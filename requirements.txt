@@ -1,0 +1,17 @@
+# Core (the scaffold itself):
+numpy>=1.24
+
+# Swap-in real backends (uncomment for the paper):
+# sentence-transformers>=2.2     # Embedder
+# anthropic>=0.39                # LLM (Claude)   -- or:
+# openai>=1.0                    # LLM (GPT-4o)
+# gymnasium>=0.29                # WebEnv via BrowserGym
+# browsergym-webarena            # WebArena tasks
+# pytest>=7.0                    # tests
+
+# --- WebArena exploration extras (for run_webarena.py real runs) ---
+browsergym-core
+browsergym-webarena
+openai
+sentence-transformers
+# (then: playwright install chromium)
