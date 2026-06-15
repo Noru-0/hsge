@@ -43,13 +43,33 @@ def segment_trajectory(
     ]}
     prompt = f"Task: {task}\n<payload>{json.dumps(payload)}</payload>"
     out = llm.complete_json(_SYS, prompt)
+    # Defensive: if out is a list, treat it as the segments array directly.
+    segments = out if isinstance(out, list) else out.get("segments", [])
     subs: list[SubTrajectory] = []
-    for seg in out.get("segments", []):
+    for seg in segments:
         if not isinstance(seg, dict) or "span" not in seg:
             continue
-        a, b = seg["span"]
-        subs.append(SubTrajectory(
-            steps=steps[a:b], subgoal=seg.get("subgoal", ""),
-            source_site=site, source_task=task, success=True,
-        ))
+        try:
+            span = seg["span"]
+            if not isinstance(span, (list, tuple)) or len(span) != 2:
+                continue
+            a, b = int(span[0]), int(span[1])
+            if not (0 <= a < b <= len(steps)):
+                continue
+            subs.append(SubTrajectory(
+                steps=steps[a:b], subgoal=seg.get("subgoal", ""),
+                source_site=site, source_task=task, success=True,
+            ))
+        except (TypeError, ValueError):
+            continue
+    # Fallback: if LLM returned unusable output, use the seeded spans directly.
+    if not subs and spans:
+        subs = [
+            SubTrajectory(
+                steps=steps[a:b],
+                subgoal=hints[i] if i < len(hints) else f"segment {i}",
+                source_site=site, source_task=task, success=True,
+            )
+            for i, (a, b) in enumerate(spans)
+        ]
     return subs

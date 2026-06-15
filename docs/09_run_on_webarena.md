@@ -61,8 +61,12 @@ Uses a scripted LLM + fake browser to exercise the full loop and persistence.
 4. Run:
    ```bash
    # Dùng provider từ .env
-   python run_webarena.py --root-url "$WA_SHOPPING" --out outputs/wa_run --max-nodes 15
+   # KHÔNG screenshot (mặc định) — text-only, dùng được với DeepSeek & OpenAI
    python run_webarena.py --root-url "http://192.168.1.31:7770/" --out outputs/wa_run --max-nodes 50
+
+   # CÓ screenshot — CẦN model hỗ trợ vision (gpt-4o, gpt-4o-mini)
+   python run_webarena.py --provider openai --explorer-model gpt-4o-mini --solver-model gpt-4o \
+    --screenshot --root-url "http://192.168.1.31:7770/" --out outputs/wa_run --max-nodes 50
 
    # Hoặc override provider qua CLI
    python run_webarena.py --provider deepseek --root-url "http://host:7770/" --out outputs/wa_run

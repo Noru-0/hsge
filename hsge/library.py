@@ -38,6 +38,7 @@ class SkillLibrary:
         self.cluster_to_members: dict[int, list[str]] = {}
         self.skills: dict[int, SkillCard] = {}     # keyed by cluster id
         self._abstracted: set[int] = set()
+        self._on_admit = None                       # callback(skill_card) on admission
 
     # ----------------------------------------------------------------- observe
     def observe(self, sub: SubTrajectory) -> int | None:
@@ -50,23 +51,36 @@ class SkillLibrary:
         self.cluster_to_members.setdefault(cid, []).append(sub.sub_id)
 
         members = self.cluster_to_members[cid]
-        if len(members) >= self.maturity and cid not in self._abstracted:
+        n = len(members)
+        if n >= self.maturity and cid not in self._abstracted:
+            print(f"  [library] cluster {cid} reached maturity ({n} members), "
+                  f"attempting abstraction...")
             return self._try_admit(cid)
+        elif n > 0 and n < self.maturity:
+            pass  # still accumulating
         return None
 
     def _try_admit(self, cid: int) -> int | None:
-        self._abstracted.add(cid)
         members = [self.subtrajs[mid] for mid in self.cluster_to_members[cid]]
         card = abstract_cluster(self.llm, cid, members)
         if card is None:                                 # LLM abstraction failed
-            return None
+            print(f"  [library] cluster {cid}: abstraction FAILED, will retry later")
+            return None                                   # don't mark abstracted; retry later
         card.stats.n_members = len(members)
         for m in members:
             card.stats.sites_seen.add(m.source_site)
+        print(f"  [library] cluster {cid}: abstracted → \"{card.name}\", "
+              f"verifying (k={self.verify_k})...")
         ok = verify_skill(self.llm, card, self.verify_contexts_fn(), k=self.verify_k)
         if ok:
+            self._abstracted.add(cid)
             self.skills[cid] = card
+            if self._on_admit:
+                self._on_admit(card)
+            print(f"  [library] cluster {cid}: VERIFIED → skill admitted: {card.name}")
             return card.skill_id
+        # verification failed — do NOT mark abstracted so we can retry later
+        print(f"  [library] cluster {cid}: verification FAILED, will retry later")
         return None
 
     # --------------------------------------------------------------- retrieval

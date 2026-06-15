@@ -109,6 +109,25 @@ from hsge.llm import LLM, HashingEmbedder
 from hsge.webarena.runtime import WebArenaExplorer
 
 
+def _check_overwrite_safety(out_dir: str) -> None:
+    """Warn if output directory has existing data that would be overwritten."""
+    ep_dir = os.path.join(out_dir, "episodes")
+    skills = os.path.join(out_dir, "skills.json")
+    has_episodes = os.path.isdir(ep_dir) and os.listdir(ep_dir)
+    has_skills = os.path.isfile(skills) and os.path.getsize(skills) > 0
+    if has_episodes or has_skills:
+        print("\n" + "!" * 60)
+        print("  WARNING: Output directory already has data!")
+        if has_episodes:
+            n_eps = len([d for d in os.listdir(ep_dir) if d.startswith("ep_")])
+            print(f"  - {n_eps} episodes in {ep_dir}")
+        if has_skills:
+            print(f"  - skills.json exists in {out_dir}")
+        print("  Running without --resume will OVERWRITE run.log and frontier.")
+        print("  Use --resume to continue from checkpoint instead.")
+        print("!" * 60 + "\n")
+
+
 # --------------------------- dry-run fakes --------------------------------- #
 class _DryLLM(LLM):
     """Scripted LLM: proposes two tasks, advances one step then declares done."""
@@ -120,6 +139,10 @@ class _DryLLM(LLM):
                 return {"thought": "done", "action": "send_msg_to_user('done')"}
             return {"thought": "advance", "action": "click('1')"}
         return {}                                               # segment/abstract: no-op
+
+    def complete_vision_json(self, system: str, prompt: str,
+                             screenshot_base64: bytes | None = None) -> dict:
+        return self.complete_json(system, prompt)
 
 
 class _FakeBrowser:
@@ -164,8 +187,26 @@ def main():
                     help="Model for Solver (action planning). Env: SOLVER_MODEL")
 
     ap.add_argument("--headless", action="store_true", default=True)
+    ap.add_argument("--screenshot", action="store_true", default=False,
+                    help="Include screenshots in observations (for vision-enabled models)")
+    ap.add_argument("--timeout", type=int, default=30000,
+                    help="Browser page load timeout in ms (default: 30000)")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--resume", action="store_true",
+                    help="Resume from previous checkpoint in --out dir")
+    ap.add_argument("--transfer-query", default=None,
+                    help="Extra transfer query to evaluate after exploration "
+                         "(e.g. 'purchase an item'). Default: auto-evaluates "
+                         "search, cart+checkout, and login queries.")
+    ap.add_argument("--denylist", default=None, nargs="*",
+                    help="Additional URL regex patterns to exclude from frontier "
+                         "(/logout is always blocked by default). "
+                         "Example: --denylist '/customer/account/logout' '/wishlist'")
     args = ap.parse_args()
+
+    # Safety: warn if output dir has existing data and not resuming
+    if not args.resume and not args.dry_run:
+        _check_overwrite_safety(args.out)
 
     allow = args.allow or (re.escape(args.root_url.rsplit("/", 1)[0]) + ".*")
 
@@ -192,15 +233,23 @@ def main():
             print("  Or copy .env.example -> .env and fill in keys.")
             return
 
-        explorer_llm = OpenAILLM(model=explorer_model, api_key=api_key, base_url=base_url)
-        solver_llm = OpenAILLM(model=solver_model, api_key=api_key, base_url=base_url)
+        # DeepSeek does not support vision; only enable for OpenAI
+        vision_ok = (provider == "openai")
+
+        explorer_llm = OpenAILLM(model=explorer_model, api_key=api_key, base_url=base_url,
+                                 supports_vision=vision_ok)
+        solver_llm = OpenAILLM(model=solver_model, api_key=api_key, base_url=base_url,
+                               supports_vision=vision_ok)
         embedder = STEmbedder()
-        browser_factory = lambda url: WebArenaBrowser(url, headless=args.headless)
+        browser_factory = lambda url: WebArenaBrowser(url, headless=args.headless,
+                                                       screenshot=args.screenshot,
+                                                       timeout_ms=args.timeout)
 
         print(f"[config] provider={provider}")
         print(f"[config] explorer model={explorer_model}")
         print(f"[config] solver   model={solver_model}")
         print(f"[config] base URL ={base_url}")
+        print(f"[config] vision  ={vision_ok}")
 
     explorer = WebArenaExplorer(
         browser_factory=browser_factory,
@@ -209,8 +258,12 @@ def main():
         embedder=embedder, out_dir=args.out,
         allow_pattern=allow, max_depth=args.max_depth, max_nodes=args.max_nodes,
         max_steps=args.max_steps,
+        resume=args.resume,
+        denylist_patterns=args.denylist,
     )
     explorer.run(args.root_url)
+    if args.transfer_query:
+        explorer.transfer_eval(args.transfer_query, top_k=5)
     print("\nnext: python build_sft_dataset.py", os.path.join(args.out, "episodes"), "train.jsonl")
 
 

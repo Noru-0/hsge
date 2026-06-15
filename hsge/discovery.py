@@ -34,6 +34,9 @@ class Discovery:
 
         # 2. segment + feed the library
         subs = segment_trajectory(self.library.llm, steps, site, task, subgoal_hints)
+        if not subs:
+            print(f"  [discovery] WARNING: segment_trajectory returned 0 segments "
+                  f"(task={task[:60]}, steps={len(steps)})")
         admitted, just_admitted_in_order = [], []
         for sub in subs:
             sid = self.library.observe(sub)

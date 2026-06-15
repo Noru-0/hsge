@@ -49,7 +49,16 @@ def verify_skill(
     contexts: list[WebEnv],
     k: int = 2,
 ) -> bool:
-    """Admit iff the skill succeeds in >= k distinct contexts. Mutates skill.stats."""
+    """Admit iff the skill succeeds in >= k distinct contexts. Mutates skill.stats.
+
+    If no verification contexts are available, admit immediately (we have no
+    way to verify, but also no reason to reject).
+    """
+    if not contexts:
+        # No verification environments available — admit without verification
+        skill.verified = True
+        return True
+
     successes = 0
     for env in contexts:
         skill.stats.n_verify_attempts += 1

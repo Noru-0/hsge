@@ -8,6 +8,7 @@ and the WA_* env vars pointing at your hosted WebArena (see the runbook).
 """
 from __future__ import annotations
 
+import asyncio
 import re
 from urllib.parse import urljoin, urlparse
 
@@ -25,10 +26,14 @@ def _is_same_origin(base: str, url: str) -> bool:
 
 
 class WebArenaBrowser:
-    def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000):
+    def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000,
+                 screenshot: bool = False):
+        import logging
+        logging.getLogger("browsergym").setLevel(logging.WARNING)
         import gymnasium as gym
         import browsergym.core            # noqa: registers browsergym/openended
         self._gym = gym
+        self.screenshot_enabled = screenshot
         self.env = gym.make(
             "browsergym/openended",
             task_kwargs={"start_url": start_url},
@@ -39,7 +44,12 @@ class WebArenaBrowser:
         self._last_obs = None
 
     def reset(self) -> dict:
-        obs, _ = self.env.reset()
+        try:
+            obs, _ = self.env.reset()
+        except Exception as e:
+            # Page.goto timeout or other reset failure — return safe fallback
+            return {"url": "", "axtree": "", "bids": [], "screenshot_base64": None,
+                    "_reset_error": str(e)}
         self._last_obs = obs
         return self.observation()
 
@@ -50,11 +60,30 @@ class WebArenaBrowser:
             axtree = flatten_axtree_to_str(obs["axtree_object"])
         except Exception:
             axtree = ""
-        return {
+        result = {
             "url": obs.get("url", ""),
             "axtree": axtree,
             "bids": self._extract_bids(axtree),
+            "screenshot_base64": None,
         }
+        if self.screenshot_enabled:
+            try:
+                result["screenshot_base64"] = self.env.unwrapped.page.screenshot(
+                    type="png", full_page=False,
+                )
+            except Exception:
+                pass
+        return result
+
+    def _safe_page_evaluate(self, js: str, default=None):
+        """Run page.evaluate with protection against closed browser/page."""
+        try:
+            page = self.env.unwrapped.page
+            if page.is_closed():
+                return default
+            return page.evaluate(js)
+        except Exception:
+            return default
 
     @staticmethod
     def _extract_bids(axtree: str) -> list[str]:
@@ -63,7 +92,12 @@ class WebArenaBrowser:
 
     def act(self, action: str) -> dict:
         """action is a BrowserGym call string, e.g. click('a51') or fill('b3','x')."""
-        self._last_obs, _, term, trunc, _ = self.env.step(action)
+        try:
+            self._last_obs, _, term, trunc, _ = self.env.step(action)
+        except Exception:
+            # If the browser was closed mid-step (e.g. TargetClosedError),
+            # return a safe fallback observation so the caller can exit gracefully.
+            return {"url": "", "axtree": "", "bids": [], "screenshot_base64": None}
         return self.observation()
 
     def links(self) -> list[str]:
@@ -71,14 +105,13 @@ class WebArenaBrowser:
         current_url = self._last_obs.get("url", "") if self._last_obs else ""
         links: set[str] = set()
         try:
-            page = self.env.page  # Playwright page (undocumented but stable in BrowserGym)
-            hrefs = page.evaluate("""() => {
+            hrefs = self._safe_page_evaluate("""() => {
                 const links = [];
                 for (const a of document.querySelectorAll('a[href]')) {
                     links.push(a.href);
                 }
                 return links;
-            }""")
+            }""", default=[])
             for href in (hrefs or []):
                 if _is_same_origin(current_url, href):
                     # Normalize: strip fragment & trailing slash
@@ -96,5 +129,5 @@ class WebArenaBrowser:
     def close(self):
         try:
             self.env.close()
-        except Exception:
+        except (Exception, asyncio.CancelledError):
             pass

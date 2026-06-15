@@ -17,7 +17,8 @@ class OpenAILLM(LLM):
     """OpenAI-compatible chat-completions backend returning parsed JSON."""
 
     def __init__(self, model: str | None = None, base_url: str | None = None,
-                 api_key: str | None = None, temperature: float = 0.2):
+                 api_key: str | None = None, temperature: float = 0.2,
+                 supports_vision: bool = True):
         from openai import OpenAI                       # lazy
         self.model = model or os.environ.get("HSGE_MODEL", "gpt-4o-mini")
         self.client = OpenAI(
@@ -25,6 +26,62 @@ class OpenAILLM(LLM):
             base_url=base_url or os.environ.get("OPENAI_BASE_URL"),
         )
         self.temperature = temperature
+        self.supports_vision = supports_vision
+
+    @staticmethod
+    def _fix_json(txt: str) -> str:
+        """Apply common LLM JSON fixups (trailing commas, single quotes, etc.)."""
+        # Remove trailing commas before ] or }
+        txt = re.sub(r",\s*([}\]])", r"\1", txt)
+        # Replace single quotes used as string delimiters (but not inside strings)
+        # This is a simple heuristic: replace ' with " around property names/values
+        txt = re.sub(r"(?<=[{,])\s*'([^']+)'\s*:", r'"\1":', txt)
+        txt = re.sub(r":\s*'([^']*)'\s*([,}])", r': "\1"\2', txt)
+        return txt
+
+    def _parse_json(self, txt: str | None) -> dict:
+        if not txt:
+            return {}
+        txt = re.sub(r"^```(?:json)?|```$", "", txt, flags=re.M).strip()
+        txt = self._fix_json(txt)
+        try:
+            result = json.loads(txt)
+            # The LLM may return a JSON array instead of an object;
+            # wrap it so callers always receive a dict.
+            if isinstance(result, list):
+                return {"segments": result}
+            if isinstance(result, dict):
+                return result
+            return {}
+        except json.JSONDecodeError:
+            # Try to extract a JSON object or array from the text
+            m = re.search(r"[\[\{].*[\]\}]", txt, re.S)
+            if m:
+                raw = self._fix_json(m.group(0))
+                try:
+                    result = json.loads(raw)
+                    if isinstance(result, list):
+                        return {"segments": result}
+                    if isinstance(result, dict):
+                        return result
+                except json.JSONDecodeError:
+                    pass
+            return {}
+
+    def _get_content(self, msg) -> str | None:
+        """Safely extract text content from an OpenAI response."""
+        try:
+            choice = msg.choices[0]
+            content = choice.message.content
+            if content is not None:
+                return content.strip()
+            # Some models return content as a list of content blocks
+            if hasattr(choice.message, 'content') and isinstance(choice.message.content, list):
+                parts = [p.get('text', '') for p in choice.message.content if isinstance(p, dict)]
+                return '\n'.join(parts).strip()
+        except (IndexError, AttributeError):
+            pass
+        return None
 
     def complete_json(self, system: str, prompt: str) -> dict:
         msg = self.client.chat.completions.create(
@@ -32,13 +89,27 @@ class OpenAILLM(LLM):
             messages=[{"role": "system", "content": system + "\nReturn ONLY valid JSON."},
                       {"role": "user", "content": prompt}],
         )
-        txt = msg.choices[0].message.content.strip()
-        txt = re.sub(r"^```(?:json)?|```$", "", txt, flags=re.M).strip()
-        try:
-            return json.loads(txt)
-        except json.JSONDecodeError:
-            m = re.search(r"\{.*\}", txt, re.S)          # salvage first JSON object
-            return json.loads(m.group(0)) if m else {}
+        return self._parse_json(self._get_content(msg))
+
+    def complete_vision_json(self, system: str, prompt: str,
+                             screenshot_base64: bytes | None = None) -> dict:
+        """Multimodal completion with optional screenshot."""
+        if screenshot_base64 is None:
+            return self.complete_json(system, prompt)
+        import base64
+        img_b64 = base64.b64encode(screenshot_base64).decode("utf-8")
+        user_content = [
+            {"type": "text", "text": prompt},
+            {"type": "image_url",
+             "image_url": {"url": f"data:image/png;base64,{img_b64}",
+                           "detail": "auto"}},
+        ]
+        msg = self.client.chat.completions.create(
+            model=self.model, temperature=self.temperature,
+            messages=[{"role": "system", "content": system + "\nReturn ONLY valid JSON."},
+                      {"role": "user", "content": user_content}],
+        )
+        return self._parse_json(self._get_content(msg))
 
     def complete_text(self, system: str, prompt: str) -> str:
         msg = self.client.chat.completions.create(
@@ -46,7 +117,7 @@ class OpenAILLM(LLM):
             messages=[{"role": "system", "content": system},
                       {"role": "user", "content": prompt}],
         )
-        return msg.choices[0].message.content
+        return self._get_content(msg) or ""
 
 
 class STEmbedder(Embedder):

@@ -44,7 +44,10 @@ def abstract_cluster(
     out = llm.complete_json(_SYS, f"<payload>{json.dumps(payload)}</payload>")
 
     if not out or "name" not in out:
-        # LLM returned empty/invalid response → skip abstraction for this cluster
+        # LLM returned empty/invalid response — skip abstraction for this cluster
+        print(f"  [abstraction] WARNING: LLM returned invalid response "
+              f"(cluster={cluster_id}, n_members={len(members)}, "
+              f"dominant_subgoal={dominant[:50]})")
         return None
 
     slots = [ParamSlot(**s) for s in out.get("slots", [])]

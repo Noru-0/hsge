@@ -55,6 +55,12 @@ class LLM(ABC):
     def complete_json(self, system: str, prompt: str) -> dict:
         """Return a parsed JSON object. Real impls should strip code fences."""
 
+    def complete_vision_json(self, system: str, prompt: str,
+                             screenshot_base64: bytes | None = None) -> dict:
+        """Return parsed JSON, optionally with a screenshot. Falls back to
+        complete_json if the backend doesn't support vision."""
+        return self.complete_json(system, prompt)
+
 
 class MockLLM(LLM):
     """Heuristic stand-in that returns structured outputs for the three calls the
