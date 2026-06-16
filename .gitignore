@@ -25,7 +25,24 @@ Thumbs.db
 
 # Outputs / run data (large, can regenerate)
 outputs/
-*.jsonl
+# *.jsonl
+temp/
+saved_eval_base/
+lora_model/
+
+# Model checkpoints / fine-tune artifacts
+qwen_7b_hsge_agent_lora/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+
+# WebArena checkouts / evaluation artifacts
+webarena-main/
+webarena-main-lora/
+webarena-main*.zip
+*.zip
 
 # Jupyter
 .ipynb_checkpoints/
