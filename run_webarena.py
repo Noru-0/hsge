@@ -202,6 +202,15 @@ def main():
                     help="Additional URL regex patterns to exclude from frontier "
                          "(/logout is always blocked by default). "
                          "Example: --denylist '/customer/account/logout' '/wishlist'")
+    ap.add_argument("--full-reset-url", default=None,
+                    help="POST URL to reset server state before each node "
+                         "(e.g. http://host:3000/reset). Clears cart/session "
+                         "so each node starts fresh.")
+    ap.add_argument("--storage-state", default=None,
+                    help="Path to Playwright storageState JSON file containing "
+                         "pre-saved cookies and session data. When provided, the "
+                         "browser will start already logged in. "
+                         "Generate with: python generate_auth_state.py")
     args = ap.parse_args()
 
     # Safety: warn if output dir has existing data and not resuming
@@ -241,9 +250,13 @@ def main():
         solver_llm = OpenAILLM(model=solver_model, api_key=api_key, base_url=base_url,
                                supports_vision=vision_ok)
         embedder = STEmbedder()
-        browser_factory = lambda url: WebArenaBrowser(url, headless=args.headless,
-                                                       screenshot=args.screenshot,
-                                                       timeout_ms=args.timeout)
+        _storage_state = args.storage_state
+        browser_factory = lambda url, _ss=_storage_state: WebArenaBrowser(
+            url, headless=args.headless,
+            screenshot=args.screenshot,
+            timeout_ms=args.timeout,
+            storage_state=_ss,
+        )
 
         print(f"[config] provider={provider}")
         print(f"[config] explorer model={explorer_model}")
@@ -260,6 +273,7 @@ def main():
         max_steps=args.max_steps,
         resume=args.resume,
         denylist_patterns=args.denylist,
+        full_reset_url=args.full_reset_url,
     )
     explorer.run(args.root_url)
     if args.transfer_query:

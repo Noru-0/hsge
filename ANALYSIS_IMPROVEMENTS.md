@@ -501,48 +501,6 @@ class Discovery:
 
 ---
 
-## 7. Segmentation — URL boundary không đủ
-
-### Vấn đề
-
-```python
-def _url_boundary_segments(steps: list[Step]) -> list[tuple[int, int]]:
-    """Split where the URL changes; each run of same-URL steps is one segment."""
-```
-
-**URL boundary là heuristic quá thô**: nhiều actions khác nhau có thể xảy ra trên cùng URL (e.g., fill form → click submit → vẫn cùng URL chờ redirect). Và nhiều steps trên các URLs khác nhau có thể là 1 subgoal (e.g., search flow: home → search?q=x → results).
-
-### Giải pháp đề xuất
-
-```python
-def segment_trajectory(llm, steps, site, task, subgoal_hints=None):
-    # Dùng LLM để segment thay vì URL boundary
-    # Cung cấp cho LLM: action sequence + URL changes + DOM summaries
-    action_sequence = [
-        f"{i}. [{s.action_kind()}] {s.url}" 
-        for i, s in enumerate(steps)
-    ]
-    
-    prompt = (
-        f"Task: {task}\n\n"
-        f"Split this action sequence into coherent sub-goals. "
-        f"Each sub-goal should be a meaningful unit of work "
-        f"(e.g., 'log in', 'search for product', 'add to cart').\n\n"
-        + "\n".join(action_sequence)
-    )
-    
-    out = llm.complete_json(_SEGMENT_SYS, prompt)
-    # Parse segments từ LLM output
-    # Fallback: nếu LLM fail, dùng URL boundary + action heuristic
-    
-    # Action heuristic fallback:
-    # - click + URL change → likely new subgoal
-    # - fill + same URL → same subgoal
-    # - Multiple clicks without URL change → likely 1 subgoal
-```
-
----
-
 ## 8. Abstraction — Action template không dùng được
 
 ### Vấn đề
@@ -761,85 +719,6 @@ def _resume_from_checkpoint(self, ckpt):
     # Chỉ replay nếu cần rebuild library từ episodes
     if not self.opgraph.ops:
         self._replay_episodes()
-```
-
----
-
-## 11. Frontier Filter — Thiếu context-aware filtering
-
-### Vấn đề
-
-`_filter_links()` dùng template clustering + global quota, nhưng:
-1. **Không biết skill library**: có thể filter mất URLs cần thiết để học skill mới
-2. **Không ưu tiên URLs chưa explore**: tất cả templates được đối xử như nhau
-3. **Template max=10 là hardcoded**: không adapt theo số nodes đã explore
-
-### Giải pháp đề xuất
-
-```python
-def _filter_links(self, links, already_queued, current_url=""):
-    """Context-aware frontier filter."""
-    if not links:
-        return []
-    
-    # 1. Deduplicate
-    links = list(dict.fromkeys(links))
-    
-    # 2. Extract templates
-    batch_templates = extract_templates(links)
-    
-    # 3. Score with context awareness
-    scored = []
-    for tmpl, urls in batch_templates.items():
-        base_score = template_priority(tmpl, len(urls))
-        
-        # THÊM: boost nếu template chưa từng thấy (khám phá mới)
-        novelty_boost = 2.0 if tmpl not in self._template_quota else 0.0
-        
-        # THÊM: boost nếu URL pattern gợi ý functional page
-        func_boost = 0.0
-        for kw in ['checkout', 'cart', 'payment', 'account', 'product']:
-            if kw in tmpl.lower():
-                func_boost += 0.5
-        
-        # THÊM: penalty nếu template quá sâu
-        depth_penalty = max(0, tmpl.count('/') - 6) * 0.5
-        
-        scored.append((
-            tmpl, 
-            base_score + novelty_boost + func_boost - depth_penalty,
-            urls
-        ))
-    
-    # 4. Adaptive budget: càng explore nhiều → quota càng nhỏ
-    progress = self._nodes_done / max(self.max_nodes, 1)
-    adaptive_max = max(3, int(self._template_max * (1 - progress * 0.5)))
-    
-    # 5. Sample
-    scored.sort(key=lambda x: -x[1])
-    kept = []
-    budget = self._frontier_max
-    
-    for tmpl, score, urls in scored:
-        if budget <= 0:
-            break
-        already = self._template_quota.get(tmpl, 0)
-        remaining = adaptive_max - already
-        if remaining <= 0:
-            continue
-        candidates = [u for u in urls if u not in already_queued]
-        if not candidates:
-            continue
-        sampled = _sample_diverse(
-            [{'url': u, 'depth': 0} for u in candidates],
-            min(remaining, budget)
-        )
-        sampled_urls = [it['url'] for it in sampled]
-        kept.extend(sampled_urls)
-        self._template_quota[tmpl] = already + len(sampled_urls)
-        budget -= len(sampled_urls)
-    
-    return kept
 ```
 
 ---
@@ -1186,12 +1065,10 @@ Phase 2 — Fix core logic (P1)
 Phase 3 — Improve reliability (P2)
   ├── 3.1 Checkpoint full state
   ├── 3.2 Transfer execution thật
-  ├── 3.3 Segmentation cải tiến
-  └── 3.4 Full reset env trước mỗi node
+  └── 3.3 Full reset env trước mỗi node
 
 Phase 4 — Polish (P3)
   ├── 4.1 Error handling
   ├── 4.2 Monitoring
-  ├── 4.3 Frontier filter context-aware
-  └── 4.4 Abstraction execution plan
+  └── 4.3 Abstraction execution plan
 ```

@@ -3,8 +3,10 @@
 flat-graph exploration already produces successful trajectories during structured exploration.
 You call `Discovery.on_trajectory(...)` from inside that loop (right after a task
 is solved). It segments, feeds the skill library, and wires admitted skills into
-the hierarchical graph, including composition edges inferred from co-occurrence
-within the same parent trajectory.
+the hierarchical graph using URL states.
+
+Composition edges are NOT created from co-occurrence here. They are derived from
+operator precondition/effect matching in _sync_to_hierarchical_graph().
 """
 from __future__ import annotations
 
@@ -37,7 +39,7 @@ class Discovery:
         if not subs:
             print(f"  [discovery] WARNING: segment_trajectory returned 0 segments "
                   f"(task={task[:60]}, steps={len(steps)})")
-        admitted, just_admitted_in_order = [], []
+        admitted = []
         for sub in subs:
             sid = self.library.observe(sub)
             if sid:
@@ -54,11 +56,12 @@ class Discovery:
             effect = [sub.steps[-1].url] if sub.steps else []
             if card:
                 self.graph.add_skill(card, init_states=init, effect_states=effect)
-                just_admitted_in_order.append(sid)
 
-        # 4. composition edges: consecutive admitted skills in one trajectory
-        for a, b in zip(just_admitted_in_order, just_admitted_in_order[1:]):
-            self.graph.link_skills(a, b)
+        # 4. composition edges are NOT created from co-occurrence here.
+        #     They are instead derived from operator precondition/effect matching
+        #     in _sync_to_hierarchical_graph() (called by _mine_operator).
+        #     This ensures edges represent genuine dependency relationships,
+        #     not just coincidental co-occurrence in the same trajectory.
 
         return admitted
 

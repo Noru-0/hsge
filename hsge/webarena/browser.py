@@ -9,6 +9,7 @@ and the WA_* env vars pointing at your hosted WebArena (see the runbook).
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 from urllib.parse import urljoin, urlparse
 
@@ -27,20 +28,47 @@ def _is_same_origin(base: str, url: str) -> bool:
 
 class WebArenaBrowser:
     def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000,
-                 screenshot: bool = False):
+                 screenshot: bool = False, storage_state: str | None = None):
         import logging
+        # Tắt log "Overriding the task's timeout parameter" từ browsergym
         logging.getLogger("browsergym").setLevel(logging.WARNING)
+        logging.getLogger("browsergym.core").setLevel(logging.WARNING)
+        logging.getLogger("browsergym.core.task").setLevel(logging.ERROR)
+        logging.getLogger("gymnasium").setLevel(logging.WARNING)
         import gymnasium as gym
         import browsergym.core            # noqa: registers browsergym/openended
         self._gym = gym
         self.screenshot_enabled = screenshot
+        # Build pw_context_kwargs with storage_state if provided.
+        # We pass it BOTH via gym.make() (for initial context creation)
+        # AND directly on env.unwrapped.pw_context_kwargs (so env.reset()
+        # re-applies it when creating new Playwright contexts).
+        pw_context_kwargs = {}
+        if storage_state:
+            if os.path.isfile(storage_state):
+                pw_context_kwargs["storage_state"] = storage_state
+                logging.getLogger(__name__).info(
+                    f"Using storage_state: {storage_state}"
+                )
+            else:
+                logging.getLogger(__name__).warning(
+                    f"storage_state file not found: {storage_state}. "
+                    "Proceeding without pre-loaded login state."
+                )
         self.env = gym.make(
             "browsergym/openended",
             task_kwargs={"start_url": start_url},
             headless=headless,
             timeout=timeout_ms,
             wait_for_user_message=False,
+            pw_context_kwargs=pw_context_kwargs,
         )
+        # Also set pw_context_kwargs directly on the unwrapped BrowserEnv,
+        # matching Go-Browse's pattern (web_explore.py line 696).
+        # This ensures storage_state is re-applied every time env.reset()
+        # creates a new Playwright context.
+        if pw_context_kwargs:
+            self.env.unwrapped.pw_context_kwargs.update(pw_context_kwargs)
         self._last_obs = None
 
     def reset(self) -> dict:

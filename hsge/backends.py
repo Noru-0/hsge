@@ -119,6 +119,58 @@ class OpenAILLM(LLM):
         )
         return self._get_content(msg) or ""
 
+    def complete_with_tools(
+        self,
+        system: str,
+        prompt: str,
+        tools: list[dict] | None = None,
+    ) -> dict:
+        """Send a completion with tool/function definitions.
+
+        Returns a dict with either:
+          - {"type": "text", "content": "...", "thought": "..."} for text responses
+          - {"type": "tool_call", "name": "...", "arguments": {...}} for tool calls
+
+        Tools are registered as 'functions' in the OpenAI API format.
+        """
+        kwargs = {
+            "model": self.model,
+            "temperature": self.temperature,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+        }
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = "auto"
+
+        msg = self.client.chat.completions.create(**kwargs)
+        choice = msg.choices[0]
+
+        # Check for tool calls first
+        if choice.message.tool_calls:
+            tc = choice.message.tool_calls[0]
+            try:
+                args = json.loads(tc.function.arguments)
+            except json.JSONDecodeError:
+                args = {}
+            return {
+                "type": "tool_call",
+                "name": tc.function.name,
+                "arguments": args,
+            }
+
+        # Fall back to text response (parse as JSON action)
+        content = self._get_content(msg) or ""
+        parsed = self._parse_json(content)
+        return {
+            "type": "text",
+            "content": content,
+            "thought": parsed.get("thought", ""),
+            "action": parsed.get("action", content),
+        }
+
 
 class STEmbedder(Embedder):
     """sentence-transformers embedder (L2-normalized)."""

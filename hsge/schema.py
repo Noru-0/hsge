@@ -23,6 +23,7 @@ class Step:
     url: str                    # URL after the action
     obs_summary: str = ""       # short NL summary of the resulting observation
     dom_signature: str = ""     # cheap structural fingerprint of the page
+    misc: dict | None = None    # optional metadata (e.g. {"skill": "add_to_cart"})
 
     def action_kind(self) -> str:
         """Verb only, used to build a site-agnostic action signature."""
@@ -85,6 +86,10 @@ class SkillCard:
     - precondition  ~ I (initiation set predicate, as NL the grounder can check)
     - action_template + slots ~ pi (parameterized policy)
     - success_predicate ~ beta (termination/success test)
+
+    Phase 4 additions:
+    - execution_plan: structured list of ExecutionStep for robust execution
+    - alternative_templates: fallback templates for different page layouts
     """
     name: str
     description: str
@@ -97,6 +102,9 @@ class SkillCard:
     stats: SkillStats = field(default_factory=SkillStats)
     verified: bool = False
     skill_id: str = field(default_factory=lambda: _new_id("skill"))
+    # Phase 4: structured execution plan
+    execution_plan: list[dict] = field(default_factory=list)
+    alternative_templates: list[list[str]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -115,6 +123,13 @@ class SkillCard:
         ]
         lines += [f"      - {a}" for a in self.action_template]
         lines.append(f"  success_if : {self.success_predicate}")
+        if self.execution_plan:
+            lines.append(f"  execution_plan ({len(self.execution_plan)} steps):")
+            for i, step in enumerate(self.execution_plan):
+                lines.append(f"      {i}. [{step.get('action_type','?')}] "
+                             f"{step.get('target_desc','')}")
+        if self.alternative_templates:
+            lines.append(f"  alternatives: {len(self.alternative_templates)} variant(s)")
         return "\n".join(lines)
 
 

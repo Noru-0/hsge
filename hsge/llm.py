@@ -61,6 +61,19 @@ class LLM(ABC):
         complete_json if the backend doesn't support vision."""
         return self.complete_json(system, prompt)
 
+    def complete_with_tools(
+        self,
+        system: str,
+        prompt: str,
+        tools: list[dict] | None = None,
+    ) -> dict:
+        """Send a completion with tool/function definitions.
+
+        Default implementation falls back to complete_json (ignoring tools).
+        Real backends (OpenAILLM) override this to use function-calling API.
+        """
+        return self.complete_json(system, prompt)
+
 
 class MockLLM(LLM):
     """Heuristic stand-in that returns structured outputs for the three calls the

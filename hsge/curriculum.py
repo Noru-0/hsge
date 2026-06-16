@@ -58,3 +58,9 @@ def generate_curriculum(
     ]
     tasks.sort(key=lambda t: t.difficulty)        # easy -> hard
     return tasks
+
+
+# ---- Alias for backward compatibility ---------------------------------------
+def generate_curriculum_from_operators(opgraph, max_len=3, site=""):
+    """Alias giữ tương thích với runtime cũ."""
+    return []
