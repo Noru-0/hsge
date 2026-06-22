@@ -8,6 +8,10 @@ from hsge import (
     Discovery, HashingEmbedder, HierarchicalGraph, MockLLM, OnlineClusterer,
     SkillLibrary, Step, demo_sites,
 )
+from hsge.env import WebEnv, PageState
+from hsge.schema import ParamSlot, SkillCard, SubTrajectory
+from hsge.abstraction import abstract_cluster, validate_skill_card
+from hsge.verification import verify_skill
 
 
 def _unit(v):
@@ -69,7 +73,186 @@ def test_pipeline_admits_two_verified_skills():
     assert len(lib.all_skills()) == 2
     assert all(c.verified for c in lib.all_skills())
     # composition edge login -> search exists
-    assert any(g.skills[a].name.startswith("Log In") for a in g.skill_to_skill)
+    assert any(g.skills[a].name in {"fill_visible_field", "submit_search_query"} for a in g.skill_to_skill)
+
+
+def test_verification_rejects_ungroundable_skill():
+    env = WebEnv(
+        "empty",
+        {"start": PageState("/empty", affordances=[], goto={})},
+        start="start",
+        goal_pages={"done"},
+    )
+    card = SkillCard(
+        name="Click Missing",
+        description="Click a missing control.",
+        slots=[ParamSlot("target", "selector")],
+        action_template=["click({target})"],
+        precondition="target is visible",
+        success_predicate="done",
+        cluster_id="c0",
+    )
+
+    assert not verify_skill(MockLLM(), card, [env], k=1)
+    assert not card.verified
+    assert card.stats.n_verify_attempts == 1
+    assert card.stats.n_verify_success == 0
+
+
+class _OverfitSkillLLM(MockLLM):
+    def complete_json(self, system, prompt):
+        if "ABSTRACT" in system:
+            return {
+                "name": "Locate Gingerbread House Kit",
+                "description": "Find the Pre-baked Gingerbread House Kit on the webpage.",
+                "slots": [{"name": "product_name", "slot_type": "value"}],
+                "action_template": "click('{product_name}')",
+                "precondition": "The webpage is loaded.",
+                "success_predicate": (
+                    "Locate the 'Pre-baked Gingerbread House Kit Value Pack, "
+                    "17 oz., Pack of 2, Total 34 oz.' on the webpage. completed"
+                ),
+            }
+        return super().complete_json(system, prompt)
+
+
+def test_abstraction_rejects_long_entity_literals():
+    member = SubTrajectory(
+        steps=[Step("click [101]", "/product")],
+        subgoal="Locate product detail",
+        source_site="site",
+        source_task="task",
+    )
+
+    assert abstract_cluster(_OverfitSkillLLM(), 1, [member, member, member]) is None
+
+
+class _FixedSkillLLM(MockLLM):
+    def __init__(self, payload):
+        self.payload = payload
+
+    def complete_json(self, system, prompt):
+        if "ABSTRACT" in system:
+            return self.payload
+        return super().complete_json(system, prompt)
+
+
+def _member(subgoal="open visible item", task="Open item"):
+    return SubTrajectory(
+        steps=[Step("click('101')", "/detail", obs_summary="Clicked a visible link.")],
+        subgoal=subgoal,
+        source_site="site",
+        source_task=task,
+    )
+
+
+def test_abstraction_rejects_value_slot_click_target():
+    out = {
+        "name": "ClickProductLink",
+        "description": "Clicks on a specified product link.",
+        "slots": [{"name": "product_name", "slot_type": "value"}],
+        "action_template": ["click('{product_name}')"],
+        "precondition": "The product link is visible.",
+        "success_predicate": "product page loaded",
+    }
+
+    assert abstract_cluster(_FixedSkillLLM(out), 2, [_member(), _member(), _member()]) is None
+
+
+def test_abstraction_rejects_natural_language_template():
+    out = {
+        "name": "save_visible_item",
+        "description": "Save a visible item for later.",
+        "slots": [{"name": "item_name", "slot_type": "value"}],
+        "action_template": ["Add {item_name} to your wish list."],
+        "precondition": "A save control is visible.",
+        "success_predicate": "item saved",
+    }
+
+    assert abstract_cluster(_FixedSkillLLM(out), 3, [_member(), _member(), _member()]) is None
+
+
+def test_abstraction_accepts_canonical_open_visible_item():
+    out = {
+        "name": "open_visible_item",
+        "description": "Open a visible item or record.",
+        "slots": [{"name": "item_selector", "slot_type": "selector"}],
+        "action_template": ["click({item_selector})"],
+        "precondition": "A target item is visible.",
+        "success_predicate": "item detail is visible",
+    }
+
+    card = abstract_cluster(_FixedSkillLLM(out), 4, [_member(), _member(), _member()])
+
+    assert card is not None
+    assert card.name == "open_visible_item"
+    assert not validate_skill_card(card)
+
+
+def test_abstraction_accepts_canonical_submit_search_query():
+    out = {
+        "name": "submit_search_query",
+        "description": "Submit a query through a visible search field.",
+        "slots": [
+            {"name": "search_selector", "slot_type": "selector"},
+            {"name": "query_value", "slot_type": "value"},
+        ],
+        "action_template": ["fill({search_selector}, {query_value})", "press('Enter')"],
+        "precondition": "A search field is visible.",
+        "success_predicate": "query results are visible",
+    }
+
+    card = abstract_cluster(_FixedSkillLLM(out), 5, [_member("search visible records")] * 3)
+
+    assert card is not None
+    assert card.name == "submit_search_query"
+    assert not validate_skill_card(card)
+
+
+def test_duplicate_normalized_skill_is_detected():
+    lib = SkillLibrary(MockLLM(), HashingEmbedder(), lambda: [], maturity=3, verify_k=1)
+    existing = SkillCard(
+        name="open_visible_item",
+        description="Open a visible item or record.",
+        slots=[ParamSlot("item_selector", "selector")],
+        action_template=["click({item_selector})"],
+        precondition="item visible",
+        success_predicate="detail visible",
+        cluster_id="0",
+    )
+    candidate = SkillCard(
+        name="open_visible_item",
+        description="Open another visible item or record.",
+        slots=[ParamSlot("record_selector", "selector")],
+        action_template=["click({record_selector})"],
+        precondition="record visible",
+        success_predicate="detail visible",
+        cluster_id="1",
+    )
+    lib.skills[0] = existing
+
+    assert lib._duplicate_skill(candidate) is existing
+
+
+def test_domain_examples_share_open_visible_item_abstraction():
+    out = {
+        "name": "ClickProductLink",
+        "description": "Open a visible item or record.",
+        "slots": [{"name": "item_selector", "slot_type": "selector"}],
+        "action_template": ["click({item_selector})"],
+        "precondition": "A target item is visible.",
+        "success_predicate": "item detail is visible",
+    }
+    members = [
+        _member("open issue detail", "Open issue #42"),
+        _member("open article detail", "Open API reference article"),
+        _member("open item detail", "Open listed item"),
+    ]
+
+    card = abstract_cluster(_FixedSkillLLM(out), 6, members)
+
+    assert card is not None
+    assert card.name == "open_visible_item"
 
 
 if __name__ == "__main__":

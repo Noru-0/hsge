@@ -1,12 +1,14 @@
 """WebArena exploration runtime for HSGE.
 
-Frontier loop over URLs. At each page: propose local tasks (PageExplorer) and a
-goal-conditioned composed task (planner over mined operators); solve each with the
-Solver; mine operators from successful trajectories; feed HSGE Discovery; persist
-trajectories in a run-dir layout that build_sft_dataset.py can read directly.
+Frontier loop over URLs. At each page: propose local tasks (PageExplorer) and,
+when configured, a goal-conditioned composed task over mined operators. Solve each
+task with the Solver, mine operators from successful trajectories, feed HSGE
+Discovery, and persist trajectories in a run-dir layout that build_sft_dataset.py
+can read directly.
 
 Operators are mined from predicate deltas (start-state predicates -> end-state
-predicates), which is what lets the planner compose a purchase chain on real pages.
+predicates), which lets the planner compose longer tasks without domain-specific
+rules.
 """
 from __future__ import annotations
 
@@ -14,8 +16,10 @@ import json
 import os
 import re
 import time
+from collections import Counter
 from dataclasses import dataclass, field
 
+from .action_validation import action_family, repair_thought, task_family
 from ..discovery import Discovery
 from ..graph import HierarchicalGraph
 from ..library import SkillLibrary
@@ -35,8 +39,12 @@ from urllib.parse import urlparse, urlunparse
 class RunMetrics:
     """Track run statistics for monitoring."""
     nodes_visited: int = 0
+    nodes_processed: int = 0
+    nodes_error: int = 0
     tasks_proposed: int = 0
     tasks_solved: int = 0
+    tasks_failed: int = 0
+    tasks_error: int = 0
     skills_discovered: int = 0
     skills_verified: int = 0
     operators_mined: int = 0
@@ -54,7 +62,9 @@ class RunMetrics:
             f"\n{'='*50}"
             f"\n  Run Summary ({elapsed:.0f}s)"
             f"\n  Nodes visited: {self.nodes_visited}"
+            f"\n  Nodes processed: {self.nodes_processed}, node errors: {self.nodes_error}"
             f"\n  Tasks: {self.tasks_solved}/{self.tasks_proposed} solved"
+            f"\n  Task failures: {self.tasks_failed}, task backend errors: {self.tasks_error}"
             f"\n  Skills: {self.skills_discovered} discovered, {self.skills_verified} verified"
             f"\n  Operators: {self.operators_mined}"
             f"\n  Goal tasks: {self.goal_tasks_solved}/{self.goal_tasks_attempted}"
@@ -65,18 +75,39 @@ class RunMetrics:
 
 
 def _name_from_goal(goal: str) -> str:
-    g = goal.lower()
-    for k, n in [("search", "search"), ("cart", "add_to_cart"), ("checkout", "checkout"),
-                 ("payment", "enter_payment"), ("order", "place_order"), ("product", "open_product")]:
-        if k in g:
-            return n
-    return re.sub(r"\W+", "_", g.strip())[:24] or "op"
+    g = re.sub(r"\s+", " ", (goal or "").lower()).strip()
+    if re.search(r"wish\s*list|wishlist", g):
+        return "add_to_wish_list" if "add" in g or "click" in g else "open_wish_list"
+    if "cart" in g:
+        return "add_to_cart" if "add" in g or "click" in g else "open_cart"
+    if "compare" in g:
+        return "add_to_compare" if "add" in g or "click" in g else "compare_items"
+    if re.search(r"\bsearch\b|\bfind\b", g):
+        return "search_visible_field"
+    if re.search(r"\bsort\b|\bfilter\b|\bnarrow\b|\brefine\b", g):
+        return "inspect_sort_filter"
+    if re.search(r"review|feedback|rating|comment", g):
+        return "inspect_feedback"
+    if re.search(r"account|profile|settings|address|preference", g):
+        return "inspect_account_options"
+    if re.search(r"hover|submenu|menu", g):
+        return "inspect_menu_options"
+    if re.search(r"product|details?", g):
+        return "open_visible_detail"
+
+    g = re.sub(r"'[^']+'|\"[^\"]+\"", "item", g)
+    words = [
+        w for w in re.findall(r"[a-z0-9]+", g)
+        if w not in {"the", "a", "an", "visible", "button", "link", "control", "for", "to"}
+    ]
+    return "_".join(words[:4]) or "op"
 
 
 class WebArenaExplorer:
     def __init__(self, browser_factory, embedder, out_dir: str,
                  allow_pattern: str, max_depth: int = 6, max_nodes: int = 20,
-                 max_steps: int = 20, terminal_goal: str = "order_confirmed",
+                 max_steps: int = 20, terminal_goal: str | None = None,
+                 goal_instruction: str | None = None,
                  llm=None, explorer_llm=None, solver_llm=None,
                  resume: bool = False,
                  denylist_patterns: list[str] | None = None,
@@ -84,7 +115,9 @@ class WebArenaExplorer:
         self.browser_factory = browser_factory
         self.out_dir = out_dir
         self.allow = re.compile(allow_pattern)
-        self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
+        self.max_depth, self.max_nodes = max_depth, max_nodes
+        self.terminal_goal = terminal_goal
+        self.goal_instruction = goal_instruction
         # support both old single-llm API and new separate explorer/solver llms
         _explorer_llm = explorer_llm or llm
         _solver_llm = solver_llm or llm
@@ -118,8 +151,7 @@ class WebArenaExplorer:
         self._denylist = [re.compile(p) for p in (denylist_patterns or [])]
         self._denylist.append(re.compile(r'/logout'))
 
-        # Full reset URL: POST request to reset server state before each node
-        # (e.g., "http://host:3000/reset" to clear cart/session on WebArena)
+        # Full reset URL: POST request to reset server state before each node.
         self.full_reset_url = full_reset_url
 
         # Frontier scorer (UVD) replaces FIFO queue for node selection
@@ -150,6 +182,19 @@ class WebArenaExplorer:
         # Run metrics for monitoring
         self.metrics = RunMetrics()
         self.metrics.start_time = time.time()
+        self._coverage = {
+            "task_family": Counter(),
+            "action_family": Counter(),
+            "successful_task_family": Counter(),
+            "failed_task_family": Counter(),
+            "successful_action_family": Counter(),
+            "invalid_or_empty_episodes": 0,
+        }
+        self._task_attempt_counts: Counter[str] = Counter()
+        self._task_success_counts: Counter[str] = Counter()
+        self._task_failure_counts: Counter[str] = Counter()
+        self._task_error_counts: Counter[str] = Counter()
+        self._task_family_failure_counts: Counter[str] = Counter()
 
         # Log file (must open BEFORE _replay_episodes so _on_skill_admitted can write)
         log_mode = "a" if resume else "w"
@@ -191,9 +236,9 @@ class WebArenaExplorer:
         """Reset server state before exploring a new node.
 
         Sends a POST request to `full_reset_url` (if configured) to clear
-        session, cart, and other server-side state. This ensures each node
-        starts with a clean environment, preventing stale state issues
-        (e.g., items in cart from a previous checkout attempt).
+        session and other server-side state. This ensures each node starts with a
+        clean environment and prevents stale state from one attempt affecting the
+        next.
 
         Based on Go-Browse's full_reset_url mechanism.
         """
@@ -548,10 +593,20 @@ class WebArenaExplorer:
                 "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps)}
         json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w"), indent=2)
         with open(os.path.join(ep, "episode.jsonl"), "w") as f:
+            repaired_steps: list[Step] = []
             for k, st in enumerate(steps):
                 axp = f"page_state/step_{k:03d}_axtree.txt"
                 obs_text = obs_texts[k] if k < len(obs_texts) else ""
                 open(os.path.join(ep, axp), "w", encoding="utf-8").write(obs_text)
+                thought, _ = repair_thought(st.obs_summary, st.action, obs_text)
+                repaired_step = Step(
+                    action=st.action,
+                    url=st.url,
+                    obs_summary=thought,
+                    dom_signature=st.dom_signature,
+                    misc=st.misc,
+                )
+                repaired_steps.append(repaired_step)
                 # Save screenshot in separate screenshots/ folder
                 ssp = None
                 if screenshots and k < len(screenshots) and screenshots[k]:
@@ -563,17 +618,77 @@ class WebArenaExplorer:
                 if ssp:
                     observation["screenshot_png"] = {"path": ssp}
                 rec = {"record_type": "step", "index": k,
-                       "action": json.dumps({"thought": st.obs_summary, "action": st.action}),
-                       "parsed_action": st.action, "thought": st.obs_summary,
+                       "action": json.dumps({"thought": thought, "action": st.action}),
+                       "parsed_action": st.action, "thought": thought,
                        "observation": observation}
                 # last_action: chứa thought và action của step trước (để SFT có context)
                 if k > 0:
-                    prev_st = steps[k - 1]
+                    prev_st = repaired_steps[k - 1]
                     rec["last_action"] = json.dumps({"thought": prev_st.obs_summary, "action": prev_st.action})
                 if st.misc:
                     rec["misc"] = st.misc
                 f.write(json.dumps(rec) + "\n")
+        self._update_coverage(goal, steps, success)
+        self._write_coverage()
         self.episode += 1
+
+    def _update_coverage(self, goal: str, steps: list[Step], success: bool) -> None:
+        fam = task_family(goal)
+        self._coverage["task_family"][fam] += 1
+        if success:
+            self._coverage["successful_task_family"][fam] += 1
+        else:
+            self._coverage["failed_task_family"][fam] += 1
+        if not steps:
+            self._coverage["invalid_or_empty_episodes"] += 1
+            return
+        for st in steps:
+            af = action_family(st.action)
+            self._coverage["action_family"][af] += 1
+            if success:
+                self._coverage["successful_action_family"][af] += 1
+
+    def _write_coverage(self) -> None:
+        path = os.path.join(self.out_dir, "coverage.json")
+        data = {
+            k: (dict(v) if isinstance(v, Counter) else v)
+            for k, v in self._coverage.items()
+        }
+        json.dump(data, open(path, "w", encoding="utf-8"), indent=2, sort_keys=True)
+
+    def _rank_tasks_for_coverage(self, tasks: list[str]) -> list[str]:
+        """Prefer task families that successful training data under-covers."""
+        successful = self._coverage["successful_task_family"]
+        failed_family = self._task_family_failure_counts
+        filtered = [t for t in tasks if self._should_attempt_task(t)]
+        return sorted(
+            filtered,
+            key=lambda t: (
+                failed_family[task_family(t)] >= 4 and successful[task_family(t)] == 0,
+                successful[task_family(t)],
+                failed_family[task_family(t)],
+                self._task_attempt_counts[self._task_key(t)],
+                task_family(t),
+                t.lower(),
+            ),
+        )
+
+    def _should_attempt_task(self, task: str) -> bool:
+        key = self._task_key(task)
+        if self._task_success_counts[key] >= 1:
+            return False
+        if self._task_attempt_counts[key] >= 2:
+            return False
+        if self._task_failure_counts[key] >= 2:
+            return False
+        fam = task_family(task)
+        if self._task_family_failure_counts[fam] >= 4 and self._coverage["successful_task_family"][fam] == 0:
+            return False
+        return True
+
+    @staticmethod
+    def _task_key(task: str) -> str:
+        return re.sub(r"\s+", " ", (task or "").lower()).strip()
 
     # ---- operator mining from a successful trajectory ------------------------
     def _mine_operator(self, goal, steps, obs_texts, final_obs):
@@ -588,7 +703,7 @@ class WebArenaExplorer:
         if not eff:
             return
         name = _name_from_goal(goal)
-        terminal = self.terminal_goal in eff
+        terminal = bool(self.terminal_goal and self.terminal_goal in eff)
         op = Operator(name, frozenset(start), frozenset(eff), terminal=terminal)
         self.opgraph.add(op)
         # Sync to HierarchicalGraph for export compatibility
@@ -655,10 +770,13 @@ class WebArenaExplorer:
                 self.graph.skill_to_skill[other_id].add(skill_id)
 
     def _goal_task(self):
+        if not self.terminal_goal:
+            return None
         chain = plan(self.opgraph, frozenset(), self.terminal_goal)
         if not chain:
             return None
-        return {"goal": "Purchase an item: complete the full checkout to order confirmation.",
+        instruction = self.goal_instruction or f"Achieve the terminal condition: {self.terminal_goal}."
+        return {"goal": instruction,
                 "difficulty": len(chain), "chain": chain}
 
     # ---- checkpoint ------------------------------------------------------
@@ -887,8 +1005,7 @@ class WebArenaExplorer:
 
         Instead of doing browser.goto(target_url) directly (which can break
         state), this replays the actual click/fill actions that were recorded
-        when the URL was first discovered. This preserves login state, session,
-        and cart.
+        when the URL was first discovered. This preserves login and session state.
 
         Returns the observation dict at the target URL, or None if navigation
         fails (fall back to direct goto).
@@ -1075,9 +1192,20 @@ class WebArenaExplorer:
         # 1) local exploration (with skill hints when available)
         skill_hints = self._build_skill_hints(page_url=actual_url)
         _node_tasks = []  # track tasks for this node
-        for task in self.explorer.propose(obs, skill_hints=skill_hints):
+        raw_proposed_tasks = self.explorer.propose(obs, skill_hints=skill_hints)
+        proposed_tasks = self._rank_tasks_for_coverage(raw_proposed_tasks)
+        skipped_repeats = len(raw_proposed_tasks) - len(proposed_tasks)
+        if skipped_repeats:
+            msg_repeat = f"  [tasks] Skipped {skipped_repeats} repeated/saturated proposal(s)"
+            print(msg_repeat)
+            if self._log_file:
+                self._log_file.write(msg_repeat + "\n")
+                self._log_file.flush()
+        for task in proposed_tasks:
             self.metrics.tasks_proposed += 1
             _node_tasks.append(task)
+            task_key = self._task_key(task)
+            self._task_attempt_counts[task_key] += 1
             try:
                 reset_obs = browser.reset()
                 if not reset_obs.get("url"):
@@ -1098,10 +1226,15 @@ class WebArenaExplorer:
                 self._record(task, steps, obs_texts, success, difficulty=1, tag="LOCAL",
                              screenshots=screenshots)
                 if success:
+                    self._task_success_counts[task_key] += 1
                     _any_success = True
                     self.metrics.tasks_solved += 1
                     self._mine_operator(task, steps, obs_texts, final_obs)
                     self.discovery.on_trajectory(steps, site=root_url, task=task)
+                else:
+                    self.metrics.tasks_failed += 1
+                    self._task_failure_counts[task_key] += 1
+                    self._task_family_failure_counts[task_family(task)] += 1
                 msg2 = f"    local: {task!r} success={success}"
                 print(msg2)
                 if self._log_file:
@@ -1109,6 +1242,8 @@ class WebArenaExplorer:
                     self._log_file.flush()
             except Exception as e:
                 self.metrics.errors += 1
+                self.metrics.tasks_error += 1
+                self._task_error_counts[task_key] += 1
                 msg_err = f"    local: {task!r} ERROR: {e}"
                 print(msg_err)
                 if self._log_file:
@@ -1143,6 +1278,8 @@ class WebArenaExplorer:
                     if success:
                         _any_success = True
                         self.metrics.goal_tasks_solved += 1
+                    else:
+                        self.metrics.tasks_failed += 1
                     msg3 = f"    GOAL chain={gt['chain']} verified={success}"
                     print(msg3)
                     if self._log_file:
@@ -1150,6 +1287,7 @@ class WebArenaExplorer:
                         self._log_file.flush()
             except Exception as e:
                 self.metrics.errors += 1
+                self.metrics.tasks_error += 1
                 msg_err = f"    GOAL ERROR: {e}"
                 print(msg_err)
                 if self._log_file:
@@ -1337,7 +1475,7 @@ class WebArenaExplorer:
                                 url_match = re.search(r'URL:\s*(\S+)', obs_text)
                                 if url_match:
                                     url = url_match.group(1)
-                    steps.append(Step(action=action, url=url, obs_summary=rec.get("thought", "")[:100]))
+                    steps.append(Step(action=action, url=url, obs_summary=rec.get("thought", "")))
                     obs_texts.append(obs_text)
             if not steps:
                 continue
@@ -1508,6 +1646,7 @@ class WebArenaExplorer:
             visited.add(url)
             nodes_processed += 1
             self.metrics.nodes_visited += 1
+            self.metrics.nodes_processed = nodes_processed
 
             # Ghi nhận parent đã chọn 1 child (cho V_n)
             parent_url = self._frontier_scorer._parent_url.get(url)
@@ -1523,6 +1662,7 @@ class WebArenaExplorer:
                 )
             except Exception as e:
                 self.metrics.errors += 1
+                self.metrics.nodes_error += 1
                 msg = f"[node {nodes_processed} depth={depth}] ERROR: {e}"
                 print(msg)
                 if self._log_file:
@@ -1550,12 +1690,8 @@ class WebArenaExplorer:
         self._write_graph()
         self._write_curriculum()
 
-        # Transfer retrieval: which skills are most relevant for common queries?
-        for q in ["search for a product", "add item to cart and checkout",
-                   "log in with credentials"]:
-            self.transfer_eval(q, top_k=5)
-
         # Update metrics with final counts
+        self.metrics.nodes_processed = nodes_processed
         self.metrics.skills_discovered = len(self.library.all_skills())
         self.metrics.skills_verified = len([s for s in self.library.all_skills() if s.verified])
         self.metrics.operators_mined = len(self.opgraph.ops)

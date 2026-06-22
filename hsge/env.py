@@ -48,8 +48,15 @@ class WebEnv:
         """Execute 'click [signin]' / 'type [user] alice'. Only clicks navigate."""
         page = self.pages[self.cur]
         verb = action.split(" ", 1)[0].lower()
-        m = re.search(r"\[([^\]]+)\]", action)
-        target = m.group(1) if m else None
+        target = None
+        canonical = re.match(r"\s*([a-z_]+)\((.*)\)\s*$", action)
+        if canonical:
+            verb = canonical.group(1).lower()
+            first = canonical.group(2).split(",", 1)[0].strip()
+            target = first.strip("'\"")
+        else:
+            m = re.search(r"\[([^\]]+)\]", action)
+            target = m.group(1) if m else None
         if verb == "click" and target and target in page.affordances and target in page.goto:
             self.cur = page.goto[target]
         return self.pages[self.cur]

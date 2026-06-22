@@ -66,6 +66,12 @@ class SkillLibrary:
         if card is None:                                 # LLM abstraction failed
             print(f"  [library] cluster {cid}: abstraction FAILED, will retry later")
             return None                                   # don't mark abstracted; retry later
+        existing = self._duplicate_skill(card)
+        if existing is not None:
+            self._abstracted.add(cid)
+            print(f"  [library] cluster {cid}: duplicate skill \"{card.name}\" "
+                  f"matches {existing.skill_id}; skipping admission")
+            return None
         card.stats.n_members = len(members)
         for m in members:
             card.stats.sites_seen.add(m.source_site)
@@ -111,3 +117,9 @@ class SkillLibrary:
 
     def all_skills(self) -> list[SkillCard]:
         return list(self.skills.values())
+
+    def _duplicate_skill(self, candidate: SkillCard) -> SkillCard | None:
+        for card in self.skills.values():
+            if card.name == candidate.name:
+                return card
+        return None

@@ -126,21 +126,26 @@ class MockLLM(LLM):
                               "description": f"value entered at step {i}", "example": ""})
                 slots.append({"name": f"sel_{i}", "slot_type": "selector",
                               "description": f"target field at step {i}", "example": ""})
-                template.append(f"type {{sel_{i}}} {{value_{i}}}")
+                template.append(f"type({{sel_{i}}}, {{value_{i}}}, '0')")
             elif v == "click":
                 slots.append({"name": f"sel_{i}", "slot_type": "selector",
                               "description": f"element clicked at step {i}", "example": ""})
-                template.append(f"click {{sel_{i}}}")
+                template.append(f"click({{sel_{i}}})")
             else:
                 template.append(v)
-        name = subgoal.split()[0:3]
+        if any(v in ("type", "fill") for v in verbs):
+            skill_name = "submit_search_query" if "search" in subgoal.lower() else "fill_visible_field"
+        elif any(v == "click" for v in verbs):
+            skill_name = "open_visible_item"
+        else:
+            skill_name = "activate_named_control"
         return {
-            "name": " ".join(name).title() or "Skill",
-            "description": f"Reusable routine to {subgoal}.",
+            "name": skill_name,
+            "description": f"Reusable routine for a generic page interaction.",
             "slots": slots,
             "action_template": template,
-            "precondition": f"page affords: {subgoal}",
-            "success_predicate": p.get("success_predicate", f"{subgoal} completed"),
+            "precondition": "required controls are visible",
+            "success_predicate": "interaction completed",
         }
 
     def _ground(self, prompt: str) -> dict:
@@ -153,7 +158,7 @@ class MockLLM(LLM):
         for slot in p.get("slots", []):
             if slot["slot_type"] == "selector":
                 if affs:
-                    bindings[slot["name"]] = f"[{affs.pop(0)}]"
+                    bindings[slot["name"]] = affs.pop(0)
                 else:
                     ok = False
             elif slot["slot_type"] == "value":

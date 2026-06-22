@@ -11,6 +11,13 @@ from .graph import HierarchicalGraph
 from .schema import SkillCard, Task
 
 
+def _display_name(name: str) -> str:
+    name = (name or "skill").strip()
+    if "_" in name and name.lower() == name:
+        return name.replace("_", " ")
+    return name
+
+
 def _chains(graph: HierarchicalGraph, max_len: int) -> list[list[str]]:
     chains: list[list[str]] = []
     # length-1 chains: every skill on its own
@@ -32,10 +39,10 @@ def _chains(graph: HierarchicalGraph, max_len: int) -> list[list[str]]:
 
 
 def _instruction(graph: HierarchicalGraph, chain: list[str]) -> str:
-    names = [graph.skills[s].name for s in chain]
+    names = [_display_name(graph.skills[s].name) for s in chain]
     if len(names) == 1:
         return f"Complete the '{names[0]}' task."
-    return "Then ".join([f"Do '{n}'. " for n in names]).strip()
+    return " Then ".join([f"Do '{n}'." for n in names]).strip()
 
 
 def generate_curriculum(

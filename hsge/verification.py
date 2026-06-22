@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import json
 
-from .env import WebEnv
+from .env import PageState, WebEnv
 from .llm import LLM
 from .schema import SkillCard
+from .webarena.action_validation import parse_hsge_action, validate_hsge_action
 
 _SYS = ("You GROUND a parameterized skill onto a concrete page: bind each "
         "selector/value slot to an element present in the page. Return JSON.")
@@ -43,8 +44,14 @@ def ground_and_execute(llm: LLM, skill: SkillCard, env: WebEnv) -> bool:
     for tmpl in skill.action_template:
         action = tmpl
         for name, val in bindings.items():
-            action = action.replace("{" + name + "}", str(val))
+            action = action.replace("{" + name + "}", repr(str(val)))
         if "{" in action:
+            return False
+        try:
+            parsed = parse_hsge_action(action)
+        except ValueError:
+            return False
+        if parsed.name in {"goto", "send_msg_to_user"}:
             return False
         env.step(action)
     return env.check(skill.success_predicate)
@@ -63,11 +70,9 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser
         if not obs.get("url"):
             return False
 
-        # Nếu skill không có slots → quá cụ thể, không thể execute trên page khác
-        # Nhưng skill vẫn có giá trị cho chính page gốc → admit
         has_slots = bool(skill.slots) or ("{" in str(skill.action_template))
         if not has_slots:
-            return True
+            return False
 
         # Ground: LLM bind slots vào axtree của context
         axtree = obs.get("axtree", "")[:4000]
@@ -75,6 +80,7 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser
             "slots": [{"name": s.name, "slot_type": s.slot_type} for s in skill.slots],
             "page_url": obs.get("url", ""),
             "axtree_snippet": axtree,
+            "affordances": _extract_affordances(axtree),
         }
         g = llm.complete_json(
             "You GROUND a parameterized skill onto a concrete page. "
@@ -96,15 +102,16 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser
             templates = [templates]
         has_placeholder = any("{" in t for t in templates)
         if not has_placeholder:
-            # Template không có placeholder → action cứng, không thể execute trên context khác
-            # Nhưng ground thành công → skill đủ tổng quát → admit
-            return True
+            return False
 
         for tmpl in templates:
             action = tmpl
             for name, val in bindings.items():
-                action = action.replace("{" + name + "}", str(val))
+                action = action.replace("{" + name + "}", repr(str(val)))
             if "{" in action:
+                return False
+            validation = validate_hsge_action(action, obs.get("axtree", ""), allow_goto=False)
+            if not validation.ok:
                 return False
             obs = browser.act(action)
             if not obs.get("url"):
@@ -121,6 +128,13 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser
                 pass
 
 
+def _extract_affordances(axtree: str) -> list[str]:
+    """Return visible numeric BIDs from an accessibility tree snippet."""
+    import re
+
+    return re.findall(r"^\s*\[(\d+)\]", axtree or "", flags=re.MULTILINE)
+
+
 def verify_skill(
     llm: LLM,
     skill: SkillCard,
@@ -129,14 +143,45 @@ def verify_skill(
 ) -> bool:
     """Admit iff the skill succeeds in >= k distinct contexts. Mutates skill.stats.
 
-    If no verification contexts are available, admit immediately (we have no
-    way to verify, but also no reason to reject).
+    If no verification contexts are available, reject the candidate until the
+    run has collected enough successful contexts to audit it.
     """
-    # Bỏ verify — admit tất cả skill
-    print(f"  [verify] Admitting \"{skill.name}\" (verification disabled)")
-    skill.verified = True
-    return True
+    if k <= 0:
+        skill.verified = True
+        return True
+
+    if not contexts:
+        print(f"  [verify] \"{skill.name}\": no contexts available → rejected")
+        skill.verified = False
+        return False
+
+    successes = 0
+    tried_contexts: set[str] = set()
+    for env in contexts:
+        site = getattr(env, "site", "") or repr(env)
+        start = getattr(env, "start", "")
+        page_url = ""
+        try:
+            page_url = env.pages[start].url
+        except Exception:
+            page_url = str(start)
+        context_key = f"{site}:{page_url}"
+        if context_key in tried_contexts:
+            continue
+        tried_contexts.add(context_key)
+        skill.stats.n_verify_attempts += 1
+        try:
+            ok = ground_and_execute(llm, skill, env)
+        except Exception:
+            ok = False
+        if ok:
+            successes += 1
+            skill.stats.n_verify_success += 1
+        if successes >= k:
+            break
+
+    required = k
     skill.verified = successes >= required
     print(f"  [verify] \"{skill.name}\": {successes}/{k} successes → "
-          f"{'✅ ADMITTED' if skill.verified else '❌ REJECTED'}")
+          f"{'ADMITTED' if skill.verified else 'REJECTED'}")
     return skill.verified
