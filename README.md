@@ -61,32 +61,35 @@ explore (collect verified, composed trajectories)
 
 ## SFT dataset formats
 
-`build_sft_dataset.py` can export training data in three formats. All formats
-use Go-Browse-style narrative thoughts (goal-aware, no template markers).
-Keep one format per training file.
+`build_sft_dataset.py` can export training data in three formats. The default
+`hsge_json` format uses Go-Browse style prompt structure with full action space
+documentation in each user message.
 
 ```bash
-# Recommended: JSON output + narrative thought + webarena bracket actions
+# Recommended: HSGE solver format (Go-Browse style, full action docs)
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_hsge.jsonl
+
+# Multi-turn (one sample per trajectory)
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_hsge.jsonl --multiturn
+
+# WebArena bracket format (upstream compatibility)
 PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_webarena.jsonl \
   --action-format webarena_json
-
-# Multi-turn (one sample per trajectory, not per step)
 PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_webarena.jsonl \
   --action-format webarena_json --multiturn
-
-# Prose + code block output (legacy webarena_id format)
-PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_webarena.jsonl \
-  --action-format webarena_id
-
-# HSGE solver format: actions like click('123')
-PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_hsge.jsonl
 ```
 
 | Flag | Output | Action syntax |
 |------|--------|---------------|
+| `hsge_json` (default, **recommended**) | `{"thought": "...", "action": "click('337')"}` | `click('bid')`, `fill('bid','text')`, `send_msg_to_user('text')` |
 | `webarena_json` | `{"thought": "...", "action": "click [337]"}` | `click [id]`, `type [id] [text] [0]`, `stop [answer]` |
 | `webarena_id` | prose + `` ```click [337]``` `` | `click [id]`, `type [id] [text] [0]`, `stop [answer]` |
-| `hsge_json` (default) | `{"thought": "...", "action": "click('337')"}` | `click('bid')`, `send_msg_to_user('text')` |
+
+`hsge_json` training samples follow the Go-Browse prompt structure:
+system is a short role instruction; the user message includes `# Goal`,
+`# Current page Accessibility Tree`, `# Action Space` (full documentation with
+signatures, descriptions, and examples for all 8 actions), `# History of past
+actions`, and `# Next action`.
 
 - `--multiturn` groups all steps of an episode into one chat conversation.
 - `goto` examples are dropped by default; add `--allow-goto-training` only

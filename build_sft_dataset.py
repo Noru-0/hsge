@@ -45,6 +45,8 @@ ACTION_FORMATS = (ACTION_FORMAT_HSGE_JSON, ACTION_FORMAT_WEBARENA_ID, ACTION_FOR
 
 
 def _system_prompt(allow_goto: bool, action_format: str = ACTION_FORMAT_HSGE_JSON) -> str:
+    """Build the system message. For hsge_json we keep it short (Go-Browse style);
+    the detailed action space goes into the user message via _action_space_doc()."""
     if action_format in (ACTION_FORMAT_WEBARENA_ID, ACTION_FORMAT_WEBARENA_JSON):
         actions = (
             "click [id], type [id] [text] [press_enter_after=0_or_1], "
@@ -70,20 +72,168 @@ def _system_prompt(allow_goto: bool, action_format: str = ACTION_FORMAT_HSGE_JSO
             "Do not bypass visible UI with direct URLs unless goto is explicitly allowed."
         )
 
-    actions = (
-        "click('bid'), fill('bid','text'), type('bid','text','1_or_0'), "
-        "press('key'), scroll('down'|'up'), hover('bid')"
-    )
-    if allow_goto:
-        actions += ", goto('url')"
-    actions += ", or send_msg_to_user('text')"
+    # hsge_json: short system role (Go-Browse style), action space in user message
     return (
-        "You are a web agent. At each step you receive the task goal, the current page "
-        "accessibility tree, and your recent actions. Respond with a JSON object "
-        '{"thought": <reasoning>, "action": <one HSGE action>} where action is one '
-        f"of {actions}. Use numeric bids from the current accessibility tree. "
-        "Do not bypass visible UI with direct URLs unless goto is explicitly allowed."
+        "You are a web agent. Your goal is to help the user perform tasks "
+        "using a web browser. Review the goal, the current page accessibility "
+        "tree, and your history of past actions to find the best next action. "
+        "Your answer will be interpreted and executed by a program — "
+        "follow the formatting instructions exactly."
     )
+
+
+def _action_space_doc(allow_goto: bool) -> str:
+    """Generate detailed action space documentation in Go-Browse style.
+
+    Placed in the user message so the model always sees action definitions
+    with type signatures, descriptions, and examples.
+    """
+    lines = [
+        "# Action Space",
+        "17 different types of actions are available.",
+        "",
+        "noop(wait_ms: float = 1000)",
+        "  Description: Do nothing, and optionally wait for the given time (in milliseconds).",
+        "  Examples:",
+        "  noop()",
+        "  noop(500)",
+        "",
+        "send_msg_to_user(text: str)",
+        "  Description: Sends a message to the user. Use when the task is",
+        "  complete to report the result, or to communicate findings.",
+        "  Examples:",
+        "  send_msg_to_user('Based on the results of my search, the city was built in 1751.')",
+        "  send_msg_to_user('The product details page has been opened successfully.')",
+        "",
+        "scroll(delta_x: float, delta_y: float)",
+        "  Description: Scroll horizontally and vertically. Amounts in pixels,",
+        "  positive for right or down scrolling, negative for left or up scrolling.",
+        "  Dispatches a wheel event.",
+        "  Examples:",
+        "  scroll(0, 200)",
+        "  scroll(-50.2, -100.5)",
+        "",
+        "fill(bid: str, value: str)",
+        "  Description: Fill out a form field. Focuses the element and types the text.",
+        "  Works for textbox, searchbox, and combobox elements.",
+        "  Examples:",
+        "  fill('332', 'controller')",
+        "  fill('420', 'Emma Lopez')",
+        "",
+        "select_option(bid: str, options: str | list[str])",
+        "  Description: Select one or multiple options in a <select> element.",
+        "  You can specify option value or label to select. Multiple options can be selected.",
+        "  Examples:",
+        "  select_option('a48', 'blue')",
+        "  select_option('c48', ['red', 'green', 'blue'])",
+        "",
+        "click(bid: str, button: str = 'left', modifiers: list[str] = [])",
+        "  Description: Click an element by its numeric id from the accessibility tree.",
+        "  Optional: button ('left', 'middle', 'right') and modifiers (e.g. ['Shift', 'Control']).",
+        "  Examples:",
+        "  click('332')",
+        "  click('1480')",
+        "  click('b22', button='right')",
+        "  click('48', button='middle', modifiers=['Shift'])",
+        "",
+        "dblclick(bid: str, button: str = 'left', modifiers: list[str] = [])",
+        "  Description: Double click an element by its numeric id.",
+        "  Examples:",
+        "  dblclick('12')",
+        "  dblclick('ca42', button='right')",
+        "",
+        "hover(bid: str)",
+        "  Description: Hover over an element by its numeric id.",
+        "  Examples:",
+        "  hover('332')",
+        "",
+        "press(bid: str, key_comb: str)",
+        "  Description: Focus the matching element and press a combination of keys.",
+        "  Supported keys: Enter, Escape, Backspace, ArrowDown, ArrowUp, ArrowLeft,",
+        "  ArrowRight, Tab, PageDown, PageUp, Home, End, F1-F12, Digit0-Digit9,",
+        "  KeyA-KeyZ, etc. Supports modifiers: Shift, Control, Alt, Meta, ControlOrMeta.",
+        "  Examples:",
+        "  press('88', 'Backspace')",
+        "  press('a26', 'ControlOrMeta+a')",
+        "  press('a61', 'Meta+Shift+t')",
+        "",
+        "focus(bid: str)",
+        "  Description: Focus the matching element.",
+        "  Examples:",
+        "  focus('b455')",
+        "",
+        "clear(bid: str)",
+        "  Description: Clear the input field.",
+        "  Examples:",
+        "  clear('996')",
+        "",
+        "drag_and_drop(from_bid: str, to_bid: str)",
+        "  Description: Perform a drag & drop. Hover the element that will be dragged.",
+        "  Press left mouse button. Move mouse to the element that will receive the drop.",
+        "  Release left mouse button.",
+        "  Examples:",
+        "  drag_and_drop('56', '498')",
+        "",
+        "upload_file(bid: str, file: str | list[str])",
+        "  Description: Click an element and wait for a file chooser event,",
+        "  then select one or multiple files for upload. Relative file paths are resolved",
+        "  relative to the current working directory.",
+        "  Examples:",
+        "  upload_file('572', 'my_receipt.pdf')",
+        "  upload_file('63', ['/home/bob/Documents/image.jpg', '/home/bob/Documents/file.zip'])",
+        "",
+        "report_infeasible(reason: str)",
+        "  Description: Notifies the user that their instructions are infeasible.",
+        "  Examples:",
+        "  report_infeasible('I cannot follow these instructions because there is no email field in this form.')",
+        "",
+        "go_back()",
+        "  Description: Navigate to the previous page in history.",
+        "  Examples:",
+        "  go_back()",
+        "",
+        "go_forward()",
+        "  Description: Navigate to the next page in history.",
+        "  Examples:",
+        "  go_forward()",
+        "",
+    ]
+    if allow_goto:
+        lines += [
+            "goto(url: str)",
+            "  Description: Navigate to a URL. Only use when the exact URL",
+            "  is explicitly present in the goal or page context.",
+            "  Examples:",
+            "  goto('http://www.example.com')",
+            "",
+        ]
+    lines += [
+        "# Output Format",
+        "Respond with a JSON object:",
+        '{"thought": "<step-by-step reasoning connecting goal → page → element → action>",',
+        ' "action": "<one action>"}',
+        "",
+        "The thought MUST explain: what subgoal you are pursuing, which element",
+        "(bid) you are interacting with and why, and the visible evidence from",
+        "the page that supports your choice.",
+        "",
+        "Here are examples of actions with chain-of-thought reasoning:",
+        "",
+        '{"thought": "I now need to click on the Submit button to send the form. ',
+        'I will use the click action on the button, which has bid 12.',
+        '", "action": "click(\'12\')"}',
+        "",
+        '{"thought": "I found the information requested by the user, ',
+        'I will send it to the chat.',
+        '", "action": "send_msg_to_user(\'The price for a 15 inch laptop is 1499 USD.\')"}',
+        "",
+        '{"thought": "I have finished navigating to the Products page. ',
+        'I will inform the user that I have completed the task.',
+        '", "action": "send_msg_to_user(\'I have finished navigating to the Products page.\')"}',
+        "",
+        "Only a single action can be provided at once.",
+    ]
+    return "\n".join(lines)
 
 
 def _read_axtree(episode_dir: str, step: dict) -> str:
@@ -289,8 +439,16 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
         target, source_action, exported_action, axtree = valid
         obs_block = axtree if axtree else "[accessibility tree omitted]"
         hist = "\n".join(f"- {h}" for h in history[-5:]) or "(none yet)"
-        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
-                f"CURRENT PAGE (accessibility tree):\n{obs_block}")
+        if action_format == ACTION_FORMAT_HSGE_JSON:
+            action_space = _action_space_doc(allow_goto)
+            user = (f"# Goal\n{goal}\n\n"
+                    f"# Current page Accessibility Tree\n{obs_block}\n\n"
+                    f"{action_space}\n\n"
+                    f"# History of past actions\n{hist}\n\n"
+                    f"# Next action")
+        else:
+            user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
+                    f"CURRENT PAGE (accessibility tree):\n{obs_block}")
         examples.append({
             "messages": [
                 {"role": "system", "content": _system_prompt(allow_goto, action_format)},
@@ -345,8 +503,16 @@ def episode_to_multiturn_example(goal: str, steps: list[dict], episode_dir: str,
         target, source_action, exported_action, axtree = valid
         obs_block = axtree if axtree else "[accessibility tree omitted]"
         hist = "\n".join(f"- {h}" for h in history[-5:]) or "(none yet)"
-        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
-                f"CURRENT PAGE (accessibility tree):\n{obs_block}")
+        if action_format == ACTION_FORMAT_HSGE_JSON:
+            action_space = _action_space_doc(allow_goto)
+            user = (f"# Goal\n{goal}\n\n"
+                    f"# Current page Accessibility Tree\n{obs_block}\n\n"
+                    f"{action_space}\n\n"
+                    f"# History of past actions\n{hist}\n\n"
+                    f"# Next action")
+        else:
+            user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
+                    f"CURRENT PAGE (accessibility tree):\n{obs_block}")
         messages.append({"role": "user", "content": user})
         messages.append({"role": "assistant", "content": target})
         history.append(exported_action)

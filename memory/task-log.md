@@ -2,6 +2,31 @@
 
 ## Recent Work
 
+### Go-Browse Style Prompt Format Upgrade
+
+Upgraded the HSGE training prompt and solver runtime to follow the Go-Browse
+prompt structure:
+
+- **System message**: Short role instruction only (was: action space + format).
+- **User message**: Structured with `# Goal`, `# Current page Accessibility Tree`,
+  `# Action Space` (full documentation with function signatures, descriptions,
+  and examples for all 8 actions), `# History of past actions`, `# Next action`.
+- **Action space**: Each action now has type-hinted signature, plain-English
+  description, and multiple usage examples — mirroring Go-Browse's approach.
+- **Assistant**: Unchanged JSON `{"thought": "...", "action": "click('337')"}`.
+
+Files changed:
+- `build_sft_dataset.py`: Refactored `_system_prompt()` (short), added
+  `_action_space_doc()` (Go-Browse style), updated user message construction
+  in `episode_to_examples()` and `episode_to_multiturn_example()`.
+- `hsge/webarena/agents.py`: Added `_ACTION_SPACE_DOC` (full action docs),
+  simplified `_build_solver_sys()`, updated solver user prompt to include
+  action space documentation.
+
+The `hsge_json` format (default) is now the recommended training format.
+Legacy `webarena_json` and `webarena_id` formats remain for upstream
+compatibility.
+
 ### Run 06-09 Analysis
 
 Evaluated earlier WebArena runs for task proposal quality, pass/fail rate, skill creation, domain overfitting, prefix replay, node metrics, and exploration behavior. Main findings:

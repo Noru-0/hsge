@@ -83,11 +83,14 @@ python run_webarena.py --provider deepseek --root-url "http://host:7770/" --out 
 python run_webarena.py --provider openai --explorer-model gpt-4o-mini --solver-model gpt-4o \
   --screenshot --root-url "http://host:7770/" --out outputs/wa_run --max-nodes 50
 
-# Build SFT dataset from collected trajectories (Go-Browse style: JSON + narrative thought)
-python build_sft_dataset.py outputs/wa_run/episodes train.jsonl --action-format webarena_json
+# Build SFT dataset from collected trajectories (Go-Browse style: full action docs)
+python build_sft_dataset.py outputs/wa_run/episodes train.jsonl
 
 # Multi-turn: one sample per trajectory
-python build_sft_dataset.py outputs/wa_run/episodes train.jsonl --action-format webarena_json --multiturn
+python build_sft_dataset.py outputs/wa_run/episodes train.jsonl --multiturn
+
+# WebArena bracket format (upstream compatibility)
+python build_sft_dataset.py outputs/wa_run/episodes train.jsonl --action-format webarena_json
 ```
 
 ## Module Map (quick reference)

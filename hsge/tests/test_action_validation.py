@@ -37,7 +37,7 @@ def test_validate_canonical_actions():
 
 
 def test_reject_invalid_action_and_hallucinated_bid():
-    assert not validate_hsge_action("select_option('102','Blue')", AXTREE).ok
+    assert not validate_hsge_action("unknown_action('102','Blue')", AXTREE).ok
     assert not validate_hsge_action("functions.GatherProductInfo('x')", AXTREE).ok
     assert not validate_hsge_action("click('Tweezers For Succulents Duo')", AXTREE).ok
     assert not validate_hsge_action("click('999')", AXTREE).ok

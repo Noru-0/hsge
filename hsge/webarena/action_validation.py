@@ -16,6 +16,7 @@ from typing import Any
 
 
 CANONICAL_ACTIONS = {
+    # Original HSGE actions
     "click",
     "fill",
     "type",
@@ -24,10 +25,29 @@ CANONICAL_ACTIONS = {
     "hover",
     "goto",
     "send_msg_to_user",
+    # Go-Browse additions
+    "noop",
+    "select_option",
+    "dblclick",
+    "focus",
+    "clear",
+    "drag_and_drop",
+    "upload_file",
+    "report_infeasible",
+    "go_back",
+    "go_forward",
 }
 
-TARGETED_ACTIONS = {"click", "fill", "type", "hover"}
-INPUT_ACTIONS = {"fill", "type"}
+# Actions whose first positional arg is a BID (for grounding checks)
+TARGETED_ACTIONS = {
+    "click", "fill", "type", "hover",
+    "dblclick", "focus", "clear", "press",
+    "select_option",
+}
+# Actions that target input/editable elements
+INPUT_ACTIONS = {"fill", "type", "clear"}
+# Actions that expect two bids (from_bid, to_bid)
+DUAL_BID_ACTIONS = {"drag_and_drop", "upload_file"}
 INTERACTIVE_ROLES = {
     "button",
     "link",
@@ -52,13 +72,24 @@ AXTREE_LINE_RE = re.compile(
 class ParsedAction:
     name: str
     args: tuple[str, ...]
+    kwargs: dict[str, Any]
     raw: str
 
     @property
     def bid(self) -> str | None:
         if self.name in TARGETED_ACTIONS and self.args:
             return self.args[0]
+        if self.name in DUAL_BID_ACTIONS and len(self.args) >= 1:
+            return self.args[0]
         return None
+
+    @property
+    def bids(self) -> list[str]:
+        """All bid arguments (for dual-bid actions like drag_and_drop)."""
+        if self.name in DUAL_BID_ACTIONS and len(self.args) >= 2:
+            return [self.args[0], self.args[1]]
+        bid = self.bid
+        return [bid] if bid else []
 
 
 @dataclass(frozen=True)
@@ -69,8 +100,45 @@ class ValidationResult:
     target_line: str = ""
 
 
+def _ast_value_to_str(node: ast.AST) -> str:
+    """Convert an AST node to its string representation for validation.
+    Handles constants (str/int/float), lists of constants, and negative numbers.
+    """
+    # Negative numbers: UnaryOp(USub(), Constant(value))
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        if isinstance(node.operand, ast.Constant) and isinstance(node.operand.value, (int, float)):
+            return str(-node.operand.value)
+    if isinstance(node, ast.Constant) and isinstance(node.value, (str, int, float)):
+        return str(node.value)
+    if isinstance(node, ast.List):
+        elements = []
+        for elt in node.elts:
+            if isinstance(elt, ast.Constant) and isinstance(elt.value, (str, int, float)):
+                elements.append(str(elt.value))
+            else:
+                raise ValueError("list elements must be string or numeric literals")
+        return "[" + ", ".join(repr(e) for e in elements) + "]"
+    raise ValueError("action arguments must be string, numeric literals, or lists thereof")
+
+
+def _ast_kwarg_to_value(node: ast.AST) -> Any:
+    """Convert an AST keyword value node to its Python value."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, (str, int, float)):
+        return node.value
+    if isinstance(node, ast.List):
+        return [_ast_kwarg_to_value(elt) for elt in node.elts]
+    raise ValueError("keyword values must be string, numeric literals, or lists thereof")
+
+
 def parse_hsge_action(action: str) -> ParsedAction:
-    """Parse a canonical HSGE action string with Python's AST parser."""
+    """Parse a canonical HSGE action string with Python's AST parser.
+
+    Supports both HSGE-simple and Go-Browse style actions:
+      - Positional args: click('332'), fill('420', 'text'), scroll(0, 200)
+      - Keyword args: click('a51', button='right', modifiers=['Shift'])
+      - List args: select_option('a48', ['red', 'green', 'blue'])
+      - No-arg calls: go_back(), go_forward()
+    """
     raw = (action or "").strip()
     try:
         expr = ast.parse(raw, mode="eval").body
@@ -81,14 +149,17 @@ def parse_hsge_action(action: str) -> ParsedAction:
     name = expr.func.id
     if name not in CANONICAL_ACTIONS:
         raise ValueError(f"unsupported action {name!r}")
-    if expr.keywords:
-        raise ValueError("keyword arguments are not supported")
+    # Positional args
     args: list[str] = []
     for arg in expr.args:
-        if not isinstance(arg, ast.Constant) or not isinstance(arg.value, (str, int, float)):
-            raise ValueError("action arguments must be string or numeric literals")
-        args.append(str(arg.value))
-    return ParsedAction(name=name, args=tuple(args), raw=raw)
+        args.append(_ast_value_to_str(arg))
+    # Keyword args (Go-Browse style: button='right', modifiers=['Shift'], etc.)
+    kwargs: dict[str, Any] = {}
+    for kw in expr.keywords:
+        if kw.arg is None:
+            raise ValueError("**kwargs unpacking is not supported")
+        kwargs[kw.arg] = _ast_kwarg_to_value(kw.value)
+    return ParsedAction(name=name, args=tuple(args), kwargs=kwargs, raw=raw)
 
 
 def parse_assistant_json(target: str) -> dict[str, Any]:
@@ -129,7 +200,7 @@ def validate_hsge_action(
     *,
     allow_goto: bool = True,
 ) -> ValidationResult:
-    """Validate syntax and AXTree grounding for one HSGE action."""
+    """Validate syntax and AXTree grounding for one HSGE/Go-Browse action."""
     try:
         parsed = parse_hsge_action(action)
     except ValueError as exc:
@@ -137,23 +208,106 @@ def validate_hsge_action(
 
     args = parsed.args
     name = parsed.name
-    if name in {"click", "hover"} and len(args) != 1:
-        return ValidationResult(False, f"{name} requires exactly one bid", parsed)
-    if name == "fill" and len(args) != 2:
-        return ValidationResult(False, "fill requires bid and text", parsed)
-    if name == "type" and (len(args) not in {2, 3} or (len(args) == 3 and args[2] not in {"0", "1"})):
-        return ValidationResult(False, "type requires bid, text, and optional 0/1 enter flag", parsed)
-    if name == "press" and len(args) != 1:
-        return ValidationResult(False, "press requires one key argument", parsed)
-    if name == "scroll" and (len(args) != 1 or args[0] not in {"up", "down"}):
-        return ValidationResult(False, "scroll requires 'up' or 'down'", parsed)
-    if name == "goto" and len(args) != 1:
-        return ValidationResult(False, "goto requires one url argument", parsed)
-    if name == "goto" and not allow_goto:
-        return ValidationResult(False, "goto is disabled for this policy; use visible UI actions instead", parsed)
-    if name == "send_msg_to_user" and len(args) != 1:
-        return ValidationResult(False, "send_msg_to_user requires one message argument", parsed)
 
+    # --- No-arg actions ---
+    if name in {"go_back", "go_forward"}:
+        if len(args) != 0:
+            return ValidationResult(False, f"{name} takes no arguments", parsed)
+        return ValidationResult(True, parsed=parsed)
+
+    # --- noop ---
+    if name == "noop":
+        if len(args) > 1:
+            return ValidationResult(False, "noop takes 0 or 1 argument (wait_ms)", parsed)
+        return ValidationResult(True, parsed=parsed)
+
+    # --- report_infeasible ---
+    if name == "report_infeasible":
+        if len(args) != 1:
+            return ValidationResult(False, "report_infeasible requires one reason argument", parsed)
+        return ValidationResult(True, parsed=parsed)
+
+    # --- Simple single-bid actions (click, hover, focus, dblclick) ---
+    if name in {"click", "hover", "focus"}:
+        if len(args) < 1:
+            return ValidationResult(False, f"{name} requires at least a bid", parsed)
+        # Extra kwargs (button, modifiers) are passed through — BrowserGym handles them
+    if name == "dblclick":
+        if len(args) < 1:
+            return ValidationResult(False, "dblclick requires at least a bid", parsed)
+
+    # --- fill ---
+    if name == "fill":
+        if len(args) != 2:
+            return ValidationResult(False, "fill requires bid and text", parsed)
+
+    # --- type (HSGE legacy: type(bid, text, enter_flag); Go-Browse: type(bid, text)) ---
+    if name == "type":
+        if len(args) < 2:
+            return ValidationResult(False, "type requires bid and text", parsed)
+        if len(args) == 3 and args[2] not in {"0", "1"}:
+            return ValidationResult(False, "type third argument must be '0' or '1'", parsed)
+
+    # --- press (HSGE legacy: press(key); Go-Browse: press(bid, key_comb)) ---
+    if name == "press":
+        if len(args) not in {1, 2}:
+            return ValidationResult(False, "press requires key (legacy) or bid+key_comb", parsed)
+        # Legacy single-arg press: no bid grounding needed
+        if len(args) == 1:
+            return ValidationResult(True, parsed=parsed)
+
+    # --- scroll (HSGE legacy: scroll('up'|'down'); Go-Browse: scroll(delta_x, delta_y)) ---
+    if name == "scroll":
+        if len(args) == 1 and args[0] not in {"up", "down"}:
+            return ValidationResult(False, "scroll requires 'up'/'down' or two numeric pixel values", parsed)
+        if len(args) not in {1, 2}:
+            return ValidationResult(False, "scroll requires 'up'/'down' or delta_x, delta_y", parsed)
+        return ValidationResult(True, parsed=parsed)  # scroll needs no element grounding
+
+    # --- clear ---
+    if name == "clear":
+        if len(args) != 1:
+            return ValidationResult(False, "clear requires one bid", parsed)
+
+    # --- select_option ---
+    if name == "select_option":
+        if len(args) < 2:
+            return ValidationResult(False, "select_option requires bid and option(s)", parsed)
+
+    # --- drag_and_drop ---
+    if name == "drag_and_drop":
+        if len(args) != 2:
+            return ValidationResult(False, "drag_and_drop requires from_bid and to_bid", parsed)
+        # Validate both bids exist
+        elements = axtree_elements(axtree) if axtree else {}
+        for i, bid in enumerate(args[:2]):
+            if not bid.isdigit():
+                return ValidationResult(False, f"drag_and_drop bid must be numeric, got {bid!r}", parsed)
+            if axtree and bid not in elements:
+                label = "from_bid" if i == 0 else "to_bid"
+                return ValidationResult(False, f"drag_and_drop {label} {bid} not in AXTree", parsed)
+        return ValidationResult(True, parsed=parsed)
+
+    # --- upload_file ---
+    if name == "upload_file":
+        if len(args) < 2:
+            return ValidationResult(False, "upload_file requires bid and file path(s)", parsed)
+
+    # --- goto ---
+    if name == "goto":
+        if len(args) != 1:
+            return ValidationResult(False, "goto requires one url argument", parsed)
+        if not allow_goto:
+            return ValidationResult(False, "goto is disabled for this policy; use visible UI actions instead", parsed)
+        return ValidationResult(True, parsed=parsed)
+
+    # --- send_msg_to_user ---
+    if name == "send_msg_to_user":
+        if len(args) != 1:
+            return ValidationResult(False, "send_msg_to_user requires one message argument", parsed)
+        return ValidationResult(True, parsed=parsed)
+
+    # --- Grounding checks for targeted actions ---
     if parsed.bid is None:
         return ValidationResult(True, parsed=parsed)
     if not parsed.bid.isdigit():
@@ -170,7 +324,7 @@ def validate_hsge_action(
         return ValidationResult(False, f"{name} target [{parsed.bid}] is disabled", parsed, line)
     if name in INPUT_ACTIONS and role not in INPUT_ROLES:
         return ValidationResult(False, f"{name} target [{parsed.bid}] is {role}, not an input", parsed, line)
-    if name in {"click", "hover"} and role not in INTERACTIVE_ROLES:
+    if name in {"click", "hover", "dblclick", "focus"} and role not in INTERACTIVE_ROLES:
         return ValidationResult(False, f"{name} target [{parsed.bid}] is non-interactive role {role}", parsed, line)
     return ValidationResult(True, parsed=parsed, target_line=line)
 
@@ -244,12 +398,27 @@ def _narrative_thought(goal: str, action_type: str, bid: str,
                 f"which is {target_desc}. "
                 f"Hovering over it will reveal the available options or submenu."
             )
+        case "dblclick":
+            return (
+                f"To {goal_text}, I need to double-click [{bid}], "
+                f"which is {target_desc}."
+            )
+        case "focus":
+            return (
+                f"To {goal_text}, I need to focus element [{bid}], "
+                f"which is {target_desc}, before interacting with it."
+            )
         case "fill":
             text = extra if extra else "the required text"
             return (
                 f"To {goal_text}, I need to type '{text}' into input [{bid}], "
                 f"which is {target_desc}. "
                 f"This is the first step of the task."
+            )
+        case "clear":
+            return (
+                f"To {goal_text}, I need to clear input [{bid}], "
+                f"which is {target_desc}, before entering new text."
             )
         case "type":
             text = extra if extra else "the required text"
@@ -267,14 +436,47 @@ def _narrative_thought(goal: str, action_type: str, bid: str,
             )
         case "press":
             key = extra if extra else "the requested key"
+            if bid:
+                return (
+                    f"To {goal_text}, I need to focus [{bid}] "
+                    f"({target_desc}) and press {key}."
+                )
             return (
                 f"Continuing the current keyboard-driven interaction, "
                 f"I need to press {key}."
+            )
+        case "select_option":
+            text = extra if extra else "the desired option"
+            return (
+                f"To {goal_text}, I need to select '{text}' from dropdown "
+                f"[{bid}], which is {target_desc}."
+            )
+        case "drag_and_drop":
+            return (
+                f"To {goal_text}, I need to drag [{bid}] "
+                f"({target_desc}) and drop it onto the target element."
+            )
+        case "upload_file":
+            text = extra if extra else "the file"
+            return (
+                f"To {goal_text}, I need to upload '{text}' "
+                f"using the file input [{bid}] ({target_desc})."
             )
         case "goto":
             return (
                 f"The task requires navigating to a specific page. "
                 f"I will go to the target URL provided by the context."
+            )
+        case "go_back":
+            return "I need to navigate back to the previous page."
+        case "go_forward":
+            return "I need to navigate forward to the next page."
+        case "noop":
+            return "I should wait briefly for the page to settle."
+        case "report_infeasible":
+            return (
+                f"The requested task cannot be completed: {extra}. "
+                f"I will report this to the user."
             )
         case "send_msg_to_user":
             return (
@@ -314,22 +516,45 @@ def repair_thought(thought: str, action: str, axtree: str,
             repaired = _narrative_thought(goal, "click", bid, target)
         case "hover":
             repaired = _narrative_thought(goal, "hover", bid, target)
+        case "dblclick":
+            repaired = _narrative_thought(goal, "dblclick", bid, target)
+        case "focus":
+            repaired = _narrative_thought(goal, "focus", bid, target)
         case "fill":
             text = parsed.args[1] if len(parsed.args) >= 2 else ""
             repaired = _narrative_thought(goal, "fill", bid, target, extra=text)
+        case "clear":
+            repaired = _narrative_thought(goal, "clear", bid, target)
         case "type":
             text = parsed.args[1] if len(parsed.args) >= 2 else ""
             if len(parsed.args) >= 3 and parsed.args[2] == "1":
                 text += "↵"
             repaired = _narrative_thought(goal, "type", bid, target, extra=text)
         case "press":
-            key = parsed.args[0] if parsed.args else ""
-            repaired = _narrative_thought(goal, "press", bid, "", extra=key)
+            key = parsed.args[0] if len(parsed.args) == 1 else (parsed.args[1] if len(parsed.args) >= 2 else "")
+            repaired = _narrative_thought(goal, "press", bid, target, extra=key)
         case "scroll":
-            direction = parsed.args[0] if parsed.args else "down"
+            direction = parsed.args[0] if len(parsed.args) == 1 else "by pixels"
             repaired = _narrative_thought(goal, "scroll", bid, "", extra=direction)
+        case "select_option":
+            opt = parsed.args[1] if len(parsed.args) >= 2 else ""
+            repaired = _narrative_thought(goal, "select_option", bid, target, extra=opt)
+        case "drag_and_drop":
+            repaired = _narrative_thought(goal, "drag_and_drop", bid, target)
+        case "upload_file":
+            fname = parsed.args[1] if len(parsed.args) >= 2 else ""
+            repaired = _narrative_thought(goal, "upload_file", bid, target, extra=fname)
         case "goto":
             repaired = _narrative_thought(goal, "goto", bid, "")
+        case "go_back":
+            repaired = _narrative_thought(goal, "go_back", "", "")
+        case "go_forward":
+            repaired = _narrative_thought(goal, "go_forward", "", "")
+        case "noop":
+            repaired = _narrative_thought(goal, "noop", "", "")
+        case "report_infeasible":
+            reason = parsed.args[0] if parsed.args else ""
+            repaired = _narrative_thought(goal, "report_infeasible", "", "", extra=reason)
         case "send_msg_to_user":
             repaired = _narrative_thought("", "send_msg_to_user", "", "")
         case _:

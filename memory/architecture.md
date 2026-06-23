@@ -40,14 +40,28 @@ the retry limit. These failures must not be marked visited or processed.
 
 ## SFT Action Formats
 
-`build_sft_dataset.py` supports two assistant target formats:
+`build_sft_dataset.py` supports three assistant target formats:
 
-- `hsge_json`: default format for `hsge/webarena/agents.py`. The assistant target
-  is JSON shaped like `{"thought": "...", "action": "click('123')"}` and actions
-  use the compact HSGE function-call dialect.
-- `webarena_id`: upstream WebArena-compatible format for `webarena-main`
-  `PromptAgent`. The assistant target is rationale text ending with one fenced
-  bracket action such as `click [123]`, `type [123] [text] [0]`, or
+- `hsge_json` (default, **recommended**): HSGE solver format. Training samples use
+  Go-Browse style prompt structure: short system role, user message with `# Goal`,
+  `# Current page Accessibility Tree`, `# Action Space` (full documentation with
+  function signatures, descriptions, and examples for all 8 actions),
+  `# History of past actions`, `# Next action`. The assistant target is JSON
+  shaped like `{"thought": "...", "action": "click('123')"}` and actions use the
+  HSGE function-call dialect (`click('bid')`, `fill('bid','text')`,
+  `send_msg_to_user('text')`, etc.).
+- `webarena_json`: Upstream WebArena-compatible JSON format. The assistant target
+  is JSON shaped like `{"thought": "...", "action": "click [337]"}` and actions
+  use bracket syntax (`click [id]`, `type [id] [text] [0]`, `stop [answer]`).
+- `webarena_id`: Legacy upstream format. The assistant target is rationale text
+  ending with one fenced bracket action such as `click [123]`,
+  `type [123] [text] [0]`, or `stop [answer]`.
+
+The `hsge_json` format embeds the full action space documentation (function
+signatures, descriptions, examples) directly in each user message, following
+the Go-Browse pattern. This gives the fine-tuned model in-context knowledge
+of every available action. The solver runtime (`hsge/webarena/agents.py`)
+uses the same structure via `_ACTION_SPACE_DOC`.
   `stop [answer]`.
 
 Dataset validation remains grounded in the HSGE action validator first, then the

@@ -17,36 +17,50 @@ learns to stop early. Training quality is capped by collection quality.
 ## 2. Convert to SFT data
 
 ```bash
-# Go-Browse style: JSON output + narrative thought + webarena bracket actions
-python build_sft_dataset.py outputs/<run>/episodes train.jsonl \
-  --action-format webarena_json
+# Recommended: HSGE solver format with Go-Browse style action documentation
+python build_sft_dataset.py outputs/<run>/episodes train.jsonl
 
 # Multi-turn (one sample per trajectory, not per step)
+python build_sft_dataset.py outputs/<run>/episodes train.jsonl --multiturn
+
+# WebArena bracket format (for upstream compatibility)
+python build_sft_dataset.py outputs/<run>/episodes train.jsonl \
+  --action-format webarena_json
 python build_sft_dataset.py outputs/<run>/episodes train.jsonl \
   --action-format webarena_json --multiturn
 ```
 
 Three action formats are supported:
 
-| Flag | Assistant output | Thought style |
+| Flag | Assistant output | Action syntax |
 |------|-----------------|---------------|
-| `webarena_json` | `{"thought": "Looking at the page...", "action": "click [337]"}` | Narrative paragraph (Go-Browse style) |
-| `webarena_id` | prose + `` ```click [337]``` `` code block | Narrative paragraph (Go-Browse style) |
-| `hsge_json` (default) | `{"thought": "...", "action": "click('337')"}` | Narrative paragraph (Go-Browse style) |
+| `hsge_json` (default, **recommended**) | `{"thought": "I need to...", "action": "click('337')"}` | `click('bid')`, `fill('bid','text')`, `send_msg_to_user('text')` |
+| `webarena_json` | `{"thought": "Looking at the page...", "action": "click [337]"}` | `click [id]`, `type [id] [text] [0]`, `stop [answer]` |
+| `webarena_id` | prose + `` ```click [337]``` `` code block | `click [id]`, `type [id] [text] [0]`, `stop [answer]` |
 
-All formats use goal-aware narrative thoughts (no template markers like "Evidence:" or "In summary").
-Use `--multiturn` to group all steps of an episode into one chat conversation so the model learns
-sequential decision-making. Without it, each step is a separate single-turn sample.
+### `hsge_json` format (Go-Browse style)
 
-Each example mirrors your solver's action-planner prompt:
+The default and recommended format. Training samples follow the Go-Browse prompt structure:
 
-- system: action space + output format
-- user: goal + current observation (accessibility tree) + recent action history
-- assistant: the step's `{"thought":..., "action":...}` (exactly what your solver emits)
+- **System**: Short role instruction only ("You are a web agent...")
+- **User**: Structured with `# Goal`, `# Current page Accessibility Tree`, `# Action Space` (full documentation with signatures, descriptions, and examples for all 8 actions), `# History of past actions`, `# Next action`
+- **Assistant**: JSON `{"thought": "...", "action": "click('337')"}`
 
-Only successful (and, with the terminal evaluator, verified) episodes are kept; each
-example carries a `difficulty` for the curriculum. Because the target is the solver's
-own output format, a model fine-tuned on this drops straight back into the solver.
+The action space documentation in each user message includes function signatures
+with type hints, plain-English descriptions, and usage examples — exactly as
+Go-Browse does. This gives the fine-tuned model in-context knowledge of every
+available action and its correct syntax.
+
+Actions use the HSGE function-call dialect: `click('bid')`, `fill('bid','text')`,
+`type('bid','text','1_or_0')`, `press('key')`, `scroll('down'|'up')`,
+`hover('bid')`, `send_msg_to_user('text')`, and optionally `goto('url')`.
+
+### `webarena_json` and `webarena_id` formats
+
+Legacy formats for upstream WebArena PromptAgent compatibility. Actions use bracket
+syntax (`click [337]`, `type [332] [controller] [0]`, `stop [answer]`). The action
+space is listed as a one-liner in the system message. These formats are kept for
+baseline comparisons but `hsge_json` is preferred for training.
 
 ## 3. Fine-tune
 
