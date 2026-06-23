@@ -34,6 +34,10 @@ EXPLORER_SYS = (
     "Each task must be grounded in visible controls or visible page text, with a clear stop condition. "
     "Prefer one local objective that should take 1-3 primitive actions, such as search, browse, compare, "
     "read, inspect, filter, open a form, or report a visible detail. "
+    "Return a balanced portfolio when the page supports it: atomic navigation/detail tasks, "
+    "state-change tasks, form tasks, menu/filter tasks, and checkout/order-flow tasks. "
+    "If cart, checkout, address, shipping, payment, review, or confirmation controls are visible, "
+    "include a safe task that progresses to or reports the next required step. "
     "Do NOT return action-chain labels with arrows like A -> B -> C. "
     "Do NOT invent item names, categories, records, people, quantities, amounts, dates, or IDs that are not visible. "
     "Avoid irreversible commit, payment, destructive, or submit tasks unless the exact reversible control is visible. "
@@ -108,10 +112,19 @@ def _build_solver_sys(skill_hints: str = "") -> str:
 
 
 class PageExplorer:
-    def __init__(self, llm, max_tasks: int = 12, profile: str = "training_quality"):
+    def __init__(
+        self,
+        llm,
+        max_tasks: int = 12,
+        profile: str = "training_quality",
+        checkout_mode: str = "safe",
+        place_order_allowed: bool = False,
+    ):
         self.llm = llm
         self.max_tasks = max_tasks
         self.profile = profile
+        self.checkout_mode = checkout_mode
+        self.place_order_allowed = place_order_allowed
         self.domain_type: str = ""
         self.common_tasks: list[str] = []
         self.common_actions: list[str] = []
@@ -131,7 +144,7 @@ class PageExplorer:
             r"\b(submit|send|publish|post|save|apply|confirm|book|reserve)\b",
             r"\b(submit|send|publish|post|save|apply|confirm|book|reserve)\b",
         ),
-        "payment_or_order": (
+        "commit_or_transaction_flow": (
             r"\b(checkout|purchase|buy now|place order|payment|pay|refund|return item)\b",
             r"\b(checkout|purchase|buy now|place order|payment|pay|refund|return|order)\b",
         ),
@@ -288,8 +301,16 @@ class PageExplorer:
             "numeric": bool(re.search(r"\$|amount|cost|total|date|latest|recent|percent|%|\b\d+(?:[.,]\d+)?\b", visible_content)),
             "deep_progression": self._has_line(
                 lines,
-                r"confirm|continue|next|complete|finish",
+                self._progression_pattern(),
             ),
+            "transaction_flow": self._has_line(
+                lines,
+                r"cart|checkout|shipping|payment|billing|review order|place order|"
+                r"proceed|continue|next|order summary",
+            ),
+            "address_form": self._has_line(lines, r"address|street|city|state|zip|postal|country|phone"),
+            "shipping_payment": self._has_line(lines, r"shipping|payment|billing|method"),
+            "order_review": self._has_line(lines, r"review order|order summary|subtotal|grand total|place order"),
         }
 
     def _task_matches_page_affordance(self, task: str, affordances: dict[str, bool]) -> bool:
@@ -304,6 +325,7 @@ class PageExplorer:
             ("hover", r"\bhover\b|submenu|expandable"),
             ("numeric", r"numeric|dated|amount|price|cost|total|count|compare|latest|recent"),
             ("deep_progression", r"confirm|continue|next|required step"),
+            ("transaction_flow", r"cart|checkout|payment|shipping|billing|review order|place order|order summary"),
         ]
         for key, pattern in required:
             if re.search(pattern, task_l) and not affordances.get(key, False):
@@ -345,14 +367,14 @@ class PageExplorer:
         all_text = self._visible_text(obs)
         tasks: list[str] = []
 
-        deep_label = self._first_label(
-            lines,
-            r"checkout|payment|pay|place order|confirm|continue|next|review order|complete|finish",
-        )
+        deep_label = self._first_label(lines, self._progression_pattern())
         if deep_label:
-            tasks.append(
-                f"Use the visible '{deep_label}' progression control and report the next required step or confirmation that appears."
-            )
+            if self._is_final_order_control(deep_label) and not self.place_order_allowed:
+                tasks.append(f"Review the visible '{deep_label}' final order control and report what confirmation would be required before using it.")
+            elif self.checkout_mode != "discover-only":
+                tasks.append(f"Use the visible '{deep_label}' progression control and report the next required step or confirmation that appears.")
+            else:
+                tasks.append(f"Inspect the visible '{deep_label}' progression control and report the next required step without submitting it.")
 
         search_label = self._first_label(lines, r"\b(searchbox|textbox|combobox)\b.*search")
         if search_label:
@@ -382,6 +404,17 @@ class PageExplorer:
         if state_label:
             tasks.append(f"Open the visible '{state_label}' state-changing control and report the available action.")
 
+        if self.checkout_mode != "discover-only":
+            checkout_label = self._first_label(lines, r"proceed to checkout|checkout|cart|shipping|payment|billing|review order|order summary")
+            if checkout_label:
+                tasks.append(f"Use the visible '{checkout_label}' checkout or order-flow control and report the next required step.")
+        payment_label = self._first_label(lines, r"shipping method|payment method|billing|order summary|grand total|subtotal")
+        if payment_label:
+            tasks.append(f"Review the visible '{payment_label}' order-flow section and report one required option or summary detail.")
+        address_label = self._first_label(lines, r"street address|address|city|state|zip|postal|country|phone")
+        if address_label:
+            tasks.append(f"Inspect the visible '{address_label}' address or checkout field and report what input is required.")
+
         profile_label = self._first_label(lines, r"my account|account|profile|settings|address book|address|preferences")
         if profile_label:
             tasks.append(f"Open the visible '{profile_label}' account or settings control and report one visible option.")
@@ -401,6 +434,17 @@ class PageExplorer:
         if numeric_hint:
             tasks.append(f"Read the visible numeric or dated detail near '{numeric_hint}' and answer a simple lookup question.")
         return tasks[:6]
+
+    @staticmethod
+    def _progression_pattern() -> str:
+        return (
+            r"\b(proceed(?: to checkout)?|checkout|continue|next|confirm|"
+            r"review order|complete|finish|submit|place order)\b"
+        )
+
+    @staticmethod
+    def _is_final_order_control(label: str) -> bool:
+        return bool(re.search(r"\b(place order|pay now|complete order|submit order)\b", label or "", re.I))
 
     @staticmethod
     def _feedback_count(label: str) -> str:

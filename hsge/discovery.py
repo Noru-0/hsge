@@ -36,6 +36,14 @@ class Discovery:
 
         # 2. segment + feed the library
         subs = segment_trajectory(self.library.llm, steps, site, task, subgoal_hints)
+        if hasattr(self.library, "_diag"):
+            self.library._diag(
+                "segments_created",
+                task=task,
+                steps=len(steps),
+                segments=len(subs),
+                subgoals=[s.subgoal for s in subs],
+            )
         if not subs:
             print(f"  [discovery] WARNING: segment_trajectory returned 0 segments "
                   f"(task={task[:60]}, steps={len(steps)})")

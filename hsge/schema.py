@@ -27,7 +27,10 @@ class Step:
 
     def action_kind(self) -> str:
         """Verb only, used to build a site-agnostic action signature."""
-        return self.action.strip().split(" ", 1)[0].lower()
+        action = (self.action or "").strip().lower()
+        if "(" in action:
+            return action.split("(", 1)[0].strip()
+        return action.split(" ", 1)[0]
 
 
 @dataclass
@@ -71,6 +74,7 @@ class SkillStats:
     n_verify_attempts: int = 0
     n_verify_success: int = 0
     sites_seen: set[str] = field(default_factory=set)
+    bootstrap_verified: bool = False
 
     @property
     def success_rate(self) -> float:

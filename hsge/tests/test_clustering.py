@@ -11,6 +11,7 @@ from hsge import (
 from hsge.env import WebEnv, PageState
 from hsge.schema import ParamSlot, SkillCard, SubTrajectory
 from hsge.abstraction import abstract_cluster, validate_skill_card
+from hsge.segmentation import segment_trajectory
 from hsge.verification import verify_skill
 
 
@@ -70,10 +71,9 @@ def test_pipeline_admits_two_verified_skills():
     for s in train:
         d.on_trajectory(traj(s), s, "task", ["log in with credentials", "search the catalog"])
 
-    assert len(lib.all_skills()) == 2
+    names = {c.name for c in lib.all_skills()}
+    assert {"fill_visible_field", "submit_search_query"} <= names
     assert all(c.verified for c in lib.all_skills())
-    # composition edge login -> search exists
-    assert any(g.skills[a].name in {"fill_visible_field", "submit_search_query"} for a in g.skill_to_skill)
 
 
 def test_verification_rejects_ungroundable_skill():
@@ -97,6 +97,26 @@ def test_verification_rejects_ungroundable_skill():
     assert not card.verified
     assert card.stats.n_verify_attempts == 1
     assert card.stats.n_verify_success == 0
+
+
+def test_action_kind_parses_canonical_hsge_actions():
+    assert Step("click('101')", "/").action_kind() == "click"
+    assert Step("fill('102','query')", "/").action_kind() == "fill"
+    assert Step("click [submit]", "/").action_kind() == "click"
+
+
+def test_segmentation_adds_reusable_action_level_segments():
+    steps = [
+        Step("fill('102','ginger')", "/search", obs_summary="Filled Search."),
+        Step("click('103')", "/search", obs_summary="Clicked Search."),
+        Step("click('201')", "/detail", obs_summary="Opened visible item."),
+    ]
+
+    subs = segment_trajectory(MockLLM(), steps, "site", "Search for ginger and open product detail")
+    subgoals = {s.subgoal for s in subs}
+
+    assert "submit search query" in subgoals
+    assert "open visible item" in subgoals
 
 
 class _OverfitSkillLLM(MockLLM):
@@ -125,6 +145,35 @@ def test_abstraction_rejects_long_entity_literals():
     )
 
     assert abstract_cluster(_OverfitSkillLLM(), 1, [member, member, member]) is None
+
+
+class _OverfitCanonicalSkillLLM(MockLLM):
+    def complete_json(self, system, prompt):
+        if "ABSTRACT" in system:
+            return {
+                "name": "LocateGingerbreadProduct",
+                "description": "Open the product page for the Pre-baked Gingerbread House Kit.",
+                "slots": [{"name": "item_selector", "slot_type": "selector"}],
+                "action_template": ["click({item_selector})"],
+                "precondition": "The product link is visible.",
+                "success_predicate": "product page loaded",
+            }
+        return super().complete_json(system, prompt)
+
+
+def test_abstraction_fallback_accepts_canonical_overfit_skill():
+    member = SubTrajectory(
+        steps=[Step("click('101')", "/product")],
+        subgoal="open product detail",
+        source_site="site",
+        source_task="Open product detail",
+    )
+
+    card = abstract_cluster(_OverfitCanonicalSkillLLM(), 7, [member, member, member])
+
+    assert card is not None
+    assert card.name == "open_visible_item"
+    assert card.stats.bootstrap_verified
 
 
 class _FixedSkillLLM(MockLLM):

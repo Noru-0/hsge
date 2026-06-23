@@ -133,7 +133,7 @@ class _DryLLM(LLM):
     """Scripted LLM: proposes two tasks, advances one step then declares done."""
     def complete_json(self, system: str, prompt: str) -> dict:
         if system.startswith("PROPOSE"):
-            return {"tasks": ["search for an item", "add an item to cart"]}
+            return {"tasks": ["use the visible search control", "open a visible detail link"]}
         if "web agent" in system.lower():                       # solver
             if "click('1')" in prompt:                          # already acted -> finish
                 return {"thought": "done", "action": "send_msg_to_user('done')"}
@@ -146,12 +146,11 @@ class _DryLLM(LLM):
 
 
 class _FakeBrowser:
-    SEQ = [("http://shop/home", ""),
-           ("http://shop/catalogsearch/result/?q=x", "search results"),
-           ("http://shop/item.html", "Add to Cart"),
-           ("http://shop/checkout/cart", "2 items in cart"),
-           ("http://shop/checkout", "payment"),
-           ("http://shop/checkout/onepage/success", "Thank you for your purchase")]
+    SEQ = [("http://example.test/home", ""),
+           ("http://example.test/search?q=x", "search results"),
+           ("http://example.test/detail/123", "details and status"),
+           ("http://example.test/form", "Continue"),
+           ("http://example.test/complete", "Success")]
 
     def __init__(self, url): self.i = 0
     def reset(self): self.i = 0; return self.observation()
@@ -168,12 +167,12 @@ class _FakeBrowser:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root-url", default="http://shop/home")
+    ap.add_argument("--root-url", default=None)
     ap.add_argument("--out", default="outputs/wa_run")
     ap.add_argument("--allow", default=None, help="regex of allowed child URLs")
-    ap.add_argument("--max-nodes", type=int, default=15)
+    ap.add_argument("--max-nodes", type=int, default=20)
     ap.add_argument("--max-depth", type=int, default=6)
-    ap.add_argument("--max-steps", type=int, default=15)
+    ap.add_argument("--max-steps", type=int, default=20)
 
     # --- provider & model selection ---
     ap.add_argument("--provider", default=None,
@@ -196,22 +195,38 @@ def main():
                     help="Resume from previous checkpoint in --out dir")
     ap.add_argument("--transfer-query", default=None,
                     help="Extra transfer query to evaluate after exploration "
-                         "(e.g. 'purchase an item'). Default: auto-evaluates "
-                         "search, cart+checkout, and login queries.")
+                         "(e.g. 'find a record and read its status').")
+    ap.add_argument("--terminal-goal", default=None,
+                    help="Optional predicate for a composed goal task. By default, "
+                         "the run performs local exploration only.")
+    ap.add_argument("--goal-instruction", default=None,
+                    help="Natural-language instruction used with --terminal-goal.")
     ap.add_argument("--denylist", default=None, nargs="*",
                     help="Additional URL regex patterns to exclude from frontier "
                          "(/logout is always blocked by default). "
                          "Example: --denylist '/customer/account/logout' '/wishlist'")
     ap.add_argument("--full-reset-url", default=None,
                     help="POST URL to reset server state before each node "
-                         "(e.g. http://host:3000/reset). Clears cart/session "
-                         "so each node starts fresh.")
+                         "(e.g. http://host:3000/reset) so each node starts fresh.")
+    ap.add_argument("--checkout-mode", default="safe",
+                    choices=["safe", "full", "discover-only"],
+                    help="How far to explore checkout/order flows. Default: safe.")
+    ap.add_argument("--auto-terminal-goals", action="store_true", default=True,
+                    help="Automatically attempt composed transactional goals when an operator chain exists.")
+    ap.add_argument("--no-auto-terminal-goals", dest="auto_terminal_goals", action="store_false",
+                    help="Disable automatic composed transactional goals.")
+    ap.add_argument("--place-order-allowed", action="store_true", default=False,
+                    help="Allow final irreversible order/payment submission. Default: false.")
     ap.add_argument("--storage-state", default=None,
                     help="Path to Playwright storageState JSON file containing "
                          "pre-saved cookies and session data. When provided, the "
                          "browser will start already logged in. "
                          "Generate with: python generate_auth_state.py")
     args = ap.parse_args()
+    if not args.root_url:
+        args.root_url = "http://example.test/home" if args.dry_run else None
+    if not args.root_url:
+        ap.error("--root-url is required unless --dry-run is used")
 
     # Safety: warn if output dir has existing data and not resuming
     if not args.resume and not args.dry_run:
@@ -249,7 +264,15 @@ def main():
                                  supports_vision=vision_ok)
         solver_llm = OpenAILLM(model=solver_model, api_key=api_key, base_url=base_url,
                                supports_vision=vision_ok)
-        embedder = STEmbedder()
+        try:
+            embedder = STEmbedder()
+        except ModuleNotFoundError as e:
+            if e.name != "sentence_transformers":
+                raise
+            print("[WARN] sentence_transformers is not installed; using HashingEmbedder fallback.")
+            print("       For higher-quality skill clustering, install it with:")
+            print("       pip install sentence-transformers")
+            embedder = HashingEmbedder()
         _storage_state = args.storage_state
         browser_factory = lambda url, _ss=_storage_state: WebArenaBrowser(
             url, headless=args.headless,
@@ -271,9 +294,14 @@ def main():
         embedder=embedder, out_dir=args.out,
         allow_pattern=allow, max_depth=args.max_depth, max_nodes=args.max_nodes,
         max_steps=args.max_steps,
+        terminal_goal=args.terminal_goal,
+        goal_instruction=args.goal_instruction,
         resume=args.resume,
         denylist_patterns=args.denylist,
         full_reset_url=args.full_reset_url,
+        checkout_mode=args.checkout_mode,
+        auto_terminal_goals=args.auto_terminal_goals,
+        place_order_allowed=args.place_order_allowed,
     )
     explorer.run(args.root_url)
     if args.transfer_query:

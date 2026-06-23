@@ -97,7 +97,7 @@ def abstract_cluster(
         print(f"  [abstraction] WARNING: LLM returned invalid response "
               f"(cluster={cluster_id}, n_members={len(members)}, "
               f"dominant_subgoal={dominant[:50]})")
-        return None
+        return _fallback_skill_card(cluster_id, members, dominant, reason="invalid_llm_output")
 
     slots = [ParamSlot(**s) for s in out.get("slots", [])]
 
@@ -146,10 +146,106 @@ def abstract_cluster(
 
     reason = validate_skill_card(card)
     if reason:
+        if reason in {"domain_specific_vocabulary", "overfit_literal", "name_not_generic_snake_case"}:
+            fallback = _fallback_skill_card(cluster_id, members, dominant, reason=reason)
+            if fallback is not None:
+                return fallback
         print(f"  [abstraction] WARNING: rejected skill "
               f"(cluster={cluster_id}, name={card.name!r}, reason={reason})")
         return None
 
+    return card
+
+
+def _fallback_skill_card(
+    cluster_id: int,
+    members: list[SubTrajectory],
+    dominant: str,
+    reason: str = "",
+) -> SkillCard | None:
+    sig = Counter(m.action_signature() for m in members).most_common(1)[0][0]
+    verbs = [v.strip() for v in sig.split(">") if v.strip()]
+    subgoal = (dominant or " ".join(m.subgoal for m in members[:2])).lower()
+
+    name = ""
+    slots: list[ParamSlot] = []
+    template: list[str] = []
+    description = ""
+    precondition = "required visible control is present"
+    success = "interaction completed"
+
+    if verbs and verbs[0] in {"fill", "type"}:
+        slots = [
+            ParamSlot("field_selector", "selector", "visible input field"),
+            ParamSlot("input_value", "value", "text to enter"),
+        ]
+        if len(verbs) > 1 and verbs[1] == "click":
+            slots.append(ParamSlot("submit_selector", "selector", "visible submit control"))
+            template = ["fill({field_selector}, {input_value})", "click({submit_selector})"]
+        elif len(verbs) > 1 and verbs[1] == "press":
+            template = ["fill({field_selector}, {input_value})", "press('Enter')"]
+        else:
+            template = ["fill({field_selector}, {input_value})"]
+        name = "submit_search_query" if re.search(r"search|query|find|sku", subgoal) else "fill_visible_field"
+        description = "Enter a value into a visible field and submit it when needed."
+        precondition = "a visible input field is available"
+        success = "the field interaction completes"
+    elif verbs and verbs[0] == "hover":
+        slots = [ParamSlot("menu_selector", "selector", "visible menu or expandable control")]
+        template = ["hover({menu_selector})"]
+        name = "inspect_menu_options"
+        description = "Hover over a visible menu or expandable control."
+        precondition = "a visible menu or expandable control is available"
+        success = "menu options or expanded content are visible"
+    elif verbs and verbs[0] == "click":
+        slots = [ParamSlot("control_selector", "selector", "visible target control")]
+        template = ["click({control_selector})"]
+        if re.search(r"feedback|review|rating|comment", subgoal):
+            name = "inspect_feedback_indicator"
+            description = "Open or inspect a visible feedback indicator."
+            success = "feedback information is visible"
+        elif re.search(r"add|save|apply|submit|confirm|continue|next|compare|remove|delete|checkout|proceed|state change", subgoal):
+            name = "activate_state_change_control"
+            description = "Activate a visible control that changes page or item state."
+            success = "the requested state-changing control is activated"
+        elif re.search(r"detail|item|record|article|issue|image|link|open|view", subgoal):
+            name = "open_visible_item"
+            description = "Open a visible item or record from the current page."
+            success = "the visible item or record is opened"
+        else:
+            name = "activate_named_control"
+            description = "Activate a visible named control."
+    else:
+        return None
+
+    card = SkillCard(
+        name=name,
+        description=description,
+        slots=slots,
+        action_template=template,
+        precondition=precondition,
+        success_predicate=success,
+        cluster_id=str(cluster_id),
+        member_ids=[m.sub_id for m in members],
+    )
+    card.stats.bootstrap_verified = True
+    card.execution_plan = [
+        {
+            "action_type": parse_hsge_action(_render_template_for_validation(t, {s.name: s.slot_type for s in slots})).name,
+            "target_desc": "visible grounded target",
+            "value_ref": next((s.name for s in slots if s.slot_type == "value" and "{" + s.name + "}" in t), None),
+            "fallback": "try another visible control with the same role",
+            "success_check": success,
+        }
+        for t in template
+    ]
+    check = validate_skill_card(card)
+    if check:
+        print(f"  [abstraction] WARNING: fallback rejected "
+              f"(cluster={cluster_id}, reason={reason}, fallback_reason={check})")
+        return None
+    print(f"  [abstraction] fallback skill (cluster={cluster_id}, "
+          f"reason={reason}) → {card.name}")
     return card
 
 
@@ -189,6 +285,13 @@ def validate_skill_card(card: SkillCard) -> str:
     """Return a rejection reason, or empty string when the card is usable."""
     if not re.fullmatch(r"[a-z][a-z0-9_]{2,48}", card.name or ""):
         return "name_not_generic_snake_case"
+    slot_types = {s.name: s.slot_type for s in card.slots}
+    if not card.action_template:
+        return "missing_action_template"
+    for tmpl in card.action_template:
+        reason = _validate_action_template(tmpl, slot_types)
+        if reason:
+            return reason
     if _contains_domain_terms(" ".join([
         card.name,
         card.description,
@@ -199,14 +302,6 @@ def validate_skill_card(card: SkillCard) -> str:
         return "domain_specific_vocabulary"
     if _looks_overfit_to_literal(card):
         return "overfit_literal"
-
-    slot_types = {s.name: s.slot_type for s in card.slots}
-    if not card.action_template:
-        return "missing_action_template"
-    for tmpl in card.action_template:
-        reason = _validate_action_template(tmpl, slot_types)
-        if reason:
-            return reason
     for step in card.execution_plan:
         action_type = step.get("action_type", "")
         if action_type not in {"click", "fill", "type", "hover", "press", "scroll"}:

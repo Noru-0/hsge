@@ -7,6 +7,7 @@ LLM just echoes the seeded segments with a provided sub-goal label.
 from __future__ import annotations
 
 import json
+import re
 
 from .llm import LLM
 from .schema import Step, SubTrajectory
@@ -72,4 +73,81 @@ def segment_trajectory(
             )
             for i, (a, b) in enumerate(spans)
         ]
-    return subs
+    return _dedupe_subtrajectories(subs + _action_level_segments(steps, site, task))
+
+
+def _action_level_segments(steps: list[Step], site: str, task: str) -> list[SubTrajectory]:
+    """Add compact reusable action-pattern segments alongside URL spans."""
+    out: list[SubTrajectory] = []
+    i = 0
+    while i < len(steps):
+        kind = steps[i].action_kind()
+        if kind in {"fill", "type"}:
+            j = i + 1
+            if j < len(steps) and steps[j].action_kind() in {"click", "press"}:
+                out.append(SubTrajectory(
+                    steps=steps[i:j + 1],
+                    subgoal=_form_subgoal(task),
+                    source_site=site,
+                    source_task=task,
+                    success=True,
+                ))
+                i = j + 1
+                continue
+            out.append(SubTrajectory(
+                steps=[steps[i]],
+                subgoal="fill visible field",
+                source_site=site,
+                source_task=task,
+                success=True,
+            ))
+        elif kind == "click":
+            out.append(SubTrajectory(
+                steps=[steps[i]],
+                subgoal=_click_subgoal(task, steps[i]),
+                source_site=site,
+                source_task=task,
+                success=True,
+            ))
+        elif kind == "hover":
+            out.append(SubTrajectory(
+                steps=[steps[i]],
+                subgoal="inspect menu options",
+                source_site=site,
+                source_task=task,
+                success=True,
+            ))
+        i += 1
+    return out
+
+
+def _form_subgoal(task: str) -> str:
+    g = (task or "").lower()
+    if re.search(r"\b(search|find|sku|query)\b", g):
+        return "submit search query"
+    if re.search(r"\b(message|contact|comment|reply|email)\b", g):
+        return "fill communication form"
+    return "fill visible field"
+
+
+def _click_subgoal(task: str, step: Step) -> str:
+    g = f"{task or ''} {step.obs_summary or ''}".lower()
+    if re.search(r"\b(review|rating|feedback|comment)\b", g):
+        return "inspect feedback indicator"
+    if re.search(r"\b(add|save|apply|submit|confirm|continue|next|compare|remove|delete|checkout|proceed|reorder|wish\s*list|cart)\b", g):
+        return "activate state change control"
+    if re.search(r"\b(detail|details|image|product|article|issue|record|link|view|open)\b", g):
+        return "open visible item"
+    return "activate named control"
+
+
+def _dedupe_subtrajectories(subs: list[SubTrajectory]) -> list[SubTrajectory]:
+    seen: set[tuple[tuple[str, ...], str]] = set()
+    out: list[SubTrajectory] = []
+    for sub in subs:
+        key = (tuple(s.action for s in sub.steps), sub.subgoal)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(sub)
+    return out

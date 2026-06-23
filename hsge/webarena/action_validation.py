@@ -189,9 +189,9 @@ def task_family(goal: str) -> str:
         return "communication"
     if re.search(r"delete|remove|cancel|archive|deactivate|disable|close", g):
         return "destructive_change"
-    if re.search(r"submit|save|apply|confirm|book|reserve|subscribe|purchase|checkout|payment|pay|refund|return item|cart|wishlist|reorder", g):
+    if re.search(r"submit|save|apply|confirm|book|reserve|subscribe|purchase|checkout|payment|pay|refund|return item|cart|wish\s*list|wishlist|reorder|add to compare|proceed to checkout|place order", g):
         return "state_change"
-    if re.search(r"record|history|status|ticket|issue|request|case|incident|order|delivery|shipping|billing|fulfilled|pending", g):
+    if re.search(r"record|history|status|ticket|issue|request|case|incident|order|orders|recent orders|delivery|shipping|billing|fulfilled|pending", g):
         return "records_status"
     if re.search(r"address|account|profile|settings|preference|password", g):
         return "profile_settings"
