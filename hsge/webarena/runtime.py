@@ -35,6 +35,14 @@ from .scoring import FrontierScorer, LookaheadPredictor
 from urllib.parse import urlparse, urlunparse
 
 
+PREFIX_TRACE_SCHEMA_VERSION = 1
+
+
+def _normalize_trace_url(url: str) -> str:
+    p = urlparse(url or "")
+    return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
+
+
 @dataclass
 class RunMetrics:
     """Track run statistics for monitoring."""
@@ -86,6 +94,46 @@ class RunMetrics:
             f"\n  Errors: {self.errors}"
             f"\n{'='*50}"
         )
+
+
+@dataclass
+class PrefixTraceStep:
+    """One replayable action inside a URL-discovery prefix trace."""
+    action: str
+    source_url: str
+    target_url: str
+    thought: str = ""
+    stateful_hint: bool = False
+
+    def to_dict(self) -> dict:
+        return {
+            "action": self.action,
+            "source_url": self.source_url,
+            "target_url": self.target_url,
+            "thought": self.thought,
+            "stateful_hint": self.stateful_hint,
+        }
+
+
+@dataclass
+class PrefixTrace:
+    """Versioned runtime-local schema for replaying discovered frontier URLs."""
+    source_url: str
+    target_url: str
+    discovered_by_action: str
+    steps: list[PrefixTraceStep]
+    created_at: float = field(default_factory=time.time)
+    schema_version: int = PREFIX_TRACE_SCHEMA_VERSION
+
+    def to_dict(self) -> dict:
+        return {
+            "schema_version": self.schema_version,
+            "source_url": self.source_url,
+            "target_url": self.target_url,
+            "discovered_by_action": self.discovered_by_action,
+            "created_at": self.created_at,
+            "steps": [s.to_dict() for s in self.steps],
+        }
 
 
 def _name_from_goal(goal: str) -> str:
@@ -204,9 +252,10 @@ class WebArenaExplorer:
         self.graph = HierarchicalGraph()
         self.discovery = Discovery(self.library, self.graph)
         self.episode = 0
-        # Callback-discovered URLs with prefix traces (for frontier expansion)
-        # Stores: {normalized_url: {"prefix_steps": [...], "source_url": str}}
-        self._discovered_urls: dict[str, dict] = {}
+        # Callback-discovered URLs with versioned prefix traces (for frontier expansion).
+        # Stored as {normalized_url: PrefixTrace}; legacy dict entries are normalized
+        # at checkpoint/replay boundaries for backward compatibility.
+        self._discovered_urls: dict[str, PrefixTrace | dict] = {}
         # Skill admission callback: log + save to JSON
         self._skills_log: list[dict] = []
         self._curriculum_log: list[dict] = []
@@ -413,6 +462,140 @@ class WebArenaExplorer:
             })
         return tools
 
+    def _prefix_trace_from_transition(
+        self,
+        action: str,
+        url_before: str,
+        url_after: str,
+        traj_steps: list,
+    ) -> PrefixTrace:
+        norm_before = _normalize_trace_url(url_before)
+        norm_after = _normalize_trace_url(url_after)
+        raw_steps = list(traj_steps or [])
+        steps: list[PrefixTraceStep] = []
+        for i, step in enumerate(raw_steps):
+            step_action = step.action if isinstance(step, Step) else step.get("action", "")
+            step_action = (step_action or "").strip()
+            thought = step.obs_summary if isinstance(step, Step) else (
+                step.get("thought", "") or step.get("obs_summary", "")
+            )
+            source_url = step.url if isinstance(step, Step) else (
+                step.get("source_url", "") or step.get("url", "")
+            )
+            if i + 1 < len(raw_steps):
+                next_step = raw_steps[i + 1]
+                target_url = next_step.url if isinstance(next_step, Step) else (
+                    next_step.get("source_url", "") or next_step.get("url", "")
+                )
+            else:
+                target_url = norm_after
+            source_url = _normalize_trace_url(source_url) or (steps[-1].target_url if steps else norm_before)
+            target_url = _normalize_trace_url(target_url) or norm_after
+            steps.append(PrefixTraceStep(
+                action=step_action,
+                source_url=source_url,
+                target_url=target_url,
+                thought=thought or "",
+                stateful_hint=self._text_suggests_state_change(f"{step_action} {thought or ''}"),
+            ))
+
+        if not steps:
+            steps.append(PrefixTraceStep(
+                action=(action or "").strip(),
+                source_url=norm_before,
+                target_url=norm_after,
+                stateful_hint=self._text_suggests_state_change(action or ""),
+            ))
+
+        source_url = steps[0].source_url or norm_before
+        return PrefixTrace(
+            source_url=source_url,
+            target_url=norm_after,
+            discovered_by_action=(action or "").strip(),
+            steps=steps,
+        )
+
+    def _coerce_prefix_trace(self, target_url: str, info) -> PrefixTrace:
+        """Accept current and legacy prefix trace records as PrefixTrace."""
+        norm_target = _normalize_trace_url(target_url)
+        if isinstance(info, PrefixTrace):
+            if info.target_url == norm_target:
+                return info
+            return PrefixTrace(
+                source_url=info.source_url,
+                target_url=norm_target,
+                discovered_by_action=info.discovered_by_action,
+                steps=info.steps,
+                created_at=info.created_at,
+                schema_version=info.schema_version,
+            )
+
+        info = info or {}
+        source_url = _normalize_trace_url(info.get("source_url", ""))
+        discovered_by_action = info.get("discovered_by_action", info.get("action", ""))
+        created_at = info.get("created_at", time.time())
+        raw_steps = info.get("steps")
+        if raw_steps is None:
+            raw_steps = info.get("prefix_steps", [])
+
+        steps: list[PrefixTraceStep] = []
+        for i, step in enumerate(raw_steps or []):
+            if isinstance(step, PrefixTraceStep):
+                steps.append(step)
+                continue
+            action = step.action if isinstance(step, Step) else step.get("action", "")
+            action = (action or "").strip()
+            thought = step.obs_summary if isinstance(step, Step) else (
+                step.get("thought", "") or step.get("obs_summary", "")
+            )
+            step_source = ""
+            step_target = ""
+            if isinstance(step, Step):
+                step_source = step.url
+            else:
+                step_source = step.get("source_url", "") or step.get("url", "")
+                step_target = step.get("target_url", "")
+            step_source = _normalize_trace_url(step_source) or (steps[-1].target_url if steps else source_url)
+            step_target = _normalize_trace_url(step_target) or norm_target
+            stateful_hint = bool(
+                (not isinstance(step, Step) and step.get("stateful_hint", False))
+                or self._text_suggests_state_change(f"{action} {thought or ''}")
+            )
+            steps.append(PrefixTraceStep(
+                action=action,
+                source_url=step_source,
+                target_url=step_target,
+                thought=thought or "",
+                stateful_hint=stateful_hint,
+            ))
+
+        if steps and not source_url:
+            source_url = steps[0].source_url
+        return PrefixTrace(
+            source_url=source_url,
+            target_url=norm_target,
+            discovered_by_action=(discovered_by_action or "").strip(),
+            steps=steps,
+            created_at=float(created_at or time.time()),
+            schema_version=int(info.get("schema_version", PREFIX_TRACE_SCHEMA_VERSION) or PREFIX_TRACE_SCHEMA_VERSION),
+        )
+
+    def _prefix_trace_metadata(self, target_url: str) -> dict:
+        norm_target = _normalize_trace_url(target_url)
+        key = norm_target if norm_target in self._discovered_urls else target_url
+        if key not in self._discovered_urls:
+            return {}
+        trace = self._coerce_prefix_trace(norm_target, self._discovered_urls[key])
+        return {
+            "schema_version": trace.schema_version,
+            "source_url": trace.source_url,
+            "target_url": trace.target_url,
+            "discovered_by_action": trace.discovered_by_action,
+            "step_count": len(trace.steps),
+            "stateful": self._prefix_contains_state_change(trace.steps),
+            "last_replay_status": getattr(self, "_last_prefix_replay_status", {}),
+        }
+
     def _on_step_completed(self, action: str, url_before: str, url_after: str,
                             traj_steps: list) -> None:
         """Callback after each agent step — detects URL transitions in real-time.
@@ -428,15 +611,11 @@ class WebArenaExplorer:
         expansion. They are preferred over DOM-queried links because they come
         with verified prefix traces.
         """
-        def _norm(u: str) -> str:
-            p = urlparse(u)
-            return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
-
         if not url_after or not url_before:
             return
 
-        norm_before = _norm(url_before)
-        norm_after = _norm(url_after)
+        norm_before = _normalize_trace_url(url_before)
+        norm_after = _normalize_trace_url(url_after)
 
         # Only capture actual navigations (URL changes)
         if norm_after == norm_before:
@@ -453,13 +632,12 @@ class WebArenaExplorer:
         if norm_after in self._discovered_urls:
             return
 
-        # Save the discovered URL with its prefix trace
-        # Store the actual Step objects for replay, plus serializable form for checkpoint
-        self._discovered_urls[norm_after] = {
-            "prefix_steps": list(traj_steps),  # actual Step objects for replay
-            "source_url": norm_before,
-            "action": action,
-        }
+        self._discovered_urls[norm_after] = self._prefix_trace_from_transition(
+            action=action,
+            url_before=norm_before,
+            url_after=norm_after,
+            traj_steps=traj_steps,
+        )
 
     def _on_skill_admitted(self, card):
         """Called by SkillLibrary when a new skill is verified and admitted."""
@@ -1031,14 +1209,7 @@ class WebArenaExplorer:
             "nodes_processed": self._nodes_done,
             "episode": self.episode,
             "discovered_urls": {
-                url: {
-                    "source_url": info["source_url"],
-                    "action": info.get("action", ""),
-                    "prefix_steps": [
-                        {"action": s.action, "url": s.url, "obs_summary": s.obs_summary}
-                        for s in info.get("prefix_steps", [])
-                    ],
-                }
+                url: self._coerce_prefix_trace(url, info).to_dict()
                 for url, info in self._discovered_urls.items()
             },
             "frontier_scorer": self._frontier_scorer.to_dict(),
@@ -1116,17 +1287,8 @@ class WebArenaExplorer:
         # Restore callback-discovered URLs with prefix traces
         self._discovered_urls = {}
         for url, info in ckpt.get("discovered_urls", {}).items():
-            prefix_steps_data = info.get("prefix_steps", [])
-            prefix_steps = [
-                Step(action=s.get("action", ""), url=s.get("url", ""),
-                     obs_summary=s.get("obs_summary", ""))
-                for s in prefix_steps_data
-            ]
-            self._discovered_urls[url] = {
-                "prefix_steps": prefix_steps,
-                "source_url": info.get("source_url", ""),
-                "action": info.get("action", ""),
-            }
+            norm_url = _normalize_trace_url(url)
+            self._discovered_urls[norm_url] = self._coerce_prefix_trace(norm_url, info)
         # Restore skills_log from existing skills.json
         sp = os.path.join(self.out_dir, "skills.json")
         if os.path.isfile(sp):
@@ -1207,21 +1369,23 @@ class WebArenaExplorer:
         Returns the observation dict at the target URL, or None if navigation
         fails (fall back to direct goto).
         """
-        info = self._discovered_urls.get(target_url)
+        norm_target = _normalize_trace_url(target_url)
+        info = self._discovered_urls.get(norm_target) or self._discovered_urls.get(target_url)
         self._last_prefix_replay_status = {
             "attempted": False,
             "ok": False,
             "reason": "no_prefix",
             "arrived_url": "",
-            "expected_url": target_url,
+            "expected_url": norm_target,
             "stateful": False,
             "used_direct_goto": False,
         }
         if not info:
             return None
 
-        prefix_steps = info.get("prefix_steps", [])
-        source_url = info.get("source_url", "")
+        trace = self._coerce_prefix_trace(norm_target, info)
+        prefix_steps = trace.steps
+        source_url = trace.source_url
         stateful_prefix = self._prefix_contains_state_change(prefix_steps)
         self._last_prefix_replay_status.update({
             "attempted": True,
@@ -1254,7 +1418,7 @@ class WebArenaExplorer:
 
         # Replay each step in the prefix
         for i, step in enumerate(prefix_steps):
-            action = step.action if isinstance(step, Step) else step.get("action", "")
+            action = step.action if isinstance(step, (Step, PrefixTraceStep)) else step.get("action", "")
             action = (action or "").strip()
             if not action:
                 continue
@@ -1294,13 +1458,12 @@ class WebArenaExplorer:
 
         # Verify we arrived at the target
         obs = browser.observation()
-        def _norm(u): return urlunparse((urlparse(u).scheme, urlparse(u).netloc, urlparse(u).path.rstrip('/'), '', '', ''))
-        arrived = _norm(obs.get("url", ""))
+        arrived = _normalize_trace_url(obs.get("url", ""))
         self._last_prefix_replay_status["arrived_url"] = arrived
 
-        if arrived == target_url:
+        if arrived == norm_target:
             self._last_prefix_replay_status.update({"ok": True, "reason": "arrived"})
-            msg = f"      [prefix] ✅ Arrived at {target_url[:60]}"
+            msg = f"      [prefix] ✅ Arrived at {norm_target[:60]}"
             print(msg)
             if self._log_file:
                 self._log_file.write(msg + "\n")
@@ -1308,7 +1471,7 @@ class WebArenaExplorer:
             return obs
         else:
             self._last_prefix_replay_status["reason"] = "url_mismatch"
-            msg = f"      [prefix] ⚠️  Expected {target_url[:60]}, got {arrived[:60]}"
+            msg = f"      [prefix] ⚠️  Expected {norm_target[:60]}, got {arrived[:60]}"
             print(msg)
             if self._log_file:
                 self._log_file.write(msg + "\n")
@@ -1329,8 +1492,17 @@ class WebArenaExplorer:
     @classmethod
     def _prefix_contains_state_change(cls, prefix_steps: list) -> bool:
         for step in prefix_steps:
-            action = step.action if isinstance(step, Step) else step.get("action", "")
-            summary = step.obs_summary if isinstance(step, Step) else step.get("obs_summary", "")
+            action = step.action if isinstance(step, (Step, PrefixTraceStep)) else step.get("action", "")
+            if isinstance(step, PrefixTraceStep):
+                summary = step.thought
+                if step.stateful_hint:
+                    return True
+            elif isinstance(step, Step):
+                summary = step.obs_summary
+            else:
+                summary = step.get("thought", "") or step.get("obs_summary", "")
+                if step.get("stateful_hint", False):
+                    return True
             if cls._text_suggests_state_change(f"{action} {summary}"):
                 return True
         return False
@@ -1346,8 +1518,9 @@ class WebArenaExplorer:
             p = urlparse(u)
             return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
 
-        if url in self._discovered_urls:
-            obs = self._navigate_via_prefix(browser, url)
+        norm_url = _normalize_trace_url(url)
+        if norm_url in self._discovered_urls or url in self._discovered_urls:
+            obs = self._navigate_via_prefix(browser, norm_url)
             return obs or {"url": "", "axtree": ""}
 
         obs = browser.reset()
@@ -1385,8 +1558,9 @@ class WebArenaExplorer:
             obs = browser.reset()
 
             # If we have a prefix trace for this URL, use it instead of direct goto
-            if obs.get("url") and url in self._discovered_urls:
-                prefix_obs = self._navigate_via_prefix(browser, url)
+            norm_url = _normalize_trace_url(url)
+            if obs.get("url") and (norm_url in self._discovered_urls or url in self._discovered_urls):
+                prefix_obs = self._navigate_via_prefix(browser, norm_url)
                 if prefix_obs is not None:
                     obs = prefix_obs
                 else:
@@ -1742,6 +1916,7 @@ class WebArenaExplorer:
             parent_url=url,
             tasks=_node_task_records,
             episode_range=[_ep_start, _ep_end],
+            prefix_trace=self._prefix_trace_metadata(url),
         )
         return actual_url
 
@@ -1834,7 +2009,8 @@ class WebArenaExplorer:
                          lookahead_candidates: list[dict],
                          parent_url: str | None = None,
                          tasks: list[dict | str] | None = None,
-                         episode_range: list[int] | None = None) -> None:
+                         episode_range: list[int] | None = None,
+                         prefix_trace: dict | None = None) -> None:
         """Save detailed per-node metadata to nodes/node_{N}/node_info.json.
 
         Matches Go-Browse's node_info.json schema so analysis tools can
@@ -1878,6 +2054,7 @@ class WebArenaExplorer:
             "depth": depth,
             "tasks": task_records,
             "episode_range": episode_range or [],
+            "prefix_trace": prefix_trace or {},
         }
         path = os.path.join(nodes_dir, "node_info.json")
         json.dump(info, open(path, "w", encoding="utf-8"), indent=4)

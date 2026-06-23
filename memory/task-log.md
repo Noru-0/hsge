@@ -131,3 +131,30 @@ Next likely fixes:
 - Add task preflight grounding so quoted entities/control categories must match visible AXTree evidence before a task is attempted.
 - Improve solver behavior for combobox/select controls by selecting visible options after opening the control.
 - Improve no-op click handling: when URL/AXTree do not change after repeated clicks, force an alternative grounded target or terminate with a clearer failure reason.
+
+## 2026-06-23: Prefix Trace Save Logic Cleanup
+
+Implemented a versioned runtime-local prefix trace schema in `hsge/webarena/runtime.py`.
+
+Changes:
+
+- Added `PrefixTrace` and `PrefixTraceStep` for checkpoint-safe prefix replay data.
+- Replaced ad hoc raw `Step` storage in `_discovered_urls` with normalized trace construction.
+- Preserved backward compatibility for older checkpoint records shaped like `{source_url, action, prefix_steps}`.
+- Updated checkpoint save/resume and prefix replay to route through trace coercion helpers.
+- Added compact `prefix_trace` metadata to `nodes/node_*/node_info.json`.
+- Added regression coverage for checkpoint round-trip and legacy trace migration.
+
+Validation:
+
+- `python -m py_compile hsge/webarena/runtime.py hsge/tests/test_action_validation.py hsge/tests/test_clustering.py` passed.
+- Direct prefix regression functions passed.
+- Full pytest could not run because `pytest` was not installed in the active Python environment.
+
+Frontier-exhaustion proposal:
+
+- Do not terminate solely because the active frontier is empty while recoverable stale-prefix candidates exist.
+- Track stale-prefix candidates in a retry queue with bounded attempts.
+- On retry, first re-ground the action on the source page by label/role/BID similarity, then replay.
+- Use direct URL fallback only when the prefix trace is stateless.
+- If both active frontier and retry queue are empty, refresh from safe current-page discoveries or scorer lookahead before stopping.

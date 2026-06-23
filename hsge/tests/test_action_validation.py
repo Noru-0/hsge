@@ -11,6 +11,8 @@ from hsge.webarena.runtime import (
     desired_skill_family_for_task,
     skill_family,
 )
+from hsge.graph import HierarchicalGraph
+from hsge.operators import OperatorGraph
 from hsge.schema import Step
 
 
@@ -284,6 +286,79 @@ def test_node_task_records_expose_task_success_rate(tmp_path):
     assert info["tasks_error"] == 1
     assert info["tasks_skipped"] == 1
     assert info["task_success_rate"] == 0.333333
+
+
+def test_prefix_trace_checkpoint_roundtrip_uses_versioned_schema(tmp_path):
+    from types import SimpleNamespace
+    import json
+
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer.out_dir = str(tmp_path)
+    explorer.episode = 7
+    explorer.opgraph = OperatorGraph()
+    explorer.graph = HierarchicalGraph()
+    explorer.library = SimpleNamespace(
+        clusterer=SimpleNamespace(clusters={}, sim_threshold=0.6),
+        cluster_to_members={},
+    )
+    explorer._frontier_scorer = SimpleNamespace(to_dict=lambda: {})
+    explorer._url_attempts = {}
+    explorer._url_successes = {}
+    explorer._discovered_urls = {}
+
+    target = "http://example.test/detail"
+    explorer._on_step_completed(
+        "click('2')",
+        "http://example.test/list",
+        target,
+        [
+            Step("click('1')", "http://example.test/", "Open the list."),
+            Step("click('2')", "http://example.test/list", "Open the detail."),
+        ],
+    )
+    explorer.save_checkpoint(frontier=[(target, 1)], visited=set(), queued={target})
+
+    ckpt = json.load(open(tmp_path / "checkpoint.json", encoding="utf-8"))
+    saved = ckpt["discovered_urls"][target]
+    assert saved["schema_version"] == 1
+    assert saved["source_url"] == "http://example.test"
+    assert saved["target_url"] == target
+    assert saved["discovered_by_action"] == "click('2')"
+    assert [s["action"] for s in saved["steps"]] == ["click('1')", "click('2')"]
+
+    resumed = WebArenaExplorer.__new__(WebArenaExplorer)
+    resumed.out_dir = str(tmp_path)
+    resumed.opgraph = OperatorGraph()
+    resumed.graph = HierarchicalGraph()
+    resumed.library = SimpleNamespace(
+        clusterer=SimpleNamespace(clusters={}, sim_threshold=0.6),
+        cluster_to_members={},
+    )
+    resumed._resume_from_checkpoint(ckpt)
+    trace = resumed._coerce_prefix_trace(target, resumed._discovered_urls[target])
+    assert trace.source_url == "http://example.test"
+    assert trace.target_url == target
+    assert len(trace.steps) == 2
+
+
+def test_legacy_prefix_trace_dict_migrates_to_versioned_trace():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    target = "http://example.test/cart"
+
+    trace = explorer._coerce_prefix_trace(target, {
+        "source_url": "http://example.test/",
+        "action": "click('101')",
+        "prefix_steps": [
+            {"action": "click('101')", "url": "http://example.test/", "obs_summary": "Add item to cart."},
+        ],
+    })
+
+    assert trace.schema_version == 1
+    assert trace.source_url == "http://example.test"
+    assert trace.target_url == target
+    assert trace.discovered_by_action == "click('101')"
+    assert trace.steps[0].thought == "Add item to cart."
+    assert trace.steps[0].stateful_hint is True
 
 
 def test_prefix_replay_rejects_stale_action_and_stateful_direct_goto():

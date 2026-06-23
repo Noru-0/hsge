@@ -89,3 +89,23 @@ Run 12 follow-up: The task reset problem was fixed, but stale prefixes still dra
 - record stale-prefix skips separately from processed nodes.
 
 Do not mark stale-prefix skipped nodes as processed or visited.
+
+Decision: Prefix trace persistence is runtime-local and versioned. Do not extend
+the shared `Step` schema just to support replay metadata.
+
+Reason: `Step.url` is used inconsistently across trajectory recording and replay
+contexts. Keeping prefix replay metadata in an explicit `PrefixTrace` /
+`PrefixTraceStep` runtime schema avoids destabilizing SFT episode consumers while
+making checkpoint/resume data self-describing.
+
+Decision: To address early stopping from frontier exhaustion, treat stale-prefix
+nodes as recoverable candidates rather than terminal failures.
+
+Preferred next design:
+
+- keep a retry queue with `retry_count`, `last_failure_reason`, and parent/source URL,
+- retry stale prefixes after other frontier candidates before declaring exhaustion,
+- try re-grounding the failed action from the source page by visible text/role/BID,
+- allow direct URL fallback only for stateless prefixes,
+- add a small seed refresh from current-page discovered links or scorer lookahead when the queue is empty,
+- persist skipped/retry states separately from processed/visited nodes.

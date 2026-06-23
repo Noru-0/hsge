@@ -17,6 +17,15 @@ The codebase is intentionally backend-pluggable:
 - `hsge/graph.py`, `hsge/operators.py`, `hsge/curriculum.py`: skill graph, operators, composition, and curriculum tasks.
 - `hsge/webarena/`: real WebArena integration, browser/runtime, PageExplorer, scoring, action validation, prefix replay, and diagnostics.
 
+## WebArena Prefix Traces
+
+Prefix-derived frontier nodes use a runtime-local, versioned prefix trace schema
+inside `hsge/webarena/runtime.py`, not the shared `Step` schema. The trace records
+source URL, target URL, discovery action, replayable actions, stateful hints, and
+created time. Checkpoints still store traces under `discovered_urls`, but entries
+are now explicit and backward-compatible with older `{source_url, action,
+prefix_steps}` records.
+
 ## Core Pipeline
 
 1. PageExplorer proposes grounded local tasks from current visible UI evidence.
@@ -39,4 +48,3 @@ Domain-specific tasks are allowed and desirable as training data. Core logic mus
 - `activate_state_change_control`
 - `fill_visible_field`
 - `read_visible_detail`
-
