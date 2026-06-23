@@ -14,7 +14,7 @@ actions:
 
 ```bash
 PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17 train_webarena.jsonl \
-  --action-format webarena_id \
+  --action-format webarena_json \
   --report outputs/wa_run_17/sft_report_webarena.json
 ```
 
@@ -22,7 +22,7 @@ Expected run-17 first-pass output:
 
 ```text
 examples valid: 199
-action format : webarena_id
+action format : webarena_json
 ```
 
 Do not mix formats:

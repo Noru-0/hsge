@@ -61,21 +61,33 @@ explore (collect verified, composed trajectories)
 
 ## SFT dataset formats
 
-`build_sft_dataset.py` can export training data for two different action
-consumers. Keep one format per training file.
+`build_sft_dataset.py` can export training data in three formats. All formats
+use Go-Browse-style narrative thoughts (goal-aware, no template markers).
+Keep one format per training file.
 
 ```bash
-# Default: train a model to replace the HSGE solver.
-PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17 train_hsge.jsonl
+# Recommended: JSON output + narrative thought + webarena bracket actions
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_webarena.jsonl \
+  --action-format webarena_json
 
-# Upstream WebArena PromptAgent format: bracket id_accessibility_tree actions.
-PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17 train_webarena.jsonl \
+# Multi-turn (one sample per trajectory, not per step)
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_webarena.jsonl \
+  --action-format webarena_json --multiturn
+
+# Prose + code block output (legacy webarena_id format)
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_webarena.jsonl \
   --action-format webarena_id
+
+# HSGE solver format: actions like click('123')
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17/episodes train_hsge.jsonl
 ```
 
-- `hsge_json` emits assistant JSON with actions like `click('123')` and
-  `send_msg_to_user('done')`.
-- `webarena_id` emits rationale text ending with fenced actions like
-  `click [123]`, `type [123] [text] [0]`, and `stop [done]`.
-- `goto` examples are still dropped by default; add `--allow-goto-training` only
+| Flag | Output | Action syntax |
+|------|--------|---------------|
+| `webarena_json` | `{"thought": "...", "action": "click [337]"}` | `click [id]`, `type [id] [text] [0]`, `stop [answer]` |
+| `webarena_id` | prose + `` ```click [337]``` `` | `click [id]`, `type [id] [text] [0]`, `stop [answer]` |
+| `hsge_json` (default) | `{"thought": "...", "action": "click('337')"}` | `click('bid')`, `send_msg_to_user('text')` |
+
+- `--multiturn` groups all steps of an episode into one chat conversation.
+- `goto` examples are dropped by default; add `--allow-goto-training` only
   when direct URL actions are part of the intended deployment policy.

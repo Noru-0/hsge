@@ -52,7 +52,13 @@ python compare_three_way.py  # Flat baseline vs AWM vs HSGE
 ## Build a training dataset
 
 ```bash
-python build_sft_dataset.py path/to/run_dir_or_episode.json train.jsonl
+# Go-Browse style: JSON output + narrative thought
+python build_sft_dataset.py path/to/run_dir_or_episode.json train.jsonl \
+  --action-format webarena_json
+
+# Multi-turn: one sample per trajectory
+python build_sft_dataset.py path/to/run_dir_or_episode.json train.jsonl \
+  --action-format webarena_json --multiturn
 ```
 Converts successful trajectories into curriculum-ordered chat-format SFT examples.
 

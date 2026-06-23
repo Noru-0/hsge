@@ -258,3 +258,69 @@ class CoTPromptConstructor(PromptConstructor):
             raise ActionParsingError(
                 f'Cannot find the answer phrase "{self.answer_phrase}" in "{response}"'
             )
+
+
+class JsonActionPromptConstructor(PromptConstructor):
+    """Prompt constructor for models trained to emit {"thought": ..., "action": ...}."""
+
+    def construct(
+        self,
+        trajectory: Trajectory,
+        intent: str,
+        meta_data: dict[str, Any] = {},
+    ) -> APIInput:
+        intro = self.instruction["intro"]
+        examples = self.instruction["examples"]
+        template = self.instruction["template"]
+        keywords = self.instruction["meta_data"]["keywords"]
+        state_info: StateInfo = trajectory[-1]  # type: ignore[assignment]
+
+        obs = state_info["observation"][self.obs_modality]
+        max_obs_length = self.lm_config.gen_config["max_obs_length"]
+        if max_obs_length:
+            obs = self.tokenizer.decode(self.tokenizer.encode(obs)[:max_obs_length])  # type: ignore[arg-type]
+
+        action_history = meta_data.get("action_history", [])
+        recent_actions = [
+            action
+            for action in action_history
+            if action and action != "None"
+        ]
+        recent_action_str = (
+            "\n".join(f"- {action}" for action in recent_actions[-6:])
+            if recent_actions
+            else "(none yet)"
+        )
+
+        current = template.format(
+            objective=intent,
+            observation=obs,
+            recent_actions=recent_action_str,
+        )
+
+        assert all([f"{{k}}" not in current for k in keywords])
+        return self.get_lm_api_input(intro, examples, current)
+
+    def _extract_action(self, response: str) -> str:
+        decoder = json.JSONDecoder()
+        for idx, char in enumerate(response):
+            if char != "{":
+                continue
+            try:
+                obj, _ = decoder.raw_decode(response[idx:])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(obj, dict) and isinstance(obj.get("action"), str):
+                return obj["action"].strip()
+
+        match = re.search(r"```((.|\n)*?)```", response)
+        if match:
+            text = match.group(1).strip()
+            try:
+                obj = json.loads(text)
+                if isinstance(obj, dict) and isinstance(obj.get("action"), str):
+                    return obj["action"].strip()
+            except json.JSONDecodeError:
+                return text
+
+        raise ActionParsingError(f"Cannot parse JSON action from response {response}")

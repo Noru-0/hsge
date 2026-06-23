@@ -40,11 +40,12 @@ from hsge.webarena.action_validation import (
 
 ACTION_FORMAT_HSGE_JSON = "hsge_json"
 ACTION_FORMAT_WEBARENA_ID = "webarena_id"
-ACTION_FORMATS = (ACTION_FORMAT_HSGE_JSON, ACTION_FORMAT_WEBARENA_ID)
+ACTION_FORMAT_WEBARENA_JSON = "webarena_json"  # Go-Browse style: JSON + bracket actions
+ACTION_FORMATS = (ACTION_FORMAT_HSGE_JSON, ACTION_FORMAT_WEBARENA_ID, ACTION_FORMAT_WEBARENA_JSON)
 
 
 def _system_prompt(allow_goto: bool, action_format: str = ACTION_FORMAT_HSGE_JSON) -> str:
-    if action_format == ACTION_FORMAT_WEBARENA_ID:
+    if action_format in (ACTION_FORMAT_WEBARENA_ID, ACTION_FORMAT_WEBARENA_JSON):
         actions = (
             "click [id], type [id] [text] [press_enter_after=0_or_1], "
             "press [key], scroll [down|up], hover [id]"
@@ -52,6 +53,15 @@ def _system_prompt(allow_goto: bool, action_format: str = ACTION_FORMAT_HSGE_JSO
         if allow_goto:
             actions += ", goto [url]"
         actions += ", or stop [answer]"
+        if action_format == ACTION_FORMAT_WEBARENA_JSON:
+            return (
+                "You are a web agent. At each step you receive the task goal, the current page "
+                "accessibility tree, and your recent actions. Respond with a JSON object "
+                '{"thought": "<step-by-step reasoning connecting goal → page → element → action>", '
+                '"action": "<one WebArena action>"} where action is one '
+                f"of {actions}. Use numeric ids from the current accessibility tree. "
+                "Do not bypass visible UI with direct URLs unless goto is explicitly allowed."
+            )
         return (
             "You are a web agent. At each step you receive the task goal, the current page "
             "accessibility tree, and your recent actions. Think briefly, then end your response "
@@ -190,6 +200,13 @@ def _webarena_target(thought: str, action: str) -> str:
 def _assistant_target(thought: str, action: str, action_format: str, report: dict) -> tuple[str, str] | None:
     if action_format == ACTION_FORMAT_HSGE_JSON:
         return _json_target(thought, action), action
+    if action_format == ACTION_FORMAT_WEBARENA_JSON:
+        converted, reason = _to_webarena_id_action(action)
+        if not converted:
+            report["steps_dropped"] += 1
+            report["drop_reasons"][reason or "webarena_conversion_failed"] += 1
+            return None
+        return _json_target(thought, converted), converted
     if action_format == ACTION_FORMAT_WEBARENA_ID:
         converted, reason = _to_webarena_id_action(action)
         if not converted:
@@ -236,7 +253,7 @@ def _validate_step(goal: str, step: dict, episode_dir: str,
             return None
 
     if repair:
-        thought, did_repair = repair_thought(thought, action, axtree)
+        thought, did_repair = repair_thought(thought, action, axtree, goal=goal)
         if did_repair:
             report["thoughts_repaired"] += 1
 
@@ -292,6 +309,66 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
     return examples
 
 
+def episode_to_multiturn_example(goal: str, steps: list[dict], episode_dir: str,
+                                  difficulty: int, repair: bool = True,
+                                  allow_goto: bool = False,
+                                  action_format: str = ACTION_FORMAT_HSGE_JSON,
+                                  report: dict | None = None) -> dict | None:
+    """Build a SINGLE multi-turn sample from an entire episode trajectory.
+
+    Unlike ``episode_to_examples`` which emits one sample per step, this groups
+    all valid steps into one chat conversation so the fine-tuned model learns
+    sequential decision-making across the full task.
+
+    Returns a dict with ``messages`` (system + alternating user/assistant turns),
+    or None if no valid steps remain after filtering.
+    """
+    if report is None:
+        report = _new_report()
+    if action_format not in ACTION_FORMATS:
+        raise ValueError(f"unsupported action format {action_format!r}")
+    sys_msg = _system_prompt(allow_goto, action_format)
+    messages: list[dict] = [{"role": "system", "content": sys_msg}]
+    history: list[str] = []
+    recent_obs: list[str] = []
+    actions: list[str] = []
+    kept_steps = 0
+    exported_actions: list[str] = []
+
+    for step in steps:
+        valid = _validate_step(
+            goal, step, episode_dir, recent_obs, actions, repair, allow_goto,
+            action_format, report
+        )
+        if not valid:
+            continue
+        target, source_action, exported_action, axtree = valid
+        obs_block = axtree if axtree else "[accessibility tree omitted]"
+        hist = "\n".join(f"- {h}" for h in history[-5:]) or "(none yet)"
+        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
+                f"CURRENT PAGE (accessibility tree):\n{obs_block}")
+        messages.append({"role": "user", "content": user})
+        messages.append({"role": "assistant", "content": target})
+        history.append(exported_action)
+        actions.append(source_action)
+        recent_obs.append(axtree)
+        exported_actions.append(exported_action)
+        kept_steps += 1
+
+    if kept_steps == 0:
+        return None
+
+    return {
+        "messages": messages,
+        "difficulty": difficulty,
+        "steps": kept_steps,
+        "axtree_loaded": True,  # at least one step loaded
+        "task_family": task_family(goal),
+        "action_families": list(dict.fromkeys(action_family(a) for a in actions)),
+        "action_format": action_format,
+    }
+
+
 def load_episodes(path: str):
     """Yield (goal, steps, episode_dir, difficulty, success) tuples."""
     if os.path.isfile(path) and path.endswith(".json"):
@@ -331,6 +408,9 @@ def main():
                         help="Keep goto(url) examples. Default drops them to avoid UI-bypass training.")
     parser.add_argument("--action-format", choices=ACTION_FORMATS, default=ACTION_FORMAT_HSGE_JSON,
                         help="Assistant target format: hsge_json for HSGE Solver, webarena_id for upstream WebArena PromptAgent.")
+    parser.add_argument("--multiturn", action="store_true",
+                        help="Emit one multi-turn sample per episode instead of one sample per step "
+                             "(Go-Browse style: full trajectory in a single chat).")
     args = parser.parse_args()
 
     all_examples, n_ep, n_kept = [], 0, 0
@@ -342,16 +422,28 @@ def main():
             continue
         n_kept += 1
         report["task_family"][task_family(goal)] += 1
-        examples = episode_to_examples(
-            goal, steps, ep_dir, diff, args.repair_thoughts,
-            args.allow_goto_training, args.action_format, report
-        )
-        if examples:
-            report["episodes_kept"] += 1
-            report["successful_task_family"][task_family(goal)] += 1
-            all_examples += examples
+        if args.multiturn:
+            example = episode_to_multiturn_example(
+                goal, steps, ep_dir, diff, args.repair_thoughts,
+                args.allow_goto_training, args.action_format, report
+            )
+            if example:
+                report["episodes_kept"] += 1
+                report["successful_task_family"][task_family(goal)] += 1
+                all_examples.append(example)
+            else:
+                report["episodes_dropped_empty"] += 1
         else:
-            report["episodes_dropped_empty"] += 1
+            examples = episode_to_examples(
+                goal, steps, ep_dir, diff, args.repair_thoughts,
+                args.allow_goto_training, args.action_format, report
+            )
+            if examples:
+                report["episodes_kept"] += 1
+                report["successful_task_family"][task_family(goal)] += 1
+                all_examples += examples
+            else:
+                report["episodes_dropped_empty"] += 1
 
     all_examples.sort(key=lambda e: e["difficulty"])   # curriculum: easy -> hard
     if not args.validate_only:
@@ -362,7 +454,8 @@ def main():
     by_diff = {}
     for e in all_examples:
         by_diff[e["difficulty"]] = by_diff.get(e["difficulty"], 0) + 1
-    loaded = sum(e["axtree_loaded"] for e in all_examples)
+    loaded = sum(e.get("axtree_loaded", False) for e in all_examples)
+    total_steps = sum(e.get("steps", 1) for e in all_examples)
     serializable_report = {
         k: (dict(v) if isinstance(v, Counter) else v)
         for k, v in report.items()
@@ -370,8 +463,10 @@ def main():
     serializable_report["examples_written"] = 0 if args.validate_only else len(all_examples)
     serializable_report["examples_valid"] = len(all_examples)
     serializable_report["action_format"] = args.action_format
+    serializable_report["multiturn"] = args.multiturn
     serializable_report["examples_by_difficulty"] = dict(sorted(by_diff.items()))
     serializable_report["axtree_loaded"] = loaded
+    serializable_report["total_steps"] = total_steps
     if args.report:
         with open(args.report, "w", encoding="utf-8") as f:
             json.dump(serializable_report, f, indent=2, sort_keys=True)
@@ -382,7 +477,8 @@ def main():
     if args.validate_only:
         print(f"SFT examples valid   : {len(all_examples)} (validate-only)")
     else:
-        print(f"SFT examples written : {len(all_examples)} -> {args.out}")
+        mode = "multiturn" if args.multiturn else "single-step"
+        print(f"SFT examples written : {len(all_examples)} -> {args.out}  (mode={mode}, total_steps={total_steps})")
     print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
     print(f"action families      : {dict(report['action_family'])}")
     print(f"task families        : {dict(report['successful_task_family'])}")

@@ -222,77 +222,116 @@ def _target_description(line: str, fallback: str) -> str:
     return f"{role} {name}".strip()
 
 
-def _debug_thought(subgoal: str, next_action: str, evidence: str) -> str:
-    return (
-        f"I need to {subgoal}. "
-        f"The next action is to {next_action}. "
-        f"Evidence: {evidence}."
-    )
+def _narrative_thought(goal: str, action_type: str, bid: str,
+                       target_desc: str, extra: str = "") -> str:
+    """Generate a Go-Browse-style flowing narrative thought.
+
+    Unlike the old template pattern ("I need to X. Evidence: Y. In summary..."),
+    this produces a single natural paragraph that connects goal → page state →
+    element → action in one coherent reasoning chain.
+    """
+    goal_text = goal.lower().rstrip('.') if goal else ""
+    match action_type:
+        case "click":
+            return (
+                f"Looking at the current page, the goal is to {goal_text}. "
+                f"I can see {target_desc} at element [{bid}]. "
+                f"Clicking this will advance the task."
+            )
+        case "hover":
+            return (
+                f"To {goal_text}, I first need to inspect [{bid}], "
+                f"which is {target_desc}. "
+                f"Hovering over it will reveal the available options or submenu."
+            )
+        case "fill":
+            text = extra if extra else "the required text"
+            return (
+                f"To {goal_text}, I need to type '{text}' into input [{bid}], "
+                f"which is {target_desc}. "
+                f"This is the first step of the task."
+            )
+        case "type":
+            text = extra if extra else "the required text"
+            submit_hint = " and submit" if extra.endswith("↵") else ""
+            return (
+                f"To {goal_text}, I need to type '{text}' into [{bid}]"
+                f"{submit_hint}, which is {target_desc}."
+            )
+        case "scroll":
+            direction = extra if extra else "down"
+            return (
+                f"The needed information or controls may be outside the current "
+                f"visible region. I should scroll {direction} to inspect more "
+                f"page content before deciding the next action."
+            )
+        case "press":
+            key = extra if extra else "the requested key"
+            return (
+                f"Continuing the current keyboard-driven interaction, "
+                f"I need to press {key}."
+            )
+        case "goto":
+            return (
+                f"The task requires navigating to a specific page. "
+                f"I will go to the target URL provided by the context."
+            )
+        case "send_msg_to_user":
+            return (
+                f"The task is now complete. "
+                f"The current page contains the requested information, "
+                f"confirming the task has been accomplished."
+            )
+        case _:
+            return f"I need to perform the {action_type} action to advance the task."
+    return ""  # unreachable
 
 
-def repair_thought(thought: str, action: str, axtree: str) -> tuple[str, bool]:
-    """Deterministically ground weak thoughts to a debug-friendly action rationale."""
+def repair_thought(thought: str, action: str, axtree: str,
+                   goal: str = "") -> tuple[str, bool]:
+    """Deterministically ground weak thoughts to Go-Browse-style narrative.
+
+    When `goal` is provided, produces a flowing natural-language paragraph
+    (no template markers like "Evidence:" or "In summary"). For send_msg_to_user,
+    generates a task-completion statement instead of goal-prefixed text.
+    """
     validation = validate_hsge_action(action, axtree)
     if not validation.ok or not validation.parsed:
         return thought, False
-    has_action = thought_mentions_action(thought, action)
-    has_bid = not validation.parsed.bid or validation.parsed.bid in thought
-    has_debug_shape = "next action" in (thought or "").lower() and "evidence" in (thought or "").lower()
-    if has_action and has_bid and has_debug_shape:
+    # Keep original if it's already a rich narrative (not the old template)
+    is_template = ("evidence:" in (thought or "").lower()
+                   or "in summary" in (thought or "").lower()
+                   or "next action" in (thought or "").lower())
+    if not is_template and thought_mentions_action(thought, action):
         return thought, False
 
     parsed = validation.parsed
     target = _target_description(validation.target_line, "the grounded element")
+    bid = parsed.args[0] if parsed.args else ""
+
     match parsed.name:
         case "click":
-            repaired = _debug_thought(
-                f"activate the visible control [{parsed.args[0]}]",
-                f"click [{parsed.args[0]}]",
-                f"[{parsed.args[0]}] is {target}",
-            )
+            repaired = _narrative_thought(goal, "click", bid, target)
         case "hover":
-            repaired = _debug_thought(
-                f"open or inspect the menu/control [{parsed.args[0]}]",
-                f"hover [{parsed.args[0]}]",
-                f"[{parsed.args[0]}] is {target}",
-            )
+            repaired = _narrative_thought(goal, "hover", bid, target)
         case "fill":
-            repaired = _debug_thought(
-                f"enter the required text into input [{parsed.args[0]}]",
-                f"fill [{parsed.args[0]}]",
-                f"[{parsed.args[0]}] is {target}",
-            )
+            text = parsed.args[1] if len(parsed.args) >= 2 else ""
+            repaired = _narrative_thought(goal, "fill", bid, target, extra=text)
         case "type":
-            submit_note = " and submit it" if len(parsed.args) >= 3 and parsed.args[2] == "1" else ""
-            repaired = _debug_thought(
-                f"type the required text into input [{parsed.args[0]}]{submit_note}",
-                f"type [{parsed.args[0]}]",
-                f"[{parsed.args[0]}] is {target}",
-            )
+            text = parsed.args[1] if len(parsed.args) >= 2 else ""
+            if len(parsed.args) >= 3 and parsed.args[2] == "1":
+                text += "↵"
+            repaired = _narrative_thought(goal, "type", bid, target, extra=text)
         case "press":
-            repaired = _debug_thought(
-                "continue the current keyboard-driven interaction",
-                f"press {parsed.args[0]}",
-                f"the requested key is {parsed.args[0]}",
-            )
+            key = parsed.args[0] if parsed.args else ""
+            repaired = _narrative_thought(goal, "press", bid, "", extra=key)
         case "scroll":
-            repaired = _debug_thought(
-                "inspect more page content before deciding",
-                f"scroll {parsed.args[0]}",
-                "the needed information or controls may be outside the current visible region",
-            )
+            direction = parsed.args[0] if parsed.args else "down"
+            repaired = _narrative_thought(goal, "scroll", bid, "", extra=direction)
         case "goto":
-            repaired = _debug_thought(
-                "navigate to the requested page",
-                "goto the target URL",
-                "the task or previous context provides a direct URL",
-            )
+            repaired = _narrative_thought(goal, "goto", bid, "")
         case "send_msg_to_user":
-            repaired = _debug_thought(
-                "answer because the requested information is available",
-                "send_msg_to_user",
-                "the recent visible page text contains the answer",
-            )
+            repaired = _narrative_thought("", "send_msg_to_user", "", "")
         case _:
             repaired = thought
     return repaired, repaired != thought

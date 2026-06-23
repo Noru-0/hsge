@@ -17,9 +17,28 @@ learns to stop early. Training quality is capped by collection quality.
 ## 2. Convert to SFT data
 
 ```bash
-python build_sft_dataset.py outputs/<run>/graph train.jsonl
+# Go-Browse style: JSON output + narrative thought + webarena bracket actions
+python build_sft_dataset.py outputs/<run>/episodes train.jsonl \
+  --action-format webarena_json
+
+# Multi-turn (one sample per trajectory, not per step)
+python build_sft_dataset.py outputs/<run>/episodes train.jsonl \
+  --action-format webarena_json --multiturn
 ```
-Each step becomes one chat example mirroring your solver's action-planner prompt:
+
+Three action formats are supported:
+
+| Flag | Assistant output | Thought style |
+|------|-----------------|---------------|
+| `webarena_json` | `{"thought": "Looking at the page...", "action": "click [337]"}` | Narrative paragraph (Go-Browse style) |
+| `webarena_id` | prose + `` ```click [337]``` `` code block | Narrative paragraph (Go-Browse style) |
+| `hsge_json` (default) | `{"thought": "...", "action": "click('337')"}` | Narrative paragraph (Go-Browse style) |
+
+All formats use goal-aware narrative thoughts (no template markers like "Evidence:" or "In summary").
+Use `--multiturn` to group all steps of an episode into one chat conversation so the model learns
+sequential decision-making. Without it, each step is a separate single-turn sample.
+
+Each example mirrors your solver's action-planner prompt:
 
 - system: action space + output format
 - user: goal + current observation (accessibility tree) + recent action history

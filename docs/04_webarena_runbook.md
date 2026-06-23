@@ -141,7 +141,13 @@ outputs/wa_run/episodes/ep_XXXX/
 
 Feed straight into training:
 ```bash
-python build_sft_dataset.py outputs/wa_run/episodes train.jsonl
+# Go-Browse style: JSON output + narrative thought
+python build_sft_dataset.py outputs/wa_run/episodes train.jsonl \
+  --action-format webarena_json
+
+# Multi-turn: one sample per trajectory
+python build_sft_dataset.py outputs/wa_run/episodes train.jsonl \
+  --action-format webarena_json --multiturn
 ```
 
 ## 10. Caveats and troubleshooting

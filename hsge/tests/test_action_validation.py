@@ -58,9 +58,10 @@ def test_repair_thought_mentions_action_and_target():
     assert "click" in thought.lower()
     assert "[101]" in thought
     assert "Add to Cart" in thought
-    assert "I need to" in thought
-    assert "The next action is to" in thought
-    assert "Evidence:" in thought
+    # Go-Browse style narrative: no template markers
+    assert "I can see" in thought or "need to" in thought.lower()
+    assert "Evidence:" not in thought
+    assert "In summary" not in thought.lower()
 
 
 def test_answer_evidence_gate_for_review_tasks():
