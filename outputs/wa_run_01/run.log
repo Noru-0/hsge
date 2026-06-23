@@ -1,0 +1,18 @@
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_01/domain.json
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: "View cart -> Update quantity of 'V8 +Energy' to 2 -> Proceed to checkout" success=False
+    local: 'Open a communication form and identify the fields needed to draft or send a message.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=True
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=True
+    local: "Browse product categories -> Select 'Beauty & Personal Care' -> View products" success=True
+  >>> SKILL admitted: HoverOverMenuItem  (Skill to hover over a specified menu item.)
+    local: 'Hover over a visible menu or category item and open one submenu option.' success=True
+    local: 'Inspect visible transaction controls and make one reversible transaction-related change.' success=False
+    local: "Open wish list -> Add item 'Pre-baked Gingerbread House Kit' -> View item details" success=False
+  >>> SKILL admitted: OpenFeedbackSection  (A skill to open the user feedback section.)
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+  >>> SKILL admitted: SelectCategory  (Select a specified category from the menu.)
+    local: "Search for 'Energy Drink' -> Select product 'V8 +Energy, Healthy Energy Drink' -> Read details -> Add to cart" success=True
+    local: 'Use the visible search field to search for a page-relevant term and submit the search.' success=True

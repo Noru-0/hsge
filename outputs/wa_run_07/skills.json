@@ -1,0 +1,357 @@
+[
+  {
+    "skill_id": "skill_3e0f1758",
+    "name": "ClickProductLink",
+    "description": "Clicks on a specified product link.",
+    "precondition": "The product link is visible on the page",
+    "success_predicate": "Click on the '{product_name}' link completed",
+    "action_template": [
+      "click('{product_name}')"
+    ],
+    "slots": [
+      {
+        "name": "product_name",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "2",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the '{product_name}' link",
+        "value_ref": "product_name",
+        "fallback": "try clicking on the product link by its ID",
+        "success_check": "verify that the product page has loaded"
+      }
+    ],
+    "alternative_templates": [
+      "click('{product_name}')",
+      "select('{product_name}')"
+    ]
+  },
+  {
+    "skill_id": "skill_74b43424",
+    "name": "AddToWishList",
+    "description": "A skill to add a product to the user's wish list.",
+    "precondition": "User is logged in and on the product page.",
+    "success_predicate": "Add the product to your wish list completed",
+    "action_template": [
+      "Add {product_name} to your wish list."
+    ],
+    "slots": [
+      {
+        "name": "product_name",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "1",
+    "n_members": 5,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the 'Add to Wish List' button for the product",
+        "value_ref": null,
+        "fallback": "try refreshing the page and clicking again",
+        "success_check": "Verify that the product appears in the wish list"
+      }
+    ],
+    "alternative_templates": [
+      "Save {product_name} to my wish list.",
+      "Add {product_name} to my favorites."
+    ]
+  },
+  {
+    "skill_id": "skill_b34488dd",
+    "name": "ClickProductLink",
+    "description": "Clicks on a specified product link.",
+    "precondition": "The product link is visible on the page.",
+    "success_predicate": "Click on the '{product_name}' link completed",
+    "action_template": [
+      "click('{product_name}')"
+    ],
+    "slots": [
+      {
+        "name": "product_name",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "10",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the '{product_name}' link",
+        "value_ref": "product_name",
+        "fallback": "try clicking on a similar product link",
+        "success_check": "verify that the product page is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "click('{product_name}')",
+      "select('{product_name}')"
+    ]
+  },
+  {
+    "skill_id": "skill_0ea99fc7",
+    "name": "NavigateToProductPage",
+    "description": "Navigate to a specified product page on the website.",
+    "precondition": "User is on the homepage or product listing page.",
+    "success_predicate": "Navigate to the product page for '{product_name}' completed",
+    "action_template": [
+      "click('{product_name}')"
+    ],
+    "slots": [
+      {
+        "name": "product_name",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "0",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the product link for {product_name}",
+        "value_ref": "product_name",
+        "fallback": "search for {product_name} in the search bar",
+        "success_check": "Verify that the product page for {product_name} is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "click('{product_name}')",
+      "search('{product_name}')"
+    ]
+  },
+  {
+    "skill_id": "skill_14287420",
+    "name": "IdentifySearchField",
+    "description": "Skill to identify and interact with the search field.",
+    "precondition": "The search field is present on the page.",
+    "success_predicate": "Identify the search field and its purpose. completed",
+    "action_template": [
+      "Identify and interact with the search field using ID {search_field_id}."
+    ],
+    "slots": [
+      {
+        "name": "search_field_id",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "8",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "search field with ID {search_field_id}",
+        "value_ref": "search_field_id",
+        "fallback": "try to locate the search field by its label",
+        "success_check": "Check if the search field is focused or active."
+      },
+      {
+        "action_type": "fill",
+        "target_desc": "search field with ID {search_field_id}",
+        "value_ref": "search_field_id",
+        "fallback": "try to fill the search field by its label",
+        "success_check": "Verify that the search field contains the expected input."
+      }
+    ],
+    "alternative_templates": [
+      "Locate and use the search field with ID {search_field_id}.",
+      "Interact with the search field identified by {search_field_id}."
+    ]
+  },
+  {
+    "skill_id": "skill_a6ce4f2c",
+    "name": "HoverOverSearchMenu",
+    "description": "Skill to hover over the 'Search' menu for interaction.",
+    "precondition": "The 'Search' menu is visible.",
+    "success_predicate": "Hover over the visible 'Search' menu. completed",
+    "action_template": [
+      "Hover over the {menu_name} menu."
+    ],
+    "slots": [
+      {
+        "name": "menu_name",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "4",
+    "n_members": 5,
+    "execution_plan": [
+      {
+        "action_type": "hover",
+        "target_desc": "the 'Search' menu",
+        "value_ref": "menu_name",
+        "fallback": "Try to locate the 'Search' menu again",
+        "success_check": "Verify that the hover effect is applied to the 'Search' menu"
+      }
+    ],
+    "alternative_templates": [
+      "Hover over the {menu_name} option.",
+      "Mouse over the {menu_name} menu."
+    ]
+  },
+  {
+    "skill_id": "skill_c3524faa",
+    "name": "CheckReviewsFeedback",
+    "description": "Skill to verify if a specific review count indicates available feedback.",
+    "precondition": "The review section is visible on the page.",
+    "success_predicate": "Check if '{review_count} Reviews' indicates available feedback completed.",
+    "action_template": [
+      "Check if '{review_count} Reviews' indicates available feedback."
+    ],
+    "slots": [
+      {
+        "name": "review_count",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "6",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the review section",
+        "value_ref": null,
+        "fallback": "try to locate the review section again",
+        "success_check": "Verify that the review section is displayed."
+      },
+      {
+        "action_type": "select",
+        "target_desc": "the feedback indicator for '{review_count} Reviews'",
+        "value_ref": "review_count",
+        "fallback": "check for alternative feedback indicators",
+        "success_check": "Confirm that feedback is available for the specified review count."
+      }
+    ],
+    "alternative_templates": [
+      "Verify if feedback is available for '{review_count} Reviews'.",
+      "Determine if '{review_count} Reviews' shows feedback options."
+    ]
+  },
+  {
+    "skill_id": "skill_08b4d4c0",
+    "name": "NavigateToProductPage",
+    "description": "Navigates to the specified product page.",
+    "precondition": "User is on the homepage or product listing page.",
+    "success_predicate": "Navigate to the product page for {product_name} completed",
+    "action_template": [
+      "click('{product_name}')"
+    ],
+    "slots": [
+      {
+        "name": "product_name",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "14",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the product link for {product_name}",
+        "value_ref": "product_name",
+        "fallback": "search for {product_name} and click the first result",
+        "success_check": "Verify that the product page for {product_name} is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "click on the product named '{product_name}'",
+      "select the link for '{product_name}'"
+    ]
+  },
+  {
+    "skill_id": "skill_8cba8364",
+    "name": "AddToWishList",
+    "description": "A skill to add a product to the user's wish list.",
+    "precondition": "Product is available for adding to wish list",
+    "success_predicate": "Add product to wish list completed",
+    "action_template": [
+      "click('{product_id}')"
+    ],
+    "slots": [
+      {
+        "name": "product_id",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "16",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "Add to wish list button for product with ID {product_id}",
+        "value_ref": "product_id",
+        "fallback": "Try to locate the button by product name",
+        "success_check": "Check if the confirmation message for adding to wish list is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "click('wish_list_button_{product_id}')",
+      "click('add_to_wishlist_{product_id}')"
+    ]
+  },
+  {
+    "skill_id": "skill_a4a341b9",
+    "name": "ClickMyOrders",
+    "description": "A skill to click on the 'My Orders' button.",
+    "precondition": "The 'My Orders' button is visible on the page.",
+    "success_predicate": "Click on 'My Orders' button completed",
+    "action_template": [
+      "click('{button_id}')"
+    ],
+    "slots": [
+      {
+        "name": "button_id",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "3",
+    "n_members": 32,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "'My Orders' button with ID {button_id}",
+        "value_ref": "button_id",
+        "fallback": "Try clicking on the 'My Orders' button by its label.",
+        "success_check": "Verify that the 'My Orders' page is displayed."
+      }
+    ],
+    "alternative_templates": [
+      "click('My Orders')",
+      "click('orders_button')"
+    ]
+  },
+  {
+    "skill_id": "skill_d0534ec1",
+    "name": "Inspect Product Details",
+    "description": "A skill to inspect the details of a specified product.",
+    "precondition": "The product is available for inspection",
+    "success_predicate": "Inspect the details of '{product_name}' completed",
+    "action_template": [
+      "Inspect the details of '{product_name}'"
+    ],
+    "slots": [
+      {
+        "name": "product_name",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "20",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the product link for {product_name}",
+        "value_ref": "product_name",
+        "fallback": "search for the product if the link is not found",
+        "success_check": "Verify that the product details page is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "View details of '{product_name}'",
+      "Check information for '{product_name}'"
+    ]
+  }
+]

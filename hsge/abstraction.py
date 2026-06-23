@@ -61,7 +61,24 @@ _DOMAIN_TERMS = {
     "checkout", "order", "orders", "category", "categories", "price", "prices",
 }
 
+CANONICAL_SKILL_NAMES = {
+    "open_visible_item",
+    "open_visible_detail",
+    "submit_search_query",
+    "inspect_feedback_indicator",
+    "inspect_menu_options",
+    "inspect_filter_sort",
+    "activate_state_change_control",
+    "activate_named_control",
+    "fill_visible_field",
+    "read_visible_detail",
+    "save_visible_item",
+}
+
 _NAME_ALIASES = [
+    (re.compile(r"\b(click_visible_item_image|click_visible_item_link|click_visible_detail)\b", re.I), "open_visible_item"),
+    (re.compile(r"\b(activate_visible_control|click_visible_control|use_visible_control)\b", re.I), "activate_state_change_control"),
+    (re.compile(r"\b(open_visible_detail|open_visible_item|submit_search_query|inspect_feedback_indicator|inspect_menu_options|inspect_filter_sort|activate_state_change_control|activate_named_control|fill_visible_field|read_visible_detail|save_visible_item)\b", re.I), None),
     (re.compile(r"\b(product|item|record).*(link|page|detail)|\b(click|navigate).*product", re.I), "open_visible_item"),
     (re.compile(r"\b(detail|details|description)\b", re.I), "open_visible_detail"),
     (re.compile(r"\b(wish\s*list|wishlist|favorite|save)\b", re.I), "save_visible_item"),
@@ -127,8 +144,9 @@ def abstract_cluster(
     if isinstance(alternative_templates, str):
         alternative_templates = [alternative_templates]
 
+    normalized_name = _normalize_skill_name(out.get("name", f"skill_{cluster_id}"), dominant)
     card = SkillCard(
-        name=_normalize_skill_name(out.get("name", f"skill_{cluster_id}"), dominant),
+        name=normalized_name,
         description=out.get("description", ""),
         slots=slots,
         action_template=action_template,
@@ -146,7 +164,12 @@ def abstract_cluster(
 
     reason = validate_skill_card(card)
     if reason:
-        if reason in {"domain_specific_vocabulary", "overfit_literal", "name_not_generic_snake_case"}:
+        if reason in {
+            "domain_specific_vocabulary",
+            "overfit_literal",
+            "name_not_generic_snake_case",
+            "noncanonical_skill_name",
+        }:
             fallback = _fallback_skill_card(cluster_id, members, dominant, reason=reason)
             if fallback is not None:
                 return fallback
@@ -268,12 +291,15 @@ def _representative_examples(members: list[SubTrajectory], max_examples: int = 3
 
 def _normalize_skill_name(name: str, dominant_subgoal: str = "") -> str:
     raw = (name or "").strip()
-    if re.fullmatch(r"[a-z][a-z0-9_]{2,48}", raw) and not _contains_domain_terms(raw):
-        return raw
     text = f"{name or ''} {dominant_subgoal or ''}"
     for pattern, replacement in _NAME_ALIASES:
         if pattern.search(text):
+            if replacement is None:
+                match = pattern.search(text)
+                return match.group(1).lower() if match else raw.lower()
             return replacement
+    if re.fullmatch(r"[a-z][a-z0-9_]{2,48}", raw) and raw in CANONICAL_SKILL_NAMES:
+        return raw
     tokens = [
         t for t in re.findall(r"[a-z0-9]+", (name or "").lower())
         if t not in {"skill", "to", "the", "a", "an", "visible", "specified"}
@@ -285,6 +311,8 @@ def validate_skill_card(card: SkillCard) -> str:
     """Return a rejection reason, or empty string when the card is usable."""
     if not re.fullmatch(r"[a-z][a-z0-9_]{2,48}", card.name or ""):
         return "name_not_generic_snake_case"
+    if card.name not in CANONICAL_SKILL_NAMES:
+        return "noncanonical_skill_name"
     slot_types = {s.name: s.slot_type for s in card.slots}
     if not card.action_template:
         return "missing_action_template"

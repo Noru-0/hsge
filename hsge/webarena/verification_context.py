@@ -202,7 +202,7 @@ def _build_browser_contexts(out_dir: str, browser_factory) -> list[WebEnv]:
     )
 
     for ep_name in episodes:
-        if len(contexts) >= 3:
+        if len(contexts) >= 10:
             break
 
         ep_path = os.path.join(ep_dir, ep_name)

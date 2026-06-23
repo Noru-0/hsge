@@ -31,14 +31,12 @@ _RE_HEX = re.compile(r'^[a-f0-9]{32,}$')
 _RE_NUM = re.compile(r'^\d+$')
 _KNOWN_EXTENSIONS = {'.html', '.htm', '.php', '.asp', '.jsp', '.aspx'}
 
-# Keywords that influence template priority (all lower-case, domain-agnostic)
+# Keywords that influence template priority (all lower-case, domain-neutral)
 _HIGH_KEYWORDS = {
     'login', 'signin', 'logout', 'signout', 'register', 'signup',
-    'cart', 'basket', 'checkout', 'order', 'payment',
     'account', 'profile', 'settings', 'dashboard',
-    'product', 'item', 'detail',
-    'issue', 'merge_request', 'pull', 'blob', 'tree', 'commit',
-    'wiki', 'article', 'page', 'readme',
+    'search', 'results', 'detail', 'status', 'history',
+    'form', 'record', 'request', 'report',
 }
 _LOW_KEYWORDS = {
     'action', 'query', 'redirect', 'goto', 'print', 'pdf', 'xml',

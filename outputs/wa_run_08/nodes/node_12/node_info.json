@@ -1,0 +1,72 @@
+{
+    "url": "http://192.168.1.31:7770/customer/account",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/sales/order/history",
+        "http://192.168.1.31:7770/wishlist"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 1,
+        "parent_url": "http://192.168.1.31:7770/customer/account"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.444153,
+    "frontier_breakdown": {
+        "score": 1.4441533590314828,
+        "U": 0.0014583181425193487,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/customer/account",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/customer/account",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Search for a product using the search bar",
+            "type": "search",
+            "confidence": 0.95
+        },
+        {
+            "task": "Navigate to My Account page",
+            "type": "navigation",
+            "confidence": 1.0
+        },
+        {
+            "task": "Click on the 'Electronics' category to browse",
+            "type": "navigation",
+            "confidence": 0.9
+        },
+        {
+            "task": "View the shopping cart by clicking the cart link",
+            "type": "navigation",
+            "confidence": 1.0
+        },
+        {
+            "task": "Add the Gingerbread House Kit to the cart",
+            "type": "local",
+            "confidence": 0.95
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/customer/account",
+    "depth": 1,
+    "tasks": [
+        "Click on 'View All' under Recent Orders to see the details of all your past orders.",
+        "Click on 'Manage Addresses' to update your address information.",
+        "Report whether the visible 'My Product Reviews' feedback control indicates available feedback.",
+        "Click on 'My Wish List' to view your saved items.",
+        "Open the visible '\\ue611 My Cart 26 26items' state-changing control and report the available action."
+    ],
+    "episode_range": [
+        67,
+        72
+    ]
+}

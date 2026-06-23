@@ -1,0 +1,78 @@
+{
+    "url": "http://192.168.1.31:7770/customer/account",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/sales/order/history",
+        "http://192.168.1.31:7770/customer/account/edit",
+        "http://192.168.1.31:7770/vault/cards/listaction",
+        "http://192.168.1.31:7770/customer/address",
+        "http://192.168.1.31:7770/checkout/cart",
+        "http://192.168.1.31:7770/checkout"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 1,
+        "parent_url": "http://192.168.1.31:7770/customer/account"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.443099,
+    "frontier_breakdown": {
+        "score": 1.4430990772118288,
+        "U": 0.0004040363228654264,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/customer/account",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/customer/account",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Search for 'gingerbread' using the search bar",
+            "type": "search",
+            "confidence": 0.95
+        },
+        {
+            "task": "Navigate to the Electronics category",
+            "type": "navigation",
+            "confidence": 1.0
+        },
+        {
+            "task": "View details of the Pre-baked Gingerbread House Kit product",
+            "type": "local",
+            "confidence": 1.0
+        },
+        {
+            "task": "Add the Pre-baked Gingerbread House Kit to the shopping cart",
+            "type": "local",
+            "confidence": 1.0
+        },
+        {
+            "task": "Open the My Wish List page",
+            "type": "local",
+            "confidence": 1.0
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/customer/account",
+    "depth": 1,
+    "tasks": [
+        "Click on 'View All' under 'Recent Orders' to see the complete list of your past orders.",
+        "Click on 'Edit' under 'Account Information' to update your personal details.",
+        "Report whether the visible 'My Product Reviews' feedback control indicates available feedback.",
+        "Click on 'Manage Addresses' to view or modify your address book.",
+        "Click on 'My Wish List' to view your saved items.",
+        "Click on 'Reorder' next to any recent order to quickly place the same order again.",
+        "Open the visible '\\ue611 My Cart 20 20items' state-changing control and report the available action."
+    ],
+    "episode_range": [
+        107,
+        114
+    ]
+}

@@ -152,22 +152,13 @@ class SkillLibrary:
             verify_attempts=card.stats.n_verify_attempts,
             required=effective_k,
             reason="insufficient_successes",
+            failure_reasons=dict(Counter(getattr(card, "_verify_failures", []))),
         )
         return None
 
     def _effective_verify_k(self, card: SkillCard, contexts: list) -> int:
         if card.stats.bootstrap_verified and contexts:
-            unique = set()
-            for env in contexts:
-                site = getattr(env, "site", "") or repr(env)
-                start = getattr(env, "start", "")
-                try:
-                    page_url = env.pages[start].url
-                except Exception:
-                    page_url = str(start)
-                unique.add(f"{site}:{page_url}")
-            if len(unique) < self.verify_k:
-                return 1
+            return 1
         return self.verify_k
 
     # --------------------------------------------------------------- retrieval

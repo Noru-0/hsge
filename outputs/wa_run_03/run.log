@@ -1,0 +1,32 @@
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_03/domain.json
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=True
+    local: "View the details of 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' by clicking on its name." success=True
+  >>> SKILL admitted: ReadNumericOrDateInfo  (Skill to read visible numeric or dated information from the )
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=True
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: "Click on 'Beauty & Personal Care' to browse products in that category." success=True
+    local: 'Hover over a visible menu or category item and open one submenu option.' success=False
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=True
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: "Use the search bar to find 'V8 +Energy, Healthy Energy Drink'." success=True
+    local: "Add 'Pre-baked Gingerbread House Kit Value Pack' to the cart." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/elmwood-inn-fine-teas-orange-vanill
+[node 2 depth=1] http://192.168.1.31:7770/elmwood-inn-fine-teas-orange-vanilla-caffeine-free-fruit-infusion-16-ounce-pouch.html
+    local: 'Inspect the product rating and read the number of reviews available.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: "Add the product to the cart by clicking the 'Add to Cart' button." success=True
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Read the product price displayed on the page.' success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Hover over a visible menu or category item and open one submenu option.' success=False
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=False

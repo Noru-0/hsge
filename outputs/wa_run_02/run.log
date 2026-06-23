@@ -1,0 +1,16 @@
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_02/domain.json
+    local: "Add 'Elmwood Inn Fine Teas' to compare -> Add 'Belle Of The Ball Princess Sprinkle Mix' to compare -> View comparison" success=True
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open a communication form and identify the fields needed to draft or send a message.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=True
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=True
+    local: "View product details for 'Pre-baked Gingerbread House Kit' -> Read reviews -> Add to wish list" success=True
+    local: "Browse product categories -> Select 'Beauty & Personal Care' -> View products" success=True
+    local: 'Hover over a visible menu or category item and open one submenu option.' success=False
+    local: 'Inspect visible transaction controls and make one reversible transaction-related change.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+  >>> SKILL admitted: OpenFeedbackSection  (Opens the user feedback section of the application.)
+    local: "Search for 'Energy Drink' -> Select product -> View details -> Add to cart" success=True
+    local: 'Use the visible search field to search for a page-relevant term and submit the search.' success=False

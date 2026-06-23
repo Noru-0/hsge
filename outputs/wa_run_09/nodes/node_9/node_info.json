@@ -1,0 +1,118 @@
+{
+    "url": "http://192.168.1.31:7770/customer/account",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/customer/address/edit/id/26",
+        "http://192.168.1.31:7770/sales/order/history",
+        "http://192.168.1.31:7770/customer/address",
+        "http://192.168.1.31:7770/checkout/cart"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 1,
+        "parent_url": "http://192.168.1.31:7770/customer/account"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.428571,
+    "tasks_attempted": 7,
+    "tasks_solved": 3,
+    "tasks_failed": 4,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.453257,
+    "frontier_breakdown": {
+        "score": 1.453256719971221,
+        "U": 0.010561679082257504,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/customer/account",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/customer/account",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Navigate to My Account page",
+            "type": "navigation",
+            "confidence": 0.95
+        },
+        {
+            "task": "Browse the Electronics category",
+            "type": "navigation",
+            "confidence": 0.9
+        },
+        {
+            "task": "Add the displayed product to shopping cart",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Search for a product using the search bar",
+            "type": "search",
+            "confidence": 0.7
+        },
+        {
+            "task": "Add the product to the wish list using the local button",
+            "type": "local",
+            "confidence": 0.95
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/customer/account",
+    "depth": 1,
+    "tasks": [
+        {
+            "goal": "Click on 'Edit Address' next to the Default Billing Address to modify your billing details.",
+            "family": "records_status",
+            "status": "failed",
+            "episode_id": 55
+        },
+        {
+            "goal": "Click on 'Edit Address' next to the Default Shipping Address to change your shipping information.",
+            "family": "records_status",
+            "status": "failed",
+            "episode_id": 56
+        },
+        {
+            "goal": "Click on 'View All' under 'Recent Orders' to see the details of all your past orders.",
+            "family": "records_status",
+            "status": "solved",
+            "episode_id": 57
+        },
+        {
+            "goal": "Report whether the visible 'My Product Reviews' feedback control indicates available feedback.",
+            "family": "feedback_analysis",
+            "status": "failed",
+            "episode_id": 58
+        },
+        {
+            "goal": "Click on 'Manage Addresses' to view and edit your saved addresses.",
+            "family": "state_change",
+            "status": "solved",
+            "episode_id": 59
+        },
+        {
+            "goal": "Click on 'Reorder' next to an order to quickly add the same items to your cart.",
+            "family": "state_change",
+            "status": "solved",
+            "episode_id": 60
+        },
+        {
+            "goal": "Use the search bar to find a specific product you want to purchase.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 61
+        }
+    ],
+    "episode_range": [
+        55,
+        62
+    ]
+}

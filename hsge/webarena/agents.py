@@ -368,7 +368,7 @@ class PageExplorer:
         tasks: list[str] = []
 
         deep_label = self._first_label(lines, self._progression_pattern())
-        if deep_label:
+        if deep_label and not self._is_pagination_control(deep_label, all_text):
             if self._is_final_order_control(deep_label) and not self.place_order_allowed:
                 tasks.append(f"Review the visible '{deep_label}' final order control and report what confirmation would be required before using it.")
             elif self.checkout_mode != "discover-only":
@@ -445,6 +445,18 @@ class PageExplorer:
     @staticmethod
     def _is_final_order_control(label: str) -> bool:
         return bool(re.search(r"\b(place order|pay now|complete order|submit order)\b", label or "", re.I))
+
+    @staticmethod
+    def _is_pagination_control(label: str, page_text: str = "") -> bool:
+        text = f"{label or ''}\n{page_text or ''}"
+        if re.search(r"\b(checkout|shipping|billing|payment|review order|order summary|place order)\b", text, re.I):
+            return False
+        if re.search(r"\b(page\s+next|next\s+page|pagination|pager)\b", label or "", re.I):
+            return True
+        visible_words = re.findall(r"[A-Za-z]+", label or "")
+        return visible_words and visible_words[-1].lower() == "next" and bool(
+            re.search(r"\b(gallery|carousel|image|photo|product)\b", page_text or "", re.I)
+        )
 
     @staticmethod
     def _feedback_count(label: str) -> str:

@@ -1,0 +1,94 @@
+[
+  {
+    "skill_id": "skill_25cda490",
+    "name": "HoverOverMenuItem",
+    "description": "Skill to hover over a specified menu item.",
+    "precondition": "The menu item with the specified ID is visible.",
+    "success_predicate": "Hover over the visible menu item completed",
+    "action_template": [
+      "hover('{menu_item_id}')"
+    ],
+    "slots": [
+      {
+        "name": "menu_item_id",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "5",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "hover",
+        "target_desc": "menu item with ID {menu_item_id}",
+        "value_ref": "menu_item_id",
+        "fallback": "click on the menu item instead",
+        "success_check": "Verify that the hover action is recognized by the UI"
+      }
+    ],
+    "alternative_templates": [
+      "click('{menu_item_id}')"
+    ]
+  },
+  {
+    "skill_id": "skill_78c3c408",
+    "name": "OpenFeedbackSection",
+    "description": "A skill to open the user feedback section.",
+    "precondition": "User is on the feedback page.",
+    "success_predicate": "Open user feedback section completed",
+    "action_template": [
+      "click('{feedback_section_id}')"
+    ],
+    "slots": [
+      {
+        "name": "feedback_section_id",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "1",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "feedback section button with ID {feedback_section_id}",
+        "value_ref": "feedback_section_id",
+        "fallback": "click the default feedback section button",
+        "success_check": "Check if the feedback section is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "click('default_feedback_section')",
+      "click('feedback_button')"
+    ]
+  },
+  {
+    "skill_id": "skill_3aecebdb",
+    "name": "SelectCategory",
+    "description": "Select a specified category from the menu.",
+    "precondition": "Menu is visible and accessible.",
+    "success_predicate": "Select '{category}' completed",
+    "action_template": [
+      "Select '{category}' from the menu."
+    ],
+    "slots": [
+      {
+        "name": "category",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "4",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the category menu item for {category}",
+        "value_ref": "category",
+        "fallback": "try to refresh the menu and click again",
+        "success_check": "Verify that the selected category is highlighted"
+      }
+    ],
+    "alternative_templates": [
+      "Choose '{category}' from the options.",
+      "Pick '{category}' in the category list."
+    ]
+  }
+]

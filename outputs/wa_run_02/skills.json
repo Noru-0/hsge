@@ -1,0 +1,25 @@
+[
+  {
+    "skill_id": "skill_7152f1f7",
+    "name": "OpenFeedbackSection",
+    "description": "Opens the user feedback section of the application.",
+    "precondition": "User is on the main application page.",
+    "success_predicate": "Open user feedback section completed",
+    "action_template": [
+      "click('1506')"
+    ],
+    "slots": [],
+    "cluster_id": "3",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "user feedback section button",
+        "value_ref": null,
+        "fallback": "try to locate the feedback section link",
+        "success_check": "verify that the user feedback section is displayed"
+      }
+    ],
+    "alternative_templates": []
+  }
+]

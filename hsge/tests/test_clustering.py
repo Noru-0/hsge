@@ -13,6 +13,8 @@ from hsge.schema import ParamSlot, SkillCard, SubTrajectory
 from hsge.abstraction import abstract_cluster, validate_skill_card
 from hsge.segmentation import segment_trajectory
 from hsge.verification import verify_skill
+from hsge.webarena.agents import PageExplorer
+from hsge.webarena.runtime import WebArenaExplorer
 
 
 def _unit(v):
@@ -256,6 +258,130 @@ def test_abstraction_accepts_canonical_submit_search_query():
     assert card is not None
     assert card.name == "submit_search_query"
     assert not validate_skill_card(card)
+
+
+def test_abstraction_normalizes_noncanonical_generic_names():
+    out = {
+        "name": "click_visible_item_image",
+        "description": "Open a visible item or record.",
+        "slots": [{"name": "image_selector", "slot_type": "selector"}],
+        "action_template": ["click({image_selector})"],
+        "precondition": "A target item is visible.",
+        "success_predicate": "item detail is visible",
+    }
+
+    card = abstract_cluster(_FixedSkillLLM(out), 8, [_member(), _member(), _member()])
+
+    assert card is not None
+    assert card.name == "open_visible_item"
+
+
+def test_segmentation_drops_terminal_answer_actions():
+    steps = [
+        Step("click('101')", "/detail", obs_summary="Opened a visible link."),
+        Step("send_msg_to_user('done')", "/detail", obs_summary="Answered the user."),
+    ]
+
+    subs = segment_trajectory(MockLLM(), steps, "site", "Open visible detail and answer")
+
+    assert subs
+    assert all("send_msg_to_user" not in {s.action_kind() for s in sub.steps} for sub in subs)
+
+
+class _FakeBrowser:
+    def __init__(self, url):
+        self.url = url
+
+    def reset(self):
+        return {
+            "url": self.url,
+            "axtree": "[101] link Example item\n[102] button Save\n",
+        }
+
+    def act(self, action):
+        return {
+            "url": self.url + "/detail",
+            "axtree": "[201] heading Detail\n",
+        }
+
+    def close(self):
+        pass
+
+
+def test_browser_verification_uses_deterministic_selector_grounding():
+    env = WebEnv(
+        "site",
+        {"start": PageState("http://example.test/list", affordances=[], goto={})},
+        start="start",
+        goal_pages={"done"},
+    )
+    env.browser_factory = lambda url: _FakeBrowser(url)
+    card = SkillCard(
+        name="open_visible_item",
+        description="Open a visible item or record.",
+        slots=[ParamSlot("item_selector", "selector")],
+        action_template=["click({item_selector})"],
+        precondition="A visible item is available.",
+        success_predicate="item detail is visible",
+        cluster_id="c1",
+    )
+
+    assert verify_skill(MockLLM(), card, [env], k=1)
+    assert card.verified
+
+
+def test_page_next_is_not_deep_progression_control():
+    assert PageExplorer._is_pagination_control("Page Next")
+    assert PageExplorer._is_pagination_control("button 'Next'", "Product image gallery")
+    assert not PageExplorer._is_pagination_control("button 'Next'", "Checkout shipping payment")
+    assert not PageExplorer._is_pagination_control("Proceed to Checkout")
+
+
+class _PrefixReplayBrowser:
+    def __init__(self):
+        self.url = "http://example.test/"
+        self.axtree = "[1] link 'Result'\n"
+        self.actions = []
+
+    def reset(self):
+        self.url = "http://example.test/"
+        self.axtree = "[1] link 'Result'\n"
+        return self.observation()
+
+    def act(self, action):
+        self.actions.append(action)
+        if action.startswith("goto("):
+            self.url = "http://example.test/"
+            self.axtree = "[1] link 'Result'\n"
+        elif action == "click('1')":
+            self.url = "http://example.test/result"
+            self.axtree = "[2] link 'Detail'\n"
+        return self.observation()
+
+    def observation(self):
+        return {"url": self.url, "axtree": self.axtree}
+
+
+def test_task_reset_replays_prefix_for_prefix_discovered_node():
+    explorer = object.__new__(WebArenaExplorer)
+    explorer._log_file = None
+    explorer._last_prefix_replay_status = {}
+    explorer._discovered_urls = {
+        "http://example.test/result": {
+            "source_url": "http://example.test",
+            "prefix_steps": [Step("click('1')", "http://example.test/")],
+        }
+    }
+    browser = _PrefixReplayBrowser()
+
+    obs = explorer._reset_browser_to_node(
+        browser,
+        "http://example.test/result",
+        "http://example.test/result",
+    )
+
+    assert obs["url"] == "http://example.test/result"
+    assert browser.actions == ["goto('http://example.test')", "click('1')"]
 
 
 def test_duplicate_normalized_skill_is_detected():

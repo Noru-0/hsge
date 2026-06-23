@@ -1305,8 +1305,6 @@ class WebArenaExplorer:
             if self._log_file:
                 self._log_file.write(msg + "\n")
                 self._log_file.flush()
-            # Dọn prefix sau khi đã dùng thành công
-            self._discovered_urls.pop(target_url, None)
             return obs
         else:
             self._last_prefix_replay_status["reason"] = "url_mismatch"
@@ -1336,6 +1334,30 @@ class WebArenaExplorer:
             if cls._text_suggests_state_change(f"{action} {summary}"):
                 return True
         return False
+
+    def _reset_browser_to_node(self, browser, url: str, actual_url: str) -> dict:
+        """Return browser to the node state before each local task.
+
+        Correctness first: if the node was reached through a prefix trace, replay
+        that trace again instead of relying on BrowserGym reset, which may go
+        back to the original start URL and lose query/stateful navigation.
+        """
+        def _norm(u: str) -> str:
+            p = urlparse(u)
+            return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
+
+        if url in self._discovered_urls:
+            obs = self._navigate_via_prefix(browser, url)
+            return obs or {"url": "", "axtree": ""}
+
+        obs = browser.reset()
+        if obs.get("url") and _norm(obs.get("url", "")) != actual_url:
+            try:
+                browser.act(f"goto('{actual_url}')")
+                obs = browser.observation()
+            except Exception:
+                return {"url": "", "axtree": ""}
+        return obs
 
     def _process_node(self, url, depth, root_url, frontier, visited, queued, node_num):
         """Process one node with full error isolation.
@@ -1382,7 +1404,7 @@ class WebArenaExplorer:
                             browser.close()
                         except Exception:
                             pass
-                        return
+                        return None
                     # Prefix failed — fall back to fresh browser
                     msg = f"      [prefix] Fallback to direct goto for {url[:60]}"
                     print(msg)
@@ -1402,7 +1424,7 @@ class WebArenaExplorer:
             if self._log_file:
                 self._log_file.write(msg + "\n")
                 self._log_file.flush()
-            return
+            return None
 
         if not obs.get("url"):
             msg = f"[node {node_num} depth={depth}] SKIP {url}  (empty observation after reset)"
@@ -1414,7 +1436,7 @@ class WebArenaExplorer:
                 browser.close()
             except Exception:
                 pass
-            return
+            return None
 
         actual_url = _norm(obs['url'])
 
@@ -1433,7 +1455,7 @@ class WebArenaExplorer:
                 browser.close()
             except Exception:
                 pass
-            return
+            return None
 
         msg = f"[node {node_num} depth={depth}] {actual_url}"
         print(msg)
@@ -1491,7 +1513,7 @@ class WebArenaExplorer:
             task_key = self._task_key(task)
             self._task_attempt_counts[task_key] += 1
             try:
-                reset_obs = browser.reset()
+                reset_obs = self._reset_browser_to_node(browser, url, actual_url)
                 if not reset_obs.get("url"):
                     task_record["status"] = "skipped"
                     msg_skip = f"    local: {task!r} SKIP (reset failed)"
@@ -1559,7 +1581,7 @@ class WebArenaExplorer:
             }
             _node_task_records.append(goal_record)
             try:
-                reset_obs = browser.reset()
+                reset_obs = self._reset_browser_to_node(browser, url, actual_url)
                 if not reset_obs.get("url"):
                     goal_record["status"] = "skipped"
                     msg_skip = f"    GOAL SKIP (reset failed)"
@@ -1627,6 +1649,7 @@ class WebArenaExplorer:
             for discovered_url, info in list(self._discovered_urls.items()):
                 if (discovered_url not in queued
                     and discovered_url not in visited
+                    and discovered_url not in {url, actual_url}
                     and self.allow.search(discovered_url)
                     and not any(d.search(discovered_url) for d in self._denylist)):
                     new_urls.append(discovered_url)
@@ -1720,6 +1743,7 @@ class WebArenaExplorer:
             tasks=_node_task_records,
             episode_range=[_ep_start, _ep_end],
         )
+        return actual_url
 
     def _replay_episodes(self) -> None:
         """Replay all existing episodes through discovery to rebuild the skill
@@ -1992,27 +2016,22 @@ class WebArenaExplorer:
             frontier = [(u, d) for u, d in frontier if u != url]
             if url in visited or depth > self.max_depth:
                 continue
-            visited.add(url)
-            nodes_processed += 1
-            self.metrics.nodes_visited += 1
-            self.metrics.nodes_processed = nodes_processed
+            node_num = nodes_processed + 1
 
             # Ghi nhận parent đã chọn 1 child (cho V_n)
             parent_url = self._frontier_scorer._parent_url.get(url)
-            if parent_url:
-                self._frontier_scorer.record_child_selection(parent_url)
 
             # Error-isolated node processing: any failure in one node
             # is caught, logged, and skipped — the run continues.
             try:
-                self._process_node(
+                processed_url = self._process_node(
                     url, depth, root_url,
-                    frontier, visited, queued, nodes_processed,
+                    frontier, visited, queued, node_num,
                 )
             except Exception as e:
                 self.metrics.errors += 1
                 self.metrics.nodes_error += 1
-                msg = f"[node {nodes_processed} depth={depth}] ERROR: {e}"
+                msg = f"[node {node_num} depth={depth}] ERROR: {e}"
                 print(msg)
                 if self._log_file:
                     self._log_file.write(msg + "\n")
@@ -2020,6 +2039,18 @@ class WebArenaExplorer:
                 # Save emergency checkpoint and continue
                 self.save_checkpoint(frontier, visited, queued)
                 continue
+
+            if not processed_url:
+                self.save_checkpoint(frontier, visited, queued)
+                continue
+
+            visited.add(url)
+            visited.add(processed_url)
+            nodes_processed += 1
+            self.metrics.nodes_visited += 1
+            self.metrics.nodes_processed = nodes_processed
+            if parent_url:
+                self._frontier_scorer.record_child_selection(parent_url)
 
             # Save checkpoint for resume support
             self.save_checkpoint(frontier, visited, queued)

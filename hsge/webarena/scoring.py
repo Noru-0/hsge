@@ -104,8 +104,8 @@ Propose {self.num_candidates} diverse candidate tasks for a web page.
 The page URL is: {url}
 
 Based ONLY on the URL, propose tasks that a user could likely do on this page.
-Consider what type of page it is (category listing, product detail, cart, checkout, etc.)
-and what actions would be feasible.
+Infer broad page roles from the URL path when possible, such as search, listing,
+detail, form, profile, status, history, or settings pages.
 
 IMPORTANT: Do NOT propose any login, sign in, sign up, register,
 or account creation tasks — the agent is already logged in.

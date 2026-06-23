@@ -1,0 +1,202 @@
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_04/domain.json
+    local: "Click on the 'Add to Compare' link for the 'Elmwood Inn Fine Teas' to compare it with other products." success=True
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=True
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=True
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=True
+    local: "Click on the 'Beauty & Personal Care' category to browse products in that section." success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=False
+  >>> SKILL admitted: OpenFeedbackSection  (A skill to open the user feedback section of the application)
+  >>> SKILL admitted: ReadVisibleInfo  (Skill to read and extract visible numeric or dated informati)
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+    local: "Use the search bar to type 'Energy Drink' and click the 'Search' button to find related products." success=False
+    local: "Click on the 'Add to Cart' button for the 'V8 +Energy, Healthy Energy Drink' to add it to your shopping cart." success=True
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=False
+  [frontier] +4 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/beauty-personal-care.html
+[node 2 depth=1] http://192.168.1.31:7770/beauty-personal-care.html
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Use the search bar to find specific beauty products by entering a keyword.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Sort the products by price to view the cheapest items first.' success=False
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=False
+    local: 'Use a visible sort or filter control to narrow the current list.' success=False
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/beauty-personal-care.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+[node 3 depth=2] http://192.168.1.31:7770/catalogsearch/result
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: "Click on the 'Add to Compare' button for 'Derma Ella Advanced Skincare (2 Pack)' to compare it with other products." success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+    local: "Click on the 'Add to Cart' button for 'Bulldog Skincare Ultimate Sensitive Bundle' to add it to your cart." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+  >>> SKILL admitted: HoverOverMenu  (Skill to hover over a visible menu or expandable control.)
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: 'Open a visible communication form and identify its required fields.' success=True
+    local: 'Open a visible state-changing control and report the available action.' success=True
+    local: 'Use a visible sort or filter control to narrow the current list.' success=False
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 3 steps from http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/contact, got http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/contact
+[node 4 depth=3] http://192.168.1.31:7770/contact
+    local: "Hover over the 'Tools & Home Improvement' menu to find tools and home improvement items." success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+  >>> SKILL admitted: UseSearchField  (Interact with the visible search field to input a query.)
+  >>> SKILL admitted: SubmitSearch  (Submits a search query relevant to the current page.)
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: "Hover over the 'Beauty & Personal Care' menu to explore products in that category." success=False
+    local: "Hover over the 'Clothing, Shoes & Jewelry' menu to see available options." success=False
+    local: "Hover over the 'Home & Kitchen' menu to check for products in that section." success=False
+    local: "Hover over the 'Office Products' menu to discover office supplies." success=False
+    local: "Hover over the 'Sports & Outdoors' menu to view related items." success=True
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=False
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val
+[node 5 depth=1] http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: "Click on 'Add to Compare' to compare this product with others." success=True
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: "Click on 'Add to Cart' to add the Pre-baked Gingerbread House Kit to your shopping cart." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: "Hover over the 'Details' tab to view more information about the product." success=True
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=False
+  [frontier] +2 URLs from callback discovery
+  [graph] 13 states, 7 skills, 1 composition edges → outputs/wa_run_04/graph.json
+  [curriculum] 10 tasks from 7 skills → outputs/wa_run_04/curriculum.json
+      [prefix] Replaying 3 steps from http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalog/product_compare
+[node 6 depth=2] http://192.168.1.31:7770/catalog/product_compare
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+    local: "Click on the 'Add to Cart' button for the 'Belle Of The Ball Princess Sprinkle Mix'." success=True
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: "Hover over the 'Beauty & Personal Care' menu to explore related products." success=False
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=True
+    local: 'Use a visible sort or filter control to narrow the current list.' success=False
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/catalog/product_compare...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle, got http://192.168.1.31:7770/catalog/product_compare
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle
+[node 7 depth=3] http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle-mix-wedding-colorful-sprinkles-cake-cupcake-cookie-sprinkles-ice-cream-candy-sprinkles-yellow-gold-red-royal-red-rose-icing-flowers-decorating-sprinkles-8oz.html
+    local: "Use the search field to find similar sprinkle mixes by filling in 'sprinkle mix'." success=True
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' SKIP (reset failed)
+    local: "Compare this product with another by clicking 'Add to Compare'." success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: "Add the '8 Ounce (Pack of 1)' size to the cart by selecting it and clicking 'Add to Cart'." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: "Add this product to your wish list by clicking 'Add to Wish List'." success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5, got http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5
+[node 8 depth=2] http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Use the search field to find a specific product by entering a query.' success=True
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: "Add the 'Pre-baked Gingerbread House Kit Value Pack' to the cart by clicking 'Add to Cart'." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: 'Open a visible communication form and identify its required fields.' success=True
+    local: 'Open a visible state-changing control and report the available action.' success=True
+    local: 'Use a visible sort or filter control to narrow the current list.' success=False
+  [frontier] +3 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/wishlist/index/configure/id/5/produ, got http://192.168.1.31:7770/sales/order/history
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/wishlist/index/configure/id/5/produ
+[node 9 depth=3] http://192.168.1.31:7770/wishlist
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Use the search field to find a specific product by filling in a query.' success=True
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: "Add the 'Uttermost Volterra Crackled Taupe-Gray Ceramic Table Lamp' to the cart by checking the 'Add to Cart' checkbox." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: "Hover over the 'Beauty & Personal Care' menu to explore related products." success=False
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/sales/order/history, got http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/sales/order/history
+[node 10 depth=3] http://192.168.1.31:7770/sales/order/history
+    local: "Click on the 'View Order' link for order #000000189 to inspect the order details." success=True
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: "Hover over the 'Beauty & Personal Care' menu to explore product options." success=False
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=True
+    local: 'Use a visible sort or filter control to narrow the current list.' success=False
+  [frontier] +2 URLs from callback discovery
+  [graph] 26 states, 8 skills, 2 composition edges → outputs/wa_run_04/graph.json
+  [curriculum] 12 tasks from 8 skills → outputs/wa_run_04/curriculum.json
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/sales/order/history...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/sales/order/view/order_id/189
+[node 11 depth=4] http://192.168.1.31:7770/sales/order/view/order_id/189
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: "Click on the 'Print Order' link to print the details of Order # 000000189." success=True
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: "Click on the 'Reorder' link to initiate the reorder process for Order # 000000189." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=True
+    local: 'Use a visible sort or filter control to narrow the current list.' success=False
+  [frontier] +2 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/sales/order/view/order_id/189...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/checkout/cart, got http://192.168.1.31:7770/sales/order/view/order_id/189
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/checkout/cart
+[node 12 depth=5] http://192.168.1.31:7770/checkout/cart
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Open history or status information and answer one visible record-status detail.' success=False
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+    local: "Click on the 'Proceed to Checkout' button to continue with the purchase process." success=True
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: "Hover over the 'Beauty & Personal Care' menu to explore related products." success=False
+    local: 'Open a visible communication form and identify its required fields.' success=True
+    local: 'Open a visible state-changing control and report the available action.' success=True
+    local: 'Use a visible sort or filter control to narrow the current list.' success=False

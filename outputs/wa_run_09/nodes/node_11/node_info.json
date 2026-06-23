@@ -1,0 +1,104 @@
+{
+    "url": "http://192.168.1.31:7770/checkout/cart",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/checkout",
+        "http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle-mix-wedding-colorful-sprinkles-cake-cupcake-cookie-sprinkles-ice-cream-candy-sprinkles-yellow-gold-red-royal-red-rose-icing-flowers-decorating-sprinkles-8oz.html"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 2,
+        "parent_url": "http://192.168.1.31:7770/checkout/cart"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.4,
+    "tasks_attempted": 5,
+    "tasks_solved": 2,
+    "tasks_failed": 3,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.453806,
+    "frontier_breakdown": {
+        "score": 1.4538060285446561,
+        "U": 0.011110987655692715,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/checkout/cart",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/checkout/cart",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Edit contact information by clicking the Edit link next to Emma Lopez's name and email",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Navigate to the My Wish List page by clicking the 'My Wish List' link in the top navigation bar",
+            "type": "navigation",
+            "confidence": 0.95
+        },
+        {
+            "task": "Use the search bar to search for a product (e.g., 'shoes') by typing into the combobox and submitting via Enter or clicking the Advanced Search link",
+            "type": "search",
+            "confidence": 0.7
+        },
+        {
+            "task": "Change the account password by clicking the 'Change Password' link",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Browse the Electronics category by clicking the 'Electronics' menuitem in the main navigation tablist",
+            "type": "navigation",
+            "confidence": 0.95
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/checkout/cart",
+    "depth": 2,
+    "tasks": [
+        {
+            "goal": "Report whether the visible 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ' feedback control indicates available feedback.",
+            "family": "feedback_analysis",
+            "status": "failed",
+            "episode_id": 65
+        },
+        {
+            "goal": "Click on the 'Proceed to Checkout' button to start the checkout process.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 66
+        },
+        {
+            "goal": "Open the visible '\\ue611 My Cart 130 130items' state-changing control and report the available action.",
+            "family": "state_change",
+            "status": "solved",
+            "episode_id": 67
+        },
+        {
+            "goal": "Adjust the quantity of 'Belle Of The Ball Princess Sprinkle Mix' by using the spinbutton next to the quantity field.",
+            "family": "other",
+            "status": "failed",
+            "episode_id": 68
+        },
+        {
+            "goal": "Click on the link for 'Belle Of The Ball Princess Sprinkle Mix' to view its detailed product page.",
+            "family": "other",
+            "status": "solved",
+            "episode_id": 69
+        }
+    ],
+    "episode_range": [
+        65,
+        70
+    ]
+}

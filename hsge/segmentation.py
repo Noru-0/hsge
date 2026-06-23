@@ -82,6 +82,9 @@ def _action_level_segments(steps: list[Step], site: str, task: str) -> list[SubT
     i = 0
     while i < len(steps):
         kind = steps[i].action_kind()
+        if kind == "send_msg_to_user":
+            i += 1
+            continue
         if kind in {"fill", "type"}:
             j = i + 1
             if j < len(steps) and steps[j].action_kind() in {"click", "press"}:
@@ -145,6 +148,9 @@ def _dedupe_subtrajectories(subs: list[SubTrajectory]) -> list[SubTrajectory]:
     seen: set[tuple[tuple[str, ...], str]] = set()
     out: list[SubTrajectory] = []
     for sub in subs:
+        kinds = {s.action_kind() for s in sub.steps}
+        if not sub.steps or "send_msg_to_user" in kinds or "goto" in kinds:
+            continue
         key = (tuple(s.action for s in sub.steps), sub.subgoal)
         if key in seen:
             continue

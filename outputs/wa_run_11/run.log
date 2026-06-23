@@ -1,0 +1,73 @@
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_11/domain.json
+  [skill_diag] {"episode": 1, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'", "activate state change control"], "task": "View the details of 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' by clicking on its name."}
+    local: "View the details of 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' by clicking on its name." success=True
+  [skill_diag] {"episode": 2, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback."}
+    local: "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 3, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Browse the 'Beauty & Personal Care' category", "activate state change control"], "task": "Browse the 'Beauty & Personal Care' category from the menu."}
+    local: "Browse the 'Beauty & Personal Care' category from the menu." success=True
+  [skill_diag] {"episode": 4, "event": "segments_created", "segments": 1, "steps": 3, "subgoals": ["inspect menu options"], "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears."}
+    local: "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears." success=True
+    local: "Search for 'Energy Drink' using the search bar." success=False
+    local: "Add 'Pre-baked Gingerbread House Kit Value Pack' to the cart." success=False
+  [skill_diag] {"episode": 7, "event": "segments_created", "segments": 5, "steps": 5, "subgoals": ["Open the wish list", "Search for 'V8 +Energy, Healthy Energy Drink'", "activate state change control", "fill visible field", "fill visible field"], "task": "Add 'V8 +Energy, Healthy Energy Drink' to the wish list."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 3, "episode": 7, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 3, "contexts": 1, "episode": 7, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 7, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Add 'V8 +Energy, Healthy Energy Drink' to the wish list." success=True
+    local: "Compare 'Belle Of The Ball Princess Sprinkle Mix' with another product using the 'Add to Compare' link." success=False
+    local: "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required." success=False
+  [skill_diag] {"episode": 10, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 4, "episode": 10, "event": "cluster_matured", "signatures": {"click": 4}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 4, "contexts": 1, "episode": 10, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 10, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=False
+  [skill_diag] {"episode": 12, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Identify the search field and its purpose", "submit search query"], "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search."}
+  [skill_diag] {"cluster_id": 6, "cluster_size": 3, "episode": 12, "event": "cluster_matured", "signatures": {"fill": 1, "fill > click": 2}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 6, "cluster_size": 3, "contexts": 1, "episode": 12, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 6, "episode": 12, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 1, "verify_success": 1}
+  [skill_diag] {"cluster_id": 6, "cluster_size": 4, "episode": 12, "event": "cluster_matured", "signatures": {"fill": 1, "fill > click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 6, "cluster_size": 4, "contexts": 1, "episode": 12, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 6, "episode": 12, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 1, "verify_success": 1}
+    local: "Use the visible '\\ue615 Search' search field to submit a page-relevant search." success=True
+  [frontier] +6 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+[node 2 depth=1] http://192.168.1.31:7770/catalogsearch/result
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+    local: "Change the 'Sort By' option from 'Relevance' to 'Price' to sort the search results by price." success=False
+    local: "Click on the link 'Mini Elf on the Shelf Gingerbread House Kit by Cookies United' to view product details." success=False
+    local: "Open the visible 'Sort By' sort or filter control and report one available option." success=False
+    local: "Click the 'Add to Compare' button for the 'Ninjabread Gingerbread Cookie Kit - 9.5oz Baking Kit' to compare it with other products." success=False
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=False
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/elmwood-inn-fine-teas-orange-vanill
+[node 3 depth=1] http://192.168.1.31:7770/elmwood-inn-fine-teas-orange-vanilla-caffeine-free-fruit-infusion-16-ounce-pouch.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 18, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible '4\\xa0 Reviews' feedback control indicates available feedback."}
+    local: "Report whether the visible '4\\xa0 Reviews' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 19, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "View the product details by clicking on the 'Details' tab to read more about the product."}
+    local: "View the product details by clicking on the 'Details' tab to read more about the product." success=True
+  [skill_diag] {"episode": 20, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion, 16-Ounce Pouch' to cart by clicking the 'Add to Cart' button."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 5, "episode": 20, "event": "cluster_matured", "signatures": {"click": 5}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 5, "contexts": 1, "episode": 20, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 20, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion, 16-Ounce Pouch' to cart by clicking the 'Add to Cart' button." success=True
+    local: "Use the visible 'Next' progression control and report the next required step or confirmation that appears." success=False
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/customer/account/login...
+      [prefix] step 0 stale: bid 1452 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1452 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 289 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree, arrived=)
+  [graph] 6 states, 4 skills, 0 composition edges → outputs/wa_run_11/graph.json
+  [curriculum] 4 tasks from 4 skills → outputs/wa_run_11/curriculum.json
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1452] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:click target [1452] is non-interactive role section, arrived=)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1026 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/cell-phones-accessories.html (reason=stale_action:bid 1026 is not present in current AXTree, arrived=)
+  [graph] 6 states, 4 skills, 0 composition edges → outputs/wa_run_11/graph.json
+  [curriculum] 4 tasks from 4 skills → outputs/wa_run_11/curriculum.json

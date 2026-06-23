@@ -1,0 +1,116 @@
+{
+    "url": "http://192.168.1.31:7770/catalogsearch/advanced",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/catalogsearch/advanced/result",
+        "http://192.168.1.31:7770/contact"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 4,
+        "parent_url": "http://192.168.1.31:7770/catalogsearch/advanced"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.714286,
+    "tasks_attempted": 7,
+    "tasks_solved": 5,
+    "tasks_failed": 2,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.445853,
+    "frontier_breakdown": {
+        "score": 1.445852902385158,
+        "U": 0.0031578614961947776,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/catalogsearch/advanced",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/catalogsearch/advanced",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Sort the product list by Price",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Switch view from Grid to List",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Navigate to My Account page",
+            "type": "navigation",
+            "confidence": 1.0
+        },
+        {
+            "task": "Search for 'organic coffee' using the search box",
+            "type": "search",
+            "confidence": 0.85
+        },
+        {
+            "task": "Navigate to the Home & Kitchen category via the menu",
+            "type": "navigation",
+            "confidence": 1.0
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/catalogsearch/advanced",
+    "depth": 4,
+    "tasks": [
+        {
+            "goal": "Input a price range in the 'Price' and 'USD' textboxes, then click the 'Search' button to find products within that price range.",
+            "family": "analysis",
+            "status": "failed",
+            "episode_id": 29
+        },
+        {
+            "goal": "Enter a product name in the 'Product Name' textbox and click the 'Search' button to find products matching that name.",
+            "family": "search",
+            "status": "solved",
+            "episode_id": 30
+        },
+        {
+            "goal": "Enter a short description in the 'Short Description' textbox and click the 'Search' button to find products that match that description.",
+            "family": "search",
+            "status": "solved",
+            "episode_id": 31
+        },
+        {
+            "goal": "Fill in the 'Description' textbox with keywords and click the 'Search' button to look for products containing those keywords.",
+            "family": "search",
+            "status": "solved",
+            "episode_id": 32
+        },
+        {
+            "goal": "Type a SKU in the 'SKU' textbox and click the 'Search' button to search for a specific product by its SKU.",
+            "family": "search",
+            "status": "failed",
+            "episode_id": 33
+        },
+        {
+            "goal": "Use the category menu to navigate to 'Beauty & Personal Care' and view the products available in that category.",
+            "family": "other",
+            "status": "solved",
+            "episode_id": 34
+        },
+        {
+            "goal": "Open the visible 'Contact Us' communication control and report one visible field or option.",
+            "family": "communication",
+            "status": "solved",
+            "episode_id": 35
+        }
+    ],
+    "episode_range": [
+        29,
+        36
+    ]
+}

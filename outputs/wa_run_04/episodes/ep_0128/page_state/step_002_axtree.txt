@@ -1,0 +1,730 @@
+RootWebArea 'Shopping Cart', focused
+	[315] banner ''
+		[318] list ''
+			[319] listitem ''
+				[320] link 'My Account'
+			[321] listitem ''
+				[322] link 'My Wish List'
+			[323] listitem ''
+				[324] link 'Sign Out'
+			[325] listitem ''
+			[328] listitem ''
+				StaticText 'Welcome, Emma Lopez!'
+		[330] link 'Skip to Content'
+			StaticText 'Skip to Content'
+		[335] link 'store logo'
+			[336] image 'one_stop_market_logo'
+		[338] link '\ue611 My Cart 20 20items'
+			StaticText '\ue611'
+			StaticText 'My Cart'
+			StaticText '20'
+			StaticText '20'
+			StaticText 'items'
+		[656] Section ''
+			[658] LabelText ''
+				StaticText '\ue615'
+				StaticText 'Search'
+			[661] combobox '\ue615 Search', autocomplete='both', hasPopup='listbox', expanded=False
+			[664] link 'Advanced Search'
+			[666] button 'Search', disabled=True
+				StaticText '\ue615'
+				StaticText 'Search'
+	[669] tablist '', multiselectable=False, orientation='horizontal'
+		[672] tabpanel ''
+			[673] navigation ''
+				[674] menu '', orientation='vertical'
+					[676] menuitem '\ue622 Beauty & Personal Care', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Beauty & Personal Care'
+					[893] menuitem '\ue622 Sports & Outdoors', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Sports & Outdoors'
+					[931] menuitem '\ue622 Clothing, Shoes & Jewelry', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Clothing, Shoes & Jewelry'
+					[983] menuitem '\ue622 Home & Kitchen', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Home & Kitchen'
+					[1110] menuitem '\ue622 Office Products', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Office Products'
+					[1142] menuitem '\ue622 Tools & Home Improvement', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Tools & Home Improvement'
+					[1161] menuitem '\ue622 Health & Household', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Health & Household'
+					[1185] menuitem '\ue622 Patio, Lawn & Garden', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Patio, Lawn & Garden'
+					[1204] menuitem '\ue622 Electronics', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Electronics'
+					[1413] menuitem '\ue622 Cell Phones & Accessories', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Cell Phones & Accessories'
+					[1464] menuitem '\ue622 Video Games', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Video Games'
+					[1513] menuitem '\ue622 Grocery & Gourmet Food', hasPopup='menu'
+						StaticText '\ue622'
+						StaticText 'Grocery & Gourmet Food'
+	[1741] main ''
+		[1744] heading 'Shopping Cart'
+			StaticText 'Shopping Cart'
+		[1756] strong ''
+			StaticText 'Summary'
+		[1757] tablist '', multiselectable=False, orientation='horizontal'
+			[1758] tab 'Estimate Shipping and Tax \ue621', focused, expanded=True, selected=True, controls='block-summary'
+				[1759] heading 'Estimate Shipping and Tax'
+				StaticText '\ue621'
+			[1760] tabpanel 'Estimate Shipping and Tax'
+				[1761] Section ''
+					[1762] group ''
+						[1766] paragraph ''
+							StaticText 'Enter your destination to get a shipping estimate.'
+						[1768] LabelText ''
+							StaticText 'Country'
+						[1771] combobox 'Country' value='United States', hasPopup='menu', expanded=False
+							[1772] option '', selected=False
+							[1773] option 'Afghanistan', selected=False
+							[1774] option 'Albania', selected=False
+							[1775] option 'Algeria', selected=False
+							[1776] option 'American Samoa', selected=False
+							[1777] option 'Andorra', selected=False
+							[1778] option 'Angola', selected=False
+							[1779] option 'Anguilla', selected=False
+							[1780] option 'Antarctica', selected=False
+							[1781] option 'Antigua & Barbuda', selected=False
+							[1782] option 'Argentina', selected=False
+							[1783] option 'Armenia', selected=False
+							[1784] option 'Aruba', selected=False
+							[1785] option 'Australia', selected=False
+							[1786] option 'Austria', selected=False
+							[1787] option 'Azerbaijan', selected=False
+							[1788] option 'Bahamas', selected=False
+							[1789] option 'Bahrain', selected=False
+							[1790] option 'Bangladesh', selected=False
+							[1791] option 'Barbados', selected=False
+							[1792] option 'Belarus', selected=False
+							[1793] option 'Belgium', selected=False
+							[1794] option 'Belize', selected=False
+							[1795] option 'Benin', selected=False
+							[1796] option 'Bermuda', selected=False
+							[1797] option 'Bhutan', selected=False
+							[1798] option 'Bolivia', selected=False
+							[1799] option 'Bosnia & Herzegovina', selected=False
+							[1800] option 'Botswana', selected=False
+							[1801] option 'Bouvet Island', selected=False
+							[1802] option 'Brazil', selected=False
+							[1803] option 'British Indian Ocean Territory', selected=False
+							[1804] option 'British Virgin Islands', selected=False
+							[1805] option 'Brunei', selected=False
+							[1806] option 'Bulgaria', selected=False
+							[1807] option 'Burkina Faso', selected=False
+							[1808] option 'Burundi', selected=False
+							[1809] option 'Cambodia', selected=False
+							[1810] option 'Cameroon', selected=False
+							[1811] option 'Canada', selected=False
+							[1812] option 'Cape Verde', selected=False
+							[1813] option 'Caribbean Netherlands', selected=False
+							[1814] option 'Cayman Islands', selected=False
+							[1815] option 'Central African Republic', selected=False
+							[1816] option 'Chad', selected=False
+							[1817] option 'Chile', selected=False
+							[1818] option 'China', selected=False
+							[1819] option 'Christmas Island', selected=False
+							[1820] option 'Cocos (Keeling) Islands', selected=False
+							[1821] option 'Colombia', selected=False
+							[1822] option 'Comoros', selected=False
+							[1823] option 'Congo - Brazzaville', selected=False
+							[1824] option 'Congo - Kinshasa', selected=False
+							[1825] option 'Cook Islands', selected=False
+							[1826] option 'Costa Rica', selected=False
+							[1827] option 'Croatia', selected=False
+							[1828] option 'Cuba', selected=False
+							[1829] option 'Curaçao', selected=False
+							[1830] option 'Cyprus', selected=False
+							[1831] option 'Czechia', selected=False
+							[1832] option 'Côte d’Ivoire', selected=False
+							[1833] option 'Denmark', selected=False
+							[1834] option 'Djibouti', selected=False
+							[1835] option 'Dominica', selected=False
+							[1836] option 'Dominican Republic', selected=False
+							[1837] option 'Ecuador', selected=False
+							[1838] option 'Egypt', selected=False
+							[1839] option 'El Salvador', selected=False
+							[1840] option 'Equatorial Guinea', selected=False
+							[1841] option 'Eritrea', selected=False
+							[1842] option 'Estonia', selected=False
+							[1843] option 'Eswatini', selected=False
+							[1844] option 'Ethiopia', selected=False
+							[1845] option 'Falkland Islands', selected=False
+							[1846] option 'Faroe Islands', selected=False
+							[1847] option 'Fiji', selected=False
+							[1848] option 'Finland', selected=False
+							[1849] option 'France', selected=False
+							[1850] option 'French Guiana', selected=False
+							[1851] option 'French Polynesia', selected=False
+							[1852] option 'French Southern Territories', selected=False
+							[1853] option 'Gabon', selected=False
+							[1854] option 'Gambia', selected=False
+							[1855] option 'Georgia', selected=False
+							[1856] option 'Germany', selected=False
+							[1857] option 'Ghana', selected=False
+							[1858] option 'Gibraltar', selected=False
+							[1859] option 'Greece', selected=False
+							[1860] option 'Greenland', selected=False
+							[1861] option 'Grenada', selected=False
+							[1862] option 'Guadeloupe', selected=False
+							[1863] option 'Guam', selected=False
+							[1864] option 'Guatemala', selected=False
+							[1865] option 'Guernsey', selected=False
+							[1866] option 'Guinea', selected=False
+							[1867] option 'Guinea-Bissau', selected=False
+							[1868] option 'Guyana', selected=False
+							[1869] option 'Haiti', selected=False
+							[1870] option 'Heard & McDonald Islands', selected=False
+							[1871] option 'Honduras', selected=False
+							[1872] option 'Hong Kong SAR China', selected=False
+							[1873] option 'Hungary', selected=False
+							[1874] option 'Iceland', selected=False
+							[1875] option 'India', selected=False
+							[1876] option 'Indonesia', selected=False
+							[1877] option 'Iran', selected=False
+							[1878] option 'Iraq', selected=False
+							[1879] option 'Ireland', selected=False
+							[1880] option 'Isle of Man', selected=False
+							[1881] option 'Israel', selected=False
+							[1882] option 'Italy', selected=False
+							[1883] option 'Jamaica', selected=False
+							[1884] option 'Japan', selected=False
+							[1885] option 'Jersey', selected=False
+							[1886] option 'Jordan', selected=False
+							[1887] option 'Kazakhstan', selected=False
+							[1888] option 'Kenya', selected=False
+							[1889] option 'Kiribati', selected=False
+							[1890] option 'Kosovo', selected=False
+							[1891] option 'Kuwait', selected=False
+							[1892] option 'Kyrgyzstan', selected=False
+							[1893] option 'Laos', selected=False
+							[1894] option 'Latvia', selected=False
+							[1895] option 'Lebanon', selected=False
+							[1896] option 'Lesotho', selected=False
+							[1897] option 'Liberia', selected=False
+							[1898] option 'Libya', selected=False
+							[1899] option 'Liechtenstein', selected=False
+							[1900] option 'Lithuania', selected=False
+							[1901] option 'Luxembourg', selected=False
+							[1902] option 'Macao SAR China', selected=False
+							[1903] option 'Madagascar', selected=False
+							[1904] option 'Malawi', selected=False
+							[1905] option 'Malaysia', selected=False
+							[1906] option 'Maldives', selected=False
+							[1907] option 'Mali', selected=False
+							[1908] option 'Malta', selected=False
+							[1909] option 'Marshall Islands', selected=False
+							[1910] option 'Martinique', selected=False
+							[1911] option 'Mauritania', selected=False
+							[1912] option 'Mauritius', selected=False
+							[1913] option 'Mayotte', selected=False
+							[1914] option 'Mexico', selected=False
+							[1915] option 'Micronesia', selected=False
+							[1916] option 'Moldova', selected=False
+							[1917] option 'Monaco', selected=False
+							[1918] option 'Mongolia', selected=False
+							[1919] option 'Montenegro', selected=False
+							[1920] option 'Montserrat', selected=False
+							[1921] option 'Morocco', selected=False
+							[1922] option 'Mozambique', selected=False
+							[1923] option 'Myanmar (Burma)', selected=False
+							[1924] option 'Namibia', selected=False
+							[1925] option 'Nauru', selected=False
+							[1926] option 'Nepal', selected=False
+							[1927] option 'Netherlands', selected=False
+							[1928] option 'New Caledonia', selected=False
+							[1929] option 'New Zealand', selected=False
+							[1930] option 'Nicaragua', selected=False
+							[1931] option 'Niger', selected=False
+							[1932] option 'Nigeria', selected=False
+							[1933] option 'Niue', selected=False
+							[1934] option 'Norfolk Island', selected=False
+							[1935] option 'North Korea', selected=False
+							[1936] option 'North Macedonia', selected=False
+							[1937] option 'Northern Mariana Islands', selected=False
+							[1938] option 'Norway', selected=False
+							[1939] option 'Oman', selected=False
+							[1940] option 'Pakistan', selected=False
+							[1941] option 'Palau', selected=False
+							[1942] option 'Palestinian Territories', selected=False
+							[1943] option 'Panama', selected=False
+							[1944] option 'Papua New Guinea', selected=False
+							[1945] option 'Paraguay', selected=False
+							[1946] option 'Peru', selected=False
+							[1947] option 'Philippines', selected=False
+							[1948] option 'Pitcairn Islands', selected=False
+							[1949] option 'Poland', selected=False
+							[1950] option 'Portugal', selected=False
+							[1951] option 'Qatar', selected=False
+							[1952] option 'Romania', selected=False
+							[1953] option 'Russia', selected=False
+							[1954] option 'Rwanda', selected=False
+							[1955] option 'Réunion', selected=False
+							[1956] option 'Samoa', selected=False
+							[1957] option 'San Marino', selected=False
+							[1958] option 'Saudi Arabia', selected=False
+							[1959] option 'Senegal', selected=False
+							[1960] option 'Serbia', selected=False
+							[1961] option 'Seychelles', selected=False
+							[1962] option 'Sierra Leone', selected=False
+							[1963] option 'Singapore', selected=False
+							[1964] option 'Sint Maarten', selected=False
+							[1965] option 'Slovakia', selected=False
+							[1966] option 'Slovenia', selected=False
+							[1967] option 'Solomon Islands', selected=False
+							[1968] option 'Somalia', selected=False
+							[1969] option 'South Africa', selected=False
+							[1970] option 'South Georgia & South Sandwich Islands', selected=False
+							[1971] option 'South Korea', selected=False
+							[1972] option 'Spain', selected=False
+							[1973] option 'Sri Lanka', selected=False
+							[1974] option 'St. Barthélemy', selected=False
+							[1975] option 'St. Helena', selected=False
+							[1976] option 'St. Kitts & Nevis', selected=False
+							[1977] option 'St. Lucia', selected=False
+							[1978] option 'St. Martin', selected=False
+							[1979] option 'St. Pierre & Miquelon', selected=False
+							[1980] option 'St. Vincent & Grenadines', selected=False
+							[1981] option 'Sudan', selected=False
+							[1982] option 'Suriname', selected=False
+							[1983] option 'Svalbard & Jan Mayen', selected=False
+							[1984] option 'Sweden', selected=False
+							[1985] option 'Switzerland', selected=False
+							[1986] option 'Syria', selected=False
+							[1987] option 'São Tomé & Príncipe', selected=False
+							[1988] option 'Taiwan, Province of China', selected=False
+							[1989] option 'Tajikistan', selected=False
+							[1990] option 'Tanzania', selected=False
+							[1991] option 'Thailand', selected=False
+							[1992] option 'Timor-Leste', selected=False
+							[1993] option 'Togo', selected=False
+							[1994] option 'Tokelau', selected=False
+							[1995] option 'Tonga', selected=False
+							[1996] option 'Trinidad & Tobago', selected=False
+							[1997] option 'Tunisia', selected=False
+							[1998] option 'Turkey', selected=False
+							[1999] option 'Turkmenistan', selected=False
+							[2000] option 'Turks & Caicos Islands', selected=False
+							[2001] option 'Tuvalu', selected=False
+							[2002] option 'U.S. Outlying Islands', selected=False
+							[2003] option 'U.S. Virgin Islands', selected=False
+							[2004] option 'Uganda', selected=False
+							[2005] option 'Ukraine', selected=False
+							[2006] option 'United Arab Emirates', selected=False
+							[2007] option 'United Kingdom', selected=False
+							[2008] option 'United States', selected=True
+							[2009] option 'Uruguay', selected=False
+							[2010] option 'Uzbekistan', selected=False
+							[2011] option 'Vanuatu', selected=False
+							[2012] option 'Vatican City', selected=False
+							[2013] option 'Venezuela', selected=False
+							[2014] option 'Vietnam', selected=False
+							[2015] option 'Wallis & Futuna', selected=False
+							[2016] option 'Western Sahara', selected=False
+							[2017] option 'Yemen', selected=False
+							[2018] option 'Zambia', selected=False
+							[2019] option 'Zimbabwe', selected=False
+							[2020] option 'Åland Islands', selected=False
+						[2022] LabelText ''
+							StaticText 'State/Province'
+						[2025] combobox 'State/Province' value='California', hasPopup='menu', expanded=False
+							[2026] option 'Please select a region, state or province.', selected=False
+							[2027] option 'Alabama', selected=False
+							[2028] option 'Alaska', selected=False
+							[2029] option 'American Samoa', selected=False
+							[2030] option 'Arizona', selected=False
+							[2031] option 'Arkansas', selected=False
+							[2032] option 'Armed Forces Africa', selected=False
+							[2033] option 'Armed Forces Americas', selected=False
+							[2034] option 'Armed Forces Canada', selected=False
+							[2035] option 'Armed Forces Europe', selected=False
+							[2036] option 'Armed Forces Middle East', selected=False
+							[2037] option 'Armed Forces Pacific', selected=False
+							[2038] option 'California', selected=True
+							[2039] option 'Colorado', selected=False
+							[2040] option 'Connecticut', selected=False
+							[2041] option 'Delaware', selected=False
+							[2042] option 'District of Columbia', selected=False
+							[2043] option 'Federated States Of Micronesia', selected=False
+							[2044] option 'Florida', selected=False
+							[2045] option 'Georgia', selected=False
+							[2046] option 'Guam', selected=False
+							[2047] option 'Hawaii', selected=False
+							[2048] option 'Idaho', selected=False
+							[2049] option 'Illinois', selected=False
+							[2050] option 'Indiana', selected=False
+							[2051] option 'Iowa', selected=False
+							[2052] option 'Kansas', selected=False
+							[2053] option 'Kentucky', selected=False
+							[2054] option 'Louisiana', selected=False
+							[2055] option 'Maine', selected=False
+							[2056] option 'Marshall Islands', selected=False
+							[2057] option 'Maryland', selected=False
+							[2058] option 'Massachusetts', selected=False
+							[2059] option 'Michigan', selected=False
+							[2060] option 'Minnesota', selected=False
+							[2061] option 'Mississippi', selected=False
+							[2062] option 'Missouri', selected=False
+							[2063] option 'Montana', selected=False
+							[2064] option 'Nebraska', selected=False
+							[2065] option 'Nevada', selected=False
+							[2066] option 'New Hampshire', selected=False
+							[2067] option 'New Jersey', selected=False
+							[2068] option 'New Mexico', selected=False
+							[2069] option 'New York', selected=False
+							[2070] option 'North Carolina', selected=False
+							[2071] option 'North Dakota', selected=False
+							[2072] option 'Northern Mariana Islands', selected=False
+							[2073] option 'Ohio', selected=False
+							[2074] option 'Oklahoma', selected=False
+							[2075] option 'Oregon', selected=False
+							[2076] option 'Palau', selected=False
+							[2077] option 'Pennsylvania', selected=False
+							[2078] option 'Puerto Rico', selected=False
+							[2079] option 'Rhode Island', selected=False
+							[2080] option 'South Carolina', selected=False
+							[2081] option 'South Dakota', selected=False
+							[2082] option 'Tennessee', selected=False
+							[2083] option 'Texas', selected=False
+							[2084] option 'Utah', selected=False
+							[2085] option 'Vermont', selected=False
+							[2086] option 'Virgin Islands', selected=False
+							[2087] option 'Virginia', selected=False
+							[2088] option 'Washington', selected=False
+							[2089] option 'West Virginia', selected=False
+							[2090] option 'Wisconsin', selected=False
+							[2091] option 'Wyoming', selected=False
+						[2098] LabelText ''
+							StaticText 'Zip/Postal Code'
+						[2101] textbox 'Zip/Postal Code' value='94010'
+							StaticText '94010'
+				[2102] Section ''
+					[2104] group ''
+						[2105] DescriptionList ''
+							[2106] term ''
+								StaticText 'Flat Rate'
+							[2108] definition ''
+								[2110] radio 'Fixed$100.00', checked='true'
+								[2111] LabelText ''
+									StaticText 'Fixed'
+									StaticText '$100.00'
+		[2117] table ''
+			[2119] rowgroup ''
+				[2120] row ''
+					[2121] rowheader 'Subtotal'
+					[2122] gridcell '$2,150.61'
+						StaticText '$2,150.61'
+				[2124] row ''
+					[2125] rowheader 'Shipping(Flat Rate - Fixed)'
+						StaticText 'Shipping'
+						StaticText '(Flat Rate - Fixed)'
+					[2128] gridcell '$100.00'
+						StaticText '$100.00'
+				[2130] row ''
+					[2131] rowheader 'Order Total'
+						[2132] strong ''
+							StaticText 'Order Total'
+					[2133] gridcell '$2,250.61'
+						[2134] strong ''
+							StaticText '$2,250.61'
+		[2136] tablist '', multiselectable=False, orientation='horizontal'
+			[2137] tab 'Apply Discount Code \ue622', expanded=False, selected=False
+				[2138] heading 'Apply Discount Code'
+				StaticText '\ue622'
+		[2152] list ''
+			[2153] listitem ''
+				[2154] button 'Proceed to Checkout'
+					StaticText 'Proceed to Checkout'
+			[2156] listitem ''
+				[2157] link 'Check Out with Multiple Addresses'
+					StaticText 'Check Out with Multiple Addresses'
+		[2159] Section ''
+			[2162] table 'Shopping Cart Items'
+				[2163] caption ''
+					StaticText 'Shopping Cart Items'
+				[2164] rowgroup ''
+					[2165] row ''
+						[2166] columnheader 'Item'
+							StaticText 'Item'
+						[2168] columnheader 'Price'
+							StaticText 'Price'
+						[2170] columnheader 'Qty'
+							StaticText 'Qty'
+						[2172] columnheader 'Subtotal'
+							StaticText 'Subtotal'
+				[2174] rowgroup ''
+					[2175] row ''
+						[2176] gridcell 'Uttermost Volterra Crackled Taupe-Gray Ceramic Table Lamp Uttermost Volterra Crackled Taupe-Gray Ceramic Table Lamp'
+							[2177] link 'Uttermost Volterra Crackled Taupe-Gray Ceramic Table Lamp'
+								[2180] image 'Uttermost Volterra Crackled Taupe-Gray Ceramic Table Lamp'
+							[2184] strong ''
+								[2185] link 'Uttermost Volterra Crackled Taupe-Gray Ceramic Table Lamp'
+						[2186] gridcell '$250.80'
+							StaticText '$250.80'
+						[2190] gridcell 'Qty 1'
+							[2193] LabelText ''
+								StaticText 'Qty'
+								[2195] spinbutton 'Qty' value=1, valuemin=0, valuemax=0, valuetext=''
+									StaticText '1'
+						[2196] gridcell '$250.80'
+							StaticText '$250.80'
+					[2200] row ''
+						[2201] gridcell 'Move to Wishlist Edit Remove item'
+							[2204] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2206] link 'Edit'
+								StaticText 'Edit'
+							[2208] link 'Remove item'
+								StaticText 'Remove item'
+				[2210] rowgroup ''
+					[2211] row ''
+						[2212] gridcell 'NOZE Rustic Coat Rack Wall Mounted Shelf with 4 Hooks, Hanging Entryway Organizer for Mug Coffee Cup, Holding Solid Wooden Shelf with 2 Baskets for Kitchen Living Room, Bathroom and Bedroom NOZE Rustic Coat Rack Wall Mounted Shelf with 4 Hooks, Hanging Entryway Organizer for Mug Coffee Cup, Holding Solid Wooden Shelf with 2 Baskets for Kitchen Living Room, Bathroom and Bedroom'
+							[2213] link 'NOZE Rustic Coat Rack Wall Mounted Shelf with 4 Hooks, Hanging Entryway Organizer for Mug Coffee Cup, Holding Solid Wooden Shelf with 2 Baskets for Kitchen Living Room, Bathroom and Bedroom'
+								[2216] image 'NOZE Rustic Coat Rack Wall Mounted Shelf with 4 Hooks, Hanging Entryway Organizer for Mug Coffee Cup, Holding Solid Wooden Shelf with 2 Baskets for Kitchen Living Room, Bathroom and Bedroom'
+							[2220] strong ''
+								[2221] link 'NOZE Rustic Coat Rack Wall Mounted Shelf with 4 Hooks, Hanging Entryway Organizer for Mug Coffee Cup, Holding Solid Wooden Shelf with 2 Baskets for Kitchen Living Room, Bathroom and Bedroom'
+						[2222] gridcell '$40.99'
+							StaticText '$40.99'
+						[2226] gridcell 'Qty 1'
+							[2229] LabelText ''
+								StaticText 'Qty'
+								[2231] spinbutton 'Qty' value=1, valuemin=0, valuemax=0, valuetext=''
+									StaticText '1'
+						[2232] gridcell '$40.99'
+							StaticText '$40.99'
+					[2236] row ''
+						[2237] gridcell 'Move to Wishlist Edit Remove item'
+							[2240] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2242] link 'Edit'
+								StaticText 'Edit'
+							[2244] link 'Remove item'
+								StaticText 'Remove item'
+				[2246] rowgroup ''
+					[2247] row ''
+						[2248] gridcell 'Plus Size Lingerie for Women Sexy for Sex Naughty Eyelash Lace Bodysuit Naughty Mesh One Piece Teddy Bodysuit Outfits Plus Size Lingerie for Women Sexy for Sex Naughty Eyelash Lace Bodysuit Naughty Mesh One Piece Teddy Bodysuit Outfits Large Blue'
+							[2249] link 'Plus Size Lingerie for Women Sexy for Sex Naughty Eyelash Lace Bodysuit Naughty Mesh One Piece Teddy Bodysuit Outfits'
+								[2252] image 'Plus Size Lingerie for Women Sexy for Sex Naughty Eyelash Lace Bodysuit Naughty Mesh One Piece Teddy Bodysuit Outfits'
+							[2256] strong ''
+								[2257] link 'Plus Size Lingerie for Women Sexy for Sex Naughty Eyelash Lace Bodysuit Naughty Mesh One Piece Teddy Bodysuit Outfits'
+							[2258] DescriptionList ''
+								[2259] term ''
+									StaticText 'Size'
+									StaticText ':'
+								[2260] definition ''
+									StaticText 'Large'
+								[2261] term ''
+									StaticText 'Color'
+									StaticText ':'
+								[2262] definition ''
+									StaticText 'Blue'
+						[2263] gridcell '$58.63'
+							StaticText '$58.63'
+						[2267] gridcell 'Qty 1'
+							[2270] LabelText ''
+								StaticText 'Qty'
+								[2272] spinbutton 'Qty' value=1, valuemin=0, valuemax=0, valuetext=''
+									StaticText '1'
+						[2273] gridcell '$58.63'
+							StaticText '$58.63'
+					[2277] row ''
+						[2278] gridcell 'Move to Wishlist Edit Remove item'
+							[2281] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2283] link 'Edit'
+								StaticText 'Edit'
+							[2285] link 'Remove item'
+								StaticText 'Remove item'
+				[2287] rowgroup ''
+					[2288] row ''
+						[2289] gridcell 'V8 +Energy, Healthy Energy Drink, Steady Energy from Black and Green Tea, Pomegranate Blueberry, 8 Ounce Can ,Pack of 24 V8 +Energy, Healthy Energy Drink, Steady Energy from Black and Green Tea, Pomegranate Blueberry, 8 Ounce Can ,Pack of 24'
+							[2290] link 'V8 +Energy, Healthy Energy Drink, Steady Energy from Black and Green Tea, Pomegranate Blueberry, 8 Ounce Can ,Pack of 24'
+								[2293] image 'V8 +Energy, Healthy Energy Drink, Steady Energy from Black and Green Tea, Pomegranate Blueberry, 8 Ounce Can ,Pack of 24'
+							[2297] strong ''
+								[2298] link 'V8 +Energy, Healthy Energy Drink, Steady Energy from Black and Green Tea, Pomegranate Blueberry, 8 Ounce Can ,Pack of 24'
+						[2299] gridcell '$14.47'
+							StaticText '$14.47'
+						[2303] gridcell 'Qty 3'
+							[2306] LabelText ''
+								StaticText 'Qty'
+								[2308] spinbutton 'Qty' value=3, valuemin=0, valuemax=0, valuetext=''
+									StaticText '3'
+						[2309] gridcell '$43.41'
+							StaticText '$43.41'
+					[2313] row ''
+						[2314] gridcell 'Move to Wishlist Edit Remove item'
+							[2317] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2319] link 'Edit'
+								StaticText 'Edit'
+							[2321] link 'Remove item'
+								StaticText 'Remove item'
+				[2323] rowgroup ''
+					[2324] row ''
+						[2325] gridcell 'Pre-baked Gingerbread House Kit Value Pack, 17 oz., Pack of 2, Total 34 oz. Pre-baked Gingerbread House Kit Value Pack, 17 oz., Pack of 2, Total 34 oz.'
+							[2326] link 'Pre-baked Gingerbread House Kit Value Pack, 17 oz., Pack of 2, Total 34 oz.'
+								[2329] image 'Pre-baked Gingerbread House Kit Value Pack, 17 oz., Pack of 2, Total 34 oz.'
+							[2333] strong ''
+								[2334] link 'Pre-baked Gingerbread House Kit Value Pack, 17 oz., Pack of 2, Total 34 oz.'
+						[2335] gridcell '$19.99'
+							StaticText '$19.99'
+						[2339] gridcell 'Qty 6'
+							[2342] LabelText ''
+								StaticText 'Qty'
+								[2344] spinbutton 'Qty' value=6, valuemin=0, valuemax=0, valuetext=''
+									StaticText '6'
+						[2345] gridcell '$119.94'
+							StaticText '$119.94'
+					[2349] row ''
+						[2350] gridcell 'Move to Wishlist Edit Remove item'
+							[2353] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2355] link 'Edit'
+								StaticText 'Edit'
+							[2357] link 'Remove item'
+								StaticText 'Remove item'
+				[2359] rowgroup ''
+					[2360] row ''
+						[2361] gridcell 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion, 16-Ounce Pouch Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion, 16-Ounce Pouch'
+							[2362] link 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion, 16-Ounce Pouch'
+								[2365] image 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion, 16-Ounce Pouch'
+							[2369] strong ''
+								[2370] link 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion, 16-Ounce Pouch'
+						[2371] gridcell '$19.36'
+							StaticText '$19.36'
+						[2375] gridcell 'Qty 1'
+							[2378] LabelText ''
+								StaticText 'Qty'
+								[2380] spinbutton 'Qty' value=1, valuemin=0, valuemax=0, valuetext=''
+									StaticText '1'
+						[2381] gridcell '$19.36'
+							StaticText '$19.36'
+					[2385] row ''
+						[2386] gridcell 'Move to Wishlist Edit Remove item'
+							[2389] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2391] link 'Edit'
+								StaticText 'Edit'
+							[2393] link 'Remove item'
+								StaticText 'Remove item'
+				[2395] rowgroup ''
+					[2396] row ''
+						[2397] gridcell 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ 8 Ounce (Pack of 1)'
+							[2398] link 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ'
+								[2401] image 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ'
+							[2405] strong ''
+								[2406] link 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ'
+							[2407] DescriptionList ''
+								[2408] term ''
+									StaticText 'Size'
+									StaticText ':'
+								[2409] definition ''
+									StaticText '8 Ounce (Pack of 1)'
+						[2410] gridcell '$23.50'
+							StaticText '$23.50'
+						[2414] gridcell 'Qty 4'
+							[2417] LabelText ''
+								StaticText 'Qty'
+								[2419] spinbutton 'Qty' value=4, valuemin=0, valuemax=0, valuetext=''
+									StaticText '4'
+						[2420] gridcell '$94.00'
+							StaticText '$94.00'
+					[2424] row ''
+						[2425] gridcell 'Move to Wishlist Edit Remove item'
+							[2428] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2430] link 'Edit'
+								StaticText 'Edit'
+							[2432] link 'Remove item'
+								StaticText 'Remove item'
+				[2434] rowgroup ''
+					[2435] row ''
+						[2436] gridcell 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ 2 Ounce (Pack of 1)'
+							[2437] link 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ'
+								[2440] image 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ'
+							[2444] strong ''
+								[2445] link 'Belle Of The Ball Princess Sprinkle Mix| Wedding Colorful Sprinkles| Cake Cupcake Cookie Sprinkles| Ice cream Candy Sprinkles| Yellow Gold Red Royal Red Rose Icing Flowers Decorating Sprinkles, 8OZ'
+							[2446] DescriptionList ''
+								[2447] term ''
+									StaticText 'Size'
+									StaticText ':'
+								[2448] definition ''
+									StaticText '2 Ounce (Pack of 1)'
+						[2449] gridcell '$23.50'
+							StaticText '$23.50'
+						[2453] gridcell 'Qty 1'
+							[2456] LabelText ''
+								StaticText 'Qty'
+								[2458] spinbutton 'Qty' value=1, valuemin=0, valuemax=0, valuetext=''
+									StaticText '1'
+						[2459] gridcell '$23.50'
+							StaticText '$23.50'
+					[2463] row ''
+						[2464] gridcell 'Move to Wishlist Edit Remove item'
+							[2467] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2469] link 'Edit'
+								StaticText 'Edit'
+							[2471] link 'Remove item'
+								StaticText 'Remove item'
+				[2473] rowgroup ''
+					[2474] row ''
+						[2475] gridcell 'Quoizel TF9404M Grove Park Tiffany Multi-Color Floor Lamp Quoizel TF9404M Grove Park Tiffany Multi-Color Floor Lamp'
+							[2476] link 'Quoizel TF9404M Grove Park Tiffany Multi-Color Floor Lamp'
+								[2479] image 'Quoizel TF9404M Grove Park Tiffany Multi-Color Floor Lamp'
+							[2483] strong ''
+								[2484] link 'Quoizel TF9404M Grove Park Tiffany Multi-Color Floor Lamp'
+						[2485] gridcell '$749.99'
+							StaticText '$749.99'
+						[2489] gridcell 'Qty 2'
+							[2492] LabelText ''
+								StaticText 'Qty'
+								[2494] spinbutton 'Qty' value=2, valuemin=0, valuemax=0, valuetext=''
+									StaticText '2'
+						[2495] gridcell '$1,499.98'
+							StaticText '$1,499.98'
+					[2499] row ''
+						[2500] gridcell 'Move to Wishlist Edit Remove item'
+							[2503] link 'Move to Wishlist'
+								StaticText 'Move to Wishlist'
+							[2505] link 'Edit'
+								StaticText 'Edit'
+							[2507] link 'Remove item'
+								StaticText 'Remove item'
+			[2510] link '\ue617 Continue Shopping'
+				StaticText '\ue617'
+				StaticText 'Continue Shopping'
+			[2512] button '\ue603 Update Shopping Cart'
+				StaticText '\ue603'
+				StaticText 'Update Shopping Cart'
+	[2517] contentinfo ''
+		[2523] Section ''
+			StaticText '\ue61d'
+			[2526] LabelText ''
+				StaticText 'Sign Up for Our Newsletter:'
+				[2528] textbox 'Sign Up for Our Newsletter:'
+			[2530] button 'Subscribe'
+				StaticText 'Subscribe'
+		[2532] list ''
+			[2533] listitem ''
+				[2534] link 'Privacy and Cookie Policy'
+			[2535] listitem ''
+				[2536] link 'Search Terms'
+			[2537] listitem ''
+				[2538] link 'Advanced Search'
+			[2539] listitem ''
+				[2540] link 'Contact Us'
+		StaticText 'Copyright © 2013-present Magento, Inc. All rights reserved.'
+		StaticText 'Help Us Keep Magento Healthy'
+		StaticText ''
+		[2545] link 'Report All Bugs'

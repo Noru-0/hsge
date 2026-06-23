@@ -1,0 +1,111 @@
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_12/domain.json
+  [skill_diag] {"episode": 1, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Check the details of 'Belle Of The Ball Princess Sprinkle Mix'", "activate state change control"], "task": "Check the details and price of 'Belle Of The Ball Princess Sprinkle Mix'."}
+    local: "Check the details and price of 'Belle Of The Ball Princess Sprinkle Mix'." success=True
+  [skill_diag] {"episode": 2, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["Read the first review for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'", "activate state change control", "activate state change control"], "task": "Read the reviews for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 3, "episode": 2, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 3, "contexts": 1, "episode": 2, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 2, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Read the reviews for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'." success=True
+  [skill_diag] {"episode": 3, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback."}
+    local: "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 4, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Access the main menu", "activate state change control"], "task": "Navigate to the 'Beauty & Personal Care' category from the menu."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 4, "episode": 4, "event": "cluster_matured", "signatures": {"click": 4}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 4, "contexts": 1, "episode": 4, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 4, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Navigate to the 'Beauty & Personal Care' category from the menu." success=True
+  [skill_diag] {"episode": 5, "event": "segments_created", "segments": 1, "steps": 3, "subgoals": ["inspect menu options"], "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears."}
+    local: "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears." success=True
+  [skill_diag] {"episode": 6, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["fill visible field", "fill visible field"], "task": "Use the search bar to search for 'Energy Drink' and view the results."}
+    local: "Use the search bar to search for 'Energy Drink' and view the results." success=True
+  [skill_diag] {"episode": 7, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Add the 'Pre-baked Gingerbread House Kit Value Pack' to the cart."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 5, "episode": 7, "event": "cluster_matured", "signatures": {"click": 5}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 5, "contexts": 1, "episode": 7, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 7, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Add the 'Pre-baked Gingerbread House Kit Value Pack' to the cart." success=True
+  [skill_diag] {"episode": 8, "event": "segments_created", "segments": 5, "steps": 5, "subgoals": ["Navigate to the product page for 'V8 +Energy, Healthy Energy Drink'", "Add 'V8 +Energy, Healthy Energy Drink' to the wish list", "activate state change control", "fill visible field", "fill visible field"], "task": "Add the 'V8 +Energy, Healthy Energy Drink' to the wish list."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 6, "episode": 8, "event": "cluster_matured", "signatures": {"click": 6}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 6, "contexts": 1, "episode": 8, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 8, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+  [skill_diag] {"cluster_id": 5, "cluster_size": 3, "episode": 8, "event": "cluster_matured", "signatures": {"fill": 1, "type": 2}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 5, "cluster_size": 3, "contexts": 1, "episode": 8, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 5, "episode": 8, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 1, "verify_success": 1}
+  [skill_diag] {"cluster_id": 5, "cluster_size": 4, "episode": 8, "event": "cluster_matured", "signatures": {"fill": 1, "fill > click": 1, "type": 2}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 5, "cluster_size": 4, "contexts": 1, "episode": 8, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 5, "episode": 8, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 1, "verify_success": 1}
+    local: "Add the 'V8 +Energy, Healthy Energy Drink' to the wish list." success=True
+    local: "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required." success=False
+  [skill_diag] {"episode": 10, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 7, "episode": 10, "event": "cluster_matured", "signatures": {"click": 7}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 7, "contexts": 1, "episode": 10, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 10, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart 1 1items' checkout or order-flow control and report the next required step." success=False
+  [skill_diag] {"episode": 12, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Identify the search field and prepare to enter a query.", "submit search query"], "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search."}
+    local: "Use the visible '\\ue615 Search' search field to submit a page-relevant search." success=True
+  [frontier] +6 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+[node 2 depth=1] http://192.168.1.31:7770/catalogsearch/result
+  [tasks] Skipped 2 repeated/saturated proposal(s)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+    local: "Use the 'Sort By' dropdown to change the sorting option from 'Relevance' to 'Price'." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+  [skill_diag] {"episode": 14, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible 'Sort By' sort or filter control and report one available option."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 8, "episode": 14, "event": "cluster_matured", "signatures": {"click": 8}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 8, "contexts": 1, "episode": 14, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 14, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible 'Sort By' sort or filter control and report one available option." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+  [skill_diag] {"episode": 15, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the link 'Wilton 710-5813 Door and Window Gingerbread House Decorating Candy'", "activate state change control"], "task": "Click on the link 'Wilton 710-5813 Door and Window Gingerbread House Decorating Candy' to view product details."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 9, "episode": 15, "event": "cluster_matured", "signatures": {"click": 9}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 9, "contexts": 2, "episode": 15, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  >>> SKILL admitted: activate_state_change_control  (Activate a visible control element on the page.)
+  [skills] diversity target unmet: 1/4; missing=['fill_visible_field', 'inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail', 'search_submission']
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "episode": 15, "event": "skill_admitted", "skill_name": "activate_state_change_control", "verify_attempts": 2, "verify_success": 2}
+    local: "Click on the link 'Wilton 710-5813 Door and Window Gingerbread House Decorating Candy' to view product details." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+    local: "Report whether the visible 'Wilton 710-5813 Door and Window Gingerbread House Decorating Candy' feedback control indicates available feedback." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+    local: "Click the button 'Add to Cart' for the 'Mini Elf on the Shelf Gingerbread House Kit by Cookies United'." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+  [skill_diag] {"episode": 18, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Click the button 'Add to Compare' for the 'Mini Elf on the Shelf Gingerbread House Kit by Cookies United'."}
+    local: "Click the button 'Add to Compare' for the 'Mini Elf on the Shelf Gingerbread House Kit by Cookies United'." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+    local: "Click the button 'Add to Wish List' for the 'Pre-baked Gingerbread House Kit Value Pack, 17 oz., Pack of 2, Total 34 oz.'." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+  [skill_diag] {"episode": 20, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action."}
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+  [skill_diag] {"episode": 21, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step."}
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=True
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/catalogsearch/result...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/wilton-710-5813-door-and-window-gin, got http://192.168.1.31:7770
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wilton-710-5813-door-and-window-gin (reason=url_mismatch, arrived=http://192.168.1.31:7770)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1523 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/elmwood-inn-fine-teas-orange-vanill (reason=stale_action:bid 1523 is not present in current AXTree, arrived=)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/customer/account/login...
+      [prefix] step 0 stale: bid 1526 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1526 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1553 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1553 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1526 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:bid 1526 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 336 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 336 is not present in current AXTree, arrived=)
+  [graph] 8 states, 6 skills, 2 composition edges → outputs/wa_run_12/graph.json
+  [curriculum] 8 tasks from 6 skills → outputs/wa_run_12/curriculum.json

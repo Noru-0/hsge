@@ -1,0 +1,376 @@
+{
+  "low_level": {
+    "n_states": 8,
+    "states": [
+      "http://192.168.1.31:7770/",
+      "http://192.168.1.31:7770/beauty-personal-care.html",
+      "http://192.168.1.31:7770/catalogsearch/result/?q=Energy+Drink",
+      "http://192.168.1.31:7770/catalogsearch/result/?q=Gingerbread+House+Kit",
+      "http://192.168.1.31:7770/jsy-foldable-bath-body-brush-portable-massager-brush-with-long-handle-for-wet-dry-brush-bath-body-brushes-color-green.html?options=cart",
+      "http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html",
+      "http://192.168.1.31:7770/tweezers-for-succulents-duo.html",
+      "http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5/"
+    ],
+    "trajectory_edges": {
+      "http://192.168.1.31:7770/": [
+        "http://192.168.1.31:7770/beauty-personal-care.html",
+        "http://192.168.1.31:7770/catalogsearch/result/?q=Energy+Drink",
+        "http://192.168.1.31:7770/catalogsearch/result/?q=Gingerbread+House+Kit",
+        "http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html",
+        "http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5/"
+      ],
+      "http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html": [
+        "http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5/"
+      ],
+      "http://192.168.1.31:7770/beauty-personal-care.html": [
+        "http://192.168.1.31:7770/jsy-foldable-bath-body-brush-portable-massager-brush-with-long-handle-for-wet-dry-brush-bath-body-brushes-color-green.html?options=cart",
+        "http://192.168.1.31:7770/tweezers-for-succulents-duo.html",
+        "http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5/"
+      ]
+    }
+  },
+  "high_level": {
+    "n_skills": 11,
+    "skills": {
+      "op_click_add_to_wish_list_f": {
+        "skill_id": "op_click_add_to_wish_list_f",
+        "name": "click_add_to_wish_list_f",
+        "description": "Operator: click_add_to_wish_list_f",
+        "precondition": "has_feedback | has_filter_or_sort | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input | path:beauty | path:care | path:personal",
+        "success_predicate": "path:wishlist",
+        "action_template": "",
+        "cluster_id": "op_click_add_to_wish_list_f",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_click_on_pre_baked_ginge": {
+        "skill_id": "op_click_on_pre_baked_ginge",
+        "name": "click_on_pre_baked_ginge",
+        "description": "Operator: click_on_pre_baked_ginge",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_record_status | path:baked | path:gingerbread | path:house | path:kit | path:pack | path:pre | path:total | path:value",
+        "action_template": "",
+        "cluster_id": "op_click_on_pre_baked_ginge",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_click_on_beauty_personal": {
+        "skill_id": "op_click_on_beauty_personal",
+        "name": "click_on_beauty_personal",
+        "description": "Operator: click_on_beauty_personal",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_filter_or_sort | path:beauty | path:care | path:personal",
+        "action_template": "",
+        "cluster_id": "op_click_on_beauty_personal",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "skill_0f392fe2": {
+        "skill_id": "skill_0f392fe2",
+        "name": "AddToWishList",
+        "description": "Clicks the 'Add to Wish List' button for a specified product.",
+        "precondition": "The product is displayed on the page.",
+        "success_predicate": "Click the 'Add to Wish List' button for the selected product. completed",
+        "action_template": [
+          "Click the 'Add to Wish List' button for {product_name}."
+        ],
+        "cluster_id": "2",
+        "n_members": 3,
+        "sites_seen": [
+          "http://192.168.1.31:7770"
+        ]
+      },
+      "op_use_the_search_bar_to_ty": {
+        "skill_id": "op_use_the_search_bar_to_ty",
+        "name": "use_the_search_bar_to_ty",
+        "description": "Operator: use_the_search_bar_to_ty",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_filter_or_sort | path:catalogsearch | path:result",
+        "action_template": "",
+        "cluster_id": "op_use_the_search_bar_to_ty",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_use_the_visible_ue615_se": {
+        "skill_id": "op_use_the_visible_ue615_se",
+        "name": "use_the_visible_ue615_se",
+        "description": "Operator: use_the_visible_ue615_se",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_filter_or_sort | path:catalogsearch | path:result",
+        "action_template": "",
+        "cluster_id": "op_use_the_visible_ue615_se",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "skill_7983d0b2": {
+        "skill_id": "skill_7983d0b2",
+        "name": "HoverOverSearchMenu",
+        "description": "Skill to hover over the visible 'Search' menu.",
+        "precondition": "The 'Search' menu is visible.",
+        "success_predicate": "Hover over the visible 'Search' menu. completed",
+        "action_template": [
+          "Hover over the 'Search' menu."
+        ],
+        "cluster_id": "5",
+        "n_members": 3,
+        "sites_seen": [
+          "http://192.168.1.31:7770"
+        ]
+      },
+      "op_click_the_add_to_wish_li": {
+        "skill_id": "op_click_the_add_to_wish_li",
+        "name": "click_the_add_to_wish_li",
+        "description": "Operator: click_the_add_to_wish_li",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_record_status | has_search_input | path:baked | path:gingerbread | path:house | path:kit | path:pack | path:pre | path:total | path:value",
+        "success_predicate": "path:wishlist",
+        "action_template": "",
+        "cluster_id": "op_click_the_add_to_wish_li",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "skill_ac159a6f": {
+        "skill_id": "skill_ac159a6f",
+        "name": "Locate Gingerbread House Kit",
+        "description": "Find the Pre-baked Gingerbread House Kit on the webpage.",
+        "precondition": "The webpage is loaded.",
+        "success_predicate": "Locate the 'Pre-baked Gingerbread House Kit Value Pack, 17 oz., Pack of 2, Total 34 oz.' on the webpage. completed",
+        "action_template": [
+          "click('{product_name}')"
+        ],
+        "cluster_id": "3",
+        "n_members": 3,
+        "sites_seen": [
+          "http://192.168.1.31:7770"
+        ]
+      },
+      "op_click_on_tweezers_for_su": {
+        "skill_id": "op_click_on_tweezers_for_su",
+        "name": "click_on_tweezers_for_su",
+        "description": "Operator: click_on_tweezers_for_su",
+        "precondition": "has_feedback | has_filter_or_sort | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input | path:beauty | path:care | path:personal",
+        "success_predicate": "path:duo | path:for | path:succulents | path:tweezers",
+        "action_template": "",
+        "cluster_id": "op_click_on_tweezers_for_su",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_add_jsy_foldable_bath_bo": {
+        "skill_id": "op_add_jsy_foldable_bath_bo",
+        "name": "add_jsy_foldable_bath_bo",
+        "description": "Operator: add_jsy_foldable_bath_bo",
+        "precondition": "has_feedback | has_filter_or_sort | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input | path:beauty | path:care | path:personal",
+        "success_predicate": "path:bath | path:body | path:brush | path:brushes | path:color | path:dry | path:foldable | path:for | path:green | path:handle | path:jsy | path:long | path:massager | path:portable | path:wet | path:with",
+        "action_template": "",
+        "cluster_id": "op_add_jsy_foldable_bath_bo",
+        "n_members": 1,
+        "sites_seen": []
+      }
+    },
+    "state_to_skill": {
+      "has_feedback": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_beauty_personal",
+        "op_click_on_pre_baked_ginge",
+        "op_click_on_tweezers_for_su",
+        "op_click_the_add_to_wish_li",
+        "op_use_the_search_bar_to_ty",
+        "op_use_the_visible_ue615_se"
+      ],
+      "has_numeric_content": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_beauty_personal",
+        "op_click_on_pre_baked_ginge",
+        "op_click_on_tweezers_for_su",
+        "op_click_the_add_to_wish_li",
+        "op_use_the_search_bar_to_ty",
+        "op_use_the_visible_ue615_se"
+      ],
+      "has_form_input": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_beauty_personal",
+        "op_click_on_pre_baked_ginge",
+        "op_click_on_tweezers_for_su",
+        "op_click_the_add_to_wish_li",
+        "op_use_the_search_bar_to_ty",
+        "op_use_the_visible_ue615_se"
+      ],
+      "has_search_input": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_beauty_personal",
+        "op_click_on_pre_baked_ginge",
+        "op_click_on_tweezers_for_su",
+        "op_click_the_add_to_wish_li",
+        "op_use_the_search_bar_to_ty",
+        "op_use_the_visible_ue615_se"
+      ],
+      "has_progress_control": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_beauty_personal",
+        "op_click_on_pre_baked_ginge",
+        "op_click_on_tweezers_for_su",
+        "op_click_the_add_to_wish_li",
+        "op_use_the_search_bar_to_ty",
+        "op_use_the_visible_ue615_se"
+      ],
+      "has_menu": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_beauty_personal",
+        "op_click_on_pre_baked_ginge",
+        "op_click_on_tweezers_for_su",
+        "op_click_the_add_to_wish_li",
+        "op_use_the_search_bar_to_ty",
+        "op_use_the_visible_ue615_se"
+      ],
+      "http://192.168.1.31:7770/beauty-personal-care.html": [
+        "skill_0f392fe2"
+      ],
+      "http://192.168.1.31:7770/catalogsearch/result/?q=Gingerbread+House+Kit": [
+        "skill_7983d0b2"
+      ],
+      "has_record_status": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:house": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:value": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:total": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:baked": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:gingerbread": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:pack": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:kit": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "path:pre": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html": [
+        "skill_ac159a6f"
+      ],
+      "path:personal": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_tweezers_for_su"
+      ],
+      "has_filter_or_sort": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_tweezers_for_su"
+      ],
+      "path:beauty": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_tweezers_for_su"
+      ],
+      "path:care": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_tweezers_for_su"
+      ]
+    },
+    "skill_to_state": {
+      "op_click_add_to_wish_list_f": [
+        "path:wishlist"
+      ],
+      "op_click_on_pre_baked_ginge": [
+        "has_record_status",
+        "path:baked",
+        "path:gingerbread",
+        "path:house",
+        "path:kit",
+        "path:pack",
+        "path:pre",
+        "path:total",
+        "path:value"
+      ],
+      "op_click_on_beauty_personal": [
+        "has_filter_or_sort",
+        "path:beauty",
+        "path:care",
+        "path:personal"
+      ],
+      "skill_0f392fe2": [
+        "http://192.168.1.31:7770/beauty-personal-care.html"
+      ],
+      "op_use_the_search_bar_to_ty": [
+        "has_filter_or_sort",
+        "path:catalogsearch",
+        "path:result"
+      ],
+      "op_use_the_visible_ue615_se": [
+        "has_filter_or_sort",
+        "path:catalogsearch",
+        "path:result"
+      ],
+      "skill_7983d0b2": [
+        "http://192.168.1.31:7770/catalogsearch/result/?q=Gingerbread+House+Kit"
+      ],
+      "op_click_the_add_to_wish_li": [
+        "path:wishlist"
+      ],
+      "skill_ac159a6f": [
+        "http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html"
+      ],
+      "op_click_on_tweezers_for_su": [
+        "path:duo",
+        "path:for",
+        "path:succulents",
+        "path:tweezers"
+      ],
+      "op_add_jsy_foldable_bath_bo": [
+        "path:bath",
+        "path:body",
+        "path:brush",
+        "path:brushes",
+        "path:color",
+        "path:dry",
+        "path:foldable",
+        "path:for",
+        "path:green",
+        "path:handle",
+        "path:jsy",
+        "path:long",
+        "path:massager",
+        "path:portable",
+        "path:wet",
+        "path:with"
+      ]
+    },
+    "skill_to_skill": {
+      "op_click_on_pre_baked_ginge": [
+        "op_click_the_add_to_wish_li"
+      ],
+      "op_click_on_beauty_personal": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_tweezers_for_su"
+      ],
+      "op_use_the_search_bar_to_ty": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_tweezers_for_su"
+      ],
+      "op_use_the_visible_ue615_se": [
+        "op_add_jsy_foldable_bath_bo",
+        "op_click_add_to_wish_list_f",
+        "op_click_on_tweezers_for_su"
+      ]
+    }
+  }
+}

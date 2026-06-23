@@ -1,0 +1,109 @@
+[
+  {
+    "skill_id": "skill_82f0fd94",
+    "name": "ReadFeedback",
+    "description": "Skill to read visible ratings, comments, or feedback information.",
+    "precondition": "Feedback information is visible on the screen.",
+    "success_predicate": "Read visible rating, comment, or feedback information. completed",
+    "action_template": [
+      "Read the {feedback_type} information."
+    ],
+    "slots": [
+      {
+        "name": "feedback_type",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "0",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "feedback section or element",
+        "value_ref": null,
+        "fallback": "Try to locate the feedback section again",
+        "success_check": "Verify that the feedback information is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "Access the {feedback_type} details.",
+      "Retrieve the {feedback_type} information."
+    ]
+  },
+  {
+    "skill_id": "skill_5945361e",
+    "name": "UseVisibleSearchField",
+    "description": "Interacts with the visible search field to input a query.",
+    "precondition": "The search field is visible on the page.",
+    "success_predicate": "Use the visible search field completed",
+    "action_template": [
+      "Fill the search field with {search_query} and click the search button."
+    ],
+    "slots": [
+      {
+        "name": "search_query",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "2",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "fill",
+        "target_desc": "the visible search field",
+        "value_ref": "search_query",
+        "fallback": "try to locate the search field again",
+        "success_check": "Check if the search field contains the input text"
+      },
+      {
+        "action_type": "click",
+        "target_desc": "the search button",
+        "value_ref": null,
+        "fallback": "try to locate the search button again",
+        "success_check": "Verify that the search results are displayed"
+      }
+    ],
+    "alternative_templates": [
+      "Enter {search_query} in the search field and submit.",
+      "Type {search_query} into the search box and click to search."
+    ]
+  },
+  {
+    "skill_id": "skill_fc3ed10b",
+    "name": "SubmitSearch",
+    "description": "Submits a search query relevant to the current page.",
+    "precondition": "The search input field is visible and ready for input.",
+    "success_predicate": "Submit a simple page-relevant search completed",
+    "action_template": [
+      "send_msg_to_user('{search_query}')"
+    ],
+    "slots": [
+      {
+        "name": "search_query",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "3",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "fill",
+        "target_desc": "search input field",
+        "value_ref": "search_query",
+        "fallback": "focus on the search input field and retry",
+        "success_check": "Check if the search input field contains the search_query"
+      },
+      {
+        "action_type": "click",
+        "target_desc": "submit button for the search",
+        "value_ref": null,
+        "fallback": "try clicking the submit button again",
+        "success_check": "Verify that the search results page is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "send_msg_to_user('search for {search_query}')",
+      "send_msg_to_user('execute search: {search_query}')"
+    ]
+  }
+]

@@ -1,0 +1,42 @@
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_05/domain.json
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=True
+  >>> SKILL admitted: ReadFeedback  (Skill to read visible ratings, comments, or feedback informa)
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=True
+    local: "Click on 'Beauty & Personal Care' to browse products in that category." success=True
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=True
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=True
+    local: "Use the search bar to type 'Energy Drink' and click the 'Search' button to find related products." success=False
+    local: "Click 'Add to Cart' for the 'V8 +Energy, Healthy Energy Drink' to add it to your shopping cart." success=True
+    local: "Use the visible '\\ue615 Search' progression control and report the next required step or confirmation that appears." success=False
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+  [frontier] +4 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val, got http://192.168.1.31:7770
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val
+[node 2 depth=1] http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html
+    local: 'Read visible numeric or dated information and answer a simple comparison or lookup question.' success=False
+    local: 'Read visible rating, comment, or feedback information and answer with the relevant detail.' success=False
+    local: 'Open or scroll to user feedback or discussion content and answer one visible detail.' success=False
+    local: 'Open profile, settings, or address information and identify the visible editable fields.' success=False
+    local: 'Add the Pre-baked Gingerbread House Kit to the wish list.' success=False
+    local: 'Hover over one visible menu or expandable control and report one submenu option that appears.' success=False
+    local: 'Open a visible communication form and identify its required fields.' success=False
+    local: 'Open a visible state-changing control and report the available action.' success=False
+    local: 'Read the product details for the Pre-baked Gingerbread House Kit.' success=False
+    local: 'Add the Pre-baked Gingerbread House Kit to the cart.' success=True
+    local: "Use the visible '\\ue615 Search' progression control and report the next required step or confirmation that appears." success=True
+  >>> SKILL admitted: UseVisibleSearchField  (Interacts with the visible search field to input a query.)
+  >>> SKILL admitted: SubmitSearch  (Submits a search query relevant to the current page.)
+    local: 'Use the visible search field to submit a simple page-relevant search.' success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/catalogsearch/result, got http://192.168.1.31:7770
+      [prefix] Fallback to direct goto for http://192.168.1.31:7770/catalogsearch/result
+[node 3 depth=1] SKIP http://192.168.1.31:7770/catalogsearch/result → redirect to already-visited http://192.168.1.31:7770
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/customer/account
+[node 4 depth=1] http://192.168.1.31:7770/customer/account

@@ -1,0 +1,130 @@
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_10/domain.json
+  [skill_diag] {"episode": 1, "event": "segments_created", "segments": 1, "steps": 1, "subgoals": ["segment 0"], "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback."}
+    local: "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 2, "event": "segments_created", "segments": 3, "steps": 2, "subgoals": ["Click on the 'Beauty & Personal Care' category", "Browse products in the 'Beauty & Personal Care' section", "activate state change control"], "task": "Click on the 'Beauty & Personal Care' category to browse products in that section."}
+    local: "Click on the 'Beauty & Personal Care' category to browse products in that section." success=True
+  [skill_diag] {"episode": 3, "event": "segments_created", "segments": 3, "steps": 2, "subgoals": ["Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack'", "View the detailed product page", "activate state change control"], "task": "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack' to view its detailed product page."}
+    local: "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack' to view its detailed product page." success=True
+  [skill_diag] {"episode": 4, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Hover over the visible 'Search' menu.", "inspect menu options"], "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears."}
+    local: "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears." success=True
+  [skill_diag] {"episode": 5, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["Enter 'Energy Drink' in the search bar", "Click the 'Search' button", "submit search query"], "task": "Use the search bar to enter 'Energy Drink' and click the 'Search' button to find related products."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 3, "episode": 5, "event": "cluster_matured", "signatures": {"send_msg_to_user": 3}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 3, "episode": 5, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+    local: "Use the search bar to enter 'Energy Drink' and click the 'Search' button to find related products." success=True
+    local: "Click the 'Add to Cart' button for the 'V8 +Energy, Healthy Energy Drink' to add it to your shopping cart." success=False
+  [skill_diag] {"episode": 7, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Locate the 'So Delicious Dairy Free CocoWhip Light' product on the webpage.", "activate state change control"], "task": "Click the 'Add to Compare' link for the 'So Delicious Dairy Free CocoWhip Light' to compare it with other products."}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 3, "episode": 7, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 3, "contexts": 1, "episode": 7, "event": "skill_abstracted", "skill_name": "activate_visible_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 7, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_visible_control", "verify_attempts": 1, "verify_success": 0}
+    local: "Click the 'Add to Compare' link for the 'So Delicious Dairy Free CocoWhip Light' to compare it with other products." success=True
+  [skill_diag] {"episode": 8, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Open the My Cart control", "activate state change control"], "task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 4, "episode": 8, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 1, "send_msg_to_user": 3}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 4, "episode": 8, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 4, "episode": 8, "event": "cluster_matured", "signatures": {"click": 4}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 4, "contexts": 1, "episode": 8, "event": "skill_abstracted", "skill_name": "activate_visible_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 8, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_visible_control", "verify_attempts": 1, "verify_success": 0}
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue608 Page Next' progression control and report the next required step or confirmation that appears." success=False
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=False
+  [skill_diag] {"episode": 11, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["Identify the search field and understand its purpose.", "Submit a relevant search query using the search field.", "submit search query"], "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 5, "episode": 11, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 1, "send_msg_to_user": 4}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 5, "episode": 11, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+  [skill_diag] {"cluster_id": 6, "cluster_size": 3, "episode": 11, "event": "cluster_matured", "signatures": {"fill > click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 6, "cluster_size": 3, "contexts": 1, "episode": 11, "event": "skill_abstracted", "skill_name": "submit_search_query", "verify_k": 2}
+  [skill_diag] {"cluster_id": 6, "episode": 11, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "submit_search_query", "verify_attempts": 1, "verify_success": 0}
+    local: "Use the visible '\\ue615 Search' search field to submit a page-relevant search." success=True
+  [frontier] +4 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 1 stale: bid 275 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout (reason=stale_action:bid 275 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/beauty-personal-care.html
+[node 3 depth=1] http://192.168.1.31:7770/beauty-personal-care.html
+  [tasks] Skipped 3 repeated/saturated proposal(s)
+    local: "Sort the products by 'Price' using the 'Sort By' dropdown." success=False
+    local: "Report whether the visible '3 \\xa0Reviews' feedback control indicates available feedback." success=False
+  [skill_diag] {"episode": 14, "event": "segments_created", "segments": 3, "steps": 2, "subgoals": ["Click on the image of 'Tweezers For Succulents Duo'", "View the details of 'Tweezers For Succulents Duo'", "activate state change control"], "task": "Click on the image of 'Tweezers For Succulents Duo' to view its details."}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 5, "episode": 14, "event": "cluster_matured", "signatures": {"click": 5}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 5, "contexts": 2, "episode": 14, "event": "skill_abstracted", "skill_name": "activate_visible_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 14, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_visible_control", "verify_attempts": 2, "verify_success": 0}
+    local: "Click on the image of 'Tweezers For Succulents Duo' to view its details." success=True
+  [skill_diag] {"episode": 15, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Open the 'Sort By' control", "activate state change control"], "task": "Open the visible 'Sort By' sort or filter control and report one available option."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 6, "episode": 15, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 2, "send_msg_to_user": 4}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 6, "episode": 15, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 6, "episode": 15, "event": "cluster_matured", "signatures": {"click": 6}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 6, "contexts": 2, "episode": 15, "event": "skill_abstracted", "skill_name": "activate_named_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 15, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_named_control", "verify_attempts": 2, "verify_success": 0}
+    local: "Open the visible 'Sort By' sort or filter control and report one available option." success=True
+  [skill_diag] {"episode": 16, "event": "segments_created", "segments": 6, "steps": 5, "subgoals": ["Open the website or app.", "Search for 'BODY Exfoliating Washcloth Mitt'.", "Add the item to the wish list.", "activate state change control", "fill visible field", "fill visible field"], "task": "Add 'BODY Exfoliating Washcloth Mitt' to the wish list."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 7, "episode": 16, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 2, "send_msg_to_user": 5}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 7, "episode": 16, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 7, "episode": 16, "event": "cluster_matured", "signatures": {"click": 7}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 7, "contexts": 2, "episode": 16, "event": "skill_abstracted", "skill_name": "activate_named_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 16, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_named_control", "verify_attempts": 2, "verify_success": 0}
+    local: "Add 'BODY Exfoliating Washcloth Mitt' to the wish list." success=True
+    local: "Add 'JSY Foldable Bath Body Brush Portable Massager Brush' to the cart." success=False
+    local: "Check the current items in 'My Cart' by clicking on the 'My Cart' link." success=False
+    local: "Compare 'Lip Balm Containers' with another product using the 'Add to Compare' button." success=False
+    local: "Use the visible '\\ue608 Page Next' progression control and report the next required step or confirmation that appears." success=False
+  [frontier] +3 URLs from callback discovery
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/customer/account/login...
+      [prefix] step 0 stale: bid 1480 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1480 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/beauty-personal-care.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/tweezers-for-succulents-duo.html
+[node 5 depth=2] http://192.168.1.31:7770/tweezers-for-succulents-duo.html
+  [tasks] Skipped 3 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 21, "event": "segments_created", "segments": 1, "steps": 1, "subgoals": ["Expand the 'Details' tab to access the product description."], "task": "Read the product description by expanding the 'Details' tab and reviewing the listed features."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 8, "episode": 21, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 2, "send_msg_to_user": 6}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 8, "episode": 21, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+    local: "Read the product description by expanding the 'Details' tab and reviewing the listed features." success=True
+  [skill_diag] {"episode": 22, "event": "segments_created", "segments": 1, "steps": 1, "subgoals": ["segment 0"], "task": "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 9, "episode": 22, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 2, "send_msg_to_user": 7}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 9, "episode": 22, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+    local: "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback." success=True
+    local: "Inspect the product images by clicking the 'Next' button to see more images." success=False
+    local: "Navigate back to the 'Home' page by clicking the 'Home' link in the breadcrumb navigation." success=False
+  [skill_diag] {"episode": 25, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the 'Details' tab to view product details.", "activate state change control"], "task": "View the product details by clicking the 'Details' tab."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 10, "episode": 25, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 3, "send_msg_to_user": 7}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 10, "episode": 25, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 8, "episode": 25, "event": "cluster_matured", "signatures": {"click": 8}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 8, "contexts": 2, "episode": 25, "event": "skill_abstracted", "skill_name": "activate_visible_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 25, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_visible_control", "verify_attempts": 2, "verify_success": 0}
+    local: "View the product details by clicking the 'Details' tab." success=True
+  [skill_diag] {"episode": 26, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Locate the 'Tweezers For Succulents Duo' product on the website.", "activate state change control"], "task": "Add 'Tweezers For Succulents Duo' to the cart by clicking the 'Add to Cart' button."}
+  [skill_diag] {"cluster_id": 8, "cluster_size": 3, "episode": 26, "event": "cluster_matured", "signatures": {"click": 1, "click > send_msg_to_user": 1, "send_msg_to_user": 1}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 8, "cluster_size": 3, "contexts": 2, "episode": 26, "event": "skill_abstracted", "skill_name": "click_visible_item_image", "verify_k": 2}
+  [skill_diag] {"cluster_id": 8, "episode": 26, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "click_visible_item_image", "verify_attempts": 2, "verify_success": 0}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 9, "episode": 26, "event": "cluster_matured", "signatures": {"click": 9}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 9, "contexts": 2, "episode": 26, "event": "skill_abstracted", "skill_name": "activate_named_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 26, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_named_control", "verify_attempts": 2, "verify_success": 0}
+    local: "Add 'Tweezers For Succulents Duo' to the cart by clicking the 'Add to Cart' button." success=True
+  [skill_diag] {"episode": 27, "event": "segments_created", "segments": 6, "steps": 5, "subgoals": ["Navigate to the product page for 'Tweezers For Succulents Duo'.", "Locate the 'Add to Wish List' link on the product page.", "Click the 'Add to Wish List' link to add the product.", "activate state change control", "fill visible field", "fill visible field"], "task": "Add 'Tweezers For Succulents Duo' to the wish list by clicking the 'Add to Wish List' link."}
+  [skill_diag] {"cluster_id": 8, "cluster_size": 4, "episode": 27, "event": "cluster_matured", "signatures": {"click": 2, "click > send_msg_to_user": 1, "send_msg_to_user": 1}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 8, "cluster_size": 4, "contexts": 3, "episode": 27, "event": "skill_abstracted", "skill_name": "click_visible_item_image", "verify_k": 2}
+  [skill_diag] {"cluster_id": 8, "episode": 27, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "click_visible_item_image", "verify_attempts": 3, "verify_success": 0}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 10, "episode": 27, "event": "cluster_matured", "signatures": {"click": 10}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 10, "contexts": 3, "episode": 27, "event": "skill_abstracted", "skill_name": "activate_named_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 2, "episode": 27, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "activate_named_control", "verify_attempts": 3, "verify_success": 0}
+  [skill_diag] {"cluster_id": 11, "cluster_size": 3, "episode": 27, "event": "cluster_matured", "signatures": {"fill": 2, "fill > click": 1}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 11, "cluster_size": 3, "contexts": 3, "episode": 27, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 11, "episode": 27, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 3, "verify_success": 0}
+  [skill_diag] {"cluster_id": 11, "cluster_size": 4, "episode": 27, "event": "cluster_matured", "signatures": {"fill": 2, "fill > click": 2}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 11, "cluster_size": 4, "contexts": 3, "episode": 27, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 11, "episode": 27, "event": "verification_rejected", "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 3, "verify_success": 0}
+    local: "Add 'Tweezers For Succulents Duo' to the wish list by clicking the 'Add to Wish List' link." success=True
+    local: "Use the visible 'Next' progression control and report the next required step or confirmation that appears." success=False
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=False
+  [graph] 8 states, 3 skills, 3 composition edges → outputs/wa_run_10/graph.json
+  [curriculum] 7 tasks from 3 skills → outputs/wa_run_10/curriculum.json
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/result
+[node 6 depth=1] http://192.168.1.31:7770/catalogsearch/result
+  [tasks] Skipped 5 repeated/saturated proposal(s)
+    local: "Sort the search results by 'Price' using the 'Sort By' dropdown menu." success=False
+  [skill_diag] {"episode": 31, "event": "segments_created", "segments": 1, "steps": 1, "subgoals": ["segment 0"], "task": "Report whether the visible '12 \\xa0Reviews' feedback control indicates available feedback."}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 11, "episode": 31, "event": "cluster_matured", "signatures": {"click > send_msg_to_user": 3, "send_msg_to_user": 8}}
+  [skill_diag] {"cluster_id": 0, "cluster_size": 11, "episode": 31, "event": "abstraction_rejected", "reason": "abstract_cluster_returned_none"}
+    local: "Report whether the visible '12 \\xa0Reviews' feedback control indicates available feedback." success=True
+    local: "Click on the product image for 'Roaring Lion energy drink (16oz Syrup Concentrate)' to view more details." success=False

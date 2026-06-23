@@ -1,0 +1,163 @@
+[
+  {
+    "skill_id": "skill_6997c154",
+    "name": "OpenFeedbackSection",
+    "description": "A skill to open the user feedback section of the application.",
+    "precondition": "User is on the main application page",
+    "success_predicate": "Open user feedback section completed",
+    "action_template": [
+      "click('1587')"
+    ],
+    "slots": [],
+    "cluster_id": "2",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "user feedback section button",
+        "value_ref": null,
+        "fallback": "Try to locate the feedback section button by its label",
+        "success_check": "Verify that the user feedback section is displayed"
+      }
+    ],
+    "alternative_templates": []
+  },
+  {
+    "skill_id": "skill_9830d46d",
+    "name": "ReadVisibleInfo",
+    "description": "Skill to read and extract visible numeric or dated information from the interface.",
+    "precondition": "Information is visible on the screen.",
+    "success_predicate": "Read visible numeric or dated information completed",
+    "action_template": [
+      "Extract {info_type} from the visible information."
+    ],
+    "slots": [
+      {
+        "name": "info_type",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "1",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "select",
+        "target_desc": "visible numeric or dated information",
+        "value_ref": "info_type",
+        "fallback": "Try to locate alternative information sources.",
+        "success_check": "Verify that the information has been successfully extracted."
+      }
+    ],
+    "alternative_templates": [
+      "Read {info_type} displayed on the screen.",
+      "Capture visible {info_type} from the interface."
+    ]
+  },
+  {
+    "skill_id": "skill_60708bd2",
+    "name": "HoverOverMenu",
+    "description": "Skill to hover over a visible menu or expandable control.",
+    "precondition": "menu is visible",
+    "success_predicate": "Hover over the visible menu or expandable control. completed",
+    "action_template": [
+      "hover('{menu_id}')"
+    ],
+    "slots": [
+      {
+        "name": "menu_id",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "5",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "hover",
+        "target_desc": "the menu or expandable control identified by menu_id",
+        "value_ref": "menu_id",
+        "fallback": "try to locate the menu by its label",
+        "success_check": "verify that the menu is expanded or highlighted"
+      }
+    ],
+    "alternative_templates": [
+      "hover('menu_id')",
+      "hover_over('menu_id')"
+    ]
+  },
+  {
+    "skill_id": "skill_a4a31415",
+    "name": "UseSearchField",
+    "description": "Interact with the visible search field to input a query.",
+    "precondition": "The search field is visible and enabled.",
+    "success_predicate": "Use the visible search field completed",
+    "action_template": [
+      "fill('{search_query}')"
+    ],
+    "slots": [
+      {
+        "name": "search_query",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "6",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "fill",
+        "target_desc": "the visible search field",
+        "value_ref": "search_query",
+        "fallback": "click on the search field to focus",
+        "success_check": "Verify that the search field contains the input text"
+      },
+      {
+        "action_type": "click",
+        "target_desc": "the search button",
+        "value_ref": null,
+        "fallback": "try clicking the search button again",
+        "success_check": "Check if the search results are displayed"
+      }
+    ],
+    "alternative_templates": [
+      "fill('{search_query}') and click('search_button')",
+      "click('search_field') then fill('{search_query}')"
+    ]
+  },
+  {
+    "skill_id": "skill_32a67f59",
+    "name": "SubmitSearch",
+    "description": "Submits a search query relevant to the current page.",
+    "precondition": "User is on a page where search is relevant.",
+    "success_predicate": "Submit a simple page-relevant search completed",
+    "action_template": [
+      "send_msg_to_user('{search_query}')"
+    ],
+    "slots": [
+      {
+        "name": "search_query",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "7",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "fill",
+        "target_desc": "search input field",
+        "value_ref": "search_query",
+        "fallback": "try to locate the search input field by its placeholder",
+        "success_check": "Verify that the search input field contains the search_query"
+      },
+      {
+        "action_type": "click",
+        "target_desc": "submit button for search",
+        "value_ref": null,
+        "fallback": "try to locate the submit button by its text",
+        "success_check": "Check if the search results page is displayed"
+      }
+    ],
+    "alternative_templates": [
+      "search_for('{search_query}')",
+      "execute_search('{search_query}')"
+    ]
+  }
+]

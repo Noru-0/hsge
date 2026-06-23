@@ -1,0 +1,77 @@
+[
+  {
+    "skill_id": "skill_d24d4732",
+    "name": "submit_search_query",
+    "description": "Use the search bar to submit a query and retrieve results.",
+    "precondition": "The search bar is visible on the page.",
+    "success_predicate": "The search results for the query are displayed.",
+    "action_template": [
+      "click({search_bar})",
+      "type({search_bar}, {search_query}, '1')"
+    ],
+    "slots": [
+      {
+        "name": "search_bar",
+        "slot_type": "selector"
+      },
+      {
+        "name": "search_query",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "6",
+    "n_members": 3,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the search input field",
+        "value_ref": "search_bar",
+        "fallback": "Try refreshing the page and locating the search bar again.",
+        "success_check": "Check if the search input field is focused."
+      },
+      {
+        "action_type": "type",
+        "target_desc": "the search input field",
+        "value_ref": "search_query",
+        "fallback": "If typing fails, try clicking the search bar again.",
+        "success_check": "Verify that the search query appears in the input field."
+      },
+      {
+        "action_type": "press",
+        "target_desc": "the Enter key to submit the search",
+        "value_ref": "null",
+        "fallback": "If the search does not submit, try clicking the search button if available.",
+        "success_check": "Check if the search results are displayed on the page."
+      }
+    ],
+    "alternative_templates": []
+  },
+  {
+    "skill_id": "skill_cd6a215d",
+    "name": "click_visible_detail",
+    "description": "Click on a visible detail link to view more information.",
+    "precondition": "The detail link is visible on the page.",
+    "success_predicate": "Click on the detail link completed",
+    "action_template": [
+      "click({detail_link})"
+    ],
+    "slots": [
+      {
+        "name": "detail_link",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "14",
+    "n_members": 9,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the detail link to view more information",
+        "value_ref": "detail_link",
+        "fallback": "Try to locate the detail link again or refresh the page",
+        "success_check": "Verify that the detail page has loaded"
+      }
+    ],
+    "alternative_templates": []
+  }
+]

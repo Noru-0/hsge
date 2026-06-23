@@ -1,0 +1,32 @@
+[
+  {
+    "skill_id": "skill_fd955441",
+    "name": "activate_state_change_control",
+    "family": "activate_state_change",
+    "description": "Activate a visible control element on the page.",
+    "precondition": "The control is visible on the page.",
+    "success_predicate": "activate state change control completed",
+    "action_template": [
+      "click({control_selector})"
+    ],
+    "slots": [
+      {
+        "name": "control_selector",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "1",
+    "n_members": 9,
+    "bootstrap_verified": false,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the visible control element",
+        "value_ref": "control_selector",
+        "fallback": "try to find another control to activate",
+        "success_check": "verify that the control has been activated"
+      }
+    ],
+    "alternative_templates": []
+  }
+]
