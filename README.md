@@ -46,6 +46,7 @@ Run everything from this directory (the one containing `hsge/`).
 | `04_webarena_runbook.md` | Hosting WebArena and running real exploration |
 | `06_training.md` | The collect → SFT → fine-tune → evaluate → loop pipeline |
 | `09_run_on_webarena.md` | Running the standalone WebArena exploration runtime |
+| `15_lora_finetune_eval_webarena_shopping.md` | LoRA fine-tune Qwen and evaluate on WebArena Shopping |
 | `00_package_readme.md` | The original package-level README |
 
 ## The pipeline at a glance
@@ -57,3 +58,24 @@ explore (collect verified, composed trajectories)
          -> evaluate on WebArena
             -> re-collect with the improved agent   (iterated bootstrap)
 ```
+
+## SFT dataset formats
+
+`build_sft_dataset.py` can export training data for two different action
+consumers. Keep one format per training file.
+
+```bash
+# Default: train a model to replace the HSGE solver.
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17 train_hsge.jsonl
+
+# Upstream WebArena PromptAgent format: bracket id_accessibility_tree actions.
+PYTHONPATH=. python build_sft_dataset.py outputs/wa_run_17 train_webarena.jsonl \
+  --action-format webarena_id
+```
+
+- `hsge_json` emits assistant JSON with actions like `click('123')` and
+  `send_msg_to_user('done')`.
+- `webarena_id` emits rationale text ending with fenced actions like
+  `click [123]`, `type [123] [text] [0]`, and `stop [done]`.
+- `goto` examples are still dropped by default; add `--allow-goto-training` only
+  when direct URL actions are part of the intended deployment policy.

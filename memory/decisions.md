@@ -109,3 +109,35 @@ Preferred next design:
 - allow direct URL fallback only for stateless prefixes,
 - add a small seed refresh from current-page discovered links or scorer lookahead when the queue is empty,
 - persist skipped/retry states separately from processed/visited nodes.
+
+Decision: Direct-load empty reset observations are transient load failures, not
+proof that a URL has been explored.
+
+Reason: Run 15 showed that one empty root reset can drain the entire frontier
+before any tasks, links, skills, or episodes are created. Bounded requeue/release
+keeps checkpoint state honest while avoiding infinite retries.
+
+Decision: Callback-discovered URLs remain the preferred frontier source, but
+DOM-link fallback is allowed when callback discovery yields no new URLs.
+
+Reason: Solver tasks may not navigate even when the current page exposes many
+valid same-origin links. A bounded, filtered DOM fallback keeps exploration from
+ending early without introducing domain-specific crawling rules.
+
+## SFT Action Format Selection
+
+Decision: Keep `hsge_json` as the default `build_sft_dataset.py` output format.
+Use `--action-format webarena_id` only when the fine-tuned model will be plugged
+into upstream `webarena-main` / WebArena `PromptAgent`.
+
+Reason: HSGE exploration and solver code consume JSON assistant targets with
+function-call actions such as `click('123')`. Upstream WebArena consumes
+bracket-style `id_accessibility_tree` actions such as `click [123]` and
+`stop [answer]`. Mixing both formats in one SFT file would train the SLM toward
+inconsistent action syntax.
+
+Decision: Convert only already-valid HSGE actions to WebArena bracket actions,
+and drop bracket-unsafe text instead of escaping it.
+
+Reason: Upstream WebArena's parser is regex-based. Text containing `]`, newlines,
+or fenced-code delimiters can make examples ambiguous or unparseable.

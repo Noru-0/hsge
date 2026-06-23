@@ -1,0 +1,172 @@
+[
+  {
+    "skill_id": "skill_52b0c627",
+    "name": "activate_state_change_control",
+    "family": "activate_state_change",
+    "description": "Activate a visible control to change its state.",
+    "precondition": "control is visible",
+    "success_predicate": "activate state change control completed",
+    "action_template": [
+      "click({control_selector})"
+    ],
+    "slots": [
+      {
+        "name": "control_selector",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "1",
+    "n_members": 9,
+    "bootstrap_verified": false,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the visible control to activate",
+        "value_ref": "control_selector",
+        "fallback": "try to find another control to activate",
+        "success_check": "verify that the control's state has changed"
+      }
+    ],
+    "alternative_templates": []
+  },
+  {
+    "skill_id": "skill_2889b304",
+    "name": "fill_visible_field",
+    "family": "fill_visible_field",
+    "description": "Fill a visible input field with the specified value.",
+    "precondition": "The input field is visible and enabled.",
+    "success_predicate": "The input field contains the specified value.",
+    "action_template": [
+      "fill({field_selector}, {input_value})"
+    ],
+    "slots": [
+      {
+        "name": "field_selector",
+        "slot_type": "selector"
+      },
+      {
+        "name": "input_value",
+        "slot_type": "value"
+      }
+    ],
+    "cluster_id": "7",
+    "n_members": 5,
+    "bootstrap_verified": false,
+    "execution_plan": [
+      {
+        "action_type": "fill",
+        "target_desc": "the visible input field",
+        "value_ref": "input_value",
+        "fallback": "scroll to the field and try again",
+        "success_check": "Verify that the field contains the input value"
+      }
+    ],
+    "alternative_templates": []
+  },
+  {
+    "skill_id": "skill_a32b30e2",
+    "name": "submit_search_query",
+    "family": "search_submission",
+    "description": "Enter a value into a visible field and submit it when needed.",
+    "precondition": "a visible input field is available",
+    "success_predicate": "the field interaction completes",
+    "action_template": [
+      "fill({field_selector}, {input_value})",
+      "click({submit_selector})"
+    ],
+    "slots": [
+      {
+        "name": "field_selector",
+        "slot_type": "selector"
+      },
+      {
+        "name": "input_value",
+        "slot_type": "value"
+      },
+      {
+        "name": "submit_selector",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "4",
+    "n_members": 3,
+    "bootstrap_verified": true,
+    "execution_plan": [
+      {
+        "action_type": "fill",
+        "target_desc": "visible grounded target",
+        "value_ref": "input_value",
+        "fallback": "try another visible control with the same role",
+        "success_check": "the field interaction completes"
+      },
+      {
+        "action_type": "click",
+        "target_desc": "visible grounded target",
+        "value_ref": null,
+        "fallback": "try another visible control with the same role",
+        "success_check": "the field interaction completes"
+      }
+    ],
+    "alternative_templates": []
+  },
+  {
+    "skill_id": "skill_c80307c6",
+    "name": "inspect_menu_options",
+    "family": "inspect_menu",
+    "description": "Click on a visible item in the menu.",
+    "precondition": "The menu item is visible and clickable.",
+    "success_predicate": "Click on the menu item completed",
+    "action_template": [
+      "click({menu_item_selector})"
+    ],
+    "slots": [
+      {
+        "name": "menu_item_selector",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "2",
+    "n_members": 3,
+    "bootstrap_verified": false,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the visible menu item",
+        "value_ref": "menu_item_selector",
+        "fallback": "Try to locate the menu item again or check for visibility issues.",
+        "success_check": "Verify that the menu item has been clicked and the expected page is loaded."
+      }
+    ],
+    "alternative_templates": []
+  },
+  {
+    "skill_id": "skill_fe6c5035",
+    "name": "inspect_feedback_indicator",
+    "family": "inspect_feedback",
+    "description": "Activate a visible control to inspect the feedback indicator.",
+    "precondition": "The feedback control is visible on the page.",
+    "success_predicate": "inspect feedback indicator completed",
+    "action_template": [
+      "click({control_selector})"
+    ],
+    "slots": [
+      {
+        "name": "control_selector",
+        "slot_type": "selector"
+      }
+    ],
+    "cluster_id": "12",
+    "n_members": 3,
+    "bootstrap_verified": false,
+    "execution_plan": [
+      {
+        "action_type": "click",
+        "target_desc": "the feedback control to inspect",
+        "value_ref": "control_selector",
+        "fallback": "try to locate the control again or refresh the page",
+        "success_check": "verify that the feedback indicator has been activated"
+      }
+    ],
+    "alternative_templates": []
+  }
+]

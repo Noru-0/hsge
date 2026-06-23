@@ -26,6 +26,35 @@ created time. Checkpoints still store traces under `discovered_urls`, but entrie
 are now explicit and backward-compatible with older `{source_url, action,
 prefix_steps}` records.
 
+## WebArena Frontier Recovery
+
+Frontier expansion prefers callback-discovered URLs from actual solver
+navigation because those URLs have replayable prefix traces. If a processed page
+produces no callback-discovered children, the runtime falls back to visible
+same-origin DOM links, filtered by allow/deny/depth/visited/queued checks and
+`filter_frontier`.
+
+Empty direct-load reset observations are recoverable. The runtime records the
+reset diagnostic, requeues the URL for bounded retry, and only releases it after
+the retry limit. These failures must not be marked visited or processed.
+
+## SFT Action Formats
+
+`build_sft_dataset.py` supports two assistant target formats:
+
+- `hsge_json`: default format for `hsge/webarena/agents.py`. The assistant target
+  is JSON shaped like `{"thought": "...", "action": "click('123')"}` and actions
+  use the compact HSGE function-call dialect.
+- `webarena_id`: upstream WebArena-compatible format for `webarena-main`
+  `PromptAgent`. The assistant target is rationale text ending with one fenced
+  bracket action such as `click [123]`, `type [123] [text] [0]`, or
+  `stop [answer]`.
+
+Dataset validation remains grounded in the HSGE action validator first, then the
+optional WebArena export converts already-valid HSGE actions into WebArena
+`id_accessibility_tree` actions. This keeps training data aligned with collected
+HSGE trajectories while allowing export for upstream WebArena fine-tuning.
+
 ## Core Pipeline
 
 1. PageExplorer proposes grounded local tasks from current visible UI evidence.

@@ -1,0 +1,983 @@
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_17/domain.json
+  [skill_diag] {"episode": 1, "event": "segments_created", "segments": 4, "steps": 6, "subgoals": ["Click on the name 'Pre-baked Gingerbread House Kit Value Pack' to access the product details.", "activate state change control", "activate state change control", "activate state change control"], "task": "Read the details of the 'Pre-baked Gingerbread House Kit Value Pack' by clicking on its name to inspect its features and reviews."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 3, "episode": 1, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 3, "contexts": 1, "episode": 1, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 1, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Read the details of the 'Pre-baked Gingerbread House Kit Value Pack' by clicking on its name to inspect its features and reviews." success=True
+  [skill_diag] {"episode": 2, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback."}
+    local: "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 3, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the 'Beauty & Personal Care' menu item", "activate state change control"], "task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item to view related products."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 4, "episode": 3, "event": "cluster_matured", "signatures": {"click": 4}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 4, "contexts": 1, "episode": 3, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 3, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item to view related products." success=True
+  [skill_diag] {"episode": 4, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["inspect menu options"], "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears."}
+    local: "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears." success=True
+  [skill_diag] {"episode": 5, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Type the product name in the search bar", "submit search query"], "task": "Use the search bar to type in a product name and click the 'Search' button to find specific items."}
+    local: "Use the search bar to type in a product name and click the 'Search' button to find specific items." success=True
+  [skill_diag] {"episode": 6, "event": "segments_created", "segments": 5, "steps": 5, "subgoals": ["Locate the 'Elmwood Inn Fine Teas' item on the website.", "Click on the 'Add to Wish List' link for the item.", "activate state change control", "fill visible field", "fill visible field"], "task": "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 5, "episode": 6, "event": "cluster_matured", "signatures": {"click": 5}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 5, "contexts": 1, "episode": 6, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 6, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link." success=True
+  [skill_diag] {"episode": 7, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart by clicking the 'Add to Cart' button."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 6, "episode": 7, "event": "cluster_matured", "signatures": {"click": 6}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 6, "contexts": 1, "episode": 7, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 7, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Add the 'V8 +Energy, Healthy Energy Drink' to your cart by clicking the 'Add to Cart' button." success=True
+    local: "Compare the 'Pre-baked Gingerbread House Kit Value Pack' with another product by clicking the 'Add to Compare' link." success=False
+    local: "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required." success=False
+  [skill_diag] {"episode": 10, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 7, "episode": 10, "event": "cluster_matured", "signatures": {"click": 7}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 7, "contexts": 1, "episode": 10, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 10, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart 2 2items' checkout or order-flow control and report the next required step." success=False
+    local: "Use the visible '\\ue615 Search' search field to submit a page-relevant search." success=False
+  [frontier] +7 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 358 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 358 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalogsearch/result (retry 1/2, reason=stale_action:bid 358 is not present in current AXTree)
+  [frontier] loose select score=1.444 http://192.168.1.31:7770/customer/account/login
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/customer/account/login, got http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=url_mismatch, arrived=http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle-mix-wedding-colorful-sprinkles-cake-cupcake-cookie-sprinkles-ice-cream-candy-sprinkles-yellow-gold-red-royal-red-rose-icing-flowers-decorating-sprinkles-8oz.html)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/customer/account/login (retry 1/2, reason=url_mismatch)
+  [frontier] loose select score=1.444 http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 1 stale: fill target [1462] is strong, not an input
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:fill target [1462] is strong, not an input, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (retry 1/2, reason=stale_action:fill target [1462] is strong, not an input)
+  [frontier] loose select score=1.443 http://192.168.1.31:7770/checkout
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+[node 2 depth=1] http://192.168.1.31:7770/checkout
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Select a Country from the 'Country*' dropdown menu." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: 'Input your Street Address: Line 1 in the corresponding textbox.' success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+  [skill_diag] {"episode": 15, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["fill visible field"], "task": "Fill in your First Name in the 'First Name*' textbox."}
+  [skill_diag] {"cluster_id": 7, "cluster_size": 3, "episode": 15, "event": "cluster_matured", "signatures": {"fill": 2, "fill > click": 1}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 7, "cluster_size": 3, "contexts": 1, "episode": 15, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 7, "episode": 15, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 1, "verify_success": 1}
+    local: "Fill in your First Name in the 'First Name*' textbox." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+  [skill_diag] {"episode": 16, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["fill visible field"], "task": "Fill in your Last Name in the 'Last Name*' textbox."}
+  [skill_diag] {"cluster_id": 7, "cluster_size": 4, "episode": 16, "event": "cluster_matured", "signatures": {"fill": 3, "fill > click": 1}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 7, "cluster_size": 4, "contexts": 1, "episode": 16, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  [skill_diag] {"cluster_id": 7, "episode": 16, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "fill_visible_field", "verify_attempts": 1, "verify_success": 1}
+    local: "Fill in your Last Name in the 'Last Name*' textbox." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Hover over the visible 'Tooltip' menu or expandable control and report one submenu option that appears." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Use the visible '1Item in Cart \\ue622' checkout or order-flow control and report the next required step." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Use the visible 'Next' progression control and report the next required step or confirmation that appears." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Enter your Email Address in the 'Email Address*' textbox." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Inspect the visible 'Email Address*' address or checkout field and report what input is required." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+  [skill_diag] {"episode": 22, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible 'Email Address*' account or settings control and report one visible option."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 8, "episode": 22, "event": "cluster_matured", "signatures": {"click": 8}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 8, "contexts": 1, "episode": 22, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 22, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible 'Email Address*' account or settings control and report one visible option." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Open the visible 'Zip/Postal Code*' state-changing control and report the available action." success=False
+  [frontier] +1 URLs from DOM links
+[node 3 depth=2] http://192.168.1.31:7770/customer/account/forgotpassword
+  [tasks] Skipped 1 repeated/saturated proposal(s)
+    local: "Click the 'My Account' link to navigate back to your account overview page." success=False
+  [skill_diag] {"episode": 25, "event": "segments_created", "segments": 3, "steps": 4, "subgoals": ["Locate the 'Reset My Password' button", "activate state change control", "fill visible field"], "task": "Click the 'Reset My Password' button to initiate the password reset process."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 9, "episode": 25, "event": "cluster_matured", "signatures": {"click": 9}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 9, "contexts": 2, "episode": 25, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  >>> SKILL admitted: activate_state_change_control  (Activate a visible control to change its state.)
+  [skills] diversity target unmet: 1/4; missing=['fill_visible_field', 'inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail', 'search_submission']
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "episode": 25, "event": "skill_admitted", "skill_name": "activate_state_change_control", "verify_attempts": 2, "verify_success": 2}
+  [skill_diag] {"cluster_id": 7, "cluster_size": 5, "episode": 25, "event": "cluster_matured", "signatures": {"fill": 3, "fill > click": 2}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 7, "cluster_size": 5, "contexts": 2, "episode": 25, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  >>> SKILL admitted: fill_visible_field  (Fill a visible input field with the specified value.)
+  [skills] diversity target unmet: 2/4; missing=['inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail', 'search_submission']
+  [skill_diag] {"bootstrap": false, "cluster_id": 7, "episode": 25, "event": "skill_admitted", "skill_name": "fill_visible_field", "verify_attempts": 2, "verify_success": 2}
+    local: "Click the 'Reset My Password' button to initiate the password reset process." success=True
+  [skill_diag] {"episode": 26, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Open the 'My Account' settings control.", "activate state change control"], "task": "Open the visible 'My Account' account or settings control and report one visible option."}
+    local: "Open the visible 'My Account' account or settings control and report one visible option." success=True
+    local: "Click the 'Advanced Search' link to access more detailed search options." success=False
+  [skill_diag] {"episode": 28, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Type the product name in the search bar.", "submit search query"], "task": "Use the search bar to type in a product name and click the 'Search' button to find specific products."}
+  [skill_diag] {"cluster_id": 4, "cluster_size": 3, "episode": 28, "event": "cluster_matured", "signatures": {"fill > click": 3}}
+  [skill_diag] {"bootstrap": true, "cluster_id": 4, "cluster_size": 3, "contexts": 2, "episode": 28, "event": "skill_abstracted", "skill_name": "submit_search_query", "verify_k": 1}
+  >>> SKILL admitted: submit_search_query  (Enter a value into a visible field and submit it when needed)
+  [skills] diversity target unmet: 3/4; missing=['inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail']
+  [skill_diag] {"bootstrap": true, "cluster_id": 4, "episode": 28, "event": "skill_admitted", "skill_name": "submit_search_query", "verify_attempts": 1, "verify_success": 1}
+    local: "Use the search bar to type in a product name and click the 'Search' button to find specific products." success=True
+    local: "Click the 'My Wish List' link to view items saved in your wish list." success=False
+    local: "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action." success=False
+    local: "Use the visible '\\ue611 My Cart 1 1items' checkout or order-flow control and report the next required step." success=False
+    local: "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required." success=False
+  [skill_diag] {"episode": 33, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Identify the search field and its purpose", "submit search query"], "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search."}
+    local: "Use the visible '\\ue615 Search' search field to submit a page-relevant search." success=True
+  [skill_diag] {"episode": 34, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Enter your email address in the 'Email*' textbox", "fill communication form"], "task": "Enter your email address in the 'Email*' textbox to receive a password reset link."}
+    local: "Enter your email address in the 'Email*' textbox to receive a password reset link." success=True
+    GOAL chain=['submit_search_query'] verified=True
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+[node 4 depth=3] http://192.168.1.31:7770/catalogsearch/advanced
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+  [skill_diag] {"episode": 36, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the 'Price' field with a specific price", "submit search query"], "task": "Fill the 'Price' field with a specific price and click the 'Search' button."}
+    local: "Fill the 'Price' field with a specific price and click the 'Search' button." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+    local: "Select 'Beauty & Personal Care' from the category menu to browse products in that category." success=False
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+    local: "Select 'Clothing, Shoes & Jewelry' from the category menu to browse products in that category." success=False
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+  [skill_diag] {"episode": 39, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the 'Description' field with a specific description.", "submit search query"], "task": "Fill the 'Description' field with a specific description and click the 'Search' button."}
+    local: "Fill the 'Description' field with a specific description and click the 'Search' button." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+  [skill_diag] {"episode": 40, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the 'Product Name' field with a specific product name.", "submit search query"], "task": "Fill the 'Product Name' field with a specific product name and click the 'Search' button."}
+    local: "Fill the 'Product Name' field with a specific product name and click the 'Search' button." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+  [skill_diag] {"episode": 41, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the 'SKU' field with a specific SKU", "submit search query"], "task": "Fill the 'SKU' field with a specific SKU and click the 'Search' button."}
+    local: "Fill the 'SKU' field with a specific SKU and click the 'Search' button." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+  [skill_diag] {"episode": 42, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action."}
+    local: "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/forgotpassword...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced
+    local: "Use the visible '\\ue611 My Cart 1 1items' checkout or order-flow control and report the next required step." success=False
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/catalogsearch/advanced...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced/result
+[node 5 depth=4] http://192.168.1.31:7770/catalogsearch/advanced/result
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/catalogsearch/advanced...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced/result
+    local: "Select 'Price' from the 'Sort By' dropdown menu to sort the search results by price." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/catalogsearch/advanced...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced/result
+  [skill_diag] {"episode": 45, "event": "segments_created", "segments": 1, "steps": 3, "subgoals": ["inspect menu options"], "task": "Report whether the visible '2 \\xa0Reviews' feedback control indicates available feedback."}
+    local: "Report whether the visible '2 \\xa0Reviews' feedback control indicates available feedback." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/catalogsearch/advanced...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced/result
+    local: "Open the visible 'Sort By' sort or filter control and report one available option." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770/catalogsearch/advanced...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/catalogsearch/advanced/result
+    local: "Click on the link 'Modify your search.' to adjust the search criteria." success=False
+  [frontier] +32 URLs from DOM links
+  [graph] 14 states, 9 skills, 9 composition edges → outputs/wa_run_17/graph.json
+  [curriculum] 24 tasks from 9 skills → outputs/wa_run_17/curriculum.json
+[node 6 depth=5] http://192.168.1.31:7770/privacy-policy-cookie-restriction-mode
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 48, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["click on 'Beauty & Personal Care'", "activate state change control"], "task": "click(\u2018Beauty & Personal Care\u2019)"}
+    local: 'click(‘Beauty & Personal Care’)' success=True
+    local: 'click(‘Home & Kitchen’)' success=False
+  [skill_diag] {"episode": 50, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["click on 'List of cookies we collect'", "activate state change control"], "task": "click(\u2018List of cookies we collect\u2019)"}
+    local: 'click(‘List of cookies we collect’)' success=True
+    local: 'click(‘My Cart 1 1 items’)' success=False
+    local: 'click(‘My Wish List’)' success=False
+    local: 'click(‘Advanced Search’)' success=False
+    GOAL chain=['click_beauty_personal_care'] verified=False
+  [frontier] +16 URLs from DOM links
+[node 7 depth=6] http://192.168.1.31:7770/video-games/playstation-4.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 55, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Add '5Pcs HDMI Port Socket' to the compare list."}
+    local: "Add '5Pcs HDMI Port Socket' to the compare list." success=True
+    local: "Sort products by 'Price' using the Sort By dropdown." success=False
+    local: "Report whether the visible '4 \\xa0Reviews' feedback control indicates available feedback." success=False
+  [skill_diag] {"episode": 58, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the product name 'Wireless Game Controller with 4 Paddles'", "activate state change control"], "task": "View product details for 'Wireless Game Controller with 4 Paddles' by clicking on its name."}
+    local: "View product details for 'Wireless Game Controller with 4 Paddles' by clicking on its name." success=True
+    local: "Open the visible 'Sort By' sort or filter control and report one available option." success=False
+    local: "Add 'Skinit Decal Gaming Skin Compatible with PS4 Controller' to the wish list." success=False
+    local: "Add 'Skinit Decal Gaming Skin for PS4 Console' to the cart." success=False
+  [skill_diag] {"episode": 62, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Open the website and locate the search bar.", "submit search query"], "task": "Search for 'Wireless Game Controller' using the search bar."}
+    local: "Search for 'Wireless Game Controller' using the search bar." success=True
+    GOAL chain=['open_visible_detail'] verified=False
+  [frontier] +1 URLs from callback discovery
+  [frontier] loose select score=0.925 http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care.html
+[node 8 depth=5] http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care.html
+  [tasks] Skipped 5 repeated/saturated proposal(s)
+    local: "Sort the product listings by price by selecting 'Price' from the 'Sort By' dropdown menu." success=False
+    local: "Report whether the visible '12 \\xa0Reviews' feedback control indicates available feedback." success=False
+  [skill_diag] {"episode": 66, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Add the '10pcs Professional Foot File Pedicure Kit Set' to your cart by clicking the 'Add to Cart' button."}
+    local: "Add the '10pcs Professional Foot File Pedicure Kit Set' to your cart by clicking the 'Add to Cart' button." success=True
+    local: "Add the 'Ohora Base Nail Care Set' to your wish list by clicking the 'Add to Wish List' button." success=False
+  [skill_diag] {"episode": 68, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["activate state change control", "activate state change control"], "task": "Compare the 'PTGMH 6 Pcs Solid Golden Nail Powder' by clicking the 'Add to Compare' button."}
+    local: "Compare the 'PTGMH 6 Pcs Solid Golden Nail Powder' by clicking the 'Add to Compare' button." success=True
+  [skill_diag] {"episode": 69, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Enter a keyword for foot care products in the search bar.", "submit search query"], "task": "Use the search bar to find specific foot care products by entering a keyword and clicking the Search button."}
+    local: 'Use the search bar to find specific foot care products by entering a keyword and clicking the Search button.' success=True
+  [frontier] +20 URLs from DOM links
+[node 9 depth=6] http://192.168.1.31:7770/foot-peel-mask-make-your-feet-baby-soft-get-smooth-silky-skin-foot-care.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 70, "event": "segments_created", "segments": 2, "steps": 4, "subgoals": ["inspect feedback indicator", "inspect feedback indicator"], "task": "Click the 'Be the first to review this product' link to write a review for the Foot Peel Mask."}
+    local: "Click the 'Be the first to review this product' link to write a review for the Foot Peel Mask." success=True
+  [skill_diag] {"episode": 71, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback."}
+    local: "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback." success=True
+    local: "Navigate to the 'Beauty & Personal Care' category to explore related products." success=False
+    local: "Select the 'Cucumber' color option for the Foot Peel Mask." success=False
+    local: "Click the 'Add to Cart' button to add the Foot Peel Mask to your cart." success=False
+    local: "Use the visible '\\ue611 My Cart 2 2items' checkout or order-flow control and report the next required step." success=False
+    GOAL chain=['inspect_feedback_indicator'] verified=True
+  [frontier] loose select score=0.921 http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care/nail-art-polis
+[node 10 depth=6] http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care/nail-art-polish.html
+  [tasks] Skipped 3 repeated/saturated proposal(s)
+    local: "Sort the nail art products by price by selecting 'Price' from the 'Sort By' dropdown menu." success=False
+    local: "View the details of the '6-Piece Set Diamond Powder Nail Art' by clicking on the product link to inspect its features and reviews." success=False
+    local: "Report whether the visible '12 \\xa0Reviews' feedback control indicates available feedback." success=False
+  [skill_diag] {"episode": 80, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Add the 'Ohora Base Nail Care Set' to your cart by clicking the 'Add to Cart' button next to the product."}
+    local: "Add the 'Ohora Base Nail Care Set' to your cart by clicking the 'Add to Cart' button next to the product." success=True
+    local: "Open the visible '\\ue611 My Cart 5 5items' state-changing control and report the available action." success=False
+    local: "Use the visible '\\ue611 My Cart 5 5items' checkout or order-flow control and report the next required step." success=False
+  [skill_diag] {"episode": 83, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Enter a keyword related to nail art products in the search bar.", "submit search query"], "task": "Use the search bar to find specific nail art products by entering a keyword and clicking the search button."}
+    local: 'Use the search bar to find specific nail art products by entering a keyword and clicking the search button.' success=True
+  [frontier] +1 URLs from callback discovery
+  [graph] 23 states, 11 skills, 22 composition edges → outputs/wa_run_17/graph.json
+  [curriculum] 80 tasks from 11 skills → outputs/wa_run_17/curriculum.json
+  [frontier] loose select score=0.914 http://192.168.1.31:7770/triplet-jagmoolya-products-4-in-1-pedicure-brush-foot-c
+[node 11 depth=6] http://192.168.1.31:7770/triplet-jagmoolya-products-4-in-1-pedicure-brush-foot-care-random-color.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+    local: "Navigate to the 'Beauty & Personal Care' category by clicking on the corresponding menu item." success=False
+    local: "Read the product details by clicking on the 'Details' tab to view more information about the product." success=False
+    local: "Add the TRIPLET JAGMOOLYA Products 4 in 1 Pedicure Brush to the cart by clicking the 'Add to Cart' button." success=False
+    local: "Add the TRIPLET JAGMOOLYA Products 4 in 1 Pedicure Brush to the wish list by clicking the 'Add to Wish List' link." success=False
+  [skill_diag] {"episode": 88, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 6 6items' state-changing control and report the available action."}
+    local: "Open the visible '\\ue611 My Cart 6 6items' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart 6 6items' checkout or order-flow control and report the next required step." success=False
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/beauty-personal-care.html
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 373 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 373 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/beauty-personal-care.html (retry 1/2, reason=stale_action:bid 373 is not present in current AXTree)
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-o
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1470 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1470 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (retry 1/2, reason=stale_action:bid 1470 is not present in current AXTree)
+  [frontier] loose select score=0.914 http://192.168.1.31:7770/catalogsearch/result
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 358 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 358 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalogsearch/result (retry 2/2, reason=stale_action:bid 358 is not present in current AXTree)
+  [frontier] loose select score=0.912 http://192.168.1.31:7770/customer/account/login
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1576 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:bid 1576 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/customer/account/login (retry 2/2, reason=stale_action:bid 1576 is not present in current AXTree)
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1576 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1576 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (retry 2/2, reason=stale_action:bid 1576 is not present in current AXTree)
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/beauty-personal-care.html
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 373 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 373 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/beauty-personal-care.html (retry 2/2, reason=stale_action:bid 373 is not present in current AXTree)
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-o
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1470 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1470 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (retry 2/2, reason=stale_action:bid 1470 is not present in current AXTree)
+  [frontier] loose select score=0.914 http://192.168.1.31:7770/catalogsearch/result
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 358 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 358 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 358 is not present in current AXTree)
+  [frontier] loose select score=0.910 http://192.168.1.31:7770/cell-phones-accessories.html
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/cell-phones-accessories.html (reason=stale_action:bid 1073 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/cell-phones-accessories.html (retry 1/2, reason=stale_action:bid 1073 is not present in current AXTree)
+  [frontier] loose select score=0.910 http://192.168.1.31:7770/cell-phones-accessories.html
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/cell-phones-accessories.html (reason=stale_action:bid 1073 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/cell-phones-accessories.html (retry 2/2, reason=stale_action:bid 1073 is not present in current AXTree)
+  [frontier] loose select score=0.912 http://192.168.1.31:7770/customer/account/login
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1576 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:bid 1576 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/customer/account/login (reason=stale_action:bid 1576 is not present in current AXTree)
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1576 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1576 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1576 is not present in current AXTree)
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/beauty-personal-care.html
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 373 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 373 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 373 is not present in current AXTree)
+  [frontier] loose select score=0.911 http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-o
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1470 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1470 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1470 is not present in current AXTree)
+  [frontier] loose select score=0.910 http://192.168.1.31:7770/cell-phones-accessories.html
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/cell-phones-accessories.html (reason=stale_action:bid 1073 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/cell-phones-accessories.html (reason=stale_action:bid 1073 is not present in current AXTree)
+  [frontier] loose select score=0.736 http://192.168.1.31:7770/2-kicker-45kmtdc65w-dual-6-390w-marine-wakeboard-led-to
+[node 12 depth=5] http://192.168.1.31:7770/2-kicker-45kmtdc65w-dual-6-390w-marine-wakeboard-led-tower-speakers-kmtdc65-bundle-with-rockville-rghr2-marine-receiver-rmwk8-8-awg-marine-amplifier-and-rxm-t1-marine-amplifier-stereo.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+    local: "Click the 'Be the first to review this product' link to leave a review for the KICKER 45KMTDC65W speakers." success=False
+  [skill_diag] {"episode": 91, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Click the 'Details' tab to view more information about the KICKER 45KMTDC65W speakers."}
+    local: "Click the 'Details' tab to view more information about the KICKER 45KMTDC65W speakers." success=True
+    local: "Adjust the quantity in the 'Qty' spinbutton to 2 and then click the 'Add to Cart' button." success=False
+    local: "Click the 'Add to Cart' button to add the KICKER 45KMTDC65W speakers to your shopping cart." success=False
+  [skill_diag] {"episode": 94, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 9 9items' state-changing control and report the available action."}
+    local: "Open the visible '\\ue611 My Cart 9 9items' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart 9 9items' checkout or order-flow control and report the next required step." success=False
+  [frontier] loose select score=0.732 http://192.168.1.31:7770/clothing-shoes-jewelry.html
+[node 13 depth=6] http://192.168.1.31:7770/clothing-shoes-jewelry.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+    local: "Sort the product list by 'Price' using the 'Sort By' dropdown menu." success=False
+  [skill_diag] {"episode": 97, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the 'Beauty & Personal Care' menu item", "activate state change control"], "task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item."}
+  [skill_diag] {"cluster_id": 2, "cluster_size": 3, "episode": 97, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "cluster_size": 3, "contexts": 7, "episode": 97, "event": "skill_abstracted", "skill_name": "inspect_menu_options", "verify_k": 2}
+  >>> SKILL admitted: inspect_menu_options  (Click on a visible item in the menu.)
+  [skill_diag] {"bootstrap": false, "cluster_id": 2, "episode": 97, "event": "skill_admitted", "skill_name": "inspect_menu_options", "verify_attempts": 2, "verify_success": 2}
+    local: "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item." success=True
+  [skill_diag] {"episode": 98, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Use the search bar to enter a keyword.", "submit search query"], "task": "Use the search bar to find a specific product by entering a keyword."}
+    local: 'Use the search bar to find a specific product by entering a keyword.' success=True
+    local: "Add the 'Christmas Elf Tshirt' to your wish list by clicking the 'Add to Wish List' button." success=False
+  [skill_diag] {"episode": 100, "event": "segments_created", "segments": 5, "steps": 6, "subgoals": ["Locate the 'HFHAPW Onesie Pajamas for Women' product.", "activate state change control", "activate state change control", "activate state change control", "activate state change control"], "task": "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button."}
+    local: "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button." success=True
+    local: "Open the visible '\\ue611 My Cart 12 12items' state-changing control and report the available action." success=False
+    local: "Use the visible '\\ue611 My Cart 12 12items' checkout or order-flow control and report the next required step." success=False
+  [frontier] +4 URLs from callback discovery
+  [frontier] loose select score=0.725 http://192.168.1.31:7770/beauty-personal-care/hair-care.html
+[node 14 depth=6] http://192.168.1.31:7770/beauty-personal-care/hair-care.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 103, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["Locate the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels'", "activate state change control", "activate state change control"], "task": "Click on the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels' to view its details."}
+    local: "Click on the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels' to view its details." success=True
+    local: "Select 'Product Name' from the 'Sort By' dropdown to sort the hair care items by product name." success=False
+    local: "Click on the 'Advanced Search' link to access more search options." success=False
+    local: "Click the 'Add to Compare' button for the 'MINGMIN-DZ Hair Cutting Scissors' to compare it with other products." success=False
+  [skill_diag] {"episode": 107, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 13 13items' state-changing control and report the available action."}
+    local: "Open the visible '\\ue611 My Cart 13 13items' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart 13 13items' checkout or order-flow control and report the next required step." success=False
+  [frontier] +1 URLs from callback discovery
+  [frontier] loose select score=0.635 http://192.168.1.31:7770/checkout/cart/configure/id/574/product_id/104498
+[node 15 depth=5] http://192.168.1.31:7770/checkout/cart/configure/id/574/product_id/104498
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 109, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["inspect menu options", "inspect feedback indicator"], "task": "Report whether the visible '12\\xa0 Reviews' feedback control indicates available feedback."}
+  [skill_diag] {"cluster_id": 3, "cluster_size": 3, "episode": 109, "event": "cluster_matured", "signatures": {"hover": 3}}
+  [skill_diag] {"cluster_id": 12, "cluster_size": 3, "episode": 109, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 12, "cluster_size": 3, "contexts": 7, "episode": 109, "event": "skill_abstracted", "skill_name": "inspect_feedback_indicator", "verify_k": 2}
+  >>> SKILL admitted: inspect_feedback_indicator  (Activate a visible control to inspect the feedback indicator)
+  [skill_diag] {"bootstrap": false, "cluster_id": 12, "episode": 109, "event": "skill_admitted", "skill_name": "inspect_feedback_indicator", "verify_attempts": 2, "verify_success": 2}
+    local: "Report whether the visible '12\\xa0 Reviews' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 110, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Inspect the product details for 'V8 +Energy, Healthy Energy Drink' by clicking on the 'Details' tab."}
+    local: "Inspect the product details for 'V8 +Energy, Healthy Energy Drink' by clicking on the 'Details' tab." success=True
+    local: "Add 'V8 +Energy, Healthy Energy Drink' to your compare list by clicking the 'Add to Compare' link." success=False
+  [skill_diag] {"episode": 112, "event": "segments_created", "segments": 6, "steps": 6, "subgoals": ["Navigate to the product page for 'V8 +Energy, Healthy Energy Drink'.", "Locate the 'Add to Wish List' link on the product page.", "activate state change control", "fill visible field", "fill visible field", "inspect menu options"], "task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link."}
+    local: "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link." success=True
+    local: "Update the quantity of 'V8 +Energy, Healthy Energy Drink' in your cart by adjusting the spinbutton and clicking 'Update Cart'." success=False
+    local: "Use the visible '\\ue611 My Cart 13 13items' checkout or order-flow control and report the next required step." success=False
+    GOAL chain=['inspect_feedback_indicator'] verified=False
+  [frontier] +2 URLs from callback discovery
+  [graph] 29 states, 13 skills, 22 composition edges → outputs/wa_run_17/graph.json
+  [curriculum] 86 tasks from 13 skills → outputs/wa_run_17/curriculum.json
+  [frontier] loose select score=1.445 http://192.168.1.31:7770/catalog/product_compare
+      [prefix] Replaying 3 steps from http://192.168.1.31:7770/checkout/cart/configure/id/574/prod...
+      [prefix] step 0 stale: bid 1681 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalog/product_compare (reason=stale_action:bid 1681 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalog/product_compare (retry 1/2, reason=stale_action:bid 1681 is not present in current AXTree)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/checkout/cart/configure/id/574/prod...
+      [prefix] step 0 stale: bid 1679 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1679 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (retry 1/2, reason=stale_action:bid 1679 is not present in current AXTree)
+  [frontier] loose select score=1.445 http://192.168.1.31:7770/catalog/product_compare
+      [prefix] Replaying 3 steps from http://192.168.1.31:7770/checkout/cart/configure/id/574/prod...
+      [prefix] step 0 stale: bid 1681 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalog/product_compare (reason=stale_action:bid 1681 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalog/product_compare (retry 2/2, reason=stale_action:bid 1681 is not present in current AXTree)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/checkout/cart/configure/id/574/prod...
+      [prefix] step 0 stale: bid 1679 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1679 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (retry 2/2, reason=stale_action:bid 1679 is not present in current AXTree)
+  [frontier] loose select score=1.445 http://192.168.1.31:7770/catalog/product_compare
+      [prefix] Replaying 3 steps from http://192.168.1.31:7770/checkout/cart/configure/id/574/prod...
+      [prefix] step 0 stale: bid 1681 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalog/product_compare (reason=stale_action:bid 1681 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/catalog/product_compare (reason=stale_action:bid 1681 is not present in current AXTree)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/checkout/cart/configure/id/574/prod...
+      [prefix] step 0 stale: bid 1679 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1679 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1679 is not present in current AXTree)
+  [frontier] loose select score=0.632 http://192.168.1.31:7770/home-kitchen.html
+[node 16 depth=6] http://192.168.1.31:7770/home-kitchen.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+    local: 'click(View as List)' success=False
+    local: 'click(Advanced Search)' success=False
+  [skill_diag] {"episode": 118, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["fill the search input with 'nightstand'", "submit search query"], "task": "fill(ue615 Search, 'nightstand'); click(Search)"}
+    local: "fill(ue615 Search, 'nightstand'); click(Search)" success=True
+    local: 'click(Add to Cart) for Magic Home Nightstands Bedroom with Drawers' success=False
+    local: 'click(Add to Compare) for Pemberly Row 70" Farmhouse Barn Door Rustic Wood TV Stand Console' success=False
+    local: 'click(Add to Wish List) for Bonzy Home Glossy LED TV Stand' success=False
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." success=False
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=False
+  [frontier] loose select score=0.625 http://192.168.1.31:7770/cell-phones-accessories/accessories/chargers-power-adap
+[node 17 depth=6] http://192.168.1.31:7770/cell-phones-accessories/accessories/chargers-power-adapters.html
+  [tasks] Skipped 3 repeated/saturated proposal(s)
+    local: "Sort the product list by 'Price' using the Sort By dropdown." success=False
+  [skill_diag] {"episode": 125, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["segment 0", "inspect feedback indicator", "inspect feedback indicator"], "task": "Report whether the visible '3 \\xa0Reviews' feedback control indicates available feedback."}
+    local: "Report whether the visible '3 \\xa0Reviews' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 126, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the search field with 'wireless charger'", "submit search query"], "task": "Fill the search field with 'wireless charger' and click the Search button."}
+    local: "Fill the search field with 'wireless charger' and click the Search button." success=True
+    local: "Click on the 'Add to Cart' button for the product 'USB Charger, Anker Elite Dual Port 24W Wall Charger'." success=False
+  [skill_diag] {"episode": 128, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Click on the 'Add to Wish List' button for the product 'Vchiming Wireless Car Charger Mount'."}
+    local: "Click on the 'Add to Wish List' button for the product 'Vchiming Wireless Car Charger Mount'." success=True
+  [skill_diag] {"episode": 129, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action."}
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=False
+  [frontier] +1 URLs from callback discovery
+  [frontier] loose select score=0.569 http://192.168.1.31:7770/video-games.html
+[node 18 depth=5] http://192.168.1.31:7770/video-games.html
+  [tasks] Skipped 5 repeated/saturated proposal(s)
+    local: "Report whether the visible '5 \\xa0Reviews' feedback control indicates available feedback." success=False
+  [frontier] +26 URLs from DOM links
+  [frontier] loose select score=0.567 http://192.168.1.31:7770/video-games/playstation-4/accessories.html
+[node 19 depth=6] http://192.168.1.31:7770/video-games/playstation-4/accessories.html
+  [tasks] Skipped 5 repeated/saturated proposal(s)
+    local: "Sort the accessories by 'Price' using the 'Sort By' dropdown." success=False
+    local: "Report whether the visible '4 \\xa0Reviews' feedback control indicates available feedback." success=False
+  [skill_diag] {"episode": 134, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the search field with 'controller'", "submit search query"], "task": "Fill the search field with 'controller' and click the search button."}
+    local: "Fill the search field with 'controller' and click the search button." success=True
+    local: "Click on the 'Add to Cart' button for the 'Wireless Game Controller with 4 Paddles'." success=False
+    local: "Click on the 'Add to Wish List' button for the 'Skinit Decal Gaming Skin for PS4 Console'." success=False
+  [frontier] loose select score=0.562 http://192.168.1.31:7770/electronics/car-vehicle-electronics.html
+[node 20 depth=6] http://192.168.1.31:7770/electronics/car-vehicle-electronics.html
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+  [graph] 35 states, 13 skills, 24 composition edges → outputs/wa_run_17/graph.json
+  [curriculum] 86 tasks from 13 skills → outputs/wa_run_17/curriculum.json
+  [frontier] loose select score=0.525 http://192.168.1.31:7770/4-rockville-6-5-led-swivel-metal-marine-wakeboard-speak
+[node 21 depth=5] http://192.168.1.31:7770/4-rockville-6-5-led-swivel-metal-marine-wakeboard-speakers-amplifier-amp-kit.html
+  [tasks] Skipped 5 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 137, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "click(Details)"}
+    local: 'click(Details)' success=True
+    local: 'click(1 Review)' success=False
+    local: "Report whether the visible '1\\xa0 Review' feedback control indicates available feedback." success=False
+  [skill_diag] {"episode": 140, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill in the search query for Rockville 6.5\" LED Swivel Metal Marine Wakeboard Speakers", "submit search query"], "task": "fill(Search, Rockville 6.5\" LED Swivel Metal Marine Wakeboard Speakers); click(Search)"}
+    local: 'fill(Search, Rockville 6.5" LED Swivel Metal Marine Wakeboard Speakers); click(Search)' success=True
+  [skill_diag] {"episode": 141, "event": "segments_created", "segments": 3, "steps": 4, "subgoals": ["segment 0", "activate state change control", "activate state change control"], "task": "click(Add to Cart)"}
+    local: 'click(Add to Cart)' success=True
+  [skill_diag] {"episode": 142, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "click(Add to Compare)"}
+    local: 'click(Add to Compare)' success=True
+    local: 'click(Add to Wish List)' success=False
+    GOAL chain=['activate_state_change_control'] verified=False
+  [frontier] +19 URLs from DOM links
+[node 22 depth=6] http://192.168.1.31:7770/clothing-shoes-jewelry/novelty-more.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+    local: "Select 'Price' from the 'Sort By' dropdown to sort the items by price." success=False
+    local: "Click on the 'Advanced Search' link to access more search options." success=False
+    local: "Click the 'Add to Cart' button for the item 'Christmas Elf Tshirt I'm The Sporty Elf Matching Xmas Gift Tank Top'." success=False
+    local: "Click the 'Add to Wish List' button for the item 'Juggalo Gathering Whoop Whoop, Hatchetman Clown T-Shirt Tank Top'." success=False
+  [skill_diag] {"episode": 149, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 3 3items' state-changing control and report the available action."}
+    local: "Open the visible '\\ue611 My Cart 3 3items' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart 3 3items' checkout or order-flow control and report the next required step." success=False
+  [frontier] loose select score=0.920 http://192.168.1.31:7770/grocery-gourmet-food/breads-bakery.html
+[node 23 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/breads-bakery.html
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+    local: "Sort the products by 'Price' using the 'Sort By' dropdown menu." success=False
+  [skill_diag] {"episode": 152, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the search field with 'cookies'", "submit search query"], "task": "Fill the search field with 'cookies' and click the 'Search' button to find related products."}
+    local: "Fill the search field with 'cookies' and click the 'Search' button to find related products." success=True
+    local: "Click on the 'Add to Cart' button for the product 'COOKIES WITH BIG CHOCOLATE CHIP AND ALMONDS CARAMELIZED' to add it to your cart." success=False
+    local: "Click on the 'Add to Compare' button for the product 'Sweetwell Chocolate Chunk Cookies' to compare it with other products." success=False
+    local: "Click on the 'My Cart' link to view the items currently in your cart." success=False
+    local: "Use the visible '\\ue611 My Cart 3 3items' checkout or order-flow control and report the next required step." success=False
+    GOAL chain=['submit_search_query'] verified=False
+  [frontier] loose select score=0.730 http://192.168.1.31:7770/grocery-gourmet-food/meat-seafood.html
+[node 24 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/meat-seafood.html
+  [tasks] Skipped 4 repeated/saturated proposal(s)
+    local: 'click(View as List)' success=False
+  [skill_diag] {"episode": 159, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["fill the search input with 'Chicken'", "submit search query"], "task": "fill(ue615 Search, Chicken); click(Search)"}
+    local: 'fill(ue615 Search, Chicken); click(Search)' success=True
+    local: 'click(Advanced Search)' success=False
+    local: 'click(Add to Cart) for Hungry Planet Chicken Ground Bulk, Unseasoned Plant-Based Meat' success=False
+    local: 'click(Add to Compare) for El Latino Colombian Morcillas' success=False
+    local: 'click(Add to Wish List) for Super Trimmed USDA Prime Filet Mignon' success=False
+    local: "Open the visible '\\ue611 My Cart 7 7items' state-changing control and report the available action." success=False
+    local: "Use the visible '\\ue611 My Cart 7 7items' checkout or order-flow control and report the next required step." success=False
+  [frontier] +1 URLs from callback discovery
+  [frontier] loose select score=0.630 http://192.168.1.31:7770/electronics/headphones.html
+[node 25 depth=6] http://192.168.1.31:7770/electronics/headphones.html
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+  [skill_diag] {"episode": 166, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the search field with the query 'wireless earbuds'.", "submit search query"], "task": "fill_visible_field('Search', 'wireless earbuds')"}
+    local: "fill_visible_field('Search', 'wireless earbuds')" success=True
+  [skill_diag] {"episode": 167, "event": "segments_created", "segments": 6, "steps": 5, "subgoals": ["Locate the product 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'", "Review product details and confirm it meets requirements", "activate state change control", "activate state change control", "activate state change control", "activate state change control"], "task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'"}
+    local: "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'" success=True
+    local: "click('Add to Compare') for 'Skullcandy Ink'd+ Wireless In-Ear Earbud - Deep Red'" success=False
+    GOAL chain=['activate_state_change_control'] verified=False
+  [frontier] +2 URLs from callback discovery
+  [graph] 45 states, 13 skills, 24 composition edges → outputs/wa_run_17/graph.json
+  [curriculum] 94 tasks from 13 skills → outputs/wa_run_17/curriculum.json
+  [frontier] loose select score=0.562 http://192.168.1.31:7770/video-games/legacy-systems/xbox-systems.html
+[node 26 depth=6] http://192.168.1.31:7770/video-games/legacy-systems/xbox-systems.html
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+    local: "Sort the products by 'Price' in ascending order." success=False
+    local: "Change the view to 'List' format." success=False
+  [skill_diag] {"episode": 172, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the search field with 'Xbox'", "submit search query"], "task": "Fill the search field with 'Xbox' and click the Search button."}
+    local: "Fill the search field with 'Xbox' and click the Search button." success=True
+    local: "Add the 'HexGaming Esports Advance Customized Controller' to the wish list." success=False
+    local: "Add the 'Number-one Game Storage Tower Bracket' to the cart." success=False
+  [frontier] loose select score=0.521 http://192.168.1.31:7770/beauty-personal-care/fragrance.html
+[node 27 depth=6] http://192.168.1.31:7770/beauty-personal-care/fragrance.html
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+    local: 'click(Set Descending Direction) to sort products in descending order' success=False
+    local: "Report whether the visible '9 \\xa0Reviews' feedback control indicates available feedback." success=False
+    local: 'click(View as List) to change the display format of products' success=False
+  [skill_diag] {"episode": 178, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["fill search input with 'Givenchy Dahlia Divin Nude'", "submit search query"], "task": "fill(ue615 Search, 'Givenchy Dahlia Divin Nude'); click(Search)"}
+    local: "fill(ue615 Search, 'Givenchy Dahlia Divin Nude'); click(Search)" success=True
+  [skill_diag] {"episode": 179, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["Navigate to the product page for Givenchy Dahlia Divin Nude Eau De Parfum.", "activate state change control", "activate state change control"], "task": "click(Add to Cart) for Givenchy Dahlia Divin Nude By Givenchy For Women Eau De Parfum Spray 1.7 oz"}
+    local: 'click(Add to Cart) for Givenchy Dahlia Divin Nude By Givenchy For Women Eau De Parfum Spray 1.7 oz' success=True
+  [skill_diag] {"episode": 180, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "click(Add to Compare) for Bodycology Pure White Gardenia Fragrance Mist Spray By Bodycology Perfume for Women 8 oz Fragrance Mist Spray"}
+    local: 'click(Add to Compare) for Bodycology Pure White Gardenia Fragrance Mist Spray By Bodycology Perfume for Women 8 oz Fragrance Mist Spray' success=True
+    GOAL chain=['activate_state_change_control'] verified=False
+  [frontier] loose select score=0.518 http://192.168.1.31:7770/video-games/pc/virtual-reality.html
+[node 28 depth=6] http://192.168.1.31:7770/video-games/pc/virtual-reality.html
+  [tasks] Skipped 7 repeated/saturated proposal(s)
+    local: "Select 'Price' from the 'Sort By' dropdown to sort the items by price." success=False
+  [skill_diag] {"episode": 183, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Use the search bar to look for 'Oculus Quest 2'", "submit search query"], "task": "Use the search bar to look for 'Oculus Quest 2' and click the 'Search' button once it is enabled."}
+    local: "Use the search bar to look for 'Oculus Quest 2' and click the 'Search' button once it is enabled." success=True
+  [skill_diag] {"episode": 184, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Click on the 'Add to Compare' button for the item 'METORY Adjustable Ear Muffs & METORY Battery Pack for Oculus Quest 2'."}
+    local: "Click on the 'Add to Compare' button for the item 'METORY Adjustable Ear Muffs & METORY Battery Pack for Oculus Quest 2'." success=True
+    local: "Click on the 'Add to Wish List' button for the item 'VR Cover for Meta/Oculus™ Rift S - Washable Hygienic Cotton Cover (2 pcs)'." success=False
+  [frontier] loose select score=0.517 http://192.168.1.31:7770/electronics/portable-audio-video/radios.html
+[node 29 depth=6] http://192.168.1.31:7770/electronics/portable-audio-video/radios.html
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+  [frontier] loose select score=0.492 http://192.168.1.31:7770/customer/account
+[node 30 depth=5] http://192.168.1.31:7770/customer/account/login
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+    local: "click('Beauty & Personal Care')" success=False
+    local: "click('Sports & Outdoors')" success=False
+    local: "click('Advanced Search')" success=False
+    local: "click('Search Terms')" success=False
+    local: "click('My Wish List')" success=False
+    local: "click('Subscribe')" success=False
+  [frontier] +19 URLs from DOM links
+  [graph] 51 states, 13 skills, 26 composition edges → outputs/wa_run_17/graph.json
+  [curriculum] 115 tasks from 13 skills → outputs/wa_run_17/curriculum.json
+  [frontier] loose select score=0.488 http://192.168.1.31:7770/electronics/camera-photo.html
+[node 31 depth=6] http://192.168.1.31:7770/electronics/camera-photo.html
+  [tasks] Skipped 6 repeated/saturated proposal(s)
+    local: "Sort the products by price by selecting 'Price' from the 'Sort By' dropdown menu." success=False
+  [skill_diag] {"episode": 193, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the name 'Multi Accessory Hub Adapter By JOBY' to view details.", "activate state change control"], "task": "View the details of the 'Multi Accessory Hub Adapter By JOBY' by clicking on its name to read more about it."}
+    local: "View the details of the 'Multi Accessory Hub Adapter By JOBY' by clicking on its name to read more about it." success=True
+  [skill_diag] {"episode": 194, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Fill the search field with 'camera'.", "submit search query"], "task": "Use the search bar to find a specific camera by filling the search field with 'camera' and clicking the Search button."}
+    local: "Use the search bar to find a specific camera by filling the search field with 'camera' and clicking the Search button." success=True
+    local: "Add the 'CG7060 Apollo Transparency Film' to the compare list by clicking the 'Add to Compare' button." success=False
+    local: "Add the 'Indoor Pet Camera, HD 1080P No WiFi Security Camera' to your wish list by clicking the 'Add to Wish List' button." success=False
+    local: "Add the 'Navitech Black Hard Carry Bag/Case/Cover with Shoulder Strap' to the cart by clicking the 'Add to Cart' button." success=False
+  [frontier] +1 URLs from callback discovery
+  [frontier] loose select score=0.484 http://192.168.1.31:7770/office-products/office-school-supplies.html
+[node 32 depth=6] http://192.168.1.31:7770/office-products/office-school-supplies.html
+  [tasks] Skipped 3 repeated/saturated proposal(s)
+    local: "Sort the items by 'Price' in ascending order." success=False
+    local: "Add 'Plastic Foldable Storage Baskets' to the compare list." success=False
+  [skill_diag] {"episode": 200, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["View product overview", "activate state change control"], "task": "View the details of 'WQPY Desktop Storage Box Leaf Foldable File Folder'."}
+  [skill_diag] {"cluster_id": 16, "cluster_size": 3, "episode": 200, "event": "cluster_matured", "signatures": {"click": 1, "click > click > click": 2}}
+    local: "View the details of 'WQPY Desktop Storage Box Leaf Foldable File Folder'." success=True
+    local: "Report whether the visible '10 \\xa0Reviews' feedback control indicates available feedback." success=False
+  [skill_diag] {"episode": 202, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Open the website and locate the search bar.", "submit search query"], "task": "Search for 'Plastic Foldable Storage Baskets' using the search bar."}
+    local: "Search for 'Plastic Foldable Storage Baskets' using the search bar." success=True
+    local: "Add 'Fireproof File Box with Lock' to the cart." success=False
+    local: "Add 'luckxuan Small Corner Bookcase' to the wish list." success=False
+    local: "Open the visible '\\ue611 My Cart 4 4items' state-changing control and report the available action." success=False
+    local: "Use the visible '\\ue611 My Cart 4 4items' checkout or order-flow control and report the next required step." success=False
+  [frontier] +1 URLs from callback discovery
+  [frontier] loose select score=0.484 http://192.168.1.31:7770/home-kitchen/heating-cooling-air-quality.html
+[node 33 depth=6] http://192.168.1.31:7770/home-kitchen/heating-cooling-air-quality.html
+  [tasks] Skipped 5 repeated/saturated proposal(s)
+    local: "Sort the items by 'Price' using the 'Sort By' dropdown menu." success=False
+    local: "View the product details for 'Senville LETO Series Mini Split Air Conditioner' by clicking on its name." ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+    local: "Add the 'BRIVIC AC Covers for Outside Unit' to the cart by clicking the 'Add to Cart' button." ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+    local: "Add the 'Ivation 5-in-1 HEPA Air Purifier' to the wish list by clicking the 'Add to Wish List' button." ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+    local: "Open the visible '\\ue611 My Cart 7 7items' state-changing control and report the available action." ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+    local: "Use the visible '\\ue611 My Cart 7 7items' checkout or order-flow control and report the next required step." ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.466 http://192.168.1.31:7770/5-lbs-wild-caught-frozen-grouper-portion-sizes-vary.htm
+[node 34 depth=5] http://192.168.1.31:7770/5-lbs-wild-caught-frozen-grouper-portion-sizes-vary.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/2-pairs-rockville-x8c-competition-8-component-speakers-
+[node 34 depth=5] http://192.168.1.31:7770/2-pairs-rockville-x8c-competition-8-component-speakers-w-titanium-tweeters.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/video-games/xbox-one.html
+[node 34 depth=5] http://192.168.1.31:7770/video-games/xbox-one.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/wishlist
+[node 34 depth=5] SKIP http://192.168.1.31:7770/wishlist → redirect to already-visited http://192.168.1.31:7770/customer/account/login
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist (retry 1/2, reason=stale_action:bid 1679 is not present in current AXTree)
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/checkout/cart
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/cell-phones-accessories/accessories...
+      [prefix] step 2 stale: bid 1478 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1478 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/checkout/cart (retry 1/2, reason=stale_action:bid 1478 is not present in current AXTree)
+  [frontier] loose select score=0.461 http://192.168.1.31:7770/contact
+[node 34 depth=5] http://192.168.1.31:7770/contact
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.459 http://192.168.1.31:7770/catalog/product_compare/index/uenc/aHR0cDovLzE5Mi4xNjgu
+[node 34 depth=5] http://192.168.1.31:7770/catalog/product_compare/index/uenc/aHR0cDovLzE5Mi4xNjguMS4zMTo3NzcwL2N1c3RvbWVyL3NlY3Rpb24vbG9hZC8_c2VjdGlvbnM9bWVzc2FnZXMlMkNjdXN0b21lciUyQ2NvbXBhcmUtcHJvZHVjdHMlMkNsYXN0LW9yZGVyZWQtaXRlbXMlMkNjYXJ0JTJDZGlyZWN0b3J5LWRhdGElMkNjYXB0Y2hhJTJDaW5zdGFudC1wdXJjaGFzZSUyQ2xvZ2dlZEFzQ3VzdG9tZXIlMkNwZXJzaXN0ZW50JTJDcmV2aWV3JTJDd2lzaGxpc3QlMkNyZWNlbnRseV92aWV3ZWRfcHJvZHVjdCUyQ3JlY2VudGx5X2NvbXBhcmVkX3Byb2R1Y3QlMkNwcm9kdWN0X2RhdGFfc3RvcmFnZSUyQ3BheXBhbC1iaWxsaW5nLWFncmVlbWVudCZmb3JjZV9uZXdfc2VjdGlvbl90aW1lc3RhbXA9ZmFsc2UmXz0xNzgyMTE2MjAyMjEy
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.459 http://192.168.1.31:7770/office-products.html
+[node 34 depth=5] http://192.168.1.31:7770/office-products.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.459 http://192.168.1.31:7770/video-games/xbox-one/accessories.html
+[node 34 depth=5] http://192.168.1.31:7770/video-games/xbox-one/accessories.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.458 http://192.168.1.31:7770/2-skar-audio-evl-65-d4-6-5-400-watt-max-power-dual-4-oh
+[node 34 depth=5] http://192.168.1.31:7770/2-skar-audio-evl-65-d4-6-5-400-watt-max-power-dual-4-ohm-car-subwoofers-pair-of-2-bndle-evl-65d4x2.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.458 http://192.168.1.31:7770/sales/guest/form
+[node 34 depth=5] http://192.168.1.31:7770/sales/guest/form
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.458 http://192.168.1.31:7770/cell-phones-accessories/accessories/automobile-accessor
+[node 34 depth=5] http://192.168.1.31:7770/cell-phones-accessories/accessories/automobile-accessories.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.458 http://192.168.1.31:7770/sports-outdoors.html
+[node 34 depth=5] http://192.168.1.31:7770/sports-outdoors.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.459 http://192.168.1.31:7770/grocery-gourmet-food.html
+      [prefix] Replaying 7 steps from http://192.168.1.31:7770/grocery-gourmet-food/meat-seafood.h...
+      [prefix] step 1 stale: bid 1516 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/grocery-gourmet-food.html (reason=stale_action:bid 1516 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/grocery-gourmet-food.html (retry 1/2, reason=stale_action:bid 1516 is not present in current AXTree)
+  [frontier] loose select score=0.458 http://192.168.1.31:7770/v8-energy-healthy-energy-drink-steady-energy-from-black
+[node 34 depth=6] http://192.168.1.31:7770/v8-energy-healthy-energy-drink-steady-energy-from-black-and-green-tea-pomegranate-blueberry-8-ounce-can-pack-of-24.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/pasta-noodles.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/pasta-noodles.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/home-kitchen/kitchen-dining.html
+[node 34 depth=5] http://192.168.1.31:7770/home-kitchen/kitchen-dining.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/home-kitchen/home-decor-products.html
+[node 34 depth=6] http://192.168.1.31:7770/home-kitchen/home-decor-products.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/chenyouwen-foot-care-tools-great-60-pcs-replacement-san
+[node 34 depth=6] http://192.168.1.31:7770/chenyouwen-foot-care-tools-great-60-pcs-replacement-sandpaper-disk-for-electric-foot-polisher-specification-100-mesh-fine-sand.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/ingrown-toenail-treatment-ingrown-toenail-lifter-ingrow
+[node 34 depth=6] http://192.168.1.31:7770/ingrown-toenail-treatment-ingrown-toenail-lifter-ingrown-toenail-tool-toe-clamp-foot-care-tool-for-paronychia-sliver.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/electronics/accessories-supplies.html
+[node 34 depth=5] http://192.168.1.31:7770/electronics/accessories-supplies.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/10pcs-professional-foot-file-pedicure-kit-set-for-hard-
+[node 34 depth=6] http://192.168.1.31:7770/10pcs-professional-foot-file-pedicure-kit-set-for-hard-skin-remover-foot-scrub-nail-brush-foot-care-kit-nail-file-for-wet-dry-cracked-feet-men-women-salon-home.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/checkout/cart/configure/id/575/product_id/6536
+[node 34 depth=6] http://192.168.1.31:7770/checkout/cart
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/search/term/popular
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/login...
+      [prefix] step 0 stale: bid 1467 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/search/term/popular (reason=stale_action:bid 1467 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/search/term/popular (retry 1/2, reason=stale_action:bid 1467 is not present in current AXTree)
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/grocery-gourmet-food/dairy-cheese-eggs.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/dairy-cheese-eggs.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/home-kitchen/furniture.html
+[node 34 depth=6] http://192.168.1.31:7770/home-kitchen/furniture.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/cell-phones-accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/cell-phones-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/8-in-1-professional-pedicure-kit-pedicure-foot-rasp-foo
+[node 34 depth=6] http://192.168.1.31:7770/8-in-1-professional-pedicure-kit-pedicure-foot-rasp-foot-file-and-callus-remover-sided-remove-set-best-foot-care.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/yinrunx-pedicure-kit-20-in-1-foot-care-scrubber-pedicur
+[node 34 depth=6] http://192.168.1.31:7770/yinrunx-pedicure-kit-20-in-1-foot-care-scrubber-pedicure-kit-manicure-foot-scrubber-nail-tools-supplies-set-stainless-steel-foot-care-kit-callus-and-dead-skin-remover-foot-rasp-peel-black.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/belden-8241-002u1000-coaxial-cable-rg-59-u-75-ohm-imp-2
+[node 34 depth=5] http://192.168.1.31:7770/belden-8241-002u1000-coaxial-cable-rg-59-u-75-ohm-imp-23awg-solid-analog-video-cable-red.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/15pcs-manicure-pedicure-set-nail-clippers-callus-remove
+[node 34 depth=6] http://192.168.1.31:7770/15pcs-manicure-pedicure-set-nail-clippers-callus-remover-kit-hand-foot-care-by-iconshops.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/catalogsearch/result/index
+[node 34 depth=6] SKIP http://192.168.1.31:7770/catalogsearch/result/index → redirect to already-visited http://192.168.1.31:7770
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalogsearch/result/index (retry 1/2, reason=stale_action:bid 1467 is not present in current AXTree)
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/wishlist
+[node 34 depth=5] SKIP http://192.168.1.31:7770/wishlist → redirect to already-visited http://192.168.1.31:7770/customer/account/login
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist (retry 2/2, reason=stale_action:bid 1467 is not present in current AXTree)
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/checkout/cart
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/cell-phones-accessories/accessories...
+      [prefix] step 0 stale: bid 1463 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1463 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/checkout/cart (retry 2/2, reason=stale_action:bid 1463 is not present in current AXTree)
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/search/term/popular
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/login...
+      [prefix] step 0 stale: bid 1467 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/search/term/popular (reason=stale_action:bid 1467 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/search/term/popular (retry 2/2, reason=stale_action:bid 1467 is not present in current AXTree)
+  [frontier] loose select score=0.459 http://192.168.1.31:7770/grocery-gourmet-food.html
+      [prefix] Replaying 7 steps from http://192.168.1.31:7770/grocery-gourmet-food/meat-seafood.h...
+      [prefix] step 0 stale: bid 1591 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/grocery-gourmet-food.html (reason=stale_action:bid 1591 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/grocery-gourmet-food.html (retry 2/2, reason=stale_action:bid 1591 is not present in current AXTree)
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/catalogsearch/result/index
+[node 34 depth=6] SKIP http://192.168.1.31:7770/catalogsearch/result/index → redirect to already-visited http://192.168.1.31:7770
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalogsearch/result/index (retry 2/2, reason=stale_action:bid 1591 is not present in current AXTree)
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/wishlist
+[node 34 depth=5] SKIP http://192.168.1.31:7770/wishlist → redirect to already-visited http://192.168.1.31:7770/customer/account/login
+      [prefix] released stale prefix http://192.168.1.31:7770/wishlist (reason=stale_action:bid 1591 is not present in current AXTree)
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/beauty-personal-care/fragrance/women-s.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/fragrance/women-s.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/electronics/television-video.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/television-video.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/electronics.html
+[node 34 depth=5] http://192.168.1.31:7770/electronics.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/patio-lawn-garden.html
+[node 34 depth=6] http://192.168.1.31:7770/patio-lawn-garden.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/grocery-gourmet-food/food-beverage-gifts.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/food-beverage-gifts.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/sauces-gravies-mari
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/sauces-gravies-marinades.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care/tools-accessor
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care/tools-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/beauty-personal-care/oral-care.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/oral-care.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/cell-phones-accessories/accessories/photo-video-accesso
+[node 34 depth=6] http://192.168.1.31:7770/cell-phones-accessories/accessories/photo-video-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.465 http://192.168.1.31:7770/checkout/cart
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770/cell-phones-accessories/accessories...
+      [prefix] step 0 stale: bid 1463 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1463 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1463 is not present in current AXTree)
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/electronics/portable-audio-video/mp3-mp4-player-accesso
+[node 34 depth=5] http://192.168.1.31:7770/electronics/portable-audio-video/mp3-mp4-player-accessories.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/soups-stocks-broths
+[node 34 depth=5] http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/soups-stocks-broths.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/health-household.html
+[node 34 depth=5] http://192.168.1.31:7770/health-household.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/electronics/portable-audio-video/boomboxes.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/portable-audio-video/boomboxes.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/electronics/portable-audio-video/portable-speakers-dock
+[node 34 depth=6] http://192.168.1.31:7770/electronics/portable-audio-video/portable-speakers-docks.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/beauty-personal-care/tools-accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/tools-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/tools-home-improvement.html
+[node 34 depth=6] http://192.168.1.31:7770/tools-home-improvement.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/triton-rac-up-250-a3-x31-48-26-cm-19-inches-retractable
+[node 34 depth=5] http://192.168.1.31:7770/triton-rac-up-250-a3-x31-48-26-cm-19-inches-retractable-shelf-1u-black.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/grocery-gourmet-food/deli-prepared-foods.html
+[node 34 depth=5] http://192.168.1.31:7770/grocery-gourmet-food/deli-prepared-foods.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/video-games/legacy-systems.html
+[node 34 depth=6] http://192.168.1.31:7770/video-games/legacy-systems.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/beauty-personal-care/tools-accessories/skin-care-tools.
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/tools-accessories/skin-care-tools.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/sports-outdoors/hunting-fishing.html
+[node 34 depth=6] http://192.168.1.31:7770/sports-outdoors/hunting-fishing.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.455 http://192.168.1.31:7770/customer/account/create
+[node 34 depth=5] http://192.168.1.31:7770/customer/account/create
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.455 http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care/foot-hand-care
+[node 34 depth=5] http://192.168.1.31:7770/beauty-personal-care/foot-hand-nail-care/foot-hand-care.html
+[node 34 depth=5] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.455 http://192.168.1.31:7770/video-games/pc.html
+[node 34 depth=6] http://192.168.1.31:7770/video-games/pc.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.455 http://192.168.1.31:7770/grocery-gourmet-food/produce/dried-fruits-vegetables.ht
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/produce/dried-fruits-vegetables.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.455 http://192.168.1.31:7770/checkout/cart/configure/id/588/product_id/18864
+[node 34 depth=6] http://192.168.1.31:7770/checkout/cart
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.455 http://192.168.1.31:7770/health-household/diet-sports-nutrition.html
+[node 34 depth=6] http://192.168.1.31:7770/health-household/diet-sports-nutrition.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.457 http://192.168.1.31:7770/search/term/popular
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/customer/account/login...
+      [prefix] step 0 stale: bid 1467 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/search/term/popular (reason=stale_action:bid 1467 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/search/term/popular (reason=stale_action:bid 1467 is not present in current AXTree)
+  [frontier] loose select score=0.459 http://192.168.1.31:7770/grocery-gourmet-food.html
+      [prefix] Replaying 7 steps from http://192.168.1.31:7770/grocery-gourmet-food/meat-seafood.h...
+      [prefix] step 0 stale: bid 1591 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/grocery-gourmet-food.html (reason=stale_action:bid 1591 is not present in current AXTree, arrived=)
+      [prefix] released stale prefix http://192.168.1.31:7770/grocery-gourmet-food.html (reason=stale_action:bid 1591 is not present in current AXTree)
+  [frontier] loose select score=0.456 http://192.168.1.31:7770/catalogsearch/result/index
+[node 34 depth=6] SKIP http://192.168.1.31:7770/catalogsearch/result/index → redirect to already-visited http://192.168.1.31:7770
+      [prefix] released stale prefix http://192.168.1.31:7770/catalogsearch/result/index (reason=stale_action:bid 1591 is not present in current AXTree)
+  [frontier] loose select score=0.011 http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/olives-pickles-reli
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/olives-pickles-relishes.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.011 http://192.168.1.31:7770/beauty-personal-care/shave-hair-removal.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/shave-hair-removal.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.005 http://192.168.1.31:7770/electronics/home-audio/turntables-accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/home-audio/turntables-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.004 http://192.168.1.31:7770/grocery-gourmet-food/alcoholic-beverages.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/alcoholic-beverages.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.004 http://192.168.1.31:7770/grocery-gourmet-food/home-brewing-winemaking.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/home-brewing-winemaking.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.004 http://192.168.1.31:7770/peipu-joystick-for-mobile-phone-gaming-controller-gift-
+[node 34 depth=6] http://192.168.1.31:7770/peipu-joystick-for-mobile-phone-gaming-controller-gift-mobile-phone-game-joystick-game-control-2packs.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.003 http://192.168.1.31:7770/electronics/gps-finders-accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/gps-finders-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.003 http://192.168.1.31:7770/sports-outdoors/fan-shop.html
+[node 34 depth=6] http://192.168.1.31:7770/sports-outdoors/fan-shop.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.003 http://192.168.1.31:7770/office-products/office-furniture-lighting.html
+[node 34 depth=6] http://192.168.1.31:7770/office-products/office-furniture-lighting.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/games-tech-5-x-replacement-mini-usb-charging-charger-co
+[node 34 depth=6] http://192.168.1.31:7770/games-tech-5-x-replacement-mini-usb-charging-charger-connector-port-socket-jack-for-ps3-playstation-3-controller.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/skinit-decal-gaming-skin-for-ps4-console-officially-lic
+[node 34 depth=6] http://192.168.1.31:7770/skinit-decal-gaming-skin-for-ps4-console-officially-licensed-disney-mickey-mouse-design.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/cell-phones-accessories/cell-phones.html
+[node 34 depth=6] http://192.168.1.31:7770/cell-phones-accessories/cell-phones.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/home-kitchen/bedding.html
+[node 34 depth=6] http://192.168.1.31:7770/home-kitchen/bedding.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/video-games/legacy-systems/playstation-systems.html
+[node 34 depth=6] http://192.168.1.31:7770/video-games/legacy-systems/playstation-systems.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/beauty-personal-care/personal-care.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/personal-care.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/logitech-g433-7-1-wired-gaming-headset-with-dts-headpho
+[node 34 depth=6] http://192.168.1.31:7770/logitech-g433-7-1-wired-gaming-headset-with-dts-headphone-x-7-1-surround-for-pc-ps4-ps4-pro-xbox-one-xbox-one-s-nintendo-switch-fire-red.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/grocery-gourmet-food/produce.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/produce.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/beauty-personal-care/hair-care/hair-accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/hair-care/hair-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.002 http://192.168.1.31:7770/grocery-gourmet-food/beverages.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/beverages.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.001 http://192.168.1.31:7770/beauty-personal-care/fragrance/men-s.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/fragrance/men-s.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.001 http://192.168.1.31:7770/tools-home-improvement/lighting-ceiling-fans.html
+[node 34 depth=6] http://192.168.1.31:7770/tools-home-improvement/lighting-ceiling-fans.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.001 http://192.168.1.31:7770/electronics/security-surveillance.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/security-surveillance.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.001 http://192.168.1.31:7770/grocery-gourmet-food/snacks-sweets.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/snacks-sweets.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.001 http://192.168.1.31:7770/video-games/nintendo-switch.html
+[node 34 depth=6] http://192.168.1.31:7770/video-games/nintendo-switch.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.001 http://192.168.1.31:7770/givenchy-dahlia-divin-nude-by-givenchy-for-women-eau-de
+[node 34 depth=6] http://192.168.1.31:7770/givenchy-dahlia-divin-nude-by-givenchy-for-women-eau-de-parfum-spray-1-7-oz.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/nut-seed-butters.ht
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/pantry-staples/nut-seed-butters.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/armor3-soundtac-universal-gaming-headset-black-for-xbox
+[node 34 depth=6] http://192.168.1.31:7770/armor3-soundtac-universal-gaming-headset-black-for-xbox-series-x-xbox-series-s-nintendo-switch-lite-ps4-ps5-xbox-one-wii-u-pc-mac-nintendo-switch.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/celeste-nintendo-animal-crossing-happy-home-designer-am
+[node 34 depth=6] http://192.168.1.31:7770/celeste-nintendo-animal-crossing-happy-home-designer-amiibo-card-305.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/cell-phones-accessories/accessories/maintenance-upkeep-
+[node 34 depth=6] http://192.168.1.31:7770/cell-phones-accessories/accessories/maintenance-upkeep-repairs.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/checkout/cart/configure/id/587/product_id/37358
+[node 34 depth=6] http://192.168.1.31:7770/checkout/cart
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/electronics/computers-accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/computers-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/electronics/power-accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/power-accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/miadore-classic-n64-controller-joystick-remote-for-n64-
+[node 34 depth=6] http://192.168.1.31:7770/miadore-classic-n64-controller-joystick-remote-for-n64-video-game-system-n64-console-jungle-green.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/checkout/cart/configure/id/597/product_id/6540
+[node 34 depth=6] http://192.168.1.31:7770/checkout/cart/configure/id/597/product_id/6540
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/office-products/office-electronics.html
+[node 34 depth=6] http://192.168.1.31:7770/office-products/office-electronics.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/skinit-decal-gaming-skin-compatible-with-ps4-controller
+[node 34 depth=6] http://192.168.1.31:7770/skinit-decal-gaming-skin-compatible-with-ps4-controller-officially-licensed-nfl-los-angeles-rams-zone-block-design.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/sports-outdoors/exercise-fitness.html
+[node 34 depth=6] http://192.168.1.31:7770/sports-outdoors/exercise-fitness.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/video-games/pc/accessories.html
+[node 34 depth=6] http://192.168.1.31:7770/video-games/pc/accessories.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/beauty-personal-care/makeup.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/makeup.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/beauty-personal-care/skin-care.html
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/skin-care.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/beauty-personal-care/tools-accessories/refillable-conta
+[node 34 depth=6] http://192.168.1.31:7770/beauty-personal-care/tools-accessories/refillable-containers.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/clothing-shoes-jewelry/men.html
+[node 34 depth=6] http://192.168.1.31:7770/clothing-shoes-jewelry/men.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/electronics/home-audio/speakers.html
+[node 34 depth=6] http://192.168.1.31:7770/electronics/home-audio/speakers.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/grocery-gourmet-food/frozen.html
+[node 34 depth=6] http://192.168.1.31:7770/grocery-gourmet-food/frozen.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [frontier] loose select score=0.000 http://192.168.1.31:7770/home-kitchen/bath.html
+[node 34 depth=6] http://192.168.1.31:7770/home-kitchen/bath.html
+[node 34 depth=6] ERROR: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+  [graph] 57 states, 13 skills, 29 composition edges → outputs/wa_run_17/graph.json
+  [curriculum] 133 tasks from 13 skills → outputs/wa_run_17/curriculum.json

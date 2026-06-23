@@ -1,0 +1,148 @@
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_14/domain.json
+  [skill_diag] {"episode": 1, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback."}
+    local: "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 2, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Locate the product image of 'Pre-baked Gingerbread House Kit Value Pack'", "activate state change control"], "task": "Click on the product image of 'Pre-baked Gingerbread House Kit Value Pack' to view its details."}
+    local: "Click on the product image of 'Pre-baked Gingerbread House Kit Value Pack' to view its details." success=True
+  [skill_diag] {"episode": 3, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Access the main menu", "activate state change control"], "task": "Navigate to the 'Beauty & Personal Care' category from the menu to browse related products."}
+    local: "Navigate to the 'Beauty & Personal Care' category from the menu to browse related products." success=True
+  [skill_diag] {"episode": 4, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["inspect menu options"], "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears."}
+    local: "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears." success=True
+  [skill_diag] {"episode": 5, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Enter the product name in the search bar.", "submit search query"], "task": "Use the search bar to enter a product name and click the 'Search' button to find specific items."}
+    local: "Use the search bar to enter a product name and click the 'Search' button to find specific items." success=True
+  [skill_diag] {"episode": 6, "event": "segments_created", "segments": 5, "steps": 5, "subgoals": ["Navigate to the product page for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'.", "Locate the 'Add to Wish List' link on the product page.", "activate state change control", "fill visible field", "fill visible field"], "task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 3, "episode": 6, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 3, "contexts": 1, "episode": 6, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 6, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link." success=True
+    local: "Add 'V8 +Energy, Healthy Energy Drink' to the cart by clicking the 'Add to Cart' button." success=False
+    local: "Compare 'Pre-baked Gingerbread House Kit Value Pack' with another product by clicking 'Add to Compare'." success=False
+    local: "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required." success=False
+  [skill_diag] {"episode": 10, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 4, "episode": 10, "event": "cluster_matured", "signatures": {"click": 4}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 4, "contexts": 1, "episode": 10, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 10, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action." success=True
+  [skill_diag] {"episode": 11, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Use the visible '\\ue611 My Cart 2 2items' checkout or order-flow control and report the next required step."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 5, "episode": 11, "event": "cluster_matured", "signatures": {"click": 5}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 5, "contexts": 1, "episode": 11, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 11, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Use the visible '\\ue611 My Cart 2 2items' checkout or order-flow control and report the next required step." success=True
+  [skill_diag] {"episode": 12, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Locate the search field", "submit search query"], "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search."}
+  [skill_diag] {"cluster_id": 5, "cluster_size": 3, "episode": 12, "event": "cluster_matured", "signatures": {"fill > click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 5, "cluster_size": 3, "contexts": 1, "episode": 12, "event": "skill_abstracted", "skill_name": "submit_search_query", "verify_k": 2}
+  [skill_diag] {"cluster_id": 5, "episode": 12, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "submit_search_query", "verify_attempts": 1, "verify_success": 1}
+    local: "Use the visible '\\ue615 Search' search field to submit a page-relevant search." success=True
+  [frontier] +7 URLs from callback discovery
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 348 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 348 is not present in current AXTree, arrived=)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1566 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1566 is not present in current AXTree, arrived=)
+  [frontier] loose select score=1.443 http://192.168.1.31:7770/catalog/product_compare/index/uenc/aHR0cDovLzE5Mi4xNjgu
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/catalog/product_compare/index/uenc/, got http://192.168.1.31:7770/catalog/product_compare/index/uenc/
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalog/product_compare/index/uenc/ (reason=url_mismatch, arrived=http://192.168.1.31:7770/catalog/product_compare/index/uenc/aHR0cDovLzE5Mi4xNjguMS4zMTo3NzcwL2N1c3RvbWVyL3NlY3Rpb24vbG9hZC8_c2VjdGlvbnM9bWVzc2FnZXMlMkNjb21wYXJlLXByb2R1Y3RzJmZvcmNlX25ld19zZWN0aW9uX3RpbWVzdGFtcD1mYWxzZSZfPTE3ODIyMjg4ODU2NzA~)
+  [frontier] loose select score=1.443 http://192.168.1.31:7770/cell-phones-accessories.html
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+[node 2 depth=1] http://192.168.1.31:7770/cell-phones-accessories.html
+  [tasks] Skipped 2 repeated/saturated proposal(s)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+    local: "Sort the products by 'Price' using the 'Sort By' dropdown menu." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+  [skill_diag] {"episode": 14, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible '11 \\xa0Reviews' feedback control indicates available feedback."}
+    local: "Report whether the visible '11 \\xa0Reviews' feedback control indicates available feedback." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+  [skill_diag] {"episode": 15, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier'", "activate state change control"], "task": "Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier' to view its details."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 6, "episode": 15, "event": "cluster_matured", "signatures": {"click": 6}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 6, "contexts": 2, "episode": 15, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  >>> SKILL admitted: activate_state_change_control  (This skill activates a visible control element on the page.)
+  [skills] diversity target unmet: 1/4; missing=['fill_visible_field', 'inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail', 'search_submission']
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "episode": 15, "event": "skill_admitted", "skill_name": "activate_state_change_control", "verify_attempts": 2, "verify_success": 2}
+    local: "Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier' to view its details." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+  [skill_diag] {"episode": 16, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Navigate to the 'Cell Phones & Accessories' category from the menu."}
+    local: "Navigate to the 'Cell Phones & Accessories' category from the menu." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+    local: "Open the visible 'Sort By' sort or filter control and report one available option." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+  [skill_diag] {"episode": 18, "event": "segments_created", "segments": 5, "steps": 5, "subgoals": ["Navigate to the product page for the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector'.", "Add the product to your wish list.", "activate state change control", "fill visible field", "fill visible field"], "task": "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list."}
+  [skill_diag] {"cluster_id": 8, "cluster_size": 3, "episode": 18, "event": "cluster_matured", "signatures": {"fill": 2, "fill > click": 1}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 8, "cluster_size": 3, "contexts": 2, "episode": 18, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 2}
+  >>> SKILL admitted: fill_visible_field  (Fill a visible input field with the specified value.)
+  [skills] diversity target unmet: 2/4; missing=['inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail', 'search_submission']
+  [skill_diag] {"bootstrap": false, "cluster_id": 8, "episode": 18, "event": "skill_admitted", "skill_name": "fill_visible_field", "verify_attempts": 2, "verify_success": 2}
+    local: "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1026 is not present in current AXTree
+    local: "Add the 'NTG [1st Generation] Designed for Samsung S21 Case' to your cart." SKIP (reset failed)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1026 is not present in current AXTree
+    local: "Click on 'Add to Compare' for the 'for Huawei Supercharge Power Adapter' product." SKIP (reset failed)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1026 is not present in current AXTree
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." SKIP (reset failed)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1026 is not present in current AXTree
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." SKIP (reset failed)
+  [frontier] +1 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/dilwe1-12-phone-screen-magnifier-hd
+[node 3 depth=2] http://192.168.1.31:7770/dilwe1-12-phone-screen-magnifier-hd-mobile-phone-magnifier-projector-screen-foldable-phone-stand-with-screen-amplifier-for-movies-videos.html
+  [tasks] Skipped 2 repeated/saturated proposal(s)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/dilwe1-12-phone-screen-magnifier-hd
+  [skill_diag] {"episode": 19, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback."}
+    local: "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/dilwe1-12-phone-screen-magnifier-hd
+  [skill_diag] {"episode": 20, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Search for 'phone screen magnifier' using the search bar.", "submit search query"], "task": "Search for 'phone screen magnifier' using the search bar."}
+  [skill_diag] {"cluster_id": 5, "cluster_size": 4, "episode": 20, "event": "cluster_matured", "signatures": {"fill > click": 4}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 5, "cluster_size": 4, "contexts": 3, "episode": 20, "event": "skill_abstracted", "skill_name": "submit_search_query", "verify_k": 2}
+  >>> SKILL admitted: submit_search_query  (This skill allows the user to submit a search query using a )
+  [skills] diversity target unmet: 3/4; missing=['inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail']
+  [skill_diag] {"bootstrap": false, "cluster_id": 5, "episode": 20, "event": "skill_admitted", "skill_name": "submit_search_query", "verify_attempts": 2, "verify_success": 2}
+    local: "Search for 'phone screen magnifier' using the search bar." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/dilwe1-12-phone-screen-magnifier-hd
+  [skill_diag] {"episode": 21, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Inspect the product specifications listed under the 'Details' tab."}
+    local: "Inspect the product specifications listed under the 'Details' tab." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/dilwe1-12-phone-screen-magnifier-hd
+  [skill_diag] {"episode": 22, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "View product details by clicking on the 'Details' tab."}
+    local: "View product details by clicking on the 'Details' tab." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/dilwe1-12-phone-screen-magnifier-hd
+  [skill_diag] {"episode": 23, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Add the product to the cart by clicking the 'Add to Cart' button."}
+    local: "Add the product to the cart by clicking the 'Add to Cart' button." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] step 0 stale: bid 1399 is not present in current AXTree
+    local: "Add the product to the wish list by clicking the 'Add to Wish List' link." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] step 0 stale: bid 1399 is not present in current AXTree
+    local: "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] step 0 stale: bid 1399 is not present in current AXTree
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770/cell-phones-accessories.html...
+      [prefix] step 0 stale: bid 1399 is not present in current AXTree
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1566 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:bid 1566 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 363 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 363 is not present in current AXTree, arrived=)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1452] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:click target [1452] is non-interactive role section, arrived=)
+  [graph] 10 states, 7 skills, 7 composition edges → outputs/wa_run_14/graph.json
+  [curriculum] 19 tasks from 7 skills → outputs/wa_run_14/curriculum.json

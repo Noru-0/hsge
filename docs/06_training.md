@@ -44,6 +44,9 @@ SFTTrainer(model="<base-7b-instruct>", train_dataset=ds,
                           per_device_train_batch_size=2)).train()
 ```
 
+For a concrete Qwen LoRA workflow and upstream WebArena Shopping benchmark
+evaluation, see `15_lora_finetune_eval_webarena_shopping.md`.
+
 ## 4. Use the curriculum
 
 `train.jsonl` is sorted easy→hard by `difficulty`. Either train in difficulty order

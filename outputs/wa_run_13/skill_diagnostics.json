@@ -1,0 +1,665 @@
+[
+  {
+    "event": "segments_created",
+    "task": "Read the reviews for the 'Belle Of The Ball Princess Sprinkle Mix'.",
+    "steps": 3,
+    "segments": 3,
+    "subgoals": [
+      "Read the first review for the 'Belle Of The Ball Princess Sprinkle Mix'.",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 1
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 0,
+    "cluster_size": 1,
+    "subgoal": "Read the first review for the 'Belle Of The Ball Princess Sprinkle Mix'.",
+    "action_signature": "click",
+    "source_task": "Read the reviews for the 'Belle Of The Ball Princess Sprinkle Mix'.",
+    "episode": 1
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 1,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Read the reviews for the 'Belle Of The Ball Princess Sprinkle Mix'.",
+    "episode": 1
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 2,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Read the reviews for the 'Belle Of The Ball Princess Sprinkle Mix'.",
+    "episode": 1
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback.",
+    "steps": 1,
+    "segments": 0,
+    "subgoals": [],
+    "episode": 2
+  },
+  {
+    "event": "segments_created",
+    "task": "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack' to view its details.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack'",
+      "activate state change control"
+    ],
+    "episode": 3
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 2,
+    "cluster_size": 1,
+    "subgoal": "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack'",
+    "action_signature": "click",
+    "source_task": "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack' to view its details.",
+    "episode": 3
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 3,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack' to view its details.",
+    "episode": 3
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 3,
+    "signatures": {
+      "click": 3
+    },
+    "episode": 3
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 3
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 3
+  },
+  {
+    "event": "segments_created",
+    "task": "Navigate to the 'Beauty & Personal Care' category from the menu.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Open the main menu",
+      "activate state change control"
+    ],
+    "episode": 4
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 3,
+    "cluster_size": 1,
+    "subgoal": "Open the main menu",
+    "action_signature": "click",
+    "source_task": "Navigate to the 'Beauty & Personal Care' category from the menu.",
+    "episode": 4
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 4,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Navigate to the 'Beauty & Personal Care' category from the menu.",
+    "episode": 4
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 4,
+    "signatures": {
+      "click": 4
+    },
+    "episode": 4
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 4,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 4
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 4
+  },
+  {
+    "event": "segments_created",
+    "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears.",
+    "steps": 3,
+    "segments": 1,
+    "subgoals": [
+      "inspect menu options"
+    ],
+    "episode": 5
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 1,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears.",
+    "episode": 5
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to search for 'energy drink'.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "segment 0",
+      "submit search query"
+    ],
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 1,
+    "subgoal": "segment 0",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to search for 'energy drink'.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 2,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to search for 'energy drink'.",
+    "episode": 6
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list.",
+    "steps": 5,
+    "segments": 5,
+    "subgoals": [
+      "Navigate to the product page for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'",
+      "Add the product to the wish list",
+      "activate state change control",
+      "fill visible field",
+      "fill visible field"
+    ],
+    "episode": 7
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 6,
+    "cluster_size": 1,
+    "subgoal": "Navigate to the product page for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'",
+    "action_signature": "click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list.",
+    "episode": 7
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 1,
+    "subgoal": "Add the product to the wish list",
+    "action_signature": "fill > fill > click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list.",
+    "episode": 7
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 5,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list.",
+    "episode": 7
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 5,
+    "signatures": {
+      "click": 5
+    },
+    "episode": 7
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 5,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 7
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 7
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 3,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list.",
+    "episode": 7
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 5,
+    "cluster_size": 3,
+    "signatures": {
+      "fill > click": 2,
+      "fill": 1
+    },
+    "episode": 7
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 5,
+    "skill_name": "fill_visible_field",
+    "cluster_size": 3,
+    "verify_k": 1,
+    "contexts": 1,
+    "bootstrap": true,
+    "episode": 7
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 5,
+    "skill_name": "fill_visible_field",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "bootstrap": true,
+    "episode": 7
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 4,
+    "subgoal": "fill visible field",
+    "action_signature": "fill > click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list.",
+    "episode": 7
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart.",
+    "steps": 3,
+    "segments": 3,
+    "subgoals": [
+      "Navigate to the product page for 'V8 +Energy, Healthy Energy Drink'.",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 8
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 8,
+    "cluster_size": 1,
+    "subgoal": "Navigate to the product page for 'V8 +Energy, Healthy Energy Drink'.",
+    "action_signature": "click > click",
+    "source_task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart.",
+    "episode": 8
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 6,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart.",
+    "episode": 8
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 6,
+    "signatures": {
+      "click": 6
+    },
+    "episode": 8
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 6,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 8
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 8
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 7,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart.",
+    "episode": 8
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 7,
+    "signatures": {
+      "click": 7
+    },
+    "episode": 8
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 7,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 8
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 8
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 10
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 8,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action.",
+    "episode": 10
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 8,
+    "signatures": {
+      "click": 8
+    },
+    "episode": 10
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 8,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 10
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 10
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Identify the search field and its purpose.",
+      "submit search query"
+    ],
+    "episode": 12
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 5,
+    "subgoal": "Identify the search field and its purpose.",
+    "action_signature": "fill > click",
+    "source_task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "episode": 12
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 6,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "episode": 12
+  },
+  {
+    "event": "segments_created",
+    "task": "Hover over the visible 'Tooltip' menu or expandable control and report one submenu option that appears.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "inspect menu options"
+    ],
+    "episode": 15
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 2,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Hover over the visible 'Tooltip' menu or expandable control and report one submenu option that appears.",
+    "episode": 15
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible 'Email Address*' account or settings control and report one visible option.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 20
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 9,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible 'Email Address*' account or settings control and report one visible option.",
+    "episode": 20
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 9,
+    "signatures": {
+      "click": 9
+    },
+    "episode": 20
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 9,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 20
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 20
+  },
+  {
+    "event": "segments_created",
+    "task": "Enter your 'First Name*' in the corresponding textbox.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "fill visible field"
+    ],
+    "episode": 23
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 7,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Enter your 'First Name*' in the corresponding textbox.",
+    "episode": 23
+  },
+  {
+    "event": "segments_created",
+    "task": "Enter your 'Last Name*' in the corresponding textbox.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "fill visible field"
+    ],
+    "episode": 24
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 8,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Enter your 'Last Name*' in the corresponding textbox.",
+    "episode": 24
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '11 \\xa0Reviews' feedback control indicates available feedback.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "inspect menu options"
+    ],
+    "episode": 27
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 3,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Report whether the visible '11 \\xa0Reviews' feedback control indicates available feedback.",
+    "episode": 27
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 4,
+    "cluster_size": 3,
+    "signatures": {
+      "hover": 3
+    },
+    "episode": 27
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 4,
+    "skill_name": "inspect_menu_options",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 27
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 4,
+    "skill_name": "inspect_menu_options",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 27
+  }
+]

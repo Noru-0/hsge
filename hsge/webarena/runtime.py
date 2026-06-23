@@ -29,6 +29,7 @@ from ..transfer import TransferResult
 from ..schema import Step
 from ..segmentation import segment_trajectory
 from .agents import PageExplorer, Solver
+from .frontier_filter import filter_frontier
 from .predicates import predicates_from, reached
 from .verification_context import make_verify_contexts_fn
 from .scoring import FrontierScorer, LookaheadPredictor
@@ -296,6 +297,15 @@ class WebArenaExplorer:
         # Track per-URL stats for the scorer
         self._url_successes: dict[str, int] = {}       # url -> successful trajectories
         self._url_attempts: dict[str, int] = {}         # url -> total trajectories
+        self._frontier_selection_counts: dict[str, int] = {}
+        self._frontier_select_pool = 5
+        self._frontier_score_band = 0.98
+        self._frontier_max_size = max(20, min(120, max_nodes * 4))
+        self._prefix_retry_counts: dict[str, int] = {}
+        self._prefix_retry_limit = 2
+        self._load_retry_counts: dict[str, int] = {}
+        self._load_retry_limit = 2
+        self._last_node_load_status: dict = {}
 
         # Run metrics for monitoring
         self.metrics = RunMetrics()
@@ -1215,6 +1225,9 @@ class WebArenaExplorer:
             "frontier_scorer": self._frontier_scorer.to_dict(),
             "url_attempts": dict(self._url_attempts),
             "url_successes": dict(self._url_successes),
+            "frontier_selection_counts": dict(getattr(self, "_frontier_selection_counts", {})),
+            "prefix_retry_counts": dict(getattr(self, "_prefix_retry_counts", {})),
+            "load_retry_counts": dict(getattr(self, "_load_retry_counts", {})),
             # NEW: full state for resume without replay
             "operator_graph": operator_graph,
             "hierarchical_graph": hierarchical_graph,
@@ -1311,6 +1324,9 @@ class WebArenaExplorer:
             self._frontier_scorer = FrontierScorer.from_dict(scorer_state)
         self._url_attempts = ckpt.get("url_attempts", {})
         self._url_successes = ckpt.get("url_successes", {})
+        self._frontier_selection_counts = ckpt.get("frontier_selection_counts", {})
+        self._prefix_retry_counts = ckpt.get("prefix_retry_counts", {})
+        self._load_retry_counts = ckpt.get("load_retry_counts", {})
 
         # --- v2: Restore full state (no replay needed) ---
         version = ckpt.get("version", 1)
@@ -1532,6 +1548,106 @@ class WebArenaExplorer:
                 return {"url": "", "axtree": ""}
         return obs
 
+    def _recover_unprocessed_prefix_url(
+        self,
+        url: str,
+        depth: int,
+        frontier: list[tuple[str, int]],
+        queued: set[str],
+    ) -> bool:
+        """Recover selected URLs that failed because their prefix became stale.
+
+        Returns True when the URL was requeued for another bounded attempt.
+        Once the limit is reached, release it from queued/discovered state so a
+        future successful action can rediscover it with a fresh prefix trace.
+        """
+        status = getattr(self, "_last_prefix_replay_status", {}) or {}
+        reason = status.get("reason", "")
+        if not status.get("attempted") or not status.get("stateful"):
+            return False
+        if not reason.startswith(("stale_action", "url_mismatch", "goto_source_failed", "step_failed")):
+            return False
+
+        norm_url = _normalize_trace_url(url)
+        retry_counts = getattr(self, "_prefix_retry_counts", {})
+        self._prefix_retry_counts = retry_counts
+        attempts = retry_counts.get(norm_url, 0)
+        limit = getattr(self, "_prefix_retry_limit", 2)
+
+        if attempts < limit:
+            retry_counts[norm_url] = attempts + 1
+            if norm_url not in {u for u, _ in frontier}:
+                frontier.append((norm_url, depth))
+            queued.add(norm_url)
+            msg = (
+                f"      [prefix] requeued stale prefix {norm_url[:60]} "
+                f"(retry {retry_counts[norm_url]}/{limit}, reason={reason})"
+            )
+            print(msg)
+            if self._log_file:
+                self._log_file.write(msg + "\n")
+                self._log_file.flush()
+            return True
+
+        queued.discard(norm_url)
+        queued.discard(url)
+        self._discovered_urls.pop(norm_url, None)
+        self._discovered_urls.pop(url, None)
+        retry_counts.pop(norm_url, None)
+        msg = f"      [prefix] released stale prefix {norm_url[:60]} (reason={reason})"
+        print(msg)
+        if self._log_file:
+            self._log_file.write(msg + "\n")
+            self._log_file.flush()
+        return False
+
+    def _recover_empty_observation_url(
+        self,
+        url: str,
+        depth: int,
+        frontier: list[tuple[str, int]],
+        queued: set[str],
+    ) -> bool:
+        """Recover direct-load nodes that produced an empty reset observation."""
+        status = getattr(self, "_last_node_load_status", {}) or {}
+        if status.get("reason") != "empty_observation":
+            return False
+        if status.get("prefix_attempted"):
+            return False
+
+        norm_url = _normalize_trace_url(url)
+        retry_counts = getattr(self, "_load_retry_counts", {})
+        self._load_retry_counts = retry_counts
+        attempts = retry_counts.get(norm_url, 0)
+        limit = getattr(self, "_load_retry_limit", 2)
+        detail = status.get("detail") or "no reset diagnostic"
+
+        if attempts < limit:
+            retry_counts[norm_url] = attempts + 1
+            if norm_url not in {u for u, _ in frontier}:
+                frontier.append((norm_url, depth))
+            queued.add(norm_url)
+            msg = (
+                f"      [load] requeued empty observation {norm_url[:60]} "
+                f"(retry {retry_counts[norm_url]}/{limit}, reason={detail})"
+            )
+            print(msg)
+            if self._log_file:
+                self._log_file.write(msg + "\n")
+                self._log_file.flush()
+            return True
+
+        queued.discard(norm_url)
+        queued.discard(url)
+        retry_counts.pop(norm_url, None)
+        self.metrics.nodes_error += 1
+        msg = f"      [load] released empty observation {norm_url[:60]} (reason={detail})"
+        print(msg)
+        if self._log_file:
+            self._log_file.write(msg + "\n")
+            self._log_file.flush()
+        return False
+
     def _process_node(self, url, depth, root_url, frontier, visited, queued, node_num):
         """Process one node with full error isolation.
 
@@ -1552,6 +1668,7 @@ class WebArenaExplorer:
 
         # Create browser with timeout protection
         browser = None
+        self._last_node_load_status = {}
         try:
             # Try prefix-based navigation first (replay natural clicks)
             browser = self.browser_factory(url)
@@ -1593,6 +1710,11 @@ class WebArenaExplorer:
                     browser = self.browser_factory(url)
                     obs = browser.reset()
         except Exception as e:
+            self._last_node_load_status = {
+                "reason": "load_error",
+                "detail": str(e),
+                "prefix_attempted": False,
+            }
             msg = f"[node {node_num} depth={depth}] SKIP {url}  (load error: {e})"
             print(msg)
             if self._log_file:
@@ -1601,7 +1723,16 @@ class WebArenaExplorer:
             return None
 
         if not obs.get("url"):
-            msg = f"[node {node_num} depth={depth}] SKIP {url}  (empty observation after reset)"
+            detail = obs.get("_reset_error") or obs.get("_start_url") or "no url after reset"
+            self._last_node_load_status = {
+                "reason": "empty_observation",
+                "detail": detail,
+                "prefix_attempted": bool(norm_url in self._discovered_urls or url in self._discovered_urls),
+            }
+            msg = (
+                f"[node {node_num} depth={depth}] SKIP {url}  "
+                f"(empty observation after reset: {detail})"
+            )
             print(msg)
             if self._log_file:
                 self._log_file.write(msg + "\n")
@@ -1813,9 +1944,9 @@ class WebArenaExplorer:
             total_trajs=total, successful_trajs=succ,
         )
 
-        # 3) expand frontier — CHỈ từ callback-discovered URLs (phát hiện trong lúc solve task)
-        #     Không còn query DOM <a href> hay filter_frontier nữa.
-        #     URL chỉ được thêm vào frontier khi agent thực sự đi đến URL đó.
+        # 3) expand frontier. Prefer callback-discovered URLs from actual solver
+        # navigation; fall back to same-origin DOM links when solver tasks did
+        # not reveal new pages, so exploration does not exhaust on a navigable page.
         _node_children = []
         _node_lookahead = []
         try:
@@ -1828,6 +1959,36 @@ class WebArenaExplorer:
                     and not any(d.search(discovered_url) for d in self._denylist)):
                     new_urls.append(discovered_url)
             # Prefix được giữ lại trong _discovered_urls cho đến khi dùng thành công
+            source = "callback discovery"
+            if not new_urls and depth < self.max_depth:
+                fallback_items = []
+                seen_links = set()
+                for raw_link in browser.links():
+                    link = _normalize_trace_url(raw_link)
+                    if not link or link in seen_links:
+                        continue
+                    seen_links.add(link)
+                    if (link not in queued
+                        and link not in visited
+                        and link not in {url, actual_url}
+                        and self.allow.search(link)
+                        and not any(d.search(link) for d in self._denylist)):
+                        fallback_items.append({"url": link, "depth": depth + 1})
+
+                if fallback_items:
+                    remaining_slots = max(0, getattr(self, "_frontier_max_size", 80) - len(frontier))
+                    if remaining_slots > 0:
+                        filtered = filter_frontier(
+                            fallback_items,
+                            max_output=min(remaining_slots, len(fallback_items)),
+                        )
+                        new_urls = [item["url"] for item in filtered]
+                        source = "DOM links"
+
+            if new_urls:
+                remaining_slots = max(0, getattr(self, "_frontier_max_size", 80) - len(frontier))
+                if len(new_urls) > remaining_slots:
+                    new_urls = new_urls[:remaining_slots]
 
             for link in new_urls:
                 _node_children.append(link)
@@ -1847,7 +2008,7 @@ class WebArenaExplorer:
                 except Exception:
                     pass
             if new_urls:
-                msg = f"  [frontier] +{len(new_urls)} URLs from callback discovery"
+                msg = f"  [frontier] +{len(new_urls)} URLs from {source}"
                 print(msg)
                 if self._log_file:
                     self._log_file.write(msg + "\n")
@@ -2134,6 +2295,39 @@ class WebArenaExplorer:
                     except Exception:
                         pass
 
+    def _select_frontier_node(self, scored: list[tuple[float, str, int]]) -> tuple[float, str, int] | None:
+        """Pick from a small top-score band to avoid overly strict ranking."""
+        eligible = [(s, u, d) for s, u, d in scored if d <= self.max_depth]
+        if not eligible:
+            return None
+        best = eligible[0][0]
+        threshold = best * getattr(self, "_frontier_score_band", 0.98)
+        pool_limit = getattr(self, "_frontier_select_pool", 5)
+        pool = [
+            item for item in eligible[:pool_limit]
+            if item[0] >= threshold
+        ] or eligible[:1]
+
+        retry_counts = getattr(self, "_prefix_retry_counts", {})
+        selection_counts = getattr(self, "_frontier_selection_counts", {})
+
+        def key(item: tuple[float, str, int]):
+            score, url, depth = item
+            norm_url = _normalize_trace_url(url)
+            return (
+                retry_counts.get(norm_url, 0),
+                selection_counts.get(norm_url, 0),
+                depth,
+                -score,
+                norm_url,
+            )
+
+        selected = sorted(pool, key=key)[0]
+        norm_selected = _normalize_trace_url(selected[1])
+        selection_counts[norm_selected] = selection_counts.get(norm_selected, 0) + 1
+        self._frontier_selection_counts = selection_counts
+        return selected
+
     # ---- the loop ------------------------------------------------------------
     def run(self, root_url: str):
         # Normalize URLs: strip trailing slash, query string, and fragment.
@@ -2188,8 +2382,19 @@ class WebArenaExplorer:
             if len(scored) > 5:
                 print(f"    ... and {len(scored) - 5} more")
 
-            # Remove the selected node from frontier
-            _score, url, depth = scored[0]
+            # Remove the selected node from frontier. Selection is intentionally
+            # loose within a small top-score band to avoid one stale branch
+            # monopolizing exploration.
+            selected = self._select_frontier_node(scored)
+            if not selected:
+                break
+            _score, url, depth = selected
+            if scored and url != scored[0][1]:
+                msg = f"  [frontier] loose select score={_score:.3f} {url[:80]}"
+                print(msg)
+                if self._log_file:
+                    self._log_file.write(msg + "\n")
+                    self._log_file.flush()
             frontier = [(u, d) for u, d in frontier if u != url]
             if url in visited or depth > self.max_depth:
                 continue
@@ -2218,11 +2423,16 @@ class WebArenaExplorer:
                 continue
 
             if not processed_url:
+                recovered = self._recover_unprocessed_prefix_url(url, depth, frontier, queued)
+                if not recovered:
+                    self._recover_empty_observation_url(url, depth, frontier, queued)
                 self.save_checkpoint(frontier, visited, queued)
                 continue
 
             visited.add(url)
             visited.add(processed_url)
+            self._prefix_retry_counts.pop(_normalize_trace_url(url), None)
+            self._load_retry_counts.pop(_normalize_trace_url(url), None)
             nodes_processed += 1
             self.metrics.nodes_visited += 1
             self.metrics.nodes_processed = nodes_processed

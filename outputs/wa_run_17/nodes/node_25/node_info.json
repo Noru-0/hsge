@@ -1,0 +1,99 @@
+{
+    "url": "http://192.168.1.31:7770/electronics/headphones.html",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/white-wireless-earbuds-bluetooth-with-microphone-and-charge-case-touch-control-in-ear-headphone-30hrs-playtime-waterproof-earset.html",
+        "http://192.168.1.31:7770/catalog/product_compare"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 6,
+        "parent_url": "http://192.168.1.31:7770/electronics/headphones.html"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.5,
+    "tasks_attempted": 4,
+    "tasks_solved": 2,
+    "tasks_failed": 2,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.451431,
+    "frontier_breakdown": {
+        "score": 1.4514305726644603,
+        "U": 0.008735531775496838,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/electronics/headphones.html",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/electronics/headphones.html",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Click on the '1 Review' link to view product reviews",
+            "type": "local",
+            "confidence": 0.9
+        },
+        {
+            "task": "Search for 'marine speakers' using the search box",
+            "type": "search",
+            "confidence": 0.9
+        },
+        {
+            "task": "Navigate to the Electronics category by clicking the menu item",
+            "type": "navigation",
+            "confidence": 0.95
+        },
+        {
+            "task": "Click on 'My Wish List' link to view wish list",
+            "type": "navigation",
+            "confidence": 0.9
+        },
+        {
+            "task": "Add the current product to the shopping cart",
+            "type": "form",
+            "confidence": 0.7
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/electronics/headphones.html",
+    "depth": 6,
+    "tasks": [
+        {
+            "goal": "fill_visible_field('Search', 'wireless earbuds')",
+            "family": "search",
+            "status": "solved",
+            "episode_id": 165
+        },
+        {
+            "goal": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+            "family": "state_change",
+            "status": "solved",
+            "episode_id": 166
+        },
+        {
+            "goal": "click('Add to Compare') for 'Skullcandy Ink'd+ Wireless In-Ear Earbud - Deep Red'",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 167
+        },
+        {
+            "goal": "Safely reach the checkout flow and report the next required step.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 168
+        }
+    ],
+    "episode_range": [
+        165,
+        169
+    ],
+    "prefix_trace": {}
+}

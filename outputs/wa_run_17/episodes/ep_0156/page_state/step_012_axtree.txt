@@ -1,0 +1,448 @@
+RootWebArea 'Checkout', focused
+	[311] banner ''
+		[315] link 'store logo'
+			[316] image 'one_stop_market_logo'
+	[317] main ''
+		[320] heading 'Checkout'
+			StaticText 'Checkout'
+		[328] button 'Sign In'
+			StaticText 'Sign In'
+		[330] dialog '', modal=False, describedby='modal-content-6'
+			[334] button '\ue616 Close'
+				StaticText '\ue616'
+				StaticText 'Close'
+			[340] heading 'Sign In'
+			[343] Section ''
+				[346] LabelText ''
+					StaticText 'Email Address'
+					StaticText '*'
+				[349] textbox 'Email Address*'
+				[351] LabelText ''
+					StaticText 'Password'
+					StaticText '*'
+				[354] textbox 'Password*'
+				[359] button 'Sign In'
+					StaticText 'Sign In'
+				[362] link 'Forgot Your Password?'
+					StaticText 'Forgot Your Password?'
+		[365] list ''
+			[366] listitem ''
+				StaticText 'Shipping'
+				StaticText '\ue610'
+			[368] listitem ''
+				StaticText 'Review & Payments'
+				StaticText '2'
+		[380] list ''
+			[381] listitem ''
+				StaticText 'Shipping Address'
+				[384] Section ''
+					[385] group ''
+						[387] LabelText ''
+							StaticText 'Email Address'
+							StaticText '*'
+						[390] textbox 'Email Address*' value='emma.lopez@gmail.com', required
+							StaticText 'emma.lopez@gmail.com'
+						StaticText 'Tooltip'
+						[394] button 'Tooltip', hasPopup='menu', expanded=False
+							StaticText '\ue623'
+						[398] group ''
+							[400] LabelText ''
+								StaticText 'Password'
+							[403] textbox 'Password' value='••••••••••••', focused, describedby='customer-password-error'
+								StaticText '••••••••••••'
+							StaticText 'This is a required field.'
+							StaticText 'You already have an account with us. Sign in or continue as guest.'
+							[409] button 'Login'
+								StaticText 'Login'
+							[412] link 'Forgot Your Password?'
+								StaticText 'Forgot Your Password?'
+				[414] Section ''
+					[417] LabelText ''
+						StaticText 'First Name'
+						StaticText '*'
+					[420] textbox 'First Name*' value='Emma', required
+						StaticText 'Emma'
+					[422] LabelText ''
+						StaticText 'Last Name'
+						StaticText '*'
+					[425] textbox 'Last Name*' value='Lopez', required
+						StaticText 'Lopez'
+					[427] LabelText ''
+						StaticText 'Company'
+					[430] textbox 'Company'
+					[431] group 'Street Address *'
+						[432] Legend ''
+							StaticText 'Street Address'
+							StaticText ''
+							StaticText '*'
+						[436] LabelText ''
+							StaticText 'Street Address: Line 1'
+						[439] textbox 'Street Address: Line 1' value='123 Main St', required
+							StaticText '123 Main St'
+						[441] LabelText ''
+							StaticText 'Street Address: Line 2'
+						[444] textbox 'Street Address: Line 2' value='Apt 4B'
+							StaticText 'Apt 4B'
+					[446] LabelText ''
+						StaticText 'Country'
+						StaticText '*'
+					[449] combobox 'Country*' value='United States', hasPopup='menu', expanded=False
+						[450] option '', selected=False
+						[451] option 'Afghanistan', selected=False
+						[452] option 'Albania', selected=False
+						[453] option 'Algeria', selected=False
+						[454] option 'American Samoa', selected=False
+						[455] option 'Andorra', selected=False
+						[456] option 'Angola', selected=False
+						[457] option 'Anguilla', selected=False
+						[458] option 'Antarctica', selected=False
+						[459] option 'Antigua & Barbuda', selected=False
+						[460] option 'Argentina', selected=False
+						[461] option 'Armenia', selected=False
+						[462] option 'Aruba', selected=False
+						[463] option 'Australia', selected=False
+						[464] option 'Austria', selected=False
+						[465] option 'Azerbaijan', selected=False
+						[466] option 'Bahamas', selected=False
+						[467] option 'Bahrain', selected=False
+						[468] option 'Bangladesh', selected=False
+						[469] option 'Barbados', selected=False
+						[470] option 'Belarus', selected=False
+						[471] option 'Belgium', selected=False
+						[472] option 'Belize', selected=False
+						[473] option 'Benin', selected=False
+						[474] option 'Bermuda', selected=False
+						[475] option 'Bhutan', selected=False
+						[476] option 'Bolivia', selected=False
+						[477] option 'Bosnia & Herzegovina', selected=False
+						[478] option 'Botswana', selected=False
+						[479] option 'Bouvet Island', selected=False
+						[480] option 'Brazil', selected=False
+						[481] option 'British Indian Ocean Territory', selected=False
+						[482] option 'British Virgin Islands', selected=False
+						[483] option 'Brunei', selected=False
+						[484] option 'Bulgaria', selected=False
+						[485] option 'Burkina Faso', selected=False
+						[486] option 'Burundi', selected=False
+						[487] option 'Cambodia', selected=False
+						[488] option 'Cameroon', selected=False
+						[489] option 'Canada', selected=False
+						[490] option 'Cape Verde', selected=False
+						[491] option 'Caribbean Netherlands', selected=False
+						[492] option 'Cayman Islands', selected=False
+						[493] option 'Central African Republic', selected=False
+						[494] option 'Chad', selected=False
+						[495] option 'Chile', selected=False
+						[496] option 'China', selected=False
+						[497] option 'Christmas Island', selected=False
+						[498] option 'Cocos (Keeling) Islands', selected=False
+						[499] option 'Colombia', selected=False
+						[500] option 'Comoros', selected=False
+						[501] option 'Congo - Brazzaville', selected=False
+						[502] option 'Congo - Kinshasa', selected=False
+						[503] option 'Cook Islands', selected=False
+						[504] option 'Costa Rica', selected=False
+						[505] option 'Croatia', selected=False
+						[506] option 'Cuba', selected=False
+						[507] option 'Curaçao', selected=False
+						[508] option 'Cyprus', selected=False
+						[509] option 'Czechia', selected=False
+						[510] option 'Côte d’Ivoire', selected=False
+						[511] option 'Denmark', selected=False
+						[512] option 'Djibouti', selected=False
+						[513] option 'Dominica', selected=False
+						[514] option 'Dominican Republic', selected=False
+						[515] option 'Ecuador', selected=False
+						[516] option 'Egypt', selected=False
+						[517] option 'El Salvador', selected=False
+						[518] option 'Equatorial Guinea', selected=False
+						[519] option 'Eritrea', selected=False
+						[520] option 'Estonia', selected=False
+						[521] option 'Eswatini', selected=False
+						[522] option 'Ethiopia', selected=False
+						[523] option 'Falkland Islands', selected=False
+						[524] option 'Faroe Islands', selected=False
+						[525] option 'Fiji', selected=False
+						[526] option 'Finland', selected=False
+						[527] option 'France', selected=False
+						[528] option 'French Guiana', selected=False
+						[529] option 'French Polynesia', selected=False
+						[530] option 'French Southern Territories', selected=False
+						[531] option 'Gabon', selected=False
+						[532] option 'Gambia', selected=False
+						[533] option 'Georgia', selected=False
+						[534] option 'Germany', selected=False
+						[535] option 'Ghana', selected=False
+						[536] option 'Gibraltar', selected=False
+						[537] option 'Greece', selected=False
+						[538] option 'Greenland', selected=False
+						[539] option 'Grenada', selected=False
+						[540] option 'Guadeloupe', selected=False
+						[541] option 'Guam', selected=False
+						[542] option 'Guatemala', selected=False
+						[543] option 'Guernsey', selected=False
+						[544] option 'Guinea', selected=False
+						[545] option 'Guinea-Bissau', selected=False
+						[546] option 'Guyana', selected=False
+						[547] option 'Haiti', selected=False
+						[548] option 'Heard & McDonald Islands', selected=False
+						[549] option 'Honduras', selected=False
+						[550] option 'Hong Kong SAR China', selected=False
+						[551] option 'Hungary', selected=False
+						[552] option 'Iceland', selected=False
+						[553] option 'India', selected=False
+						[554] option 'Indonesia', selected=False
+						[555] option 'Iran', selected=False
+						[556] option 'Iraq', selected=False
+						[557] option 'Ireland', selected=False
+						[558] option 'Isle of Man', selected=False
+						[559] option 'Israel', selected=False
+						[560] option 'Italy', selected=False
+						[561] option 'Jamaica', selected=False
+						[562] option 'Japan', selected=False
+						[563] option 'Jersey', selected=False
+						[564] option 'Jordan', selected=False
+						[565] option 'Kazakhstan', selected=False
+						[566] option 'Kenya', selected=False
+						[567] option 'Kiribati', selected=False
+						[568] option 'Kosovo', selected=False
+						[569] option 'Kuwait', selected=False
+						[570] option 'Kyrgyzstan', selected=False
+						[571] option 'Laos', selected=False
+						[572] option 'Latvia', selected=False
+						[573] option 'Lebanon', selected=False
+						[574] option 'Lesotho', selected=False
+						[575] option 'Liberia', selected=False
+						[576] option 'Libya', selected=False
+						[577] option 'Liechtenstein', selected=False
+						[578] option 'Lithuania', selected=False
+						[579] option 'Luxembourg', selected=False
+						[580] option 'Macao SAR China', selected=False
+						[581] option 'Madagascar', selected=False
+						[582] option 'Malawi', selected=False
+						[583] option 'Malaysia', selected=False
+						[584] option 'Maldives', selected=False
+						[585] option 'Mali', selected=False
+						[586] option 'Malta', selected=False
+						[587] option 'Marshall Islands', selected=False
+						[588] option 'Martinique', selected=False
+						[589] option 'Mauritania', selected=False
+						[590] option 'Mauritius', selected=False
+						[591] option 'Mayotte', selected=False
+						[592] option 'Mexico', selected=False
+						[593] option 'Micronesia', selected=False
+						[594] option 'Moldova', selected=False
+						[595] option 'Monaco', selected=False
+						[596] option 'Mongolia', selected=False
+						[597] option 'Montenegro', selected=False
+						[598] option 'Montserrat', selected=False
+						[599] option 'Morocco', selected=False
+						[600] option 'Mozambique', selected=False
+						[601] option 'Myanmar (Burma)', selected=False
+						[602] option 'Namibia', selected=False
+						[603] option 'Nauru', selected=False
+						[604] option 'Nepal', selected=False
+						[605] option 'Netherlands', selected=False
+						[606] option 'New Caledonia', selected=False
+						[607] option 'New Zealand', selected=False
+						[608] option 'Nicaragua', selected=False
+						[609] option 'Niger', selected=False
+						[610] option 'Nigeria', selected=False
+						[611] option 'Niue', selected=False
+						[612] option 'Norfolk Island', selected=False
+						[613] option 'North Korea', selected=False
+						[614] option 'North Macedonia', selected=False
+						[615] option 'Northern Mariana Islands', selected=False
+						[616] option 'Norway', selected=False
+						[617] option 'Oman', selected=False
+						[618] option 'Pakistan', selected=False
+						[619] option 'Palau', selected=False
+						[620] option 'Palestinian Territories', selected=False
+						[621] option 'Panama', selected=False
+						[622] option 'Papua New Guinea', selected=False
+						[623] option 'Paraguay', selected=False
+						[624] option 'Peru', selected=False
+						[625] option 'Philippines', selected=False
+						[626] option 'Pitcairn Islands', selected=False
+						[627] option 'Poland', selected=False
+						[628] option 'Portugal', selected=False
+						[629] option 'Qatar', selected=False
+						[630] option 'Romania', selected=False
+						[631] option 'Russia', selected=False
+						[632] option 'Rwanda', selected=False
+						[633] option 'Réunion', selected=False
+						[634] option 'Samoa', selected=False
+						[635] option 'San Marino', selected=False
+						[636] option 'Saudi Arabia', selected=False
+						[637] option 'Senegal', selected=False
+						[638] option 'Serbia', selected=False
+						[639] option 'Seychelles', selected=False
+						[640] option 'Sierra Leone', selected=False
+						[641] option 'Singapore', selected=False
+						[642] option 'Sint Maarten', selected=False
+						[643] option 'Slovakia', selected=False
+						[644] option 'Slovenia', selected=False
+						[645] option 'Solomon Islands', selected=False
+						[646] option 'Somalia', selected=False
+						[647] option 'South Africa', selected=False
+						[648] option 'South Georgia & South Sandwich Islands', selected=False
+						[649] option 'South Korea', selected=False
+						[650] option 'Spain', selected=False
+						[651] option 'Sri Lanka', selected=False
+						[652] option 'St. Barthélemy', selected=False
+						[653] option 'St. Helena', selected=False
+						[654] option 'St. Kitts & Nevis', selected=False
+						[655] option 'St. Lucia', selected=False
+						[656] option 'St. Martin', selected=False
+						[657] option 'St. Pierre & Miquelon', selected=False
+						[658] option 'St. Vincent & Grenadines', selected=False
+						[659] option 'Sudan', selected=False
+						[660] option 'Suriname', selected=False
+						[661] option 'Svalbard & Jan Mayen', selected=False
+						[662] option 'Sweden', selected=False
+						[663] option 'Switzerland', selected=False
+						[664] option 'Syria', selected=False
+						[665] option 'São Tomé & Príncipe', selected=False
+						[666] option 'Taiwan, Province of China', selected=False
+						[667] option 'Tajikistan', selected=False
+						[668] option 'Tanzania', selected=False
+						[669] option 'Thailand', selected=False
+						[670] option 'Timor-Leste', selected=False
+						[671] option 'Togo', selected=False
+						[672] option 'Tokelau', selected=False
+						[673] option 'Tonga', selected=False
+						[674] option 'Trinidad & Tobago', selected=False
+						[675] option 'Tunisia', selected=False
+						[676] option 'Turkey', selected=False
+						[677] option 'Turkmenistan', selected=False
+						[678] option 'Turks & Caicos Islands', selected=False
+						[679] option 'Tuvalu', selected=False
+						[680] option 'U.S. Outlying Islands', selected=False
+						[681] option 'U.S. Virgin Islands', selected=False
+						[682] option 'Uganda', selected=False
+						[683] option 'Ukraine', selected=False
+						[684] option 'United Arab Emirates', selected=False
+						[685] option 'United Kingdom', selected=False
+						[686] option 'United States', selected=True
+						[687] option 'Uruguay', selected=False
+						[688] option 'Uzbekistan', selected=False
+						[689] option 'Vanuatu', selected=False
+						[690] option 'Vatican City', selected=False
+						[691] option 'Venezuela', selected=False
+						[692] option 'Vietnam', selected=False
+						[693] option 'Wallis & Futuna', selected=False
+						[694] option 'Western Sahara', selected=False
+						[695] option 'Yemen', selected=False
+						[696] option 'Zambia', selected=False
+						[697] option 'Zimbabwe', selected=False
+						[698] option 'Åland Islands', selected=False
+					[700] LabelText ''
+						StaticText 'State/Province'
+						StaticText '*'
+					[703] combobox 'State/Province*' value='Please select a region, state or province.', hasPopup='menu', expanded=False
+						[704] option 'Please select a region, state or province.', selected=True
+						[705] option 'Alabama', selected=False
+						[706] option 'Alaska', selected=False
+						[707] option 'American Samoa', selected=False
+						[708] option 'Arizona', selected=False
+						[709] option 'Arkansas', selected=False
+						[710] option 'Armed Forces Africa', selected=False
+						[711] option 'Armed Forces Americas', selected=False
+						[712] option 'Armed Forces Canada', selected=False
+						[713] option 'Armed Forces Europe', selected=False
+						[714] option 'Armed Forces Middle East', selected=False
+						[715] option 'Armed Forces Pacific', selected=False
+						[716] option 'California', selected=False
+						[717] option 'Colorado', selected=False
+						[718] option 'Connecticut', selected=False
+						[719] option 'Delaware', selected=False
+						[720] option 'District of Columbia', selected=False
+						[721] option 'Federated States Of Micronesia', selected=False
+						[722] option 'Florida', selected=False
+						[723] option 'Georgia', selected=False
+						[724] option 'Guam', selected=False
+						[725] option 'Hawaii', selected=False
+						[726] option 'Idaho', selected=False
+						[727] option 'Illinois', selected=False
+						[728] option 'Indiana', selected=False
+						[729] option 'Iowa', selected=False
+						[730] option 'Kansas', selected=False
+						[731] option 'Kentucky', selected=False
+						[732] option 'Louisiana', selected=False
+						[733] option 'Maine', selected=False
+						[734] option 'Marshall Islands', selected=False
+						[735] option 'Maryland', selected=False
+						[736] option 'Massachusetts', selected=False
+						[737] option 'Michigan', selected=False
+						[738] option 'Minnesota', selected=False
+						[739] option 'Mississippi', selected=False
+						[740] option 'Missouri', selected=False
+						[741] option 'Montana', selected=False
+						[742] option 'Nebraska', selected=False
+						[743] option 'Nevada', selected=False
+						[744] option 'New Hampshire', selected=False
+						[745] option 'New Jersey', selected=False
+						[746] option 'New Mexico', selected=False
+						[747] option 'New York', selected=False
+						[748] option 'North Carolina', selected=False
+						[749] option 'North Dakota', selected=False
+						[750] option 'Northern Mariana Islands', selected=False
+						[751] option 'Ohio', selected=False
+						[752] option 'Oklahoma', selected=False
+						[753] option 'Oregon', selected=False
+						[754] option 'Palau', selected=False
+						[755] option 'Pennsylvania', selected=False
+						[756] option 'Puerto Rico', selected=False
+						[757] option 'Rhode Island', selected=False
+						[758] option 'South Carolina', selected=False
+						[759] option 'South Dakota', selected=False
+						[760] option 'Tennessee', selected=False
+						[761] option 'Texas', selected=False
+						[762] option 'Utah', selected=False
+						[763] option 'Vermont', selected=False
+						[764] option 'Virgin Islands', selected=False
+						[765] option 'Virginia', selected=False
+						[766] option 'Washington', selected=False
+						[767] option 'West Virginia', selected=False
+						[768] option 'Wisconsin', selected=False
+						[769] option 'Wyoming', selected=False
+					[776] LabelText ''
+						StaticText 'City'
+						StaticText '*'
+					[779] textbox 'City*', required
+					[781] LabelText ''
+						StaticText 'Zip/Postal Code'
+						StaticText '*'
+					[784] textbox 'Zip/Postal Code*', required
+					[786] LabelText ''
+						StaticText 'Phone Number'
+						StaticText '*'
+					[789] textbox 'Phone Number*', required
+					StaticText 'Tooltip'
+					[793] button 'Tooltip', hasPopup='menu', expanded=False
+						StaticText '\ue623'
+			[795] listitem ''
+				StaticText 'Shipping Methods'
+				[803] tabpanel ''
+					[804] Section ''
+						[806] table ''
+							[807] rowgroup ''
+								[808] row ''
+							[813] rowgroup ''
+								[814] row ''
+									[815] gridcell 'Fixed Flat Rate'
+										[816] radio 'Fixed Flat Rate', checked='true'
+									[817] gridcell '$35.00'
+										StaticText '$35.00'
+									[820] gridcell 'Fixed'
+									[821] gridcell 'Flat Rate'
+						[825] button 'Next'
+							StaticText 'Next'
+		[862] dialog '', modal=False, describedby='modal-content-5'
+			StaticText 'Order Summary'
+			[872] tablist '', multiselectable=False, orientation='horizontal'
+				[873] tab '7Items in Cart \ue622', expanded=False, selected=False
+					[874] heading '7Items in Cart'
+						StaticText '7'
+						StaticText 'Items in Cart'
+					StaticText '\ue622'

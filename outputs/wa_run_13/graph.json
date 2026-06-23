@@ -1,0 +1,212 @@
+{
+  "low_level": {
+    "n_states": 9,
+    "states": [
+      "http://192.168.1.31:7770/",
+      "http://192.168.1.31:7770/beauty-personal-care.html",
+      "http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle-mix-wedding-colorful-sprinkles-cake-cupcake-cookie-sprinkles-ice-cream-candy-sprinkles-yellow-gold-red-royal-red-rose-icing-flowers-decorating-sprinkles-8oz.html#reviews",
+      "http://192.168.1.31:7770/catalogsearch/result/?q=Gingerbread+House",
+      "http://192.168.1.31:7770/catalogsearch/result/?q=energy+drink",
+      "http://192.168.1.31:7770/checkout/cart/",
+      "http://192.168.1.31:7770/customer/account/login/",
+      "http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html",
+      "http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5/"
+    ],
+    "trajectory_edges": {
+      "http://192.168.1.31:7770/": [
+        "http://192.168.1.31:7770/beauty-personal-care.html",
+        "http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle-mix-wedding-colorful-sprinkles-cake-cupcake-cookie-sprinkles-ice-cream-candy-sprinkles-yellow-gold-red-royal-red-rose-icing-flowers-decorating-sprinkles-8oz.html#reviews",
+        "http://192.168.1.31:7770/catalogsearch/result/?q=Gingerbread+House",
+        "http://192.168.1.31:7770/catalogsearch/result/?q=energy+drink",
+        "http://192.168.1.31:7770/checkout/cart/",
+        "http://192.168.1.31:7770/customer/account/login/",
+        "http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-value-pack-17-oz-pack-of-2-total-34-oz.html"
+      ],
+      "http://192.168.1.31:7770/customer/account/login/": [
+        "http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5/"
+      ]
+    }
+  },
+  "high_level": {
+    "n_skills": 6,
+    "skills": {
+      "op_inspect_feedback_indicator": {
+        "skill_id": "op_inspect_feedback_indicator",
+        "name": "inspect_feedback_indicator",
+        "description": "Operator: inspect_feedback_indicator",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "path:ball | path:belle | path:cake | path:candy | path:colorful | path:cookie | path:cream | path:cupcake | path:decorating | path:flowers | path:gold | path:ice | path:icing | path:mix | path:princess | path:red | path:rose | path:royal | path:sprinkle | path:sprinkles | path:the | path:wedding | path:yellow",
+        "action_template": "",
+        "cluster_id": "op_inspect_feedback_indicator",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_open_visible_detail": {
+        "skill_id": "op_open_visible_detail",
+        "name": "open_visible_detail",
+        "description": "Operator: open_visible_detail",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_record_status | path:baked | path:gingerbread | path:house | path:kit | path:pack | path:pre | path:total | path:value",
+        "action_template": "",
+        "cluster_id": "op_open_visible_detail",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_inspect_menu_options": {
+        "skill_id": "op_inspect_menu_options",
+        "name": "inspect_menu_options",
+        "description": "Operator: inspect_menu_options",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_filter_or_sort | path:beauty | path:care | path:personal",
+        "action_template": "",
+        "cluster_id": "op_inspect_menu_options",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_submit_search_query": {
+        "skill_id": "op_submit_search_query",
+        "name": "submit_search_query",
+        "description": "Operator: submit_search_query",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_filter_or_sort | path:catalogsearch | path:result",
+        "action_template": "",
+        "cluster_id": "op_submit_search_query",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "op_activate_state_change_control": {
+        "skill_id": "op_activate_state_change_control",
+        "name": "activate_state_change_control",
+        "description": "Operator: activate_state_change_control",
+        "precondition": "has_feedback | has_form_input | has_menu | has_numeric_content | has_progress_control | has_search_input",
+        "success_predicate": "has_record_status | path:cart | path:checkout",
+        "action_template": "",
+        "cluster_id": "op_activate_state_change_control",
+        "n_members": 1,
+        "sites_seen": []
+      },
+      "skill_d9f1a15d": {
+        "skill_id": "skill_d9f1a15d",
+        "name": "fill_visible_field",
+        "description": "Enter a value into a visible field and submit it when needed.",
+        "precondition": "a visible input field is available",
+        "success_predicate": "the field interaction completes",
+        "action_template": [
+          "fill({field_selector}, {input_value})",
+          "click({submit_selector})"
+        ],
+        "cluster_id": "5",
+        "n_members": 3,
+        "sites_seen": [
+          "http://192.168.1.31:7770"
+        ]
+      }
+    },
+    "state_to_skill": {
+      "has_menu": [
+        "op_activate_state_change_control",
+        "op_inspect_feedback_indicator",
+        "op_inspect_menu_options",
+        "op_open_visible_detail",
+        "op_submit_search_query"
+      ],
+      "has_numeric_content": [
+        "op_activate_state_change_control",
+        "op_inspect_feedback_indicator",
+        "op_inspect_menu_options",
+        "op_open_visible_detail",
+        "op_submit_search_query"
+      ],
+      "has_search_input": [
+        "op_activate_state_change_control",
+        "op_inspect_feedback_indicator",
+        "op_inspect_menu_options",
+        "op_open_visible_detail",
+        "op_submit_search_query"
+      ],
+      "has_form_input": [
+        "op_activate_state_change_control",
+        "op_inspect_feedback_indicator",
+        "op_inspect_menu_options",
+        "op_open_visible_detail",
+        "op_submit_search_query"
+      ],
+      "has_feedback": [
+        "op_activate_state_change_control",
+        "op_inspect_feedback_indicator",
+        "op_inspect_menu_options",
+        "op_open_visible_detail",
+        "op_submit_search_query"
+      ],
+      "has_progress_control": [
+        "op_activate_state_change_control",
+        "op_inspect_feedback_indicator",
+        "op_inspect_menu_options",
+        "op_open_visible_detail",
+        "op_submit_search_query"
+      ],
+      "http://192.168.1.31:7770/customer/account/login/": [
+        "skill_d9f1a15d"
+      ]
+    },
+    "skill_to_state": {
+      "op_inspect_feedback_indicator": [
+        "path:ball",
+        "path:belle",
+        "path:cake",
+        "path:candy",
+        "path:colorful",
+        "path:cookie",
+        "path:cream",
+        "path:cupcake",
+        "path:decorating",
+        "path:flowers",
+        "path:gold",
+        "path:ice",
+        "path:icing",
+        "path:mix",
+        "path:princess",
+        "path:red",
+        "path:rose",
+        "path:royal",
+        "path:sprinkle",
+        "path:sprinkles",
+        "path:the",
+        "path:wedding",
+        "path:yellow"
+      ],
+      "op_open_visible_detail": [
+        "has_record_status",
+        "path:baked",
+        "path:gingerbread",
+        "path:house",
+        "path:kit",
+        "path:pack",
+        "path:pre",
+        "path:total",
+        "path:value"
+      ],
+      "op_inspect_menu_options": [
+        "has_filter_or_sort",
+        "path:beauty",
+        "path:care",
+        "path:personal"
+      ],
+      "op_submit_search_query": [
+        "has_filter_or_sort",
+        "path:catalogsearch",
+        "path:result"
+      ],
+      "op_activate_state_change_control": [
+        "has_record_status",
+        "path:cart",
+        "path:checkout",
+        "path:wishlist"
+      ],
+      "skill_d9f1a15d": [
+        "http://192.168.1.31:7770/customer/account/login/"
+      ]
+    },
+    "skill_to_skill": {}
+  }
+}

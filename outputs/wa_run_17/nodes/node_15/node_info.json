@@ -1,0 +1,117 @@
+{
+    "url": "http://192.168.1.31:7770/checkout/cart/configure/id/574/product_id/104498",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/catalog/product_compare",
+        "http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 5,
+        "parent_url": "http://192.168.1.31:7770/checkout/cart/configure/id/574/product_id/104498"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.428571,
+    "tasks_attempted": 7,
+    "tasks_solved": 3,
+    "tasks_failed": 4,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.456028,
+    "frontier_breakdown": {
+        "score": 1.4560282209673534,
+        "U": 0.013333180078389907,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/checkout/cart/configure/id/574/product_id/104498",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/checkout/cart/configure/id/574/product_id/104498",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Modify the current advanced search criteria by clicking 'Modify your search'",
+            "type": "navigation",
+            "confidence": 0.9
+        },
+        {
+            "task": "Switch the product view from Grid to List by clicking 'View as List'",
+            "type": "local",
+            "confidence": 1.0
+        },
+        {
+            "task": "Navigate to the Electronics category by clicking on the 'Electronics' menu item",
+            "type": "navigation",
+            "confidence": 0.8
+        },
+        {
+            "task": "Search for a product by typing in the search combobox",
+            "type": "search",
+            "confidence": 0.7
+        },
+        {
+            "task": "View the shopping cart by clicking 'My Cart' link",
+            "type": "navigation",
+            "confidence": 0.95
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/checkout/cart/configure/id/574/product_id/104498",
+    "depth": 5,
+    "tasks": [
+        {
+            "goal": "Report whether the visible '12\\xa0 Reviews' feedback control indicates available feedback.",
+            "family": "feedback_analysis",
+            "status": "solved",
+            "episode_id": 108
+        },
+        {
+            "goal": "Inspect the product details for 'V8 +Energy, Healthy Energy Drink' by clicking on the 'Details' tab.",
+            "family": "other",
+            "status": "solved",
+            "episode_id": 109
+        },
+        {
+            "goal": "Add 'V8 +Energy, Healthy Energy Drink' to your compare list by clicking the 'Add to Compare' link.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 110
+        },
+        {
+            "goal": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+            "family": "state_change",
+            "status": "solved",
+            "episode_id": 111
+        },
+        {
+            "goal": "Update the quantity of 'V8 +Energy, Healthy Energy Drink' in your cart by adjusting the spinbutton and clicking 'Update Cart'.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 112
+        },
+        {
+            "goal": "Use the visible '\\ue611 My Cart 13 13items' checkout or order-flow control and report the next required step.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 113
+        },
+        {
+            "goal": "Safely advance the transaction flow until a confirmation cue is visible, without placing a final order.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 114
+        }
+    ],
+    "episode_range": [
+        108,
+        115
+    ],
+    "prefix_trace": {}
+}

@@ -38,6 +38,7 @@ class WebArenaBrowser:
         import gymnasium as gym
         import browsergym.core            # noqa: registers browsergym/openended
         self._gym = gym
+        self.start_url = start_url
         self.screenshot_enabled = screenshot
         # Build pw_context_kwargs with storage_state if provided.
         # We pass it BOTH via gym.make() (for initial context creation)
@@ -77,7 +78,7 @@ class WebArenaBrowser:
         except Exception as e:
             # Page.goto timeout or other reset failure — return safe fallback
             return {"url": "", "axtree": "", "bids": [], "screenshot_base64": None,
-                    "_reset_error": str(e)}
+                    "_reset_error": str(e), "_start_url": self.start_url}
         self._last_obs = obs
         return self.observation()
 

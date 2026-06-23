@@ -1,0 +1,156 @@
+{
+    "url": "http://192.168.1.31:7770/checkout",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/customer/account/forgotpassword"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 1,
+        "parent_url": "http://192.168.1.31:7770/checkout"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.272727,
+    "tasks_attempted": 11,
+    "tasks_solved": 3,
+    "tasks_failed": 8,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.443347,
+    "frontier_breakdown": {
+        "score": 1.443347207713237,
+        "U": 0.0006521668242736475,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/checkout",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/checkout",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Navigate to the 'My Account' page by clicking the link",
+            "type": "navigation",
+            "confidence": 0.95
+        },
+        {
+            "task": "Search for 'beauty products' using the search bar",
+            "type": "search",
+            "confidence": 0.9
+        },
+        {
+            "task": "Add the Pre-baked Gingerbread House Kit to the shopping cart",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Add the Pre-baked Gingerbread House Kit to the wish list",
+            "type": "local",
+            "confidence": 0.9
+        },
+        {
+            "task": "Navigate to the 'Electronics' category from the main menu",
+            "type": "navigation",
+            "confidence": 0.9
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/checkout",
+    "depth": 1,
+    "tasks": [
+        {
+            "goal": "Select a Country from the 'Country*' dropdown menu.",
+            "family": "analysis",
+            "status": "failed",
+            "episode_id": 12
+        },
+        {
+            "goal": "Input your Street Address: Line 1 in the corresponding textbox.",
+            "family": "profile_settings",
+            "status": "failed",
+            "episode_id": 13
+        },
+        {
+            "goal": "Fill in your First Name in the 'First Name*' textbox.",
+            "family": "other",
+            "status": "solved",
+            "episode_id": 14
+        },
+        {
+            "goal": "Fill in your Last Name in the 'Last Name*' textbox.",
+            "family": "other",
+            "status": "solved",
+            "episode_id": 15
+        },
+        {
+            "goal": "Hover over the visible 'Tooltip' menu or expandable control and report one submenu option that appears.",
+            "family": "other",
+            "status": "failed",
+            "episode_id": 16
+        },
+        {
+            "goal": "Use the visible '1Item in Cart \\ue622' checkout or order-flow control and report the next required step.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 17
+        },
+        {
+            "goal": "Use the visible 'Next' progression control and report the next required step or confirmation that appears.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 18
+        },
+        {
+            "goal": "Enter your Email Address in the 'Email Address*' textbox.",
+            "family": "communication",
+            "status": "failed",
+            "episode_id": 19
+        },
+        {
+            "goal": "Inspect the visible 'Email Address*' address or checkout field and report what input is required.",
+            "family": "communication",
+            "status": "failed",
+            "episode_id": 20
+        },
+        {
+            "goal": "Open the visible 'Email Address*' account or settings control and report one visible option.",
+            "family": "communication",
+            "status": "solved",
+            "episode_id": 21
+        },
+        {
+            "goal": "Open the visible 'Zip/Postal Code*' state-changing control and report the available action.",
+            "family": "communication",
+            "status": "failed",
+            "episode_id": 22
+        }
+    ],
+    "episode_range": [
+        12,
+        23
+    ],
+    "prefix_trace": {
+        "schema_version": 1,
+        "source_url": "http://192.168.1.31:7770",
+        "target_url": "http://192.168.1.31:7770/checkout",
+        "discovered_by_action": "click('275')",
+        "step_count": 2,
+        "stateful": true,
+        "last_replay_status": {
+            "attempted": true,
+            "ok": true,
+            "reason": "arrived",
+            "arrived_url": "http://192.168.1.31:7770/checkout",
+            "expected_url": "http://192.168.1.31:7770/checkout",
+            "stateful": true,
+            "used_direct_goto": false
+        }
+    }
+}

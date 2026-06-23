@@ -1,0 +1,2386 @@
+[
+  {
+    "event": "segments_created",
+    "task": "Read the details of the 'Pre-baked Gingerbread House Kit Value Pack' by clicking on its name to inspect its features and reviews.",
+    "steps": 6,
+    "segments": 4,
+    "subgoals": [
+      "Click on the name 'Pre-baked Gingerbread House Kit Value Pack' to access the product details.",
+      "activate state change control",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 1
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 0,
+    "cluster_size": 1,
+    "subgoal": "Click on the name 'Pre-baked Gingerbread House Kit Value Pack' to access the product details.",
+    "action_signature": "click",
+    "source_task": "Read the details of the 'Pre-baked Gingerbread House Kit Value Pack' by clicking on its name to inspect its features and reviews.",
+    "episode": 1
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 1,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Read the details of the 'Pre-baked Gingerbread House Kit Value Pack' by clicking on its name to inspect its features and reviews.",
+    "episode": 1
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 2,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Read the details of the 'Pre-baked Gingerbread House Kit Value Pack' by clicking on its name to inspect its features and reviews.",
+    "episode": 1
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 3,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Read the details of the 'Pre-baked Gingerbread House Kit Value Pack' by clicking on its name to inspect its features and reviews.",
+    "episode": 1
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 3,
+    "signatures": {
+      "click": 3
+    },
+    "episode": 1
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 1
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 1
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback.",
+    "steps": 1,
+    "segments": 0,
+    "subgoals": [],
+    "episode": 2
+  },
+  {
+    "event": "segments_created",
+    "task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item to view related products.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Click on the 'Beauty & Personal Care' menu item",
+      "activate state change control"
+    ],
+    "episode": 3
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 2,
+    "cluster_size": 1,
+    "subgoal": "Click on the 'Beauty & Personal Care' menu item",
+    "action_signature": "click",
+    "source_task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item to view related products.",
+    "episode": 3
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 4,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item to view related products.",
+    "episode": 3
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 4,
+    "signatures": {
+      "click": 4
+    },
+    "episode": 3
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 4,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 3
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 3
+  },
+  {
+    "event": "segments_created",
+    "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "inspect menu options"
+    ],
+    "episode": 4
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 3,
+    "cluster_size": 1,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears.",
+    "episode": 4
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to type in a product name and click the 'Search' button to find specific items.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Type the product name in the search bar",
+      "submit search query"
+    ],
+    "episode": 5
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 1,
+    "subgoal": "Type the product name in the search bar",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to type in a product name and click the 'Search' button to find specific items.",
+    "episode": 5
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 2,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to type in a product name and click the 'Search' button to find specific items.",
+    "episode": 5
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link.",
+    "steps": 5,
+    "segments": 5,
+    "subgoals": [
+      "Locate the 'Elmwood Inn Fine Teas' item on the website.",
+      "Click on the 'Add to Wish List' link for the item.",
+      "activate state change control",
+      "fill visible field",
+      "fill visible field"
+    ],
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 1,
+    "subgoal": "Locate the 'Elmwood Inn Fine Teas' item on the website.",
+    "action_signature": "click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 6,
+    "cluster_size": 1,
+    "subgoal": "Click on the 'Add to Wish List' link for the item.",
+    "action_signature": "fill > fill > click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 5,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 5,
+    "signatures": {
+      "click": 5
+    },
+    "episode": 6
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 5,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 6
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 1,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 2,
+    "subgoal": "fill visible field",
+    "action_signature": "fill > click",
+    "source_task": "Add the 'Elmwood Inn Fine Teas' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart by clicking the 'Add to Cart' button.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 7
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 6,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart by clicking the 'Add to Cart' button.",
+    "episode": 7
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 6,
+    "signatures": {
+      "click": 6
+    },
+    "episode": 7
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 6,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 7
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 7
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 10
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 7,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action.",
+    "episode": 10
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 7,
+    "signatures": {
+      "click": 7
+    },
+    "episode": 10
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 7,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 10
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 10
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill in your First Name in the 'First Name*' textbox.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "fill visible field"
+    ],
+    "episode": 15
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 3,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Fill in your First Name in the 'First Name*' textbox.",
+    "episode": 15
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 7,
+    "cluster_size": 3,
+    "signatures": {
+      "fill": 2,
+      "fill > click": 1
+    },
+    "episode": 15
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 7,
+    "skill_name": "fill_visible_field",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 15
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 7,
+    "skill_name": "fill_visible_field",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 15
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill in your Last Name in the 'Last Name*' textbox.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "fill visible field"
+    ],
+    "episode": 16
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 4,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Fill in your Last Name in the 'Last Name*' textbox.",
+    "episode": 16
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 7,
+    "cluster_size": 4,
+    "signatures": {
+      "fill": 3,
+      "fill > click": 1
+    },
+    "episode": 16
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 7,
+    "skill_name": "fill_visible_field",
+    "cluster_size": 4,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 16
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 7,
+    "skill_name": "fill_visible_field",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 16
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible 'Email Address*' account or settings control and report one visible option.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 22
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 8,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible 'Email Address*' account or settings control and report one visible option.",
+    "episode": 22
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 8,
+    "signatures": {
+      "click": 8
+    },
+    "episode": 22
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 8,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 22
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 22
+  },
+  {
+    "event": "segments_created",
+    "task": "Click the 'Reset My Password' button to initiate the password reset process.",
+    "steps": 4,
+    "segments": 3,
+    "subgoals": [
+      "Locate the 'Reset My Password' button",
+      "activate state change control",
+      "fill visible field"
+    ],
+    "episode": 25
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 8,
+    "cluster_size": 1,
+    "subgoal": "Locate the 'Reset My Password' button",
+    "action_signature": "click > fill > click",
+    "source_task": "Click the 'Reset My Password' button to initiate the password reset process.",
+    "episode": 25
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 9,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click the 'Reset My Password' button to initiate the password reset process.",
+    "episode": 25
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 9,
+    "signatures": {
+      "click": 9
+    },
+    "episode": 25
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 9,
+    "verify_k": 2,
+    "contexts": 2,
+    "bootstrap": false,
+    "episode": 25
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 2,
+    "verify_attempts": 2,
+    "bootstrap": false,
+    "episode": 25
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 5,
+    "subgoal": "fill visible field",
+    "action_signature": "fill > click",
+    "source_task": "Click the 'Reset My Password' button to initiate the password reset process.",
+    "episode": 25
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 7,
+    "cluster_size": 5,
+    "signatures": {
+      "fill": 3,
+      "fill > click": 2
+    },
+    "episode": 25
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 7,
+    "skill_name": "fill_visible_field",
+    "cluster_size": 5,
+    "verify_k": 2,
+    "contexts": 2,
+    "bootstrap": false,
+    "episode": 25
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 7,
+    "skill_name": "fill_visible_field",
+    "verify_success": 2,
+    "verify_attempts": 2,
+    "bootstrap": false,
+    "episode": 25
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible 'My Account' account or settings control and report one visible option.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Open the 'My Account' settings control.",
+      "activate state change control"
+    ],
+    "episode": 26
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 9,
+    "cluster_size": 1,
+    "subgoal": "Open the 'My Account' settings control.",
+    "action_signature": "click",
+    "source_task": "Open the visible 'My Account' account or settings control and report one visible option.",
+    "episode": 26
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 10,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible 'My Account' account or settings control and report one visible option.",
+    "episode": 26
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to type in a product name and click the 'Search' button to find specific products.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Type the product name in the search bar.",
+      "submit search query"
+    ],
+    "episode": 28
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 3,
+    "subgoal": "Type the product name in the search bar.",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to type in a product name and click the 'Search' button to find specific products.",
+    "episode": 28
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 4,
+    "cluster_size": 3,
+    "signatures": {
+      "fill > click": 3
+    },
+    "episode": 28
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 4,
+    "skill_name": "submit_search_query",
+    "cluster_size": 3,
+    "verify_k": 1,
+    "contexts": 2,
+    "bootstrap": true,
+    "episode": 28
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 4,
+    "skill_name": "submit_search_query",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "bootstrap": true,
+    "episode": 28
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 4,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to type in a product name and click the 'Search' button to find specific products.",
+    "episode": 28
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Identify the search field and its purpose",
+      "submit search query"
+    ],
+    "episode": 33
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 5,
+    "subgoal": "Identify the search field and its purpose",
+    "action_signature": "fill > click",
+    "source_task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "episode": 33
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 6,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "episode": 33
+  },
+  {
+    "event": "segments_created",
+    "task": "Enter your email address in the 'Email*' textbox to receive a password reset link.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Enter your email address in the 'Email*' textbox",
+      "fill communication form"
+    ],
+    "episode": 34
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 9,
+    "cluster_size": 2,
+    "subgoal": "Enter your email address in the 'Email*' textbox",
+    "action_signature": "fill > click",
+    "source_task": "Enter your email address in the 'Email*' textbox to receive a password reset link.",
+    "episode": 34
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 7,
+    "subgoal": "fill communication form",
+    "action_signature": "fill > click",
+    "source_task": "Enter your email address in the 'Email*' textbox to receive a password reset link.",
+    "episode": 34
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the 'Price' field with a specific price and click the 'Search' button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the 'Price' field with a specific price",
+      "submit search query"
+    ],
+    "episode": 36
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 8,
+    "subgoal": "Fill the 'Price' field with a specific price",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'Price' field with a specific price and click the 'Search' button.",
+    "episode": 36
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 9,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'Price' field with a specific price and click the 'Search' button.",
+    "episode": 36
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the 'Description' field with a specific description and click the 'Search' button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the 'Description' field with a specific description.",
+      "submit search query"
+    ],
+    "episode": 39
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 10,
+    "subgoal": "Fill the 'Description' field with a specific description.",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'Description' field with a specific description and click the 'Search' button.",
+    "episode": 39
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 11,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'Description' field with a specific description and click the 'Search' button.",
+    "episode": 39
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the 'Product Name' field with a specific product name and click the 'Search' button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the 'Product Name' field with a specific product name.",
+      "submit search query"
+    ],
+    "episode": 40
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 12,
+    "subgoal": "Fill the 'Product Name' field with a specific product name.",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'Product Name' field with a specific product name and click the 'Search' button.",
+    "episode": 40
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 13,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'Product Name' field with a specific product name and click the 'Search' button.",
+    "episode": 40
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the 'SKU' field with a specific SKU and click the 'Search' button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the 'SKU' field with a specific SKU",
+      "submit search query"
+    ],
+    "episode": 41
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 14,
+    "subgoal": "Fill the 'SKU' field with a specific SKU",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'SKU' field with a specific SKU and click the 'Search' button.",
+    "episode": 41
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 15,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the 'SKU' field with a specific SKU and click the 'Search' button.",
+    "episode": 41
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 42
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 11,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action.",
+    "episode": 42
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '2 \\xa0Reviews' feedback control indicates available feedback.",
+    "steps": 3,
+    "segments": 1,
+    "subgoals": [
+      "inspect menu options"
+    ],
+    "episode": 45
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 3,
+    "cluster_size": 2,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Report whether the visible '2 \\xa0Reviews' feedback control indicates available feedback.",
+    "episode": 45
+  },
+  {
+    "event": "segments_created",
+    "task": "click(\u2018Beauty & Personal Care\u2019)",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "click on 'Beauty & Personal Care'",
+      "activate state change control"
+    ],
+    "episode": 48
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 2,
+    "cluster_size": 2,
+    "subgoal": "click on 'Beauty & Personal Care'",
+    "action_signature": "click",
+    "source_task": "click(\u2018Beauty & Personal Care\u2019)",
+    "episode": 48
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 12,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(\u2018Beauty & Personal Care\u2019)",
+    "episode": 48
+  },
+  {
+    "event": "segments_created",
+    "task": "click(\u2018List of cookies we collect\u2019)",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "click on 'List of cookies we collect'",
+      "activate state change control"
+    ],
+    "episode": 50
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 10,
+    "cluster_size": 1,
+    "subgoal": "click on 'List of cookies we collect'",
+    "action_signature": "click",
+    "source_task": "click(\u2018List of cookies we collect\u2019)",
+    "episode": 50
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 13,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(\u2018List of cookies we collect\u2019)",
+    "episode": 50
+  },
+  {
+    "event": "segments_created",
+    "task": "Add '5Pcs HDMI Port Socket' to the compare list.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 55
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 14,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add '5Pcs HDMI Port Socket' to the compare list.",
+    "episode": 55
+  },
+  {
+    "event": "segments_created",
+    "task": "View product details for 'Wireless Game Controller with 4 Paddles' by clicking on its name.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Click on the product name 'Wireless Game Controller with 4 Paddles'",
+      "activate state change control"
+    ],
+    "episode": 58
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 11,
+    "cluster_size": 1,
+    "subgoal": "Click on the product name 'Wireless Game Controller with 4 Paddles'",
+    "action_signature": "click",
+    "source_task": "View product details for 'Wireless Game Controller with 4 Paddles' by clicking on its name.",
+    "episode": 58
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 15,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "View product details for 'Wireless Game Controller with 4 Paddles' by clicking on its name.",
+    "episode": 58
+  },
+  {
+    "event": "segments_created",
+    "task": "Search for 'Wireless Game Controller' using the search bar.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Open the website and locate the search bar.",
+      "submit search query"
+    ],
+    "episode": 62
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 16,
+    "subgoal": "Open the website and locate the search bar.",
+    "action_signature": "fill > click",
+    "source_task": "Search for 'Wireless Game Controller' using the search bar.",
+    "episode": 62
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 17,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Search for 'Wireless Game Controller' using the search bar.",
+    "episode": 62
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the '10pcs Professional Foot File Pedicure Kit Set' to your cart by clicking the 'Add to Cart' button.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 66
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 16,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the '10pcs Professional Foot File Pedicure Kit Set' to your cart by clicking the 'Add to Cart' button.",
+    "episode": 66
+  },
+  {
+    "event": "segments_created",
+    "task": "Compare the 'PTGMH 6 Pcs Solid Golden Nail Powder' by clicking the 'Add to Compare' button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 68
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 17,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Compare the 'PTGMH 6 Pcs Solid Golden Nail Powder' by clicking the 'Add to Compare' button.",
+    "episode": 68
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 18,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Compare the 'PTGMH 6 Pcs Solid Golden Nail Powder' by clicking the 'Add to Compare' button.",
+    "episode": 68
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to find specific foot care products by entering a keyword and clicking the Search button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Enter a keyword for foot care products in the search bar.",
+      "submit search query"
+    ],
+    "episode": 69
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 18,
+    "subgoal": "Enter a keyword for foot care products in the search bar.",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find specific foot care products by entering a keyword and clicking the Search button.",
+    "episode": 69
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 19,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find specific foot care products by entering a keyword and clicking the Search button.",
+    "episode": 69
+  },
+  {
+    "event": "segments_created",
+    "task": "Click the 'Be the first to review this product' link to write a review for the Foot Peel Mask.",
+    "steps": 4,
+    "segments": 2,
+    "subgoals": [
+      "inspect feedback indicator",
+      "inspect feedback indicator"
+    ],
+    "episode": 70
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 12,
+    "cluster_size": 1,
+    "subgoal": "inspect feedback indicator",
+    "action_signature": "click",
+    "source_task": "Click the 'Be the first to review this product' link to write a review for the Foot Peel Mask.",
+    "episode": 70
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 12,
+    "cluster_size": 2,
+    "subgoal": "inspect feedback indicator",
+    "action_signature": "click",
+    "source_task": "Click the 'Be the first to review this product' link to write a review for the Foot Peel Mask.",
+    "episode": 70
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback.",
+    "steps": 1,
+    "segments": 0,
+    "subgoals": [],
+    "episode": 71
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the 'Ohora Base Nail Care Set' to your cart by clicking the 'Add to Cart' button next to the product.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 80
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 19,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'Ohora Base Nail Care Set' to your cart by clicking the 'Add to Cart' button next to the product.",
+    "episode": 80
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to find specific nail art products by entering a keyword and clicking the search button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Enter a keyword related to nail art products in the search bar.",
+      "submit search query"
+    ],
+    "episode": 83
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 20,
+    "subgoal": "Enter a keyword related to nail art products in the search bar.",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find specific nail art products by entering a keyword and clicking the search button.",
+    "episode": 83
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 21,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find specific nail art products by entering a keyword and clicking the search button.",
+    "episode": 83
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart 6 6items' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 88
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 20,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart 6 6items' state-changing control and report the available action.",
+    "episode": 88
+  },
+  {
+    "event": "segments_created",
+    "task": "Click the 'Details' tab to view more information about the KICKER 45KMTDC65W speakers.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 91
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 21,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click the 'Details' tab to view more information about the KICKER 45KMTDC65W speakers.",
+    "episode": 91
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart 9 9items' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 94
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 22,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart 9 9items' state-changing control and report the available action.",
+    "episode": 94
+  },
+  {
+    "event": "segments_created",
+    "task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Click on the 'Beauty & Personal Care' menu item",
+      "activate state change control"
+    ],
+    "episode": 97
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 2,
+    "cluster_size": 3,
+    "subgoal": "Click on the 'Beauty & Personal Care' menu item",
+    "action_signature": "click",
+    "source_task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item.",
+    "episode": 97
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 2,
+    "cluster_size": 3,
+    "signatures": {
+      "click": 3
+    },
+    "episode": 97
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 2,
+    "skill_name": "inspect_menu_options",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 7,
+    "bootstrap": false,
+    "episode": 97
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 2,
+    "skill_name": "inspect_menu_options",
+    "verify_success": 2,
+    "verify_attempts": 2,
+    "bootstrap": false,
+    "episode": 97
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 23,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Browse the 'Beauty & Personal Care' category by clicking on the corresponding menu item.",
+    "episode": 97
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to find a specific product by entering a keyword.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Use the search bar to enter a keyword.",
+      "submit search query"
+    ],
+    "episode": 98
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 22,
+    "subgoal": "Use the search bar to enter a keyword.",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find a specific product by entering a keyword.",
+    "episode": 98
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 23,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find a specific product by entering a keyword.",
+    "episode": 98
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button.",
+    "steps": 6,
+    "segments": 5,
+    "subgoals": [
+      "Locate the 'HFHAPW Onesie Pajamas for Women' product.",
+      "activate state change control",
+      "activate state change control",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 100
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 13,
+    "cluster_size": 1,
+    "subgoal": "Locate the 'HFHAPW Onesie Pajamas for Women' product.",
+    "action_signature": "click",
+    "source_task": "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button.",
+    "episode": 100
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 24,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button.",
+    "episode": 100
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 25,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button.",
+    "episode": 100
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 26,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button.",
+    "episode": 100
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 27,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the 'HFHAPW Onesie Pajamas for Women' to your cart by clicking the 'Add to Cart' button.",
+    "episode": 100
+  },
+  {
+    "event": "segments_created",
+    "task": "Click on the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels' to view its details.",
+    "steps": 3,
+    "segments": 3,
+    "subgoals": [
+      "Locate the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels'",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 103
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 14,
+    "cluster_size": 1,
+    "subgoal": "Locate the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels'",
+    "action_signature": "click",
+    "source_task": "Click on the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels' to view its details.",
+    "episode": 103
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 28,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click on the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels' to view its details.",
+    "episode": 103
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 29,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click on the 'Image' link for the 'XZP 4 Pack Larger Thicker Rapid Hair Wrap Towels' to view its details.",
+    "episode": 103
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart 13 13items' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 107
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 30,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart 13 13items' state-changing control and report the available action.",
+    "episode": 107
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '12\\xa0 Reviews' feedback control indicates available feedback.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "inspect menu options",
+      "inspect feedback indicator"
+    ],
+    "episode": 109
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 3,
+    "cluster_size": 3,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Report whether the visible '12\\xa0 Reviews' feedback control indicates available feedback.",
+    "episode": 109
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 3,
+    "cluster_size": 3,
+    "signatures": {
+      "hover": 3
+    },
+    "episode": 109
+  },
+  {
+    "event": "duplicate_skill",
+    "cluster_id": 3,
+    "skill_name": "inspect_menu_options",
+    "existing_skill_id": "skill_c80307c6",
+    "episode": 109
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 12,
+    "cluster_size": 3,
+    "subgoal": "inspect feedback indicator",
+    "action_signature": "click",
+    "source_task": "Report whether the visible '12\\xa0 Reviews' feedback control indicates available feedback.",
+    "episode": 109
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 12,
+    "cluster_size": 3,
+    "signatures": {
+      "click": 3
+    },
+    "episode": 109
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 12,
+    "skill_name": "inspect_feedback_indicator",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 7,
+    "bootstrap": false,
+    "episode": 109
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 12,
+    "skill_name": "inspect_feedback_indicator",
+    "verify_success": 2,
+    "verify_attempts": 2,
+    "bootstrap": false,
+    "episode": 109
+  },
+  {
+    "event": "segments_created",
+    "task": "Inspect the product details for 'V8 +Energy, Healthy Energy Drink' by clicking on the 'Details' tab.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 110
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 31,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Inspect the product details for 'V8 +Energy, Healthy Energy Drink' by clicking on the 'Details' tab.",
+    "episode": 110
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+    "steps": 6,
+    "segments": 6,
+    "subgoals": [
+      "Navigate to the product page for 'V8 +Energy, Healthy Energy Drink'.",
+      "Locate the 'Add to Wish List' link on the product page.",
+      "activate state change control",
+      "fill visible field",
+      "fill visible field",
+      "inspect menu options"
+    ],
+    "episode": 112
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 15,
+    "cluster_size": 1,
+    "subgoal": "Navigate to the product page for 'V8 +Energy, Healthy Energy Drink'.",
+    "action_signature": "click",
+    "source_task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 112
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 6,
+    "cluster_size": 2,
+    "subgoal": "Locate the 'Add to Wish List' link on the product page.",
+    "action_signature": "fill > fill > click",
+    "source_task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 112
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 32,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 112
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 6,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 112
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 7,
+    "subgoal": "fill visible field",
+    "action_signature": "fill > click",
+    "source_task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 112
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 3,
+    "cluster_size": 4,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Add the product 'V8 +Energy, Healthy Energy Drink' to your wish list by clicking the 'Add to Wish List' link.",
+    "episode": 112
+  },
+  {
+    "event": "segments_created",
+    "task": "fill(ue615 Search, 'nightstand'); click(Search)",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "fill the search input with 'nightstand'",
+      "submit search query"
+    ],
+    "episode": 118
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 24,
+    "subgoal": "fill the search input with 'nightstand'",
+    "action_signature": "fill > click",
+    "source_task": "fill(ue615 Search, 'nightstand'); click(Search)",
+    "episode": 118
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 25,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "fill(ue615 Search, 'nightstand'); click(Search)",
+    "episode": 118
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '3 \\xa0Reviews' feedback control indicates available feedback.",
+    "steps": 3,
+    "segments": 3,
+    "subgoals": [
+      "segment 0",
+      "inspect feedback indicator",
+      "inspect feedback indicator"
+    ],
+    "episode": 125
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 16,
+    "cluster_size": 1,
+    "subgoal": "segment 0",
+    "action_signature": "click > click > click",
+    "source_task": "Report whether the visible '3 \\xa0Reviews' feedback control indicates available feedback.",
+    "episode": 125
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 12,
+    "cluster_size": 4,
+    "subgoal": "inspect feedback indicator",
+    "action_signature": "click",
+    "source_task": "Report whether the visible '3 \\xa0Reviews' feedback control indicates available feedback.",
+    "episode": 125
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 12,
+    "cluster_size": 5,
+    "subgoal": "inspect feedback indicator",
+    "action_signature": "click",
+    "source_task": "Report whether the visible '3 \\xa0Reviews' feedback control indicates available feedback.",
+    "episode": 125
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the search field with 'wireless charger' and click the Search button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the search field with 'wireless charger'",
+      "submit search query"
+    ],
+    "episode": 126
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 26,
+    "subgoal": "Fill the search field with 'wireless charger'",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'wireless charger' and click the Search button.",
+    "episode": 126
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 27,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'wireless charger' and click the Search button.",
+    "episode": 126
+  },
+  {
+    "event": "segments_created",
+    "task": "Click on the 'Add to Wish List' button for the product 'Vchiming Wireless Car Charger Mount'.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 128
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 33,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click on the 'Add to Wish List' button for the product 'Vchiming Wireless Car Charger Mount'.",
+    "episode": 128
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 129
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 34,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action.",
+    "episode": 129
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the search field with 'controller' and click the search button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the search field with 'controller'",
+      "submit search query"
+    ],
+    "episode": 134
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 28,
+    "subgoal": "Fill the search field with 'controller'",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'controller' and click the search button.",
+    "episode": 134
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 29,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'controller' and click the search button.",
+    "episode": 134
+  },
+  {
+    "event": "segments_created",
+    "task": "click(Details)",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 137
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 35,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(Details)",
+    "episode": 137
+  },
+  {
+    "event": "segments_created",
+    "task": "fill(Search, Rockville 6.5\" LED Swivel Metal Marine Wakeboard Speakers); click(Search)",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill in the search query for Rockville 6.5\" LED Swivel Metal Marine Wakeboard Speakers",
+      "submit search query"
+    ],
+    "episode": 140
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 17,
+    "cluster_size": 1,
+    "subgoal": "Fill in the search query for Rockville 6.5\" LED Swivel Metal Marine Wakeboard Speakers",
+    "action_signature": "fill > click",
+    "source_task": "fill(Search, Rockville 6.5\" LED Swivel Metal Marine Wakeboard Speakers); click(Search)",
+    "episode": 140
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 30,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "fill(Search, Rockville 6.5\" LED Swivel Metal Marine Wakeboard Speakers); click(Search)",
+    "episode": 140
+  },
+  {
+    "event": "segments_created",
+    "task": "click(Add to Cart)",
+    "steps": 4,
+    "segments": 3,
+    "subgoals": [
+      "segment 0",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 141
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 16,
+    "cluster_size": 2,
+    "subgoal": "segment 0",
+    "action_signature": "click > click > click",
+    "source_task": "click(Add to Cart)",
+    "episode": 141
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 36,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(Add to Cart)",
+    "episode": 141
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 37,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(Add to Cart)",
+    "episode": 141
+  },
+  {
+    "event": "segments_created",
+    "task": "click(Add to Compare)",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 142
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 38,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(Add to Compare)",
+    "episode": 142
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart 3 3items' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 149
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 39,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart 3 3items' state-changing control and report the available action.",
+    "episode": 149
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the search field with 'cookies' and click the 'Search' button to find related products.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the search field with 'cookies'",
+      "submit search query"
+    ],
+    "episode": 152
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 31,
+    "subgoal": "Fill the search field with 'cookies'",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'cookies' and click the 'Search' button to find related products.",
+    "episode": 152
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 32,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'cookies' and click the 'Search' button to find related products.",
+    "episode": 152
+  },
+  {
+    "event": "segments_created",
+    "task": "fill(ue615 Search, Chicken); click(Search)",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "fill the search input with 'Chicken'",
+      "submit search query"
+    ],
+    "episode": 159
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 33,
+    "subgoal": "fill the search input with 'Chicken'",
+    "action_signature": "fill > click",
+    "source_task": "fill(ue615 Search, Chicken); click(Search)",
+    "episode": 159
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 34,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "fill(ue615 Search, Chicken); click(Search)",
+    "episode": 159
+  },
+  {
+    "event": "segments_created",
+    "task": "fill_visible_field('Search', 'wireless earbuds')",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the search field with the query 'wireless earbuds'.",
+      "submit search query"
+    ],
+    "episode": 166
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 35,
+    "subgoal": "Fill the search field with the query 'wireless earbuds'.",
+    "action_signature": "fill > click",
+    "source_task": "fill_visible_field('Search', 'wireless earbuds')",
+    "episode": 166
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 36,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "fill_visible_field('Search', 'wireless earbuds')",
+    "episode": 166
+  },
+  {
+    "event": "segments_created",
+    "task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "steps": 5,
+    "segments": 6,
+    "subgoals": [
+      "Locate the product 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+      "Review product details and confirm it meets requirements",
+      "activate state change control",
+      "activate state change control",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 167
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 18,
+    "cluster_size": 1,
+    "subgoal": "Locate the product 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "action_signature": "click",
+    "source_task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "episode": 167
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 19,
+    "cluster_size": 1,
+    "subgoal": "Review product details and confirm it meets requirements",
+    "action_signature": "click > click > click",
+    "source_task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "episode": 167
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 40,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "episode": 167
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 41,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "episode": 167
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 42,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "episode": 167
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 43,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click('Add to Cart') for 'White Wireless Earbuds Bluetooth with Microphone and Charge Case-Touch Control in Ear Headphone,30HRS Playtime, Waterproof Earset'",
+    "episode": 167
+  },
+  {
+    "event": "segments_created",
+    "task": "Fill the search field with 'Xbox' and click the Search button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the search field with 'Xbox'",
+      "submit search query"
+    ],
+    "episode": 172
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 37,
+    "subgoal": "Fill the search field with 'Xbox'",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'Xbox' and click the Search button.",
+    "episode": 172
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 38,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Fill the search field with 'Xbox' and click the Search button.",
+    "episode": 172
+  },
+  {
+    "event": "segments_created",
+    "task": "fill(ue615 Search, 'Givenchy Dahlia Divin Nude'); click(Search)",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "fill search input with 'Givenchy Dahlia Divin Nude'",
+      "submit search query"
+    ],
+    "episode": 178
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 39,
+    "subgoal": "fill search input with 'Givenchy Dahlia Divin Nude'",
+    "action_signature": "fill > click",
+    "source_task": "fill(ue615 Search, 'Givenchy Dahlia Divin Nude'); click(Search)",
+    "episode": 178
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 40,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "fill(ue615 Search, 'Givenchy Dahlia Divin Nude'); click(Search)",
+    "episode": 178
+  },
+  {
+    "event": "segments_created",
+    "task": "click(Add to Cart) for Givenchy Dahlia Divin Nude By Givenchy For Women Eau De Parfum Spray 1.7 oz",
+    "steps": 3,
+    "segments": 3,
+    "subgoals": [
+      "Navigate to the product page for Givenchy Dahlia Divin Nude Eau De Parfum.",
+      "activate state change control",
+      "activate state change control"
+    ],
+    "episode": 179
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 20,
+    "cluster_size": 1,
+    "subgoal": "Navigate to the product page for Givenchy Dahlia Divin Nude Eau De Parfum.",
+    "action_signature": "click > click",
+    "source_task": "click(Add to Cart) for Givenchy Dahlia Divin Nude By Givenchy For Women Eau De Parfum Spray 1.7 oz",
+    "episode": 179
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 44,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(Add to Cart) for Givenchy Dahlia Divin Nude By Givenchy For Women Eau De Parfum Spray 1.7 oz",
+    "episode": 179
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 45,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(Add to Cart) for Givenchy Dahlia Divin Nude By Givenchy For Women Eau De Parfum Spray 1.7 oz",
+    "episode": 179
+  },
+  {
+    "event": "segments_created",
+    "task": "click(Add to Compare) for Bodycology Pure White Gardenia Fragrance Mist Spray By Bodycology Perfume for Women 8 oz Fragrance Mist Spray",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 180
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 46,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "click(Add to Compare) for Bodycology Pure White Gardenia Fragrance Mist Spray By Bodycology Perfume for Women 8 oz Fragrance Mist Spray",
+    "episode": 180
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to look for 'Oculus Quest 2' and click the 'Search' button once it is enabled.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Use the search bar to look for 'Oculus Quest 2'",
+      "submit search query"
+    ],
+    "episode": 183
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 41,
+    "subgoal": "Use the search bar to look for 'Oculus Quest 2'",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to look for 'Oculus Quest 2' and click the 'Search' button once it is enabled.",
+    "episode": 183
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 42,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to look for 'Oculus Quest 2' and click the 'Search' button once it is enabled.",
+    "episode": 183
+  },
+  {
+    "event": "segments_created",
+    "task": "Click on the 'Add to Compare' button for the item 'METORY Adjustable Ear Muffs & METORY Battery Pack for Oculus Quest 2'.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 184
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 47,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click on the 'Add to Compare' button for the item 'METORY Adjustable Ear Muffs & METORY Battery Pack for Oculus Quest 2'.",
+    "episode": 184
+  },
+  {
+    "event": "segments_created",
+    "task": "View the details of the 'Multi Accessory Hub Adapter By JOBY' by clicking on its name to read more about it.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Click on the name 'Multi Accessory Hub Adapter By JOBY' to view details.",
+      "activate state change control"
+    ],
+    "episode": 193
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 21,
+    "cluster_size": 1,
+    "subgoal": "Click on the name 'Multi Accessory Hub Adapter By JOBY' to view details.",
+    "action_signature": "click",
+    "source_task": "View the details of the 'Multi Accessory Hub Adapter By JOBY' by clicking on its name to read more about it.",
+    "episode": 193
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 48,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "View the details of the 'Multi Accessory Hub Adapter By JOBY' by clicking on its name to read more about it.",
+    "episode": 193
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to find a specific camera by filling the search field with 'camera' and clicking the Search button.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Fill the search field with 'camera'.",
+      "submit search query"
+    ],
+    "episode": 194
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 43,
+    "subgoal": "Fill the search field with 'camera'.",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find a specific camera by filling the search field with 'camera' and clicking the Search button.",
+    "episode": 194
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 44,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to find a specific camera by filling the search field with 'camera' and clicking the Search button.",
+    "episode": 194
+  },
+  {
+    "event": "segments_created",
+    "task": "View the details of 'WQPY Desktop Storage Box Leaf Foldable File Folder'.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "View product overview",
+      "activate state change control"
+    ],
+    "episode": 200
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 16,
+    "cluster_size": 3,
+    "subgoal": "View product overview",
+    "action_signature": "click",
+    "source_task": "View the details of 'WQPY Desktop Storage Box Leaf Foldable File Folder'.",
+    "episode": 200
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 16,
+    "cluster_size": 3,
+    "signatures": {
+      "click > click > click": 2,
+      "click": 1
+    },
+    "episode": 200
+  },
+  {
+    "event": "duplicate_skill",
+    "cluster_id": 16,
+    "skill_name": "activate_state_change_control",
+    "existing_skill_id": "skill_52b0c627",
+    "episode": 200
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 49,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "View the details of 'WQPY Desktop Storage Box Leaf Foldable File Folder'.",
+    "episode": 200
+  },
+  {
+    "event": "segments_created",
+    "task": "Search for 'Plastic Foldable Storage Baskets' using the search bar.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Open the website and locate the search bar.",
+      "submit search query"
+    ],
+    "episode": 202
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 45,
+    "subgoal": "Open the website and locate the search bar.",
+    "action_signature": "fill > click",
+    "source_task": "Search for 'Plastic Foldable Storage Baskets' using the search bar.",
+    "episode": 202
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 46,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Search for 'Plastic Foldable Storage Baskets' using the search bar.",
+    "episode": 202
+  }
+]

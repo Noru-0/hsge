@@ -1,0 +1,120 @@
+{
+    "url": "http://192.168.1.31:7770/home-kitchen.html",
+    "description": "",
+    "children": [],
+    "visited": true,
+    "misc": {
+        "depth": 6,
+        "parent_url": "http://192.168.1.31:7770/home-kitchen.html"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.125,
+    "tasks_attempted": 8,
+    "tasks_solved": 1,
+    "tasks_failed": 7,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.453257,
+    "frontier_breakdown": {
+        "score": 1.453256719971221,
+        "U": 0.010561679082257504,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/home-kitchen.html",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/home-kitchen.html",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Click the 'My Account' link to navigate to account page",
+            "type": "navigation",
+            "confidence": 0.95
+        },
+        {
+            "task": "Click the 'My Wish List' link to view wish list",
+            "type": "navigation",
+            "confidence": 0.95
+        },
+        {
+            "task": "Use the search box to search for a product, e.g., 'laptop'",
+            "type": "search",
+            "confidence": 0.7
+        },
+        {
+            "task": "Click on the 'Electronics' category menuitem to explore submenu or department page",
+            "type": "navigation",
+            "confidence": 0.9
+        },
+        {
+            "task": "Click the shopping cart link to view current cart contents",
+            "type": "navigation",
+            "confidence": 0.95
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/home-kitchen.html",
+    "depth": 6,
+    "tasks": [
+        {
+            "goal": "click(View as List)",
+            "family": "other",
+            "status": "failed",
+            "episode_id": 115
+        },
+        {
+            "goal": "click(Advanced Search)",
+            "family": "search",
+            "status": "failed",
+            "episode_id": 116
+        },
+        {
+            "goal": "fill(ue615 Search, 'nightstand'); click(Search)",
+            "family": "search",
+            "status": "solved",
+            "episode_id": 117
+        },
+        {
+            "goal": "click(Add to Cart) for Magic Home Nightstands Bedroom with Drawers",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 118
+        },
+        {
+            "goal": "click(Add to Compare) for Pemberly Row 70\" Farmhouse Barn Door Rustic Wood TV Stand Console",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 119
+        },
+        {
+            "goal": "click(Add to Wish List) for Bonzy Home Glossy LED TV Stand",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 120
+        },
+        {
+            "goal": "Open the visible '\\ue611 My Cart' state-changing control and report the available action.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 121
+        },
+        {
+            "goal": "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 122
+        }
+    ],
+    "episode_range": [
+        115,
+        123
+    ],
+    "prefix_trace": {}
+}

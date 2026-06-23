@@ -158,3 +158,102 @@ Frontier-exhaustion proposal:
 - On retry, first re-ground the action on the source page by label/role/BID similarity, then replay.
 - Use direct URL fallback only when the prefix trace is stateless.
 - If both active frontier and retry queue are empty, refresh from safe current-page discoveries or scorer lookahead before stopping.
+
+## 2026-06-23: Loose Bounded Frontier Selection
+
+Adjusted frontier node choice to avoid overly strict top-score selection while
+keeping the active queue bounded.
+
+Changes:
+
+- Added a small top-score selection band in `WebArenaExplorer`.
+- Within that band, prefer candidates with fewer prior selections and fewer
+  prefix retry counts before falling back to score.
+- Persisted frontier selection counts in checkpoints.
+- Capped active frontier size during callback-discovered URL expansion.
+- Added a regression test proving the selector can choose a near-top candidate
+  instead of always taking `scored[0]`.
+
+Validation:
+
+- `python -m py_compile hsge/webarena/runtime.py hsge/tests/test_action_validation.py` passed.
+- Direct loose-frontier selector regression passed.
+- `PYTHONPATH=. python -m compileall hsge` passed.
+- Full pytest could not run because `pytest` was not installed in the active Python environment.
+
+## 2026-06-23: Stale Prefix Release After Run 14
+
+Run 14 showed that loose frontier selection helped reach better pages and admit
+three skill families, but early stopping still happened because selected URLs
+with stale stateful prefixes were removed from `frontier` while staying in
+`queued` and `_discovered_urls`.
+
+Implemented fix:
+
+- Added bounded `prefix_retry_counts` state to `WebArenaExplorer` checkpoints.
+- When a selected URL fails only because its stateful prefix is stale, requeue it
+  for a small number of attempts.
+- After the retry limit, release the URL from `queued` and remove its stale
+  `_discovered_urls` trace so a future successful action can rediscover it with
+  a fresh prefix.
+- Clear retry counts after a URL is successfully processed.
+
+Validation:
+
+- `python -m py_compile hsge/webarena/runtime.py hsge/tests/test_action_validation.py` passed.
+- Direct frontier lifecycle regression tests passed.
+- `PYTHONPATH=. python -m compileall hsge` passed.
+- Full pytest could not run because `pytest` was not installed in the active Python environment.
+
+## 2026-06-23: Run 15 Empty Root Reset and DOM-Link Fallback
+
+Run 15 did not process two nodes; it processed zero. The root URL was selected,
+`WebArenaBrowser.reset()` returned an observation with no URL, `_process_node()`
+skipped it as an empty reset observation, and the only frontier item had already
+been removed.
+
+Implemented fix:
+
+- Preserve BrowserGym reset diagnostics in `WebArenaBrowser`, including the
+  intended `start_url`.
+- Add bounded retry/release handling for direct-load empty observations.
+- Persist `load_retry_counts` in checkpoints.
+- Keep failed empty observations unvisited and unprocessed.
+- Restore domain-general fallback frontier expansion from same-origin DOM links
+  when callback-discovered solver navigations produce no new URLs.
+- Keep callback-discovered prefix traces as the preferred frontier source.
+- Continue filtering fallback links through allow/visited/queued/depth/denylist
+  checks and `filter_frontier`; `/logout` remains blocked.
+
+Validation:
+
+- `PYTHONPATH=. python -m py_compile hsge/webarena/browser.py hsge/webarena/runtime.py hsge/tests/test_action_validation.py` passed.
+- Direct smoke execution of the new regression tests passed.
+- `PYTHONPATH=. python run_webarena.py --dry-run --out /tmp/hsge_wa_dry_fix --max-nodes 3` completed.
+- Full pytest could not run because `pytest` was not installed in the active Python environment.
+
+## 2026-06-24: SFT Dataset WebArena Action Format Alignment
+
+Compared `build_sft_dataset.py` against upstream `webarena-main` action parsing.
+The existing dataset format is correct for the HSGE solver, but upstream
+WebArena `PromptAgent` expects bracket-style `id_accessibility_tree` actions.
+
+Implemented dual export formats:
+
+- `hsge_json` remains the default and emits assistant JSON with HSGE actions such
+  as `click('123')` and `send_msg_to_user('done')`.
+- `webarena_id` emits upstream-style assistant text ending in a fenced action
+  such as `click [123]` or `stop [done]`.
+- HSGE `fill('id','text')` converts to WebArena `type [id] [text] [0]`.
+- HSGE `send_msg_to_user('answer')` converts to WebArena `stop [answer]`.
+- Bracket-unsafe text is dropped and reported as
+  `webarena_unsafe_bracket_text`.
+
+Validation:
+
+- `PYTHONPATH=. python -m py_compile build_sft_dataset.py hsge/tests/test_build_sft_dataset.py` passed.
+- Manual pytest-style invocation of all `test_build_sft_dataset.py` tests passed.
+- Run 17 HSGE validation produced 200 valid examples.
+- Run 17 WebArena validation produced 199 valid examples and dropped one
+  bracket-unsafe example.
+- Full pytest could not run because `pytest` was not installed in the active Python environment.

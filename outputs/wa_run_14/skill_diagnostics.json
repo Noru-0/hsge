@@ -1,0 +1,645 @@
+[
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback.",
+    "steps": 1,
+    "segments": 0,
+    "subgoals": [],
+    "episode": 1
+  },
+  {
+    "event": "segments_created",
+    "task": "Click on the product image of 'Pre-baked Gingerbread House Kit Value Pack' to view its details.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Locate the product image of 'Pre-baked Gingerbread House Kit Value Pack'",
+      "activate state change control"
+    ],
+    "episode": 2
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 0,
+    "cluster_size": 1,
+    "subgoal": "Locate the product image of 'Pre-baked Gingerbread House Kit Value Pack'",
+    "action_signature": "click",
+    "source_task": "Click on the product image of 'Pre-baked Gingerbread House Kit Value Pack' to view its details.",
+    "episode": 2
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 1,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click on the product image of 'Pre-baked Gingerbread House Kit Value Pack' to view its details.",
+    "episode": 2
+  },
+  {
+    "event": "segments_created",
+    "task": "Navigate to the 'Beauty & Personal Care' category from the menu to browse related products.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Access the main menu",
+      "activate state change control"
+    ],
+    "episode": 3
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 2,
+    "cluster_size": 1,
+    "subgoal": "Access the main menu",
+    "action_signature": "click",
+    "source_task": "Navigate to the 'Beauty & Personal Care' category from the menu to browse related products.",
+    "episode": 3
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 2,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Navigate to the 'Beauty & Personal Care' category from the menu to browse related products.",
+    "episode": 3
+  },
+  {
+    "event": "segments_created",
+    "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "inspect menu options"
+    ],
+    "episode": 4
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 3,
+    "cluster_size": 1,
+    "subgoal": "inspect menu options",
+    "action_signature": "hover",
+    "source_task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears.",
+    "episode": 4
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the search bar to enter a product name and click the 'Search' button to find specific items.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Enter the product name in the search bar.",
+      "submit search query"
+    ],
+    "episode": 5
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 4,
+    "cluster_size": 1,
+    "subgoal": "Enter the product name in the search bar.",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to enter a product name and click the 'Search' button to find specific items.",
+    "episode": 5
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 1,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the search bar to enter a product name and click the 'Search' button to find specific items.",
+    "episode": 5
+  },
+  {
+    "event": "segments_created",
+    "task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link.",
+    "steps": 5,
+    "segments": 5,
+    "subgoals": [
+      "Navigate to the product page for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'.",
+      "Locate the 'Add to Wish List' link on the product page.",
+      "activate state change control",
+      "fill visible field",
+      "fill visible field"
+    ],
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 6,
+    "cluster_size": 1,
+    "subgoal": "Navigate to the product page for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'.",
+    "action_signature": "click",
+    "source_task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 1,
+    "subgoal": "Locate the 'Add to Wish List' link on the product page.",
+    "action_signature": "fill > fill > click",
+    "source_task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 3,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 3,
+    "signatures": {
+      "click": 3
+    },
+    "episode": 6
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 6
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 8,
+    "cluster_size": 1,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 8,
+    "cluster_size": 2,
+    "subgoal": "fill visible field",
+    "action_signature": "fill > click",
+    "source_task": "Add 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list using the 'Add to Wish List' link.",
+    "episode": 6
+  },
+  {
+    "event": "segments_created",
+    "task": "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 10
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 4,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Open the visible '\\ue611 My Cart 2 2items' state-changing control and report the available action.",
+    "episode": 10
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 4,
+    "signatures": {
+      "click": 4
+    },
+    "episode": 10
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 4,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 10
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 10
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the visible '\\ue611 My Cart 2 2items' checkout or order-flow control and report the next required step.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 11
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 5,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Use the visible '\\ue611 My Cart 2 2items' checkout or order-flow control and report the next required step.",
+    "episode": 11
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 5,
+    "signatures": {
+      "click": 5
+    },
+    "episode": 11
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 5,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 11
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 11
+  },
+  {
+    "event": "segments_created",
+    "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Locate the search field",
+      "submit search query"
+    ],
+    "episode": 12
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 2,
+    "subgoal": "Locate the search field",
+    "action_signature": "fill > click",
+    "source_task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "episode": 12
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 3,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+    "episode": 12
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 5,
+    "cluster_size": 3,
+    "signatures": {
+      "fill > click": 3
+    },
+    "episode": 12
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 5,
+    "skill_name": "submit_search_query",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 1,
+    "bootstrap": false,
+    "episode": 12
+  },
+  {
+    "event": "verification_rejected",
+    "cluster_id": 5,
+    "skill_name": "submit_search_query",
+    "verify_success": 1,
+    "verify_attempts": 1,
+    "required": 2,
+    "reason": "insufficient_successes",
+    "failure_reasons": {},
+    "episode": 12
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible '11 \\xa0Reviews' feedback control indicates available feedback.",
+    "steps": 1,
+    "segments": 0,
+    "subgoals": [],
+    "episode": 14
+  },
+  {
+    "event": "segments_created",
+    "task": "Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier' to view its details.",
+    "steps": 2,
+    "segments": 2,
+    "subgoals": [
+      "Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier'",
+      "activate state change control"
+    ],
+    "episode": 15
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 9,
+    "cluster_size": 1,
+    "subgoal": "Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier'",
+    "action_signature": "click",
+    "source_task": "Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier' to view its details.",
+    "episode": 15
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 6,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Click on the product image of 'Dilwe1 12'' Phone Screen Magnifier' to view its details.",
+    "episode": 15
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 1,
+    "cluster_size": 6,
+    "signatures": {
+      "click": 6
+    },
+    "episode": 15
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "cluster_size": 6,
+    "verify_k": 2,
+    "contexts": 2,
+    "bootstrap": false,
+    "episode": 15
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 1,
+    "skill_name": "activate_state_change_control",
+    "verify_success": 2,
+    "verify_attempts": 2,
+    "bootstrap": false,
+    "episode": 15
+  },
+  {
+    "event": "segments_created",
+    "task": "Navigate to the 'Cell Phones & Accessories' category from the menu.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 16
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 7,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Navigate to the 'Cell Phones & Accessories' category from the menu.",
+    "episode": 16
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list.",
+    "steps": 5,
+    "segments": 5,
+    "subgoals": [
+      "Navigate to the product page for the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector'.",
+      "Add the product to your wish list.",
+      "activate state change control",
+      "fill visible field",
+      "fill visible field"
+    ],
+    "episode": 18
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 10,
+    "cluster_size": 1,
+    "subgoal": "Navigate to the product page for the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector'.",
+    "action_signature": "click",
+    "source_task": "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list.",
+    "episode": 18
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 7,
+    "cluster_size": 2,
+    "subgoal": "Add the product to your wish list.",
+    "action_signature": "fill > fill > click",
+    "source_task": "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list.",
+    "episode": 18
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 8,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list.",
+    "episode": 18
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 8,
+    "cluster_size": 3,
+    "subgoal": "fill visible field",
+    "action_signature": "fill",
+    "source_task": "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list.",
+    "episode": 18
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 8,
+    "cluster_size": 3,
+    "signatures": {
+      "fill": 2,
+      "fill > click": 1
+    },
+    "episode": 18
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 8,
+    "skill_name": "fill_visible_field",
+    "cluster_size": 3,
+    "verify_k": 2,
+    "contexts": 2,
+    "bootstrap": false,
+    "episode": 18
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 8,
+    "skill_name": "fill_visible_field",
+    "verify_success": 2,
+    "verify_attempts": 2,
+    "bootstrap": false,
+    "episode": 18
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 8,
+    "cluster_size": 4,
+    "subgoal": "fill visible field",
+    "action_signature": "fill > click",
+    "source_task": "Add the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector' to your wish list.",
+    "episode": 18
+  },
+  {
+    "event": "segments_created",
+    "task": "Report whether the visible 'Be the first to review this product' feedback control indicates available feedback.",
+    "steps": 1,
+    "segments": 0,
+    "subgoals": [],
+    "episode": 19
+  },
+  {
+    "event": "segments_created",
+    "task": "Search for 'phone screen magnifier' using the search bar.",
+    "steps": 3,
+    "segments": 2,
+    "subgoals": [
+      "Search for 'phone screen magnifier' using the search bar.",
+      "submit search query"
+    ],
+    "episode": 20
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 9,
+    "cluster_size": 2,
+    "subgoal": "Search for 'phone screen magnifier' using the search bar.",
+    "action_signature": "fill > click",
+    "source_task": "Search for 'phone screen magnifier' using the search bar.",
+    "episode": 20
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 5,
+    "cluster_size": 4,
+    "subgoal": "submit search query",
+    "action_signature": "fill > click",
+    "source_task": "Search for 'phone screen magnifier' using the search bar.",
+    "episode": 20
+  },
+  {
+    "event": "cluster_matured",
+    "cluster_id": 5,
+    "cluster_size": 4,
+    "signatures": {
+      "fill > click": 4
+    },
+    "episode": 20
+  },
+  {
+    "event": "skill_abstracted",
+    "cluster_id": 5,
+    "skill_name": "submit_search_query",
+    "cluster_size": 4,
+    "verify_k": 2,
+    "contexts": 3,
+    "bootstrap": false,
+    "episode": 20
+  },
+  {
+    "event": "skill_admitted",
+    "cluster_id": 5,
+    "skill_name": "submit_search_query",
+    "verify_success": 2,
+    "verify_attempts": 2,
+    "bootstrap": false,
+    "episode": 20
+  },
+  {
+    "event": "segments_created",
+    "task": "Inspect the product specifications listed under the 'Details' tab.",
+    "steps": 1,
+    "segments": 0,
+    "subgoals": [],
+    "episode": 21
+  },
+  {
+    "event": "segments_created",
+    "task": "View product details by clicking on the 'Details' tab.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 22
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 9,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "View product details by clicking on the 'Details' tab.",
+    "episode": 22
+  },
+  {
+    "event": "segments_created",
+    "task": "Add the product to the cart by clicking the 'Add to Cart' button.",
+    "steps": 2,
+    "segments": 1,
+    "subgoals": [
+      "activate state change control"
+    ],
+    "episode": 23
+  },
+  {
+    "event": "cluster_observe",
+    "cluster_id": 1,
+    "cluster_size": 10,
+    "subgoal": "activate state change control",
+    "action_signature": "click",
+    "source_task": "Add the product to the cart by clicking the 'Add to Cart' button.",
+    "episode": 23
+  }
+]

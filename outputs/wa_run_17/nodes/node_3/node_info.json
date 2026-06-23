@@ -1,0 +1,146 @@
+{
+    "url": "http://192.168.1.31:7770/customer/account/forgotpassword",
+    "description": "",
+    "children": [
+        "http://192.168.1.31:7770/catalogsearch/advanced"
+    ],
+    "visited": true,
+    "misc": {
+        "depth": 2,
+        "parent_url": "http://192.168.1.31:7770/customer/account/forgotpassword"
+    },
+    "exploration_count": 1,
+    "success_rate": 1.0,
+    "node_success_rate": 1.0,
+    "task_success_rate": 0.5,
+    "tasks_attempted": 12,
+    "tasks_solved": 6,
+    "tasks_failed": 6,
+    "tasks_error": 0,
+    "tasks_skipped": 0,
+    "total_trajs": 1,
+    "successful_trajs": 1,
+    "selected_child_count": 0,
+    "frontier_score": 1.466104,
+    "frontier_breakdown": {
+        "score": 1.4661038657886805,
+        "U": 0.023408824899717046,
+        "V": 1.4426950408889634,
+        "V_sr": 1.0,
+        "V_sr_source": "parent:http://192.168.1.31:7770/customer/account/forgotpassword",
+        "V_n": 0,
+        "V_n_source": "parent:http://192.168.1.31:7770/customer/account/forgotpassword",
+        "D": 0.0,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "theta": 0.0
+    },
+    "lookahead_candidates": [
+        {
+            "task": "Fill in the email address field",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Fill in the first name field",
+            "type": "local",
+            "confidence": 0.95
+        },
+        {
+            "task": "Select a country from the country combobox",
+            "type": "form",
+            "confidence": 0.9
+        },
+        {
+            "task": "Click the store logo link to navigate to home page",
+            "type": "navigation",
+            "confidence": 1.0
+        },
+        {
+            "task": "Click on the 'Review & Payments' step indicator",
+            "type": "navigation",
+            "confidence": 0.6
+        }
+    ],
+    "parent_url": "http://192.168.1.31:7770/customer/account/forgotpassword",
+    "depth": 2,
+    "tasks": [
+        {
+            "goal": "Click the 'My Account' link to navigate back to your account overview page.",
+            "family": "profile_settings",
+            "status": "failed",
+            "episode_id": 23
+        },
+        {
+            "goal": "Click the 'Reset My Password' button to initiate the password reset process.",
+            "family": "profile_settings",
+            "status": "solved",
+            "episode_id": 24
+        },
+        {
+            "goal": "Open the visible 'My Account' account or settings control and report one visible option.",
+            "family": "profile_settings",
+            "status": "solved",
+            "episode_id": 25
+        },
+        {
+            "goal": "Click the 'Advanced Search' link to access more detailed search options.",
+            "family": "search",
+            "status": "failed",
+            "episode_id": 26
+        },
+        {
+            "goal": "Use the search bar to type in a product name and click the 'Search' button to find specific products.",
+            "family": "search",
+            "status": "solved",
+            "episode_id": 27
+        },
+        {
+            "goal": "Click the 'My Wish List' link to view items saved in your wish list.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 28
+        },
+        {
+            "goal": "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 29
+        },
+        {
+            "goal": "Use the visible '\\ue611 My Cart 1 1items' checkout or order-flow control and report the next required step.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 30
+        },
+        {
+            "goal": "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required.",
+            "family": "state_change",
+            "status": "failed",
+            "episode_id": 31
+        },
+        {
+            "goal": "Use the visible '\\ue615 Search' search field to submit a page-relevant search.",
+            "family": "state_change",
+            "status": "solved",
+            "episode_id": 32
+        },
+        {
+            "goal": "Enter your email address in the 'Email*' textbox to receive a password reset link.",
+            "family": "communication",
+            "status": "solved",
+            "episode_id": 33
+        },
+        {
+            "goal": "Advance the visible transaction flow one step and report the next required action.",
+            "family": "other",
+            "status": "solved",
+            "episode_id": 34
+        }
+    ],
+    "episode_range": [
+        23,
+        35
+    ],
+    "prefix_trace": {}
+}

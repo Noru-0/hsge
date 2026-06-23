@@ -1,0 +1,270 @@
+[node 1 depth=0] http://192.168.1.31:7770
+  [domain] Saved to outputs/wa_run_13/domain.json
+  [skill_diag] {"episode": 1, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["Read the first review for the 'Belle Of The Ball Princess Sprinkle Mix'.", "activate state change control", "activate state change control"], "task": "Read the reviews for the 'Belle Of The Ball Princess Sprinkle Mix'."}
+    local: "Read the reviews for the 'Belle Of The Ball Princess Sprinkle Mix'." success=True
+  [skill_diag] {"episode": 2, "event": "segments_created", "segments": 0, "steps": 1, "subgoals": [], "task": "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback."}
+    local: "Report whether the visible '1 \\xa0Review' feedback control indicates available feedback." success=True
+  [skill_diag] {"episode": 3, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack'", "activate state change control"], "task": "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack' to view its details."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 3, "episode": 3, "event": "cluster_matured", "signatures": {"click": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 3, "contexts": 1, "episode": 3, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 3, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Click on the image of the 'Pre-baked Gingerbread House Kit Value Pack' to view its details." success=True
+  [skill_diag] {"episode": 4, "event": "segments_created", "segments": 2, "steps": 2, "subgoals": ["Open the main menu", "activate state change control"], "task": "Navigate to the 'Beauty & Personal Care' category from the menu."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 4, "episode": 4, "event": "cluster_matured", "signatures": {"click": 4}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 4, "contexts": 1, "episode": 4, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 4, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Navigate to the 'Beauty & Personal Care' category from the menu." success=True
+  [skill_diag] {"episode": 5, "event": "segments_created", "segments": 1, "steps": 3, "subgoals": ["inspect menu options"], "task": "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears."}
+    local: "Hover over the visible '\\ue615 Search' menu or expandable control and report one submenu option that appears." success=True
+  [skill_diag] {"episode": 6, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["segment 0", "submit search query"], "task": "Use the search bar to search for 'energy drink'."}
+    local: "Use the search bar to search for 'energy drink'." success=True
+  [skill_diag] {"episode": 7, "event": "segments_created", "segments": 5, "steps": 5, "subgoals": ["Navigate to the product page for 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion'", "Add the product to the wish list", "activate state change control", "fill visible field", "fill visible field"], "task": "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 5, "episode": 7, "event": "cluster_matured", "signatures": {"click": 5}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 5, "contexts": 1, "episode": 7, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 7, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+  [skill_diag] {"cluster_id": 5, "cluster_size": 3, "episode": 7, "event": "cluster_matured", "signatures": {"fill": 1, "fill > click": 2}}
+  [skill_diag] {"bootstrap": true, "cluster_id": 5, "cluster_size": 3, "contexts": 1, "episode": 7, "event": "skill_abstracted", "skill_name": "fill_visible_field", "verify_k": 1}
+  >>> SKILL admitted: fill_visible_field  (Enter a value into a visible field and submit it when needed)
+  [skills] diversity target unmet: 1/4; missing=['activate_state_change', 'inspect_feedback', 'inspect_filter_sort', 'inspect_menu', 'open_visible_item', 'read_visible_detail', 'search_submission']
+  [skill_diag] {"bootstrap": true, "cluster_id": 5, "episode": 7, "event": "skill_admitted", "skill_name": "fill_visible_field", "verify_attempts": 1, "verify_success": 1}
+    local: "Add the 'Elmwood Inn Fine Teas, Orange Vanilla Caffeine-free Fruit Infusion' to your wish list." success=True
+  [skill_diag] {"episode": 8, "event": "segments_created", "segments": 3, "steps": 3, "subgoals": ["Navigate to the product page for 'V8 +Energy, Healthy Energy Drink'.", "activate state change control", "activate state change control"], "task": "Add the 'V8 +Energy, Healthy Energy Drink' to your cart."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 6, "episode": 8, "event": "cluster_matured", "signatures": {"click": 6}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 6, "contexts": 1, "episode": 8, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 8, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 7, "episode": 8, "event": "cluster_matured", "signatures": {"click": 7}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 7, "contexts": 1, "episode": 8, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 8, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Add the 'V8 +Energy, Healthy Energy Drink' to your cart." success=True
+    local: "Inspect the visible '\\ue622 Cell Phones & Accessories' address or checkout field and report what input is required." success=False
+  [skill_diag] {"episode": 10, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible '\\ue611 My Cart' state-changing control and report the available action."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 8, "episode": 10, "event": "cluster_matured", "signatures": {"click": 8}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 8, "contexts": 1, "episode": 10, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 10, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible '\\ue611 My Cart' state-changing control and report the available action." success=True
+    local: "Use the visible '\\ue611 My Cart' checkout or order-flow control and report the next required step." success=False
+  [skill_diag] {"episode": 12, "event": "segments_created", "segments": 2, "steps": 3, "subgoals": ["Identify the search field and its purpose.", "submit search query"], "task": "Use the visible '\\ue615 Search' search field to submit a page-relevant search."}
+    local: "Use the visible '\\ue615 Search' search field to submit a page-relevant search." success=True
+    GOAL chain=['activate_state_change_control'] verified=False
+  [frontier] +9 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1378 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (retry 1/2, reason=stale_action:bid 1378 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1492] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:click target [1492] is non-interactive role section, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/customer/account/login (retry 1/2, reason=stale_action:click target [1492] is non-interactive role section)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1378 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (retry 2/2, reason=stale_action:bid 1378 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1492] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:click target [1492] is non-interactive role section, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/customer/account/login (retry 2/2, reason=stale_action:click target [1492] is non-interactive role section)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1378 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1492] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:click target [1492] is non-interactive role section, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/customer/account/login (reason=stale_action:click target [1492] is non-interactive role section)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1516 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (retry 1/2, reason=stale_action:bid 1516 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1516 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (retry 2/2, reason=stale_action:bid 1516 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1516 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 274 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalogsearch/result (retry 1/2, reason=stale_action:bid 274 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 274 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/catalogsearch/result (retry 2/2, reason=stale_action:bid 274 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 274 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1449 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1449 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/checkout/cart (retry 1/2, reason=stale_action:bid 1449 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1449 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1449 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/checkout/cart (retry 2/2, reason=stale_action:bid 1449 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1449 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1449 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1449 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 289 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/beauty-personal-care.html (retry 1/2, reason=stale_action:bid 289 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 289 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/beauty-personal-care.html (retry 2/2, reason=stale_action:bid 289 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 289 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1492] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:click target [1492] is non-interactive role section, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (retry 1/2, reason=stale_action:click target [1492] is non-interactive role section)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+[node 2 depth=1] http://192.168.1.31:7770/checkout
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Select a country from the 'Country*' dropdown menu." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+  [skill_diag] {"episode": 15, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["inspect menu options"], "task": "Hover over the visible 'Tooltip' menu or expandable control and report one submenu option that appears."}
+    local: "Hover over the visible 'Tooltip' menu or expandable control and report one submenu option that appears." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Use the visible '1Item in Cart \\ue622' checkout or order-flow control and report the next required step." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Use the visible 'Next' progression control and report the next required step or confirmation that appears." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Fill in the 'Email Address*' field with a valid email and move to the next step." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Inspect the visible 'Email Address*' address or checkout field and report what input is required." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+  [skill_diag] {"episode": 20, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["activate state change control"], "task": "Open the visible 'Email Address*' account or settings control and report one visible option."}
+  [skill_diag] {"cluster_id": 1, "cluster_size": 9, "episode": 20, "event": "cluster_matured", "signatures": {"click": 9}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 1, "cluster_size": 9, "contexts": 1, "episode": 20, "event": "skill_abstracted", "skill_name": "activate_state_change_control", "verify_k": 2}
+  [skill_diag] {"cluster_id": 1, "episode": 20, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "activate_state_change_control", "verify_attempts": 1, "verify_success": 1}
+    local: "Open the visible 'Email Address*' account or settings control and report one visible option." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Open the visible 'Zip/Postal Code*' state-changing control and report the available action." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+    local: "Fill in the 'Street Address: Line 1' field with your address." success=False
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+  [skill_diag] {"episode": 23, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["fill visible field"], "task": "Enter your 'First Name*' in the corresponding textbox."}
+    local: "Enter your 'First Name*' in the corresponding textbox." success=True
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/checkout
+  [skill_diag] {"episode": 24, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["fill visible field"], "task": "Enter your 'Last Name*' in the corresponding textbox."}
+    local: "Enter your 'Last Name*' in the corresponding textbox." success=True
+  [frontier] +6 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1492] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=stale_action:click target [1492] is non-interactive role section, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/customer/account/login (reason=stale_action:click target [1492] is non-interactive role section)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1516 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 274 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1449 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1449 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/checkout/cart (reason=stale_action:bid 1449 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1378 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 289 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1492] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:click target [1492] is non-interactive role section, arrived=)
+      [prefix] requeued stale prefix http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (retry 2/2, reason=stale_action:click target [1492] is non-interactive role section)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1492] is non-interactive role section
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:click target [1492] is non-interactive role section, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:click target [1492] is non-interactive role section)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+[node 3 depth=1] http://192.168.1.31:7770/cell-phones-accessories.html
+  [tasks] Skipped 2 repeated/saturated proposal(s)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+    local: "Add the 'for Huawei Supercharge Power Adapter' to the compare list." success=False
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+    local: "Sort the product list by 'Price'." success=False
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+  [skill_diag] {"episode": 27, "event": "segments_created", "segments": 1, "steps": 2, "subgoals": ["inspect menu options"], "task": "Report whether the visible '11 \\xa0Reviews' feedback control indicates available feedback."}
+  [skill_diag] {"cluster_id": 4, "cluster_size": 3, "episode": 27, "event": "cluster_matured", "signatures": {"hover": 3}}
+  [skill_diag] {"bootstrap": false, "cluster_id": 4, "cluster_size": 3, "contexts": 1, "episode": 27, "event": "skill_abstracted", "skill_name": "inspect_menu_options", "verify_k": 2}
+  [skill_diag] {"cluster_id": 4, "episode": 27, "event": "verification_rejected", "failure_reasons": {}, "reason": "insufficient_successes", "required": 2, "skill_name": "inspect_menu_options", "verify_attempts": 1, "verify_success": 1}
+    local: "Report whether the visible '11 \\xa0Reviews' feedback control indicates available feedback." success=True
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ✅ Arrived at http://192.168.1.31:7770/cell-phones-accessories.html
+    local: "Add the 'Dilwe1 12'' Phone Screen Magnifier' to the cart." success=False
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+    local: "Add the 'NTG [1st Generation] Designed for Samsung S21 Case' to the wish list." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+    local: "Open the visible '\\ue611 My Cart 1 1items' state-changing control and report the available action." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+    local: "Use the visible '\\ue611 My Cart 1 1items' checkout or order-flow control and report the next required step." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+    local: "Open the visible 'Sort By' sort or filter control and report one available option." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+    local: "View the details of the '[2+2 Pack] YWXTW Galaxy S21 Privacy Screen Protector'." SKIP (reset failed)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1073 is not present in current AXTree
+    GOAL SKIP (reset failed)
+  [frontier] +7 URLs from callback discovery
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 289 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/beauty-personal-care.html (reason=stale_action:bid 289 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1516 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/belle-of-the-ball-princess-sprinkle (reason=stale_action:bid 1516 is not present in current AXTree)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] ⚠️  Expected http://192.168.1.31:7770/customer/account/login, got http://192.168.1.31:7770/v8-energy-healthy-energy-drink-stea
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/customer/account/login (reason=url_mismatch, arrived=http://192.168.1.31:7770/v8-energy-healthy-energy-drink-steady-energy-from-black-and-green-tea-pomegranate-blueberry-8-ounce-can-pack-of-24.html)
+      [prefix] retry limit reached for http://192.168.1.31:7770/customer/account/login (reason=url_mismatch)
+      [prefix] Replaying 4 steps from http://192.168.1.31:7770...
+      [prefix] step 1 stale: bid 1378 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1378 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/wishlist/index/index/wishlist_id/5 (reason=stale_action:bid 1378 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: click target [1449] is non-interactive role list
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/checkout/cart (reason=stale_action:click target [1449] is non-interactive role list, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/checkout/cart (reason=stale_action:click target [1449] is non-interactive role list)
+      [prefix] Replaying 1 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 1378 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/pre-baked-gingerbread-house-kit-val (reason=stale_action:bid 1378 is not present in current AXTree)
+      [prefix] Replaying 2 steps from http://192.168.1.31:7770...
+      [prefix] step 0 stale: bid 274 is not present in current AXTree
+      [prefix] SKIP stale stateful prefix for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree, arrived=)
+      [prefix] retry limit reached for http://192.168.1.31:7770/catalogsearch/result (reason=stale_action:bid 274 is not present in current AXTree)
+  [graph] 9 states, 6 skills, 0 composition edges → outputs/wa_run_13/graph.json
+  [curriculum] 6 tasks from 6 skills → outputs/wa_run_13/curriculum.json

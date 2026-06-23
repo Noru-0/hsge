@@ -6,6 +6,7 @@ from hsge.webarena.action_validation import (
 )
 from hsge.webarena.agents import PageExplorer, Solver
 from hsge.webarena.runtime import (
+    RunMetrics,
     WebArenaExplorer,
     _name_from_goal,
     desired_skill_family_for_task,
@@ -361,6 +362,105 @@ def test_legacy_prefix_trace_dict_migrates_to_versioned_trace():
     assert trace.steps[0].stateful_hint is True
 
 
+def test_loose_frontier_selection_uses_top_band_not_always_top_score():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer.max_depth = 3
+    explorer._frontier_select_pool = 3
+    explorer._frontier_score_band = 0.98
+    explorer._frontier_selection_counts = {
+        "http://example.test/a": 2,
+    }
+    explorer._prefix_retry_counts = {}
+
+    selected = explorer._select_frontier_node([
+        (10.0, "http://example.test/a", 1),
+        (9.9, "http://example.test/b", 1),
+        (9.7, "http://example.test/c", 1),
+    ])
+
+    assert selected == (9.9, "http://example.test/b", 1)
+    assert explorer._frontier_selection_counts["http://example.test/b"] == 1
+
+
+def test_stale_prefix_requeues_then_releases_for_fresh_discovery():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer._log_file = None
+    explorer._prefix_retry_counts = {}
+    explorer._prefix_retry_limit = 1
+    target = "http://example.test/detail"
+    explorer._discovered_urls = {
+        target: {
+            "source_url": "http://example.test",
+            "prefix_steps": [{"action": "click('101')", "url": "http://example.test"}],
+        }
+    }
+    explorer._last_prefix_replay_status = {
+        "attempted": True,
+        "stateful": True,
+        "reason": "stale_action:bid 101 is not present in current AXTree",
+    }
+    frontier = []
+    queued = {target}
+
+    assert explorer._recover_unprocessed_prefix_url(target, 1, frontier, queued) is True
+    assert frontier == [(target, 1)]
+    assert queued == {target}
+    assert explorer._discovered_urls[target]
+
+    frontier.clear()
+    assert explorer._recover_unprocessed_prefix_url(target, 1, frontier, queued) is False
+    assert frontier == []
+    assert target not in queued
+    assert target not in explorer._discovered_urls
+    assert target not in explorer._prefix_retry_counts
+
+
+def test_empty_direct_load_requeues_then_releases():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer._log_file = None
+    explorer._load_retry_counts = {}
+    explorer._load_retry_limit = 1
+    explorer.metrics = RunMetrics()
+    target = "http://example.test"
+    explorer._last_node_load_status = {
+        "reason": "empty_observation",
+        "detail": "Timeout 30000ms exceeded",
+        "prefix_attempted": False,
+    }
+    frontier = []
+    queued = {target}
+
+    assert explorer._recover_empty_observation_url(target, 0, frontier, queued) is True
+    assert frontier == [(target, 0)]
+    assert queued == {target}
+    assert explorer._load_retry_counts[target] == 1
+    assert explorer.metrics.nodes_error == 0
+
+    frontier.clear()
+    assert explorer._recover_empty_observation_url(target, 0, frontier, queued) is False
+    assert frontier == []
+    assert target not in queued
+    assert target not in explorer._load_retry_counts
+    assert explorer.metrics.nodes_error == 1
+
+
+def test_empty_prefix_load_is_left_to_prefix_recovery():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer._load_retry_counts = {}
+    explorer.metrics = RunMetrics()
+    explorer._last_node_load_status = {
+        "reason": "empty_observation",
+        "detail": "stale prefix",
+        "prefix_attempted": True,
+    }
+
+    assert explorer._recover_empty_observation_url(
+        "http://example.test/detail", 1, [], set()
+    ) is False
+    assert explorer._load_retry_counts == {}
+    assert explorer.metrics.nodes_error == 0
+
+
 def test_prefix_replay_rejects_stale_action_and_stateful_direct_goto():
     explorer = WebArenaExplorer.__new__(WebArenaExplorer)
     explorer._log_file = None
@@ -386,6 +486,118 @@ def test_prefix_replay_rejects_stale_action_and_stateful_direct_goto():
     assert explorer._navigate_via_prefix(Browser(), target) is None
     assert explorer._last_prefix_replay_status["reason"].startswith("stale_action")
     assert explorer._last_prefix_replay_status["stateful"] is True
+
+
+def test_process_node_falls_back_to_dom_links_when_callbacks_find_none(tmp_path):
+    import re
+    from collections import Counter
+    from types import SimpleNamespace
+
+    class FakePageExplorer:
+        domain_type = "generic"
+        common_tasks = []
+        common_actions = []
+
+        def detect_domain(self, obs):
+            self.detected = obs["url"]
+
+        def propose(self, obs, skill_hints=""):
+            return []
+
+    class FakeBrowser:
+        def reset(self):
+            return {
+                "url": "http://example.test",
+                "axtree": "[1] link 'Detail'\n[2] link 'Logout'",
+            }
+
+        def links(self):
+            return [
+                "http://example.test/detail",
+                "http://example.test/logout",
+                "http://other.test/outside",
+            ]
+
+        def close(self):
+            pass
+
+    class FakeScorer:
+        def __init__(self):
+            self._selected_child_count = {}
+            self._lookahead = {}
+            self.parents = {}
+
+        def record_exploration(self, *args, **kwargs):
+            pass
+
+        def set_parent(self, link, parent):
+            self.parents[link] = parent
+
+        def set_lookahead(self, link, lookahead):
+            self._lookahead[link] = lookahead
+
+        def breakdown(self, url, visited):
+            return {
+                "score": 1.0,
+                "U": 0.0,
+                "V": 0.0,
+                "V_sr": 0.0,
+                "V_sr_source": "none",
+                "V_n": 0.0,
+                "V_n_source": "none",
+            }
+
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer.out_dir = str(tmp_path)
+    explorer._log_file = None
+    explorer._frontier_file = open(tmp_path / "frontier.jsonl", "w", encoding="utf-8")
+    explorer.browser_factory = lambda _url: FakeBrowser()
+    explorer.explorer = FakePageExplorer()
+    explorer.solver = SimpleNamespace()
+    explorer.opgraph = OperatorGraph()
+    explorer.terminal_goal = None
+    explorer.goal_instruction = None
+    explorer.auto_terminal_goals = False
+    explorer._discovered_urls = {}
+    explorer._denylist = [re.compile(r"/logout")]
+    explorer.allow = re.compile(r"http://example\.test.*")
+    explorer.max_depth = 2
+    explorer._frontier_max_size = 10
+    explorer._frontier_scorer = FakeScorer()
+    explorer._lookahead_predictor = SimpleNamespace(propose=lambda _axtree: [{"task": "open detail"}])
+    explorer._url_attempts = {}
+    explorer._url_successes = {}
+    explorer._axtree_cache = {}
+    explorer.metrics = RunMetrics()
+    explorer.library = SimpleNamespace(all_skills=lambda: [])
+    explorer.episode = 0
+    explorer._account_info = ""
+    explorer._task_attempt_counts = {}
+    explorer._task_success_counts = {}
+    explorer._task_failure_counts = {}
+    explorer._task_error_counts = {}
+    explorer._task_family_failure_counts = {}
+    explorer._skill_family_counts = Counter()
+    explorer._coverage = {"successful_task_family": {}}
+
+    frontier = []
+    queued = {"http://example.test"}
+    processed = explorer._process_node(
+        "http://example.test",
+        0,
+        "http://example.test",
+        frontier,
+        visited=set(),
+        queued=queued,
+        node_num=1,
+    )
+    explorer._frontier_file.close()
+
+    assert processed == "http://example.test"
+    assert frontier == [("http://example.test/detail", 1)]
+    assert queued == {"http://example.test", "http://example.test/detail"}
+    assert "http://example.test/logout" not in queued
+    assert "http://other.test/outside" not in queued
 
 
 def test_skill_diversity_family_mapping_is_generic():

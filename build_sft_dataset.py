@@ -26,17 +26,40 @@ from collections import Counter
 import glob
 import json
 import os
+import re
 
 from hsge.webarena.action_validation import (
     action_family,
     answer_has_evidence,
     extract_action_from_target,
+    parse_hsge_action,
     repair_thought,
     task_family,
     validate_hsge_action,
 )
 
-def _system_prompt(allow_goto: bool) -> str:
+ACTION_FORMAT_HSGE_JSON = "hsge_json"
+ACTION_FORMAT_WEBARENA_ID = "webarena_id"
+ACTION_FORMATS = (ACTION_FORMAT_HSGE_JSON, ACTION_FORMAT_WEBARENA_ID)
+
+
+def _system_prompt(allow_goto: bool, action_format: str = ACTION_FORMAT_HSGE_JSON) -> str:
+    if action_format == ACTION_FORMAT_WEBARENA_ID:
+        actions = (
+            "click [id], type [id] [text] [press_enter_after=0_or_1], "
+            "press [key], scroll [down|up], hover [id]"
+        )
+        if allow_goto:
+            actions += ", goto [url]"
+        actions += ", or stop [answer]"
+        return (
+            "You are a web agent. At each step you receive the task goal, the current page "
+            "accessibility tree, and your recent actions. Think briefly, then end your response "
+            "with exactly one WebArena id_accessibility_tree action wrapped in triple backticks. "
+            f"Use one of {actions}. Use numeric ids from the current accessibility tree. "
+            "Do not bypass visible UI with direct URLs unless goto is explicitly allowed."
+        )
+
     actions = (
         "click('bid'), fill('bid','text'), type('bid','text','1_or_0'), "
         "press('key'), scroll('down'|'up'), hover('bid')"
@@ -96,11 +119,93 @@ def _json_target(thought: str, action: str) -> str:
     return json.dumps({"thought": thought, "action": action}, ensure_ascii=False)
 
 
+def _has_unsafe_webarena_bracket_text(text: str) -> bool:
+    return "]" in text or "\n" in text or "\r" in text or "```" in text
+
+
+def _validate_webarena_id_action(action: str) -> bool:
+    """Mirror WebArena's id_accessibility_tree action grammar conservatively."""
+    patterns = (
+        r"click \[\d+\]",
+        r"hover \[\d+\]",
+        r"type \[\d+\] \[[^\]\r\n`]+\] \[[01]\]",
+        r"press \[[^\]\r\n`]+\]",
+        r"scroll \[(?:up|down)\]",
+        r"goto \[[^\]\r\n`]+\]",
+        r"stop(?: \[[^\]\r\n`]*\])?",
+    )
+    return any(re.fullmatch(pattern, action) for pattern in patterns)
+
+
+def _to_webarena_id_action(action: str) -> tuple[str | None, str | None]:
+    """Convert one valid HSGE action to WebArena's bracket action dialect."""
+    parsed = parse_hsge_action(action)
+    args = parsed.args
+
+    match parsed.name:
+        case "click":
+            converted = f"click [{args[0]}]"
+        case "hover":
+            converted = f"hover [{args[0]}]"
+        case "fill":
+            text = args[1]
+            if _has_unsafe_webarena_bracket_text(text):
+                return None, "webarena_unsafe_bracket_text"
+            converted = f"type [{args[0]}] [{text}] [0]"
+        case "type":
+            text = args[1]
+            if _has_unsafe_webarena_bracket_text(text):
+                return None, "webarena_unsafe_bracket_text"
+            enter_flag = args[2] if len(args) >= 3 else "1"
+            converted = f"type [{args[0]}] [{text}] [{enter_flag}]"
+        case "press":
+            key = args[0]
+            if _has_unsafe_webarena_bracket_text(key):
+                return None, "webarena_unsafe_bracket_text"
+            converted = f"press [{key}]"
+        case "scroll":
+            converted = f"scroll [{args[0]}]"
+        case "goto":
+            url = args[0]
+            if _has_unsafe_webarena_bracket_text(url):
+                return None, "webarena_unsafe_bracket_text"
+            converted = f"goto [{url}]"
+        case "send_msg_to_user":
+            answer = args[0]
+            if _has_unsafe_webarena_bracket_text(answer):
+                return None, "webarena_unsafe_bracket_text"
+            converted = f"stop [{answer}]" if answer else "stop"
+        case _:
+            return None, "webarena_unsupported_action"
+
+    if not _validate_webarena_id_action(converted):
+        return None, "webarena_invalid_converted_action"
+    return converted, None
+
+
+def _webarena_target(thought: str, action: str) -> str:
+    return f"{thought}\n\nIn summary, the next action I will perform is ```{action}```"
+
+
+def _assistant_target(thought: str, action: str, action_format: str, report: dict) -> tuple[str, str] | None:
+    if action_format == ACTION_FORMAT_HSGE_JSON:
+        return _json_target(thought, action), action
+    if action_format == ACTION_FORMAT_WEBARENA_ID:
+        converted, reason = _to_webarena_id_action(action)
+        if not converted:
+            report["steps_dropped"] += 1
+            report["drop_reasons"][reason or "webarena_conversion_failed"] += 1
+            return None
+        return _webarena_target(thought, converted), converted
+    raise ValueError(f"unsupported action format {action_format!r}")
+
+
 def _validate_step(goal: str, step: dict, episode_dir: str,
                    recent_obs: list[str], actions: list[str],
                    repair: bool, allow_goto: bool,
-                   report: dict) -> tuple[str, str, str] | None:
-    """Return (target_json, parsed_action, axtree) when trainable."""
+                   action_format: str,
+                   report: dict) -> tuple[str, str, str, str] | None:
+    """Return (assistant_target, source_action, exported_action, axtree) when trainable."""
     report["steps_seen"] += 1
     target = step.get("action")
     if not target:
@@ -135,44 +240,54 @@ def _validate_step(goal: str, step: dict, episode_dir: str,
         if did_repair:
             report["thoughts_repaired"] += 1
 
+    assistant_target = _assistant_target(thought, action, action_format, report)
+    if not assistant_target:
+        return None
+    target_text, exported_action = assistant_target
+
     report["steps_kept"] += 1
     report["action_family"][action_family(action)] += 1
-    return _json_target(thought, action), action, axtree
+    return target_text, action, exported_action, axtree
 
 
 def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
                         difficulty: int, repair: bool = True,
                         allow_goto: bool = False,
+                        action_format: str = ACTION_FORMAT_HSGE_JSON,
                         report: dict | None = None) -> list[dict]:
     if report is None:
         report = _new_report()
+    if action_format not in ACTION_FORMATS:
+        raise ValueError(f"unsupported action format {action_format!r}")
     examples, history = [], []
     recent_obs: list[str] = []
     actions: list[str] = []
     for step in steps:
         valid = _validate_step(
-            goal, step, episode_dir, recent_obs, actions, repair, allow_goto, report
+            goal, step, episode_dir, recent_obs, actions, repair, allow_goto,
+            action_format, report
         )
         if not valid:
             continue
-        target, parsed_action, axtree = valid
+        target, source_action, exported_action, axtree = valid
         obs_block = axtree if axtree else "[accessibility tree omitted]"
         hist = "\n".join(f"- {h}" for h in history[-5:]) or "(none yet)"
         user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
                 f"CURRENT PAGE (accessibility tree):\n{obs_block}")
         examples.append({
             "messages": [
-                {"role": "system", "content": _system_prompt(allow_goto)},
+                {"role": "system", "content": _system_prompt(allow_goto, action_format)},
                 {"role": "user", "content": user},
                 {"role": "assistant", "content": target},
             ],
             "difficulty": difficulty,
             "axtree_loaded": bool(axtree),
             "task_family": task_family(goal),
-            "action_family": action_family(parsed_action),
+            "action_family": action_family(source_action),
+            "action_format": action_format,
         })
-        history.append(parsed_action)
-        actions.append(parsed_action)
+        history.append(exported_action)
+        actions.append(source_action)
         recent_obs.append(axtree)
     return examples
 
@@ -214,6 +329,8 @@ def main():
                         help="Optional JSON report path")
     parser.add_argument("--allow-goto-training", action="store_true",
                         help="Keep goto(url) examples. Default drops them to avoid UI-bypass training.")
+    parser.add_argument("--action-format", choices=ACTION_FORMATS, default=ACTION_FORMAT_HSGE_JSON,
+                        help="Assistant target format: hsge_json for HSGE Solver, webarena_id for upstream WebArena PromptAgent.")
     args = parser.parse_args()
 
     all_examples, n_ep, n_kept = [], 0, 0
@@ -227,7 +344,7 @@ def main():
         report["task_family"][task_family(goal)] += 1
         examples = episode_to_examples(
             goal, steps, ep_dir, diff, args.repair_thoughts,
-            args.allow_goto_training, report
+            args.allow_goto_training, args.action_format, report
         )
         if examples:
             report["episodes_kept"] += 1
@@ -252,6 +369,7 @@ def main():
     }
     serializable_report["examples_written"] = 0 if args.validate_only else len(all_examples)
     serializable_report["examples_valid"] = len(all_examples)
+    serializable_report["action_format"] = args.action_format
     serializable_report["examples_by_difficulty"] = dict(sorted(by_diff.items()))
     serializable_report["axtree_loaded"] = loaded
     if args.report:
@@ -270,6 +388,7 @@ def main():
     print(f"task families        : {dict(report['successful_task_family'])}")
     print(f"dropped steps        : {report['steps_dropped']} {dict(report['drop_reasons'])}")
     print(f"thoughts repaired    : {report['thoughts_repaired']}")
+    print(f"action format        : {args.action_format}")
     print(f"with real AXTree text : {loaded}/{len(all_examples)} "
           f"(rest need the run dir's page_state/*.txt files)")
     if all_examples:
