@@ -282,3 +282,63 @@ Validation:
 - Run 17 WebArena validation produced 199 valid examples and dropped one
   bracket-unsafe example.
 - Full pytest could not run because `pytest` was not installed in the active Python environment.
+
+## 2026-06-25: HSGE-18 Qwen LoRA Evaluation and Artifact Download
+
+Finished the HSGE-18 two-stage Qwen LoRA workflow and WebArena Shopping eval.
+
+Training data:
+
+- `training/train-single-18.jsonl`
+- `training/train-multi-18.jsonl`
+
+Training order:
+
+1. Single-turn SFT from `Qwen/Qwen2.5-7B-Instruct`.
+2. Continue the same LoRA adapter on multi-turn data.
+
+Final local adapter artifact:
+
+```text
+outputs/lora/qwen25_7b_hsge18_singleturn_multiturn
+```
+
+Eval setup:
+
+- vLLM served the LoRA as `hsge-qwen-hsge18`.
+- Shopping root was
+  `https://infectious-plasma-gem-officials.trycloudflare.com`.
+- Eval used HSGE JSON prompt/action syntax with an adapter to upstream
+  WebArena bracket actions.
+- Patched prompt metadata to include `action_splitter`.
+- Patched fuzzy evaluator model selection to use `EVAL_MODEL` instead of the
+  missing hardcoded `gpt-4-1106-preview`.
+
+Final downloaded eval artifacts:
+
+```text
+outputs/eval_hsge18_shopping_vllm
+logs/eval_hsge18_shopping_vllm.clean.log
+```
+
+Final result:
+
+- total tasks: 187
+- scored tasks: 184
+- pass: 26
+- fail: 158
+- unhandled errors: 3
+- WebArena average score over scored tasks: `0.14130434782608695`
+- counting errors as failures: `26 / 187 = 13.90%`
+
+The 3 unhandled errors were:
+
+- `7.json`: page load timeout.
+- `124.json`: evaluator assertion error.
+- `129.json`: temporary DNS failure to the Cloudflare Shopping URL.
+
+Documentation added:
+
+```text
+docs/17_hsge18_lora_eval_results.md
+```

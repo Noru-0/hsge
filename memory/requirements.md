@@ -43,3 +43,32 @@ Checkout/order exploration should use safe mode by default:
 - Do not click final irreversible place-order/pay/submit-order controls unless explicitly allowed.
 - Treat these flows as generic transaction/state-change affordances, not shopping-only logic.
 
+## Fine-Tune and Eval Artifact Handling
+
+- Do not commit generated LoRA adapters, evaluation traces, browser logs, or
+  downloaded WebArena copies.
+- Keep generated artifacts under ignored locations such as `outputs/`, `logs/`,
+  and `webarena-main-lora/`.
+- Preserve small run documentation in `docs/` and operational memory in
+  `memory/`.
+- When reporting WebArena eval results, distinguish:
+  - scored tasks from `[Result]` log lines,
+  - unhandled errors from `error.txt`,
+  - render HTML count from attempted/rendered tasks.
+
+## HSGE-18 Eval Repro Requirements
+
+For the HSGE-18 LoRA eval, use vLLM with the LoRA served as
+`hsge-qwen-hsge18` and set:
+
+```bash
+export OPENAI_API_BASE="http://127.0.0.1:8000/v1"
+export OPENAI_API_KEY="EMPTY"
+export EVAL_MODEL="hsge-qwen-hsge18"
+```
+
+Use the HSGE JSON WebArena prompt:
+
+```text
+webarena-main/agent/prompts/jsons/p_hsge_json_id_actree.json
+```

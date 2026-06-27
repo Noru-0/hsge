@@ -141,3 +141,28 @@ and drop bracket-unsafe text instead of escaping it.
 
 Reason: Upstream WebArena's parser is regex-based. Text containing `]`, newlines,
 or fenced-code delimiters can make examples ambiguous or unparseable.
+
+Decision: Keep HSGE-18 SFT data in `hsge_json` action format and adapt at eval
+time instead of retraining the model into WebArena bracket syntax.
+
+Reason: The HSGE solver and dataset builder naturally produce function-call
+actions such as `click('123')`. A thin eval adapter preserves that training
+distribution while still satisfying upstream WebArena's bracket parser.
+
+Decision: Use separate Python environments for local vLLM serving and upstream
+WebArena evaluation when package requirements conflict.
+
+Reason: WebArena's old OpenAI client path requires `openai==0.27.0`, while
+current vLLM requires OpenAI 2.x and CUDA-compatible Torch wheels. On the Vast
+A100 machine, the working setup was:
+
+- `/workspace/vllm-env`: `vllm==0.10.2`, `torch==2.8.0+cu128`, OpenAI 2.x.
+- `/venv/main`: WebArena eval dependencies and `openai==0.27.0`.
+
+Decision: Treat WebArena render files as evidence of attempted tasks, not
+scored tasks.
+
+Reason: `render_*.html` can be written before the evaluator returns a
+`[Result]` line. Final pass/fail counts must come from the eval log
+`[Result]` lines, with `error.txt` inspected separately for unhandled task
+errors.

@@ -69,6 +69,25 @@ optional WebArena export converts already-valid HSGE actions into WebArena
 `id_accessibility_tree` actions. This keeps training data aligned with collected
 HSGE trajectories while allowing export for upstream WebArena fine-tuning.
 
+## LoRA Evaluation Adapter
+
+The HSGE-18 fine-tuned Qwen model was trained on `hsge_json` action syntax, not
+native WebArena bracket syntax. Upstream WebArena evaluation therefore uses a
+JSON prompt constructor/action adapter:
+
+- model output: `{"thought": "...", "action": "click('1424')"}`;
+- adapter output: `click [1424]`;
+- `fill('id','text')` maps to `type [id] [text] [0]`;
+- `send_msg_to_user('answer')` and `report_infeasible('reason')` map to
+  WebArena `stop [...]`.
+
+The eval prompt metadata must include `action_splitter` so WebArena render and
+invalid-action description helpers do not crash while formatting prior actions.
+
+The WebArena fuzzy evaluator must not stay hardcoded to `gpt-4-1106-preview`
+when running against local vLLM. It should read `EVAL_MODEL`, defaulting to the
+served local model such as `hsge-qwen-hsge18`.
+
 ## Core Pipeline
 
 1. PageExplorer proposes grounded local tasks from current visible UI evidence.
