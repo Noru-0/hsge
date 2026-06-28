@@ -1,8 +1,11 @@
 from pathlib import Path
+import sys
+from types import ModuleType
 
 import pytest
 
 from run_webarena import CONFIG_FIELDS, _build_parser, _load_yaml_defaults, _validate_args
+from hsge.backends import OpenAILLM
 
 
 def test_repository_config_covers_every_documented_destination():
@@ -47,3 +50,23 @@ def test_yaml_lists_are_preserved_for_denylist(tmp_path):
     args = _build_parser(defaults).parse_args([])
 
     assert args.denylist == ["/logout", "/danger"]
+
+
+def test_openai_backend_applies_request_timeout_and_retry_limit(monkeypatch):
+    captured = {}
+    fake_openai = ModuleType("openai")
+
+    def make_client(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    fake_openai.OpenAI = make_client
+    monkeypatch.setitem(sys.modules, "openai", fake_openai)
+
+    OpenAILLM(
+        model="test-model", api_key="test-key",
+        timeout_seconds=17.5, max_retries=1,
+    )
+
+    assert captured["timeout"] == 17.5
+    assert captured["max_retries"] == 1

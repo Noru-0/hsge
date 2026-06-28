@@ -486,6 +486,48 @@ def test_redirect_to_visited_releases_requested_alias():
     assert not explorer._discovered_urls
 
 
+def test_browser_reset_uses_configured_navigation_timeout(monkeypatch):
+    import sys
+    from types import ModuleType, SimpleNamespace
+    from hsge.webarena.browser import WebArenaBrowser
+
+    calls = {}
+
+    class Page:
+        def goto(self, url, **kwargs):
+            calls["goto"] = (url, kwargs)
+
+    class Env:
+        def __init__(self):
+            self.unwrapped = SimpleNamespace(
+                page=Page(),
+                _get_obs=lambda: {"url": "https://example.test", "axtree_object": {}},
+            )
+
+        def reset(self):
+            calls["reset"] = True
+
+    obs_module = ModuleType("browsergym.utils.obs")
+    obs_module.flatten_axtree_to_str = lambda _tree: "[1] heading 'Ready'"
+    monkeypatch.setitem(sys.modules, "browsergym.utils.obs", obs_module)
+
+    browser = WebArenaBrowser.__new__(WebArenaBrowser)
+    browser.env = Env()
+    browser.start_url = "https://example.test"
+    browser.timeout_ms = 45000
+    browser.screenshot_enabled = False
+    browser._last_obs = None
+
+    obs = browser.reset()
+
+    assert calls["reset"]
+    assert calls["goto"] == (
+        "https://example.test",
+        {"timeout": 45000, "wait_until": "domcontentloaded"},
+    )
+    assert obs["url"] == "https://example.test"
+
+
 def test_empty_prefix_load_is_left_to_prefix_recovery():
     explorer = WebArenaExplorer.__new__(WebArenaExplorer)
     explorer._load_retry_counts = {}

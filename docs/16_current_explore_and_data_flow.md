@@ -215,6 +215,10 @@ SFT chat example. Có thể xuất format `hsge_json`, `webarena_id`, hoặc
 Một run hiện tại có thể tạo:
 
 - `run.log`: log chính, gồm node, task outcome, skill/graph/curriculum updates.
+- `events.jsonl`: append-only structured events với correlation theo `run_id`,
+  `node_id`, `task_id`, `episode_id`; gồm URL funnel, frontier decisions,
+  solver outcomes, skill admission và planner decisions.
+- `metrics_latest.json`: snapshot counters sau mỗi checkpoint.
 - `frontier.jsonl`: snapshot frontier sau từng node, gồm score, U, V, parent SR.
 - `checkpoint.json`: frontier, visited, queued, discovered prefix traces,
   operator graph, hierarchical graph edges, clusterer state, scorer state.
@@ -224,10 +228,13 @@ Một run hiện tại có thể tạo:
 - `skills.json`: skill đã verify/admit, ghi ngay khi admit.
 - `skill_diagnostics.json`: trace chi tiết của discovery/verification.
 - `graph.json`: low-level URL graph + high-level skills/operators/composition.
-- `curriculum.json`: task chain easy-to-hard sinh từ graph.
+- `curriculum.json`: shortest planner chain tới từng reachable goal predicate,
+  sắp easy-to-hard; terminal goal giữ nguyên full long-horizon chain.
 - `transfer.json`: kết quả retrieve/adapt skill nếu gọi transfer eval.
 - `nodes/node_N/node_info.json`: metadata từng node, gồm children, tasks,
   score breakdown, lookahead, prefix trace.
+- `nodes/node_N/summary.json`: compact frontier delta, task outcomes, Solver URL
+  funnel, skill/operator delta và planner status.
 - `episodes/ep_XXXX/episode_meta.json`: goal, success, difficulty, tags.
 - `episodes/ep_XXXX/episode.jsonl`: từng step với thought, parsed action,
   observation path và optional `last_action`.

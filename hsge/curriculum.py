@@ -1,14 +1,11 @@
-"""Curriculum generation by skill composition on the hierarchical graph.
-
-Difficulty := length of the composed skill chain. We enumerate chains by walking
-skill->skill successor edges, then emit Tasks ordered easy->hard. These feed both
-task proposal (more grounded exploration targets) and curriculum-ordered
-fine-tuning of the agent.
-"""
+"""Goal-conditioned curriculum generation over verified skill operators."""
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from .graph import HierarchicalGraph
-from .schema import SkillCard, Task
+from .operators import OperatorGraph, plan
+from .schema import Task
 
 
 def _display_name(name: str) -> str:
@@ -18,56 +15,78 @@ def _display_name(name: str) -> str:
     return name
 
 
-def _chains(graph: HierarchicalGraph, max_len: int) -> list[list[str]]:
-    chains: list[list[str]] = []
-    # length-1 chains: every skill on its own
-    for sid in graph.skills:
-        chains.append([sid])
-    # extend via DFS over composition successors
-    frontier = [[sid] for sid in graph.skills]
-    while frontier:
-        path = frontier.pop()
-        if len(path) >= max_len:
-            continue
-        for nxt in graph.successors(path[-1]):
-            if nxt in path:
-                continue
-            new = path + [nxt]
-            chains.append(new)
-            frontier.append(new)
-    return chains
+def _operator_graph(graph: HierarchicalGraph | OperatorGraph) -> OperatorGraph:
+    if isinstance(graph, OperatorGraph):
+        return graph
+    return graph.operator_graph
 
 
-def _instruction(graph: HierarchicalGraph, chain: list[str]) -> str:
-    names = [_display_name(graph.skills[s].name) for s in chain]
-    if len(names) == 1:
-        return f"Complete the '{names[0]}' task."
-    return " Then ".join([f"Do '{n}'." for n in names]).strip()
+def _instruction(opgraph: OperatorGraph, chain: list[str], goal: str) -> str:
+    names = [_display_name(opgraph.ops[skill_id].name) for skill_id in chain]
+    actions = ", then ".join(f"'{name}'" for name in names)
+    return f"Complete {actions} to reach the verified condition '{goal}'."
 
 
 def generate_curriculum(
-    graph: HierarchicalGraph,
-    max_len: int = 3,
+    graph: HierarchicalGraph | OperatorGraph,
+    max_len: int | None = None,
     site: str = "",
+    initial_predicates: Iterable[str] | None = None,
+    goal_predicates: Iterable[str] | None = None,
 ) -> list[Task]:
-    chains = _chains(graph, max_len)
-    # dedupe
-    seen, uniq = set(), []
-    for c in chains:
-        key = tuple(c)
-        if key not in seen:
-            seen.add(key)
-            uniq.append(c)
-    tasks = [
-        Task(instruction=_instruction(graph, c), skill_chain=c,
-             difficulty=len(c), site=site)
-        for c in uniq
-    ]
-    tasks.sort(key=lambda t: t.difficulty)        # easy -> hard
+    """Plan one shortest task for every requested reachable goal predicate.
+
+    ``max_len`` remains as a compatibility filter for existing callers.  A
+    value of ``None`` (the default) keeps long-horizon plans intact.
+    """
+    opgraph = _operator_graph(graph)
+    initial = frozenset(initial_predicates or ())
+    goals = set(goal_predicates or ())
+    if goal_predicates is None:
+        goals = {
+            effect
+            for operator in opgraph.ops.values()
+            for effect in operator.effects
+        }
+
+    tasks: list[Task] = []
+    for goal in sorted(goals):
+        chain = plan(opgraph, initial, goal)
+        # A goal already true in the initial state is not a task, and an
+        # unreachable goal must never produce an atom or co-occurrence chain.
+        if not chain:
+            continue
+        if max_len is not None and len(chain) > max_len:
+            continue
+        tasks.append(Task(
+            instruction=_instruction(opgraph, chain, goal),
+            skill_chain=chain,
+            difficulty=len(chain),
+            site=site,
+            goal_predicate=goal,
+            terminal=goal in opgraph.goal_predicates,
+        ))
+
+    tasks.sort(key=lambda task: (
+        task.difficulty,
+        task.goal_predicate,
+        tuple(task.skill_chain),
+    ))
     return tasks
 
 
-# ---- Alias for backward compatibility ---------------------------------------
-def generate_curriculum_from_operators(opgraph, max_len=3, site=""):
-    """Alias giữ tương thích với runtime cũ."""
-    return []
+def generate_curriculum_from_operators(
+    opgraph: OperatorGraph,
+    max_len: int | None = None,
+    site: str = "",
+    initial_predicates: Iterable[str] | None = None,
+    goal_predicates: Iterable[str] | None = None,
+) -> list[Task]:
+    """Backward-compatible entrypoint for callers holding an OperatorGraph."""
+    return generate_curriculum(
+        opgraph,
+        max_len=max_len,
+        site=site,
+        initial_predicates=initial_predicates,
+        goal_predicates=goal_predicates,
+    )

@@ -152,3 +152,5 @@ class Task:
     difficulty: int                 # = len(skill_chain) by default
     site: str = ""
     task_id: str = field(default_factory=lambda: _new_id("task"))
+    goal_predicate: str = ""
+    terminal: bool = False

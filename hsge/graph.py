@@ -1,16 +1,17 @@
-"""The hierarchical graph: the flat explorer's flat URL graph (low level) augmented with
-skill nodes (high level) and three edge types:
+"""Two-level graph with URL exploration below and planning operators above.
 
     state -> skill   : skill is applicable from this state (initiation set)
     skill -> state   : landing/effect state after the skill
-    skill -> skill   : composition edge (skill B frequently follows skill A)
+    skill -> skill   : A's effects establish a precondition required by B
 
-Planning/curriculum then operates on the high-level subgraph.
+URL transitions never create high-level composition edges.  Planning and
+curriculum operate only on the verified SkillCard operator view.
 """
 from __future__ import annotations
 
 from collections import defaultdict
 
+from .operators import Operator, OperatorGraph
 from .schema import SkillCard
 
 
@@ -23,7 +24,20 @@ class HierarchicalGraph:
         self.skills: dict[str, SkillCard] = {}             # skill_id -> card
         self.state_to_skill: dict[str, set[str]] = defaultdict(set)
         self.skill_to_state: dict[str, set[str]] = defaultdict(set)
-        self.skill_to_skill: dict[str, set[str]] = defaultdict(set)
+        self.operator_graph = OperatorGraph()
+
+    @property
+    def opgraph(self) -> OperatorGraph:
+        """The canonical high-level planning view."""
+        return self.operator_graph
+
+    @property
+    def skill_to_skill(self) -> dict[str, set[str]]:
+        """A read-only-by-construction view derived from operator semantics."""
+        derived: dict[str, set[str]] = defaultdict(set)
+        for source, target in self.operator_graph.edges():
+            derived[source].add(target)
+        return derived
 
     # --- low level -------------------------------------------------------- #
     def add_state(self, url: str) -> None:
@@ -36,6 +50,7 @@ class HierarchicalGraph:
     # --- high level ------------------------------------------------------- #
     def add_skill(self, card: SkillCard, init_states: list[str],
                   effect_states: list[str]) -> None:
+        op = Operator.from_skill(card)
         self.skills[card.skill_id] = card
         for s in init_states:
             self.add_state(s)
@@ -43,28 +58,18 @@ class HierarchicalGraph:
         for s in effect_states:
             self.add_state(s)
             self.skill_to_state[card.skill_id].add(s)
-        self._refresh_composition_edges(card.skill_id)
+        self.operator_graph.add(op)
 
     def link_skills(self, a_id: str, b_id: str) -> None:
-        """Record that skill b commonly follows skill a (composition edge)."""
-        self.skill_to_skill[a_id].add(b_id)
+        """Validate a derived composition edge for compatibility callers."""
+        if (a_id, b_id) not in set(self.operator_graph.edges()):
+            raise ValueError(
+                "skill composition requires effect/precondition matching"
+            )
 
-    def _state_reaches(self, src: str, dst: str) -> bool:
-        return src == dst or dst in self.trajectory_edges.get(src, set())
-
-    def _refresh_composition_edges(self, skill_id: str) -> None:
-        """Derive skill composition from effect/init states and low-level edges."""
-        init_states = self._init_states_for(skill_id)
-        effect_states = self.skill_to_state.get(skill_id, set())
-        for other_id in self.skills:
-            if other_id == skill_id:
-                continue
-            other_init = self._init_states_for(other_id)
-            other_effect = self.skill_to_state.get(other_id, set())
-            if any(self._state_reaches(e, i) for e in effect_states for i in other_init):
-                self.link_skills(skill_id, other_id)
-            if any(self._state_reaches(e, i) for e in other_effect for i in init_states):
-                self.link_skills(other_id, skill_id)
+    def rebuild_composition_edges(self) -> dict[str, set[str]]:
+        """Return the derived view; retained for compatibility with old callers."""
+        return self.skill_to_skill
 
     def _init_states_for(self, skill_id: str) -> set[str]:
         return {state for state, skills in self.state_to_skill.items() if skill_id in skills}
@@ -73,10 +78,5 @@ class HierarchicalGraph:
         return sorted(self.state_to_skill.get(state, set()))
 
     def successors(self, skill_id: str) -> list[str]:
-        """Skills composable after `skill_id` (via shared landing/init states or
-        explicit composition edges)."""
-        succ = set(self.skill_to_skill.get(skill_id, set()))
-        for land in self.skill_to_state.get(skill_id, set()):
-            succ |= self.state_to_skill.get(land, set())
-        succ.discard(skill_id)
-        return sorted(succ)
+        """Skills whose preconditions match an effect of ``skill_id``."""
+        return sorted(self.skill_to_skill.get(skill_id, set()))

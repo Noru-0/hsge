@@ -18,12 +18,16 @@ class OpenAILLM(LLM):
 
     def __init__(self, model: str | None = None, base_url: str | None = None,
                  api_key: str | None = None, temperature: float = 0.2,
-                 supports_vision: bool = True):
+                 supports_vision: bool = True,
+                 timeout_seconds: float = 60.0,
+                 max_retries: int = 2):
         from openai import OpenAI                       # lazy
         self.model = model or os.environ.get("HSGE_MODEL", "gpt-4o-mini")
         self.client = OpenAI(
             api_key=api_key or os.environ.get("OPENAI_API_KEY"),
             base_url=base_url or os.environ.get("OPENAI_BASE_URL"),
+            timeout=timeout_seconds,
+            max_retries=max_retries,
         )
         self.temperature = temperature
         self.supports_vision = supports_vision

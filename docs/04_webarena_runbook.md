@@ -152,6 +152,12 @@ python build_sft_dataset.py outputs/wa_run/episodes train.jsonl \
 
 ## 10. Caveats and troubleshooting
 
+`events.jsonl` là log machine-readable theo component/event. Xem
+`nodes/node_N/summary.json` để biết Solver tạo bao nhiêu navigation, unique URL,
+eligible URL và bao nhiêu URL thực sự vào Frontier. `metrics_latest.json` được
+cập nhật cùng checkpoint. Điều chỉnh độ chi tiết bằng
+`--event-log-level debug|info|summary|warning|error` (mặc định `info`).
+
 | Symptom / risk | Cause | Fix |
 | --- | --- | --- |
 | Purchase tasks never verify | checkout can't reach success page | Confirm Magento accepts dummy payment (check/money order) and lands on `checkout/onepage/success`; key the terminal checker on that URL |

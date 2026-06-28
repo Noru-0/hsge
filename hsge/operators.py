@@ -56,8 +56,15 @@ class OperatorGraph:
 
     def add(self, op: Operator) -> None:
         self.ops[op.key] = op
-        if op.terminal:
-            self.goal_predicates |= op.effects
+        # Operators can be replaced under a stable skill_id.  Recompute instead
+        # of incrementally unioning so predicates from an older terminal view do
+        # not remain as stale goals.
+        self.goal_predicates = {
+            effect
+            for candidate in self.ops.values()
+            if candidate.terminal
+            for effect in candidate.effects
+        }
 
     # ---- this is the new graph.py edge rule -------------------------------- #
     def edges(self) -> list[tuple[str, str]]:
@@ -67,8 +74,9 @@ class OperatorGraph:
         cart follows product', so traversal can chain toward payment.
         """
         out = []
-        for a in self.ops.values():
-            for b in self.ops.values():
+        ordered = [self.ops[key] for key in sorted(self.ops)]
+        for a in ordered:
+            for b in ordered:
                 if a.key == b.key:
                     continue
                 if a.effects & b.preconditions:
@@ -78,7 +86,7 @@ class OperatorGraph:
     def successors(self, op_name: str, state: frozenset[str]) -> list[str]:
         eff = self.ops[op_name].effects
         nxt = state | eff
-        return [b.key for b in self.ops.values()
+        return [b.key for b in sorted(self.ops.values(), key=lambda op: op.key)
                 if b.key != op_name and b.preconditions <= nxt
                 and not b.preconditions <= state]  # newly enabled by op
 
@@ -96,7 +104,7 @@ def plan(graph: OperatorGraph, initial: frozenset[str], goal: str) -> list[str] 
     q: deque[tuple[frozenset[str], list[str]]] = deque([(initial, [])])
     while q:
         state, path = q.popleft()
-        for op in graph.ops.values():
+        for op in sorted(graph.ops.values(), key=lambda candidate: candidate.key):
             if op.preconditions <= state and not (op.effects <= state):
                 ns = state | op.effects
                 npath = path + [op.key]

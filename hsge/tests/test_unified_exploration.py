@@ -252,9 +252,9 @@ def test_composed_goal_retries_three_full_attempts_and_records_each(tmp_path):
     explorer.browser_factory = lambda _url: FakeBrowser()
     explorer.explorer = FakePageExplorer()
     explorer.solver = FakeSolver()
-    explorer.opgraph = OperatorGraph()
-    explorer.opgraph.add(Operator.from_skill(card))
     explorer.graph = HierarchicalGraph()
+    explorer.graph.add_skill(card, init_states=[], effect_states=[])
+    explorer.opgraph = explorer.graph.operator_graph
     explorer.library = SimpleNamespace(all_skills=lambda: [card])
     explorer.terminal_goal = "has_confirmation_cue"
     explorer.goal_instruction = "Complete the full workflow."

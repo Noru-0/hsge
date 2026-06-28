@@ -128,6 +128,9 @@ CONFIG_FIELDS = {
         "provider": "provider", "model": "model",
         "explorer_model": "explorer_model", "solver_model": "solver_model",
         "api_base_url": "api_base_url",
+        "temperature": "llm_temperature",
+        "request_timeout_seconds": "llm_timeout_seconds",
+        "max_retries": "llm_max_retries",
     },
     "browser": {
         "headless": "headless", "screenshot": "screenshot",
@@ -164,6 +167,11 @@ CONFIG_FIELDS = {
     "lookahead": {
         "candidates": "lookahead_candidates", "model": "lookahead_model",
         "base_url": "lookahead_base_url",
+        "request_timeout_seconds": "lookahead_timeout_seconds",
+        "max_retries": "lookahead_max_retries",
+    },
+    "observability": {
+        "event_log_level": "event_log_level",
     },
 }
 
@@ -226,6 +234,8 @@ def _validate_args(ap: argparse.ArgumentParser, args) -> None:
         "max_depth": args.max_depth, "skill_verify_k": args.skill_verify_k,
         "prefix_retry_limit": args.prefix_retry_limit,
         "load_retry_limit": args.load_retry_limit,
+        "llm_max_retries": args.llm_max_retries,
+        "lookahead_max_retries": args.lookahead_max_retries,
     }
     for name, value in nonnegative.items():
         if value < 0:
@@ -238,6 +248,10 @@ def _validate_args(ap: argparse.ArgumentParser, args) -> None:
             ap.error(f"--{name.replace('_', '-')} must be >= 0")
     if args.frontier_epsilon <= 0:
         ap.error("--frontier-epsilon must be > 0")
+    if args.llm_timeout_seconds <= 0 or args.lookahead_timeout_seconds <= 0:
+        ap.error("LLM request timeouts must be > 0")
+    if not 0.0 <= args.llm_temperature <= 2.0:
+        ap.error("--llm-temperature must be between 0 and 2")
     for name, value in {
         "skill_sim_threshold": args.skill_sim_threshold,
         "skill_prune_min_rate": args.skill_prune_min_rate,
@@ -341,6 +355,9 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
                     help="Model for Solver (action planning). Env: SOLVER_MODEL")
     ap.add_argument("--api-base-url", default=d("api_base_url", None),
                     help="Override provider API base URL (API keys still come from environment).")
+    ap.add_argument("--llm-temperature", type=float, default=d("llm_temperature", 0.2))
+    ap.add_argument("--llm-timeout-seconds", type=float, default=d("llm_timeout_seconds", 60.0))
+    ap.add_argument("--llm-max-retries", type=int, default=d("llm_max_retries", 2))
 
     ap.add_argument("--headless", action=argparse.BooleanOptionalAction,
                     default=d("headless", True))
@@ -409,6 +426,16 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
     ap.add_argument("--lookahead-candidates", type=int, default=d("lookahead_candidates", 5))
     ap.add_argument("--lookahead-model", default=d("lookahead_model", None))
     ap.add_argument("--lookahead-base-url", default=d("lookahead_base_url", None))
+    ap.add_argument("--lookahead-timeout-seconds", type=float,
+                    default=d("lookahead_timeout_seconds", 30.0))
+    ap.add_argument("--lookahead-max-retries", type=int,
+                    default=d("lookahead_max_retries", 1))
+    ap.add_argument(
+        "--event-log-level",
+        choices=["debug", "info", "summary", "warning", "error"],
+        default=d("event_log_level", "info"),
+        help="Minimum level written to events.jsonl (default: info).",
+    )
     return ap
 
 
@@ -463,9 +490,15 @@ def main(argv: list[str] | None = None):
         vision_ok = (provider == "openai")
 
         explorer_llm = OpenAILLM(model=explorer_model, api_key=api_key, base_url=base_url,
-                                 supports_vision=vision_ok)
+                                 supports_vision=vision_ok,
+                                 temperature=args.llm_temperature,
+                                 timeout_seconds=args.llm_timeout_seconds,
+                                 max_retries=args.llm_max_retries)
         solver_llm = OpenAILLM(model=solver_model, api_key=api_key, base_url=base_url,
-                               supports_vision=vision_ok)
+                               supports_vision=vision_ok,
+                               temperature=args.llm_temperature,
+                               timeout_seconds=args.llm_timeout_seconds,
+                               max_retries=args.llm_max_retries)
         try:
             embedder = STEmbedder()
         except ModuleNotFoundError as e:
@@ -524,6 +557,9 @@ def main(argv: list[str] | None = None):
         lookahead_candidates=args.lookahead_candidates,
         lookahead_model=args.lookahead_model,
         lookahead_base_url=args.lookahead_base_url,
+        lookahead_timeout_seconds=args.lookahead_timeout_seconds,
+        lookahead_max_retries=args.lookahead_max_retries,
+        event_log_level=args.event_log_level,
         ignored_query_params=args.ignored_query_params,
     )
     explorer.run(args.root_url)

@@ -7,7 +7,8 @@ Contrast with the flat pipeline, which only ever emits the atomic tasks
 """
 from __future__ import annotations
 
-from hsge.operators import Operator, OperatorGraph, plan
+from hsge.curriculum import generate_curriculum_from_operators
+from hsge.operators import Operator, OperatorGraph
 
 # These 7 skills are exactly what online discovery would abstract from
 # sub-trajectories on a shopping site. Here we hand-specify their pre/effects;
@@ -43,18 +44,18 @@ def main():
     print("curriculum.py's job: plan from start to a goal predicate -> the task")
     print("=" * 72)
     initial = frozenset()        # fresh page, nothing established yet
-    # easy -> hard by choosing progressively deeper goal predicates:
-    goals = [
-        ("results_shown",  "EASY  "),
-        ("cart_nonempty",  "MEDIUM"),
-        ("on_checkout",    "HARD  "),
-        ("order_confirmed","PURCHASE (terminal)"),
-    ]
-    for goal, label in goals:
-        p = plan(g, initial, goal)
-        chain = " -> ".join(p) if p else "(unreachable)"
-        print(f"  [{label}] goal={goal:16s} difficulty={len(p) if p else 0}")
-        print(f"           task chain: {chain}")
+    tasks = generate_curriculum_from_operators(
+        g,
+        initial_predicates=initial,
+        goal_predicates={
+            "results_shown", "cart_nonempty", "on_checkout", "order_confirmed",
+        },
+    )
+    for task in tasks:
+        label = "TERMINAL" if task.terminal else "INTERMEDIATE"
+        chain = " -> ".join(task.skill_chain)
+        print(f"  [{label}] goal={task.goal_predicate:16s} difficulty={task.difficulty}")
+        print(f"             task chain: {chain}")
 
     print("\n" + "=" * 72)
     print("WHY the purchase appears (and why the flat pipeline never produces it)")

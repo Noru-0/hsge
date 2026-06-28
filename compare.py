@@ -61,7 +61,7 @@ def run_hsge():
         r = transfer_to_site(lib, SITES[HELDOUT][key], query=q, top_k=5)
         transfers.append(r)
         reused += r.succeeded
-    curric = generate_curriculum(graph, max_len=3)
+    curric = generate_curriculum(graph)
     return lib, graph, transfers, reused, curric
 
 

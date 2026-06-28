@@ -113,9 +113,11 @@ def main() -> None:
     print("\n" + "=" * 70)
     print("5) CURRICULUM  (easy -> hard, by skill composition)")
     print("=" * 70)
-    for task in generate_curriculum(graph, max_len=3):
+    for task in generate_curriculum(graph):
         chain = " + ".join(graph.skills[s].name for s in task.skill_chain)
-        print(f"  [difficulty {task.difficulty}] {chain}")
+        terminal = " terminal" if task.terminal else ""
+        print(f"  [difficulty {task.difficulty}{terminal}] {chain}")
+        print(f"      goal: {task.goal_predicate}")
         print(f"      instruction: {task.instruction}")
 
 

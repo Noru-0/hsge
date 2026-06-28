@@ -31,6 +31,9 @@ llm:
   explorer_model: gpt-4o-mini
   solver_model: gpt-4o
   api_base_url: https://api.openai.com/v1
+  temperature: 0.2
+  request_timeout_seconds: 60
+  max_retries: 2
 
 browser:
   headless: true
@@ -83,3 +86,8 @@ lookahead:
   # DEEPSEEK_MODEL / DEEPSEEK_BASE_URL from .env instead.
   model: deepseek-v4-flash
   base_url: https://api.deepseek.com/v1
+  request_timeout_seconds: 30
+  max_retries: 1
+
+observability:
+  event_log_level: info       # debug | info | summary | warning | error

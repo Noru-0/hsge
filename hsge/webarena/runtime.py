@@ -20,13 +20,14 @@ from .action_validation import action_family, repair_thought, task_family, valid
 from ..discovery import Discovery
 from ..graph import HierarchicalGraph
 from ..library import SkillLibrary
-from ..operators import Operator, OperatorGraph, plan
+from ..operators import plan
 from ..curriculum import generate_curriculum
 from ..transfer import TransferResult
 from ..schema import ParamSlot, SkillCard, SkillStats, Step
 from ..segmentation import segment_trajectory
 from .agents import PageExplorer, Solver
 from .frontier_filter import filter_frontier
+from .observability import ExploreEventLogger
 from .predicates import predicates_from, reached
 from .verification_context import make_verify_contexts_fn
 from .scoring import FrontierScorer, LookaheadPredictor
@@ -87,6 +88,20 @@ class RunMetrics:
     goal_tasks_solved: int = 0
     total_llm_calls: int = 0
     total_llm_tokens: int = 0
+    solver_navigation_events: int = 0
+    solver_unique_urls_discovered: int = 0
+    solver_urls_duplicate: int = 0
+    solver_urls_cross_origin: int = 0
+    solver_urls_already_visited: int = 0
+    solver_urls_already_queued: int = 0
+    solver_urls_denied: int = 0
+    solver_urls_outside_allowlist: int = 0
+    solver_urls_frontier_eligible: int = 0
+    solver_urls_added_to_frontier: int = 0
+    solver_urls_dropped_capacity: int = 0
+    dom_urls_considered: int = 0
+    dom_urls_added_to_frontier: int = 0
+    event_counts: dict[str, int] = field(default_factory=dict)
     start_time: float = 0.0
     errors: int = 0
 
@@ -105,6 +120,11 @@ class RunMetrics:
             f"\n  Segments: {self.segments_created}, clusters matured: {self.clusters_matured}"
             f"\n  Operators: {self.operators_mined}"
             f"\n  Goal tasks: {self.goal_tasks_solved}/{self.goal_tasks_attempted}"
+            f"\n  Solver URLs: {self.solver_unique_urls_discovered} unique / "
+            f"{self.solver_navigation_events} navigations, "
+            f"{self.solver_urls_added_to_frontier} added to frontier"
+            f"\n  DOM fallback URLs: {self.dom_urls_added_to_frontier}/"
+            f"{self.dom_urls_considered} added"
             f"\n  LLM calls: {self.total_llm_calls}, tokens: {self.total_llm_tokens}"
             f"\n  Errors: {self.errors}"
             f"\n{'='*50}"
@@ -256,6 +276,9 @@ class WebArenaExplorer:
                  lookahead_candidates: int = 5,
                  lookahead_model: str | None = None,
                  lookahead_base_url: str | None = None,
+                 lookahead_timeout_seconds: float = 30.0,
+                 lookahead_max_retries: int = 1,
+                 event_log_level: str = "info",
                  ignored_query_params: list[str] | None = None):
         self.browser_factory = browser_factory
         self.out_dir = out_dir
@@ -286,7 +309,10 @@ class WebArenaExplorer:
         )
         self.solver = Solver(_solver_llm, max_steps=max_steps, profile=solver_profile)
         self.goal_composer_llm = _explorer_llm
-        self.opgraph = OperatorGraph()
+        self.graph = HierarchicalGraph()
+        # Compatibility alias only; HierarchicalGraph owns the canonical
+        # operator collection and all high-level composition semantics.
+        self.opgraph = self.graph.operator_graph
         # HSGE discovery with verification gate: skills are verified by replaying
         # on contexts built from successful episodes (different pages/sites).
         self.library = SkillLibrary(
@@ -297,8 +323,8 @@ class WebArenaExplorer:
             verify_k=max(0, skill_verify_k),
             prune_min_rate=skill_prune_min_rate,
         )
-        self.graph = HierarchicalGraph()
         self.discovery = Discovery(self.library, self.graph)
+        self._curriculum_initial_predicates: set[str] = set()
         self.episode = 0
         # Callback-discovered URLs with versioned prefix traces (for frontier expansion).
         # Stored as {normalized_url: PrefixTrace}; legacy dict entries are normalized
@@ -308,6 +334,11 @@ class WebArenaExplorer:
         self._skills_log: list[dict] = []
         self._curriculum_log: list[dict] = []
         self._transfer_log: list[dict] = []
+        self._node_url_stats: Counter[str] = Counter()
+        self._node_solver_urls: set[str] = set()
+        self._active_node_id: int | None = None
+        self._active_task_id: str | None = None
+        self._active_episode_id: int | None = None
         self.library._on_admit = self._on_skill_admitted
         self._skill_diagnostics: list[dict] = []
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
@@ -331,7 +362,13 @@ class WebArenaExplorer:
             _lookahead_base_url = lookahead_base_url or os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com/v1"
             _lookahead_model = lookahead_model or os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
             if _lookahead_api_key:
-                _lookahead_llm = OpenAILLM(model=_lookahead_model, api_key=_lookahead_api_key, base_url=_lookahead_base_url)
+                _lookahead_llm = OpenAILLM(
+                    model=_lookahead_model,
+                    api_key=_lookahead_api_key,
+                    base_url=_lookahead_base_url,
+                    timeout_seconds=lookahead_timeout_seconds,
+                    max_retries=max(0, lookahead_max_retries),
+                )
             else:
                 _lookahead_llm = None
         except Exception:
@@ -382,6 +419,11 @@ class WebArenaExplorer:
         # Log file (must open BEFORE _replay_episodes so _on_skill_admitted can write)
         log_mode = "a" if resume else "w"
         self._log_file = open(os.path.join(out_dir, "run.log"), log_mode, encoding="utf-8")
+        self.event_logger = ExploreEventLogger(
+            out_dir,
+            level=event_log_level,
+            resume=resume,
+        )
         self.library._on_diagnostic = self._on_skill_diagnostic
         # Frontier snapshot file
         f_mode = "a" if resume else "w"
@@ -399,6 +441,54 @@ class WebArenaExplorer:
             url,
             getattr(self, "_ignored_query_params", DEFAULT_IGNORED_QUERY_PARAMS),
         )
+
+    def _emit_event(
+        self,
+        component: str,
+        event: str,
+        *,
+        level: str = "info",
+        data: dict | None = None,
+        node_id: int | None = None,
+        task_id: str | None = None,
+        episode_id: int | None = None,
+    ) -> None:
+        logger = getattr(self, "event_logger", None)
+        if logger is None:
+            return
+        logger.emit(
+            component,
+            event,
+            level=level,
+            node_id=node_id if node_id is not None else getattr(self, "_active_node_id", None),
+            task_id=task_id if task_id is not None else getattr(self, "_active_task_id", None),
+            episode_id=(
+                episode_id
+                if episode_id is not None
+                else getattr(self, "_active_episode_id", None)
+            ),
+            data=data,
+        )
+
+    def _count_url_metric(self, name: str, amount: int = 1) -> None:
+        stats = getattr(self, "_node_url_stats", None)
+        if stats is not None:
+            stats[name] = stats.get(name, 0) + amount
+        metrics = getattr(self, "metrics", None)
+        if metrics is not None and hasattr(metrics, name):
+            setattr(metrics, name, getattr(metrics, name) + amount)
+
+    def _observed_operator_count(self) -> int:
+        graph = getattr(self, "graph", None)
+        if graph is not None:
+            return len(graph.operator_graph.ops)
+        return len(getattr(getattr(self, "opgraph", None), "ops", {}))
+
+    def _observed_composition_count(self) -> int:
+        graph = getattr(self, "graph", None)
+        if graph is None:
+            return 0
+        return sum(len(targets) for targets in graph.skill_to_skill.values())
 
     @staticmethod
     def _build_account_info() -> str:
@@ -609,18 +699,73 @@ class WebArenaExplorer:
         if norm_after == norm_before:
             return
 
+        self._count_url_metric("solver_navigation_events")
+        seen = getattr(self, "_node_solver_urls", None)
+        if seen is None:
+            seen = set()
+            self._node_solver_urls = seen
+        if norm_after in seen:
+            self._count_url_metric("solver_urls_duplicate")
+            self._emit_event("solver", "url_rejected", data={
+                "source_url": norm_before,
+                "target_url": norm_after,
+                "reason": "duplicate_in_node",
+                "action_family": action_family(action),
+            })
+            return
+        seen.add(norm_after)
+        self._count_url_metric("solver_unique_urls_discovered")
+
         # Only capture same-origin URLs
         try:
             if urlparse(norm_before).netloc != urlparse(norm_after).netloc:
+                self._count_url_metric("solver_urls_cross_origin")
+                self._emit_event("solver", "url_rejected", data={
+                    "source_url": norm_before,
+                    "target_url": norm_after,
+                    "reason": "cross_origin",
+                    "action_family": action_family(action),
+                })
                 return
         except Exception:
             return
 
         active_visited = getattr(self, "_active_visited", set())
-        if (
-            norm_after in active_visited
-            or norm_after in self._discovered_urls
-        ):
+        if norm_after in active_visited:
+            self._count_url_metric("solver_urls_already_visited")
+            self._emit_event("solver", "url_rejected", data={
+                "source_url": norm_before, "target_url": norm_after,
+                "reason": "already_visited", "action_family": action_family(action),
+            })
+            return
+        if norm_after in getattr(self, "_active_queued", set()):
+            self._count_url_metric("solver_urls_already_queued")
+            self._emit_event("solver", "url_rejected", data={
+                "source_url": norm_before, "target_url": norm_after,
+                "reason": "already_queued", "action_family": action_family(action),
+            })
+            return
+        if norm_after in self._discovered_urls:
+            self._count_url_metric("solver_urls_duplicate")
+            self._emit_event("solver", "url_rejected", data={
+                "source_url": norm_before, "target_url": norm_after,
+                "reason": "already_discovered", "action_family": action_family(action),
+            })
+            return
+        if any(pattern.search(norm_after) for pattern in getattr(self, "_denylist", [])):
+            self._count_url_metric("solver_urls_denied")
+            self._emit_event("solver", "url_rejected", data={
+                "source_url": norm_before, "target_url": norm_after,
+                "reason": "denylist", "action_family": action_family(action),
+            })
+            return
+        allow = getattr(self, "allow", None)
+        if allow is not None and not allow.search(norm_after):
+            self._count_url_metric("solver_urls_outside_allowlist")
+            self._emit_event("solver", "url_rejected", data={
+                "source_url": norm_before, "target_url": norm_after,
+                "reason": "outside_allowlist", "action_family": action_family(action),
+            })
             return
 
         self._discovered_urls[norm_after] = self._prefix_trace_from_transition(
@@ -629,12 +774,36 @@ class WebArenaExplorer:
             url_after=norm_after,
             traj_steps=traj_steps,
         )
+        self._count_url_metric("solver_urls_frontier_eligible")
+        self._emit_event("solver", "url_discovered", data={
+            "source_url": norm_before,
+            "target_url": norm_after,
+            "disposition": "frontier_eligible",
+            "action_family": action_family(action),
+            "prefix_steps": len(traj_steps),
+        })
 
     def _on_skill_admitted(self, card):
         """Called by SkillLibrary when a new skill is verified and admitted."""
         if self.terminal_goal and self.terminal_goal in card.planning_effects:
             card.terminal = True
         self._register_skill_operator(card)
+        self._emit_event("skill", "admitted", level="summary", data={
+            "skill_id": card.skill_id,
+            "name": card.name,
+            "preconditions": sorted(card.planning_preconditions),
+            "effects": sorted(card.planning_effects),
+            "terminal": card.terminal,
+            "verify_attempts": card.stats.n_verify_attempts,
+            "verify_successes": card.stats.n_verify_success,
+        })
+        self._emit_event("graph", "operator_added", data={
+            "skill_id": card.skill_id,
+            "operators": len(self.graph.operator_graph.ops),
+            "composition_edges": sum(
+                len(targets) for targets in self.graph.skill_to_skill.values()
+            ),
+        })
         self.metrics.skills_verified += 1
         if getattr(card.stats, "bootstrap_verified", False):
             self.metrics.bootstrap_skills_verified += 1
@@ -684,6 +853,7 @@ class WebArenaExplorer:
         event = dict(event)
         event["episode"] = self.episode
         self._skill_diagnostics.append(event)
+        self._emit_event("skill", event.get("event", "diagnostic"), data=event)
         kind = event.get("event", "")
         if kind == "segments_created":
             self.metrics.segments_created += int(event.get("segments", 0) or 0)
@@ -719,6 +889,7 @@ class WebArenaExplorer:
           - low-level: states (URLs) + trajectory edges
           - high-level: skill nodes + state↔skill edges + skill→skill composition edges
         """
+        self.graph.rebuild_composition_edges()
         skills_serialized = {}
         for sid, card in self.graph.skills.items():
             skills_serialized[sid] = {
@@ -763,7 +934,7 @@ class WebArenaExplorer:
 
     # ---- curriculum generation from the hierarchical graph ------------------
     def _write_curriculum(self):
-        """Generate curriculum from the hierarchical graph (DFS composition).
+        """Generate a goal-conditioned curriculum with the operator planner.
 
         Called periodically during the run and at the end. Curriculum tasks
         are ordered easy→hard by skill-chain length and can be used for
@@ -771,7 +942,13 @@ class WebArenaExplorer:
         """
         if not self.graph.skills:
             return
-        tasks = generate_curriculum(self.graph, max_len=3, site="webarena")
+        tasks = generate_curriculum(
+            self.graph,
+            site="webarena",
+            initial_predicates=getattr(
+                self, "_curriculum_initial_predicates", set()
+            ),
+        )
         self._curriculum_log = [
             {
                 "instruction": t.instruction,
@@ -779,11 +956,21 @@ class WebArenaExplorer:
                 "skill_names": [self.graph.skills[s].name for s in t.skill_chain if s in self.graph.skills],
                 "difficulty": t.difficulty,
                 "site": t.site,
+                "goal_predicate": t.goal_predicate,
+                "terminal": t.terminal,
             }
             for t in tasks
         ]
         path = os.path.join(self.out_dir, "curriculum.json")
         json.dump(self._curriculum_log, open(path, "w", encoding="utf-8"), indent=2)
+        self._emit_event("curriculum", "generated", level="summary", data={
+            "tasks": len(tasks),
+            "terminal_tasks": sum(1 for task in tasks if task.terminal),
+            "max_difficulty": max((task.difficulty for task in tasks), default=0),
+            "initial_predicates": sorted(getattr(
+                self, "_curriculum_initial_predicates", set()
+            )),
+        })
         n_skills = len(self.graph.skills)
         msg = (f"  [curriculum] {len(tasks)} tasks from {n_skills} skills "
                f"→ {path}")
@@ -1015,10 +1202,8 @@ class WebArenaExplorer:
 
     def _register_skill_operator(self, card) -> None:
         """Expose a verified SkillCard's planning view under the same identity."""
-        op = Operator.from_skill(card)
-        self.opgraph.add(op)
-        for source, target in self.opgraph.edges():
-            self.graph.skill_to_skill[source].add(target)
+        self.graph.add_skill(card, init_states=[], effect_states=[])
+        self.opgraph = self.graph.operator_graph
 
     def _goal_task(
         self,
@@ -1031,10 +1216,34 @@ class WebArenaExplorer:
         if not goal and self.auto_terminal_goals:
             goal, _ = self._auto_transaction_goal(initial)
         if not goal:
+            self._active_plan_summary = {
+                "goal": None, "status": "no_goal", "plan_length": 0,
+            }
             return None
-        chain = plan(self.opgraph, initial, goal)
+        self._emit_event("planner", "requested", data={
+            "goal": goal,
+            "initial_predicates": sorted(initial),
+            "operators": len(self.graph.operator_graph.ops),
+        })
+        chain = plan(self.graph.operator_graph, initial, goal)
         if not chain:
+            self._active_plan_summary = {
+                "goal": goal, "status": "unreachable", "plan_length": 0,
+            }
+            self._emit_event("planner", "goal_unreachable", level="summary", data={
+                "goal": goal,
+                "initial_predicates": sorted(initial),
+            })
             return None
+        self._active_plan_summary = {
+            "goal": goal, "status": "planned", "plan_length": len(chain),
+            "chain": chain,
+        }
+        self._emit_event("planner", "plan_found", level="summary", data={
+            "goal": goal,
+            "plan_length": len(chain),
+            "chain": chain,
+        })
         instruction = instruction or self._compose_goal_instruction(chain, goal, observation or {})
         return {"goal": instruction,
                 "difficulty": len(chain), "chain": chain, "terminal_goal": goal}
@@ -1093,7 +1302,7 @@ class WebArenaExplorer:
             ("has_progress_control", "Advance the visible transaction flow one step and report the next required action."),
         ]
         for goal, instruction in candidates:
-            chain = plan(self.opgraph, initial, goal)
+            chain = plan(self.graph.operator_graph, initial, goal)
             if chain:
                 return goal, instruction
         return None, None
@@ -1102,7 +1311,7 @@ class WebArenaExplorer:
         joined = " ".join(initial)
         if re.search(r"path:(cart|checkout)|has_progress_control", joined):
             return True
-        for op in self.opgraph.ops.values():
+        for op in self.graph.operator_graph.ops.values():
             text = " ".join([op.name, *op.preconditions, *op.effects])
             if re.search(r"cart|checkout|payment|shipping|billing|confirmation|progress", text):
                 return True
@@ -1140,6 +1349,18 @@ class WebArenaExplorer:
     def _checkpoint_path(self) -> str:
         return os.path.join(self.out_dir, "checkpoint.json")
 
+    def _write_metrics_snapshot(self) -> None:
+        import dataclasses
+
+        if not hasattr(self, "metrics"):
+            return
+        logger = getattr(self, "event_logger", None)
+        if logger is not None:
+            self.metrics.event_counts = dict(sorted(logger.counts.items()))
+        path = os.path.join(self.out_dir, "metrics_latest.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(dataclasses.asdict(self.metrics), f, indent=2)
+
     @property
     def _nodes_done(self) -> int:
         """Count how many nodes have been completed so far (from frontier.jsonl)."""
@@ -1163,7 +1384,6 @@ class WebArenaExplorer:
         hierarchical_graph = {
             "state_to_skill": {s: sorted(sk) for s, sk in self.graph.state_to_skill.items()},
             "skill_to_state": {s: sorted(st) for s, st in self.graph.skill_to_state.items()},
-            "skill_to_skill": {s: sorted(ss) for s, ss in self.graph.skill_to_skill.items()},
         }
 
         # Serialize clusterer state (centroids)
@@ -1186,12 +1406,22 @@ class WebArenaExplorer:
             "frontier_selection_counts": dict(getattr(self, "_frontier_selection_counts", {})),
             "prefix_retry_counts": dict(getattr(self, "_prefix_retry_counts", {})),
             "load_retry_counts": dict(getattr(self, "_load_retry_counts", {})),
+            "curriculum_initial_predicates": sorted(
+                getattr(self, "_curriculum_initial_predicates", set())
+            ),
             # NEW: full state for resume without replay
             "hierarchical_graph": hierarchical_graph,
             "clusterer": clusterer_state,
         }
         with open(self._checkpoint_path, "w", encoding="utf-8") as f:
             json.dump(ckpt, f, indent=2)
+        self._emit_event("checkpoint", "saved", data={
+            "nodes_processed": ckpt["nodes_processed"],
+            "frontier_size": len(frontier),
+            "visited": len(visited),
+            "queued": len(queued),
+        })
+        self._write_metrics_snapshot()
 
     def _serialize_clusterer(self) -> dict:
         """Serialize the online clusterer state (centroids + cluster members)."""
@@ -1297,6 +1527,9 @@ class WebArenaExplorer:
         self._frontier_selection_counts = ckpt.get("frontier_selection_counts", {})
         self._prefix_retry_counts = ckpt.get("prefix_retry_counts", {})
         self._load_retry_counts = ckpt.get("load_retry_counts", {})
+        self._curriculum_initial_predicates = set(
+            ckpt.get("curriculum_initial_predicates", [])
+        )
 
         self._restore_skills(self._skills_log)
         self._restore_hierarchical_graph(ckpt.get("hierarchical_graph", {}))
@@ -1340,7 +1573,6 @@ class WebArenaExplorer:
                 cid = index
             self.library.skills[cid] = card
             self.library._abstracted.add(cid)
-            self.graph.skills[card.skill_id] = card
             self._register_skill_operator(card)
 
     def _restore_hierarchical_graph(self, hg_data: dict) -> None:
@@ -1360,9 +1592,9 @@ class WebArenaExplorer:
             self.graph.skill_to_state[skill_id] = set(states)
             for s in states:
                 self.graph.add_state(s)
-        # Restore skill_to_skill edges
-        for skill_id, successors in hg_data.get("skill_to_skill", {}).items():
-            self.graph.skill_to_skill[skill_id] = set(successors)
+        # Legacy checkpoints may contain URL/co-occurrence-derived composition
+        # edges.  Ignore them and rebuild exclusively from restored operators.
+        self.graph.rebuild_composition_edges()
 
     def _navigate_via_prefix(self, browser, target_url: str) -> dict | None:
         """Navigate to target_url by replaying prefix steps from source page.
@@ -1654,6 +1886,27 @@ class WebArenaExplorer:
         # Mỗi node đã dùng browser context mới (state sạch), và
         # storage_state cung cấp session login sẵn.
 
+        self._active_node_id = node_num
+        self._active_task_id = None
+        self._active_episode_id = None
+        self._node_url_stats = Counter()
+        self._node_solver_urls = set()
+        self._active_node_started_at = time.time()
+        # The selected node has already been removed by run(); include it so the
+        # summary represents the queue size at selection time.
+        self._active_frontier_size_before = len(frontier) + 1
+        self._active_plan_summary = None
+        self._node_observability_baseline = {
+            "segments": getattr(self.metrics, "segments_created", 0),
+            "skills": len(self.library.all_skills()),
+            "operators": self._observed_operator_count(),
+        }
+        self._emit_event("node", "started", level="summary", data={
+            "requested_url": url,
+            "depth": depth,
+            "frontier_size": len(frontier),
+        })
+
         # Create browser with timeout protection
         browser = None
         self._last_node_load_status = {}
@@ -1683,6 +1936,11 @@ class WebArenaExplorer:
                             browser.close()
                         except Exception:
                             pass
+                        self._emit_event("node", "skipped", level="warning", data={
+                            "url": url,
+                            "reason": "stale_stateful_prefix",
+                            "detail": status,
+                        })
                         return None
                     # Prefix failed — fall back to fresh browser
                     msg = f"      [prefix] Fallback to direct goto for {url[:60]}"
@@ -1708,6 +1966,9 @@ class WebArenaExplorer:
             if self._log_file:
                 self._log_file.write(msg + "\n")
                 self._log_file.flush()
+            self._emit_event("node", "failed", level="error", data={
+                "url": url, "reason": "load_error", "error": str(e),
+            })
             return None
 
         if not obs.get("url"):
@@ -1729,9 +1990,25 @@ class WebArenaExplorer:
                 browser.close()
             except Exception:
                 pass
+            self._emit_event("node", "skipped", level="warning", data={
+                "url": url, "reason": "empty_observation", "detail": detail,
+            })
             return None
 
         actual_url = self._node_key(obs['url'])
+        self._emit_event("node", "loaded", data={
+            "requested_url": url,
+            "actual_url": actual_url,
+            "depth": depth,
+            "observation_chars": len(obs.get("axtree", "")),
+        })
+
+        if depth == 0 and not getattr(
+            self, "_curriculum_initial_predicates", set()
+        ):
+            self._curriculum_initial_predicates = predicates_from(
+                actual_url, obs.get("axtree", "")
+            )
 
         # Lưu axtree vào cache (nếu chưa có từ lần fetch trước)
         if actual_url not in self._axtree_cache:
@@ -1754,6 +2031,11 @@ class WebArenaExplorer:
                 browser.close()
             except Exception:
                 pass
+            self._emit_event("node", "skipped", level="warning", data={
+                "url": url,
+                "actual_url": actual_url,
+                "reason": "redirect_already_visited",
+            })
             return None
 
         msg = f"[node {node_num} depth={depth}] {actual_url}"
@@ -1790,18 +2072,27 @@ class WebArenaExplorer:
         raw_proposed_tasks = self.explorer.propose(obs)
         proposed_tasks = self._rank_tasks_for_coverage(raw_proposed_tasks)
         skipped_repeats = len(raw_proposed_tasks) - len(proposed_tasks)
+        self._emit_event("explorer", "tasks_proposed", data={
+            "proposed": len(raw_proposed_tasks),
+            "accepted": len(proposed_tasks),
+            "filtered": skipped_repeats,
+            "task_families": dict(Counter(task_family(task) for task in proposed_tasks)),
+        })
         if skipped_repeats:
             msg_repeat = f"  [tasks] Skipped {skipped_repeats} repeated/saturated proposal(s)"
             print(msg_repeat)
             if self._log_file:
                 self._log_file.write(msg_repeat + "\n")
                 self._log_file.flush()
-        for task in proposed_tasks:
+        for task_index, task in enumerate(proposed_tasks, start=1):
+            self._active_task_id = f"n{node_num}-local-{task_index}"
+            self._active_episode_id = self.episode
             self.metrics.tasks_proposed += 1
             is_checkout_task = self._is_checkout_task(task)
             if is_checkout_task:
                 self.metrics.checkout_tasks_attempted += 1
             task_record = {
+                "task_id": self._active_task_id,
                 "goal": task,
                 "family": task_family(task),
                 "status": "attempted",
@@ -1833,6 +2124,12 @@ class WebArenaExplorer:
                 ep_id = self.episode
                 self._record(task, steps, obs_texts, success, difficulty=1, tag="LOCAL",
                              screenshots=screenshots)
+                self._emit_event("solver", "completed", level="summary", data={
+                    "kind": "local",
+                    "goal": task,
+                    "success": bool(success),
+                    "steps": len(steps),
+                }, episode_id=ep_id)
                 task_record["episode_id"] = ep_id
                 if success:
                     task_record["status"] = "solved"
@@ -1841,6 +2138,11 @@ class WebArenaExplorer:
                     self._task_success_counts[task_key] += 1
                     _any_success = True
                     self.metrics.tasks_solved += 1
+                    self._emit_event("discovery", "trajectory_received", data={
+                        "goal": task,
+                        "steps": len(steps),
+                        "source": "local_success",
+                    }, episode_id=ep_id)
                     self.discovery.on_trajectory(
                         steps, site=root_url, task=task,
                         obs_texts=obs_texts, final_obs=final_obs,
@@ -1874,9 +2176,12 @@ class WebArenaExplorer:
         )
         if gt:
             for attempt in range(1, self.max_goal_attempts + 1):
+                self._active_task_id = f"n{node_num}-goal-{attempt}"
+                self._active_episode_id = self.episode
                 self.metrics.goal_tasks_attempted += 1
                 self.metrics.composed_goal_tasks_attempted += 1
                 goal_record = {
+                    "task_id": self._active_task_id,
                     "goal": gt["goal"],
                     "family": task_family(gt["goal"]),
                     "status": "attempted",
@@ -1913,6 +2218,14 @@ class WebArenaExplorer:
                         difficulty=gt["difficulty"], tag="GOAL",
                         screenshots=screenshots,
                     )
+                    self._emit_event("solver", "completed", level="summary", data={
+                        "kind": "goal",
+                        "goal": gt["goal"],
+                        "goal_predicate": gt["terminal_goal"],
+                        "success": bool(success),
+                        "steps": len(steps),
+                        "plan_length": gt["difficulty"],
+                    }, episode_id=ep_id)
                     goal_record["episode_id"] = ep_id
                     if success:
                         goal_record["status"] = "solved"
@@ -1946,6 +2259,9 @@ class WebArenaExplorer:
                     if self._log_file:
                         self._log_file.write(msg_err + "\n")
                         self._log_file.flush()
+
+        self._active_task_id = None
+        self._active_episode_id = None
 
         # Record exploration outcome for UVD scorer (Go-Browse style)
         self._url_attempts[actual_url] = self._url_attempts.get(actual_url, 0) + 1
@@ -1982,6 +2298,7 @@ class WebArenaExplorer:
                     if not link or link in seen_links:
                         continue
                     seen_links.add(link)
+                    self._count_url_metric("dom_urls_considered")
                     if (link not in queued
                         and link not in visited
                         and link not in {url, actual_url}
@@ -2002,12 +2319,25 @@ class WebArenaExplorer:
             if new_urls:
                 remaining_slots = max(0, getattr(self, "_frontier_max_size", 80) - len(frontier))
                 if len(new_urls) > remaining_slots:
+                    dropped = new_urls[remaining_slots:]
+                    if source == "callback discovery":
+                        dropped_from_node = sum(
+                            1 for candidate in dropped
+                            if candidate in self._node_solver_urls
+                        )
+                        self._count_url_metric(
+                            "solver_urls_dropped_capacity", dropped_from_node
+                        )
                     new_urls = new_urls[:remaining_slots]
 
             for link in new_urls:
                 _node_children.append(link)
                 queued.add(link)
                 frontier.append((link, depth + 1))
+                if source == "callback discovery" and link in self._node_solver_urls:
+                    self._count_url_metric("solver_urls_added_to_frontier")
+                elif source == "DOM links":
+                    self._count_url_metric("dom_urls_added_to_frontier")
                 self._frontier_scorer.set_parent(link, actual_url)
                 # Lookahead: dùng axtree từ cache (đã fetch trong _fetch_axtree_for_frontier)
                 # Nếu chưa có, dùng axtree của node hiện tại làm proxy
@@ -2027,6 +2357,12 @@ class WebArenaExplorer:
                 if self._log_file:
                     self._log_file.write(msg + "\n")
                     self._log_file.flush()
+            self._emit_event("frontier", "expanded", level="summary", data={
+                "source": source,
+                "added": len(new_urls),
+                "frontier_size": len(frontier),
+                "url_funnel": dict(self._node_url_stats),
+            })
         except Exception as e:
             self.metrics.errors += 1
             msg_err = f"    frontier expansion ERROR: {e}"
@@ -2076,6 +2412,13 @@ class WebArenaExplorer:
         _ep_end = self.episode
         # Lấy lookahead của chính node này (đã được fetch từ _fetch_axtree_for_frontier)
         node_lookahead = self._frontier_scorer._lookahead.get(actual_url, _node_lookahead)
+        self._write_node_summary(
+            node_num=node_num,
+            url=actual_url,
+            depth=depth,
+            frontier_size=len(frontier),
+            tasks=_node_task_records,
+        )
         self._save_node_info(
             node_num=node_num,
             url=actual_url,
@@ -2092,6 +2435,7 @@ class WebArenaExplorer:
             tasks=_node_task_records,
             episode_range=[_ep_start, _ep_end],
             prefix_trace=self._prefix_trace_metadata(url),
+            url_discovery=dict(self._node_url_stats),
         )
         return actual_url
 
@@ -2107,7 +2451,7 @@ class WebArenaExplorer:
         """
         if getattr(self, '_full_state_restored', False):
             n_skills = len(self.library.all_skills())
-            n_ops = len(self.opgraph.ops)
+            n_ops = len(self.graph.operator_graph.ops)
             print(f"[resume] Full state restored from v2 checkpoint: "
                   f"{n_skills} skills, {n_ops} operators (skipping replay)")
             return
@@ -2174,9 +2518,93 @@ class WebArenaExplorer:
             )
             rebuilt += 1
         print(f"[resume] Rebuilt library from {rebuilt}/{len(episodes)} successful episodes "
-              f"→ {len(self.library.all_skills())} skills, {len(self.opgraph.ops)} operators")
+              f"→ {len(self.library.all_skills())} skills, "
+              f"{len(self.graph.operator_graph.ops)} operators")
 
     # ---- per-node info persistence (Go-Browse style) -------------------------
+    def _write_node_summary(
+        self,
+        *,
+        node_num: int,
+        url: str,
+        depth: int,
+        frontier_size: int,
+        tasks: list[dict],
+    ) -> None:
+        baseline = getattr(self, "_node_observability_baseline", {})
+        task_records = self._normalize_node_task_records(tasks)
+        attempted = sum(1 for task in task_records if task["status"] != "skipped")
+        solved = sum(1 for task in task_records if task["status"] == "solved")
+        failed = sum(1 for task in task_records if task["status"] == "failed")
+        errors = sum(1 for task in task_records if task["status"] == "error")
+        duration_ms = round(
+            (time.time() - getattr(self, "_active_node_started_at", time.time())) * 1000
+        )
+        summary = {
+            "node_id": node_num,
+            "url": url,
+            "depth": depth,
+            "duration_ms": duration_ms,
+            "frontier": {
+                "before": getattr(self, "_active_frontier_size_before", 0),
+                "after": frontier_size,
+            },
+            "tasks": {
+                "attempted": attempted,
+                "solved": solved,
+                "failed": failed,
+                "errors": errors,
+            },
+            "urls": dict(sorted(self._node_url_stats.items())),
+            "skills": {
+                "segments_created": (
+                    self.metrics.segments_created - baseline.get("segments", 0)
+                ),
+                "admitted": len(self.library.all_skills()) - baseline.get("skills", 0),
+                "operators_added": (
+                    self._observed_operator_count() - baseline.get("operators", 0)
+                ),
+                "total": len(self.library.all_skills()),
+                "operators_total": self._observed_operator_count(),
+                "composition_edges": self._observed_composition_count(),
+            },
+            "planner": getattr(self, "_active_plan_summary", None),
+        }
+        nodes_dir = os.path.join(self.out_dir, "nodes", f"node_{node_num}")
+        os.makedirs(nodes_dir, exist_ok=True)
+        with open(os.path.join(nodes_dir, "summary.json"), "w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2)
+
+        urls = summary["urls"]
+        status = "✓" if solved else "·"
+        lines = [
+            f"[N{node_num:03d} {status}] {url}  {duration_ms / 1000:.1f}s",
+            f"  Frontier : {summary['frontier']['before']} → {frontier_size}",
+            f"  Tasks    : {solved}/{attempted} solved, failed={failed}, errors={errors}",
+            "  URLs     : "
+            f"navigation={urls.get('solver_navigation_events', 0)} "
+            f"unique={urls.get('solver_unique_urls_discovered', 0)} "
+            f"eligible={urls.get('solver_urls_frontier_eligible', 0)} "
+            f"frontier_added={urls.get('solver_urls_added_to_frontier', 0)}",
+            "  Skills   : "
+            f"segments=+{summary['skills']['segments_created']} "
+            f"admitted=+{summary['skills']['admitted']} "
+            f"operators={summary['skills']['operators_total']} "
+            f"edges={summary['skills']['composition_edges']}",
+        ]
+        if summary["planner"]:
+            planner = summary["planner"]
+            lines.append(
+                f"  Planner  : goal={planner.get('goal')} "
+                f"status={planner.get('status')} length={planner.get('plan_length', 0)}"
+            )
+        msg = "\n".join(lines)
+        print(msg)
+        if self._log_file:
+            self._log_file.write(msg + "\n")
+            self._log_file.flush()
+        self._emit_event("node", "completed", level="summary", data=summary)
+
     def _save_node_info(self, node_num: int, url: str, depth: int,
                          children: list[str], visited: bool,
                          total_trajs: int, successful_trajs: int,
@@ -2186,7 +2614,8 @@ class WebArenaExplorer:
                          parent_url: str | None = None,
                          tasks: list[dict | str] | None = None,
                          episode_range: list[int] | None = None,
-                         prefix_trace: dict | None = None) -> None:
+                         prefix_trace: dict | None = None,
+                         url_discovery: dict | None = None) -> None:
         """Save detailed per-node metadata to nodes/node_{N}/node_info.json.
 
         Matches Go-Browse's node_info.json schema so analysis tools can
@@ -2231,6 +2660,7 @@ class WebArenaExplorer:
             "tasks": task_records,
             "episode_range": episode_range or [],
             "prefix_trace": prefix_trace or {},
+            "url_discovery": url_discovery or {},
         }
         path = os.path.join(nodes_dir, "node_info.json")
         json.dump(info, open(path, "w", encoding="utf-8"), indent=4)
@@ -2243,6 +2673,7 @@ class WebArenaExplorer:
                 goal = item.get("goal", "")
                 status = item.get("status", "attempted")
                 out.append({
+                    "task_id": item.get("task_id"),
                     "goal": goal,
                     "family": item.get("family") or task_family(goal),
                     "status": status,
@@ -2375,10 +2806,26 @@ class WebArenaExplorer:
             visited: set[str] = set()
             queued: set[str] = {root_url}
         self._active_visited = visited
+        self._active_queued = queued
+        self._emit_event(
+            "run",
+            "resumed" if self._ckpt else "started",
+            level="summary",
+            data={
+                "root_url": root_url,
+                "frontier_size": len(frontier),
+                "visited": len(visited),
+                "max_nodes": self.max_nodes,
+                "max_depth": self.max_depth,
+            },
+        )
         nodes_processed = self._nodes_done
         # Lưu axtree đã fetch cho từng URL (tránh fetch lại khi explore)
         self._axtree_cache: dict[str, str] = {}
         while frontier and nodes_processed < self.max_nodes:
+            self._active_node_id = None
+            self._active_task_id = None
+            self._active_episode_id = None
             # Fetch axtree cho các URL trong frontier chưa có lookahead
             self._fetch_axtree_for_frontier(frontier)
 
@@ -2402,6 +2849,10 @@ class WebArenaExplorer:
                     "V_n": breakdown["V_n"],
                     "V_n_source": breakdown["V_n_source"],
                 })
+            self._emit_event("frontier", "ranked", data={
+                "size": len(scored),
+                "top": frontier_log[:5],
+            })
             # Print top-5 to console
             print(f"  [frontier] ranking ({len(scored)} nodes):")
             for entry in frontier_log[:5]:
@@ -2418,6 +2869,15 @@ class WebArenaExplorer:
             if not selected:
                 break
             _score, url, depth = selected
+            self._emit_event("frontier", "selected", level="summary", data={
+                "url": url,
+                "depth": depth,
+                "score": round(_score, 6),
+                "rank": next(
+                    (index + 1 for index, item in enumerate(scored) if item[1] == url),
+                    None,
+                ),
+            }, node_id=nodes_processed + 1)
             if scored and url != scored[0][1]:
                 msg = f"  [frontier] loose select score={_score:.3f} {url[:80]}"
                 print(msg)
@@ -2452,6 +2912,9 @@ class WebArenaExplorer:
                 if self._log_file:
                     self._log_file.write(msg + "\n")
                     self._log_file.flush()
+                self._emit_event("node", "failed", level="error", data={
+                    "url": url, "depth": depth, "error": str(e),
+                }, node_id=node_num)
                 self._recover_empty_observation_url(url, depth, frontier, queued)
                 self.save_checkpoint(frontier, visited, queued)
                 continue
@@ -2493,10 +2956,26 @@ class WebArenaExplorer:
         self.metrics.skills_discovered = len(self.library.all_skills())
         self.metrics.skills_verified = len([s for s in self.library.all_skills() if s.verified])
         self._refresh_skill_diversity_metrics()
-        self.metrics.operators_mined = len(self.opgraph.ops)
+        self.metrics.operators_mined = len(self.graph.operator_graph.ops)
+
+        self._active_node_id = None
+        self._active_task_id = None
+        self._active_episode_id = None
+        self._emit_event("run", "completed", level="summary", data={
+            "nodes_processed": nodes_processed,
+            "episodes": self.episode,
+            "skills": len(self.library.all_skills()),
+            "operators": len(self.graph.operator_graph.ops),
+            "solver_urls_added_to_frontier": self.metrics.solver_urls_added_to_frontier,
+        })
+        logger = getattr(self, "event_logger", None)
+        if logger is not None:
+            self.metrics.event_counts = dict(sorted(logger.counts.items()))
+            logger.flush()
 
         print(f"\ndone: {nodes_processed} nodes, {self.episode} episodes, "
-              f"{len(self.library.all_skills())} skills, {len(self.opgraph.ops)} operators")
+              f"{len(self.library.all_skills())} skills, "
+              f"{len(self.graph.operator_graph.ops)} operators")
         print(f"trajectories under {self.out_dir}/episodes  "
               f"(feed to build_sft_dataset.py)")
 

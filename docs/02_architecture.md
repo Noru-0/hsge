@@ -55,6 +55,12 @@ exploration graph. High: skill nodes (options) wired to the low level by initiat
 derived from precondition/effect matching. Planning over the high-level graph turns
 "collect a transaction" into a graph search to a terminal predicate.
 
+`HierarchicalGraph` owns the canonical `OperatorGraph`. URL adjacency is retained
+for exploration and provenance only; it never creates a skill composition edge.
+Curriculum generation runs the same BFS planner from the recorded root predicates
+to every reachable effect predicate. Intermediate effects produce easier tasks,
+while a reachable terminal effect produces the complete long-horizon chain.
+
 ## Swapping in real backends
 
 - **LLM** (`llm.py`): subclass `LLM.complete_json` (Claude/OpenAI sketches in the docstring).

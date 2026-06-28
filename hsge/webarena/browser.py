@@ -39,6 +39,7 @@ class WebArenaBrowser:
         import browsergym.core            # noqa: registers browsergym/openended
         self._gym = gym
         self.start_url = start_url
+        self.timeout_ms = timeout_ms
         self.screenshot_enabled = screenshot
         # Build pw_context_kwargs with storage_state if provided.
         # We pass it BOTH via gym.make() (for initial context creation)
@@ -58,7 +59,10 @@ class WebArenaBrowser:
                 )
         self.env = gym.make(
             "browsergym/openended",
-            task_kwargs={"start_url": start_url},
+            # OpenEndedTask hardcodes a 10s timeout for its setup goto. Start on
+            # a local blank page and navigate ourselves in reset() so the YAML
+            # browser.timeout_ms value is actually respected.
+            task_kwargs={"start_url": "about:blank"},
             headless=headless,
             timeout=timeout_ms,
             wait_for_user_message=False,
@@ -74,7 +78,14 @@ class WebArenaBrowser:
 
     def reset(self) -> dict:
         try:
-            obs, _ = self.env.reset()
+            self.env.reset()
+            page = self.env.unwrapped.page
+            page.goto(
+                self.start_url,
+                timeout=self.timeout_ms,
+                wait_until="domcontentloaded",
+            )
+            obs = self.env.unwrapped._get_obs()
         except Exception as e:
             # Page.goto timeout or other reset failure — return safe fallback
             return {"url": "", "axtree": "", "bids": [], "screenshot_base64": None,

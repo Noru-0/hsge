@@ -297,7 +297,10 @@ checkout → payment → confirm) from independently-mined page-local operators.
 **Purpose**: Cross-site skill transfer. (Not used in current WebArena run.)
 
 ### `hsge/curriculum.py`
-**Purpose**: Curriculum learning stage definitions.
+**Purpose**: Deterministic goal-conditioned curriculum generation. It plans from
+the initial predicate set to every reachable operator effect, emits one task per
+goal, and marks tasks whose goal is a terminal operator effect. `max_len` is an
+optional compatibility filter; production export does not truncate plan length.
 
 ### `hsge/env.py`
 **Purpose**: Environment abstraction layer.
