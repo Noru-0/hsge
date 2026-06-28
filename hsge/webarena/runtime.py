@@ -1,14 +1,10 @@
 """WebArena exploration runtime for HSGE.
 
-Frontier loop over URLs. At each page: propose local tasks (PageExplorer) and,
-when configured, a goal-conditioned composed task over mined operators. Solve each
-task with the Solver, mine operators from successful trajectories, feed HSGE
-Discovery, and persist trajectories in a run-dir layout that build_sft_dataset.py
-can read directly.
-
-Operators are mined from predicate deltas (start-state predicates -> end-state
-predicates), which lets the planner compose longer tasks without domain-specific
-rules.
+Frontier loop over URLs. Successful local trajectories feed HSGE Discovery;
+verified SkillCards retain observed symbolic preconditions/effects and expose an
+Operator view under the same skill_id. The planner uses only those operators to
+compose longer goals. The Solver receives the resulting natural-language goal,
+never learned skill hints, templates, or tools.
 """
 from __future__ import annotations
 
@@ -16,6 +12,7 @@ import json
 import os
 import re
 import time
+from fnmatch import fnmatchcase
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -26,22 +23,39 @@ from ..library import SkillLibrary
 from ..operators import Operator, OperatorGraph, plan
 from ..curriculum import generate_curriculum
 from ..transfer import TransferResult
-from ..schema import Step
+from ..schema import ParamSlot, SkillCard, SkillStats, Step
 from ..segmentation import segment_trajectory
 from .agents import PageExplorer, Solver
 from .frontier_filter import filter_frontier
 from .predicates import predicates_from, reached
 from .verification_context import make_verify_contexts_fn
 from .scoring import FrontierScorer, LookaheadPredictor
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 
 PREFIX_TRACE_SCHEMA_VERSION = 1
+DEFAULT_IGNORED_QUERY_PARAMS = (
+    "utm_*", "gclid", "fbclid", "msclkid", "dclid", "_ga", "_gl",
+)
 
 
-def _normalize_trace_url(url: str) -> str:
+def _normalize_trace_url(
+    url: str,
+    ignored_query_params: tuple[str, ...] | list[str] = DEFAULT_IGNORED_QUERY_PARAMS,
+) -> str:
+    """Return a stable node identity while preserving semantic query state."""
     p = urlparse(url or "")
-    return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
+    ignored = tuple(pattern.lower() for pattern in ignored_query_params)
+    query = [
+        (key, value)
+        for key, value in parse_qsl(p.query, keep_blank_values=True)
+        if not any(fnmatchcase(key.lower(), pattern) for pattern in ignored)
+    ]
+    query.sort()
+    return urlunparse((
+        p.scheme.lower(), p.netloc.lower(), p.path.rstrip('/'), '',
+        urlencode(query, doseq=True), '',
+    ))
 
 
 @dataclass
@@ -221,16 +235,43 @@ class WebArenaExplorer:
                  full_reset_url: str | None = None,
                  checkout_mode: str = "safe",
                  auto_terminal_goals: bool = True,
-                 place_order_allowed: bool = False):
+                 place_order_allowed: bool = False,
+                 max_goal_attempts: int = 3,
+                 explorer_max_tasks: int = 12,
+                 explorer_profile: str = "training_quality",
+                 solver_profile: str = "training_quality",
+                 skill_sim_threshold: float = 0.6,
+                 skill_maturity: int = 3,
+                 skill_verify_k: int = 2,
+                 skill_prune_min_rate: float = 0.34,
+                 skill_diversity_target: int = 4,
+                 frontier_alpha: float = 1.0,
+                 frontier_beta: float = 1.0,
+                 frontier_epsilon: float = 1e-5,
+                 frontier_select_pool: int = 5,
+                 frontier_score_band: float = 0.98,
+                 frontier_max_size: int | None = None,
+                 prefix_retry_limit: int = 2,
+                 load_retry_limit: int = 2,
+                 lookahead_candidates: int = 5,
+                 lookahead_model: str | None = None,
+                 lookahead_base_url: str | None = None,
+                 ignored_query_params: list[str] | None = None):
         self.browser_factory = browser_factory
         self.out_dir = out_dir
         self.allow = re.compile(allow_pattern)
         self.max_depth, self.max_nodes = max_depth, max_nodes
+        self._ignored_query_params = tuple(
+            ignored_query_params
+            if ignored_query_params is not None
+            else DEFAULT_IGNORED_QUERY_PARAMS
+        )
         self.terminal_goal = terminal_goal
         self.goal_instruction = goal_instruction
         self.checkout_mode = checkout_mode
         self.auto_terminal_goals = auto_terminal_goals
         self.place_order_allowed = place_order_allowed
+        self.max_goal_attempts = max(1, max_goal_attempts)
         # support both old single-llm API and new separate explorer/solver llms
         _explorer_llm = explorer_llm or llm
         _solver_llm = solver_llm or llm
@@ -238,17 +279,23 @@ class WebArenaExplorer:
             raise ValueError("Must provide llm= or both explorer_llm= and solver_llm=")
         self.explorer = PageExplorer(
             _explorer_llm,
+            max_tasks=max(1, explorer_max_tasks),
+            profile=explorer_profile,
             checkout_mode=checkout_mode,
             place_order_allowed=place_order_allowed,
         )
-        self.solver = Solver(_solver_llm, max_steps=max_steps)
+        self.solver = Solver(_solver_llm, max_steps=max_steps, profile=solver_profile)
+        self.goal_composer_llm = _explorer_llm
         self.opgraph = OperatorGraph()
         # HSGE discovery with verification gate: skills are verified by replaying
         # on contexts built from successful episodes (different pages/sites).
         self.library = SkillLibrary(
             _explorer_llm, embedder,
             verify_contexts_fn=make_verify_contexts_fn(out_dir, browser_factory),
-            maturity=3, verify_k=2,
+            sim_threshold=skill_sim_threshold,
+            maturity=max(1, skill_maturity),
+            verify_k=max(0, skill_verify_k),
+            prune_min_rate=skill_prune_min_rate,
         )
         self.graph = HierarchicalGraph()
         self.discovery = Discovery(self.library, self.graph)
@@ -262,7 +309,6 @@ class WebArenaExplorer:
         self._curriculum_log: list[dict] = []
         self._transfer_log: list[dict] = []
         self.library._on_admit = self._on_skill_admitted
-        self.solver._skill_library = self.library  # for tool execution
         self._skill_diagnostics: list[dict] = []
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
         # Denylist: URLs matching any of these regex patterns are silently dropped.
@@ -282,29 +328,36 @@ class WebArenaExplorer:
         try:
             from ..backends import OpenAILLM
             _lookahead_api_key = os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")
-            _lookahead_base_url = os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com/v1"
-            _lookahead_model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+            _lookahead_base_url = lookahead_base_url or os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com/v1"
+            _lookahead_model = lookahead_model or os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
             if _lookahead_api_key:
                 _lookahead_llm = OpenAILLM(model=_lookahead_model, api_key=_lookahead_api_key, base_url=_lookahead_base_url)
             else:
                 _lookahead_llm = None
         except Exception:
             _lookahead_llm = None
-        self._lookahead_predictor = LookaheadPredictor(llm=_lookahead_llm, num_candidates=5)
+        self._lookahead_predictor = LookaheadPredictor(
+            llm=_lookahead_llm, num_candidates=max(1, lookahead_candidates)
+        )
         self._frontier_scorer = FrontierScorer(
-            alpha=1.0, beta=1.0, theta=1.0, epsilon=1e-5,
+            alpha=frontier_alpha, beta=frontier_beta, theta=0.0,
+            epsilon=frontier_epsilon,
         )
         # Track per-URL stats for the scorer
         self._url_successes: dict[str, int] = {}       # url -> successful trajectories
         self._url_attempts: dict[str, int] = {}         # url -> total trajectories
         self._frontier_selection_counts: dict[str, int] = {}
-        self._frontier_select_pool = 5
-        self._frontier_score_band = 0.98
-        self._frontier_max_size = max(20, min(120, max_nodes * 4))
+        self._frontier_select_pool = max(1, frontier_select_pool)
+        self._frontier_score_band = frontier_score_band
+        self._frontier_max_size = (
+            max(1, frontier_max_size)
+            if frontier_max_size is not None
+            else max(20, min(120, max_nodes * 4))
+        )
         self._prefix_retry_counts: dict[str, int] = {}
-        self._prefix_retry_limit = 2
+        self._prefix_retry_limit = max(0, prefix_retry_limit)
         self._load_retry_counts: dict[str, int] = {}
-        self._load_retry_limit = 2
+        self._load_retry_limit = max(0, load_retry_limit)
         self._last_node_load_status: dict = {}
 
         # Run metrics for monitoring
@@ -324,7 +377,7 @@ class WebArenaExplorer:
         self._task_error_counts: Counter[str] = Counter()
         self._task_family_failure_counts: Counter[str] = Counter()
         self._skill_family_counts: Counter[str] = Counter()
-        self._skill_diversity_target = 4
+        self._skill_diversity_target = max(1, skill_diversity_target)
 
         # Log file (must open BEFORE _replay_episodes so _on_skill_admitted can write)
         log_mode = "a" if resume else "w"
@@ -340,6 +393,12 @@ class WebArenaExplorer:
             self._log_file.write(f"\n{'='*60}\n[resume] continuing from node {self._nodes_done + 1}\n\n")
             self._log_file.flush()
             self._replay_episodes()
+
+    def _node_key(self, url: str) -> str:
+        return _normalize_trace_url(
+            url,
+            getattr(self, "_ignored_query_params", DEFAULT_IGNORED_QUERY_PARAMS),
+        )
 
     @staticmethod
     def _build_account_info() -> str:
@@ -391,87 +450,6 @@ class WebArenaExplorer:
             self._log_file.write(msg + "\n")
             self._log_file.flush()
 
-    def _build_skill_hints(self, page_url: str = "", task: str = "") -> str:
-        """Build a prompt hint string from admitted skills in the library.
-
-        Returns empty string if no skills are available yet.
-        Provides guidance on how to adapt skills to the current page.
-        """
-        skills = self.library.all_skills()
-        if not skills:
-            return ""
-        # Retrieve skills most relevant to the current task or page
-        query = task or page_url or "web task"
-        relevant = self.library.retrieve(query, top_k=5)
-        if not relevant:
-            return ""
-        lines = [
-            "You have previously learned the following skills. "
-            "You MAY use them as reference for action patterns, but you MUST "
-            "adapt selectors/values to the current page's actual element IDs.",
-            ""
-        ]
-        for s in relevant:
-            lines.append(f"Skill: {s.name}")
-            lines.append(f"  Description: {s.description}")
-            lines.append(f"  When: {s.precondition}")
-            if s.action_template:
-                tmpl = s.action_template if isinstance(s.action_template, str) else "; ".join(s.action_template)
-                lines.append(f"  Action pattern: {tmpl}")
-            lines.append(f"  Success when: {s.success_predicate}")
-            lines.append("")
-        return "\n".join(lines)
-
-    def _build_tools(self, page_url: str = "", task: str = "") -> list[dict]:
-        """Convert admitted skills to OpenAI/DeepSeek tool definitions.
-
-        Each skill becomes a 'function' tool that the LLM can call.
-        The LLM calls the tool with slot bindings, and the runtime
-        executes the action template with those bindings.
-
-        Returns empty list if no skills are available.
-        """
-        skills = self.library.all_skills()
-        if not skills:
-            return []
-        query = task or page_url or "web task"
-        relevant = self.library.retrieve(query, top_k=5)
-        if not relevant:
-            return []
-
-        tools = []
-        for s in relevant:
-            properties = {}
-            required_params = []
-            for slot in s.slots:
-                properties[slot.name] = {
-                    "type": "string",
-                    "description": slot.description or f"{slot.slot_type}: {slot.name}",
-                }
-                if slot.slot_type == "value":
-                    required_params.append(slot.name)
-
-            # Build description with precondition and success info
-            desc_parts = [s.description]
-            if s.precondition:
-                desc_parts.append(f"Precondition: {s.precondition}")
-            if s.success_predicate:
-                desc_parts.append(f"Success when: {s.success_predicate}")
-
-            tools.append({
-                "type": "function",
-                "function": {
-                    "name": re.sub(r'[^a-zA-Z0-9_-]', '_', s.name)[:64],
-                    "description": ". ".join(desc_parts),
-                    "parameters": {
-                        "type": "object",
-                        "properties": properties,
-                        "required": required_params,
-                    },
-                },
-            })
-        return tools
-
     def _prefix_trace_from_transition(
         self,
         action: str,
@@ -479,8 +457,8 @@ class WebArenaExplorer:
         url_after: str,
         traj_steps: list,
     ) -> PrefixTrace:
-        norm_before = _normalize_trace_url(url_before)
-        norm_after = _normalize_trace_url(url_after)
+        norm_before = self._node_key(url_before)
+        norm_after = self._node_key(url_after)
         raw_steps = list(traj_steps or [])
         steps: list[PrefixTraceStep] = []
         for i, step in enumerate(raw_steps):
@@ -499,8 +477,8 @@ class WebArenaExplorer:
                 )
             else:
                 target_url = norm_after
-            source_url = _normalize_trace_url(source_url) or (steps[-1].target_url if steps else norm_before)
-            target_url = _normalize_trace_url(target_url) or norm_after
+            source_url = self._node_key(source_url) or (steps[-1].target_url if steps else norm_before)
+            target_url = self._node_key(target_url) or norm_after
             steps.append(PrefixTraceStep(
                 action=step_action,
                 source_url=source_url,
@@ -527,7 +505,7 @@ class WebArenaExplorer:
 
     def _coerce_prefix_trace(self, target_url: str, info) -> PrefixTrace:
         """Accept current and legacy prefix trace records as PrefixTrace."""
-        norm_target = _normalize_trace_url(target_url)
+        norm_target = self._node_key(target_url)
         if isinstance(info, PrefixTrace):
             if info.target_url == norm_target:
                 return info
@@ -541,7 +519,7 @@ class WebArenaExplorer:
             )
 
         info = info or {}
-        source_url = _normalize_trace_url(info.get("source_url", ""))
+        source_url = self._node_key(info.get("source_url", ""))
         discovered_by_action = info.get("discovered_by_action", info.get("action", ""))
         created_at = info.get("created_at", time.time())
         raw_steps = info.get("steps")
@@ -565,8 +543,8 @@ class WebArenaExplorer:
             else:
                 step_source = step.get("source_url", "") or step.get("url", "")
                 step_target = step.get("target_url", "")
-            step_source = _normalize_trace_url(step_source) or (steps[-1].target_url if steps else source_url)
-            step_target = _normalize_trace_url(step_target) or norm_target
+            step_source = self._node_key(step_source) or (steps[-1].target_url if steps else source_url)
+            step_target = self._node_key(step_target) or norm_target
             stateful_hint = bool(
                 (not isinstance(step, Step) and step.get("stateful_hint", False))
                 or self._text_suggests_state_change(f"{action} {thought or ''}")
@@ -591,7 +569,7 @@ class WebArenaExplorer:
         )
 
     def _prefix_trace_metadata(self, target_url: str) -> dict:
-        norm_target = _normalize_trace_url(target_url)
+        norm_target = self._node_key(target_url)
         key = norm_target if norm_target in self._discovered_urls else target_url
         if key not in self._discovered_urls:
             return {}
@@ -624,8 +602,8 @@ class WebArenaExplorer:
         if not url_after or not url_before:
             return
 
-        norm_before = _normalize_trace_url(url_before)
-        norm_after = _normalize_trace_url(url_after)
+        norm_before = self._node_key(url_before)
+        norm_after = self._node_key(url_after)
 
         # Only capture actual navigations (URL changes)
         if norm_after == norm_before:
@@ -638,8 +616,11 @@ class WebArenaExplorer:
         except Exception:
             return
 
-        # Only capture if not already queued/visited
-        if norm_after in self._discovered_urls:
+        active_visited = getattr(self, "_active_visited", set())
+        if (
+            norm_after in active_visited
+            or norm_after in self._discovered_urls
+        ):
             return
 
         self._discovered_urls[norm_after] = self._prefix_trace_from_transition(
@@ -651,6 +632,9 @@ class WebArenaExplorer:
 
     def _on_skill_admitted(self, card):
         """Called by SkillLibrary when a new skill is verified and admitted."""
+        if self.terminal_goal and self.terminal_goal in card.planning_effects:
+            card.terminal = True
+        self._register_skill_operator(card)
         self.metrics.skills_verified += 1
         if getattr(card.stats, "bootstrap_verified", False):
             self.metrics.bootstrap_skills_verified += 1
@@ -666,9 +650,16 @@ class WebArenaExplorer:
             "slots": [{"name": s.name, "slot_type": s.slot_type} for s in card.slots],
             "cluster_id": card.cluster_id,
             "n_members": card.stats.n_members,
+            "verified": card.verified,
+            "n_verify_attempts": card.stats.n_verify_attempts,
+            "n_verify_success": card.stats.n_verify_success,
+            "sites_seen": sorted(card.stats.sites_seen),
             "bootstrap_verified": bool(getattr(card.stats, "bootstrap_verified", False)),
             "execution_plan": getattr(card, 'execution_plan', []),
             "alternative_templates": getattr(card, 'alternative_templates', []),
+            "planning_preconditions": sorted(card.planning_preconditions),
+            "planning_effects": sorted(card.planning_effects),
+            "terminal": card.terminal,
         }
         self._skills_log.append(info)
         msg = f"  >>> SKILL admitted: {card.name}  ({card.description[:60]})"
@@ -740,6 +731,9 @@ class WebArenaExplorer:
                 "cluster_id": card.cluster_id,
                 "n_members": card.stats.n_members,
                 "sites_seen": sorted(card.stats.sites_seen),
+                "planning_preconditions": sorted(card.planning_preconditions),
+                "planning_effects": sorted(card.planning_effects),
+                "terminal": card.terminal,
             }
         graph_out = {
             "low_level": {
@@ -1019,99 +1013,76 @@ class WebArenaExplorer:
     def _task_key(task: str) -> str:
         return re.sub(r"\s+", " ", (task or "").lower()).strip()
 
-    # ---- operator mining from a successful trajectory ------------------------
-    def _mine_operator(self, goal, steps, obs_texts, final_obs):
-        if not steps or not hasattr(steps[0], 'url'):
-            return
-        start_url = getattr(steps[0], 'url', '')
-        if not start_url:
-            return
-        start = predicates_from(start_url, obs_texts[0] if obs_texts else "")
-        end = predicates_from(final_obs.get("url", ""), final_obs.get("axtree", ""))
-        eff = end - start
-        if not eff:
-            return
-        name = _name_from_goal(goal)
-        terminal = bool(self.terminal_goal and self.terminal_goal in eff)
-        op = Operator(name, frozenset(start), frozenset(eff), terminal=terminal)
+    def _register_skill_operator(self, card) -> None:
+        """Expose a verified SkillCard's planning view under the same identity."""
+        op = Operator.from_skill(card)
         self.opgraph.add(op)
-        # Sync to HierarchicalGraph for export compatibility
-        self._sync_to_hierarchical_graph(op)
+        for source, target in self.opgraph.edges():
+            self.graph.skill_to_skill[source].add(target)
 
-    def _sync_to_hierarchical_graph(self, op: Operator) -> None:
-        """Sync one operator to HierarchicalGraph for export compatibility.
-
-        Creates a virtual SkillCard from the operator and wires state→skill
-        and skill→state edges based on preconditions/effects. Also derives
-        skill→skill composition edges from effect/precondition matching
-        across all operators (replaces co-occurrence edges).
-        """
-        from ..schema import SkillCard, ParamSlot, SkillStats
-
-        # Create a virtual SkillCard for this operator
-        skill_id = f"op_{op.name}"
-        card = SkillCard(
-            name=op.name,
-            description=f"Operator: {op.name}",
-            slots=[],
-            action_template="",
-            precondition=" | ".join(sorted(op.preconditions)) if op.preconditions else "(none)",
-            success_predicate=" | ".join(sorted(op.effects)) if op.effects else "(none)",
-            cluster_id=skill_id,
-            stats=SkillStats(n_members=1),
-        )
-        card.skill_id = skill_id
-        self.graph.skills[skill_id] = card
-
-        # Edge from precondition states to skill
-        for state in op.preconditions:
-            self.graph.state_to_skill[state].add(skill_id)
-
-        # Edge from skill to effect states
-        for state in op.effects:
-            self.graph.skill_to_state[skill_id].add(state)
-
-        # Composition edges from effect/precondition matching across ALL operators
-        # A -> B iff some effect of A satisfies some precondition of B
-        for other_name, other_op in self.opgraph.ops.items():
-            other_id = f"op_{other_name}"
-            if other_id == skill_id:
-                continue
-            # Ensure other operator has a card in the graph
-            if other_id not in self.graph.skills:
-                other_card = SkillCard(
-                    name=other_name,
-                    description=f"Operator: {other_name}",
-                    slots=[],
-                    action_template="",
-                    precondition=" | ".join(sorted(other_op.preconditions)) if other_op.preconditions else "(none)",
-                    success_predicate=" | ".join(sorted(other_op.effects)) if other_op.effects else "(none)",
-                    cluster_id=other_id,
-                )
-                other_card.skill_id = other_id
-                self.graph.skills[other_id] = other_card
-
-            # op -> other_op if op's effects satisfy some of other_op's preconditions
-            if op.effects & other_op.preconditions:
-                self.graph.skill_to_skill[skill_id].add(other_id)
-            # other_op -> op if other_op's effects satisfy some of op's preconditions
-            if other_op.effects & op.preconditions:
-                self.graph.skill_to_skill[other_id].add(skill_id)
-
-    def _goal_task(self, initial_predicates: set[str] | None = None):
+    def _goal_task(
+        self,
+        initial_predicates: set[str] | None = None,
+        observation: dict | None = None,
+    ):
         initial = frozenset(initial_predicates or set())
         goal = self.terminal_goal
         instruction = self.goal_instruction
         if not goal and self.auto_terminal_goals:
-            goal, instruction = self._auto_transaction_goal(initial)
+            goal, _ = self._auto_transaction_goal(initial)
         if not goal:
             return None
         chain = plan(self.opgraph, initial, goal)
         if not chain:
             return None
-        instruction = instruction or f"Achieve the terminal condition: {goal}."
+        instruction = instruction or self._compose_goal_instruction(chain, goal, observation or {})
         return {"goal": instruction,
                 "difficulty": len(chain), "chain": chain, "terminal_goal": goal}
+
+    def _compose_goal_instruction(
+        self, chain: list[str], goal: str, observation: dict
+    ) -> str:
+        cards = [self._skill_by_id(sid) for sid in chain]
+        cards = [card for card in cards if card is not None]
+        fallback = " Then ".join(
+            f"Complete '{card.name.replace('_', ' ')}'" for card in cards
+        )
+        fallback = (fallback + f". Reach the verified condition '{goal}'.").strip()
+        payload = {
+            "skill_ids": chain,
+            "terminal_goal": goal,
+            "current_url": observation.get("url", ""),
+            "page": observation.get("axtree", "")[:3000],
+            "skills": [
+                {
+                    "skill_id": card.skill_id,
+                    "name": card.name,
+                    "description": card.description,
+                    "effects": sorted(card.planning_effects),
+                }
+                for card in cards
+            ],
+        }
+        try:
+            out = self.goal_composer_llm.complete_json(
+                "Compose one concrete, domain-neutral long-horizon browser goal. "
+                "Preserve the supplied skill order. Return JSON with exactly "
+                "'instruction' and 'skill_ids'. Do not include action selectors.",
+                json.dumps(payload),
+            )
+            instruction = out.get("instruction", "") if isinstance(out, dict) else ""
+            returned_chain = out.get("skill_ids", []) if isinstance(out, dict) else []
+            if isinstance(instruction, str) and instruction.strip() and returned_chain == chain:
+                return instruction.strip()
+        except Exception:
+            pass
+        return fallback
+
+    def _skill_by_id(self, skill_id: str):
+        for card in self.library.all_skills():
+            if card.skill_id == skill_id:
+                return card
+        return None
 
     def _auto_transaction_goal(self, initial: frozenset[str]) -> tuple[str | None, str | None]:
         if not self._transactional_state_available(initial):
@@ -1184,23 +1155,10 @@ class WebArenaExplorer:
     def save_checkpoint(self, frontier, visited, queued):
         """Persist explorer state so the run can be resumed after interruption.
 
-        Now saves FULL state including:
-          - Frontier/visited/queued (previous)
-          - OperatorGraph (new) — all mined operators with preconditions/effects
-          - HierarchicalGraph structure (new) — states, edges, skill mappings
-          - Discovery clusterer state (new) — centroids for online clustering
-          - Episode counter + template quota (previous)
-          - Frontier scorer state (previous)
+        Version 4 persists semantic-query node identities plus graph, clustering,
+        and scoring state.
+        Verified cards live in skills.json; operators are derived on resume.
         """
-        # Serialize operator graph
-        operator_graph = {}
-        for name, op in self.opgraph.ops.items():
-            operator_graph[name] = {
-                "preconditions": sorted(op.preconditions),
-                "effects": sorted(op.effects),
-                "terminal": op.terminal,
-            }
-
         # Serialize hierarchical graph (skill-level only; states can be large)
         hierarchical_graph = {
             "state_to_skill": {s: sorted(sk) for s, sk in self.graph.state_to_skill.items()},
@@ -1212,7 +1170,7 @@ class WebArenaExplorer:
         clusterer_state = self._serialize_clusterer()
 
         ckpt = {
-            "version": 2,
+            "version": 4,
             "frontier": [[u, d] for u, d in frontier],
             "visited": sorted(visited),
             "queued": sorted(queued),
@@ -1229,7 +1187,6 @@ class WebArenaExplorer:
             "prefix_retry_counts": dict(getattr(self, "_prefix_retry_counts", {})),
             "load_retry_counts": dict(getattr(self, "_load_retry_counts", {})),
             # NEW: full state for resume without replay
-            "operator_graph": operator_graph,
             "hierarchical_graph": hierarchical_graph,
             "clusterer": clusterer_state,
         }
@@ -1284,6 +1241,12 @@ class WebArenaExplorer:
             return None
         with open(self._checkpoint_path, encoding="utf-8") as f:
             ckpt = json.load(f)
+        version = ckpt.get("version", 1)
+        if version < 4:
+            raise ValueError(
+                f"checkpoint version {version} is incompatible with the unified "
+                "visited-node schema (requires version 4); start a new run directory"
+            )
         print(f"[resume] Loaded checkpoint: {ckpt['nodes_processed']} nodes done, "
               f"{len(ckpt['frontier'])} URLs in frontier, "
               f"{ckpt['episode']} episodes recorded")
@@ -1292,15 +1255,22 @@ class WebArenaExplorer:
     def _resume_from_checkpoint(self, ckpt: dict) -> None:
         """Restore in-memory state from a checkpoint dict.
 
-        Handles both v1 (partial) and v2 (full) checkpoint formats.
-        v2 includes operator_graph, hierarchical_graph, and clusterer state
-        so that replay_episodes is NOT needed.
+        Version 4 restores semantic-query node identities and verified skills.
         """
+        version = ckpt.get("version", 1)
+        if version < 4:
+            raise ValueError(
+                f"checkpoint version {version} is incompatible with the unified "
+                "visited-node schema (requires version 4); start a new run directory"
+            )
+        self._skills_log = getattr(self, "_skills_log", [])
+        self._curriculum_log = getattr(self, "_curriculum_log", [])
+        self._transfer_log = getattr(self, "_transfer_log", [])
         self.episode = ckpt.get("episode", 0)
         # Restore callback-discovered URLs with prefix traces
         self._discovered_urls = {}
         for url, info in ckpt.get("discovered_urls", {}).items():
-            norm_url = _normalize_trace_url(url)
+            norm_url = self._node_key(url)
             self._discovered_urls[norm_url] = self._coerce_prefix_trace(norm_url, info)
         # Restore skills_log from existing skills.json
         sp = os.path.join(self.out_dir, "skills.json")
@@ -1328,37 +1298,56 @@ class WebArenaExplorer:
         self._prefix_retry_counts = ckpt.get("prefix_retry_counts", {})
         self._load_retry_counts = ckpt.get("load_retry_counts", {})
 
-        # --- v2: Restore full state (no replay needed) ---
-        version = ckpt.get("version", 1)
-        if version >= 2:
-            self._restore_operator_graph(ckpt.get("operator_graph", {}))
-            self._restore_hierarchical_graph(ckpt.get("hierarchical_graph", {}))
-            self._deserialize_clusterer(ckpt.get("clusterer", {}))
-            # Mark that full state was restored (skip replay)
-            self._full_state_restored = True
-        else:
-            self._full_state_restored = False
+        self._restore_skills(self._skills_log)
+        self._restore_hierarchical_graph(ckpt.get("hierarchical_graph", {}))
+        self._deserialize_clusterer(ckpt.get("clusterer", {}))
+        self._full_state_restored = True
 
-    def _restore_operator_graph(self, op_graph_data: dict) -> None:
-        """Restore operator graph from serialized state."""
-        if not op_graph_data:
-            return
-        for name, op_data in op_graph_data.items():
-            op = Operator(
-                name=name,
-                preconditions=frozenset(op_data.get("preconditions", [])),
-                effects=frozenset(op_data.get("effects", [])),
-                terminal=op_data.get("terminal", False),
+    def _restore_skills(self, records: list[dict]) -> None:
+        """Restore verified cards, then derive OperatorGraph from those cards."""
+        for index, item in enumerate(records):
+            if not item.get("verified", True):
+                continue
+            stats = SkillStats(
+                n_members=int(item.get("n_members", 0) or 0),
+                n_verify_attempts=int(item.get("n_verify_attempts", 0) or 0),
+                n_verify_success=int(item.get("n_verify_success", 0) or 0),
+                sites_seen=set(item.get("sites_seen", [])),
+                bootstrap_verified=bool(item.get("bootstrap_verified", False)),
             )
-            self.opgraph.add(op)
-            # Sync to HierarchicalGraph for export compatibility
-            self._sync_to_hierarchical_graph(op)
+            card = SkillCard(
+                name=item.get("name", "activate_named_control"),
+                description=item.get("description", ""),
+                slots=[ParamSlot(**slot) for slot in item.get("slots", [])],
+                action_template=item.get("action_template", []),
+                precondition=item.get("precondition", ""),
+                success_predicate=item.get("success_predicate", ""),
+                cluster_id=str(item.get("cluster_id", index)),
+                stats=stats,
+                verified=True,
+                skill_id=item["skill_id"],
+                planning_preconditions=set(item.get("planning_preconditions", [])),
+                planning_effects=set(item.get("planning_effects", [])),
+                terminal=bool(item.get("terminal", False)),
+                execution_plan=item.get("execution_plan", []),
+                alternative_templates=item.get("alternative_templates", []),
+            )
+            if self.terminal_goal and self.terminal_goal in card.planning_effects:
+                card.terminal = True
+            try:
+                cid = int(card.cluster_id)
+            except ValueError:
+                cid = index
+            self.library.skills[cid] = card
+            self.library._abstracted.add(cid)
+            self.graph.skills[card.skill_id] = card
+            self._register_skill_operator(card)
 
     def _restore_hierarchical_graph(self, hg_data: dict) -> None:
         """Restore hierarchical graph edges from serialized state.
 
-        Skill cards are rebuilt from operator graph (if available) or
-        from skills.json. Edge structures are restored directly.
+        Skill cards are restored from skills.json; edge structures are restored
+        directly and operators are derived from those verified cards.
         """
         if not hg_data:
             return
@@ -1385,7 +1374,7 @@ class WebArenaExplorer:
         Returns the observation dict at the target URL, or None if navigation
         fails (fall back to direct goto).
         """
-        norm_target = _normalize_trace_url(target_url)
+        norm_target = self._node_key(target_url)
         info = self._discovered_urls.get(norm_target) or self._discovered_urls.get(target_url)
         self._last_prefix_replay_status = {
             "attempted": False,
@@ -1474,7 +1463,7 @@ class WebArenaExplorer:
 
         # Verify we arrived at the target
         obs = browser.observation()
-        arrived = _normalize_trace_url(obs.get("url", ""))
+        arrived = self._node_key(obs.get("url", ""))
         self._last_prefix_replay_status["arrived_url"] = arrived
 
         if arrived == norm_target:
@@ -1530,17 +1519,13 @@ class WebArenaExplorer:
         that trace again instead of relying on BrowserGym reset, which may go
         back to the original start URL and lose query/stateful navigation.
         """
-        def _norm(u: str) -> str:
-            p = urlparse(u)
-            return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
-
-        norm_url = _normalize_trace_url(url)
+        norm_url = self._node_key(url)
         if norm_url in self._discovered_urls or url in self._discovered_urls:
             obs = self._navigate_via_prefix(browser, norm_url)
             return obs or {"url": "", "axtree": ""}
 
         obs = browser.reset()
-        if obs.get("url") and _norm(obs.get("url", "")) != actual_url:
+        if obs.get("url") and self._node_key(obs.get("url", "")) != actual_url:
             try:
                 browser.act(f"goto('{actual_url}')")
                 obs = browser.observation()
@@ -1568,7 +1553,7 @@ class WebArenaExplorer:
         if not reason.startswith(("stale_action", "url_mismatch", "goto_source_failed", "step_failed")):
             return False
 
-        norm_url = _normalize_trace_url(url)
+        norm_url = self._node_key(url)
         retry_counts = getattr(self, "_prefix_retry_counts", {})
         self._prefix_retry_counts = retry_counts
         attempts = retry_counts.get(norm_url, 0)
@@ -1608,14 +1593,20 @@ class WebArenaExplorer:
         frontier: list[tuple[str, int]],
         queued: set[str],
     ) -> bool:
-        """Recover direct-load nodes that produced an empty reset observation."""
+        """Retry transient node failures, or release terminal redirect aliases."""
         status = getattr(self, "_last_node_load_status", {}) or {}
-        if status.get("reason") != "empty_observation":
+        reason = status.get("reason")
+        norm_url = self._node_key(url)
+        if reason == "redirect_visited":
+            queued.discard(norm_url)
+            queued.discard(url)
+            getattr(self, "_discovered_urls", {}).pop(norm_url, None)
             return False
-        if status.get("prefix_attempted"):
+        if reason not in {"empty_observation", "load_error", "process_error"}:
+            return False
+        if reason == "empty_observation" and status.get("prefix_attempted"):
             return False
 
-        norm_url = _normalize_trace_url(url)
         retry_counts = getattr(self, "_load_retry_counts", {})
         self._load_retry_counts = retry_counts
         attempts = retry_counts.get(norm_url, 0)
@@ -1628,8 +1619,8 @@ class WebArenaExplorer:
                 frontier.append((norm_url, depth))
             queued.add(norm_url)
             msg = (
-                f"      [load] requeued empty observation {norm_url[:60]} "
-                f"(retry {retry_counts[norm_url]}/{limit}, reason={detail})"
+                f"      [load] requeued node {norm_url[:60]} "
+                f"(retry {retry_counts[norm_url]}/{limit}, type={reason}, reason={detail})"
             )
             print(msg)
             if self._log_file:
@@ -1641,7 +1632,8 @@ class WebArenaExplorer:
         queued.discard(url)
         retry_counts.pop(norm_url, None)
         self.metrics.nodes_error += 1
-        msg = f"      [load] released empty observation {norm_url[:60]} (reason={detail})"
+        getattr(self, "_discovered_urls", {}).pop(norm_url, None)
+        msg = f"      [load] released node {norm_url[:60]} (type={reason}, reason={detail})"
         print(msg)
         if self._log_file:
             self._log_file.write(msg + "\n")
@@ -1657,10 +1649,6 @@ class WebArenaExplorer:
         Navigation prefers prefix trace replay over direct browser.goto()
         to preserve session state (Go-Browse style).
         """
-        def _norm(u: str) -> str:
-            p = urlparse(u)
-            return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
-
         # KHÔNG gọi _reset_env() ở đây — nó xóa session trên server,
         # làm cho storage_state cookie (PHPSESSID) trở nên vô dụng.
         # Mỗi node đã dùng browser context mới (state sạch), và
@@ -1675,7 +1663,7 @@ class WebArenaExplorer:
             obs = browser.reset()
 
             # If we have a prefix trace for this URL, use it instead of direct goto
-            norm_url = _normalize_trace_url(url)
+            norm_url = self._node_key(url)
             if obs.get("url") and (norm_url in self._discovered_urls or url in self._discovered_urls):
                 prefix_obs = self._navigate_via_prefix(browser, norm_url)
                 if prefix_obs is not None:
@@ -1743,7 +1731,7 @@ class WebArenaExplorer:
                 pass
             return None
 
-        actual_url = _norm(obs['url'])
+        actual_url = self._node_key(obs['url'])
 
         # Lưu axtree vào cache (nếu chưa có từ lần fetch trước)
         if actual_url not in self._axtree_cache:
@@ -1751,6 +1739,12 @@ class WebArenaExplorer:
 
         # Skip if redirected to an already-visited page (e.g. wishlist → login)
         if actual_url in visited and actual_url != url:
+            self._last_node_load_status = {
+                "reason": "redirect_visited",
+                "detail": f"redirected to {actual_url}",
+                "actual_url": actual_url,
+                "prefix_attempted": False,
+            }
             msg = f"[node {node_num} depth={depth}] SKIP {url} → redirect to already-visited {actual_url}"
             print(msg)
             if self._log_file:
@@ -1791,10 +1785,9 @@ class WebArenaExplorer:
         # Track whether any task succeeded on this node (for UVD scorer)
         _any_success = False
 
-        # 1) local exploration (with skill hints when available)
-        skill_hints = self._build_skill_hints(page_url=actual_url)
+        # 1) local exploration. Learned skills never enter the explorer prompt.
         _node_task_records = []  # track task outcomes for this node
-        raw_proposed_tasks = self.explorer.propose(obs, skill_hints=skill_hints)
+        raw_proposed_tasks = self.explorer.propose(obs)
         proposed_tasks = self._rank_tasks_for_coverage(raw_proposed_tasks)
         skipped_repeats = len(raw_proposed_tasks) - len(proposed_tasks)
         if skipped_repeats:
@@ -1827,16 +1820,15 @@ class WebArenaExplorer:
                         self._log_file.write(msg_skip + "\n")
                         self._log_file.flush()
                     continue
-                task_hints = self._build_skill_hints(task=task)
+                context_hints = ""
                 safe_hint = self._checkout_safety_hint(task)
                 if safe_hint:
-                    task_hints = safe_hint + "\n\n" + task_hints if task_hints else safe_hint
+                    context_hints = safe_hint
                 # Append account credentials to solver prompt
                 if self._account_info:
-                    task_hints = self._account_info + "\n\n" + task_hints if task_hints else self._account_info
-                task_tools = self._build_tools(task=task)
+                    context_hints = self._account_info + "\n\n" + context_hints if context_hints else self._account_info
                 steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
-                    browser, task, skill_hints=task_hints, tools=task_tools,
+                    browser, task, context_hints=context_hints,
                     step_callback=self._on_step_completed)
                 ep_id = self.episode
                 self._record(task, steps, obs_texts, success, difficulty=1, tag="LOCAL",
@@ -1849,8 +1841,10 @@ class WebArenaExplorer:
                     self._task_success_counts[task_key] += 1
                     _any_success = True
                     self.metrics.tasks_solved += 1
-                    self._mine_operator(task, steps, obs_texts, final_obs)
-                    self.discovery.on_trajectory(steps, site=root_url, task=task)
+                    self.discovery.on_trajectory(
+                        steps, site=root_url, task=task,
+                        obs_texts=obs_texts, final_obs=final_obs,
+                    )
                 else:
                     task_record["status"] = "failed"
                     self.metrics.tasks_failed += 1
@@ -1874,42 +1868,51 @@ class WebArenaExplorer:
                 continue
 
         # 2) goal-conditioned composed task (once a plan to the goal exists)
-        gt = self._goal_task(predicates_from(actual_url, obs.get("axtree", "")))
+        gt = self._goal_task(
+            predicates_from(actual_url, obs.get("axtree", "")),
+            observation=obs,
+        )
         if gt:
-            self.metrics.goal_tasks_attempted += 1
-            self.metrics.composed_goal_tasks_attempted += 1
-            goal_record = {
-                "goal": gt["goal"],
-                "family": task_family(gt["goal"]),
-                "status": "attempted",
-                "episode_id": None,
-            }
-            _node_task_records.append(goal_record)
-            try:
-                reset_obs = self._reset_browser_to_node(browser, url, actual_url)
-                if not reset_obs.get("url"):
-                    goal_record["status"] = "skipped"
-                    msg_skip = f"    GOAL SKIP (reset failed)"
-                    print(msg_skip)
-                    if self._log_file:
-                        self._log_file.write(msg_skip + "\n")
-                        self._log_file.flush()
-                else:
-                    task_hints = self._build_skill_hints(task=gt["goal"])
-                    safe_hint = self._checkout_safety_hint(gt["goal"])
-                    if safe_hint:
-                        task_hints = safe_hint + "\n\n" + task_hints if task_hints else safe_hint
+            for attempt in range(1, self.max_goal_attempts + 1):
+                self.metrics.goal_tasks_attempted += 1
+                self.metrics.composed_goal_tasks_attempted += 1
+                goal_record = {
+                    "goal": gt["goal"],
+                    "family": task_family(gt["goal"]),
+                    "status": "attempted",
+                    "attempt": attempt,
+                    "episode_id": None,
+                }
+                _node_task_records.append(goal_record)
+                episode_before_attempt = self.episode
+                try:
+                    reset_obs = self._reset_browser_to_node(browser, url, actual_url)
+                    if not reset_obs.get("url"):
+                        goal_record["status"] = "skipped"
+                        self._record(
+                            gt["goal"], [], [], False,
+                            difficulty=gt["difficulty"], tag="GOAL",
+                        )
+                        goal_record["episode_id"] = episode_before_attempt
+                        msg_skip = f"    GOAL attempt={attempt} SKIP (reset failed)"
+                        print(msg_skip)
+                        if self._log_file:
+                            self._log_file.write(msg_skip + "\n")
+                            self._log_file.flush()
+                        continue
+                    context_hints = self._checkout_safety_hint(gt["goal"])
                     if self._account_info:
-                        task_hints = self._account_info + "\n\n" + task_hints if task_hints else self._account_info
-                    task_tools = self._build_tools(task=gt["goal"])
+                        context_hints = self._account_info + "\n\n" + context_hints if context_hints else self._account_info
                     steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
-                        browser, gt["goal"], goal_predicate=self.terminal_goal,
-                        skill_hints=task_hints, tools=task_tools,
+                        browser, gt["goal"], goal_predicate=gt["terminal_goal"],
+                        context_hints=context_hints,
                         step_callback=self._on_step_completed)
                     ep_id = self.episode
-                    self._record(gt["goal"], steps, obs_texts, success,
-                                 difficulty=gt["difficulty"], tag="GOAL",
-                                 screenshots=screenshots)
+                    self._record(
+                        gt["goal"], steps, obs_texts, success,
+                        difficulty=gt["difficulty"], tag="GOAL",
+                        screenshots=screenshots,
+                    )
                     goal_record["episode_id"] = ep_id
                     if success:
                         goal_record["status"] = "solved"
@@ -1918,20 +1921,31 @@ class WebArenaExplorer:
                     else:
                         goal_record["status"] = "failed"
                         self.metrics.tasks_failed += 1
-                    msg3 = f"    GOAL chain={gt['chain']} verified={success}"
+                    msg3 = (
+                        f"    GOAL attempt={attempt}/{self.max_goal_attempts} "
+                        f"chain={gt['chain']} verified={success}"
+                    )
                     print(msg3)
                     if self._log_file:
                         self._log_file.write(msg3 + "\n")
                         self._log_file.flush()
-            except Exception as e:
-                goal_record["status"] = "error"
-                self.metrics.errors += 1
-                self.metrics.tasks_error += 1
-                msg_err = f"    GOAL ERROR: {e}"
-                print(msg_err)
-                if self._log_file:
-                    self._log_file.write(msg_err + "\n")
-                    self._log_file.flush()
+                    if success:
+                        break
+                except Exception as e:
+                    goal_record["status"] = "error"
+                    if self.episode == episode_before_attempt:
+                        self._record(
+                            gt["goal"], [], [], False,
+                            difficulty=gt["difficulty"], tag="GOAL",
+                        )
+                        goal_record["episode_id"] = episode_before_attempt
+                    self.metrics.errors += 1
+                    self.metrics.tasks_error += 1
+                    msg_err = f"    GOAL attempt={attempt} ERROR: {e}"
+                    print(msg_err)
+                    if self._log_file:
+                        self._log_file.write(msg_err + "\n")
+                        self._log_file.flush()
 
         # Record exploration outcome for UVD scorer (Go-Browse style)
         self._url_attempts[actual_url] = self._url_attempts.get(actual_url, 0) + 1
@@ -1964,7 +1978,7 @@ class WebArenaExplorer:
                 fallback_items = []
                 seen_links = set()
                 for raw_link in browser.links():
-                    link = _normalize_trace_url(raw_link)
+                    link = self._node_key(raw_link)
                     if not link or link in seen_links:
                         continue
                     seen_links.add(link)
@@ -2120,7 +2134,8 @@ class WebArenaExplorer:
                 continue
             with open(meta_path, encoding="utf-8") as f:
                 meta = json.load(f)
-            if not meta.get("outcome", {}).get("success"):
+            tags = meta.get("metadata", {}).get("tags", [])
+            if not meta.get("outcome", {}).get("success") or "LOCAL" not in tags:
                 continue
             goal = meta.get("goal", "")
             # Reconstruct steps from episode.jsonl
@@ -2151,12 +2166,12 @@ class WebArenaExplorer:
                     obs_texts.append(obs_text)
             if not steps:
                 continue
-            # Mine operator from successful trajectory
             final_obs = {"url": steps[-1].url if steps else "",
                          "axtree": obs_texts[-1] if obs_texts else ""}
-            self._mine_operator(goal, steps, obs_texts, final_obs)
-            # Feed through HSGE discovery
-            self.discovery.on_trajectory(steps, site="webarena", task=goal)
+            self.discovery.on_trajectory(
+                steps, site="webarena", task=goal,
+                obs_texts=obs_texts, final_obs=final_obs,
+            )
             rebuilt += 1
         print(f"[resume] Rebuilt library from {rebuilt}/{len(episodes)} successful episodes "
               f"→ {len(self.library.all_skills())} skills, {len(self.opgraph.ops)} operators")
@@ -2313,7 +2328,7 @@ class WebArenaExplorer:
 
         def key(item: tuple[float, str, int]):
             score, url, depth = item
-            norm_url = _normalize_trace_url(url)
+            norm_url = self._node_key(url)
             return (
                 retry_counts.get(norm_url, 0),
                 selection_counts.get(norm_url, 0),
@@ -2323,29 +2338,43 @@ class WebArenaExplorer:
             )
 
         selected = sorted(pool, key=key)[0]
-        norm_selected = _normalize_trace_url(selected[1])
+        norm_selected = self._node_key(selected[1])
         selection_counts[norm_selected] = selection_counts.get(norm_selected, 0) + 1
         self._frontier_selection_counts = selection_counts
         return selected
 
+    def _mark_node_visited(
+        self, requested_url: str, processed_url: str,
+        visited: set[str], queued: set[str],
+    ) -> None:
+        """Commit successful node identities and release their reservations."""
+        requested = self._node_key(requested_url)
+        processed = self._node_key(processed_url)
+        visited.update({requested, processed})
+        queued.discard(requested)
+        queued.discard(processed)
+        self._discovered_urls.pop(requested, None)
+        self._discovered_urls.pop(processed, None)
+        self._prefix_retry_counts.pop(requested, None)
+        self._load_retry_counts.pop(requested, None)
+
     # ---- the loop ------------------------------------------------------------
     def run(self, root_url: str):
-        # Normalize URLs: strip trailing slash, query string, and fragment.
-        def _norm(u: str) -> str:
-            p = urlparse(u)
-            return urlunparse((p.scheme, p.netloc, p.path.rstrip('/'), '', '', ''))
-
         # Use checkpoint loaded in __init__ (if any)
         if self._ckpt:
-            root_url = _norm(root_url)
-            frontier: list[tuple[str, int]] = [tuple(p) for p in self._ckpt["frontier"]]
-            visited: set[str] = set(self._ckpt["visited"])
-            queued: set[str] = set(self._ckpt["queued"])
+            root_url = self._node_key(root_url)
+            frontier = [
+                (self._node_key(url), depth)
+                for url, depth in self._ckpt["frontier"]
+            ]
+            visited = {self._node_key(url) for url in self._ckpt["visited"]}
+            queued = {self._node_key(url) for url in self._ckpt["queued"]}
         else:
-            root_url = _norm(root_url)
+            root_url = self._node_key(root_url)
             frontier: list[tuple[str, int]] = [(root_url, 0)]
             visited: set[str] = set()
             queued: set[str] = {root_url}
+        self._active_visited = visited
         nodes_processed = self._nodes_done
         # Lưu axtree đã fetch cho từng URL (tránh fetch lại khi explore)
         self._axtree_cache: dict[str, str] = {}
@@ -2397,6 +2426,7 @@ class WebArenaExplorer:
                     self._log_file.flush()
             frontier = [(u, d) for u, d in frontier if u != url]
             if url in visited or depth > self.max_depth:
+                queued.discard(url)
                 continue
             node_num = nodes_processed + 1
 
@@ -2412,13 +2442,17 @@ class WebArenaExplorer:
                 )
             except Exception as e:
                 self.metrics.errors += 1
-                self.metrics.nodes_error += 1
+                self._last_node_load_status = {
+                    "reason": "process_error",
+                    "detail": str(e),
+                    "prefix_attempted": False,
+                }
                 msg = f"[node {node_num} depth={depth}] ERROR: {e}"
                 print(msg)
                 if self._log_file:
                     self._log_file.write(msg + "\n")
                     self._log_file.flush()
-                # Save emergency checkpoint and continue
+                self._recover_empty_observation_url(url, depth, frontier, queued)
                 self.save_checkpoint(frontier, visited, queued)
                 continue
 
@@ -2429,10 +2463,7 @@ class WebArenaExplorer:
                 self.save_checkpoint(frontier, visited, queued)
                 continue
 
-            visited.add(url)
-            visited.add(processed_url)
-            self._prefix_retry_counts.pop(_normalize_trace_url(url), None)
-            self._load_retry_counts.pop(_normalize_trace_url(url), None)
+            self._mark_node_visited(url, processed_url, visited, queued)
             nodes_processed += 1
             self.metrics.nodes_visited += 1
             self.metrics.nodes_processed = nodes_processed

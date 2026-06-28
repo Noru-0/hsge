@@ -142,6 +142,16 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser
                 _append_verify_failure(skill, "browser_action_returned_no_url")
                 return False
 
+        if skill.planning_effects:
+            from .webarena.predicates import predicates_from
+            observed = predicates_from(obs.get("url", ""), obs.get("axtree", ""))
+            missing = skill.planning_effects - observed
+            if missing:
+                _append_verify_failure(
+                    skill,
+                    "browser_missing_planning_effects:" + ",".join(sorted(missing)),
+                )
+                return False
         return True
     except Exception as exc:
         _append_verify_failure(skill, f"browser_exception:{type(exc).__name__}")

@@ -1,8 +1,8 @@
 """Run the HSGE exploration loop (mock).
 
 This mirrors the structure of a real frontier loop so it doubles as a wiring
-reference: expand a frontier of pages, discover a skill (operator) at each
-transition, grow the hierarchical skill graph, then -- once the graph can reach
+reference: expand a frontier of pages, admit a verified skill at each
+transition, derive its operator view, then -- once the graph can reach
 a terminal goal -- propose and execute a GOAL-CONDITIONED composed task and
 collect the resulting long-horizon trajectory.
 
@@ -17,6 +17,7 @@ from collections import deque
 
 from hsge.env import PageState, WebEnv
 from hsge.operators import Operator, OperatorGraph, plan
+from hsge.schema import SkillCard
 
 
 def build_store() -> WebEnv:
@@ -46,7 +47,8 @@ TRANSITIONS = {
 def main():
     store = build_store()
     opgraph = OperatorGraph()
-    advance = {}                       # skill name -> "click [aff]"
+    skills = {}
+    advance = {}                       # skill id -> "click [aff]"
     frontier = deque(["home"])
     visited = set()
 
@@ -62,17 +64,32 @@ def main():
         print(f"  visit {node:11s} ({page.url})")
         if node in TRANSITIONS:
             name, pre, eff, aff, terminal = TRANSITIONS[node]
-            opgraph.add(Operator(name, pre, eff, terminal=terminal))
-            advance[name] = f"click [{aff}]"
+            card = SkillCard(
+                name=name,
+                description=f"Mock verified behavior: {name}",
+                slots=[],
+                action_template=[f"click('{aff}')"],
+                precondition="mock precondition",
+                success_predicate="mock success",
+                cluster_id=name,
+                verified=True,
+                skill_id=f"skill_{name}",
+                planning_preconditions=set(pre),
+                planning_effects=set(eff),
+                terminal=terminal,
+            )
+            skills[card.skill_id] = card
+            opgraph.add(Operator.from_skill(card))
+            advance[card.skill_id] = f"click [{aff}]"
             child = page.goto[aff]
             print(f"      discovered skill '{name}'  pre={sorted(pre) or '[]'} eff={sorted(eff)}")
             if child not in visited:
                 frontier.append(child)
 
-    print(f"\n  skills discovered: {len(opgraph.ops)}")
+    print(f"\n  verified skills discovered: {len(skills)}")
     print("  high-level edges:")
     for a, b in opgraph.edges():
-        print(f"      {a} -> {b}")
+        print(f"      {skills[a].name} -> {skills[b].name}")
 
     print("\n" + "=" * 68)
     print("PHASE 2 - goal-conditioned episode: plan + execute a composed task")
@@ -80,14 +97,14 @@ def main():
     chain = plan(opgraph, frozenset(), "order_confirmed")
     if not chain:
         print("  no plan to order_confirmed yet (need more discovery)"); return
-    print(f"  proposed [GOAL] task chain: {' -> '.join(chain)}")
+    print(f"  proposed [GOAL] task chain: {' -> '.join(skills[s].name for s in chain)}")
 
     # solve it: execute through the store, collecting the trajectory
     store.reset()
     trajectory = []
-    for skill in chain:
-        store.step(advance[skill])
-        trajectory.append({"skill": skill, "url": store.state().url})
+    for skill_id in chain:
+        store.step(advance[skill_id])
+        trajectory.append({"skill": skills[skill_id].name, "url": store.state().url})
     verified = store.check("order_confirmed")
 
     print("\n  collected trajectory (this is the training-worthy episode):")
@@ -101,7 +118,7 @@ def main():
     print("loop summary")
     print("=" * 68)
     print(f"  pages explored        : {len(visited)}")
-    print(f"  skills discovered     : {len(opgraph.ops)}")
+    print(f"  verified skills       : {len(skills)}")
     print(f"  composed episodes     : 1 (a full purchase)")
     print("  In the WebArena runtime, PHASE 1 = PageExplorer + Solver + Discovery,")
     print("  PHASE 2 = planner-composed goal task + Solver + terminal verification.")

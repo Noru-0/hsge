@@ -7,6 +7,7 @@ selectors and fallback instructions, not just raw template strings.
 from __future__ import annotations
 
 import json
+import math
 import re
 from collections import Counter
 
@@ -145,6 +146,7 @@ def abstract_cluster(
         alternative_templates = [alternative_templates]
 
     normalized_name = _normalize_skill_name(out.get("name", f"skill_{cluster_id}"), dominant)
+    planning_preconditions, planning_effects = _planning_evidence(members)
     card = SkillCard(
         name=normalized_name,
         description=out.get("description", ""),
@@ -154,6 +156,9 @@ def abstract_cluster(
         success_predicate=out.get("success_predicate", f"{dominant} completed"),
         cluster_id=str(cluster_id),
         member_ids=[m.sub_id for m in members],
+        planning_preconditions=planning_preconditions,
+        planning_effects=planning_effects,
+        terminal="has_confirmation_cue" in planning_effects,
     )
 
     # Store execution plan and alternatives as extra attributes
@@ -241,6 +246,7 @@ def _fallback_skill_card(
     else:
         return None
 
+    planning_preconditions, planning_effects = _planning_evidence(members)
     card = SkillCard(
         name=name,
         description=description,
@@ -250,6 +256,9 @@ def _fallback_skill_card(
         success_predicate=success,
         cluster_id=str(cluster_id),
         member_ids=[m.sub_id for m in members],
+        planning_preconditions=planning_preconditions,
+        planning_effects=planning_effects,
+        terminal="has_confirmation_cue" in planning_effects,
     )
     card.stats.bootstrap_verified = True
     card.execution_plan = [
@@ -270,6 +279,21 @@ def _fallback_skill_card(
     print(f"  [abstraction] fallback skill (cluster={cluster_id}, "
           f"reason={reason}) → {card.name}")
     return card
+
+
+def _planning_evidence(members: list[SubTrajectory]) -> tuple[set[str], set[str]]:
+    """Retain symbolic predicates supported by at least two thirds of members."""
+    if not members:
+        return set(), set()
+    required = max(1, math.ceil((2 * len(members)) / 3))
+    pre_counts = Counter(p for member in members for p in member.planning_preconditions)
+    effect_counts = Counter(p for member in members for p in member.planning_effects)
+    preconditions = {p for p, count in pre_counts.items() if count >= required}
+    effects = {
+        p for p, count in effect_counts.items()
+        if count >= required and p not in preconditions
+    }
+    return preconditions, effects
 
 
 def _representative_examples(members: list[SubTrajectory], max_examples: int = 3) -> list[dict]:

@@ -5,8 +5,8 @@ You call `Discovery.on_trajectory(...)` from inside that loop (right after a tas
 is solved). It segments, feeds the skill library, and wires admitted skills into
 the hierarchical graph using URL states.
 
-Composition edges are NOT created from co-occurrence here. They are derived from
-operator precondition/effect matching in _sync_to_hierarchical_graph().
+Verified cards carry their own planning view. The runtime derives an Operator
+with the same skill_id in its admission callback.
 """
 from __future__ import annotations
 
@@ -27,6 +27,8 @@ class Discovery:
         site: str,
         task: str,
         subgoal_hints: list[str] | None = None,
+        obs_texts: list[str] | None = None,
+        final_obs: dict | None = None,
     ) -> list[str]:
         """Process one finished trajectory. Returns newly admitted skill_ids."""
         # 1. update low-level graph with the URL path actually traversed
@@ -35,7 +37,10 @@ class Discovery:
                 self.graph.add_trajectory_edge(a.url, b.url)
 
         # 2. segment + feed the library
-        subs = segment_trajectory(self.library.llm, steps, site, task, subgoal_hints)
+        subs = segment_trajectory(
+            self.library.llm, steps, site, task, subgoal_hints,
+            obs_texts=obs_texts, final_obs=final_obs,
+        )
         if hasattr(self.library, "_diag"):
             self.library._diag(
                 "segments_created",
@@ -65,11 +70,8 @@ class Discovery:
             if card:
                 self.graph.add_skill(card, init_states=init, effect_states=effect)
 
-        # 4. composition edges are NOT created from co-occurrence here.
-        #     They are instead derived from operator precondition/effect matching
-        #     in _sync_to_hierarchical_graph() (called by _mine_operator).
-        #     This ensures edges represent genuine dependency relationships,
-        #     not just coincidental co-occurrence in the same trajectory.
+        # 4. The runtime admission callback derives the Operator from the same
+        #    verified card. No independent operator is mined from this trajectory.
 
         return admitted
 

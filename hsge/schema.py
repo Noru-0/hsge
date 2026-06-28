@@ -45,6 +45,8 @@ class SubTrajectory:
     source_task: str = ""              # the task that produced the parent trajectory
     success: bool = True               # only successes are eligible for discovery
     sub_id: str = field(default_factory=lambda: _new_id("st"))
+    planning_preconditions: set[str] = field(default_factory=set)
+    planning_effects: set[str] = field(default_factory=set)
 
     def action_signature(self) -> str:
         """Site-agnostic signature: the sequence of action verbs.
@@ -106,6 +108,9 @@ class SkillCard:
     stats: SkillStats = field(default_factory=SkillStats)
     verified: bool = False
     skill_id: str = field(default_factory=lambda: _new_id("skill"))
+    planning_preconditions: set[str] = field(default_factory=set)
+    planning_effects: set[str] = field(default_factory=set)
+    terminal: bool = False
     # Phase 4: structured execution plan
     execution_plan: list[dict] = field(default_factory=list)
     alternative_templates: list[list[str]] = field(default_factory=list)
@@ -113,6 +118,8 @@ class SkillCard:
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["stats"]["sites_seen"] = sorted(self.stats.sites_seen)
+        d["planning_preconditions"] = sorted(self.planning_preconditions)
+        d["planning_effects"] = sorted(self.planning_effects)
         return d
 
     def pretty(self) -> str:

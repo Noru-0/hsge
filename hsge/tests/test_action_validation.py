@@ -445,6 +445,47 @@ def test_empty_direct_load_requeues_then_releases():
     assert explorer.metrics.nodes_error == 1
 
 
+def test_load_error_requeues_then_releases():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer._log_file = None
+    explorer._load_retry_counts = {}
+    explorer._load_retry_limit = 1
+    explorer._discovered_urls = {}
+    explorer.metrics = RunMetrics()
+    target = "http://example.test/catalog?q=shoe"
+    explorer._last_node_load_status = {
+        "reason": "load_error",
+        "detail": "temporary browser failure",
+        "prefix_attempted": False,
+    }
+    frontier = []
+    queued = {target}
+
+    assert explorer._recover_empty_observation_url(target, 1, frontier, queued)
+    assert frontier == [(target, 1)]
+
+    frontier.clear()
+    assert not explorer._recover_empty_observation_url(target, 1, frontier, queued)
+    assert target not in queued
+    assert explorer.metrics.nodes_error == 1
+
+
+def test_redirect_to_visited_releases_requested_alias():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer._discovered_urls = {"http://example.test/private": object()}
+    explorer._last_node_load_status = {
+        "reason": "redirect_visited",
+        "actual_url": "http://example.test/login",
+    }
+    queued = {"http://example.test/private"}
+
+    assert not explorer._recover_empty_observation_url(
+        "http://example.test/private", 1, [], queued
+    )
+    assert not queued
+    assert not explorer._discovered_urls
+
+
 def test_empty_prefix_load_is_left_to_prefix_recovery():
     explorer = WebArenaExplorer.__new__(WebArenaExplorer)
     explorer._load_retry_counts = {}

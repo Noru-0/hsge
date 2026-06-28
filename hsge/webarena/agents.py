@@ -234,7 +234,7 @@ Example for a transactional site:
 """
 
 
-def _build_solver_sys(skill_hints: str = "") -> str:
+def _build_solver_sys(context_hints: str = "") -> str:
     """Short system role (Go-Browse style). Action space goes in user prompt."""
     base = (
         "You are a web agent. Your goal is to help the user perform tasks "
@@ -244,7 +244,7 @@ def _build_solver_sys(skill_hints: str = "") -> str:
         "Your answer will be interpreted and executed by a program — "
         "follow the formatting instructions exactly."
     )
-    parts = [skill_hints, base]
+    parts = [context_hints, base]
     return "\n".join(p for p in parts if p)
 
 
@@ -313,7 +313,7 @@ class PageExplorer:
         except Exception as e:
             print(f"  [domain] Detection failed: {e}")
 
-    def propose(self, obs: dict, skill_hints: str = "") -> list[str]:
+    def propose(self, obs: dict) -> list[str]:
         sys = EXPLORER_SYS
         # Thêm domain context nếu có — chỉ làm tham khảo, không dùng nguyên
         domain_context = ""
@@ -327,8 +327,6 @@ class PageExplorer:
             domain_context += "\nIMPORTANT: Propose tasks specific to the CURRENT page and its elements. Use the references above only as inspiration — combine them with what you see on the page. Each goal must be concrete and grounded in visible controls/content, not a generic action-chain label.\n"
         if domain_context:
             sys = domain_context + "\n" + sys
-        if skill_hints:
-            sys = skill_hints + "\n" + sys
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
         seeded_tasks = self._seed_tasks(obs) if self.profile == "training_quality" else []
         out = self.llm.complete_json(sys, prompt)
@@ -626,16 +624,11 @@ class Solver:
         self.profile = profile
 
     def solve(self, browser, goal: str, goal_predicate: str | None = None,
-              skill_hints: str = "", tools: list[dict] | None = None,
+              context_hints: str = "",
               step_callback=None):
         """Drive the browser toward `goal`.
         Returns (steps, obs_texts, final_obs, success, screenshots).
         screenshots is list[bytes|None] parallel to steps.
-
-        If `tools` is provided (list of OpenAI/DeepSeek function definitions),
-        the solver will use tool-calling (function calling) API instead of
-        text-only JSON completion. When the LLM calls a tool, the runtime
-        executes the skill's action template with the bound parameters.
 
         If `step_callback` is provided, it is called after each step with:
             step_callback(action, url_before, url_after, traj_steps_so_far)
@@ -647,7 +640,7 @@ class Solver:
         history: list[str] = []
         last_action_str = "(none)"
         last_result_url = ""
-        sys = _build_solver_sys(skill_hints)
+        sys = _build_solver_sys(context_hints)
         obs = browser.observation()
         success = False
         prev_url = obs.get("url", "")
@@ -666,95 +659,15 @@ class Solver:
                 + f"\n# Next action"
             )
 
-            # --- Tool-calling branch ---
-            if tools:
-                out = self.llm.complete_with_tools(sys, prompt_text, tools=tools)
-                if out.get("type") == "tool_call":
-                    # LLM invoked a skill tool — expand into detailed actions
-                    tool_name = out.get("name", "")
-                    arguments = out.get("arguments", {})
-                    thought = json.dumps({"tool": tool_name, "args": arguments})
-
-                    # Execute the tool: get rendered actions
-                    rendered_actions, tool_success = self._execute_tool(
-                        browser, tool_name, arguments)
-
-                    if rendered_actions:
-                        # Step đầu: action = rendered action thật (click('bid')),
-                        # misc chứa tool_call info để biết là dùng skill.
-                        first_action = rendered_actions[0]
-                        grounded_thought, _ = repair_thought(
-                            thought, first_action, obs.get("axtree", "")
-                        )
-                        steps.append(Step(
-                            action=first_action, url=obs["url"],
-                            obs_summary=grounded_thought,
-                            misc={"skill": tool_name, "args": arguments,
-                                  "tool_call": f"tool_call({tool_name})",
-                                  "rendered_actions": rendered_actions},
-                        ))
-                        obs_texts.append(obs["axtree"])
-                        screenshots.append(obs.get("screenshot_base64"))
-                        history.append(first_action)
-
-                        # Các action còn lại ghi rendered action thật
-                        for act in rendered_actions[1:]:
-                            obs = browser.observation()
-                            grounded_thought, _ = repair_thought(
-                                "I should execute the next concrete skill action.",
-                                act,
-                                obs.get("axtree", ""),
-                            )
-                            steps.append(Step(
-                                action=act, url=obs.get("url", ""),
-                                obs_summary=grounded_thought,
-                            ))
-                            obs_texts.append(obs.get("axtree", ""))
-                            screenshots.append(obs.get("screenshot_base64"))
-                            history.append(act)
-                    else:
-                        last_action_str = (
-                            f"ERROR: tool {tool_name} did not render to valid "
-                            "grounded concrete actions. Return one canonical action."
-                        )
-                        invalid_attempts += 1
-                        if invalid_attempts >= 3:
-                            break
-                        continue
-
-                    obs = browser.observation()
-
-                    # Cập nhật last_action_str cho step kế tiếp
-                    last_tool_action = action if not rendered_actions else rendered_actions[-1]
-                    last_action_str = f"{{'tool': '{tool_name}', 'action': {last_tool_action[:80]}}}"
-                    last_result_url = obs.get("url", "")
-
-                    # Step callback for URL discovery
-                    new_url = obs.get("url", "")
-                    if step_callback:
-                        step_callback(last_tool_action,
-                                      prev_url, new_url, steps)
-                    prev_url = new_url
-
-                    if tool_success:
-                        success = True
-                        break
-                    continue
-
-                # Text response from tool-calling API
-                action = (out.get("action") or "").strip()
-                thought = out.get("thought", "")
+            screenshot = obs.get("screenshot_base64")
+            use_vision = screenshot and getattr(self.llm, "supports_vision", False)
+            if use_vision:
+                out = self.llm.complete_vision_json(
+                    sys, prompt_text, screenshot_base64=screenshot)
             else:
-                # --- Standard JSON completion branch ---
-                screenshot = obs.get("screenshot_base64")
-                use_vision = screenshot and getattr(self.llm, "supports_vision", False)
-                if use_vision:
-                    out = self.llm.complete_vision_json(
-                        sys, prompt_text, screenshot_base64=screenshot)
-                else:
-                    out = self.llm.complete_json(sys, prompt_text)
-                action = (out.get("action") or "").strip()
-                thought = out.get("thought", "")
+                out = self.llm.complete_json(sys, prompt_text)
+            action = (out.get("action") or "").strip()
+            thought = out.get("thought", "")
 
             validation = validate_hsge_action(
                 action,
@@ -960,53 +873,3 @@ class Solver:
             }
         ]
         return any(t in text for t in tokens[:12])
-
-    def _execute_tool(self, browser, tool_name: str, arguments: dict) -> tuple[list[str], bool]:
-        """Execute a skill tool call by rendering its action template.
-
-        Finds the skill by name, renders the template with the provided
-        argument bindings, and executes each action step by step.
-
-        Returns (rendered_actions, success) where rendered_actions is the list
-        of concrete BrowserGym actions that were executed.
-        """
-        library = getattr(self, '_skill_library', None)
-        if library is None:
-            return [], False
-
-        # Find the skill by name
-        target_card = None
-        for card in library.all_skills():
-            if card.name == tool_name:
-                target_card = card
-                break
-
-        if target_card is None:
-            return [], False
-
-        # Render and execute the action template
-        templates = target_card.action_template
-        if isinstance(templates, str):
-            templates = [templates]
-
-        rendered_actions = []
-        for tmpl in templates:
-            action = tmpl
-            for name, val in arguments.items():
-                action = action.replace("{" + name + "}", repr(str(val)))
-            # Skip if unbound slots remain
-            if "{" in action:
-                continue
-            obs = browser.observation()
-            validation = validate_hsge_action(
-                action, obs.get("axtree", ""), allow_goto=False
-            )
-            if not validation.ok:
-                return rendered_actions, False
-            rendered_actions.append(action)
-            try:
-                browser.act(action)
-            except Exception:
-                return rendered_actions, False
-
-        return rendered_actions, True

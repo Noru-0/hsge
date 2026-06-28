@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import json
 import re
+from typing import Any
 
 from .llm import LLM
 from .schema import Step, SubTrajectory
+from .webarena.predicates import predicates_from
 
 _SYS = "You SEGMENT a web trajectory into coherent sub-goals. Return JSON."
 
@@ -34,6 +36,8 @@ def segment_trajectory(
     site: str,
     task: str,
     subgoal_hints: list[str] | None = None,
+    obs_texts: list[str] | None = None,
+    final_obs: dict[str, Any] | None = None,
 ) -> list[SubTrajectory]:
     spans = _url_boundary_segments(steps)
     hints = subgoal_hints or [f"segment {i}" for i in range(len(spans))]
@@ -73,7 +77,38 @@ def segment_trajectory(
             )
             for i, (a, b) in enumerate(spans)
         ]
-    return _dedupe_subtrajectories(subs + _action_level_segments(steps, site, task))
+    result = _dedupe_subtrajectories(subs + _action_level_segments(steps, site, task))
+    _attach_planning_evidence(result, steps, obs_texts or [], final_obs or {})
+    return result
+
+
+def _attach_planning_evidence(
+    subs: list[SubTrajectory],
+    full_steps: list[Step],
+    obs_texts: list[str],
+    final_obs: dict[str, Any],
+) -> None:
+    """Attach observed symbolic deltas to each candidate skill segment."""
+    by_identity = {id(step): i for i, step in enumerate(full_steps)}
+    for sub in subs:
+        if not sub.steps:
+            continue
+        start_idx = by_identity.get(id(sub.steps[0]))
+        end_idx = by_identity.get(id(sub.steps[-1]))
+        if start_idx is None or end_idx is None:
+            continue
+        start_url = full_steps[start_idx].url
+        start_ax = obs_texts[start_idx] if start_idx < len(obs_texts) else ""
+        if end_idx + 1 < len(full_steps):
+            end_url = full_steps[end_idx + 1].url
+            end_ax = obs_texts[end_idx + 1] if end_idx + 1 < len(obs_texts) else ""
+        else:
+            end_url = final_obs.get("url", full_steps[end_idx].url)
+            end_ax = final_obs.get("axtree", "")
+        before = predicates_from(start_url, start_ax)
+        after = predicates_from(end_url, end_ax)
+        sub.planning_preconditions = before
+        sub.planning_effects = after - before
 
 
 def _action_level_segments(steps: list[Step], site: str, task: str) -> list[SubTrajectory]:

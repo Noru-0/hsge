@@ -17,7 +17,9 @@ This is what `graph.py` and `curriculum.py` must become:
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
+from .schema import SkillCard
 
 
 @dataclass(frozen=True)
@@ -27,6 +29,23 @@ class Operator:
     preconditions: frozenset[str]      # predicates that must hold to apply it
     effects: frozenset[str]            # predicates it establishes
     terminal: bool = False             # does it reach a goal/transactional state?
+    skill_id: str = ""
+
+    @property
+    def key(self) -> str:
+        return self.skill_id or self.name
+
+    @classmethod
+    def from_skill(cls, card: SkillCard) -> "Operator":
+        if not card.verified:
+            raise ValueError("cannot create an operator from an unverified skill")
+        return cls(
+            name=card.name,
+            preconditions=frozenset(card.planning_preconditions),
+            effects=frozenset(card.planning_effects),
+            terminal=card.terminal,
+            skill_id=card.skill_id,
+        )
 
 
 class OperatorGraph:
@@ -36,7 +55,7 @@ class OperatorGraph:
         self.goal_predicates: set[str] = set()
 
     def add(self, op: Operator) -> None:
-        self.ops[op.name] = op
+        self.ops[op.key] = op
         if op.terminal:
             self.goal_predicates |= op.effects
 
@@ -50,27 +69,26 @@ class OperatorGraph:
         out = []
         for a in self.ops.values():
             for b in self.ops.values():
-                if a.name == b.name:
+                if a.key == b.key:
                     continue
                 if a.effects & b.preconditions:
-                    out.append((a.name, b.name))
+                    out.append((a.key, b.key))
         return out
 
     def successors(self, op_name: str, state: frozenset[str]) -> list[str]:
         eff = self.ops[op_name].effects
         nxt = state | eff
-        return [b.name for b in self.ops.values()
-                if b.name != op_name and b.preconditions <= nxt
+        return [b.key for b in self.ops.values()
+                if b.key != op_name and b.preconditions <= nxt
                 and not b.preconditions <= state]  # newly enabled by op
 
 
 def plan(graph: OperatorGraph, initial: frozenset[str], goal: str) -> list[str] | None:
     """Forward BFS over operators: shortest sequence reaching `goal`.
 
-    The returned operator sequence is the long-horizon task. For goal=
-    'order_confirmed' the only way to satisfy place_order's precondition chains
-    all the way back through checkout -> cart -> product -> search: the purchase
-    trajectory is *forced* by the precondition graph.
+    The returned skill-id sequence is the shortest known symbolic route to the
+    requested goal. Execution remains the responsibility of an independent
+    solver; the chain establishes feasibility and curriculum difficulty.
     """
     if goal in initial:
         return []
@@ -81,7 +99,7 @@ def plan(graph: OperatorGraph, initial: frozenset[str], goal: str) -> list[str] 
         for op in graph.ops.values():
             if op.preconditions <= state and not (op.effects <= state):
                 ns = state | op.effects
-                npath = path + [op.name]
+                npath = path + [op.key]
                 if goal in ns:
                     return npath
                 if ns not in seen:

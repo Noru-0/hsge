@@ -1,0 +1,85 @@
+# HSGE exploration configuration.
+# Run with: python run_webarena.py
+# Override any value temporarily with a CLI flag, for example:
+#   python run_webarena.py --no-dry-run --root-url http://host:7770 --max-nodes 50
+# API keys are intentionally kept in .env, not in this file.
+
+run:
+  root_url: https://infectious-plasma-gem-officials.trycloudflare.com/              # required for real runs; dry-run supplies a mock URL
+  # out: outputs/wa_run
+  # out: outputs/wa_run_18  # checkpoint v2, dùng cơ chế visited cũ
+  out: outputs/wa_run_19    # checkpoint v4, semantic-query visited identity
+  allow: null                 # null = derive a same-site regex from root_url
+  dry_run: false              # use `--dry-run` for the offline mock
+  resume: false
+  transfer_query: null
+
+exploration:
+  # max_nodes: 200
+  max_nodes: 300
+  max_depth: 9
+  max_steps: 20
+
+llm:
+  # DeepSeek alternative:
+  # provider: deepseek
+  # explorer_model: deepseek-v4-flash
+  # solver_model: deepseek-v4-flash
+  # api_base_url: https://api.deepseek.com/v1
+  provider: openai
+  model: null                 # optional shorthand for both roles
+  explorer_model: gpt-4o-mini
+  solver_model: gpt-4o
+  api_base_url: https://api.openai.com/v1
+
+browser:
+  headless: true
+  # screenshot: false
+  screenshot: true
+  timeout_ms: 30000
+  # storage_state: null
+  storage_state: .auth/shopping_state.json
+  denylist: []                # /logout is always denied by the runtime
+  # Semantic query parameters remain part of a node. Only tracking parameters
+  # matching these names/patterns are ignored for visited-node identity.
+  ignore_query_params: ["utm_*", gclid, fbclid, msclkid, dclid, _ga, _gl]
+  full_reset_url: null
+
+goals:
+  terminal_goal: null
+  instruction: null
+  auto_terminal_goals: true
+  max_attempts: 3
+
+checkout:
+  mode: safe                  # safe | full | discover-only
+  place_order_allowed: false
+
+tasks:
+  explorer_max_tasks: 20
+  explorer_profile: training_quality
+  solver_profile: training_quality
+
+skills:
+  similarity_threshold: 0.6
+  maturity: 3
+  verify_k: 2
+  prune_min_rate: 0.34
+  diversity_target: 4
+
+frontier:
+  alpha: 1.0
+  beta: 1.0
+  epsilon: 0.00001
+  select_pool: 5
+  score_band: 0.98
+  max_size: null              # null = clamp(max_nodes * 4, 20, 120)
+  prefix_retry_limit: 2
+  load_retry_limit: 2
+
+lookahead:
+  candidates: 5
+  # Lookahead remains on the cheaper DeepSeek model. Set both to null to use
+  # DEEPSEEK_MODEL / DEEPSEEK_BASE_URL from .env instead.
+  model: deepseek-v4-flash
+  base_url: https://api.deepseek.com/v1

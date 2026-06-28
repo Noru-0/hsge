@@ -254,6 +254,9 @@ def _adapt_skill_to_page(llm: LLM, card: SkillCard, obs: dict) -> SkillCard | No
         success_predicate=card.success_predicate,
         cluster_id=card.cluster_id,
         member_ids=card.member_ids,
+        planning_preconditions=set(card.planning_preconditions),
+        planning_effects=set(card.planning_effects),
+        terminal=card.terminal,
     )
     return adapted
 
@@ -272,8 +275,8 @@ def _register_adapted_skill(
         n_verify_success=1,
         sites_seen={target_site},
     )
+    adapted.verified = True
     # Use a synthetic cluster id derived from the original
-    from .schema import _new_id
     synthetic_cid = hash(adapted.name) % (2 ** 31)
     library.skills[synthetic_cid] = adapted
     if library._on_admit:
