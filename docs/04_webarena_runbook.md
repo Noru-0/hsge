@@ -167,6 +167,7 @@ cập nhật cùng checkpoint. Điều chỉnh độ chi tiết bằng
 | `reset()` hangs | wrong `WA_*` URL/port or site down | Re-check Step 1 + Step 4 |
 | Slow throughput | headed browser | `export BROWSERGYM_HEADLESS=true` (debug first runs headed) |
 | Auth/logout loops | agent clicks logout | Denylist logout URLs |
+| Action như `hover` giữ node quá lâu | Navigation timeout bị dùng làm action timeout hoặc target stale | Giữ `browser.timeout_ms` cho navigation và đặt `browser.action_timeout_ms` khoảng 5000; action error được ghi vào episode và `solver.completed` event |
 
 ---
 

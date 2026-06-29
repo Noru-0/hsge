@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import os
 import re
+import time
 from urllib.parse import urljoin, urlparse
 
 
@@ -28,6 +29,7 @@ def _is_same_origin(base: str, url: str) -> bool:
 
 class WebArenaBrowser:
     def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000,
+                 action_timeout_ms: int = 5000,
                  screenshot: bool = False, storage_state: str | None = None):
         import logging
         # Tắt log "Overriding the task's timeout parameter" từ browsergym
@@ -40,6 +42,7 @@ class WebArenaBrowser:
         self._gym = gym
         self.start_url = start_url
         self.timeout_ms = timeout_ms
+        self.action_timeout_ms = action_timeout_ms
         self.screenshot_enabled = screenshot
         # Build pw_context_kwargs with storage_state if provided.
         # We pass it BOTH via gym.make() (for initial context creation)
@@ -64,7 +67,6 @@ class WebArenaBrowser:
             # browser.timeout_ms value is actually respected.
             task_kwargs={"start_url": "about:blank"},
             headless=headless,
-            timeout=timeout_ms,
             wait_for_user_message=False,
             pw_context_kwargs=pw_context_kwargs,
         )
@@ -78,8 +80,26 @@ class WebArenaBrowser:
 
     def reset(self) -> dict:
         try:
+            # Let BrowserGym/Playwright deliver binding callbacks before reset
+            # tears down the previous context. This reduces benign
+            # TargetClosedError futures during repeated per-task resets.
+            try:
+                context = getattr(self.env.unwrapped, "context", None)
+                if context is not None:
+                    context.cookies()
+            except Exception:
+                pass
             self.env.reset()
             page = self.env.unwrapped.page
+            action_timeout = getattr(self, "action_timeout_ms", 5000)
+            try:
+                page.set_default_timeout(action_timeout)
+            except Exception:
+                pass
+            try:
+                self.env.unwrapped.context.set_default_timeout(action_timeout)
+            except Exception:
+                pass
             page.goto(
                 self.start_url,
                 timeout=self.timeout_ms,
@@ -132,13 +152,36 @@ class WebArenaBrowser:
 
     def act(self, action: str) -> dict:
         """action is a BrowserGym call string, e.g. click('a51') or fill('b3','x')."""
+        started_at = time.monotonic()
         try:
-            self._last_obs, _, term, trunc, _ = self.env.step(action)
-        except Exception:
+            self._last_obs, _, term, trunc, info = self.env.step(action)
+            action_error = (
+                (self._last_obs or {}).get("last_action_error", "")
+                or getattr(self.env.unwrapped, "last_action_error", "")
+            )
+            result = self.observation()
+            if action_error:
+                result.update({
+                    "_action_error": action_error,
+                    "_action_error_type": action_error.split(":", 1)[0],
+                    "_action_timed_out": bool(info.get("action_exec_timeout", 0)),
+                    "_action_elapsed_ms": round((time.monotonic() - started_at) * 1000),
+                })
+            return result
+        except Exception as exc:
             # If the browser was closed mid-step (e.g. TargetClosedError),
             # return a safe fallback observation so the caller can exit gracefully.
-            return {"url": "", "axtree": "", "bids": [], "screenshot_base64": None}
-        return self.observation()
+            try:
+                result = self.observation()
+            except Exception:
+                result = {"url": "", "axtree": "", "bids": [], "screenshot_base64": None}
+            result.update({
+                "_action_error": f"{type(exc).__name__}: {exc}",
+                "_action_error_type": type(exc).__name__,
+                "_action_timed_out": type(exc).__name__ == "TimeoutError",
+                "_action_elapsed_ms": round((time.monotonic() - started_at) * 1000),
+            })
+            return result
 
     def links(self) -> list[str]:
         """Extract all same-origin <a href> links from the current page DOM."""
@@ -167,6 +210,14 @@ class WebArenaBrowser:
         return sorted(links)
 
     def close(self):
+        try:
+            context = getattr(self.env.unwrapped, "context", None)
+            if context is not None:
+                # BrowserGym uses cookies() to flush exposed-binding callbacks;
+                # do the same before closing pages/contexts.
+                context.cookies()
+        except (Exception, asyncio.CancelledError):
+            pass
         try:
             self.env.close()
         except (Exception, asyncio.CancelledError):

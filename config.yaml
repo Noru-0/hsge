@@ -8,7 +8,7 @@ run:
   root_url: https://infectious-plasma-gem-officials.trycloudflare.com/              # required for real runs; dry-run supplies a mock URL
   # out: outputs/wa_run
   # out: outputs/wa_run_18  # checkpoint v2, dùng cơ chế visited cũ
-  out: outputs/wa_run_19    # checkpoint v4, semantic-query visited identity
+  out: outputs/wa_run_20    # checkpoint v4, semantic-query visited identity
   allow: null                 # null = derive a same-site regex from root_url
   dry_run: false              # use `--dry-run` for the offline mock
   resume: false
@@ -40,6 +40,7 @@ browser:
   # screenshot: false
   screenshot: true
   timeout_ms: 30000
+  action_timeout_ms: 5000     # keep actions bounded; navigation uses timeout_ms
   # storage_state: null
   storage_state: .auth/shopping_state.json
   denylist: []                # /logout is always denied by the runtime
@@ -62,6 +63,7 @@ tasks:
   explorer_max_tasks: 20
   explorer_profile: training_quality
   solver_profile: training_quality
+  retry_limit: 3               # max attempts per local task (1 initial + 2 retries)
 
 skills:
   similarity_threshold: 0.6

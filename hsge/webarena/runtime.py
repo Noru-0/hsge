@@ -273,6 +273,7 @@ class WebArenaExplorer:
                  frontier_max_size: int | None = None,
                  prefix_retry_limit: int = 2,
                  load_retry_limit: int = 2,
+                 task_retry_limit: int = 3,
                  lookahead_candidates: int = 5,
                  lookahead_model: str | None = None,
                  lookahead_base_url: str | None = None,
@@ -295,6 +296,9 @@ class WebArenaExplorer:
         self.auto_terminal_goals = auto_terminal_goals
         self.place_order_allowed = place_order_allowed
         self.max_goal_attempts = max(1, max_goal_attempts)
+        self._task_retry_limit = max(1, task_retry_limit)
+        self._prefix_retry_limit = max(1, prefix_retry_limit)
+        self._load_retry_limit = max(1, load_retry_limit)
         # support both old single-llm API and new separate explorer/solver llms
         _explorer_llm = explorer_llm or llm
         _solver_llm = solver_llm or llm
@@ -1643,7 +1647,9 @@ class WebArenaExplorer:
         # Navigate to the source URL first (this is a direct goto, but it's
         # the starting point of the prefix — the prefix itself is natural clicks)
         try:
-            browser.act(f"goto('{source_url}')")
+            goto_obs = browser.act(f"goto('{source_url}')")
+            if goto_obs.get("_action_error"):
+                raise RuntimeError(goto_obs["_action_error"])
         except Exception as e:
             self._last_prefix_replay_status["reason"] = f"goto_source_failed:{e}"
             msg = f"      [prefix] goto source FAILED: {e}"
@@ -1683,7 +1689,9 @@ class WebArenaExplorer:
                 stateful_prefix = True
                 self._last_prefix_replay_status["stateful"] = True
             try:
-                browser.act(action)
+                replay_obs = browser.act(action)
+                if replay_obs.get("_action_error"):
+                    raise RuntimeError(replay_obs["_action_error"])
             except Exception as e:
                 self._last_prefix_replay_status["reason"] = f"step_failed:{e}"
                 msg = f"      [prefix] step {i} FAILED: {action[:50]} ({e})"
@@ -1750,17 +1758,29 @@ class WebArenaExplorer:
         Correctness first: if the node was reached through a prefix trace, replay
         that trace again instead of relying on BrowserGym reset, which may go
         back to the original start URL and lose query/stateful navigation.
+
+        When prefix replay fails (stale actions, URL mismatch, etc.), fall back
+        to browser.reset() + goto(actual_url) so that local tasks are not all
+        silently skipped.
         """
         norm_url = self._node_key(url)
         if norm_url in self._discovered_urls or url in self._discovered_urls:
             obs = self._navigate_via_prefix(browser, norm_url)
-            return obs or {"url": "", "axtree": ""}
+            if obs and obs.get("url"):
+                return obs
+            # Prefix replay failed — fall back to direct reset + goto
+            msg = (f"      [prefix] reset fallback: direct goto to {actual_url[:80]}")
+            print(msg)
+            if self._log_file:
+                self._log_file.write(msg + "\n")
+                self._log_file.flush()
 
         obs = browser.reset()
         if obs.get("url") and self._node_key(obs.get("url", "")) != actual_url:
             try:
-                browser.act(f"goto('{actual_url}')")
-                obs = browser.observation()
+                obs = browser.act(f"goto('{actual_url}')")
+                if obs.get("_action_error"):
+                    return {"url": "", "axtree": "", "_action_error": obs["_action_error"]}
             except Exception:
                 return {"url": "", "axtree": ""}
         return obs
@@ -1913,6 +1933,7 @@ class WebArenaExplorer:
         try:
             # Try prefix-based navigation first (replay natural clicks)
             browser = self.browser_factory(url)
+            self._active_browser = browser
             obs = browser.reset()
 
             # If we have a prefix trace for this URL, use it instead of direct goto
@@ -1923,38 +1944,37 @@ class WebArenaExplorer:
                     obs = prefix_obs
                 else:
                     status = getattr(self, "_last_prefix_replay_status", {})
-                    if status.get("stateful"):
+                    stateful = status.get("stateful", False)
+                    if stateful:
                         msg = (
-                            f"      [prefix] SKIP stale stateful prefix for {url[:60]} "
-                            f"(reason={status.get('reason')}, arrived={status.get('arrived_url')})"
+                            f"      [prefix] stale stateful prefix for {url[:60]} "
+                            f"(reason={status.get('reason')}); "
+                            f"falling back to direct goto (may lose session state)"
                         )
-                        print(msg)
-                        if self._log_file:
-                            self._log_file.write(msg + "\n")
-                            self._log_file.flush()
-                        try:
-                            browser.close()
-                        except Exception:
-                            pass
-                        self._emit_event("node", "skipped", level="warning", data={
-                            "url": url,
-                            "reason": "stale_stateful_prefix",
-                            "detail": status,
-                        })
-                        return None
-                    # Prefix failed — fall back to fresh browser
-                    msg = f"      [prefix] Fallback to direct goto for {url[:60]}"
+                    else:
+                        msg = f"      [prefix] Fallback to direct goto for {url[:60]}"
                     print(msg)
                     if self._log_file:
                         self._log_file.write(msg + "\n")
                         self._log_file.flush()
+                    if stateful:
+                        self._emit_event("node", "prefix_fallback", level="warning", data={
+                            "url": url,
+                            "reason": "stale_stateful_prefix_direct_goto_fallback",
+                            "detail": status,
+                        })
                     status["used_direct_goto"] = True
                     try:
                         browser.close()
                     except Exception:
                         pass
                     browser = self.browser_factory(url)
+                    self._active_browser = browser
                     obs = browser.reset()
+                    # Clear stale prefix so _reset_browser_to_node skips
+                    # prefix replay for subsequent tasks on this node.
+                    self._discovered_urls.pop(norm_url, None)
+                    self._discovered_urls.pop(url, None)
         except Exception as e:
             self._last_node_load_status = {
                 "reason": "load_error",
@@ -2101,37 +2121,79 @@ class WebArenaExplorer:
             _node_task_records.append(task_record)
             task_key = self._task_key(task)
             self._task_attempt_counts[task_key] += 1
-            try:
-                reset_obs = self._reset_browser_to_node(browser, url, actual_url)
-                if not reset_obs.get("url"):
-                    task_record["status"] = "skipped"
-                    msg_skip = f"    local: {task!r} SKIP (reset failed)"
-                    print(msg_skip)
-                    if self._log_file:
-                        self._log_file.write(msg_skip + "\n")
-                        self._log_file.flush()
-                    continue
-                context_hints = ""
-                safe_hint = self._checkout_safety_hint(task)
-                if safe_hint:
-                    context_hints = safe_hint
-                # Append account credentials to solver prompt
-                if self._account_info:
-                    context_hints = self._account_info + "\n\n" + context_hints if context_hints else self._account_info
-                steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
-                    browser, task, context_hints=context_hints,
-                    step_callback=self._on_step_completed)
+            task_retry_limit = getattr(self, "_task_retry_limit", 3)
+            task_success = False
+            task_steps = []
+            task_obs_texts = []
+            task_final_obs = {}
+            task_screenshots = []
+            for task_attempt in range(1, task_retry_limit + 1):
+                try:
+                    reset_obs = self._reset_browser_to_node(browser, url, actual_url)
+                    if not reset_obs.get("url"):
+                        task_record["status"] = "skipped"
+                        if task_attempt > 1:
+                            msg_skip = f"    local: {task!r} SKIP (reset failed, attempt {task_attempt})"
+                        else:
+                            msg_skip = f"    local: {task!r} SKIP (reset failed)"
+                        print(msg_skip)
+                        if self._log_file:
+                            self._log_file.write(msg_skip + "\n")
+                            self._log_file.flush()
+                        break
+                    context_hints = ""
+                    safe_hint = self._checkout_safety_hint(task)
+                    if safe_hint:
+                        context_hints = safe_hint
+                    # Append account credentials to solver prompt
+                    if self._account_info:
+                        context_hints = self._account_info + "\n\n" + context_hints if context_hints else self._account_info
+                    steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
+                        browser, task, context_hints=context_hints,
+                        step_callback=self._on_step_completed)
+                    task_steps = steps
+                    task_obs_texts = obs_texts
+                    task_final_obs = final_obs
+                    task_screenshots = screenshots
+                    task_success = success
+                    if success:
+                        break
+                    if task_attempt < task_retry_limit:
+                        msg_retry = f"    local: {task!r} attempt {task_attempt}/{task_retry_limit} failed, retrying..."
+                        print(msg_retry)
+                        if self._log_file:
+                            self._log_file.write(msg_retry + "\n")
+                            self._log_file.flush()
+                except Exception as e:
+                    if task_attempt < task_retry_limit:
+                        msg_retry = f"    local: {task!r} attempt {task_attempt}/{task_retry_limit} error ({e}), retrying..."
+                        print(msg_retry)
+                        if self._log_file:
+                            self._log_file.write(msg_retry + "\n")
+                            self._log_file.flush()
+                    else:
+                        task_record["status"] = "error"
+                        self.metrics.errors += 1
+                        msg_err = f"    local: {task!r} ERROR (final): {e}"
+                        print(msg_err)
+                        if self._log_file:
+                            self._log_file.write(msg_err + "\n")
+                            self._log_file.flush()
+            # --- post-retry recording ---
+            if task_record["status"] not in ("skipped", "error"):
                 ep_id = self.episode
-                self._record(task, steps, obs_texts, success, difficulty=1, tag="LOCAL",
-                             screenshots=screenshots)
+                self._record(task, task_steps, task_obs_texts, task_success, difficulty=1, tag="LOCAL",
+                             screenshots=task_screenshots)
                 self._emit_event("solver", "completed", level="summary", data={
                     "kind": "local",
                     "goal": task,
-                    "success": bool(success),
-                    "steps": len(steps),
+                    "success": bool(task_success),
+                    "steps": len(task_steps),
+                    "action_error": task_final_obs.get("_action_error"),
+                    "action_timed_out": task_final_obs.get("_action_timed_out", False),
                 }, episode_id=ep_id)
                 task_record["episode_id"] = ep_id
-                if success:
+                if task_success:
                     task_record["status"] = "solved"
                     if is_checkout_task:
                         self.metrics.checkout_tasks_solved += 1
@@ -2140,34 +2202,23 @@ class WebArenaExplorer:
                     self.metrics.tasks_solved += 1
                     self._emit_event("discovery", "trajectory_received", data={
                         "goal": task,
-                        "steps": len(steps),
+                        "steps": len(task_steps),
                         "source": "local_success",
                     }, episode_id=ep_id)
                     self.discovery.on_trajectory(
-                        steps, site=root_url, task=task,
-                        obs_texts=obs_texts, final_obs=final_obs,
+                        task_steps, site=root_url, task=task,
+                        obs_texts=task_obs_texts, final_obs=task_final_obs,
                     )
                 else:
                     task_record["status"] = "failed"
                     self.metrics.tasks_failed += 1
                     self._task_failure_counts[task_key] += 1
                     self._task_family_failure_counts[task_family(task)] += 1
-                msg2 = f"    local: {task!r} success={success}"
+                msg2 = f"    local: {task!r} success={task_success}"
                 print(msg2)
                 if self._log_file:
                     self._log_file.write(msg2 + "\n")
                     self._log_file.flush()
-            except Exception as e:
-                task_record["status"] = "error"
-                self.metrics.errors += 1
-                self.metrics.tasks_error += 1
-                self._task_error_counts[task_key] += 1
-                msg_err = f"    local: {task!r} ERROR: {e}"
-                print(msg_err)
-                if self._log_file:
-                    self._log_file.write(msg_err + "\n")
-                    self._log_file.flush()
-                continue
 
         # 2) goal-conditioned composed task (once a plan to the goal exists)
         gt = self._goal_task(
@@ -2225,6 +2276,8 @@ class WebArenaExplorer:
                         "success": bool(success),
                         "steps": len(steps),
                         "plan_length": gt["difficulty"],
+                        "action_error": final_obs.get("_action_error"),
+                        "action_timed_out": final_obs.get("_action_timed_out", False),
                     }, episode_id=ep_id)
                     goal_record["episode_id"] = ep_id
                     if success:
@@ -2375,6 +2428,7 @@ class WebArenaExplorer:
                 browser.close()
             except Exception:
                 pass
+            self._active_browser = None
 
         # Dump frontier snapshot after each node (Go-Browse style with full scores)
         frontier_snapshot = []
@@ -2820,6 +2874,7 @@ class WebArenaExplorer:
             },
         )
         nodes_processed = self._nodes_done
+        interrupted = False
         # Lưu axtree đã fetch cho từng URL (tránh fetch lại khi explore)
         self._axtree_cache: dict[str, str] = {}
         while frontier and nodes_processed < self.max_nodes:
@@ -2900,6 +2955,29 @@ class WebArenaExplorer:
                     url, depth, root_url,
                     frontier, visited, queued, node_num,
                 )
+            except KeyboardInterrupt:
+                interrupted = True
+                active_browser = getattr(self, "_active_browser", None)
+                if active_browser is not None:
+                    try:
+                        active_browser.close()
+                    except Exception:
+                        pass
+                    self._active_browser = None
+                if url not in {candidate for candidate, _ in frontier}:
+                    frontier.insert(0, (url, depth))
+                queued.add(url)
+                self._emit_event("run", "interrupt_requested", level="warning", data={
+                    "node_id": node_num,
+                    "url": url,
+                    "nodes_processed": nodes_processed,
+                }, node_id=node_num)
+                self.save_checkpoint(frontier, visited, queued)
+                print(
+                    f"\n[interrupt] Saved checkpoint at node {node_num}; "
+                    "resume with --resume."
+                )
+                break
             except Exception as e:
                 self.metrics.errors += 1
                 self._last_node_load_status = {
@@ -2961,7 +3039,9 @@ class WebArenaExplorer:
         self._active_node_id = None
         self._active_task_id = None
         self._active_episode_id = None
-        self._emit_event("run", "completed", level="summary", data={
+        self._emit_event("run", "interrupted" if interrupted else "completed", level=(
+            "warning" if interrupted else "summary"
+        ), data={
             "nodes_processed": nodes_processed,
             "episodes": self.episode,
             "skills": len(self.library.all_skills()),

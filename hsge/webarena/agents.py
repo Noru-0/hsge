@@ -242,7 +242,12 @@ def _build_solver_sys(context_hints: str = "") -> str:
         "tree (elements shown as [bid] role 'name'), and your history of "
         "past actions to find the best next action. "
         "Your answer will be interpreted and executed by a program — "
-        "follow the formatting instructions exactly."
+        "follow the formatting instructions exactly. "
+        "IMPORTANT: The accessibility tree only shows visible elements. "
+        "If you need to find content that may be further down the page, "
+        "scroll down first (e.g., scroll(0, 300)) before concluding the "
+        "element is absent. Scroll saturation is detected automatically — "
+        "stop scrolling once the page content stops changing."
     )
     parts = [context_hints, base]
     return "\n".join(p for p in parts if p)
@@ -698,6 +703,12 @@ class Solver:
                 obs = browser.act(action)
             except Exception as e:
                 steps[-1].obs_summary += f" [action error: {e}]"
+                break
+            if obs.get("_action_error"):
+                steps[-1].obs_summary += (
+                    f" [action error: {obs['_action_error']}; "
+                    f"elapsed_ms={obs.get('_action_elapsed_ms', 0)}]"
+                )
                 break
             history.append(action)
             last_action_str = f"{{'thought': {thought[:80]}, 'action': {action[:80]}}}"

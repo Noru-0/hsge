@@ -528,6 +528,86 @@ def test_browser_reset_uses_configured_navigation_timeout(monkeypatch):
     assert obs["url"] == "https://example.test"
 
 
+def test_browser_act_surfaces_browsergym_action_timeout(monkeypatch):
+    import sys
+    from types import ModuleType, SimpleNamespace
+    from hsge.webarena.browser import WebArenaBrowser
+
+    class Env:
+        unwrapped = SimpleNamespace(
+            last_action_error="TimeoutError: Timeout 500ms exceeded."
+        )
+
+        def step(self, _action):
+            return (
+                {
+                    "url": "https://example.test",
+                    "axtree_object": {},
+                    "last_action_error": "TimeoutError: Timeout 500ms exceeded.",
+                },
+                0.0,
+                False,
+                False,
+                {"action_exec_timeout": 0.5},
+            )
+
+    obs_module = ModuleType("browsergym.utils.obs")
+    obs_module.flatten_axtree_to_str = lambda _tree: "[1] button 'Ready'"
+    monkeypatch.setitem(sys.modules, "browsergym.utils.obs", obs_module)
+
+    browser = WebArenaBrowser.__new__(WebArenaBrowser)
+    browser.env = Env()
+    browser.screenshot_enabled = False
+    browser._last_obs = None
+
+    obs = browser.act("hover('1')")
+
+    assert obs["url"] == "https://example.test"
+    assert obs["_action_timed_out"] is True
+    assert obs["_action_error_type"] == "TimeoutError"
+    assert "500ms" in obs["_action_error"]
+
+
+def test_solver_stops_immediately_when_browser_reports_action_error():
+    from hsge.webarena.agents import Solver
+
+    class LLM:
+        supports_vision = False
+
+        def complete_json(self, _system, _prompt):
+            return {"thought": "Reveal the menu.", "action": "hover('1')"}
+
+    class Browser:
+        calls = 0
+
+        def observation(self):
+            return {
+                "url": "https://example.test",
+                "axtree": "[1] button 'Menu' haspopup=menu",
+                "screenshot_base64": None,
+            }
+
+        def act(self, _action):
+            self.calls += 1
+            return {
+                **self.observation(),
+                "_action_error": "TimeoutError: Timeout 500ms exceeded.",
+                "_action_timed_out": True,
+                "_action_elapsed_ms": 501,
+            }
+
+    browser = Browser()
+    steps, _, final_obs, success, _ = Solver(LLM(), max_steps=3).solve(
+        browser, "Hover over Menu and report a submenu option."
+    )
+
+    assert browser.calls == 1
+    assert len(steps) == 1
+    assert "action error" in steps[0].obs_summary
+    assert final_obs["_action_timed_out"] is True
+    assert success is False
+
+
 def test_empty_prefix_load_is_left_to_prefix_recovery():
     explorer = WebArenaExplorer.__new__(WebArenaExplorer)
     explorer._load_retry_counts = {}

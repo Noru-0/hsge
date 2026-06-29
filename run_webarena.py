@@ -134,7 +134,8 @@ CONFIG_FIELDS = {
     },
     "browser": {
         "headless": "headless", "screenshot": "screenshot",
-        "timeout_ms": "timeout", "storage_state": "storage_state",
+        "timeout_ms": "timeout", "action_timeout_ms": "action_timeout",
+        "storage_state": "storage_state",
         "denylist": "denylist", "full_reset_url": "full_reset_url",
         "ignore_query_params": "ignored_query_params",
     },
@@ -150,6 +151,7 @@ CONFIG_FIELDS = {
         "explorer_max_tasks": "explorer_max_tasks",
         "explorer_profile": "explorer_profile",
         "solver_profile": "solver_profile",
+        "retry_limit": "task_retry_limit",
     },
     "skills": {
         "similarity_threshold": "skill_sim_threshold",
@@ -220,7 +222,8 @@ def _config_path_from_argv(argv: list[str]) -> tuple[str, bool]:
 def _validate_args(ap: argparse.ArgumentParser, args) -> None:
     positive = {
         "max_nodes": args.max_nodes, "max_steps": args.max_steps,
-        "timeout": args.timeout, "max_goal_attempts": args.max_goal_attempts,
+        "timeout": args.timeout, "action_timeout": args.action_timeout,
+        "max_goal_attempts": args.max_goal_attempts,
         "explorer_max_tasks": args.explorer_max_tasks,
         "skill_maturity": args.skill_maturity,
         "skill_diversity_target": args.skill_diversity_target,
@@ -366,6 +369,8 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
                     help="Include screenshots in observations (for vision-enabled models)")
     ap.add_argument("--timeout", type=int, default=d("timeout", 30000),
                     help="Browser page load timeout in ms (default: 30000)")
+    ap.add_argument("--action-timeout", type=int, default=d("action_timeout", 5000),
+                    help="Playwright action timeout in ms (default: 5000)")
     ap.add_argument("--dry-run", action=argparse.BooleanOptionalAction,
                     default=d("dry_run", False))
     ap.add_argument("--resume", action=argparse.BooleanOptionalAction,
@@ -408,6 +413,8 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
                          "browser will start already logged in. "
                          "Generate with: python generate_auth_state.py")
     ap.add_argument("--explorer-max-tasks", type=int, default=d("explorer_max_tasks", 12))
+    ap.add_argument("--task-retry-limit", type=int, default=d("task_retry_limit", 3),
+                    help="Max attempts per local task (1 + N retries, default 3).")
     ap.add_argument("--explorer-profile", default=d("explorer_profile", "training_quality"))
     ap.add_argument("--solver-profile", default=d("solver_profile", "training_quality"))
     ap.add_argument("--skill-sim-threshold", type=float, default=d("skill_sim_threshold", 0.6))
@@ -513,6 +520,7 @@ def main(argv: list[str] | None = None):
             url, headless=args.headless,
             screenshot=args.screenshot,
             timeout_ms=args.timeout,
+            action_timeout_ms=args.action_timeout,
             storage_state=_ss,
         )
 
@@ -554,6 +562,7 @@ def main(argv: list[str] | None = None):
         frontier_max_size=args.frontier_max_size,
         prefix_retry_limit=args.prefix_retry_limit,
         load_retry_limit=args.load_retry_limit,
+        task_retry_limit=args.task_retry_limit,
         lookahead_candidates=args.lookahead_candidates,
         lookahead_model=args.lookahead_model,
         lookahead_base_url=args.lookahead_base_url,

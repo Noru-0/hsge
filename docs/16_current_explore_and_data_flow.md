@@ -248,6 +248,8 @@ Một run hiện tại có thể tạo:
   skill hints, operator mining, graph/curriculum/export.
 - `hsge/webarena/agents.py`: `PageExplorer`, `Solver`, action-space prompt,
   task filtering, deterministic seed tasks.
+- `hsge/webarena/browser.py`: navigation dùng `browser.timeout_ms`; Playwright
+  actions dùng `browser.action_timeout_ms` và trả structured `_action_error`.
 - `hsge/webarena/scoring.py`: lookahead và U/V frontier scoring.
 - `hsge/webarena/frontier_filter.py`: template clustering và fallback link filter.
 - `hsge/webarena/action_validation.py`: parse/validate/repair action và task/action
