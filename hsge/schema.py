@@ -47,6 +47,7 @@ class SubTrajectory:
     sub_id: str = field(default_factory=lambda: _new_id("st"))
     planning_preconditions: set[str] = field(default_factory=set)
     planning_effects: set[str] = field(default_factory=set)
+    predicate_schema_version: str = ""
 
     def action_signature(self) -> str:
         """Site-agnostic signature: the sequence of action verbs.
@@ -111,6 +112,9 @@ class SkillCard:
     planning_preconditions: set[str] = field(default_factory=set)
     planning_effects: set[str] = field(default_factory=set)
     terminal: bool = False
+    planning_ready: bool = False
+    planning_rejection_reason: str = ""
+    predicate_schema_version: str = ""
     # Phase 4: structured execution plan
     execution_plan: list[dict] = field(default_factory=list)
     alternative_templates: list[list[str]] = field(default_factory=list)

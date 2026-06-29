@@ -175,6 +175,9 @@ CONFIG_FIELDS = {
     "observability": {
         "event_log_level": "event_log_level",
     },
+    "predicates": {
+        "plugins": "predicate_plugins",
+    },
 }
 
 
@@ -443,6 +446,13 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
         default=d("event_log_level", "info"),
         help="Minimum level written to events.jsonl (default: info).",
     )
+    ap.add_argument(
+        "--predicate-plugins",
+        nargs="*",
+        choices=["auto", "commerce"],
+        default=d("predicate_plugins", ["auto"]),
+        help="Predicate plugins layered over the domain-neutral core.",
+    )
     return ap
 
 
@@ -569,6 +579,7 @@ def main(argv: list[str] | None = None):
         lookahead_timeout_seconds=args.lookahead_timeout_seconds,
         lookahead_max_retries=args.lookahead_max_retries,
         event_log_level=args.event_log_level,
+        predicate_plugins=args.predicate_plugins,
         ignored_query_params=args.ignored_query_params,
     )
     explorer.run(args.root_url)

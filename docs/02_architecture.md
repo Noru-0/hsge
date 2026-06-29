@@ -61,6 +61,13 @@ Curriculum generation runs the same BFS planner from the recorded root predicate
 to every reachable effect predicate. Intermediate effects produce easier tasks,
 while a reachable terminal effect produces the complete long-horizon chain.
 
+Verified skills have two admission tiers. Execution-only skills remain usable
+for retrieval and transfer. A skill enters the operator graph only when it has a
+non-empty canonical effect and that effect was observed in the required number
+of verification contexts. Predicate extraction is versioned: the core contains
+domain-neutral structural predicates, while commerce predicates are supplied by
+an opt-in/auto-detected plugin.
+
 ## Swapping in real backends
 
 - **LLM** (`llm.py`): subclass `LLM.complete_json` (Claude/OpenAI sketches in the docstring).

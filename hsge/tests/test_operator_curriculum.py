@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from hsge.curriculum import (
     generate_curriculum,
     generate_curriculum_from_operators,
@@ -29,6 +31,8 @@ def _card(
         skill_id=skill_id,
         planning_preconditions=set(preconditions),
         planning_effects=set(effects),
+        planning_ready=bool(effects),
+        predicate_schema_version="test-v1",
         terminal=terminal,
     )
 
@@ -45,6 +49,17 @@ def test_url_adjacency_never_creates_skill_composition():
     assert graph.successors("make_x") == []
     assert graph.operator_graph.edges() == []
     assert plan(graph.operator_graph, frozenset(), "z") is None
+
+
+def test_execution_only_skill_is_rejected_from_operator_graph():
+    card = _card("execution_only", effects={"observed"})
+    card.planning_ready = False
+    card.planning_rejection_reason = "planning_effects_unverified"
+
+    with pytest.raises(ValueError, match="non-planner-ready"):
+        Operator.from_skill(card)
+    with pytest.raises(ValueError, match="planner-ready"):
+        HierarchicalGraph().add_skill(card, [], [])
 
 
 def test_composition_edges_are_exactly_effect_precondition_matches():

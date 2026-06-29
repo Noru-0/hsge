@@ -21,7 +21,7 @@ from .action_validation import (
     repair_thought,
     validate_hsge_action,
 )
-from .predicates import reached
+from .predicates import PredicateExtractor, predicates_from, reached
 
 # Full action space documentation (Go-Browse style) placed in solver user prompts.
 _ACTION_SPACE_DOC = """\
@@ -630,7 +630,8 @@ class Solver:
 
     def solve(self, browser, goal: str, goal_predicate: str | None = None,
               context_hints: str = "",
-              step_callback=None):
+              step_callback=None,
+              predicate_extractor: PredicateExtractor | None = None):
         """Drive the browser toward `goal`.
         Returns (steps, obs_texts, final_obs, success, screenshots).
         screenshots is list[bytes|None] parallel to steps.
@@ -692,10 +693,36 @@ class Solver:
             invalid_attempts = 0
 
             thought, _ = repair_thought(thought, action, obs.get("axtree", ""))
-            steps.append(Step(action=action, url=obs["url"], obs_summary=thought))
+            target_role = ""
+            target_name = ""
+            if validation.target_line:
+                match = re.match(
+                    r"^\s*\[(?:\w+)\]\s+(?P<role>[A-Za-z]+)\s+(?P<name>.*)$",
+                    validation.target_line,
+                )
+                if match:
+                    target_role = match.group("role").lower()
+                    target_name = re.sub(r"\s+", " ", match.group("name")).strip()
+            planning = {
+                "schema_version": getattr(predicate_extractor, "schema_version", "core-v2"),
+                "pre_url": obs.get("url", ""),
+                "pre_predicates": sorted(predicates_from(
+                    obs.get("url", ""), obs.get("axtree", ""), predicate_extractor
+                )),
+                "target_bid": validation.parsed.bid if validation.parsed else None,
+                "target_role": target_role,
+                "target_name": target_name,
+                "target_fingerprint": f"{target_role}|{target_name.lower()}",
+            }
+            steps.append(Step(
+                action=action, url=obs["url"], obs_summary=thought,
+                misc={"planning": planning},
+            ))
             obs_texts.append(obs["axtree"])
             screenshots.append(obs.get("screenshot_base64"))
             if not action or action.startswith("send_msg_to_user"):
+                planning["post_url"] = obs.get("url", "")
+                planning["post_predicates"] = planning["pre_predicates"]
                 break
             try:
                 url_before_action = obs.get("url", "")
@@ -704,6 +731,10 @@ class Solver:
             except Exception as e:
                 steps[-1].obs_summary += f" [action error: {e}]"
                 break
+            planning["post_url"] = obs.get("url", "")
+            planning["post_predicates"] = sorted(predicates_from(
+                obs.get("url", ""), obs.get("axtree", ""), predicate_extractor
+            ))
             if obs.get("_action_error"):
                 steps[-1].obs_summary += (
                     f" [action error: {obs['_action_error']}; "
@@ -731,7 +762,9 @@ class Solver:
                 step_callback(action, prev_url, new_url, steps)
             prev_url = new_url
 
-            if goal_predicate and reached(goal_predicate, obs["url"], obs["axtree"]):
+            if goal_predicate and reached(
+                goal_predicate, obs["url"], obs["axtree"], predicate_extractor
+            ):
                 success = True
                 break
 

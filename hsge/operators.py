@@ -39,6 +39,10 @@ class Operator:
     def from_skill(cls, card: SkillCard) -> "Operator":
         if not card.verified:
             raise ValueError("cannot create an operator from an unverified skill")
+        if not card.planning_ready:
+            raise ValueError("cannot create an operator from a non-planner-ready skill")
+        if not card.planning_effects:
+            raise ValueError("cannot create an operator with empty effects")
         return cls(
             name=card.name,
             preconditions=frozenset(card.planning_preconditions),

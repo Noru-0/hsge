@@ -16,7 +16,14 @@ from fnmatch import fnmatchcase
 from collections import Counter
 from dataclasses import dataclass, field
 
-from .action_validation import action_family, repair_thought, task_family, validate_hsge_action
+from .action_validation import (
+    action_family,
+    axtree_elements,
+    parse_hsge_action,
+    repair_thought,
+    task_family,
+    validate_hsge_action,
+)
 from ..discovery import Discovery
 from ..graph import HierarchicalGraph
 from ..library import SkillLibrary
@@ -28,16 +35,26 @@ from ..segmentation import segment_trajectory
 from .agents import PageExplorer, Solver
 from .frontier_filter import filter_frontier
 from .observability import ExploreEventLogger
-from .predicates import predicates_from, reached
+from .predicates import build_predicate_extractor, predicates_from, reached
 from .verification_context import make_verify_contexts_fn
 from .scoring import FrontierScorer, LookaheadPredictor
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 
-PREFIX_TRACE_SCHEMA_VERSION = 1
+PREFIX_TRACE_SCHEMA_VERSION = 2
 DEFAULT_IGNORED_QUERY_PARAMS = (
     "utm_*", "gclid", "fbclid", "msclkid", "dclid", "_ga", "_gl",
 )
+
+
+def _atomic_json_dump(path: str, value, **kwargs) -> None:
+    """Write JSON through a sibling temporary file, then atomically replace."""
+    tmp = f"{path}.tmp.{os.getpid()}"
+    with open(tmp, "w", encoding="utf-8") as handle:
+        json.dump(value, handle, **kwargs)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp, path)
 
 
 def _normalize_trace_url(
@@ -102,6 +119,11 @@ class RunMetrics:
     dom_urls_considered: int = 0
     dom_urls_added_to_frontier: int = 0
     event_counts: dict[str, int] = field(default_factory=dict)
+    execution_skills_verified: int = 0
+    planner_ready_skills: int = 0
+    effectless_skills: int = 0
+    reachable_goals: int = 0
+    terminal_tasks: int = 0
     start_time: float = 0.0
     errors: int = 0
 
@@ -116,9 +138,12 @@ class RunMetrics:
             f"\n  Tasks: {self.tasks_solved}/{self.tasks_proposed} solved"
             f"\n  Task failures: {self.tasks_failed}, task backend errors: {self.tasks_error}"
             f"\n  Skills: {self.skills_discovered} discovered, {self.skills_verified} verified"
+            f"\n  Skill tiers: {self.execution_skills_verified} execution-verified, "
+            f"{self.planner_ready_skills} planner-ready, {self.effectless_skills} effectless"
             f"\n  Skill families: {self.skill_families_verified}/{self.skill_diversity_target}"
             f"\n  Segments: {self.segments_created}, clusters matured: {self.clusters_matured}"
-            f"\n  Operators: {self.operators_mined}"
+            f"\n  Operators: {self.operators_mined}; reachable goals: "
+            f"{self.reachable_goals}, terminal tasks: {self.terminal_tasks}"
             f"\n  Goal tasks: {self.goal_tasks_solved}/{self.goal_tasks_attempted}"
             f"\n  Solver URLs: {self.solver_unique_urls_discovered} unique / "
             f"{self.solver_navigation_events} navigations, "
@@ -139,6 +164,10 @@ class PrefixTraceStep:
     target_url: str
     thought: str = ""
     stateful_hint: bool = False
+    target_bid: str = ""
+    target_role: str = ""
+    target_name: str = ""
+    target_fingerprint: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -147,6 +176,10 @@ class PrefixTraceStep:
             "target_url": self.target_url,
             "thought": self.thought,
             "stateful_hint": self.stateful_hint,
+            "target_bid": self.target_bid,
+            "target_role": self.target_role,
+            "target_name": self.target_name,
+            "target_fingerprint": self.target_fingerprint,
         }
 
 
@@ -280,6 +313,7 @@ class WebArenaExplorer:
                  lookahead_timeout_seconds: float = 30.0,
                  lookahead_max_retries: int = 1,
                  event_log_level: str = "info",
+                 predicate_plugins: list[str] | None = None,
                  ignored_query_params: list[str] | None = None):
         self.browser_factory = browser_factory
         self.out_dir = out_dir
@@ -299,6 +333,9 @@ class WebArenaExplorer:
         self._task_retry_limit = max(1, task_retry_limit)
         self._prefix_retry_limit = max(1, prefix_retry_limit)
         self._load_retry_limit = max(1, load_retry_limit)
+        self._predicate_plugin_names = list(predicate_plugins or ["auto"])
+        explicit_plugins = [p for p in self._predicate_plugin_names if p != "auto"]
+        self.predicate_extractor = build_predicate_extractor(explicit_plugins)
         # support both old single-llm API and new separate explorer/solver llms
         _explorer_llm = explorer_llm or llm
         _solver_llm = solver_llm or llm
@@ -326,8 +363,11 @@ class WebArenaExplorer:
             maturity=max(1, skill_maturity),
             verify_k=max(0, skill_verify_k),
             prune_min_rate=skill_prune_min_rate,
+            predicate_extractor=self.predicate_extractor,
         )
-        self.discovery = Discovery(self.library, self.graph)
+        self.discovery = Discovery(
+            self.library, self.graph, predicate_extractor=self.predicate_extractor
+        )
         self._curriculum_initial_predicates: set[str] = set()
         self.episode = 0
         # Callback-discovered URLs with versioned prefix traces (for frontier expansion).
@@ -540,7 +580,7 @@ class WebArenaExplorer:
         except Exception as e:
             msg = f"  [reset] Failed: {self.full_reset_url} ({e})"
         print(msg)
-        if self._log_file:
+        if getattr(self, "_log_file", None):
             self._log_file.write(msg + "\n")
             self._log_file.flush()
 
@@ -564,6 +604,11 @@ class WebArenaExplorer:
             source_url = step.url if isinstance(step, Step) else (
                 step.get("source_url", "") or step.get("url", "")
             )
+            planning = (
+                (step.misc or {}).get("planning", {})
+                if isinstance(step, Step)
+                else step.get("planning", step.get("misc", {}).get("planning", {}))
+            )
             if i + 1 < len(raw_steps):
                 next_step = raw_steps[i + 1]
                 target_url = next_step.url if isinstance(next_step, Step) else (
@@ -579,6 +624,10 @@ class WebArenaExplorer:
                 target_url=target_url,
                 thought=thought or "",
                 stateful_hint=self._text_suggests_state_change(f"{step_action} {thought or ''}"),
+                target_bid=str(planning.get("target_bid") or ""),
+                target_role=str(planning.get("target_role") or "").lower(),
+                target_name=str(planning.get("target_name") or ""),
+                target_fingerprint=str(planning.get("target_fingerprint") or ""),
             ))
 
         if not steps:
@@ -643,12 +692,33 @@ class WebArenaExplorer:
                 (not isinstance(step, Step) and step.get("stateful_hint", False))
                 or self._text_suggests_state_change(f"{action} {thought or ''}")
             )
+            planning = (
+                (step.misc or {}).get("planning", {})
+                if isinstance(step, Step)
+                else step.get("planning", step.get("misc", {}).get("planning", {}))
+            )
             steps.append(PrefixTraceStep(
                 action=action,
                 source_url=step_source,
                 target_url=step_target,
                 thought=thought or "",
                 stateful_hint=stateful_hint,
+                target_bid=str(
+                    planning.get("target_bid")
+                    or ("" if isinstance(step, Step) else step.get("target_bid", ""))
+                ),
+                target_role=str(
+                    planning.get("target_role")
+                    or ("" if isinstance(step, Step) else step.get("target_role", ""))
+                ).lower(),
+                target_name=str(
+                    planning.get("target_name")
+                    or ("" if isinstance(step, Step) else step.get("target_name", ""))
+                ),
+                target_fingerprint=str(
+                    planning.get("target_fingerprint")
+                    or ("" if isinstance(step, Step) else step.get("target_fingerprint", ""))
+                ),
             ))
 
         if steps and not source_url:
@@ -791,7 +861,8 @@ class WebArenaExplorer:
         """Called by SkillLibrary when a new skill is verified and admitted."""
         if self.terminal_goal and self.terminal_goal in card.planning_effects:
             card.terminal = True
-        self._register_skill_operator(card)
+        if card.planning_ready:
+            self._register_skill_operator(card)
         self._emit_event("skill", "admitted", level="summary", data={
             "skill_id": card.skill_id,
             "name": card.name,
@@ -800,15 +871,23 @@ class WebArenaExplorer:
             "terminal": card.terminal,
             "verify_attempts": card.stats.n_verify_attempts,
             "verify_successes": card.stats.n_verify_success,
+            "planning_ready": card.planning_ready,
+            "planning_rejection_reason": card.planning_rejection_reason,
         })
-        self._emit_event("graph", "operator_added", data={
-            "skill_id": card.skill_id,
-            "operators": len(self.graph.operator_graph.ops),
-            "composition_edges": sum(
-                len(targets) for targets in self.graph.skill_to_skill.values()
-            ),
-        })
+        if card.planning_ready:
+            self._emit_event("graph", "operator_added", data={
+                "skill_id": card.skill_id,
+                "operators": len(self.graph.operator_graph.ops),
+                "composition_edges": sum(
+                    len(targets) for targets in self.graph.skill_to_skill.values()
+                ),
+            })
         self.metrics.skills_verified += 1
+        self.metrics.execution_skills_verified += 1
+        if card.planning_ready:
+            self.metrics.planner_ready_skills += 1
+        elif not card.planning_effects:
+            self.metrics.effectless_skills += 1
         if getattr(card.stats, "bootstrap_verified", False):
             self.metrics.bootstrap_skills_verified += 1
         self._refresh_skill_diversity_metrics()
@@ -833,6 +912,9 @@ class WebArenaExplorer:
             "planning_preconditions": sorted(card.planning_preconditions),
             "planning_effects": sorted(card.planning_effects),
             "terminal": card.terminal,
+            "planning_ready": card.planning_ready,
+            "planning_rejection_reason": card.planning_rejection_reason,
+            "predicate_schema_version": card.predicate_schema_version,
         }
         self._skills_log.append(info)
         msg = f"  >>> SKILL admitted: {card.name}  ({card.description[:60]})"
@@ -851,6 +933,10 @@ class WebArenaExplorer:
         # Write skills.json immediately so data survives even if run is interrupted
         skills_path = os.path.join(self.out_dir, "skills.json")
         json.dump(self._skills_log, open(skills_path, "w", encoding="utf-8"), indent=2)
+        if card.planning_ready:
+            self._write_graph()
+            self._write_curriculum()
+        self._write_metrics_snapshot()
 
     def _on_skill_diagnostic(self, event: dict) -> None:
         """Persist discovery/abstraction/verification diagnostics."""
@@ -909,6 +995,9 @@ class WebArenaExplorer:
                 "planning_preconditions": sorted(card.planning_preconditions),
                 "planning_effects": sorted(card.planning_effects),
                 "terminal": card.terminal,
+                "planning_ready": card.planning_ready,
+                "planning_rejection_reason": card.planning_rejection_reason,
+                "predicate_schema_version": card.predicate_schema_version,
             }
         graph_out = {
             "low_level": {
@@ -918,21 +1007,37 @@ class WebArenaExplorer:
             },
             "high_level": {
                 "n_skills": len(self.graph.skills),
+                "n_operators": len(self.graph.operator_graph.ops),
+                "n_composition_edges": sum(
+                    len(targets) for targets in self.graph.skill_to_skill.values()
+                ),
                 "skills": skills_serialized,
+                "operators": {
+                    skill_id: {
+                        "skill_id": operator.skill_id,
+                        "name": operator.name,
+                        "preconditions": sorted(operator.preconditions),
+                        "effects": sorted(operator.effects),
+                        "terminal": operator.terminal,
+                    }
+                    for skill_id, operator in sorted(
+                        self.graph.operator_graph.ops.items()
+                    )
+                },
                 "state_to_skill": {s: sorted(sk) for s, sk in self.graph.state_to_skill.items()},
                 "skill_to_state": {s: sorted(st) for s, st in self.graph.skill_to_state.items()},
                 "skill_to_skill": {s: sorted(ss) for s, ss in self.graph.skill_to_skill.items()},
             },
         }
         path = os.path.join(self.out_dir, "graph.json")
-        json.dump(graph_out, open(path, "w", encoding="utf-8"), indent=2)
+        _atomic_json_dump(path, graph_out, indent=2)
         n_states = len(self.graph.states)
         n_skills = len(self.graph.skills)
         n_comp = sum(len(v) for v in self.graph.skill_to_skill.values())
         msg = (f"  [graph] {n_states} states, {n_skills} skills, "
                f"{n_comp} composition edges → {path}")
         print(msg)
-        if self._log_file:
+        if getattr(self, "_log_file", None):
             self._log_file.write(msg + "\n")
             self._log_file.flush()
 
@@ -944,8 +1049,6 @@ class WebArenaExplorer:
         are ordered easy→hard by skill-chain length and can be used for
         curriculum-ordered fine-tuning of the agent.
         """
-        if not self.graph.skills:
-            return
         tasks = generate_curriculum(
             self.graph,
             site="webarena",
@@ -966,9 +1069,38 @@ class WebArenaExplorer:
             for t in tasks
         ]
         path = os.path.join(self.out_dir, "curriculum.json")
-        json.dump(self._curriculum_log, open(path, "w", encoding="utf-8"), indent=2)
+        _atomic_json_dump(path, self._curriculum_log, indent=2)
+        all_effects = {
+            effect
+            for operator in self.graph.operator_graph.ops.values()
+            for effect in operator.effects
+        }
+        if not self.graph.operator_graph.ops:
+            status = "no_planner_ready_skills"
+        elif not all_effects:
+            status = "no_reachable_effects"
+        elif not self.graph.operator_graph.goal_predicates:
+            status = "no_terminal_goal" if tasks else "no_reachable_effects"
+        else:
+            status = "generated" if tasks else "no_reachable_effects"
+        diagnostics = {
+            "status": status,
+            "planner_ready_skills": len(self.graph.operator_graph.ops),
+            "reachable_goals": len(tasks),
+            "terminal_tasks": sum(1 for task in tasks if task.terminal),
+            "all_effects": sorted(all_effects),
+        }
+        _atomic_json_dump(
+            os.path.join(self.out_dir, "curriculum_diagnostics.json"),
+            diagnostics,
+            indent=2,
+        )
+        if hasattr(self, "metrics"):
+            self.metrics.reachable_goals = len(tasks)
+            self.metrics.terminal_tasks = diagnostics["terminal_tasks"]
         self._emit_event("curriculum", "generated", level="summary", data={
             "tasks": len(tasks),
+            "status": status,
             "terminal_tasks": sum(1 for task in tasks if task.terminal),
             "max_difficulty": max((task.difficulty for task in tasks), default=0),
             "initial_predicates": sorted(getattr(
@@ -979,7 +1111,7 @@ class WebArenaExplorer:
         msg = (f"  [curriculum] {len(tasks)} tasks from {n_skills} skills "
                f"→ {path}")
         print(msg)
-        if self._log_file:
+        if getattr(self, "_log_file", None):
             self._log_file.write(msg + "\n")
             self._log_file.flush()
 
@@ -1075,12 +1207,29 @@ class WebArenaExplorer:
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, success, difficulty, tag,
-                screenshots: list | None = None):
+                screenshots: list | None = None, final_obs: dict | None = None):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
+        final_obs = final_obs or {}
+        final_ax_path = "page_state/final_axtree.txt"
+        open(os.path.join(ep, final_ax_path), "w", encoding="utf-8").write(
+            final_obs.get("axtree", "")
+        )
         meta = {"kind": "low_level_trajectory", "goal": goal,
                 "outcome": {"success": bool(success), "reward": 1.0 if success else 0.0, "response": ""},
-                "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps)}
+                "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps),
+                "final_state": {
+                    "url": final_obs.get("url", ""),
+                    "axtree_txt": {"path": final_ax_path},
+                    "predicates": sorted(predicates_from(
+                        final_obs.get("url", ""), final_obs.get("axtree", ""),
+                        getattr(self, "predicate_extractor", None),
+                    )),
+                    "predicate_schema_version": getattr(
+                        getattr(self, "predicate_extractor", None),
+                        "schema_version", "core-v2",
+                    ),
+                }}
         json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w"), indent=2)
         with open(os.path.join(ep, "episode.jsonl"), "w") as f:
             repaired_steps: list[Step] = []
@@ -1358,12 +1507,18 @@ class WebArenaExplorer:
 
         if not hasattr(self, "metrics"):
             return
+        skills = self.library.all_skills() if hasattr(self, "library") else []
+        self.metrics.execution_skills_verified = sum(card.verified for card in skills)
+        self.metrics.planner_ready_skills = sum(card.planning_ready for card in skills)
+        self.metrics.effectless_skills = sum(
+            card.verified and not card.planning_effects for card in skills
+        )
+        self.metrics.operators_mined = self._observed_operator_count()
         logger = getattr(self, "event_logger", None)
         if logger is not None:
             self.metrics.event_counts = dict(sorted(logger.counts.items()))
         path = os.path.join(self.out_dir, "metrics_latest.json")
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(dataclasses.asdict(self.metrics), f, indent=2)
+        _atomic_json_dump(path, dataclasses.asdict(self.metrics), indent=2)
 
     @property
     def _nodes_done(self) -> int:
@@ -1417,14 +1572,15 @@ class WebArenaExplorer:
             "hierarchical_graph": hierarchical_graph,
             "clusterer": clusterer_state,
         }
-        with open(self._checkpoint_path, "w", encoding="utf-8") as f:
-            json.dump(ckpt, f, indent=2)
+        _atomic_json_dump(self._checkpoint_path, ckpt, indent=2)
         self._emit_event("checkpoint", "saved", data={
             "nodes_processed": ckpt["nodes_processed"],
             "frontier_size": len(frontier),
             "visited": len(visited),
             "queued": len(queued),
         })
+        self._write_graph()
+        self._write_curriculum()
         self._write_metrics_snapshot()
 
     def _serialize_clusterer(self) -> dict:
@@ -1566,6 +1722,14 @@ class WebArenaExplorer:
                 planning_preconditions=set(item.get("planning_preconditions", [])),
                 planning_effects=set(item.get("planning_effects", [])),
                 terminal=bool(item.get("terminal", False)),
+                planning_ready=bool(
+                    item.get("planning_ready", bool(item.get("planning_effects", [])))
+                ),
+                planning_rejection_reason=item.get(
+                    "planning_rejection_reason",
+                    "" if item.get("planning_effects") else "empty_planning_effects",
+                ),
+                predicate_schema_version=item.get("predicate_schema_version", "legacy-v1"),
                 execution_plan=item.get("execution_plan", []),
                 alternative_templates=item.get("alternative_templates", []),
             )
@@ -1577,7 +1741,8 @@ class WebArenaExplorer:
                 cid = index
             self.library.skills[cid] = card
             self.library._abstracted.add(cid)
-            self._register_skill_operator(card)
+            if card.planning_ready:
+                self._register_skill_operator(card)
 
     def _restore_hierarchical_graph(self, hg_data: dict) -> None:
         """Restore hierarchical graph edges from serialized state.
@@ -1600,6 +1765,68 @@ class WebArenaExplorer:
         # edges.  Ignore them and rebuild exclusively from restored operators.
         self.graph.rebuild_composition_edges()
 
+    @staticmethod
+    def _semantic_element(role: str, line: str) -> tuple[str, str]:
+        match = re.match(r"^\s*\[\d+\]\s+([A-Za-z]+)\s+(.*)$", line or "")
+        if not match:
+            return role.lower(), ""
+        name = re.sub(r"\s+", " ", match.group(2)).strip().lower()
+        return match.group(1).lower(), name
+
+    @staticmethod
+    def _replace_action_bid(action: str, old_bid: str, new_bid: str) -> str:
+        """Replace only the first positional BID while preserving other args."""
+        pattern = re.compile(
+            rf"(\(\s*['\"]?){re.escape(str(old_bid))}(['\"]?)(?=\s*[,\)])"
+        )
+        return pattern.sub(
+            lambda match: f"{match.group(1)}{new_bid}{match.group(2)}",
+            action,
+            count=1,
+        )
+
+    def _reground_prefix_action(
+        self, step: PrefixTraceStep, axtree: str
+    ) -> tuple[str | None, str, str]:
+        """Return (action, outcome, reason) using exact or semantic grounding."""
+        action = (step.action or "").strip()
+        try:
+            parsed = parse_hsge_action(action)
+        except ValueError as exc:
+            return None, "invalid_action", str(exc)
+        if not parsed.bid:
+            return action, "no_target", ""
+
+        elements = axtree_elements(axtree)
+        old_bid = str(step.target_bid or parsed.bid)
+        expected_role = (step.target_role or "").lower()
+        expected_name = re.sub(r"\s+", " ", step.target_name or "").strip().lower()
+
+        if old_bid in elements:
+            role, name = self._semantic_element(*elements[old_bid])
+            if not expected_role or (role == expected_role and name == expected_name):
+                return self._replace_action_bid(action, parsed.bid, old_bid), "exact_bid", ""
+
+        if not expected_role or not expected_name:
+            # Version-1 traces did not store semantic metadata. Preserve their
+            # legacy validation path; only version-2 traces may re-ground.
+            return action, "legacy_target", "semantic fingerprint unavailable"
+
+        matches = []
+        for bid, element in elements.items():
+            role, name = self._semantic_element(*element)
+            if role == expected_role and name == expected_name:
+                matches.append(bid)
+        if len(matches) == 1:
+            return (
+                self._replace_action_bid(action, parsed.bid, matches[0]),
+                "semantic_reground",
+                f"{old_bid}->{matches[0]}",
+            )
+        if len(matches) > 1:
+            return None, "ambiguous_target", f"{len(matches)} role/name matches"
+        return None, "target_not_found", f"no {expected_role}/{expected_name!r} match"
+
     def _navigate_via_prefix(self, browser, target_url: str) -> dict | None:
         """Navigate to target_url by replaying prefix steps from source page.
 
@@ -1620,6 +1847,7 @@ class WebArenaExplorer:
             "expected_url": norm_target,
             "stateful": False,
             "used_direct_goto": False,
+            "outcomes": [],
         }
         if not info:
             return None
@@ -1674,6 +1902,27 @@ class WebArenaExplorer:
                     self._log_file.flush()
                 return None
             current_obs = browser.observation()
+            if isinstance(step, PrefixTraceStep):
+                grounded_action, outcome, detail = self._reground_prefix_action(
+                    step, current_obs.get("axtree", "")
+                )
+                self._last_prefix_replay_status["outcomes"].append(outcome)
+                if grounded_action is None:
+                    self._last_prefix_replay_status["reason"] = f"{outcome}:{detail}"
+                    msg = f"      [prefix] step {i} {outcome}: {detail}"
+                    print(msg)
+                    if self._log_file:
+                        self._log_file.write(msg + "\n")
+                        self._log_file.flush()
+                    self._emit_event("prefix", outcome, level="warning", data={
+                        "step": i, "target_url": norm_target, "detail": detail,
+                    })
+                    return None
+                action = grounded_action
+                if outcome in {"exact_bid", "semantic_reground"}:
+                    self._emit_event("prefix", outcome, data={
+                        "step": i, "target_url": norm_target, "detail": detail,
+                    })
             validation = validate_hsge_action(
                 action, current_obs.get("axtree", ""), allow_goto=False
             )
@@ -1763,17 +2012,34 @@ class WebArenaExplorer:
         to browser.reset() + goto(actual_url) so that local tasks are not all
         silently skipped.
         """
+        if getattr(self, "_node_reset_unavailable", False):
+            self._node_reset_short_circuits = (
+                getattr(self, "_node_reset_short_circuits", 0) + 1
+            )
+            return {"url": "", "axtree": "", "_reset_error": "node reset unavailable"}
         norm_url = self._node_key(url)
         if norm_url in self._discovered_urls or url in self._discovered_urls:
             obs = self._navigate_via_prefix(browser, norm_url)
             if obs and obs.get("url"):
                 return obs
+            status = getattr(self, "_last_prefix_replay_status", {}) or {}
+            if status.get("stateful"):
+                self._node_reset_unavailable = True
+                self._emit_event("prefix", "stateful_requeue", level="warning", data={
+                    "url": norm_url,
+                    "reason": status.get("reason", "replay_failed"),
+                    "scope": "remaining_node_tasks",
+                })
+                return {"url": "", "axtree": "", "_reset_error": "stateful prefix failed"}
             # Prefix replay failed — fall back to direct reset + goto
             msg = (f"      [prefix] reset fallback: direct goto to {actual_url[:80]}")
             print(msg)
             if self._log_file:
                 self._log_file.write(msg + "\n")
                 self._log_file.flush()
+            self._emit_event("prefix", "direct_goto", data={
+                "url": actual_url, "reason": "stateless_prefix_replay_failed",
+            })
 
         obs = browser.reset()
         if obs.get("url") and self._node_key(obs.get("url", "")) != actual_url:
@@ -1802,7 +2068,10 @@ class WebArenaExplorer:
         reason = status.get("reason", "")
         if not status.get("attempted") or not status.get("stateful"):
             return False
-        if not reason.startswith(("stale_action", "url_mismatch", "goto_source_failed", "step_failed")):
+        if not reason.startswith((
+            "stale_action", "stale_bid", "target_not_found", "ambiguous_target",
+            "url_mismatch", "goto_source_failed", "step_failed",
+        )):
             return False
 
         norm_url = self._node_key(url)
@@ -1824,6 +2093,12 @@ class WebArenaExplorer:
             if self._log_file:
                 self._log_file.write(msg + "\n")
                 self._log_file.flush()
+            self._emit_event("prefix", "stateful_requeue", level="warning", data={
+                "url": norm_url,
+                "retry": retry_counts[norm_url],
+                "retry_limit": limit,
+                "reason": reason,
+            })
             return True
 
         queued.discard(norm_url)
@@ -1916,6 +2191,8 @@ class WebArenaExplorer:
         # summary represents the queue size at selection time.
         self._active_frontier_size_before = len(frontier) + 1
         self._active_plan_summary = None
+        self._node_reset_unavailable = False
+        self._node_reset_short_circuits = 0
         self._node_observability_baseline = {
             "segments": getattr(self.metrics, "segments_created", 0),
             "skills": len(self.library.all_skills()),
@@ -1949,7 +2226,7 @@ class WebArenaExplorer:
                         msg = (
                             f"      [prefix] stale stateful prefix for {url[:60]} "
                             f"(reason={status.get('reason')}); "
-                            f"falling back to direct goto (may lose session state)"
+                            "skipping this node and scheduling a bounded retry"
                         )
                     else:
                         msg = f"      [prefix] Fallback to direct goto for {url[:60]}"
@@ -1958,12 +2235,30 @@ class WebArenaExplorer:
                         self._log_file.write(msg + "\n")
                         self._log_file.flush()
                     if stateful:
-                        self._emit_event("node", "prefix_fallback", level="warning", data={
+                        self._emit_event("node", "prefix_unavailable", level="warning", data={
                             "url": url,
-                            "reason": "stale_stateful_prefix_direct_goto_fallback",
+                            "reason": "stale_stateful_prefix",
                             "detail": status,
                         })
+                        self._last_node_load_status = {
+                            "reason": "stateful_prefix_unavailable",
+                            "detail": status,
+                            "prefix_attempted": True,
+                        }
+                        self._recover_unprocessed_prefix_url(
+                            url, depth, frontier, queued
+                        )
+                        try:
+                            browser.close()
+                        except Exception:
+                            pass
+                        return None
                     status["used_direct_goto"] = True
+                    self._emit_event("prefix", "direct_goto", data={
+                        "url": url,
+                        "reason": "stateless_prefix_replay_failed",
+                        "detail": status,
+                    })
                     try:
                         browser.close()
                     except Exception:
@@ -2070,6 +2365,21 @@ class WebArenaExplorer:
         # Root node: detect domain type, common tasks và common actions
         if depth == 0:
             self.explorer.detect_domain(obs)
+            if (
+                "auto" in getattr(self, "_predicate_plugin_names", set())
+                and re.search(
+                    r"\b(e-?commerce|shopping|retail|storefront|transactional)\b",
+                    (self.explorer.domain_type or "").lower(),
+                )
+            ):
+                self.predicate_extractor = build_predicate_extractor(["commerce"])
+                self.library.predicate_extractor = self.predicate_extractor
+                self.discovery.predicate_extractor = self.predicate_extractor
+            self._curriculum_initial_predicates = predicates_from(
+                actual_url,
+                obs.get("axtree", ""),
+                getattr(self, "predicate_extractor", None),
+            )
             # Lưu domain info ra file
             domain_info = {
                 "domain_type": self.explorer.domain_type,
@@ -2150,7 +2460,8 @@ class WebArenaExplorer:
                         context_hints = self._account_info + "\n\n" + context_hints if context_hints else self._account_info
                     steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
                         browser, task, context_hints=context_hints,
-                        step_callback=self._on_step_completed)
+                        step_callback=self._on_step_completed,
+                        predicate_extractor=getattr(self, "predicate_extractor", None))
                     task_steps = steps
                     task_obs_texts = obs_texts
                     task_final_obs = final_obs
@@ -2183,7 +2494,7 @@ class WebArenaExplorer:
             if task_record["status"] not in ("skipped", "error"):
                 ep_id = self.episode
                 self._record(task, task_steps, task_obs_texts, task_success, difficulty=1, tag="LOCAL",
-                             screenshots=task_screenshots)
+                             screenshots=task_screenshots, final_obs=task_final_obs)
                 self._emit_event("solver", "completed", level="summary", data={
                     "kind": "local",
                     "goal": task,
@@ -2222,7 +2533,11 @@ class WebArenaExplorer:
 
         # 2) goal-conditioned composed task (once a plan to the goal exists)
         gt = self._goal_task(
-            predicates_from(actual_url, obs.get("axtree", "")),
+            predicates_from(
+                actual_url,
+                obs.get("axtree", ""),
+                getattr(self, "predicate_extractor", None),
+            ),
             observation=obs,
         )
         if gt:
@@ -2262,12 +2577,14 @@ class WebArenaExplorer:
                     steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
                         browser, gt["goal"], goal_predicate=gt["terminal_goal"],
                         context_hints=context_hints,
-                        step_callback=self._on_step_completed)
+                        step_callback=self._on_step_completed,
+                        predicate_extractor=getattr(self, "predicate_extractor", None))
                     ep_id = self.episode
                     self._record(
                         gt["goal"], steps, obs_texts, success,
                         difficulty=gt["difficulty"], tag="GOAL",
                         screenshots=screenshots,
+                        final_obs=final_obs,
                     )
                     self._emit_event("solver", "completed", level="summary", data={
                         "kind": "goal",
@@ -2608,6 +2925,9 @@ class WebArenaExplorer:
                 "solved": solved,
                 "failed": failed,
                 "errors": errors,
+                "reset_replay_failures_avoided": getattr(
+                    self, "_node_reset_short_circuits", 0
+                ),
             },
             "urls": dict(sorted(self._node_url_stats.items())),
             "skills": {
@@ -2646,6 +2966,12 @@ class WebArenaExplorer:
             f"operators={summary['skills']['operators_total']} "
             f"edges={summary['skills']['composition_edges']}",
         ]
+        if summary["tasks"]["reset_replay_failures_avoided"]:
+            lines.insert(3, (
+                "  Prefix   : "
+                f"{summary['tasks']['reset_replay_failures_avoided']} repeated "
+                "stateful replay failure(s) avoided"
+            ))
         if summary["planner"]:
             planner = summary["planner"]
             lines.append(
@@ -2703,6 +3029,9 @@ class WebArenaExplorer:
             "tasks_failed": tasks_failed,
             "tasks_error": tasks_error,
             "tasks_skipped": tasks_skipped,
+            "reset_replay_failures_avoided": getattr(
+                self, "_node_reset_short_circuits", 0
+            ),
             "total_trajs": total_trajs,
             "successful_trajs": successful_trajs,
             "selected_child_count": selected_child_count,
@@ -2875,6 +3204,9 @@ class WebArenaExplorer:
         )
         nodes_processed = self._nodes_done
         interrupted = False
+        self._write_graph()
+        self._write_curriculum()
+        self._write_metrics_snapshot()
         # Lưu axtree đã fetch cho từng URL (tránh fetch lại khi explore)
         self._axtree_cache: dict[str, str] = {}
         while frontier and nodes_processed < self.max_nodes:

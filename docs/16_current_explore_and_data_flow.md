@@ -147,7 +147,9 @@ sự kiện như segment created, cluster matured, rejection reason, admitted sk
 
 ### 8. Operator mining và composed goals
 
-Song song với skill discovery, `_mine_operator()` lấy predicate delta:
+Solver lưu exact evidence trên từng `Step.misc`: pre/post URL, canonical
+predicates, semantic target và predicate schema version. Segment lấy delta từ
+first-pre đến last-post:
 
 ```text
 start predicates = predicates_from(start_url, start_axtree)
@@ -155,9 +157,11 @@ end predicates   = predicates_from(final_url, final_axtree)
 effect           = end - start
 ```
 
-Từ đó tạo `Operator(name, preconditions, effects)`. `_sync_to_hierarchical_graph()`
-biến operator thành skill node ảo trong `HierarchicalGraph` và tạo composition
-edge khi effect của operator A thỏa precondition của operator B.
+Execution verification có thể admit skill effectless để retrieval/transfer. Chỉ
+skill có effect không rỗng đã được quan sát đủ `k` contexts mới có
+`planning_ready=true`. `HierarchicalGraph` dùng chính `SkillCard` đó làm source
+of truth; không tạo skill node ảo. Composition edge chỉ tồn tại khi effect của A
+giao với precondition của B, không phụ thuộc URL/co-occurrence.
 
 Nếu có `--terminal-goal`, hoặc auto terminal goal phát hiện transaction predicate
 phù hợp, `plan()` BFS trên `OperatorGraph` để tạo composed goal task dài hơn.

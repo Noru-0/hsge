@@ -15,6 +15,7 @@ from .clustering import OnlineClusterer
 from .llm import LLM, Embedder
 from .schema import SkillCard, SubTrajectory
 from .verification import verify_skill
+from .webarena.predicates import PredicateExtractor
 
 
 class SkillLibrary:
@@ -27,6 +28,7 @@ class SkillLibrary:
         maturity: int = 3,                  # min cluster size before abstraction
         verify_k: int = 2,
         prune_min_rate: float = 0.34,
+        predicate_extractor: PredicateExtractor | None = None,
     ):
         self.llm = llm
         self.embedder = embedder
@@ -34,6 +36,7 @@ class SkillLibrary:
         self.maturity = maturity
         self.verify_k = verify_k
         self.prune_min_rate = prune_min_rate
+        self.predicate_extractor = predicate_extractor
 
         self.clusterer = OnlineClusterer(sim_threshold=sim_threshold)
         self.subtrajs: dict[str, SubTrajectory] = {}
@@ -126,8 +129,26 @@ class SkillLibrary:
             contexts=len(contexts),
             bootstrap=bool(card.stats.bootstrap_verified),
         )
-        ok = verify_skill(self.llm, card, contexts, k=effective_k)
+        ok = verify_skill(
+            self.llm,
+            card,
+            contexts,
+            k=effective_k,
+            predicate_extractor=self.predicate_extractor,
+        )
         if ok:
+            planning_successes = int(
+                getattr(card, "_planning_verify_successes", 0)
+            )
+            card.planning_ready = bool(card.planning_effects) and (
+                planning_successes >= effective_k
+            )
+            if not card.planning_effects:
+                card.planning_rejection_reason = "empty_planning_effects"
+            elif not card.planning_ready:
+                card.planning_rejection_reason = "planning_effects_unverified"
+            else:
+                card.planning_rejection_reason = ""
             self._abstracted.add(cid)
             self.skills[cid] = card
             if self._on_admit:
@@ -140,6 +161,9 @@ class SkillLibrary:
                 verify_success=card.stats.n_verify_success,
                 verify_attempts=card.stats.n_verify_attempts,
                 bootstrap=bool(card.stats.bootstrap_verified),
+                planning_ready=card.planning_ready,
+                planning_rejection_reason=card.planning_rejection_reason,
+                planning_verify_success=planning_successes,
             )
             return card.skill_id
         # verification failed — do NOT mark abstracted so we can retry later

@@ -6,6 +6,7 @@ from hsge.webarena.action_validation import (
 )
 from hsge.webarena.agents import PageExplorer, Solver
 from hsge.webarena.runtime import (
+    PrefixTraceStep,
     RunMetrics,
     WebArenaExplorer,
     _name_from_goal,
@@ -322,7 +323,7 @@ def test_prefix_trace_checkpoint_roundtrip_uses_versioned_schema(tmp_path):
 
     ckpt = json.load(open(tmp_path / "checkpoint.json", encoding="utf-8"))
     saved = ckpt["discovered_urls"][target]
-    assert saved["schema_version"] == 1
+    assert saved["schema_version"] == 2
     assert saved["source_url"] == "http://example.test"
     assert saved["target_url"] == target
     assert saved["discovered_by_action"] == "click('2')"
@@ -355,7 +356,7 @@ def test_legacy_prefix_trace_dict_migrates_to_versioned_trace():
         ],
     })
 
-    assert trace.schema_version == 1
+    assert trace.schema_version == 2
     assert trace.source_url == "http://example.test"
     assert trace.target_url == target
     assert trace.discovered_by_action == "click('101')"
@@ -650,6 +651,70 @@ def test_prefix_replay_rejects_stale_action_and_stateful_direct_goto():
     assert explorer._navigate_via_prefix(Browser(), target) is None
     assert explorer._last_prefix_replay_status["reason"].startswith("stale_action")
     assert explorer._last_prefix_replay_status["stateful"] is True
+
+
+def test_prefix_replay_semantically_regrounds_changed_bid():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer._log_file = None
+    target = "http://example.test/detail"
+    explorer._discovered_urls = {
+        target: {
+            "source_url": "http://example.test",
+            "steps": [PrefixTraceStep(
+                action="click('101')",
+                source_url="http://example.test",
+                target_url=target,
+                target_bid="101",
+                target_role="link",
+                target_name="'Result'",
+                target_fingerprint="link|'result'",
+            ).to_dict()],
+        }
+    }
+
+    class Browser:
+        def __init__(self):
+            self.url = "http://example.test"
+            self.actions = []
+
+        def act(self, action):
+            self.actions.append(action)
+            if action.startswith("goto("):
+                self.url = "http://example.test"
+            elif action == "click('909')":
+                self.url = target
+            return self.observation()
+
+        def observation(self):
+            return {"url": self.url, "axtree": "[909] link 'Result'"}
+
+    browser = Browser()
+    assert explorer._navigate_via_prefix(browser, target)["url"] == target
+    assert "click('909')" in browser.actions
+    assert "semantic_reground" in explorer._last_prefix_replay_status["outcomes"]
+
+
+def test_failed_stateful_reset_is_attempted_once_per_node():
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer._log_file = None
+    explorer._node_reset_unavailable = False
+    explorer._discovered_urls = {"http://example.test/cart": {}}
+    attempts = []
+
+    def fail_once(_browser, _url):
+        attempts.append(1)
+        explorer._last_prefix_replay_status = {
+            "attempted": True, "stateful": True, "reason": "target_not_found"
+        }
+        return None
+
+    explorer._navigate_via_prefix = fail_once
+    first = explorer._reset_browser_to_node(object(), "http://example.test/cart", "http://example.test/cart")
+    second = explorer._reset_browser_to_node(object(), "http://example.test/cart", "http://example.test/cart")
+
+    assert not first["url"] and not second["url"]
+    assert len(attempts) == 1
+    assert explorer._node_reset_short_circuits == 1
 
 
 def test_process_node_falls_back_to_dom_links_when_callbacks_find_none(tmp_path):

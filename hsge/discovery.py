@@ -14,12 +14,15 @@ from .graph import HierarchicalGraph
 from .library import SkillLibrary
 from .schema import Step
 from .segmentation import segment_trajectory
+from .webarena.predicates import PredicateExtractor
 
 
 class Discovery:
-    def __init__(self, library: SkillLibrary, graph: HierarchicalGraph):
+    def __init__(self, library: SkillLibrary, graph: HierarchicalGraph,
+                 predicate_extractor: PredicateExtractor | None = None):
         self.library = library
         self.graph = graph
+        self.predicate_extractor = predicate_extractor
 
     def on_trajectory(
         self,
@@ -40,6 +43,7 @@ class Discovery:
         subs = segment_trajectory(
             self.library.llm, steps, site, task, subgoal_hints,
             obs_texts=obs_texts, final_obs=final_obs,
+            predicate_extractor=self.predicate_extractor,
         )
         if hasattr(self.library, "_diag"):
             self.library._diag(
@@ -67,7 +71,7 @@ class Discovery:
             card = self.library.skills.get(cid)
             init = [sub.steps[0].url] if sub.steps else []
             effect = [sub.steps[-1].url] if sub.steps else []
-            if card:
+            if card and card.planning_ready:
                 self.graph.add_skill(card, init_states=init, effect_states=effect)
 
         # 4. The runtime admission callback derives the Operator from the same

@@ -29,6 +29,8 @@ def _card(**overrides):
         "skill_id": "skill_control",
         "planning_preconditions": set(),
         "planning_effects": {"has_confirmation_cue"},
+        "planning_ready": True,
+        "predicate_schema_version": "test-v1",
         "terminal": True,
     }
     values.update(overrides)

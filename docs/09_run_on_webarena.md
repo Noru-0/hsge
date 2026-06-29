@@ -96,12 +96,16 @@ Uses a scripted LLM + fake browser to exercise the full loop and persistence.
 ## What happens each node
 
 1. `PageExplorer` proposes local tasks for the page.
-2. `Solver` attempts each; successful trajectories are saved and fed to HSGE
-   `Discovery`; an operator is mined from the start→end predicate delta.
-3. Once mined operators admit a plan to `order_confirmed`, a goal-conditioned
+2. `Solver` attempts each and stores exact pre/post URL, AXTree-derived predicates,
+   semantic target identity, and extractor schema per action. Successful
+   trajectories are fed to `Discovery`.
+3. Execution verification may admit a reusable skill. Only effects observed in
+   enough verification contexts make that skill planner-ready and add an operator.
+4. Once mined operators admit a plan to `order_confirmed`, a goal-conditioned
    composed task is proposed, solved, and **terminal-verified** (reward 1 only if
    the run reaches the order-confirmation page).
-4. Allowed child links extend the frontier.
+5. Allowed child links extend the frontier. Prefix replay validates the original
+   BID fingerprint and re-grounds a unique changed BID by role/accessibility name.
 
 ## Output
 
@@ -110,7 +114,14 @@ outputs/wa_run/episodes/ep_XXXX/
   episode_meta.json        # goal, outcome.success/reward, difficulty, tags
   episode.jsonl            # per-step action + observation path
   page_state/step_*.txt    # AXTree text per step
+  page_state/final_axtree.txt # exact post-state evidence (new runs)
 ```
+
+`graph.json`, `curriculum.json`, `curriculum_diagnostics.json`, and
+`metrics_latest.json` exist from run start and refresh atomically after every
+planner-ready admission. For legacy runs, use
+`python remine_planning_artifacts.py SOURCE OUTPUT`; missing final AXTree evidence
+is marked incomplete and never converted into a synthetic effect.
 Feed straight into training:
 ```bash
 python build_sft_dataset.py outputs/wa_run/episodes train.jsonl

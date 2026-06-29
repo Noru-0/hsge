@@ -50,6 +50,8 @@ class HierarchicalGraph:
     # --- high level ------------------------------------------------------- #
     def add_skill(self, card: SkillCard, init_states: list[str],
                   effect_states: list[str]) -> None:
+        if not card.planning_ready or not card.planning_effects:
+            raise ValueError("hierarchical graph accepts planner-ready skills only")
         op = Operator.from_skill(card)
         self.skills[card.skill_id] = card
         for s in init_states:

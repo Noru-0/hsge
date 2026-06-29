@@ -16,20 +16,25 @@ from .env import PageState, WebEnv
 from .llm import LLM
 from .schema import SkillCard
 from .webarena.action_validation import axtree_elements, parse_hsge_action, validate_hsge_action
+from .webarena.predicates import PredicateExtractor
 
 _SYS = ("You GROUND a parameterized skill onto a concrete page: bind each "
         "selector/value slot to an element present in the page. Return JSON.")
 
 
-def ground_and_execute(llm: LLM, skill: SkillCard, env: WebEnv) -> bool:
+def ground_and_execute(llm: LLM, skill: SkillCard, env: WebEnv,
+                       predicate_extractor: PredicateExtractor | None = None) -> bool:
     """Try to run `skill` from the env's current page. Returns success bool.
 
     Nếu env có browser_factory, dùng browser thật để verify.
     Nếu không, dùng mock WebEnv.
     """
+    setattr(skill, "_last_planning_effects_verified", False)
     browser_factory = getattr(env, 'browser_factory', None)
     if browser_factory:
-        return _ground_and_execute_browser(llm, skill, env, browser_factory)
+        return _ground_and_execute_browser(
+            llm, skill, env, browser_factory, predicate_extractor
+        )
 
     # Fallback: mock WebEnv — dùng affordances để ground + execute trên mock
     page = env.reset()
@@ -66,7 +71,8 @@ def ground_and_execute(llm: LLM, skill: SkillCard, env: WebEnv) -> bool:
     return env.check(skill.success_predicate)
 
 
-def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser_factory) -> bool:
+def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv,
+                                browser_factory, predicate_extractor=None) -> bool:
     """Verify skill bằng browser thật: mở start_url, thực thi skill actions, kiểm tra kết quả."""
     browser = None
     try:
@@ -144,7 +150,9 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser
 
         if skill.planning_effects:
             from .webarena.predicates import predicates_from
-            observed = predicates_from(obs.get("url", ""), obs.get("axtree", ""))
+            observed = predicates_from(
+                obs.get("url", ""), obs.get("axtree", ""), predicate_extractor
+            )
             missing = skill.planning_effects - observed
             if missing:
                 _append_verify_failure(
@@ -152,6 +160,7 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv, browser
                     "browser_missing_planning_effects:" + ",".join(sorted(missing)),
                 )
                 return False
+            setattr(skill, "_last_planning_effects_verified", True)
         return True
     except Exception as exc:
         _append_verify_failure(skill, f"browser_exception:{type(exc).__name__}")
@@ -301,6 +310,7 @@ def verify_skill(
     skill: SkillCard,
     contexts: list[WebEnv],
     k: int = 2,
+    predicate_extractor: PredicateExtractor | None = None,
 ) -> bool:
     """Admit iff the skill succeeds in >= k distinct contexts. Mutates skill.stats.
 
@@ -309,6 +319,7 @@ def verify_skill(
     """
     if k <= 0:
         skill.verified = True
+        setattr(skill, "_planning_verify_successes", 0)
         return True
 
     if not contexts:
@@ -317,6 +328,7 @@ def verify_skill(
         return False
 
     successes = 0
+    planning_successes = 0
     setattr(skill, "_verify_failures", [])
     tried_contexts: set[str] = set()
     for env in contexts:
@@ -333,18 +345,23 @@ def verify_skill(
         tried_contexts.add(context_key)
         skill.stats.n_verify_attempts += 1
         try:
-            ok = ground_and_execute(llm, skill, env)
+            ok = ground_and_execute(llm, skill, env, predicate_extractor)
         except Exception as exc:
             _append_verify_failure(skill, f"verify_exception:{type(exc).__name__}")
             ok = False
         if ok:
             successes += 1
             skill.stats.n_verify_success += 1
-        if successes >= k:
+            if getattr(skill, "_last_planning_effects_verified", False):
+                planning_successes += 1
+        if successes >= k and (
+            not skill.planning_effects or planning_successes >= k
+        ):
             break
 
     required = k
     skill.verified = successes >= required
+    setattr(skill, "_planning_verify_successes", planning_successes)
     print(f"  [verify] \"{skill.name}\": {successes}/{k} successes → "
           f"{'ADMITTED' if skill.verified else 'REJECTED'}")
     if not skill.verified:

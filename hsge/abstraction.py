@@ -158,7 +158,11 @@ def abstract_cluster(
         member_ids=[m.sub_id for m in members],
         planning_preconditions=planning_preconditions,
         planning_effects=planning_effects,
-        terminal="has_confirmation_cue" in planning_effects,
+        terminal=bool({"has_confirmation_cue", "order_confirmed"} & planning_effects),
+        predicate_schema_version=next(
+            (m.predicate_schema_version for m in members if m.predicate_schema_version),
+            "",
+        ),
     )
 
     # Store execution plan and alternatives as extra attributes
@@ -258,7 +262,11 @@ def _fallback_skill_card(
         member_ids=[m.sub_id for m in members],
         planning_preconditions=planning_preconditions,
         planning_effects=planning_effects,
-        terminal="has_confirmation_cue" in planning_effects,
+        terminal=bool({"has_confirmation_cue", "order_confirmed"} & planning_effects),
+        predicate_schema_version=next(
+            (m.predicate_schema_version for m in members if m.predicate_schema_version),
+            "",
+        ),
     )
     card.stats.bootstrap_verified = True
     card.execution_plan = [

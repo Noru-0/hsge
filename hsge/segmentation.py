@@ -12,7 +12,7 @@ from typing import Any
 
 from .llm import LLM
 from .schema import Step, SubTrajectory
-from .webarena.predicates import predicates_from
+from .webarena.predicates import PredicateExtractor, predicates_from
 
 _SYS = "You SEGMENT a web trajectory into coherent sub-goals. Return JSON."
 
@@ -38,6 +38,7 @@ def segment_trajectory(
     subgoal_hints: list[str] | None = None,
     obs_texts: list[str] | None = None,
     final_obs: dict[str, Any] | None = None,
+    predicate_extractor: PredicateExtractor | None = None,
 ) -> list[SubTrajectory]:
     spans = _url_boundary_segments(steps)
     hints = subgoal_hints or [f"segment {i}" for i in range(len(spans))]
@@ -78,7 +79,9 @@ def segment_trajectory(
             for i, (a, b) in enumerate(spans)
         ]
     result = _dedupe_subtrajectories(subs + _action_level_segments(steps, site, task))
-    _attach_planning_evidence(result, steps, obs_texts or [], final_obs or {})
+    _attach_planning_evidence(
+        result, steps, obs_texts or [], final_obs or {}, predicate_extractor
+    )
     return result
 
 
@@ -87,6 +90,7 @@ def _attach_planning_evidence(
     full_steps: list[Step],
     obs_texts: list[str],
     final_obs: dict[str, Any],
+    predicate_extractor: PredicateExtractor | None = None,
 ) -> None:
     """Attach observed symbolic deltas to each candidate skill segment."""
     by_identity = {id(step): i for i, step in enumerate(full_steps)}
@@ -97,6 +101,21 @@ def _attach_planning_evidence(
         end_idx = by_identity.get(id(sub.steps[-1]))
         if start_idx is None or end_idx is None:
             continue
+        first_planning = (full_steps[start_idx].misc or {}).get("planning", {})
+        last_planning = (full_steps[end_idx].misc or {}).get("planning", {})
+        sub.predicate_schema_version = (
+            first_planning.get("schema_version")
+            or getattr(predicate_extractor, "schema_version", "core-v2")
+        )
+        if first_planning.get("pre_predicates") is not None and last_planning.get(
+            "post_predicates"
+        ) is not None:
+            before = set(first_planning["pre_predicates"])
+            after = set(last_planning["post_predicates"])
+            sub.planning_preconditions = before
+            sub.planning_effects = after - before
+            continue
+
         start_url = full_steps[start_idx].url
         start_ax = obs_texts[start_idx] if start_idx < len(obs_texts) else ""
         if end_idx + 1 < len(full_steps):
@@ -105,8 +124,8 @@ def _attach_planning_evidence(
         else:
             end_url = final_obs.get("url", full_steps[end_idx].url)
             end_ax = final_obs.get("axtree", "")
-        before = predicates_from(start_url, start_ax)
-        after = predicates_from(end_url, end_ax)
+        before = predicates_from(start_url, start_ax, predicate_extractor)
+        after = predicates_from(end_url, end_ax, predicate_extractor)
         sub.planning_preconditions = before
         sub.planning_effects = after - before
 
