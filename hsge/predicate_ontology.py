@@ -440,7 +440,7 @@ class PredicateRegistry:
         """Rank extraction candidates; ranking never establishes semantics."""
         candidates = [
             definition for definition in self.definitions.values()
-            if definition.status == status and definition.source != "kernel"
+            if definition.status == status
         ]
         if not candidates:
             return []

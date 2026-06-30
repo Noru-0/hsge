@@ -92,6 +92,30 @@ def segment_trajectory(
     return result
 
 
+def _predicate_names_from_facts(facts: list) -> set[str]:
+    """Normalize predicate_ids from typed facts to string predicate names.
+
+    Strips ``kernel:`` prefix so facts from PredicateEngine.snapshot()
+    (e.g. ``kernel:view:collection``) match the naming convention used by
+    the legacy regex-based extractor (``view:collection``).
+    LLM-discovered facts (e.g. ``item_visible``) are kept as-is.
+    """
+    names: set[str] = set()
+    for f in facts:
+        pid: str = ""
+        if isinstance(f, dict):
+            pid = str(f.get("predicate_id", ""))
+        elif hasattr(f, "predicate_id"):
+            pid = str(getattr(f, "predicate_id", ""))
+        if not pid:
+            continue
+        # Normalize: strip kernel: prefix for cross-source matching
+        if pid.startswith("kernel:"):
+            pid = pid[len("kernel:"):]
+        names.add(pid)
+    return names
+
+
 def _attach_planning_evidence(
     subs: list[SubTrajectory],
     full_steps: list[Step],
@@ -119,8 +143,32 @@ def _attach_planning_evidence(
         ) is not None:
             before = set(first_planning["pre_predicates"])
             after = set(last_planning["post_predicates"])
-            sub.planning_preconditions = before
-            sub.planning_effects = after - before
+
+            # ── LLM primary / regex fallback ──────────────────────────
+            # Derive predicate names from typed (LLM+kernel) snapshots.
+            # Use them when regex detects no effects, because the LLM
+            # often catches semantic state changes regex patterns miss
+            # (e.g. UI toggle, menu expand, panel open).
+            typed_before: set[str] = set()
+            typed_after: set[str] = set()
+            if first_planning.get("typed_pre_facts"):
+                typed_before = _predicate_names_from_facts(first_planning["typed_pre_facts"])
+            if last_planning.get("typed_post_facts"):
+                typed_after = _predicate_names_from_facts(last_planning["typed_post_facts"])
+
+            typed_effects = typed_after - typed_before
+            regex_effects = after - before
+
+            if typed_effects:
+                # LLM (kernel+LLM facts) has effects → use as primary
+                sub.planning_preconditions = typed_before | before
+                sub.planning_effects = typed_effects | regex_effects
+            else:
+                # LLM empty → fallback to regex
+                sub.planning_preconditions = before
+                sub.planning_effects = regex_effects
+            # ───────────────────────────────────────────────────────────
+
             _attach_typed_action_model(sub, first_planning, last_planning)
             continue
 
