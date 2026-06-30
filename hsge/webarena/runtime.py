@@ -2362,37 +2362,13 @@ class WebArenaExplorer:
         # Track episode range cho node này
         _ep_start = self.episode
 
-        # Root node: detect domain type, common tasks và common actions
+        # Root node: capture initial predicates for curriculum
         if depth == 0:
-            self.explorer.detect_domain(obs)
-            if (
-                "auto" in getattr(self, "_predicate_plugin_names", set())
-                and re.search(
-                    r"\b(e-?commerce|shopping|retail|storefront|transactional)\b",
-                    (self.explorer.domain_type or "").lower(),
-                )
-            ):
-                self.predicate_extractor = build_predicate_extractor(["commerce"])
-                self.library.predicate_extractor = self.predicate_extractor
-                self.discovery.predicate_extractor = self.predicate_extractor
             self._curriculum_initial_predicates = predicates_from(
                 actual_url,
                 obs.get("axtree", ""),
                 getattr(self, "predicate_extractor", None),
             )
-            # Lưu domain info ra file
-            domain_info = {
-                "domain_type": self.explorer.domain_type,
-                "common_tasks": self.explorer.common_tasks,
-                "common_actions": self.explorer.common_actions,
-            }
-            domain_path = os.path.join(self.out_dir, "domain.json")
-            json.dump(domain_info, open(domain_path, "w", encoding="utf-8"), indent=2)
-            msg_domain = f"  [domain] Saved to {domain_path}"
-            print(msg_domain)
-            if self._log_file:
-                self._log_file.write(msg_domain + "\n")
-                self._log_file.flush()
 
         # Track whether any task succeeded on this node (for UVD scorer)
         _any_success = False

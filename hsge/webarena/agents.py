@@ -187,53 +187,6 @@ EXPLORER_SYS = (
     "or account creation tasks — the agent is already logged in."
 )
 
-_DOMAIN_DETECT_SYS = (
-    "You are analyzing a web page to determine what kind of website it is "
-    "and what common tasks users typically do on it. "
-    "Return ONLY valid JSON."
-)
-
-_DOMAIN_DETECT_PROMPT = """\
-Analyze the page accessibility tree below and determine:
-1. What type of website is this? (e.g. e-commerce, forum, wiki, admin panel, social media, etc.)
-2. What are the most common high-level tasks users do on this type of website?
-3. What are common local interaction patterns users typically follow from one page state?
-
-IMPORTANT: The agent is ALREADY LOGGED IN. Do NOT include any login, sign in,
-sign up, register, create account, or authentication related tasks or actions.
-
-Look at the page structure, navigation elements, and content to determine the domain.
-
-Page accessibility tree:
-{axtree}
-
-Respond with ONLY valid JSON in this exact format:
-{{
-  "domain_type": "<website type>",
-  "common_tasks": ["<task1>", "<task2>", "<task3>", ...],
-  "common_actions": ["<local interaction pattern>", ...]
-}}
-
-Example for a transactional site:
-{{
-  "domain_type": "transactional website",
-  "common_tasks": [
-    "Search for an item or record",
-    "Open a detail page",
-    "Compare visible attributes",
-    "Read user feedback or comments",
-    "Submit or update a form",
-    "Check history or status"
-  ],
-  "common_actions": [
-    "Use search to find a visible item or record",
-    "Open a menu or filter control",
-    "Read details from a visible result or record"
-  ]
-}}
-"""
-
-
 def _build_solver_sys(context_hints: str = "") -> str:
     """Short system role (Go-Browse style). Action space goes in user prompt."""
     base = (
@@ -267,9 +220,6 @@ class PageExplorer:
         self.profile = profile
         self.checkout_mode = checkout_mode
         self.place_order_allowed = place_order_allowed
-        self.domain_type: str = ""
-        self.common_tasks: list[str] = []
-        self.common_actions: list[str] = []
         self.rejected_task_counts: Counter[str] = Counter()
 
     _LOGIN_KEYWORDS = [
@@ -302,36 +252,8 @@ class PageExplorer:
         task_lower = task.lower()
         return any(kw in task_lower for kw in cls._LOGIN_KEYWORDS)
 
-    def detect_domain(self, obs: dict) -> None:
-        """Phân tích axtree root node để xác định domain type, common tasks và common actions."""
-        axtree = obs.get("axtree", "")[:4000]
-        if not axtree:
-            return
-        prompt = _DOMAIN_DETECT_PROMPT.format(axtree=axtree)
-        try:
-            out = self.llm.complete_json(_DOMAIN_DETECT_SYS, prompt)
-            self.domain_type = out.get("domain_type", "")
-            self.common_tasks = out.get("common_tasks", [])
-            self.common_actions = out.get("common_actions", [])
-            print(f"  [domain] Detected: {self.domain_type} "
-                  f"({len(self.common_tasks)} tasks, {len(self.common_actions)} local patterns)")
-        except Exception as e:
-            print(f"  [domain] Detection failed: {e}")
-
     def propose(self, obs: dict) -> list[str]:
         sys = EXPLORER_SYS
-        # Thêm domain context nếu có — chỉ làm tham khảo, không dùng nguyên
-        domain_context = ""
-        if self.domain_type:
-            domain_context = f"Website type: {self.domain_type}.\n"
-        if self.common_tasks:
-            domain_context += "Reference — common task types on this site:\n" + "\n".join(f"- {t}" for t in self.common_tasks) + "\n"
-        if self.common_actions:
-            domain_context += "Reference — common local interaction patterns (adapt to current page):\n" + "\n".join(f"- {a}" for a in self.common_actions) + "\n"
-        if domain_context:
-            domain_context += "\nIMPORTANT: Propose tasks specific to the CURRENT page and its elements. Use the references above only as inspiration — combine them with what you see on the page. Each goal must be concrete and grounded in visible controls/content, not a generic action-chain label.\n"
-        if domain_context:
-            sys = domain_context + "\n" + sys
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
         seeded_tasks = self._seed_tasks(obs) if self.profile == "training_quality" else []
         out = self.llm.complete_json(sys, prompt)
