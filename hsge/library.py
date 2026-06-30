@@ -232,7 +232,8 @@ class SkillLibrary:
     def _effective_verify_k(self, card: SkillCard, contexts: list) -> int:
         if card.stats.bootstrap_verified and contexts:
             return 1
-        return self.verify_k
+        # Never require more successes than available contexts.
+        return min(self.verify_k, max(1, len(contexts)))
 
     # --------------------------------------------------------------- retrieval
     def retrieve(self, query: str, top_k: int = 3) -> list[SkillCard]:

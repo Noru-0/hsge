@@ -27,17 +27,15 @@ def build_verify_contexts_from_episodes(
     """Build verification contexts from successful episodes.
 
     Each context is a WebEnv that simulates the page transitions of one
-    successful episode. Different episodes from different URL origins are
-    selected to ensure diversity.
-
-    Returns a list of WebEnv instances (may be empty if no episodes exist).
+    successful episode.  Deduplication is by start URL so different
+    episodes on the same site produce distinct contexts.
     """
     ep_dir = os.path.join(out_dir, "episodes")
     if not os.path.isdir(ep_dir):
         return []
 
     contexts: list[WebEnv] = []
-    seen_urls: set[str] = set()
+    seen_start_urls: set[str] = set()
 
     episodes = sorted(
         [d for d in os.listdir(ep_dir) if d.startswith("ep_")],
@@ -90,13 +88,11 @@ def build_verify_contexts_from_episodes(
         if not urls_seen:
             continue
 
-        # Use the first URL as the origin identifier
-        origin = urls_seen[0]
-        # Skip if we already have a context from this origin
-        origin_key = _origin_key(origin)
-        if origin_key in seen_urls:
+        # Dedup by start URL — episodes starting from different pages
+        # are valid contexts even on the same site.
+        if urls_seen[0] in seen_start_urls:
             continue
-        seen_urls.add(origin_key)
+        seen_start_urls.add(urls_seen[0])
 
         # Build a WebEnv from the trajectory URLs
         env = _build_env_from_urls(origin, urls_seen)
@@ -184,17 +180,17 @@ def make_verify_contexts_fn(out_dir: str, browser_factory=None) -> Callable[[], 
 def _build_browser_contexts(out_dir: str, browser_factory) -> list[WebEnv]:
     """Build verification contexts using real browser from successful episodes.
 
-    Mỗi context là một WebEnv với browser_factory để ground_and_execute
-    có thể dùng browser thật để verify skill.
+    Each context is a WebEnv with browser_factory so ground_and_execute
+    can use a real browser to verify the skill.  Deduplication is by
+    start URL (not origin) so different episodes on the same site
+    produce distinct contexts.
     """
-    from .browser import WebArenaBrowser
-    
     ep_dir = os.path.join(out_dir, "episodes")
     if not os.path.isdir(ep_dir):
         return []
 
     contexts: list[WebEnv] = []
-    seen_urls: set[str] = set()
+    seen_start_urls: set[str] = set()
 
     episodes = sorted(
         [d for d in os.listdir(ep_dir) if d.startswith("ep_")],
@@ -236,18 +232,20 @@ def _build_browser_contexts(out_dir: str, browser_factory) -> list[WebEnv]:
         if not first_url or not last_url or first_url == last_url:
             continue
 
-        origin = _origin_key(first_url)
-        if origin in seen_urls:
+        # Dedup by exact start URL, not origin — different episodes on
+        # the same site visit different pages and are valid contexts.
+        if first_url in seen_start_urls:
             continue
-        seen_urls.add(origin)
+        seen_start_urls.add(first_url)
 
         # Tạo WebEnv với browser_factory để verify dùng browser thật
+        site = _origin_key(first_url)
         pages = {
             "start": PageState(url=first_url, affordances=[], goto={}),
             "goal": PageState(url=last_url, affordances=[], goto={}),
         }
-        env = WebEnv(site=origin, pages=pages, start="start", goal_pages={"goal"})
-        env.browser_factory = browser_factory  # gắn browser_factory để ground_and_execute dùng
+        env = WebEnv(site=site, pages=pages, start="start", goal_pages={"goal"})
+        env.browser_factory = browser_factory
         contexts.append(env)
 
     return contexts

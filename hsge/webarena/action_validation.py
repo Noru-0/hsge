@@ -479,11 +479,8 @@ def _narrative_thought(goal: str, action_type: str, bid: str,
                 f"I will report this to the user."
             )
         case "send_msg_to_user":
-            return (
-                f"The task is now complete. "
-                f"The current page contains the requested information, "
-                f"confirming the task has been accomplished."
-            )
+            message = extra if extra else "the requested information"
+            return f"The task is now complete — {message}"
         case _:
             return f"I need to perform the {action_type} action to advance the task."
     return ""  # unreachable
@@ -495,7 +492,8 @@ def repair_thought(thought: str, action: str, axtree: str,
 
     When `goal` is provided, produces a flowing natural-language paragraph
     (no template markers like "Evidence:" or "In summary"). For send_msg_to_user,
-    generates a task-completion statement instead of goal-prefixed text.
+    keeps the LLM's own thought (which is guided by few-shot examples and
+    provides training value); only replaces truly empty boilerplate.
     """
     validation = validate_hsge_action(action, axtree)
     if not validation.ok or not validation.parsed:
@@ -556,7 +554,14 @@ def repair_thought(thought: str, action: str, axtree: str,
             reason = parsed.args[0] if parsed.args else ""
             repaired = _narrative_thought(goal, "report_infeasible", "", "", extra=reason)
         case "send_msg_to_user":
-            repaired = _narrative_thought("", "send_msg_to_user", "", "")
+            # Keep the LLM's own thought — it is guided by few-shot examples
+            # and is almost always better than any template.  Only replace
+            # truly empty / boilerplate thoughts.
+            if not thought or len((thought or "").strip()) < 10:
+                msg = parsed.args[0] if parsed.args else ""
+                repaired = f"The task is now complete — {msg}" if msg else thought
+            else:
+                repaired = thought
         case _:
             repaired = thought
     return repaired, repaired != thought

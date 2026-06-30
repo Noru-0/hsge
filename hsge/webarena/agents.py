@@ -152,9 +152,11 @@ Here are examples of actions with chain-of-thought reasoning:
 
 {"thought": "I now need to click on the Submit button to send the form. I will use the click action on the button, which has bid 12.", "action": "click('12')"}
 
-{"thought": "I found the information requested by the user, I will send it to the chat.", "action": "send_msg_to_user('The price for a 15 inch laptop is 1499 USD.')"}
+{"thought": "I navigated to the product page and found the price. The price for a 15 inch laptop is 1499 USD. I will now report this to the user.", "action": "send_msg_to_user('The price for a 15 inch laptop is 1499 USD.')"}
 
-{"thought": "I have finished navigating to the Products page. I will inform the user that I have completed the task.", "action": "send_msg_to_user('I have finished navigating to the Products page.')"}
+{"thought": "I clicked the Add to Cart button on the product detail page. The item has been added to the cart successfully. I will confirm this to the user.", "action": "send_msg_to_user('The item has been added to your cart.')"}
+
+{"thought": "I have finished navigating to the Products page by clicking the category link in the menu. I will confirm the navigation is complete.", "action": "send_msg_to_user('I have finished navigating to the Products page.')"}
 
 Only a single action can be provided at once."""
 
