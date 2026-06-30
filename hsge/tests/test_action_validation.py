@@ -621,9 +621,14 @@ def test_solver_continues_after_navigation_timeout():
 
         def complete_json(self, _system, _prompt):
             self.call_count += 1
+            # First 2 calls: propose click actions.
             if self.call_count <= 2:
                 return {"thought": "Click cart button.", "action": "click('1')"}
-            return {"thought": "done", "action": "send_msg_to_user('done')"}
+            # 3rd call: declare done.
+            if self.call_count == 3:
+                return {"thought": "done", "action": "send_msg_to_user('done')"}
+            # 4th+ call: LLM judge for state-change success.
+            return {"success": True, "reason": "added to cart via AJAX"}
 
     class Browser:
         calls = 0
@@ -897,50 +902,80 @@ def test_operator_names_are_generic_for_domain_specific_tasks():
     assert _name_from_goal("Enter a product name in the Search textbox") == "submit_search_query"
 
 
-def test_terminal_success_gate_requires_grounded_search_and_state_change():
-    obs = {"url": "http://example.test/search", "axtree": "[1] StaticText 'No records here'"}
-    assert not Solver._terminal_success_gate(
-        "Search for 'alpha beta'",
-        "Search for alpha beta completed successfully.",
-        obs,
-        ["[1] StaticText 'No records here'"],
-        ["fill('10','alpha beta')", "click('11')"],
-    )
-    assert Solver._terminal_success_gate(
-        "Search for 'alpha beta'",
-        "The alpha beta record is visible.",
-        {"url": "http://example.test/search?q=alpha+beta", "axtree": "[1] StaticText 'Alpha beta record'"},
-        ["[1] StaticText 'Alpha beta record'"],
-        ["fill('10','alpha beta')", "click('11')"],
-    )
-    assert not Solver._terminal_success_gate(
-        "Save the visible settings form",
-        "Settings saved successfully.",
-        {"url": "http://example.test/settings", "axtree": "[1] button 'Save'"},
-        ["[1] button 'Save'"],
-        ["click('1')"],
-    )
-    assert Solver._terminal_success_gate(
-        "Save the visible settings form",
-        "Settings saved successfully.",
-        {"url": "http://example.test/settings", "axtree": "[1] StaticText 'Settings saved'"},
-        ["[1] StaticText 'Settings saved'"],
-        ["click('1')"],
-    )
+def test_judge_success_accepts_hover_with_menu_evidence():
+    """Hover goals still use hard checks (no LLM call)."""
+    solver = Solver.__new__(Solver)
+    solver.llm = None  # not needed for hover
 
-
-def test_terminal_success_gate_accepts_hover_report_with_menu_evidence():
-    assert Solver._terminal_success_gate(
+    assert solver._judge_success(
         "Hover over one visible menu or expandable control and report one submenu option that appears.",
         "The Reports submenu option appears.",
+        ["hover('1')"],
         {"url": "http://example.test", "axtree": "[1] menuitem 'Reports'"},
         ["[1] menuitem 'Reports'"],
-        ["hover('1')"],
     )
-    assert not Solver._terminal_success_gate(
+    assert not solver._judge_success(
         "Hover over one visible menu or expandable control and report one submenu option that appears.",
         "The Reports submenu option appears.",
+        ["click('1')"],
         {"url": "http://example.test", "axtree": "[1] button 'Reports'"},
         ["[1] button 'Reports'"],
+    )
+
+
+def test_judge_success_uses_llm_for_state_change():
+    """State-change goals delegate to LLM instead of brittle regex markers."""
+    class MockLLM:
+        def complete_json(self, _sys, _prompt):
+            return {"success": True, "reason": "clicked save, page updated"}
+
+    solver = Solver.__new__(Solver)
+    solver.llm = MockLLM()
+
+    # LLM says success → should pass
+    assert solver._judge_success(
+        "Save the visible settings form",
+        "Settings saved successfully.",
         ["click('1')"],
+        {"url": "http://example.test/settings", "axtree": "[1] button 'Save'"},
+        ["[1] button 'Save'"],
+    )
+
+    # LLM says failure → should fail
+    class FailLLM:
+        def complete_json(self, _sys, _prompt):
+            return {"success": False, "reason": "no confirmation visible"}
+
+    solver2 = Solver.__new__(Solver)
+    solver2.llm = FailLLM()
+    assert not solver2._judge_success(
+        "Save the visible settings form",
+        "Settings saved successfully.",
+        ["click('1')"],
+        {"url": "http://example.test/settings", "axtree": "[1] button 'Save'"},
+        ["[1] button 'Save'"],
+    )
+
+
+def test_judge_success_falls_back_to_visible_tokens():
+    """Info/nav goals use answer-token-in-page check (no LLM call)."""
+    solver = Solver.__new__(Solver)
+    solver.llm = None
+
+    # Token "reviews" from answer appears on the final page → success.
+    assert solver._judge_success(
+        "Find the number of reviews for this item",
+        "This item has 12 reviews",
+        ["click('1')", "send_msg_to_user('This item has 12 reviews')"],
+        {"url": "http://x.test/p", "axtree": "[1] StaticText '12 Reviews'"},
+        ["[homepage]", "[1] StaticText '12 Reviews'"],
+    )
+
+    # No answer token appears on the final page → fail.
+    assert not solver._judge_success(
+        "Find the number of reviews for this item",
+        "This item has 42 ratings",
+        ["click('1')", "send_msg_to_user('This item has 42 ratings')"],
+        {"url": "http://x.test/p", "axtree": "[1] StaticText 'no data here'"},
+        ["[homepage]", "[1] StaticText 'no data here'"],
     )

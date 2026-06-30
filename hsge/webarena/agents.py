@@ -785,7 +785,7 @@ class Solver:
             actions = [s.action for s in steps]
             success = (
                 answer_has_evidence(goal, answer, obs_texts, actions)
-                and self._terminal_success_gate(goal, answer, obs, obs_texts, actions)
+                and self._judge_success(goal, answer, actions, obs, obs_texts)
             )
         return steps, obs_texts, obs, success, screenshots
 
@@ -834,54 +834,73 @@ class Solver:
             return False
         return all(before == after for before, after in list(scroll_sigs)[-4:])
 
-    @staticmethod
-    def _terminal_success_gate(goal: str, answer: str, obs: dict,
-                               obs_texts: list[str], actions: list[str]) -> bool:
+    def _judge_success(self, goal: str, answer: str, actions: list[str],
+                       obs: dict, obs_texts: list[str]) -> bool:
+        """Lightweight success judge.  Hard checks for clear-cut categories;
+        an LLM call for state-changing tasks where AJAX makes page-text
+        evidence unreliable."""
         g = (goal or "").lower()
+        action_counts = Counter(action_family(a) for a in actions)
         recent_text = "\n".join([obs.get("url", ""), obs.get("axtree", ""), *obs_texts[-3:]])
         ax = recent_text.lower()
-        action_counts = Counter(action_family(a) for a in actions)
+
+        # Hover/menu: must have hover action — cheap & reliable.
         if re.search(r"\bhover\b|\bsubmenu\b|\bmenu option\b|\bexpandable control\b", g):
             if action_counts["hover"] < 1:
                 return False
             return bool(re.search(r"menuitem|haspopup|expanded=true|submenu|option", ax))
 
-        if re.search(r"\bsearch\b|\bquery\b", g):
-            if action_counts["fill"] + action_counts["type"] < 1:
-                return False
-            search_terms = Solver._goal_or_input_terms(goal, actions)
-            if search_terms:
-                return any(Solver._contains_all_terms(ax, term) for term in search_terms)
-            return Solver._answer_has_nontrivial_visible_token(answer, ax)
-
-        if "report the available action" in g:
-            return Solver._answer_has_nontrivial_visible_token(answer, ax)
-
+        # State-changing (add/remove/checkout/cart/wishlist/...): AJAX sites
+        # rarely leave text evidence in the AXTree.  Use an LLM judge.
         state_changing = re.search(
-            r"add|remove|update|change|edit|delete|cancel|archive|deactivate|disable|"
-            r"save|submit|send|publish|post|apply|confirm|book|reserve|subscribe|"
-            r"checkout|purchase|payment|pay|refund|return item|cart|wishlist|reorder",
+            r"\badd\b|\bremove\b|\bupdate\b|\bchange\b|\bedit\b|\bdelete\b|\bcancel\b|"
+            r"\barchive\b|\bdeactivate\b|\bdisable\b|\bsave\b|\bsubmit\b|\bsend\b|"
+            r"\bpublish\b|\bpost\b|\bapply\b|\bconfirm\b|\bbook\b|\breserve\b|"
+            r"\bsubscribe\b|\bcheckout\b|\bpurchase\b|\bpayment\b|\bpay\b|"
+            r"\brefund\b|\breturn item\b|\bcart\b|\bwishlist\b|\breorder\b",
             g,
         )
         if state_changing:
             if action_counts["click"] + action_counts["fill"] + action_counts["type"] + action_counts["press"] < 1:
                 return False
-            success_markers = (
-                "success", "successful", "saved", "updated", "added", "removed", "submitted",
-                "sent", "posted", "published", "applied", "confirmed", "completed",
-                "created", "deleted", "canceled", "cancelled", "archived",
-                "thank you", "confirmation",
+            return self._llm_judge_state_change(goal, answer, actions, obs, obs_texts)
+
+        # Information / navigation: answer tokens must appear on the final page.
+        return Solver._answer_has_nontrivial_visible_token(answer, ax)
+
+    def _llm_judge_state_change(self, goal: str, answer: str, actions: list[str],
+                                 obs: dict, obs_texts: list[str]) -> bool:
+        """Ask the LLM whether the trajectory successfully accomplished the
+        state-changing goal.  This replaces the brittle regex-based success-
+        marker check that fails on AJAX commerce sites."""
+        recent_text = "\n".join(obs_texts[-3:])[:3000]
+        final_url = obs.get("url", "")
+        action_summary = "\n".join(
+            f"  {i+1}. {a}" for i, a in enumerate(actions)
+        )
+        prompt = (
+            "You are judging whether a web agent successfully completed a task. "
+            "Review the goal, the actions taken, the agent's final answer, and "
+            "the final page text.  The site may use AJAX (no page reload), so "
+            "do NOT require confirmation text like 'Added to cart'.  Judge "
+            "based on whether the agent took reasonable actions toward the goal "
+            "and the final page state is consistent with success.\n\n"
+            f"Goal: {goal}\n\n"
+            f"Actions taken:\n{action_summary}\n\n"
+            f"Agent's final answer: {answer}\n\n"
+            f"Final URL: {final_url}\n\n"
+            f"Final page text (first 3000 chars):\n{recent_text}\n\n"
+            'Return JSON: {"success": true/false, "reason": "<one sentence>"}'
+        )
+        try:
+            result = self.llm.complete_json(
+                "You are a success judge for web agent trajectories.", prompt
             )
-            return any(marker in ax for marker in success_markers)
-
-        if re.search(
-            r"\bread\b|\banswer\b|\bidentify\b|\binspect\b|\breport\b|\bvisible\b|"
-            r"\bcompare\b|\bcount\b|\bdate\b|\bstatus\b|\brating\b|\bfeedback\b",
-            g,
-        ):
+            return bool(result.get("success", False))
+        except Exception:
+            # If LLM call fails, fall back to checking answer tokens on page.
+            ax = recent_text.lower()
             return Solver._answer_has_nontrivial_visible_token(answer, ax)
-
-        return True
 
     @staticmethod
     def _goal_or_input_terms(goal: str, actions: list[str]) -> list[str]:
