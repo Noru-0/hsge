@@ -8,7 +8,7 @@ run:
   root_url: https://infectious-plasma-gem-officials.trycloudflare.com/              # required for real runs; dry-run supplies a mock URL
   # out: outputs/wa_run
   # out: outputs/wa_run_18  # checkpoint v2, dùng cơ chế visited cũ
-  out: outputs/wa_run_21    # checkpoint v4, semantic-query visited identity
+  out: outputs/wa_run_23    # checkpoint v4, semantic-query visited identity
   allow: null                 # null = derive a same-site regex from root_url
   dry_run: false              # use `--dry-run` for the offline mock
   resume: false
@@ -28,10 +28,10 @@ llm:
   # api_base_url: https://api.deepseek.com/v1
   provider: openai
   model: null                 # optional shorthand for both roles
-  explorer_model: gpt-4o-mini
-  solver_model: gpt-4o
+  explorer_model: gpt-4o
+  solver_model: gpt-4o-mini
   api_base_url: https://api.openai.com/v1
-  temperature: 0.2
+  temperature: 0.7
   request_timeout_seconds: 60
   max_retries: 2
 
@@ -95,4 +95,4 @@ observability:
   event_log_level: info       # debug | info | summary | warning | error
 
 predicates:
-  plugins: [auto]             # auto enables commerce only for e-commerce domains
+  plugins: [auto, commerce]             # auto enables commerce only for e-commerce domains

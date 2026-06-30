@@ -16,6 +16,29 @@ CORE_PREDICATES = frozenset({
 COMMERCE_PREDICATES = frozenset({
     "results_shown", "item_selected", "cart_nonempty", "on_cart",
     "on_checkout", "payment_entered", "order_confirmed",
+    # Transient predicates: only true in the confirmation moment, not sticky.
+    # These enable effect-aware clustering without saturation.
+    "item_added_to_cart",       # "added to your cart" confirmation text
+    "item_saved_to_wishlist",   # "added to your wish list" confirmation
+    "transaction_advanced",     # "proceeding to checkout" / payment step
+})
+
+# Commerce predicates that are transient (confirmation-message-only) and
+# must NOT persist across page states. They are detected from action-level
+# observation text rather than post-action page AXTree.
+TRANSIENT_COMMERCE = frozenset({
+    "item_added_to_cart",
+    "item_saved_to_wishlist",
+    "transaction_advanced",
+})
+
+# Commerce predicates that represent meaningful planning milestones.
+# When aggregating planning evidence, these need a lower support threshold
+# because they appear in fewer cluster members (specialized actions).
+MILESTONE_COMMERCE = frozenset({
+    "cart_nonempty", "item_selected", "on_cart", "on_checkout",
+    "payment_entered", "order_confirmed",
+    "item_added_to_cart", "item_saved_to_wishlist", "transaction_advanced",
 })
 
 
@@ -69,7 +92,7 @@ class CorePredicateExtractor:
 
 @dataclass(frozen=True)
 class CommercePredicateExtractor:
-    schema_version: str = "commerce-v1"
+    schema_version: str = "commerce-v2"
     terminal_predicates: frozenset[str] = frozenset({"order_confirmed"})
 
     def extract(self, url: str, axtree: str = "") -> set[str]:
@@ -88,6 +111,23 @@ class CommercePredicateExtractor:
         listing = bool(re.search(r"\b(sort by|filter|items? found|search results?)\b", ax))
         if detail and not listing and not re.search(r"/(cart|checkout)(/|$)", path):
             p.add("item_selected")
+        # --- transient confirmation signals (NOT sticky, NOT page-state) ---
+        if re.search(
+            r"\b(added to (?:your )?(?:shopping )?(?:cart|basket)|item was added|successfully added)\b",
+            ax,
+        ):
+            p.add("item_added_to_cart")
+        if re.search(
+            r"\b(added to (?:your )?(?:wish ?list|wishlist|favorites|saved items))\b",
+            ax,
+        ):
+            p.add("item_saved_to_wishlist")
+        if re.search(
+            r"\b(proceed(?:ing)? to checkout|go to checkout|checkout now|secure checkout)\b",
+            ax,
+        ):
+            p.add("transaction_advanced")
+        # --- persistent state predicates ---
         cart_count = re.search(
             r"(?:cart|basket)[^\n]{0,50}(?:count|items?)?[^\n]{0,20}\b([1-9]\d*)\b",
             ax,

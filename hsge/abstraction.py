@@ -290,17 +290,38 @@ def _fallback_skill_card(
 
 
 def _planning_evidence(members: list[SubTrajectory]) -> tuple[set[str], set[str]]:
-    """Retain symbolic predicates supported by at least two thirds of members."""
+    """Retain symbolic predicates with adaptive thresholds.
+
+    Generic predicates require 2/3 member support.
+    Commerce-milestone predicates (cart_nonempty, item_selected, etc.)
+    only need a single member — they are rare and critical for planning
+    chains.  Without this, heterogeneous click clusters erase minority
+    commerce effects through the majority threshold.
+    """
     if not members:
         return set(), set()
-    required = max(1, math.ceil((2 * len(members)) / 3))
+    # Import locally to avoid circular dependency at module level.
+    from .webarena.predicates import MILESTONE_COMMERCE  # noqa: PLC0415
+
+    n = len(members)
+    generic_required = max(1, math.ceil((2 * n) / 3))
+    milestone_required = 1  # single member is enough for commerce milestones
+
     pre_counts = Counter(p for member in members for p in member.planning_preconditions)
     effect_counts = Counter(p for member in members for p in member.planning_effects)
-    preconditions = {p for p, count in pre_counts.items() if count >= required}
-    effects = {
-        p for p, count in effect_counts.items()
-        if count >= required and p not in preconditions
-    }
+
+    preconditions: set[str] = set()
+    effects: set[str] = set()
+    for p, count in pre_counts.items():
+        threshold = milestone_required if p in MILESTONE_COMMERCE else generic_required
+        if count >= threshold:
+            preconditions.add(p)
+    for p, count in effect_counts.items():
+        if p in preconditions:
+            continue
+        threshold = milestone_required if p in MILESTONE_COMMERCE else generic_required
+        if count >= threshold:
+            effects.add(p)
     return preconditions, effects
 
 

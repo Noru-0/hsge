@@ -96,5 +96,30 @@ class OnlineClusterer:
     def cluster_members(self, cid: int) -> list[str]:
         return self.clusters[cid].member_ids
 
+    def split_cluster(
+        self, cid: int, member_groups: list[tuple[list[str], np.ndarray]]
+    ) -> list[int]:
+        """Split cluster `cid` into multiple new clusters.
+
+        Each element of ``member_groups`` is (member_ids, centroid_vector).
+        The original cluster is removed and replaced with new clusters.
+        Returns the list of new cluster IDs.
+        """
+        if cid not in self.clusters:
+            return []
+        del self.clusters[cid]
+        new_cids: list[int] = []
+        for _member_ids, centroid in member_groups:
+            if not _member_ids:
+                continue
+            new_cid = self._next_id
+            self._next_id += 1
+            c = Cluster(cluster_id=new_cid, centroid=centroid.copy())
+            c.count = len(_member_ids)
+            c.member_ids = list(_member_ids)
+            self.clusters[new_cid] = c
+            new_cids.append(new_cid)
+        return new_cids
+
     def __len__(self) -> int:
         return len(self.clusters)

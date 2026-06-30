@@ -570,6 +570,7 @@ def test_browser_act_surfaces_browsergym_action_timeout(monkeypatch):
 
 
 def test_solver_stops_immediately_when_browser_reports_action_error():
+    """Non-timeout action errors still stop the solver immediately."""
     from hsge.webarena.agents import Solver
 
     class LLM:
@@ -592,9 +593,9 @@ def test_solver_stops_immediately_when_browser_reports_action_error():
             self.calls += 1
             return {
                 **self.observation(),
-                "_action_error": "TimeoutError: Timeout 500ms exceeded.",
-                "_action_timed_out": True,
-                "_action_elapsed_ms": 501,
+                "_action_error": "ElementNotFoundError: No element with bid 1",
+                "_action_timed_out": False,
+                "_action_elapsed_ms": 10,
             }
 
     browser = Browser()
@@ -605,8 +606,61 @@ def test_solver_stops_immediately_when_browser_reports_action_error():
     assert browser.calls == 1
     assert len(steps) == 1
     assert "action error" in steps[0].obs_summary
-    assert final_obs["_action_timed_out"] is True
     assert success is False
+
+
+def test_solver_continues_after_navigation_timeout():
+    """Timeout during post-click navigation wait is NOT fatal — the solver
+    should continue, because AJAX sites don't reload the page after clicks.
+    The solver retries and eventually the page shows a success marker."""
+    from hsge.webarena.agents import Solver
+
+    class LLM:
+        supports_vision = False
+        call_count = 0
+
+        def complete_json(self, _system, _prompt):
+            self.call_count += 1
+            if self.call_count <= 2:
+                return {"thought": "Click cart button.", "action": "click('1')"}
+            return {"thought": "done", "action": "send_msg_to_user('done')"}
+
+    class Browser:
+        calls = 0
+
+        def observation(self):
+            return {
+                "url": "https://example.test",
+                "axtree": "[1] button 'Add to Cart'",
+                "screenshot_base64": None,
+            }
+
+        def act(self, _action):
+            self.calls += 1
+            # After the second click, show a success confirmation (as real
+            # AJAX commerce sites do after Add to Cart).
+            axtree = (
+                "[1] button 'Add to Cart'"
+                if self.calls < 2
+                else "[1] text 'Added to cart successfully'"
+            )
+            return {
+                "url": "https://example.test",
+                "axtree": axtree,
+                "screenshot_base64": None,
+                "_action_error": "TimeoutError: Timeout 500ms exceeded.",
+                "_action_timed_out": True,
+                "_action_elapsed_ms": 2500,
+            }
+
+    browser = Browser()
+    steps, _, final_obs, success, _ = Solver(LLM(), max_steps=5).solve(
+        browser, "Add item to cart."
+    )
+
+    # Solver should retry after timeout instead of giving up immediately.
+    assert browser.calls > 1
+    assert success is True
 
 
 def test_empty_prefix_load_is_left_to_prefix_recovery():

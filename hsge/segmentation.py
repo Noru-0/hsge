@@ -131,7 +131,12 @@ def _attach_planning_evidence(
 
 
 def _action_level_segments(steps: list[Step], site: str, task: str) -> list[SubTrajectory]:
-    """Add compact reusable action-pattern segments alongside URL spans."""
+    """Add compact reusable action-pattern segments alongside URL spans.
+
+    Commerce-triggering actions (add to cart, checkout, etc.) get
+    context windows (preceding fill/type/select + the click itself) so the
+    segment captures the full causal sequence — not just a bare click.
+    """
     out: list[SubTrajectory] = []
     i = 0
     while i < len(steps):
@@ -159,13 +164,28 @@ def _action_level_segments(steps: list[Step], site: str, task: str) -> list[SubT
                 success=True,
             ))
         elif kind == "click":
-            out.append(SubTrajectory(
-                steps=[steps[i]],
-                subgoal=_click_subgoal(task, steps[i]),
-                source_site=site,
-                source_task=task,
-                success=True,
-            ))
+            subgoal = _click_subgoal(task, steps[i])
+            # Commerce-triggering clicks: include preceding fill/type/select
+            # for context (e.g. quantity fill → Add to Cart click)
+            if subgoal in {"add item to cart", "save visible item", "advance transaction flow"}:
+                start = i
+                if i > 0 and steps[i - 1].action_kind() in {"fill", "type", "select_option"}:
+                    start = i - 1
+                out.append(SubTrajectory(
+                    steps=steps[start:i + 1],
+                    subgoal=subgoal,
+                    source_site=site,
+                    source_task=task,
+                    success=True,
+                ))
+            else:
+                out.append(SubTrajectory(
+                    steps=[steps[i]],
+                    subgoal=subgoal,
+                    source_site=site,
+                    source_task=task,
+                    success=True,
+                ))
         elif kind == "hover":
             out.append(SubTrajectory(
                 steps=[steps[i]],
@@ -191,7 +211,18 @@ def _click_subgoal(task: str, step: Step) -> str:
     g = f"{task or ''} {step.obs_summary or ''}".lower()
     if re.search(r"\b(review|rating|feedback|comment)\b", g):
         return "inspect feedback indicator"
-    if re.search(r"\b(add|save|apply|submit|confirm|continue|next|compare|remove|delete|checkout|proceed|reorder|wish\s*list|cart)\b", g):
+    # Commerce-specific subgoals — must NOT fall into generic "activate state change control"
+    # because that would lump add-to-cart, wishlist, checkout, and pagination together.
+    if re.search(r"\b(add to (?:cart|basket)|add (?:item|product) to|add this (?:item|product))\b", g):
+        return "add item to cart"
+    if re.search(r"\b(add to (?:wish ?list|wishlist|favorites|saved)|save (?:item|this|product))\b", g):
+        return "save visible item"
+    if re.search(r"\b(proceed to checkout|checkout now|secure checkout|go to checkout|begin checkout)\b", g):
+        return "advance transaction flow"
+    if re.search(r"\b(continue to (?:payment|shipping|billing)|place order|review order|confirm (?:order|payment))\b", g):
+        return "advance transaction flow"
+    # Generic state-change controls (submit, apply, confirm, compare, sort filter, etc.)
+    if re.search(r"\b(add|save|apply|submit|confirm|continue|next|compare|remove|delete|reorder)\b", g):
         return "activate state change control"
     if re.search(r"\b(detail|details|image|product|article|issue|record|link|view|open)\b", g):
         return "open visible item"

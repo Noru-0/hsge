@@ -59,7 +59,11 @@ class SubTrajectory:
         return " > ".join(s.action_kind() for s in self.steps)
 
     def text_for_embedding(self) -> str:
-        return f"GOAL: {self.subgoal} | ACTIONS: {self.action_signature()}"
+        parts = [f"GOAL: {self.subgoal}", f"ACTIONS: {self.action_signature()}"]
+        if self.planning_effects:
+            effects_sorted = ", ".join(sorted(self.planning_effects))
+            parts.append(f"EFFECTS: {effects_sorted}")
+        return " | ".join(parts)
 
 
 @dataclass

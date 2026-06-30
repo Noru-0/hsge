@@ -87,9 +87,58 @@ class SkillLibrary:
             return self._try_admit(cid)
         elif n > 0 and n < self.maturity:
             pass  # still accumulating
+
+        # Re-abstraction: an already-admitted execution-only skill (empty
+        # planning_effects) that now has new members with actual effects
+        # should be re-evaluated.  Clear the abstracted flag so the next
+        # maturity trigger will re-abstract.
+        if cid in self._abstracted and cid in self.skills:
+            admitted_card = self.skills[cid]
+            if (
+                not admitted_card.planning_effects
+                and sub.planning_effects
+            ):
+                print(
+                    f"  [library] cluster {cid}: new effect evidence "
+                    f"arrived for execution-only skill "
+                    f"\"{admitted_card.name}\" — will re-abstract on "
+                    f"next maturity cycle"
+                )
+                self._diag(
+                    "reabstract_scheduled",
+                    cluster_id=cid,
+                    skill_name=admitted_card.name,
+                    old_effects=list(admitted_card.planning_effects),
+                    new_effects=list(sub.planning_effects),
+                )
+                # Do not clear _abstracted immediately; wait until next
+                # maturity threshold to batch the re-abstraction.
+                if n >= self.maturity:
+                    self._abstracted.discard(cid)
+                    return self._try_admit(cid)
+
         return None
 
     def _try_admit(self, cid: int) -> int | None:
+        # --- split heterogeneous clusters before abstraction ---
+        split_cids = self._split_incompatible_cluster(cid)
+        if split_cids:
+            self._diag(
+                "cluster_split",
+                original_cluster_id=cid,
+                new_cluster_ids=split_cids,
+                reason="incompatible_effect_signatures",
+            )
+            # Recurse: each new cluster may now be mature on its own.
+            admitted = []
+            for new_cid in split_cids:
+                new_members = self.cluster_to_members.get(new_cid, [])
+                if len(new_members) >= self.maturity and new_cid not in self._abstracted:
+                    result = self._try_admit(new_cid)
+                    if result:
+                        admitted.append(result)
+            return admitted[0] if admitted else None
+
         members = [self.subtrajs[mid] for mid in self.cluster_to_members[cid]]
         card = abstract_cluster(self.llm, cid, members)
         if card is None:                                 # LLM abstraction failed
@@ -215,7 +264,103 @@ class SkillLibrary:
         return list(self.skills.values())
 
     def _duplicate_skill(self, candidate: SkillCard) -> SkillCard | None:
+        """Detect duplicates by planning semantics, not just name.
+
+        Two skills with the same generic name but different planning effects
+        are NOT duplicates — they serve different roles in the operator graph.
+        """
         for card in self.skills.values():
-            if card.name == candidate.name:
+            if card.name != candidate.name:
+                continue
+            # Same name + overlapping effects → true duplicate (same role)
+            if card.planning_effects and candidate.planning_effects:
+                if card.planning_effects & candidate.planning_effects:
+                    return card
+                # Different effects → different roles, keep both
+                continue
+            # One has empty effects → ambiguous; check if same action signature
+            if not card.planning_effects or not candidate.planning_effects:
                 return card
         return None
+
+    # --------------------------------------------------- cluster splitting ---
+    def _effect_signature(
+        self, member_ids: list[str]
+    ) -> dict[frozenset[str], list[str]]:
+        """Group member IDs by their planning_effects set."""
+        groups: dict[frozenset[str], list[str]] = {}
+        for mid in member_ids:
+            sub = self.subtrajs.get(mid)
+            if sub is None:
+                continue
+            key = frozenset(sub.planning_effects)
+            groups.setdefault(key, []).append(mid)
+        return groups
+
+    def _split_incompatible_cluster(self, cid: int) -> list[int]:
+        """Split a mature cluster whose members have incompatible effect
+        signatures.  Returns new cluster IDs if a split occurred, or empty
+        list if the cluster is already effect-coherent."""
+        from .webarena.predicates import MILESTONE_COMMERCE
+
+        member_ids = self.cluster_to_members.get(cid, [])
+        if len(member_ids) < self.maturity:
+            return []
+
+        groups = self._effect_signature(member_ids)
+        # Single effect group → already coherent
+        if len(groups) <= 1:
+            return []
+
+        # A split is only warranted when commerce-milestone effects differ.
+        milestone_groups: dict[frozenset[str], list[str]] = {}
+        for eff_key, mids in groups.items():
+            milestone_key = frozenset(eff_key & MILESTONE_COMMERCE)
+            milestone_groups.setdefault(milestone_key, []).extend(mids)
+
+        if len(milestone_groups) <= 1:
+            return []
+
+        # Require at least 2 members per group to avoid noise splits.
+        viable = [
+            (mkey, mids)
+            for mkey, mids in milestone_groups.items()
+            if len(mids) >= 2
+        ]
+        if len(viable) < 2:
+            return []
+
+        print(
+            f"  [library] cluster {cid}: splitting by incompatible commerce "
+            f"effects: {[(list(k), len(v)) for k, v in viable]}"
+        )
+        # Build new centroids: average of member vectors per group
+        member_groups: list[tuple[list[str], np.ndarray]] = []
+        for _mkey, mids in viable:
+            vectors = []
+            for mid in mids:
+                sub = self.subtrajs.get(mid)
+                if sub is not None:
+                    vectors.append(self.embedder.encode([sub.text_for_embedding()])[0])
+            if not vectors:
+                continue
+            centroid = np.mean(vectors, axis=0)
+            norm = np.linalg.norm(centroid)
+            if norm > 0:
+                centroid = centroid / norm
+            member_groups.append((mids, centroid))
+
+        if len(member_groups) < 2:
+            return []
+
+        new_cids = self.clusterer.split_cluster(cid, member_groups)
+        # Update cluster_to_members mapping
+        if cid in self.cluster_to_members:
+            del self.cluster_to_members[cid]
+        for (mids, _centroid), new_cid in zip(
+            [g for g in member_groups if g[0]], new_cids
+        ):
+            self.cluster_to_members[new_cid] = mids
+        # Clear abstracted flag for the old cluster so new ones can mature
+        self._abstracted.discard(cid)
+        return new_cids

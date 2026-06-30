@@ -292,7 +292,12 @@ class PageExplorer:
         sys = EXPLORER_SYS
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
         seeded_tasks = self._seed_tasks(obs) if self.profile == "training_quality" else []
-        out = self.llm.complete_json(sys, prompt)
+        screenshot = obs.get("screenshot_base64")
+        use_vision = screenshot and getattr(self.llm, "supports_vision", False)
+        if use_vision:
+            out = self.llm.complete_vision_json(sys, prompt, screenshot_base64=screenshot)
+        else:
+            out = self.llm.complete_json(sys, prompt)
         llm_tasks, rejected = self._filter_llm_tasks(out.get("tasks", []), obs)
         if rejected:
             self.rejected_task_counts.update(rejected)
@@ -695,17 +700,56 @@ class Solver:
                 sig_before_action = self._obs_signature(obs)
                 obs = browser.act(action)
             except Exception as e:
-                steps[-1].obs_summary += f" [action error: {e}]"
+                err_msg = f"{type(e).__name__}: {e}"
+                steps[-1].obs_summary += f" [action error: {err_msg}]"
+                # Timeout during navigation wait after click is normal for
+                # AJAX-heavy commerce sites — the action itself succeeded
+                # (element was clicked), the page just didn't reload.
+                # Don't break; let the solver observe the result and continue.
+                if isinstance(e, TimeoutError):
+                    history.append(action)
+                    last_action_str = (
+                        f"{{'thought': {thought[:80]}, 'action': {action[:80]}, "
+                        f"'note': 'action executed but navigation timed out (site may use AJAX)'}}"
+                    )
+                    last_result_url = obs.get("url", "")
+                    new_url = obs.get("url", "")
+                    if step_callback:
+                        step_callback(action, prev_url, new_url, steps)
+                    prev_url = new_url
+                    continue
                 break
             planning["post_url"] = obs.get("url", "")
             planning["post_predicates"] = sorted(predicates_from(
                 obs.get("url", ""), obs.get("axtree", ""), predicate_extractor
             ))
             if obs.get("_action_error"):
+                action_err = obs["_action_error"]
+                elapsed = obs.get("_action_elapsed_ms", 0)
                 steps[-1].obs_summary += (
-                    f" [action error: {obs['_action_error']}; "
-                    f"elapsed_ms={obs.get('_action_elapsed_ms', 0)}]"
+                    f" [action error: {action_err}; "
+                    f"elapsed_ms={elapsed}]"
                 )
+                # Timeout during post-click navigation wait: the click itself
+                # resolved and was performed.  The page likely used AJAX.
+                # Continue the loop so the solver can work with the result.
+                is_nav_timeout = (
+                    "Timeout" in str(action_err)
+                    and "navigation" in str(action_err).lower()
+                ) or obs.get("_action_timed_out", False)
+                if is_nav_timeout:
+                    history.append(action)
+                    last_action_str = (
+                        f"{{'thought': {thought[:80]}, 'action': {action[:80]}, "
+                        f"'note': 'action executed but navigation timed out "
+                        f"({elapsed}ms, site may use AJAX)'}}"
+                    )
+                    last_result_url = obs.get("url", "")
+                    new_url = obs.get("url", "")
+                    if step_callback:
+                        step_callback(action, prev_url, new_url, steps)
+                    prev_url = new_url
+                    continue
                 break
             history.append(action)
             last_action_str = f"{{'thought': {thought[:80]}, 'action': {action[:80]}}}"
@@ -802,7 +846,7 @@ class Solver:
                 return False
             return bool(re.search(r"menuitem|haspopup|expanded=true|submenu|option", ax))
 
-        if re.search(r"\bsearch\b|\bfind\b", g):
+        if re.search(r"\bsearch\b|\bquery\b", g):
             if action_counts["fill"] + action_counts["type"] < 1:
                 return False
             search_terms = Solver._goal_or_input_terms(goal, actions)
