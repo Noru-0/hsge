@@ -263,3 +263,15 @@ Sau khi chạy exploration, thư mục output chứa:
 | `episodes/ep_NNNN/episode.jsonl` | Steps của episode |
 | `episodes/ep_NNNN/page_state/` | AXTree observations |
 | `episodes/ep_NNNN/screenshots/` | Screenshots (nếu có) |
+
+
+
+
+# Chỉ task thành công
+python list_successful_tasks.py outputs/wa_run_19
+
+# Tất cả task (gồm fail)
+python list_successful_tasks.py outputs/wa_run_19 --all
+
+# Xuất ra file tùy chỉnh
+python list_successful_tasks.py outputs/wa_run_19 --out report.json
