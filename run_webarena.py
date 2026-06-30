@@ -119,6 +119,7 @@ CONFIG_FIELDS = {
         "root_url": "root_url", "out": "out", "allow": "allow",
         "dry_run": "dry_run", "resume": "resume",
         "transfer_query": "transfer_query",
+        "import_legacy_run": "import_legacy_run",
     },
     "exploration": {
         "max_nodes": "max_nodes", "max_depth": "max_depth",
@@ -153,6 +154,12 @@ CONFIG_FIELDS = {
         "solver_profile": "solver_profile",
         "retry_limit": "task_retry_limit",
     },
+    "curriculum": {
+        "execute_tasks": "execute_curriculum_tasks",
+        "max_tasks_per_node": "curriculum_max_tasks_per_node",
+        "max_attempts": "curriculum_max_attempts",
+        "feed_success_to_discovery": "curriculum_feed_success_to_discovery",
+    },
     "skills": {
         "similarity_threshold": "skill_sim_threshold",
         "maturity": "skill_maturity", "verify_k": "skill_verify_k",
@@ -177,6 +184,19 @@ CONFIG_FIELDS = {
     },
     "predicates": {
         "plugins": "predicate_plugins",
+        "mode": "predicate_mode", "model": "predicate_model",
+        "base_url": "predicate_base_url", "vision": "predicate_vision",
+        "top_k": "predicate_top_k",
+        "similarity_floor": "predicate_similarity_floor",
+        "equivalence_confidence": "predicate_equivalence_confidence",
+        "entailment_confidence": "predicate_entailment_confidence",
+        "min_contexts": "predicate_min_contexts",
+        "min_entities": "predicate_min_entities",
+        "min_precision": "predicate_min_precision",
+        "min_recall": "predicate_min_recall",
+        "max_contradiction_rate": "predicate_max_contradiction_rate",
+        "effect_verify_k": "predicate_effect_verify_k",
+        "cache_size": "predicate_cache_size",
     },
 }
 
@@ -227,11 +247,18 @@ def _validate_args(ap: argparse.ArgumentParser, args) -> None:
         "max_nodes": args.max_nodes, "max_steps": args.max_steps,
         "timeout": args.timeout, "action_timeout": args.action_timeout,
         "max_goal_attempts": args.max_goal_attempts,
+        "curriculum_max_tasks_per_node": args.curriculum_max_tasks_per_node,
+        "curriculum_max_attempts": args.curriculum_max_attempts,
         "explorer_max_tasks": args.explorer_max_tasks,
         "skill_maturity": args.skill_maturity,
         "skill_diversity_target": args.skill_diversity_target,
         "frontier_select_pool": args.frontier_select_pool,
         "lookahead_candidates": args.lookahead_candidates,
+        "predicate_top_k": args.predicate_top_k,
+        "predicate_min_contexts": args.predicate_min_contexts,
+        "predicate_min_entities": args.predicate_min_entities,
+        "predicate_effect_verify_k": args.predicate_effect_verify_k,
+        "predicate_cache_size": args.predicate_cache_size,
     }
     for name, value in positive.items():
         if value <= 0:
@@ -262,6 +289,12 @@ def _validate_args(ap: argparse.ArgumentParser, args) -> None:
         "skill_sim_threshold": args.skill_sim_threshold,
         "skill_prune_min_rate": args.skill_prune_min_rate,
         "frontier_score_band": args.frontier_score_band,
+        "predicate_similarity_floor": args.predicate_similarity_floor,
+        "predicate_equivalence_confidence": args.predicate_equivalence_confidence,
+        "predicate_entailment_confidence": args.predicate_entailment_confidence,
+        "predicate_min_precision": args.predicate_min_precision,
+        "predicate_min_recall": args.predicate_min_recall,
+        "predicate_max_contradiction_rate": args.predicate_max_contradiction_rate,
     }.items():
         if not 0.0 <= value <= 1.0:
             ap.error(f"--{name.replace('_', '-')} must be between 0 and 1")
@@ -275,6 +308,8 @@ def _validate_args(ap: argparse.ArgumentParser, args) -> None:
         ap.error("browser.denylist must be a YAML list")
     if not isinstance(args.ignored_query_params, list):
         ap.error("browser.ignore_query_params must be a YAML list")
+    if args.resume and args.import_legacy_run:
+        ap.error("--resume and --import-legacy-run are mutually exclusive")
 
 
 def _check_overwrite_safety(out_dir: str) -> None:
@@ -382,6 +417,10 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
     ap.add_argument("--transfer-query", default=d("transfer_query", None),
                     help="Extra transfer query to evaluate after exploration "
                          "(e.g. 'find a record and read its status').")
+    ap.add_argument(
+        "--import-legacy-run", default=d("import_legacy_run", None),
+        help="Import legacy SkillCard/string predicates as shadow-only ontology entries.",
+    )
     ap.add_argument("--terminal-goal", default=d("terminal_goal", None),
                     help="Optional predicate for a composed goal task. By default, "
                          "the run performs local exploration only.")
@@ -418,6 +457,25 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
     ap.add_argument("--explorer-max-tasks", type=int, default=d("explorer_max_tasks", 12))
     ap.add_argument("--task-retry-limit", type=int, default=d("task_retry_limit", 3),
                     help="Max attempts per local task (1 + N retries, default 3).")
+    ap.add_argument(
+        "--execute-curriculum-tasks",
+        action=argparse.BooleanOptionalAction,
+        default=d("execute_curriculum_tasks", False),
+        help="Execute node-conditioned curriculum tasks after local exploration.",
+    )
+    ap.add_argument(
+        "--curriculum-max-tasks-per-node", type=int,
+        default=d("curriculum_max_tasks_per_node", 3),
+    )
+    ap.add_argument(
+        "--curriculum-max-attempts", type=int,
+        default=d("curriculum_max_attempts", 1),
+    )
+    ap.add_argument(
+        "--curriculum-feed-success-to-discovery",
+        action=argparse.BooleanOptionalAction,
+        default=d("curriculum_feed_success_to_discovery", True),
+    )
     ap.add_argument("--explorer-profile", default=d("explorer_profile", "training_quality"))
     ap.add_argument("--solver-profile", default=d("solver_profile", "training_quality"))
     ap.add_argument("--skill-sim-threshold", type=float, default=d("skill_sim_threshold", 0.6))
@@ -453,6 +511,34 @@ def _build_parser(defaults: dict | None = None) -> argparse.ArgumentParser:
         default=d("predicate_plugins", ["auto"]),
         help="Predicate plugins layered over the domain-neutral core.",
     )
+    ap.add_argument("--predicate-mode", choices=["shadow_promote", "shadow"],
+                    default=d("predicate_mode", "shadow_promote"))
+    ap.add_argument("--predicate-model", default=d("predicate_model", None),
+                    help="Dedicated predicate model; defaults to the lookahead model/provider.")
+    ap.add_argument("--predicate-base-url", default=d("predicate_base_url", None))
+    ap.add_argument("--predicate-vision", action=argparse.BooleanOptionalAction,
+                    default=d("predicate_vision", False))
+    ap.add_argument("--predicate-top-k", type=int, default=d("predicate_top_k", 5))
+    ap.add_argument("--predicate-similarity-floor", type=float,
+                    default=d("predicate_similarity_floor", 0.55))
+    ap.add_argument("--predicate-equivalence-confidence", type=float,
+                    default=d("predicate_equivalence_confidence", 0.90))
+    ap.add_argument("--predicate-entailment-confidence", type=float,
+                    default=d("predicate_entailment_confidence", 0.85))
+    ap.add_argument("--predicate-min-contexts", type=int,
+                    default=d("predicate_min_contexts", 3))
+    ap.add_argument("--predicate-min-entities", type=int,
+                    default=d("predicate_min_entities", 2))
+    ap.add_argument("--predicate-min-precision", type=float,
+                    default=d("predicate_min_precision", 0.85))
+    ap.add_argument("--predicate-min-recall", type=float,
+                    default=d("predicate_min_recall", 0.75))
+    ap.add_argument("--predicate-max-contradiction-rate", type=float,
+                    default=d("predicate_max_contradiction_rate", 0.10))
+    ap.add_argument("--predicate-effect-verify-k", type=int,
+                    default=d("predicate_effect_verify_k", 2))
+    ap.add_argument("--predicate-cache-size", type=int,
+                    default=d("predicate_cache_size", 5000))
     return ap
 
 
@@ -482,7 +568,7 @@ def main(argv: list[str] | None = None):
     if args.dry_run:
         llm, embedder = _DryLLM(), HashingEmbedder()
         browser_factory = lambda url: _FakeBrowser(url)
-        explorer_llm = solver_llm = llm
+        explorer_llm = solver_llm = predicate_llm = llm
     else:
         from hsge.backends import OpenAILLM, STEmbedder
         from hsge.webarena.browser import WebArenaBrowser
@@ -516,6 +602,49 @@ def main(argv: list[str] | None = None):
                                temperature=args.llm_temperature,
                                timeout_seconds=args.llm_timeout_seconds,
                                max_retries=args.llm_max_retries)
+
+        # ── Non-vision LLM: always DeepSeek (cheaper, no vision needed) ──
+        # segment / abstract / ground / predicate / goal-composer never use vision.
+        _nv_api_key = os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        _nv_base_url = os.environ.get("DEEPSEEK_BASE_URL") or "https://api.deepseek.com/v1"
+        _nv_model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+        if _nv_api_key:
+            non_vision_llm = OpenAILLM(
+                model=_nv_model,
+                api_key=_nv_api_key,
+                base_url=_nv_base_url,
+                supports_vision=False,
+                temperature=args.llm_temperature,
+                timeout_seconds=args.llm_timeout_seconds,
+                max_retries=args.llm_max_retries,
+            )
+            print(f"[config] non-vision model={_nv_model} (DeepSeek)")
+        else:
+            non_vision_llm = explorer_llm
+            print("[config] non-vision model=explorer (no DeepSeek key)")
+        predicate_model = args.predicate_model or args.lookahead_model or explorer_model
+        predicate_base_url = (
+            args.predicate_base_url or args.lookahead_base_url or base_url
+        )
+        use_deepseek = "deepseek" in (
+            f"{predicate_model} {predicate_base_url}".lower()
+        )
+        predicate_api_key = (
+            os.environ.get("DEEPSEEK_API_KEY") if use_deepseek else api_key
+        )
+        if predicate_api_key:
+            predicate_llm = OpenAILLM(
+                model=predicate_model,
+                api_key=predicate_api_key,
+                base_url=predicate_base_url,
+                supports_vision=bool(args.predicate_vision and not use_deepseek),
+                temperature=0.0,
+                timeout_seconds=args.lookahead_timeout_seconds,
+                max_retries=args.lookahead_max_retries,
+            )
+        else:
+            print("[WARN] Predicate provider key is unavailable; using explorer model.")
+            predicate_llm = explorer_llm
         try:
             embedder = STEmbedder()
         except ModuleNotFoundError as e:
@@ -537,6 +666,7 @@ def main(argv: list[str] | None = None):
         print(f"[config] provider={provider}")
         print(f"[config] explorer model={explorer_model}")
         print(f"[config] solver   model={solver_model}")
+        print(f"[config] predicate model={predicate_model}")
         print(f"[config] base URL ={base_url}")
         print(f"[config] vision  ={vision_ok}")
 
@@ -544,6 +674,7 @@ def main(argv: list[str] | None = None):
         browser_factory=browser_factory,
         explorer_llm=explorer_llm,
         solver_llm=solver_llm,
+        non_vision_llm=non_vision_llm,
         embedder=embedder, out_dir=args.out,
         allow_pattern=allow, max_depth=args.max_depth, max_nodes=args.max_nodes,
         max_steps=args.max_steps,
@@ -556,6 +687,10 @@ def main(argv: list[str] | None = None):
         auto_terminal_goals=args.auto_terminal_goals,
         place_order_allowed=args.place_order_allowed,
         max_goal_attempts=args.max_goal_attempts,
+        execute_curriculum_tasks=args.execute_curriculum_tasks,
+        curriculum_max_tasks_per_node=args.curriculum_max_tasks_per_node,
+        curriculum_max_attempts=args.curriculum_max_attempts,
+        curriculum_feed_success_to_discovery=args.curriculum_feed_success_to_discovery,
         explorer_max_tasks=args.explorer_max_tasks,
         explorer_profile=args.explorer_profile,
         solver_profile=args.solver_profile,
@@ -580,6 +715,20 @@ def main(argv: list[str] | None = None):
         lookahead_max_retries=args.lookahead_max_retries,
         event_log_level=args.event_log_level,
         predicate_plugins=args.predicate_plugins,
+        predicate_llm=predicate_llm,
+        predicate_mode=args.predicate_mode,
+        predicate_top_k=args.predicate_top_k,
+        predicate_similarity_floor=args.predicate_similarity_floor,
+        predicate_equivalence_confidence=args.predicate_equivalence_confidence,
+        predicate_entailment_confidence=args.predicate_entailment_confidence,
+        predicate_min_contexts=args.predicate_min_contexts,
+        predicate_min_entities=args.predicate_min_entities,
+        predicate_min_precision=args.predicate_min_precision,
+        predicate_min_recall=args.predicate_min_recall,
+        predicate_max_contradiction_rate=args.predicate_max_contradiction_rate,
+        predicate_effect_verify_k=args.predicate_effect_verify_k,
+        predicate_cache_size=args.predicate_cache_size,
+        import_legacy_run=args.import_legacy_run,
         ignored_query_params=args.ignored_query_params,
     )
     explorer.run(args.root_url)

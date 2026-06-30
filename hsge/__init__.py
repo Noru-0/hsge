@@ -16,6 +16,12 @@ from .discovery import Discovery
 from .transfer import transfer_to_site, TransferResult
 from .curriculum import generate_curriculum
 from .env import WebEnv, PageState, demo_sites
+from .predicate_ontology import (
+    EntityRef, FactPattern, PredicateArgument, PredicateDefinition,
+    PredicateEngine, PredicateFact, PredicateRegistry, PredicateRelation,
+    PredicateSnapshot, TypedActionModel,
+)
+from .relational_operators import RelationalOperator, RelationalOperatorGraph
 
 __all__ = [
     "Step", "SubTrajectory", "SkillCard", "ParamSlot", "Task",
@@ -23,4 +29,8 @@ __all__ = [
     "OnlineClusterer", "Cluster", "SkillLibrary", "HierarchicalGraph",
     "Discovery", "transfer_to_site", "TransferResult", "generate_curriculum",
     "WebEnv", "PageState", "demo_sites",
+    "PredicateArgument", "PredicateDefinition", "EntityRef", "PredicateFact",
+    "FactPattern", "PredicateRelation", "PredicateSnapshot", "TypedActionModel",
+    "PredicateRegistry", "PredicateEngine", "RelationalOperator",
+    "RelationalOperatorGraph",
 ]

@@ -8,6 +8,7 @@ never learned skill hints, templates, or tools.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -28,9 +29,17 @@ from ..discovery import Discovery
 from ..graph import HierarchicalGraph
 from ..library import SkillLibrary
 from ..operators import plan
-from ..curriculum import generate_curriculum
+from ..predicate_ontology import (
+    FactPattern,
+    PredicateDefinition,
+    PredicateEngine,
+    PredicateRegistry,
+    TypedActionModel,
+)
+from ..relational_operators import RelationalOperator, RelationalOperatorGraph
+from ..curriculum import curriculum_task_id, generate_curriculum
 from ..transfer import TransferResult
-from ..schema import ParamSlot, SkillCard, SkillStats, Step
+from ..schema import ParamSlot, SkillCard, SkillStats, Step, Task
 from ..segmentation import segment_trajectory
 from .agents import PageExplorer, Solver
 from .frontier_filter import filter_frontier
@@ -103,6 +112,33 @@ class RunMetrics:
     operators_mined: int = 0
     goal_tasks_attempted: int = 0
     goal_tasks_solved: int = 0
+    curriculum_tasks_generated: int = 0
+    curriculum_tasks_selected: int = 0
+    curriculum_tasks_attempted: int = 0
+    curriculum_tasks_solved: int = 0
+    curriculum_tasks_failed: int = 0
+    curriculum_tasks_skipped: int = 0
+    curriculum_episodes: int = 0
+    curriculum_success_by_difficulty: dict[str, int] = field(default_factory=dict)
+    predicate_proposals: int = 0
+    predicate_admissions: int = 0
+    predicate_rejections: int = 0
+    predicates_promoted: int = 0
+    predicate_aliases: int = 0
+    predicate_alias_rate: float = 0.0
+    predicate_contradictions: int = 0
+    predicate_contradiction_rate: float = 0.0
+    predicate_detector_precision: float = 0.0
+    predicate_detector_recall: float = 0.0
+    predicate_llm_calls: int = 0
+    predicate_cache_hits: int = 0
+    predicate_cache_misses: int = 0
+    predicate_cost_usd: float | None = None
+    typed_operators: int = 0
+    typed_plans_found: int = 0
+    typed_plan_attempts: int = 0
+    typed_plan_successes: int = 0
+    legacy_plan_fallbacks: int = 0
     total_llm_calls: int = 0
     total_llm_tokens: int = 0
     solver_navigation_events: int = 0
@@ -145,6 +181,9 @@ class RunMetrics:
             f"\n  Operators: {self.operators_mined}; reachable goals: "
             f"{self.reachable_goals}, terminal tasks: {self.terminal_tasks}"
             f"\n  Goal tasks: {self.goal_tasks_solved}/{self.goal_tasks_attempted}"
+            f"\n  Curriculum tasks: {self.curriculum_tasks_solved}/"
+            f"{self.curriculum_tasks_attempted} solved "
+            f"({self.curriculum_tasks_selected} selected)"
             f"\n  Solver URLs: {self.solver_unique_urls_discovered} unique / "
             f"{self.solver_navigation_events} navigations, "
             f"{self.solver_urls_added_to_frontier} added to frontier"
@@ -283,6 +322,7 @@ class WebArenaExplorer:
                  max_steps: int = 20, terminal_goal: str | None = None,
                  goal_instruction: str | None = None,
                  llm=None, explorer_llm=None, solver_llm=None,
+                 non_vision_llm=None,
                  resume: bool = False,
                  denylist_patterns: list[str] | None = None,
                  full_reset_url: str | None = None,
@@ -290,6 +330,10 @@ class WebArenaExplorer:
                  auto_terminal_goals: bool = True,
                  place_order_allowed: bool = False,
                  max_goal_attempts: int = 3,
+                 execute_curriculum_tasks: bool = False,
+                 curriculum_max_tasks_per_node: int = 3,
+                 curriculum_max_attempts: int = 1,
+                 curriculum_feed_success_to_discovery: bool = True,
                  explorer_max_tasks: int = 12,
                  explorer_profile: str = "training_quality",
                  solver_profile: str = "training_quality",
@@ -314,6 +358,20 @@ class WebArenaExplorer:
                  lookahead_max_retries: int = 1,
                  event_log_level: str = "info",
                  predicate_plugins: list[str] | None = None,
+                 predicate_llm=None,
+                 predicate_mode: str = "shadow_promote",
+                 predicate_top_k: int = 5,
+                 predicate_similarity_floor: float = 0.55,
+                 predicate_equivalence_confidence: float = 0.90,
+                 predicate_entailment_confidence: float = 0.85,
+                 predicate_min_contexts: int = 3,
+                 predicate_min_entities: int = 2,
+                 predicate_min_precision: float = 0.85,
+                 predicate_min_recall: float = 0.75,
+                 predicate_max_contradiction_rate: float = 0.10,
+                 predicate_effect_verify_k: int = 2,
+                 predicate_cache_size: int = 5000,
+                 import_legacy_run: str | None = None,
                  ignored_query_params: list[str] | None = None):
         self.browser_factory = browser_factory
         self.out_dir = out_dir
@@ -330,6 +388,12 @@ class WebArenaExplorer:
         self.auto_terminal_goals = auto_terminal_goals
         self.place_order_allowed = place_order_allowed
         self.max_goal_attempts = max(1, max_goal_attempts)
+        self.execute_curriculum_tasks = bool(execute_curriculum_tasks)
+        self.curriculum_max_tasks_per_node = max(1, curriculum_max_tasks_per_node)
+        self.curriculum_max_attempts = max(1, curriculum_max_attempts)
+        self.curriculum_feed_success_to_discovery = bool(
+            curriculum_feed_success_to_discovery
+        )
         self._task_retry_limit = max(1, task_retry_limit)
         self._prefix_retry_limit = max(1, prefix_retry_limit)
         self._load_retry_limit = max(1, load_retry_limit)
@@ -349,7 +413,29 @@ class WebArenaExplorer:
             place_order_allowed=place_order_allowed,
         )
         self.solver = Solver(_solver_llm, max_steps=max_steps, profile=solver_profile)
-        self.goal_composer_llm = _explorer_llm
+        self.goal_composer_llm = non_vision_llm or _explorer_llm
+        self.predicate_registry = PredicateRegistry(
+            embedder,
+            top_k=predicate_top_k,
+            similarity_floor=predicate_similarity_floor,
+            equivalence_confidence=predicate_equivalence_confidence,
+            entailment_confidence=predicate_entailment_confidence,
+            min_contexts=predicate_min_contexts,
+            min_entities=predicate_min_entities,
+            min_precision=predicate_min_precision,
+            min_recall=predicate_min_recall,
+            max_contradiction_rate=predicate_max_contradiction_rate,
+            effect_verify_k=predicate_effect_verify_k,
+        )
+        self.predicate_engine = PredicateEngine(
+            self.predicate_registry,
+            predicate_llm or non_vision_llm or _explorer_llm,
+            kernel_extractor=build_predicate_extractor([]),
+            cache_size=predicate_cache_size,
+            mode=predicate_mode,
+        )
+        self.typed_opgraph = RelationalOperatorGraph(self.predicate_registry)
+        self.import_legacy_run = import_legacy_run
         self.graph = HierarchicalGraph()
         # Compatibility alias only; HierarchicalGraph owns the canonical
         # operator collection and all high-level composition semantics.
@@ -357,7 +443,7 @@ class WebArenaExplorer:
         # HSGE discovery with verification gate: skills are verified by replaying
         # on contexts built from successful episodes (different pages/sites).
         self.library = SkillLibrary(
-            _explorer_llm, embedder,
+            non_vision_llm or _explorer_llm, embedder,
             verify_contexts_fn=make_verify_contexts_fn(out_dir, browser_factory),
             sim_threshold=skill_sim_threshold,
             maturity=max(1, skill_maturity),
@@ -377,6 +463,8 @@ class WebArenaExplorer:
         # Skill admission callback: log + save to JSON
         self._skills_log: list[dict] = []
         self._curriculum_log: list[dict] = []
+        self._curriculum_task_attempt_counts: Counter[str] = Counter()
+        self._curriculum_task_success_counts: Counter[str] = Counter()
         self._transfer_log: list[dict] = []
         self._node_url_stats: Counter[str] = Counter()
         self._node_solver_urls: set[str] = set()
@@ -386,6 +474,8 @@ class WebArenaExplorer:
         self.library._on_admit = self._on_skill_admitted
         self._skill_diagnostics: list[dict] = []
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
+        if import_legacy_run:
+            self._import_legacy_predicates(import_legacy_run)
         # Denylist: URLs matching any of these regex patterns are silently dropped.
         # Default: block /logout paths (they destroy session, causing downstream failures).
         self._denylist = [re.compile(p) for p in (denylist_patterns or [])]
@@ -472,10 +562,20 @@ class WebArenaExplorer:
         # Frontier snapshot file
         f_mode = "a" if resume else "w"
         self._frontier_file = open(os.path.join(out_dir, "frontier.jsonl"), f_mode, encoding="utf-8")
+        if not resume:
+            open(
+                os.path.join(out_dir, "curriculum_executions.jsonl"),
+                "w", encoding="utf-8",
+            ).close()
+            for name in ("predicate_proposals.jsonl", "predicate_observations.jsonl"):
+                open(os.path.join(out_dir, name), "w", encoding="utf-8").close()
+        self._predicate_proposals_flushed = 0
+        self._predicate_observations_flushed = 0
 
         self._ckpt = self._load_checkpoint() if resume else None
         if self._ckpt:
             self._resume_from_checkpoint(self._ckpt)
+            self._load_predicate_logs()
             self._log_file.write(f"\n{'='*60}\n[resume] continuing from node {self._nodes_done + 1}\n\n")
             self._log_file.flush()
             self._replay_episodes()
@@ -863,6 +963,7 @@ class WebArenaExplorer:
             card.terminal = True
         if card.planning_ready:
             self._register_skill_operator(card)
+        typed_registered = self._register_typed_skill_operator(card)
         self._emit_event("skill", "admitted", level="summary", data={
             "skill_id": card.skill_id,
             "name": card.name,
@@ -873,6 +974,7 @@ class WebArenaExplorer:
             "verify_successes": card.stats.n_verify_success,
             "planning_ready": card.planning_ready,
             "planning_rejection_reason": card.planning_rejection_reason,
+            "typed_planning_ready": typed_registered,
         })
         if card.planning_ready:
             self._emit_event("graph", "operator_added", data={
@@ -881,6 +983,12 @@ class WebArenaExplorer:
                 "composition_edges": sum(
                     len(targets) for targets in self.graph.skill_to_skill.values()
                 ),
+            })
+        if typed_registered:
+            self._emit_event("graph", "typed_operator_added", data={
+                "skill_id": card.skill_id,
+                "typed_operators": len(self.typed_opgraph.ops),
+                "typed_edges": len(self.typed_opgraph.edges()),
             })
         self.metrics.skills_verified += 1
         self.metrics.execution_skills_verified += 1
@@ -915,6 +1023,9 @@ class WebArenaExplorer:
             "planning_ready": card.planning_ready,
             "planning_rejection_reason": card.planning_rejection_reason,
             "predicate_schema_version": card.predicate_schema_version,
+            "typed_action_model": (
+                card.typed_action_model.to_dict() if card.typed_action_model else None
+            ),
         }
         self._skills_log.append(info)
         msg = f"  >>> SKILL admitted: {card.name}  ({card.description[:60]})"
@@ -998,6 +1109,9 @@ class WebArenaExplorer:
                 "planning_ready": card.planning_ready,
                 "planning_rejection_reason": card.planning_rejection_reason,
                 "predicate_schema_version": card.predicate_schema_version,
+                "typed_action_model": (
+                    card.typed_action_model.to_dict() if card.typed_action_model else None
+                ),
             }
         graph_out = {
             "low_level": {
@@ -1028,6 +1142,13 @@ class WebArenaExplorer:
                 "skill_to_state": {s: sorted(st) for s, st in self.graph.skill_to_state.items()},
                 "skill_to_skill": {s: sorted(ss) for s, ss in self.graph.skill_to_skill.items()},
             },
+            "typed_high_level": (
+                self.typed_opgraph.to_dict()
+                if hasattr(self, "typed_opgraph") else {
+                    "operators": {}, "edges": [], "goal_patterns": []
+                }
+            ),
+            "planning_policy": "typed_first_legacy_fallback",
         }
         path = os.path.join(self.out_dir, "graph.json")
         _atomic_json_dump(path, graph_out, indent=2)
@@ -1042,6 +1163,34 @@ class WebArenaExplorer:
             self._log_file.flush()
 
     # ---- curriculum generation from the hierarchical graph ------------------
+    def _predicate_schema_version(self) -> str:
+        extractor = getattr(self, "predicate_extractor", None)
+        return str(getattr(extractor, "schema_version", "") or "unknown")
+
+    def _curriculum_revision(self) -> str:
+        operators = [
+            {
+                "skill_id": skill_id,
+                "name": op.name,
+                "preconditions": sorted(op.preconditions),
+                "effects": sorted(op.effects),
+                "terminal": op.terminal,
+            }
+            for skill_id, op in sorted(self.graph.operator_graph.ops.items())
+        ]
+        payload = json.dumps(
+            {
+                "predicate_schema_version": self._predicate_schema_version(),
+                "ontology_revision": getattr(
+                    getattr(self, "predicate_registry", None), "revision", ""
+                ),
+                "operators": operators,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
     def _write_curriculum(self):
         """Generate a goal-conditioned curriculum with the operator planner.
 
@@ -1055,9 +1204,13 @@ class WebArenaExplorer:
             initial_predicates=getattr(
                 self, "_curriculum_initial_predicates", set()
             ),
+            predicate_schema_version=self._predicate_schema_version(),
         )
+        revision = self._curriculum_revision()
         self._curriculum_log = [
             {
+                "task_id": t.task_id,
+                "task_origin": t.task_origin,
                 "instruction": t.instruction,
                 "skill_chain": t.skill_chain,
                 "skill_names": [self.graph.skills[s].name for s in t.skill_chain if s in self.graph.skills],
@@ -1065,6 +1218,8 @@ class WebArenaExplorer:
                 "site": t.site,
                 "goal_predicate": t.goal_predicate,
                 "terminal": t.terminal,
+                "predicate_schema_version": t.predicate_schema_version,
+                "curriculum_revision": revision,
             }
             for t in tasks
         ]
@@ -1089,6 +1244,8 @@ class WebArenaExplorer:
             "reachable_goals": len(tasks),
             "terminal_tasks": sum(1 for task in tasks if task.terminal),
             "all_effects": sorted(all_effects),
+            "curriculum_revision": revision,
+            "predicate_schema_version": self._predicate_schema_version(),
         }
         _atomic_json_dump(
             os.path.join(self.out_dir, "curriculum_diagnostics.json"),
@@ -1207,17 +1364,56 @@ class WebArenaExplorer:
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, success, difficulty, tag,
-                screenshots: list | None = None, final_obs: dict | None = None):
+                screenshots: list | None = None, final_obs: dict | None = None,
+                task_metadata: dict | None = None):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
         final_obs = final_obs or {}
+        predicate_engine = getattr(self, "predicate_engine", None)
+        if predicate_engine is not None and steps:
+            try:
+                proposals = predicate_engine.induce_episode(
+                    episode_id=self.episode,
+                    task=goal,
+                    success=bool(success),
+                    steps=steps,
+                    obs_texts=obs_texts,
+                    final_obs=final_obs,
+                )
+                if hasattr(self, "metrics"):
+                    self.metrics.predicate_proposals += len(proposals)
+                self._refresh_typed_operators()
+                self._write_predicate_artifacts()
+            except Exception as exc:
+                self._emit_event("predicate", "induction_failed", level="warning", data={
+                    "episode_id": self.episode,
+                    "error": f"{type(exc).__name__}: {exc}",
+                })
         final_ax_path = "page_state/final_axtree.txt"
         open(os.path.join(ep, final_ax_path), "w", encoding="utf-8").write(
             final_obs.get("axtree", "")
         )
+        task_origin = {
+            "LOCAL": "local", "CURRICULUM": "curriculum", "GOAL": "goal",
+        }.get(str(tag).upper(), str(tag).lower())
+        metadata = {
+            "difficulty": difficulty,
+            "tags": [tag],
+            "task_origin": task_origin,
+            **(task_metadata or {}),
+        }
+        typed_final_state = None
+        if predicate_engine is not None:
+            try:
+                typed_final_state = predicate_engine.snapshot(
+                    final_obs.get("url", ""), final_obs.get("axtree", ""),
+                    {"phase": "episode_artifact", "episode_id": self.episode},
+                ).to_dict()
+            except Exception:
+                typed_final_state = None
         meta = {"kind": "low_level_trajectory", "goal": goal,
                 "outcome": {"success": bool(success), "reward": 1.0 if success else 0.0, "response": ""},
-                "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps),
+                "metadata": metadata, "step_count": len(steps),
                 "final_state": {
                     "url": final_obs.get("url", ""),
                     "axtree_txt": {"path": final_ax_path},
@@ -1229,6 +1425,7 @@ class WebArenaExplorer:
                         getattr(self, "predicate_extractor", None),
                         "schema_version", "core-v2",
                     ),
+                    "typed_snapshot": typed_final_state,
                 }}
         json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w"), indent=2)
         with open(os.path.join(ep, "episode.jsonl"), "w") as f:
@@ -1358,6 +1555,397 @@ class WebArenaExplorer:
         self.graph.add_skill(card, init_states=[], effect_states=[])
         self.opgraph = self.graph.operator_graph
 
+    def _register_typed_skill_operator(self, card) -> bool:
+        if not getattr(card, "typed_action_model", None):
+            return False
+        try:
+            self.typed_opgraph.add(RelationalOperator.from_skill(card))
+        except ValueError:
+            return False
+        return True
+
+    def _refresh_typed_operators(self) -> None:
+        library = getattr(self, "library", None)
+        if library is None:
+            return
+        for card in library.all_skills():
+            self._register_typed_skill_operator(card)
+
+    def _write_predicate_artifacts(self) -> None:
+        engine = getattr(self, "predicate_engine", None)
+        if engine is None:
+            return
+        _atomic_json_dump(
+            os.path.join(self.out_dir, "predicate_registry.json"),
+            engine.registry.to_dict(), indent=2,
+        )
+        _atomic_json_dump(
+            os.path.join(self.out_dir, "predicate_diagnostics.json"),
+            engine.diagnostics(), indent=2,
+        )
+        proposal_path = os.path.join(self.out_dir, "predicate_proposals.jsonl")
+        proposal_offset = getattr(self, "_predicate_proposals_flushed", 0)
+        with open(proposal_path, "a", encoding="utf-8") as handle:
+            for record in engine.proposal_log[proposal_offset:]:
+                handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        self._predicate_proposals_flushed = len(engine.proposal_log)
+        observation_path = os.path.join(self.out_dir, "predicate_observations.jsonl")
+        observation_offset = getattr(self, "_predicate_observations_flushed", 0)
+        with open(observation_path, "a", encoding="utf-8") as handle:
+            for record in engine.observation_log[observation_offset:]:
+                handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        self._predicate_observations_flushed = len(engine.observation_log)
+
+    def _load_predicate_logs(self) -> None:
+        engine = getattr(self, "predicate_engine", None)
+        if engine is None:
+            return
+
+        def read_jsonl(name: str) -> list[dict]:
+            path = os.path.join(self.out_dir, name)
+            if not os.path.isfile(path):
+                return []
+            records = []
+            with open(path, encoding="utf-8") as handle:
+                for line in handle:
+                    try:
+                        value = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(value, dict):
+                        records.append(value)
+            return records
+
+        engine.proposal_log = read_jsonl("predicate_proposals.jsonl")
+        engine.observation_log = read_jsonl("predicate_observations.jsonl")
+        self._predicate_proposals_flushed = len(engine.proposal_log)
+        self._predicate_observations_flushed = len(engine.observation_log)
+
+    def _curriculum_tasks_for_node(
+        self,
+        initial_predicates: set[str],
+        typed_snapshot=None,
+    ) -> list[Task]:
+        typed_graph = getattr(self, "typed_opgraph", None)
+        registry = getattr(self, "predicate_registry", None)
+        if typed_snapshot is not None and typed_graph is not None and typed_graph.ops:
+            typed_tasks: list[Task] = []
+            goals = {
+                effect
+                for operator in typed_graph.ops.values()
+                for effect in operator.model.add_effects
+            }
+            for goal in sorted(goals):
+                typed_plan = typed_graph.plan(typed_snapshot.facts, goal)
+                if not typed_plan:
+                    continue
+                chain = [step.operator_id for step in typed_plan]
+                definition = registry.definitions.get(goal.predicate_id)
+                display_goal = definition.canonical_name if definition else goal.predicate_id
+                typed_tasks.append(Task(
+                    instruction=(
+                        f"Complete the verified typed skill chain to reach "
+                        f"'{display_goal}'."
+                    ),
+                    skill_chain=chain,
+                    difficulty=len(chain),
+                    site="webarena",
+                    task_id=curriculum_task_id(
+                        json.dumps(goal.to_dict(), sort_keys=True),
+                        chain,
+                        registry.revision,
+                    ),
+                    goal_predicate=display_goal,
+                    terminal=goal in typed_graph.goal_patterns,
+                    task_origin="curriculum",
+                    predicate_schema_version=self.predicate_engine.schema_version,
+                    typed_goal_pattern=goal,
+                    planner_source="typed",
+                ))
+            if typed_tasks:
+                self.metrics.typed_plans_found += len(typed_tasks)
+                return sorted(typed_tasks, key=lambda task: (
+                    task.difficulty, task.goal_predicate, tuple(task.skill_chain)
+                ))
+        legacy = generate_curriculum(
+            self.graph,
+            site="webarena",
+            initial_predicates=initial_predicates,
+            predicate_schema_version=self._predicate_schema_version(),
+        )
+        if typed_graph is not None and typed_graph.ops and legacy:
+            self.metrics.legacy_plan_fallbacks += 1
+        return legacy
+
+    def _select_curriculum_tasks(self, tasks: list[Task]) -> list[Task]:
+        attempts = getattr(self, "_curriculum_task_attempt_counts", Counter())
+        ordered = sorted(
+            tasks,
+            key=lambda task: (
+                attempts.get(task.task_id, 0),
+                task.difficulty,
+                task.goal_predicate,
+                tuple(task.skill_chain),
+            ),
+        )
+        return ordered[:getattr(self, "curriculum_max_tasks_per_node", 3)]
+
+    def _append_curriculum_execution(self, record: dict) -> None:
+        path = os.path.join(self.out_dir, "curriculum_executions.jsonl")
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+
+    def _run_curriculum_tasks(
+        self,
+        *,
+        browser,
+        requested_url: str,
+        actual_url: str,
+        root_url: str,
+        node_num: int,
+        task_records: list[dict],
+    ) -> bool:
+        """Generate and execute node-conditioned curriculum tasks."""
+        self._active_task_id = None
+        self._active_episode_id = None
+        if not getattr(self, "execute_curriculum_tasks", False):
+            self._emit_event("curriculum", "execution_disabled", data={"node_id": node_num})
+            return False
+
+        refreshed = self._reset_browser_to_node(browser, requested_url, actual_url)
+        if not refreshed.get("url"):
+            self.metrics.curriculum_tasks_skipped += 1
+            task_records.append({
+                "task_id": f"n{node_num}-curriculum-unavailable",
+                "goal": "",
+                "family": "other",
+                "task_origin": "curriculum",
+                "generated_by_curriculum": True,
+                "status": "skipped",
+                "skip_reason": "node_reset_failed",
+                "episode_id": None,
+            })
+            self._emit_event(
+                "curriculum", "node_skipped", level="warning",
+                data={"reason": "node_reset_failed"},
+            )
+            return False
+
+        start_predicates = predicates_from(
+            refreshed.get("url", actual_url),
+            refreshed.get("axtree", ""),
+            getattr(self, "predicate_extractor", None),
+        )
+        predicate_engine = getattr(self, "predicate_engine", None)
+        typed_snapshot = (
+            predicate_engine.snapshot(
+                refreshed.get("url", actual_url), refreshed.get("axtree", ""),
+                {"phase": "curriculum_planning", "node_id": node_num},
+            )
+            if predicate_engine is not None else None
+        )
+        generated = self._curriculum_tasks_for_node(start_predicates, typed_snapshot)
+        selected = self._select_curriculum_tasks(generated)
+        revision = self._curriculum_revision()
+        self.metrics.curriculum_tasks_generated += len(generated)
+        self.metrics.curriculum_tasks_selected += len(selected)
+        self._active_curriculum_summary = {
+            "generated": len(generated),
+            "selected": len(selected),
+            "start_predicates": sorted(start_predicates),
+            "curriculum_revision": revision,
+        }
+        self._emit_event("curriculum", "tasks_selected", level="summary", data={
+            **self._active_curriculum_summary,
+            "task_ids": [task.task_id for task in selected],
+        })
+
+        if not selected:
+            self.metrics.curriculum_tasks_skipped += 1
+            task_records.append({
+                "task_id": f"n{node_num}-curriculum-none",
+                "goal": "",
+                "family": "other",
+                "task_origin": "curriculum",
+                "generated_by_curriculum": True,
+                "status": "skipped",
+                "skip_reason": "no_reachable_curriculum_task",
+                "episode_id": None,
+            })
+            self._emit_event(
+                "curriculum", "no_reachable_task", level="summary",
+                data={"start_predicates": sorted(start_predicates)},
+            )
+            return False
+
+        any_success = False
+        if not hasattr(self, "_curriculum_task_attempt_counts"):
+            self._curriculum_task_attempt_counts = Counter()
+        if not hasattr(self, "_curriculum_task_success_counts"):
+            self._curriculum_task_success_counts = Counter()
+        for task in selected:
+            for attempt in range(1, getattr(self, "curriculum_max_attempts", 1) + 1):
+                instance_id = f"{task.task_id}:node-{node_num}:attempt-{attempt}"
+                execution_task_id = f"n{node_num}-{task.task_id}-{attempt}"
+                self._active_task_id = execution_task_id
+                self._active_episode_id = self.episode
+                self._curriculum_task_attempt_counts[task.task_id] += 1
+                self.metrics.curriculum_tasks_attempted += 1
+                if task.planner_source == "typed":
+                    self.metrics.typed_plan_attempts += 1
+                reset_obs = self._reset_browser_to_node(browser, requested_url, actual_url)
+                executed_instruction = (
+                    self._compose_goal_instruction(
+                        task.skill_chain,
+                        task.goal_predicate,
+                        reset_obs,
+                        fallback=task.instruction,
+                    )
+                    if reset_obs.get("url")
+                    else task.instruction
+                )
+                metadata = {
+                    "task_origin": "curriculum",
+                    "generated_by_curriculum": True,
+                    "curriculum_task_id": task.task_id,
+                    "curriculum_instance_id": instance_id,
+                    "curriculum_revision": revision,
+                    "node_id": node_num,
+                    "attempt": attempt,
+                    "goal_predicate": task.goal_predicate,
+                    "skill_chain": list(task.skill_chain),
+                    "terminal": task.terminal,
+                    "start_predicates": sorted(start_predicates),
+                    "catalog_instruction": task.instruction,
+                    "executed_instruction": executed_instruction,
+                    "predicate_schema_version": task.predicate_schema_version,
+                    "planner_source": task.planner_source,
+                    "typed_goal_pattern": (
+                        task.typed_goal_pattern.to_dict()
+                        if task.typed_goal_pattern else None
+                    ),
+                }
+                task_record = {
+                    "task_id": execution_task_id,
+                    "curriculum_task_id": task.task_id,
+                    "curriculum_instance_id": instance_id,
+                    "goal": executed_instruction,
+                    "family": task_family(executed_instruction),
+                    "task_origin": "curriculum",
+                    "generated_by_curriculum": True,
+                    "goal_predicate": task.goal_predicate,
+                    "skill_chain": list(task.skill_chain),
+                    "difficulty": task.difficulty,
+                    "planner_source": task.planner_source,
+                    "status": "attempted",
+                    "attempt": attempt,
+                    "episode_id": None,
+                }
+                task_records.append(task_record)
+                ep_id = self.episode
+                status = "failed"
+                steps: list[Step] = []
+                obs_texts: list[str] = []
+                final_obs: dict = reset_obs or {}
+                success = False
+                screenshots: list = []
+                try:
+                    if not reset_obs.get("url"):
+                        status = "skipped"
+                        metadata["skip_reason"] = "node_reset_failed"
+                        self.metrics.curriculum_tasks_skipped += 1
+                    else:
+                        context_hints = self._checkout_safety_hint(executed_instruction)
+                        account_info = getattr(self, "_account_info", "")
+                        if account_info:
+                            context_hints = (
+                                account_info + "\n\n" + context_hints
+                                if context_hints else account_info
+                            )
+                        steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
+                            browser,
+                            executed_instruction,
+                            goal_predicate=task.goal_predicate,
+                            context_hints=context_hints,
+                            step_callback=self._on_step_completed,
+                            predicate_extractor=getattr(self, "predicate_extractor", None),
+                            predicate_engine=getattr(self, "predicate_engine", None),
+                            goal_fact_pattern=task.typed_goal_pattern,
+                        )
+                        status = "solved" if success else "failed"
+                except Exception as exc:
+                    status = "error"
+                    metadata["error"] = f"{type(exc).__name__}: {exc}"
+                    self.metrics.tasks_error += 1
+                    self.metrics.errors += 1
+
+                metadata["execution_status"] = status
+                self._record(
+                    executed_instruction,
+                    steps,
+                    obs_texts,
+                    success,
+                    difficulty=task.difficulty,
+                    tag="CURRICULUM",
+                    screenshots=screenshots,
+                    final_obs=final_obs,
+                    task_metadata=metadata,
+                )
+                self.metrics.curriculum_episodes += 1
+                task_record["episode_id"] = ep_id
+                task_record["status"] = status
+                ledger_record = {
+                    **metadata,
+                    "difficulty": task.difficulty,
+                    "status": status,
+                    "success": bool(success),
+                    "episode_id": ep_id,
+                }
+                self._append_curriculum_execution(ledger_record)
+                self._emit_event("solver", "completed", level="summary", data={
+                    "kind": "curriculum",
+                    "goal": executed_instruction,
+                    "goal_predicate": task.goal_predicate,
+                    "curriculum_task_id": task.task_id,
+                    "skill_chain": task.skill_chain,
+                    "success": bool(success),
+                    "status": status,
+                    "steps": len(steps),
+                    "plan_length": task.difficulty,
+                }, task_id=execution_task_id, episode_id=ep_id)
+
+                if success:
+                    any_success = True
+                    self.metrics.curriculum_tasks_solved += 1
+                    if task.planner_source == "typed":
+                        self.metrics.typed_plan_successes += 1
+                    self._curriculum_task_success_counts[task.task_id] += 1
+                    key = str(task.difficulty)
+                    by_difficulty = self.metrics.curriculum_success_by_difficulty
+                    by_difficulty[key] = by_difficulty.get(key, 0) + 1
+                    if getattr(self, "curriculum_feed_success_to_discovery", True):
+                        self.discovery.on_trajectory(
+                            steps,
+                            site=root_url,
+                            task=executed_instruction,
+                            obs_texts=obs_texts,
+                            final_obs=final_obs,
+                            provenance={
+                                "source_kind": "curriculum",
+                                "episode_id": ep_id,
+                                "task_id": task.task_id,
+                            },
+                        )
+                    break
+                if status == "failed":
+                    self.metrics.curriculum_tasks_failed += 1
+                elif status == "error":
+                    self.metrics.curriculum_tasks_failed += 1
+
+        self._active_task_id = None
+        self._active_episode_id = None
+        return any_success
+
     def _goal_task(
         self,
         initial_predicates: set[str] | None = None,
@@ -1366,6 +1954,59 @@ class WebArenaExplorer:
         initial = frozenset(initial_predicates or set())
         goal = self.terminal_goal
         instruction = self.goal_instruction
+        typed_snapshot = None
+        if observation and getattr(self, "predicate_engine", None) is not None:
+            typed_snapshot = self.predicate_engine.snapshot(
+                observation.get("url", ""), observation.get("axtree", ""),
+                {"phase": "goal_planning"},
+            )
+        typed_goals: list[FactPattern] = []
+        registry = getattr(self, "predicate_registry", None)
+        typed_graph = getattr(self, "typed_opgraph", None)
+        if goal and registry is not None:
+            normalized_goal = "_".join(re.findall(r"[a-z0-9]+", goal.lower()))
+            predicate_id = (
+                goal if goal in registry.definitions
+                else registry.aliases.get(normalized_goal)
+            )
+            definition = registry.definitions.get(predicate_id or "")
+            if definition and definition.status == "promoted":
+                typed_goals.append(FactPattern(
+                    definition.predicate_id,
+                    tuple(f"?{argument.arg_type}_{index}" for index, argument in enumerate(definition.arguments)),
+                    tuple(argument.arg_type for argument in definition.arguments),
+                ))
+        elif self.auto_terminal_goals and typed_graph is not None:
+            typed_goals.extend(sorted(typed_graph.goal_patterns))
+
+        if typed_snapshot is not None:
+            for typed_goal in typed_goals:
+                typed_plan = typed_graph.plan(typed_snapshot.facts, typed_goal)
+                if not typed_plan:
+                    continue
+                chain = [step.operator_id for step in typed_plan]
+                definition = registry.definitions.get(typed_goal.predicate_id)
+                display_goal = definition.canonical_name if definition else typed_goal.predicate_id
+                self.metrics.typed_plans_found += 1
+                self._active_plan_summary = {
+                    "goal": display_goal,
+                    "status": "planned",
+                    "plan_length": len(chain),
+                    "chain": chain,
+                    "planner_source": "typed",
+                }
+                instruction = instruction or self._compose_goal_instruction(
+                    chain, display_goal, observation or {}
+                )
+                return {
+                    "goal": instruction,
+                    "difficulty": len(chain),
+                    "chain": chain,
+                    "terminal_goal": display_goal,
+                    "typed_goal_pattern": typed_goal,
+                    "planner_source": "typed",
+                    "typed_plan": [step.to_dict() for step in typed_plan],
+                }
         if not goal and self.auto_terminal_goals:
             goal, _ = self._auto_transaction_goal(initial)
         if not goal:
@@ -1388,6 +2029,8 @@ class WebArenaExplorer:
                 "initial_predicates": sorted(initial),
             })
             return None
+        if typed_goals or (typed_graph is not None and typed_graph.ops):
+            self.metrics.legacy_plan_fallbacks += 1
         self._active_plan_summary = {
             "goal": goal, "status": "planned", "plan_length": len(chain),
             "chain": chain,
@@ -1399,17 +2042,25 @@ class WebArenaExplorer:
         })
         instruction = instruction or self._compose_goal_instruction(chain, goal, observation or {})
         return {"goal": instruction,
-                "difficulty": len(chain), "chain": chain, "terminal_goal": goal}
+                "difficulty": len(chain), "chain": chain, "terminal_goal": goal,
+                "typed_goal_pattern": None, "planner_source": "legacy_fallback"}
 
     def _compose_goal_instruction(
-        self, chain: list[str], goal: str, observation: dict
+        self,
+        chain: list[str],
+        goal: str,
+        observation: dict,
+        fallback: str | None = None,
     ) -> str:
         cards = [self._skill_by_id(sid) for sid in chain]
         cards = [card for card in cards if card is not None]
-        fallback = " Then ".join(
+        fallback = fallback or " Then ".join(
             f"Complete '{card.name.replace('_', ' ')}'" for card in cards
         )
-        fallback = (fallback + f". Reach the verified condition '{goal}'.").strip()
+        if not fallback.endswith("."):
+            fallback += "."
+        if goal not in fallback:
+            fallback = (fallback + f" Reach the verified condition '{goal}'.").strip()
         payload = {
             "skill_ids": chain,
             "terminal_goal": goal,
@@ -1514,6 +2165,57 @@ class WebArenaExplorer:
             card.verified and not card.planning_effects for card in skills
         )
         self.metrics.operators_mined = self._observed_operator_count()
+        engine = getattr(self, "predicate_engine", None)
+        if engine is not None:
+            self.metrics.predicate_proposals = len(engine.proposal_log)
+            self.metrics.predicate_admissions = sum(
+                bool(record.get("observations")) for record in engine.proposal_log
+            )
+            self.metrics.predicate_rejections = sum(
+                str(record.get("disposition", "")).startswith("rejected")
+                for record in engine.proposal_log
+            )
+            self.metrics.predicates_promoted = sum(
+                definition.status == "promoted"
+                for definition in engine.registry.definitions.values()
+            )
+            self.metrics.predicate_aliases = sum(
+                len(definition.aliases)
+                for definition in engine.registry.definitions.values()
+            )
+            self.metrics.predicate_alias_rate = (
+                self.metrics.predicate_aliases
+                / max(1, len(engine.registry.definitions))
+            )
+            self.metrics.predicate_contradictions = sum(
+                stats.contradictions for stats in engine.registry.stats.values()
+            ) + sum(
+                relation.verified and relation.relation == "contradicts"
+                for relation in engine.registry.relations
+            )
+            self.metrics.predicate_llm_calls = sum(
+                count for key, count in engine.metrics.items() if key.endswith("llm_calls")
+            )
+            self.metrics.predicate_cache_hits = engine.metrics.get("cache_hits", 0)
+            self.metrics.predicate_cache_misses = engine.metrics.get("cache_misses", 0)
+            aggregate_tp = sum(s.held_out_tp for s in engine.registry.stats.values())
+            aggregate_fp = sum(s.held_out_fp for s in engine.registry.stats.values())
+            aggregate_fn = sum(s.held_out_fn for s in engine.registry.stats.values())
+            aggregate_observations = sum(s.observations for s in engine.registry.stats.values())
+            self.metrics.predicate_detector_precision = (
+                aggregate_tp / (aggregate_tp + aggregate_fp)
+                if aggregate_tp + aggregate_fp else 0.0
+            )
+            self.metrics.predicate_detector_recall = (
+                aggregate_tp / (aggregate_tp + aggregate_fn)
+                if aggregate_tp + aggregate_fn else 0.0
+            )
+            self.metrics.predicate_contradiction_rate = (
+                self.metrics.predicate_contradictions / aggregate_observations
+                if aggregate_observations else 0.0
+            )
+        typed_graph = getattr(self, "typed_opgraph", None)
+        self.metrics.typed_operators = len(typed_graph.ops) if typed_graph is not None else 0
         logger = getattr(self, "event_logger", None)
         if logger is not None:
             self.metrics.event_counts = dict(sorted(logger.counts.items()))
@@ -1535,8 +2237,8 @@ class WebArenaExplorer:
     def save_checkpoint(self, frontier, visited, queued):
         """Persist explorer state so the run can be resumed after interruption.
 
-        Version 4 persists semantic-query node identities plus graph, clustering,
-        and scoring state.
+        Version 6 persists typed predicate ontology and relational operators in
+        addition to the v5 exploration and curriculum scheduler state.
         Verified cards live in skills.json; operators are derived on resume.
         """
         # Serialize hierarchical graph (skill-level only; states can be large)
@@ -1549,7 +2251,7 @@ class WebArenaExplorer:
         clusterer_state = self._serialize_clusterer()
 
         ckpt = {
-            "version": 4,
+            "version": 6,
             "frontier": [[u, d] for u, d in frontier],
             "visited": sorted(visited),
             "queued": sorted(queued),
@@ -1568,9 +2270,26 @@ class WebArenaExplorer:
             "curriculum_initial_predicates": sorted(
                 getattr(self, "_curriculum_initial_predicates", set())
             ),
+            "curriculum_task_attempt_counts": dict(
+                getattr(self, "_curriculum_task_attempt_counts", {})
+            ),
+            "curriculum_task_success_counts": dict(
+                getattr(self, "_curriculum_task_success_counts", {})
+            ),
             # NEW: full state for resume without replay
             "hierarchical_graph": hierarchical_graph,
             "clusterer": clusterer_state,
+            "predicate_registry": (
+                self.predicate_registry.to_dict()
+                if hasattr(self, "predicate_registry") else None
+            ),
+            "typed_operator_graph": (
+                self.typed_opgraph.to_dict()
+                if hasattr(self, "typed_opgraph") else None
+            ),
+            "predicate_engine_metrics": dict(
+                getattr(getattr(self, "predicate_engine", None), "metrics", {})
+            ),
         }
         _atomic_json_dump(self._checkpoint_path, ckpt, indent=2)
         self._emit_event("checkpoint", "saved", data={
@@ -1581,6 +2300,7 @@ class WebArenaExplorer:
         })
         self._write_graph()
         self._write_curriculum()
+        self._write_predicate_artifacts()
         self._write_metrics_snapshot()
 
     def _serialize_clusterer(self) -> dict:
@@ -1632,10 +2352,11 @@ class WebArenaExplorer:
         with open(self._checkpoint_path, encoding="utf-8") as f:
             ckpt = json.load(f)
         version = ckpt.get("version", 1)
-        if version < 4:
+        if version < 6:
             raise ValueError(
-                f"checkpoint version {version} is incompatible with the unified "
-                "visited-node schema (requires version 4); start a new run directory"
+                f"checkpoint version {version} cannot resume the typed predicate "
+                "runtime (requires version 6); start a new run and use "
+                "--import-legacy-run for v5 artifacts"
             )
         print(f"[resume] Loaded checkpoint: {ckpt['nodes_processed']} nodes done, "
               f"{len(ckpt['frontier'])} URLs in frontier, "
@@ -1645,13 +2366,14 @@ class WebArenaExplorer:
     def _resume_from_checkpoint(self, ckpt: dict) -> None:
         """Restore in-memory state from a checkpoint dict.
 
-        Version 4 restores semantic-query node identities and verified skills.
+        Version 6 restores typed ontology, relational operators, semantic-query
+        node identities, verified skills, and curriculum scheduler counters.
         """
         version = ckpt.get("version", 1)
-        if version < 4:
+        if version < 6:
             raise ValueError(
-                f"checkpoint version {version} is incompatible with the unified "
-                "visited-node schema (requires version 4); start a new run directory"
+                f"checkpoint version {version} cannot resume the typed predicate "
+                "runtime (requires version 6); use --import-legacy-run"
             )
         self._skills_log = getattr(self, "_skills_log", [])
         self._curriculum_log = getattr(self, "_curriculum_log", [])
@@ -1690,8 +2412,30 @@ class WebArenaExplorer:
         self._curriculum_initial_predicates = set(
             ckpt.get("curriculum_initial_predicates", [])
         )
+        self._curriculum_task_attempt_counts = Counter(
+            ckpt.get("curriculum_task_attempt_counts", {})
+        )
+        self._curriculum_task_success_counts = Counter(
+            ckpt.get("curriculum_task_success_counts", {})
+        )
 
+        registry_state = ckpt.get("predicate_registry")
+        if registry_state:
+            self.predicate_registry = PredicateRegistry.from_dict(
+                registry_state, self.library.embedder
+            )
+            self.predicate_engine.registry = self.predicate_registry
+            self.typed_opgraph = RelationalOperatorGraph(self.predicate_registry)
+        if getattr(self, "predicate_engine", None) is not None:
+            self.predicate_engine.metrics = Counter(
+                ckpt.get("predicate_engine_metrics", {})
+            )
         self._restore_skills(self._skills_log)
+        typed_graph_state = ckpt.get("typed_operator_graph")
+        if typed_graph_state:
+            self.typed_opgraph = RelationalOperatorGraph.from_dict(
+                typed_graph_state, self.predicate_registry
+            )
         self._restore_hierarchical_graph(ckpt.get("hierarchical_graph", {}))
         self._deserialize_clusterer(ckpt.get("clusterer", {}))
         self._full_state_restored = True
@@ -1732,6 +2476,9 @@ class WebArenaExplorer:
                 predicate_schema_version=item.get("predicate_schema_version", "legacy-v1"),
                 execution_plan=item.get("execution_plan", []),
                 alternative_templates=item.get("alternative_templates", []),
+                typed_action_model=TypedActionModel.from_dict(
+                    item.get("typed_action_model")
+                ),
             )
             if self.terminal_goal and self.terminal_goal in card.planning_effects:
                 card.terminal = True
@@ -1743,6 +2490,39 @@ class WebArenaExplorer:
             self.library._abstracted.add(cid)
             if card.planning_ready:
                 self._register_skill_operator(card)
+            self._register_typed_skill_operator(card)
+
+    def _import_legacy_predicates(self, run_dir: str) -> int:
+        """Import string predicates as provisional shadow definitions only."""
+        skills_path = os.path.join(run_dir, "skills.json")
+        if not os.path.isfile(skills_path):
+            return 0
+        try:
+            records = json.load(open(skills_path, encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return 0
+        imported = 0
+        names = {
+            str(predicate)
+            for record in records if isinstance(record, dict)
+            for predicate in (
+                list(record.get("planning_preconditions", []))
+                + list(record.get("planning_effects", []))
+            )
+            if predicate
+        }
+        for name in sorted(names):
+            definition = self.predicate_registry.create_definition({
+                "name": name,
+                "description": f"Legacy shadow predicate imported from {run_dir}",
+                "scope": "page",
+                "persistence": "persistent",
+                "kind": "state",
+                "status": "provisional",
+            }, source="legacy")
+            self.predicate_registry.add_definition(definition)
+            imported += 1
+        return imported
 
     def _restore_hierarchical_graph(self, hg_data: dict) -> None:
         """Restore hierarchical graph edges from serialized state.
@@ -2191,6 +2971,7 @@ class WebArenaExplorer:
         # summary represents the queue size at selection time.
         self._active_frontier_size_before = len(frontier) + 1
         self._active_plan_summary = None
+        self._active_curriculum_summary = None
         self._node_reset_unavailable = False
         self._node_reset_short_circuits = 0
         self._node_observability_baseline = {
@@ -2401,6 +3182,7 @@ class WebArenaExplorer:
                 "task_id": self._active_task_id,
                 "goal": task,
                 "family": task_family(task),
+                "task_origin": "local",
                 "status": "attempted",
                 "episode_id": None,
             }
@@ -2437,7 +3219,8 @@ class WebArenaExplorer:
                     steps, obs_texts, final_obs, success, screenshots = self.solver.solve(
                         browser, task, context_hints=context_hints,
                         step_callback=self._on_step_completed,
-                        predicate_extractor=getattr(self, "predicate_extractor", None))
+                        predicate_extractor=getattr(self, "predicate_extractor", None),
+                        predicate_engine=getattr(self, "predicate_engine", None))
                     task_steps = steps
                     task_obs_texts = obs_texts
                     task_final_obs = final_obs
@@ -2507,14 +3290,31 @@ class WebArenaExplorer:
                     self._log_file.write(msg2 + "\n")
                     self._log_file.flush()
 
-        # 2) goal-conditioned composed task (once a plan to the goal exists)
+        # 2) node-conditioned curriculum tasks. Successful episodes feed
+        # discovery before the terminal goal is planned for this node.
+        curriculum_success = self._run_curriculum_tasks(
+            browser=browser,
+            requested_url=url,
+            actual_url=actual_url,
+            root_url=root_url,
+            node_num=node_num,
+            task_records=_node_task_records,
+        )
+        _any_success = _any_success or curriculum_success
+
+        # 3) goal-conditioned composed task (once a plan to the goal exists).
+        # Refresh the node state and plan after curriculum feedback so newly
+        # admitted operators can participate immediately.
+        goal_obs = self._reset_browser_to_node(browser, url, actual_url)
+        if not goal_obs.get("url"):
+            goal_obs = obs
         gt = self._goal_task(
             predicates_from(
                 actual_url,
-                obs.get("axtree", ""),
+                goal_obs.get("axtree", ""),
                 getattr(self, "predicate_extractor", None),
             ),
-            observation=obs,
+            observation=goal_obs,
         )
         if gt:
             for attempt in range(1, self.max_goal_attempts + 1):
@@ -2522,10 +3322,17 @@ class WebArenaExplorer:
                 self._active_episode_id = self.episode
                 self.metrics.goal_tasks_attempted += 1
                 self.metrics.composed_goal_tasks_attempted += 1
+                if gt.get("planner_source") == "typed":
+                    self.metrics.typed_plan_attempts += 1
                 goal_record = {
                     "task_id": self._active_task_id,
                     "goal": gt["goal"],
                     "family": task_family(gt["goal"]),
+                    "task_origin": "goal",
+                    "goal_predicate": gt["terminal_goal"],
+                    "skill_chain": list(gt["chain"]),
+                    "difficulty": gt["difficulty"],
+                    "planner_source": gt.get("planner_source", "legacy"),
                     "status": "attempted",
                     "attempt": attempt,
                     "episode_id": None,
@@ -2539,6 +3346,15 @@ class WebArenaExplorer:
                         self._record(
                             gt["goal"], [], [], False,
                             difficulty=gt["difficulty"], tag="GOAL",
+                            task_metadata={
+                                "task_origin": "goal",
+                                "node_id": node_num,
+                                "attempt": attempt,
+                                "goal_predicate": gt["terminal_goal"],
+                                "skill_chain": list(gt["chain"]),
+                                "planner_source": gt.get("planner_source", "legacy"),
+                                "skip_reason": "node_reset_failed",
+                            },
                         )
                         goal_record["episode_id"] = episode_before_attempt
                         msg_skip = f"    GOAL attempt={attempt} SKIP (reset failed)"
@@ -2554,13 +3370,27 @@ class WebArenaExplorer:
                         browser, gt["goal"], goal_predicate=gt["terminal_goal"],
                         context_hints=context_hints,
                         step_callback=self._on_step_completed,
-                        predicate_extractor=getattr(self, "predicate_extractor", None))
+                        predicate_extractor=getattr(self, "predicate_extractor", None),
+                        predicate_engine=getattr(self, "predicate_engine", None),
+                        goal_fact_pattern=gt.get("typed_goal_pattern"))
                     ep_id = self.episode
                     self._record(
                         gt["goal"], steps, obs_texts, success,
                         difficulty=gt["difficulty"], tag="GOAL",
                         screenshots=screenshots,
                         final_obs=final_obs,
+                        task_metadata={
+                            "task_origin": "goal",
+                            "node_id": node_num,
+                            "attempt": attempt,
+                            "goal_predicate": gt["terminal_goal"],
+                            "skill_chain": list(gt["chain"]),
+                            "planner_source": gt.get("planner_source", "legacy"),
+                            "typed_goal_pattern": (
+                                gt["typed_goal_pattern"].to_dict()
+                                if gt.get("typed_goal_pattern") else None
+                            ),
+                        },
                     )
                     self._emit_event("solver", "completed", level="summary", data={
                         "kind": "goal",
@@ -2577,6 +3407,8 @@ class WebArenaExplorer:
                         goal_record["status"] = "solved"
                         _any_success = True
                         self.metrics.goal_tasks_solved += 1
+                        if gt.get("planner_source") == "typed":
+                            self.metrics.typed_plan_successes += 1
                     else:
                         goal_record["status"] = "failed"
                         self.metrics.tasks_failed += 1
@@ -2596,6 +3428,15 @@ class WebArenaExplorer:
                         self._record(
                             gt["goal"], [], [], False,
                             difficulty=gt["difficulty"], tag="GOAL",
+                            task_metadata={
+                                "task_origin": "goal",
+                                "node_id": node_num,
+                                "attempt": attempt,
+                                "goal_predicate": gt["terminal_goal"],
+                                "skill_chain": list(gt["chain"]),
+                                "planner_source": gt.get("planner_source", "legacy"),
+                                "error": f"{type(e).__name__}: {e}",
+                            },
                         )
                         goal_record["episode_id"] = episode_before_attempt
                     self.metrics.errors += 1
@@ -2605,6 +3446,18 @@ class WebArenaExplorer:
                     if self._log_file:
                         self._log_file.write(msg_err + "\n")
                         self._log_file.flush()
+        else:
+            _node_task_records.append({
+                "task_id": f"n{node_num}-goal-none",
+                "goal": "",
+                "family": "other",
+                "task_origin": "goal",
+                "status": "skipped",
+                "skip_reason": getattr(self, "_active_plan_summary", {}).get(
+                    "status", "no_reachable_goal"
+                ),
+                "episode_id": None,
+            })
 
         self._active_task_id = None
         self._active_episode_id = None
@@ -2884,6 +3737,9 @@ class WebArenaExplorer:
         solved = sum(1 for task in task_records if task["status"] == "solved")
         failed = sum(1 for task in task_records if task["status"] == "failed")
         errors = sum(1 for task in task_records if task["status"] == "error")
+        by_origin = dict(Counter(
+            task.get("task_origin", "unknown") for task in task_records
+        ))
         duration_ms = round(
             (time.time() - getattr(self, "_active_node_started_at", time.time())) * 1000
         )
@@ -2901,6 +3757,7 @@ class WebArenaExplorer:
                 "solved": solved,
                 "failed": failed,
                 "errors": errors,
+                "by_origin": by_origin,
                 "reset_replay_failures_avoided": getattr(
                     self, "_node_reset_short_circuits", 0
                 ),
@@ -2919,6 +3776,7 @@ class WebArenaExplorer:
                 "composition_edges": self._observed_composition_count(),
             },
             "planner": getattr(self, "_active_plan_summary", None),
+            "curriculum": getattr(self, "_active_curriculum_summary", None),
         }
         nodes_dir = os.path.join(self.out_dir, "nodes", f"node_{node_num}")
         os.makedirs(nodes_dir, exist_ok=True)
@@ -2986,6 +3844,9 @@ class WebArenaExplorer:
         tasks_failed = sum(1 for t in task_records if t.get("status") == "failed")
         tasks_error = sum(1 for t in task_records if t.get("status") == "error")
         tasks_skipped = sum(1 for t in task_records if t.get("status") == "skipped")
+        tasks_by_origin = dict(Counter(
+            task.get("task_origin", "unknown") for task in task_records
+        ))
         task_success_rate = (tasks_solved / tasks_attempted) if tasks_attempted > 0 else 0.0
         info = {
             "url": url,
@@ -3005,6 +3866,7 @@ class WebArenaExplorer:
             "tasks_failed": tasks_failed,
             "tasks_error": tasks_error,
             "tasks_skipped": tasks_skipped,
+            "tasks_by_origin": tasks_by_origin,
             "reset_replay_failures_avoided": getattr(
                 self, "_node_reset_short_circuits", 0
             ),
@@ -3031,18 +3893,22 @@ class WebArenaExplorer:
             if isinstance(item, dict):
                 goal = item.get("goal", "")
                 status = item.get("status", "attempted")
-                out.append({
+                normalized = dict(item)
+                normalized.update({
                     "task_id": item.get("task_id"),
                     "goal": goal,
                     "family": item.get("family") or task_family(goal),
+                    "task_origin": item.get("task_origin", "unknown"),
                     "status": status,
                     "episode_id": item.get("episode_id"),
                 })
+                out.append(normalized)
             else:
                 goal = str(item)
                 out.append({
                     "goal": goal,
                     "family": task_family(goal),
+                    "task_origin": "unknown",
                     "status": "attempted",
                     "episode_id": None,
                 })
@@ -3182,6 +4048,7 @@ class WebArenaExplorer:
         interrupted = False
         self._write_graph()
         self._write_curriculum()
+        self._write_predicate_artifacts()
         self._write_metrics_snapshot()
         # Lưu axtree đã fetch cho từng URL (tránh fetch lại khi explore)
         self._axtree_cache: dict[str, str] = {}
@@ -3322,10 +4189,8 @@ class WebArenaExplorer:
             # Save checkpoint for resume support
             self.save_checkpoint(frontier, visited, queued)
 
-            # Periodic graph + curriculum snapshots (every 5 nodes)
-            if nodes_processed % 5 == 0:
-                self._write_graph()
-                self._write_curriculum()
+            # save_checkpoint() already exports graph and curriculum after
+            # every completed node; no separate modulo-based cadence is needed.
 
         # Export skills log
         if self._skills_log:

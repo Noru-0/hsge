@@ -1,6 +1,8 @@
 """Goal-conditioned curriculum generation over verified skill operators."""
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Iterable
 
 from .graph import HierarchicalGraph
@@ -27,12 +29,32 @@ def _instruction(opgraph: OperatorGraph, chain: list[str], goal: str) -> str:
     return f"Complete {actions} to reach the verified condition '{goal}'."
 
 
+def curriculum_task_id(
+    goal: str,
+    chain: Iterable[str],
+    predicate_schema_version: str = "",
+) -> str:
+    """Return a stable identity for one curriculum task specification."""
+    payload = json.dumps(
+        {
+            "goal_predicate": goal,
+            "skill_chain": list(chain),
+            "predicate_schema_version": predicate_schema_version or "unknown",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+    return f"curriculum_{digest}"
+
+
 def generate_curriculum(
     graph: HierarchicalGraph | OperatorGraph,
     max_len: int | None = None,
     site: str = "",
     initial_predicates: Iterable[str] | None = None,
     goal_predicates: Iterable[str] | None = None,
+    predicate_schema_version: str = "",
 ) -> list[Task]:
     """Plan one shortest task for every requested reachable goal predicate.
 
@@ -63,8 +85,11 @@ def generate_curriculum(
             skill_chain=chain,
             difficulty=len(chain),
             site=site,
+            task_id=curriculum_task_id(goal, chain, predicate_schema_version),
             goal_predicate=goal,
             terminal=goal in opgraph.goal_predicates,
+            task_origin="curriculum",
+            predicate_schema_version=predicate_schema_version,
         ))
 
     tasks.sort(key=lambda task: (
@@ -81,6 +106,7 @@ def generate_curriculum_from_operators(
     site: str = "",
     initial_predicates: Iterable[str] | None = None,
     goal_predicates: Iterable[str] | None = None,
+    predicate_schema_version: str = "",
 ) -> list[Task]:
     """Backward-compatible entrypoint for callers holding an OperatorGraph."""
     return generate_curriculum(
@@ -89,4 +115,5 @@ def generate_curriculum_from_operators(
         site=site,
         initial_predicates=initial_predicates,
         goal_predicates=goal_predicates,
+        predicate_schema_version=predicate_schema_version,
     )

@@ -11,6 +11,7 @@ import re
 from typing import Any
 
 from .llm import LLM
+from .predicate_ontology import PredicateFact, lift_transition_to_model
 from .schema import Step, SubTrajectory
 from .webarena.predicates import PredicateExtractor, predicates_from
 
@@ -39,6 +40,7 @@ def segment_trajectory(
     obs_texts: list[str] | None = None,
     final_obs: dict[str, Any] | None = None,
     predicate_extractor: PredicateExtractor | None = None,
+    provenance: dict | None = None,
 ) -> list[SubTrajectory]:
     spans = _url_boundary_segments(steps)
     hints = subgoal_hints or [f"segment {i}" for i in range(len(spans))]
@@ -79,6 +81,11 @@ def segment_trajectory(
             for i, (a, b) in enumerate(spans)
         ]
     result = _dedupe_subtrajectories(subs + _action_level_segments(steps, site, task))
+    provenance = provenance or {}
+    for sub in result:
+        sub.source_kind = str(provenance.get("source_kind", "local") or "local")
+        sub.source_episode_id = provenance.get("episode_id")
+        sub.source_task_id = str(provenance.get("task_id", "") or "")
     _attach_planning_evidence(
         result, steps, obs_texts or [], final_obs or {}, predicate_extractor
     )
@@ -114,6 +121,7 @@ def _attach_planning_evidence(
             after = set(last_planning["post_predicates"])
             sub.planning_preconditions = before
             sub.planning_effects = after - before
+            _attach_typed_action_model(sub, first_planning, last_planning)
             continue
 
         start_url = full_steps[start_idx].url
@@ -128,6 +136,35 @@ def _attach_planning_evidence(
         after = predicates_from(end_url, end_ax, predicate_extractor)
         sub.planning_preconditions = before
         sub.planning_effects = after - before
+        _attach_typed_action_model(sub, first_planning, last_planning)
+
+
+def _attach_typed_action_model(
+    sub: SubTrajectory,
+    first_planning: dict,
+    last_planning: dict,
+) -> None:
+    before = {
+        PredicateFact.from_dict(value)
+        for value in first_planning.get("typed_pre_facts", [])
+        if isinstance(value, dict) and value.get("predicate_id")
+    }
+    after = {
+        PredicateFact.from_dict(value)
+        for value in last_planning.get("typed_post_facts", [])
+        if isinstance(value, dict) and value.get("predicate_id")
+    }
+    required = {
+        PredicateFact.from_dict(value)
+        for value in first_planning.get("typed_required_preconditions", [])
+        if isinstance(value, dict) and value.get("predicate_id")
+    }
+    if not before and not after:
+        return
+    evidence_id = ":".join(filter(None, [sub.source_kind, str(sub.source_episode_id or ""), sub.sub_id]))
+    sub.typed_action_model = lift_transition_to_model(
+        before, after, required, evidence_id=evidence_id
+    )
 
 
 def _action_level_segments(steps: list[Step], site: str, task: str) -> list[SubTrajectory]:

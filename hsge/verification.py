@@ -16,7 +16,7 @@ from .env import PageState, WebEnv
 from .llm import LLM
 from .schema import SkillCard
 from .webarena.action_validation import axtree_elements, parse_hsge_action, validate_hsge_action
-from .webarena.predicates import PredicateExtractor
+from .webarena.predicates import PredicateExtractor, predicates_from
 
 _SYS = ("You GROUND a parameterized skill onto a concrete page: bind each "
         "selector/value slot to an element present in the page. Return JSON.")
@@ -84,6 +84,9 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv,
         obs = browser.reset()
         if not obs.get("url"):
             return False
+        before_predicates = predicates_from(
+            obs.get("url", ""), obs.get("axtree", ""), predicate_extractor
+        )
 
         has_slots = bool(skill.slots) or ("{" in str(skill.action_template))
         if not has_slots:
@@ -96,6 +99,11 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv,
             "page_url": obs.get("url", ""),
             "axtree_snippet": axtree,
             "affordances": _extract_affordances(axtree),
+            "verification_target": {
+                "role": getattr(env, "verification_target_role", ""),
+                "name": getattr(env, "verification_target_name", ""),
+                "fingerprint": getattr(env, "verification_target_fingerprint", ""),
+            },
         }
         g = llm.complete_json(
             "You GROUND a parameterized skill onto a concrete page. "
@@ -106,13 +114,19 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv,
             f"Action template: {skill.action_template}\n"
             f"<payload>{json.dumps(payload)}</payload>"
         )
+        preferred = _verification_target_bindings(skill, env, obs.get("axtree", ""))
         if not g.get("groundable", False):
-            bindings = _deterministic_bindings(skill, axtree=obs.get("axtree", ""))
+            bindings = preferred or _deterministic_bindings(
+                skill, axtree=obs.get("axtree", "")
+            )
             if not bindings:
                 _append_verify_failure(skill, "browser_not_groundable")
                 return False
         else:
             bindings = g.get("bindings", {})
+            # The held-out transition supplies semantic target evidence.  It is
+            # more reliable than an unconstrained generic LLM binding.
+            bindings.update(preferred)
 
         # Execute: render template với bindings và thực thi trên browser thật
         # Chỉ execute nếu template có chứa placeholder (có thể ground được)
@@ -149,11 +163,11 @@ def _ground_and_execute_browser(llm: LLM, skill: SkillCard, env: WebEnv,
                 return False
 
         if skill.planning_effects:
-            from .webarena.predicates import predicates_from
             observed = predicates_from(
                 obs.get("url", ""), obs.get("axtree", ""), predicate_extractor
             )
-            missing = skill.planning_effects - observed
+            observed_delta = observed - before_predicates
+            missing = skill.planning_effects - observed_delta
             if missing:
                 _append_verify_failure(
                     skill,
@@ -217,6 +231,54 @@ def _deterministic_bindings(
         bindings[slot.name] = bid
         used.add(bid)
     return bindings
+
+
+def _verification_target_bindings(
+    skill: SkillCard, env: WebEnv, axtree: str
+) -> dict[str, str]:
+    """Bind a selector to the semantic target retained by the context builder."""
+    expected_role = str(getattr(env, "verification_target_role", "") or "").lower()
+    expected_name = str(getattr(env, "verification_target_name", "") or "")
+    expected_fingerprint = str(
+        getattr(env, "verification_target_fingerprint", "") or ""
+    )
+    if not (expected_role or expected_name or expected_fingerprint):
+        return {}
+
+    def normalized(value: str) -> str:
+        return " ".join(re.findall(r"[a-z0-9]+", (value or "").lower()))
+
+    expected_text = normalized(expected_name)
+    if not expected_text and "|" in expected_fingerprint:
+        expected_text = normalized(expected_fingerprint.split("|", 1)[1])
+    ranked: list[tuple[int, str]] = []
+    for bid, (role, line) in axtree_elements(axtree).items():
+        line_text = normalized(line)
+        score = 0
+        if expected_role and role == expected_role:
+            score += 5
+        if expected_text and expected_text in line_text:
+            score += 10
+        elif expected_text:
+            tokens = set(expected_text.split())
+            score += len(tokens & set(line_text.split()))
+        if score:
+            ranked.append((score, bid))
+    if not ranked:
+        return {}
+    ranked.sort(reverse=True)
+
+    selector_slots = [slot.name for slot in skill.slots if slot.slot_type == "selector"]
+    if not selector_slots:
+        return {}
+    target_slot = next(
+        (
+            name for name in selector_slots
+            if re.search(r"control|target|item|record|submit|button|link", name, re.I)
+        ),
+        selector_slots[-1],
+    )
+    return {target_slot: ranked[0][1]}
 
 
 def _value_for_slot(skill: SkillCard, slot_name: str) -> str:
@@ -339,7 +401,10 @@ def verify_skill(
             page_url = env.pages[start].url
         except Exception:
             page_url = str(start)
-        context_key = f"{site}:{page_url}"
+        context_key = str(
+            getattr(env, "verification_context_id", "")
+            or f"{site}:{page_url}"
+        )
         if context_key in tried_contexts:
             continue
         tried_contexts.add(context_key)

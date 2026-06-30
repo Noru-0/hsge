@@ -32,6 +32,7 @@ class Discovery:
         subgoal_hints: list[str] | None = None,
         obs_texts: list[str] | None = None,
         final_obs: dict | None = None,
+        provenance: dict | None = None,
     ) -> list[str]:
         """Process one finished trajectory. Returns newly admitted skill_ids."""
         # 1. update low-level graph with the URL path actually traversed
@@ -44,6 +45,7 @@ class Discovery:
             self.library.llm, steps, site, task, subgoal_hints,
             obs_texts=obs_texts, final_obs=final_obs,
             predicate_extractor=self.predicate_extractor,
+            provenance=provenance,
         )
         if hasattr(self.library, "_diag"):
             self.library._diag(
@@ -52,6 +54,9 @@ class Discovery:
                 steps=len(steps),
                 segments=len(subs),
                 subgoals=[s.subgoal for s in subs],
+                source_kind=(provenance or {}).get("source_kind", "local"),
+                source_episode_id=(provenance or {}).get("episode_id"),
+                source_task_id=(provenance or {}).get("task_id", ""),
             )
         if not subs:
             print(f"  [discovery] WARNING: segment_trajectory returned 0 segments "

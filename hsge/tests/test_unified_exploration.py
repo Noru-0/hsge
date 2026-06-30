@@ -166,7 +166,7 @@ def test_goal_composer_rejects_wrong_chain_and_uses_deterministic_fallback():
 def test_old_checkpoint_is_rejected(tmp_path):
     explorer = WebArenaExplorer.__new__(WebArenaExplorer)
     explorer.out_dir = str(tmp_path)
-    with pytest.raises(ValueError, match="requires version 4"):
+    with pytest.raises(ValueError, match="requires version 6"):
         explorer._resume_from_checkpoint({"version": 3})
 
 
@@ -294,6 +294,10 @@ def test_composed_goal_retries_three_full_attempts_and_records_each(tmp_path):
         explorer.episode += 1
 
     explorer._record = record
+    curriculum_calls = []
+    explorer._run_curriculum_tasks = lambda **kwargs: (
+        curriculum_calls.append(kwargs["node_num"]) or False
+    )
 
     processed = explorer._process_node(
         "http://example.test", 0, "http://example.test",
@@ -303,5 +307,6 @@ def test_composed_goal_retries_three_full_attempts_and_records_each(tmp_path):
 
     assert processed == "http://example.test"
     assert explorer.solver.calls == 3
+    assert curriculum_calls == [1]
     assert recorded == [False, False, True]
     assert explorer.metrics.goal_tasks_solved == 1

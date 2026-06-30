@@ -421,12 +421,14 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
                         difficulty: int, repair: bool = True,
                         allow_goto: bool = False,
                         action_format: str = ACTION_FORMAT_HSGE_JSON,
-                        report: dict | None = None) -> list[dict]:
+                        report: dict | None = None,
+                        provenance: dict | None = None) -> list[dict]:
     if report is None:
         report = _new_report()
     if action_format not in ACTION_FORMATS:
         raise ValueError(f"unsupported action format {action_format!r}")
     examples, history = [], []
+    provenance = provenance or {}
     recent_obs: list[str] = []
     actions: list[str] = []
     for step in steps:
@@ -460,6 +462,10 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
             "task_family": task_family(goal),
             "action_family": action_family(source_action),
             "action_format": action_format,
+            "task_origin": provenance.get("task_origin", "unknown"),
+            "curriculum_task_id": provenance.get("curriculum_task_id"),
+            "goal_predicate": provenance.get("goal_predicate", ""),
+            "skill_chain": list(provenance.get("skill_chain", []) or []),
         })
         history.append(exported_action)
         actions.append(source_action)
@@ -471,7 +477,8 @@ def episode_to_multiturn_example(goal: str, steps: list[dict], episode_dir: str,
                                   difficulty: int, repair: bool = True,
                                   allow_goto: bool = False,
                                   action_format: str = ACTION_FORMAT_HSGE_JSON,
-                                  report: dict | None = None) -> dict | None:
+                                  report: dict | None = None,
+                                  provenance: dict | None = None) -> dict | None:
     """Build a SINGLE multi-turn sample from an entire episode trajectory.
 
     Unlike ``episode_to_examples`` which emits one sample per step, this groups
@@ -483,6 +490,7 @@ def episode_to_multiturn_example(goal: str, steps: list[dict], episode_dir: str,
     """
     if report is None:
         report = _new_report()
+    provenance = provenance or {}
     if action_format not in ACTION_FORMATS:
         raise ValueError(f"unsupported action format {action_format!r}")
     sys_msg = _system_prompt(allow_goto, action_format)
@@ -532,18 +540,25 @@ def episode_to_multiturn_example(goal: str, steps: list[dict], episode_dir: str,
         "task_family": task_family(goal),
         "action_families": list(dict.fromkeys(action_family(a) for a in actions)),
         "action_format": action_format,
+        "task_origin": provenance.get("task_origin", "unknown"),
+        "curriculum_task_id": provenance.get("curriculum_task_id"),
+        "goal_predicate": provenance.get("goal_predicate", ""),
+        "skill_chain": list(provenance.get("skill_chain", []) or []),
     }
 
 
 def load_episodes(path: str):
-    """Yield (goal, steps, episode_dir, difficulty, success) tuples."""
+    """Yield episode data plus task provenance."""
     if os.path.isfile(path) and path.endswith(".json"):
         d = json.load(open(path))
         em = d.get("episode_meta", d)
         ti = d.get("task_info", {})
         steps = d.get("steps") or []
         success = em.get("outcome", {}).get("success", False)
-        yield em.get("goal", ""), steps, os.path.dirname(path), _difficulty(ti, em), success
+        yield (
+            em.get("goal", ""), steps, os.path.dirname(path),
+            _difficulty(ti, em), success, dict(em.get("metadata", {}) or {}),
+        )
         return
     # run directory: each episode is a dir with episode_meta.json + episode.jsonl
     for meta_path in glob.glob(os.path.join(path, "**", "episode_meta.json"), recursive=True):
@@ -554,7 +569,10 @@ def load_episodes(path: str):
         ti_path = os.path.join(ep_dir, "..", "..", "task_info.json")
         ti = json.load(open(ti_path)) if os.path.exists(ti_path) else {}
         success = em.get("outcome", {}).get("success", False)
-        yield em.get("goal", ""), steps, ep_dir, _difficulty(ti, em), success
+        yield (
+            em.get("goal", ""), steps, ep_dir,
+            _difficulty(ti, em), success, dict(em.get("metadata", {}) or {}),
+        )
 
 
 def main():
@@ -581,7 +599,7 @@ def main():
 
     all_examples, n_ep, n_kept = [], 0, 0
     report = _new_report()
-    for goal, steps, ep_dir, diff, success in load_episodes(args.src):
+    for goal, steps, ep_dir, diff, success, provenance in load_episodes(args.src):
         n_ep += 1
         report["episodes_seen"] += 1
         if not success:                              # only train on successes
@@ -591,7 +609,8 @@ def main():
         if args.multiturn:
             example = episode_to_multiturn_example(
                 goal, steps, ep_dir, diff, args.repair_thoughts,
-                args.allow_goto_training, args.action_format, report
+                args.allow_goto_training, args.action_format, report,
+                provenance,
             )
             if example:
                 report["episodes_kept"] += 1
@@ -602,7 +621,8 @@ def main():
         else:
             examples = episode_to_examples(
                 goal, steps, ep_dir, diff, args.repair_thoughts,
-                args.allow_goto_training, args.action_format, report
+                args.allow_goto_training, args.action_format, report,
+                provenance,
             )
             if examples:
                 report["episodes_kept"] += 1
@@ -618,8 +638,10 @@ def main():
                 f.write(json.dumps(ex, ensure_ascii=False) + "\n")
 
     by_diff = {}
+    by_origin = Counter()
     for e in all_examples:
         by_diff[e["difficulty"]] = by_diff.get(e["difficulty"], 0) + 1
+        by_origin[e.get("task_origin", "unknown")] += 1
     loaded = sum(e.get("axtree_loaded", False) for e in all_examples)
     total_steps = sum(e.get("steps", 1) for e in all_examples)
     serializable_report = {
@@ -631,6 +653,7 @@ def main():
     serializable_report["action_format"] = args.action_format
     serializable_report["multiturn"] = args.multiturn
     serializable_report["examples_by_difficulty"] = dict(sorted(by_diff.items()))
+    serializable_report["examples_by_origin"] = dict(sorted(by_origin.items()))
     serializable_report["axtree_loaded"] = loaded
     serializable_report["total_steps"] = total_steps
     if args.report:
@@ -646,6 +669,7 @@ def main():
         mode = "multiturn" if args.multiturn else "single-step"
         print(f"SFT examples written : {len(all_examples)} -> {args.out}  (mode={mode}, total_steps={total_steps})")
     print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
+    print(f"examples by origin    : {dict(sorted(by_origin.items()))}")
     print(f"action families      : {dict(report['action_family'])}")
     print(f"task families        : {dict(report['successful_task_family'])}")
     print(f"dropped steps        : {report['steps_dropped']} {dict(report['drop_reasons'])}")

@@ -49,6 +49,42 @@ def test_episode_to_examples_filters_invalid_and_repairs_thoughts(tmp_path):
     assert report["thoughts_repaired"] == 1
 
 
+def test_episode_to_examples_preserves_curriculum_provenance(tmp_path):
+    ep = tmp_path / "ep_curriculum"
+    state = ep / "page_state"
+    state.mkdir(parents=True)
+    (state / "step_000_axtree.txt").write_text(
+        "[101] button 'Finish'\n", encoding="utf-8"
+    )
+    steps = [{
+        "action": json.dumps({
+            "thought": "Finish the workflow.",
+            "action": "click('101')",
+        }),
+        "observation": {
+            "axtree_txt": {"path": "page_state/step_000_axtree.txt"}
+        },
+    }]
+
+    examples = episode_to_examples(
+        "Finish the workflow",
+        steps,
+        str(ep),
+        difficulty=2,
+        provenance={
+            "task_origin": "curriculum",
+            "curriculum_task_id": "curriculum_123",
+            "goal_predicate": "done",
+            "skill_chain": ["open", "finish"],
+        },
+    )
+
+    assert examples[0]["task_origin"] == "curriculum"
+    assert examples[0]["curriculum_task_id"] == "curriculum_123"
+    assert examples[0]["goal_predicate"] == "done"
+    assert examples[0]["skill_chain"] == ["open", "finish"]
+
+
 def test_episode_to_examples_drops_goto_by_default(tmp_path):
     ep = tmp_path / "ep_0002"
     state = ep / "page_state"

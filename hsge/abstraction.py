@@ -13,6 +13,7 @@ from collections import Counter
 
 from .llm import LLM
 from .schema import ParamSlot, SkillCard, SubTrajectory
+from .predicate_ontology import PredicateArgument, TypedActionModel
 from .webarena.action_validation import parse_hsge_action
 
 _SYS = (
@@ -145,8 +146,14 @@ def abstract_cluster(
     if isinstance(alternative_templates, str):
         alternative_templates = [alternative_templates]
 
-    normalized_name = _normalize_skill_name(out.get("name", f"skill_{cluster_id}"), dominant)
     planning_preconditions, planning_effects = _planning_evidence(members)
+    typed_action_model = _typed_planning_evidence(members)
+    normalized_name = _evidence_aligned_skill_name(
+        _normalize_skill_name(out.get("name", f"skill_{cluster_id}"), dominant),
+        dominant,
+        verbs,
+        planning_effects,
+    )
     card = SkillCard(
         name=normalized_name,
         description=out.get("description", ""),
@@ -163,6 +170,7 @@ def abstract_cluster(
             (m.predicate_schema_version for m in members if m.predicate_schema_version),
             "",
         ),
+        typed_action_model=typed_action_model,
     )
 
     # Store execution plan and alternatives as extra attributes
@@ -251,6 +259,7 @@ def _fallback_skill_card(
         return None
 
     planning_preconditions, planning_effects = _planning_evidence(members)
+    typed_action_model = _typed_planning_evidence(members)
     card = SkillCard(
         name=name,
         description=description,
@@ -267,6 +276,7 @@ def _fallback_skill_card(
             (m.predicate_schema_version for m in members if m.predicate_schema_version),
             "",
         ),
+        typed_action_model=typed_action_model,
     )
     card.stats.bootstrap_verified = True
     card.execution_plan = [
@@ -325,6 +335,43 @@ def _planning_evidence(members: list[SubTrajectory]) -> tuple[set[str], set[str]
     return preconditions, effects
 
 
+def _typed_planning_evidence(members: list[SubTrajectory]) -> TypedActionModel | None:
+    models = [member.typed_action_model for member in members if member.typed_action_model]
+    if not models:
+        return None
+    required = max(1, math.ceil((2 * len(models)) / 3))
+
+    def supported(attribute: str):
+        counts = Counter(
+            pattern for model in models for pattern in getattr(model, attribute)
+        )
+        return frozenset(pattern for pattern, count in counts.items() if count >= required)
+
+    add_effects = supported("add_effects")
+    delete_effects = supported("delete_effects")
+    required_preconditions = supported("required_preconditions")
+    optional_context = supported("optional_context") - required_preconditions
+    parameter_types: dict[str, str] = {}
+    for model in models:
+        for parameter in model.parameters:
+            parameter_types.setdefault(parameter.name, parameter.arg_type)
+    evidence_ids = tuple(sorted({eid for model in models for eid in model.evidence_ids}))
+    support = min(1.0, len(models) / max(1, len(members)))
+    return TypedActionModel(
+        parameters=tuple(
+            PredicateArgument(name, arg_type)
+            for name, arg_type in sorted(parameter_types.items())
+        ),
+        required_preconditions=required_preconditions,
+        optional_context=optional_context,
+        add_effects=add_effects,
+        delete_effects=delete_effects,
+        confidence=support,
+        evidence_ids=evidence_ids,
+        verified_effect_contexts=len(evidence_ids) if add_effects or delete_effects else 0,
+    )
+
+
 def _representative_examples(members: list[SubTrajectory], max_examples: int = 3) -> list[dict]:
     examples = []
     for m in members[:max_examples]:
@@ -358,6 +405,38 @@ def _normalize_skill_name(name: str, dominant_subgoal: str = "") -> str:
         if t not in {"skill", "to", "the", "a", "an", "visible", "specified"}
     ]
     return "_".join(tokens[:4]) or "activate_named_control"
+
+
+def _evidence_aligned_skill_name(
+    proposed: str,
+    dominant_subgoal: str,
+    verbs: list[str],
+    planning_effects: set[str],
+) -> str:
+    """Keep a generic LLM name aligned with observed behavior and effects."""
+    text = (dominant_subgoal or "").lower()
+    if re.search(r"wish\s*list|wishlist|favorite|save visible item", text) or (
+        "item_saved_to_wishlist" in planning_effects
+    ):
+        return "save_visible_item"
+    if verbs and verbs[0] in {"fill", "type"} and re.search(
+        r"search|query|find", text
+    ):
+        return "submit_search_query"
+    if planning_effects & {
+        "cart_nonempty", "on_cart", "on_checkout", "payment_entered",
+        "order_confirmed", "item_added_to_cart", "transaction_advanced",
+    } or re.search(
+        r"add item to cart|state change|checkout|confirm|submit|continue", text
+    ):
+        return "activate_state_change_control"
+    if re.search(r"feedback|review|rating|comment", text):
+        return "inspect_feedback_indicator"
+    if verbs and verbs[0] == "hover":
+        return "inspect_menu_options"
+    if "view:detail" in planning_effects:
+        return "open_visible_item"
+    return proposed
 
 
 def validate_skill_card(card: SkillCard) -> str:

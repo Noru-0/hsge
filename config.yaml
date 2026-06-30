@@ -5,14 +5,19 @@
 # API keys are intentionally kept in .env, not in this file.
 
 run:
-  root_url: https://infectious-plasma-gem-officials.trycloudflare.com/              # required for real runs; dry-run supplies a mock URL
+  # --- Reddit (port 8880) ---
+  root_url: http://192.168.1.31:8880
   # out: outputs/wa_run
   # out: outputs/wa_run_18  # checkpoint v2, dùng cơ chế visited cũ
-  out: outputs/wa_run_24    # checkpoint v4, semantic-query visited identity
+  out: outputs/wa_run_26    # Reddit explore
+  # --- Shopping (port 7770, Cloudflare tunnel) ---
+  # root_url: https://infectious-plasma-gem-officials.trycloudflare.com/
+  # out: outputs/wa_run_25    # new runs write checkpoint v6 with typed ontology
   allow: null                 # null = derive a same-site regex from root_url
   dry_run: false              # use `--dry-run` for the offline mock
   resume: false
   transfer_query: null
+  import_legacy_run: null      # v5/older run imported as shadow only; never resumed
 
 exploration:
   # max_nodes: 200
@@ -42,7 +47,8 @@ browser:
   timeout_ms: 30000
   action_timeout_ms: 5000     # keep actions bounded; navigation uses timeout_ms
   # storage_state: null
-  storage_state: .auth/shopping_state.json
+  storage_state: .auth/reddit_state.json
+  # storage_state: .auth/shopping_state.json  # Shopping (port 7770)
   denylist: []                # /logout is always denied by the runtime
   # Semantic query parameters remain part of a node. Only tracking parameters
   # matching these names/patterns are ignored for visited-node identity.
@@ -64,6 +70,12 @@ tasks:
   explorer_profile: training_quality
   solver_profile: training_quality
   retry_limit: 3               # max attempts per local task (1 initial + 2 retries)
+
+curriculum:
+  execute_tasks: true
+  max_tasks_per_node: 3
+  max_attempts: 1
+  feed_success_to_discovery: true
 
 skills:
   similarity_threshold: 0.6
@@ -95,4 +107,20 @@ observability:
   event_log_level: info       # debug | info | summary | warning | error
 
 predicates:
-  plugins: [auto, commerce]             # auto enables commerce only for e-commerce domains
+  plugins: [auto, commerce]    # legacy rules remain diagnostics/fallback only
+  mode: shadow_promote
+  # Dedicated cheap model; null inherits the lookahead model/provider.
+  model: deepseek-v4-flash
+  base_url: https://api.deepseek.com/v1
+  vision: false
+  top_k: 5
+  similarity_floor: 0.55
+  equivalence_confidence: 0.90
+  entailment_confidence: 0.85
+  min_contexts: 3
+  min_entities: 2
+  min_precision: 0.85
+  min_recall: 0.75
+  max_contradiction_rate: 0.10
+  effect_verify_k: 2
+  cache_size: 5000

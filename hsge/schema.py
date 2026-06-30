@@ -11,6 +11,8 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from typing import Any, Optional
 
+from .predicate_ontology import FactPattern, TypedActionModel
+
 
 def _new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
@@ -48,6 +50,10 @@ class SubTrajectory:
     planning_preconditions: set[str] = field(default_factory=set)
     planning_effects: set[str] = field(default_factory=set)
     predicate_schema_version: str = ""
+    source_kind: str = "local"
+    source_episode_id: int | None = None
+    source_task_id: str = ""
+    typed_action_model: TypedActionModel | None = None
 
     def action_signature(self) -> str:
         """Site-agnostic signature: the sequence of action verbs.
@@ -122,12 +128,16 @@ class SkillCard:
     # Phase 4: structured execution plan
     execution_plan: list[dict] = field(default_factory=list)
     alternative_templates: list[list[str]] = field(default_factory=list)
+    typed_action_model: TypedActionModel | None = None
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["stats"]["sites_seen"] = sorted(self.stats.sites_seen)
         d["planning_preconditions"] = sorted(self.planning_preconditions)
         d["planning_effects"] = sorted(self.planning_effects)
+        d["typed_action_model"] = (
+            self.typed_action_model.to_dict() if self.typed_action_model else None
+        )
         return d
 
     def pretty(self) -> str:
@@ -162,3 +172,7 @@ class Task:
     task_id: str = field(default_factory=lambda: _new_id("task"))
     goal_predicate: str = ""
     terminal: bool = False
+    task_origin: str = "curriculum"
+    predicate_schema_version: str = ""
+    typed_goal_pattern: FactPattern | None = None
+    planner_source: str = "legacy"

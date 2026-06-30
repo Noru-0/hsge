@@ -141,6 +141,10 @@ def test_curriculum_plans_all_reachable_goals_and_keeps_long_terminal_chain():
         (task.goal_predicate, task.skill_chain, task.terminal)
         for task in tasks
     ]
+    assert all(task.task_id.startswith("curriculum_") for task in tasks)
+    assert [task.task_id for task in tasks] == [
+        task.task_id for task in generate_curriculum(graph)
+    ]
 
 
 def test_curriculum_respects_initial_predicates_and_optional_depth_filter():
@@ -210,3 +214,5 @@ def test_runtime_curriculum_export_includes_goal_metadata(tmp_path):
     assert explorer.opgraph is explorer.graph.operator_graph
     assert explorer._curriculum_log[0]["goal_predicate"] == "done"
     assert explorer._curriculum_log[0]["terminal"] is True
+    assert explorer._curriculum_log[0]["task_origin"] == "curriculum"
+    assert explorer._curriculum_log[0]["task_id"].startswith("curriculum_")

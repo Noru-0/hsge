@@ -601,7 +601,9 @@ class Solver:
     def solve(self, browser, goal: str, goal_predicate: str | None = None,
               context_hints: str = "",
               step_callback=None,
-              predicate_extractor: PredicateExtractor | None = None):
+              predicate_extractor: PredicateExtractor | None = None,
+              predicate_engine=None,
+              goal_fact_pattern=None):
         """Drive the browser toward `goal`.
         Returns (steps, obs_texts, final_obs, success, screenshots).
         screenshots is list[bytes|None] parallel to steps.
@@ -687,6 +689,15 @@ class Solver:
                 "target_name": target_name,
                 "target_fingerprint": f"{target_role}|{target_name.lower()}",
             }
+            if predicate_engine is not None:
+                typed_pre = predicate_engine.snapshot(
+                    obs.get("url", ""), obs.get("axtree", ""),
+                    {"goal": cleaned_goal, "phase": "pre_action"},
+                )
+                planning["typed_pre_facts"] = [
+                    fact.to_dict() for fact in sorted(typed_pre.facts)
+                ]
+                planning["typed_registry_revision"] = typed_pre.registry_revision
             steps.append(Step(
                 action=action, url=obs["url"], obs_summary=thought,
                 misc={"planning": planning},
@@ -725,6 +736,15 @@ class Solver:
             planning["post_predicates"] = sorted(predicates_from(
                 obs.get("url", ""), obs.get("axtree", ""), predicate_extractor
             ))
+            typed_post = None
+            if predicate_engine is not None:
+                typed_post = predicate_engine.snapshot(
+                    obs.get("url", ""), obs.get("axtree", ""),
+                    {"goal": cleaned_goal, "phase": "post_action"},
+                )
+                planning["typed_post_facts"] = [
+                    fact.to_dict() for fact in sorted(typed_post.facts)
+                ]
             if obs.get("_action_error"):
                 action_err = obs["_action_error"]
                 elapsed = obs.get("_action_elapsed_ms", 0)
@@ -774,7 +794,15 @@ class Solver:
                 step_callback(action, prev_url, new_url, steps)
             prev_url = new_url
 
-            if goal_predicate and reached(
+            if goal_fact_pattern is not None and predicate_engine is not None:
+                if typed_post is None:
+                    typed_post = predicate_engine.snapshot(
+                        obs.get("url", ""), obs.get("axtree", "")
+                    )
+                if predicate_engine.reached(goal_fact_pattern, typed_post):
+                    success = True
+                    break
+            elif goal_predicate and reached(
                 goal_predicate, obs["url"], obs["axtree"], predicate_extractor
             ):
                 success = True
