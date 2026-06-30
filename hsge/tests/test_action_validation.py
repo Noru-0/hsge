@@ -106,7 +106,7 @@ def test_page_explorer_filters_ungrounded_action_chain_tasks():
 
     tasks = explorer.propose(obs)
 
-    assert "Read visible review information and answer one detail." in tasks
+    assert "[INFO] Read visible review information and answer one detail." in tasks
     assert all("->" not in task for task in tasks)
     assert all("Pre-baked Gingerbread" not in task for task in tasks)
     assert all("checkout" not in task.lower() for task in tasks)
@@ -130,9 +130,9 @@ def test_page_explorer_allows_grounded_domain_specific_tasks():
 
     tasks = explorer.propose(obs)
 
-    assert "Add the visible item to the cart." in tasks
-    assert "Open the visible My Orders record-status page." in tasks
-    assert "Add the visible item to the wish list." in tasks
+    assert "[MOD] Add the visible item to the cart." in tasks
+    assert "[NAV] Open the visible My Orders record-status page." in tasks
+    assert "[MOD] Add the visible item to the wish list." in tasks
 
 
 def test_page_explorer_risky_controls_are_domain_neutral():
@@ -152,7 +152,7 @@ def test_page_explorer_risky_controls_are_domain_neutral():
 
     tasks = explorer.propose(obs)
 
-    assert "Read the visible status for issue #42." in tasks
+    assert "[INFO] Read the visible status for issue #42." in tasks
     assert all("publish" not in task.lower() for task in tasks)
     assert all("delete" not in task.lower() for task in tasks)
 
@@ -164,7 +164,7 @@ def test_page_explorer_hover_seed_has_report_stop_condition():
     }
     tasks = PageExplorer(_TaskLLM([]), max_tasks=20).propose(obs)
 
-    hover_tasks = [task for task in tasks if task.lower().startswith("hover over")]
+    hover_tasks = [task for task in tasks if "hover over" in task.lower()]
     assert hover_tasks
     assert "report one submenu option" in hover_tasks[0]
 
@@ -183,7 +183,7 @@ def test_page_explorer_seeds_only_visible_affordances():
         "Read the visible status shown on this page.",
     ]), max_tasks=20).propose(obs)
 
-    assert "Read the visible status shown on this page." in tasks
+    assert "[INFO] Read the visible status shown on this page." in tasks
     assert all("communication form" not in task.lower() for task in tasks)
     assert all("sort or filter" not in task.lower() for task in tasks)
     assert any("numeric or dated" in task.lower() for task in tasks)
@@ -241,9 +241,9 @@ def test_page_explorer_seed_tasks_have_concrete_report_targets():
     }
     tasks = PageExplorer(_TaskLLM([]), max_tasks=20).propose(obs)
 
-    assert "Report the visible feedback count shown by '12 Reviews'." in tasks
-    assert "Open the visible 'Sort By' sort or filter control and report one available option." in tasks
-    assert "Open the visible 'My Account' account or settings control and report one visible option." in tasks
+    assert "[INFO] Report the visible feedback count shown by '12 Reviews'." in tasks
+    assert "[INFO] Open the visible 'Sort By' sort or filter control and report one available option." in tasks
+    assert "[NAV] Open the visible 'My Account' account or settings control and report one visible option." in tasks
 
 
 def test_task_family_uses_generic_state_change_labels():

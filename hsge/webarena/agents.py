@@ -170,21 +170,39 @@ ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
                "send_msg_to_user('done message').")
 
 EXPLORER_SYS = (
-    "PROPOSE diverse, local tasks a user could accomplish from THIS page. "
-    "Each task must be grounded in visible controls or visible page text, with a clear stop condition. "
-    "Prefer one local objective that should take 1-3 primitive actions, such as search, browse, compare, "
-    "read, inspect, filter, open a form, or report a visible detail. "
-    "Return a balanced portfolio when the page supports it: atomic navigation/detail tasks, "
-    "state-change tasks, form tasks, menu/filter tasks, and checkout/order-flow tasks. "
-    "If cart, checkout, address, shipping, payment, review, or confirmation controls are visible, "
-    "include a safe task that progresses to or reports the next required step. "
-    "Do NOT return action-chain labels with arrows like A -> B -> C. "
-    "Do NOT invent item names, categories, records, people, quantities, amounts, dates, or IDs that are not visible. "
-    "Avoid irreversible commit, payment, destructive, or submit tasks unless the exact reversible control is visible. "
-    "Avoid proposing the same action pattern for multiple items; vary the task structure instead. "
-    "Return JSON {\"tasks\": [\"...\", ...]}. "
-    "IMPORTANT: Do NOT propose any login, sign in, sign up, register, "
-    "or account creation tasks — the agent is already logged in."
+    "You are building a training dataset for a web agent that performs tasks in a browser. "
+    "Your job is to PROPOSE concrete, feasible tasks from the CURRENT page. "
+    "The agent that will execute these tasks may start from a different page, so each task "
+    "must be self-contained and specific enough to understand without seeing this page.\n\n"
+    "=== TASK TYPES ===\n"
+    "Prefix every task with exactly one type tag:\n"
+    "  [INFO] — Information seeking: obtain facts, prices, reviews, counts, dates, comparisons\n"
+    "  [NAV]  — Navigation: go to a specific page, section, or view\n"
+    "  [MOD]  — Content modification: add to cart, fill a form, change a setting, post a comment\n\n"
+    "=== TASK QUALITY RULES ===\n"
+    "1. BE SPECIFIC: \"[MOD] Add the Sony WH-1000XM5 headphones to the cart\" NOT \"[MOD] Add item to cart\".\n"
+    "   Include the actual product name, person, date, or value visible on the page.\n"
+    "2. SELF-CONTAINED: A solver reading only the task text (without seeing this page) must understand\n"
+    "   exactly what to do. Use visible names, labels, and values — never rely on implicit page context.\n"
+    "3. EXPLORATION ORDER — propose tasks in this priority:\n"
+    "   a) [INFO] tasks answerable from visible content with no interaction\n"
+    "   b) [NAV] tasks for links/buttons that lead to interesting pages\n"
+    "   c) [MOD] tasks requiring form input, selection, or state changes\n"
+    "4. FOCUS ON COMMON TASKS: prioritize what a typical user of this website would want to do.\n"
+    "   Avoid niche or edge-case tasks. For frequent task patterns, include 1-2 variants to help\n"
+    "   the agent learn reusable skills (e.g. add different visible products to cart).\n"
+    "5. Each task should require 1-3 primitive actions with a clear stop condition.\n"
+    "   Do NOT return action chains with arrows like A -> B -> C.\n\n"
+    "=== SAFETY ===\n"
+    "- NEVER invent names, categories, people, quantities, amounts, dates, or IDs not visible on the page.\n"
+    "- NEVER propose login, sign in, sign up, register, or account creation — agent is already logged in.\n"
+    "- NEVER propose irreversible commit, payment, place-order, or destructive tasks.\n"
+    "  For checkout/order-flow controls, propose inspection/report tasks instead.\n"
+    "- If cart, checkout, address, shipping, payment, review, or confirmation controls are visible,\n"
+    "  include a safe inspection task that reports the next required step without submitting.\n\n"
+    "=== OUTPUT ===\n"
+    "Return JSON: {\"tasks\": [\"[INFO] ...\", \"[NAV] ...\", \"[MOD] ...\", ...]}\n"
+    "Aim for 6-12 diverse tasks covering all applicable types."
 )
 
 def _build_solver_sys(context_hints: str = "") -> str:
@@ -252,6 +270,24 @@ class PageExplorer:
         task_lower = task.lower()
         return any(kw in task_lower for kw in cls._LOGIN_KEYWORDS)
 
+    _VALID_TAGS = {"[INFO]", "[NAV]", "[MOD]"}
+
+    @classmethod
+    def _normalize_task_tag(cls, task: str) -> tuple[str, bool]:
+        """Ensure task starts with a valid [INFO]/[NAV]/[MOD] tag. Returns (normalized_task, ok)."""
+        for tag in cls._VALID_TAGS:
+            if task.startswith(tag):
+                return (task, True)
+        # Try to auto-tag based on content keywords
+        task_lower = task.lower()
+        if re.search(r'\b(add|fill|type|select|change|modify|update|delete|remove|post|submit|set|configure|upload|edit)\b', task_lower):
+            return (f"[MOD] {task}", True)
+        if re.search(r'\b(navigate|go to|open|visit|find|browse)\b', task_lower):
+            return (f"[NAV] {task}", True)
+        if re.search(r'\b(read|report|inspect|review|check|list|show|tell|identify|compare|count|how many|what|which|describe|summarize|look up|find out)\b', task_lower):
+            return (f"[INFO] {task}", True)
+        return (task, False)
+
     def propose(self, obs: dict) -> list[str]:
         sys = EXPLORER_SYS
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
@@ -285,6 +321,11 @@ class PageExplorer:
             task = re.sub(r"\s+", " ", task).strip()
             if not task or self._is_login_task(task):
                 rejected["login_or_empty"] += 1
+                continue
+            # Validate and normalize task type tag
+            task, tag_ok = self._normalize_task_tag(task)
+            if not tag_ok:
+                rejected["missing_or_invalid_tag"] += 1
                 continue
             if self._looks_like_action_chain(task):
                 rejected["action_chain"] += 1
@@ -422,7 +463,7 @@ class PageExplorer:
         return ""
 
     def _seed_tasks(self, obs: dict) -> list[str]:
-        """Deterministic small-skill tasks to improve SFT coverage."""
+        """Deterministic small-skill tasks to improve SFT coverage. All tagged with [INFO]/[NAV]/[MOD]."""
         axtree = obs.get("axtree", "")
         lines = self._interactive_lines(obs)
         lower = "\n".join(lines).lower()
@@ -432,31 +473,31 @@ class PageExplorer:
         deep_label = self._first_label(lines, self._progression_pattern())
         if deep_label and not self._is_pagination_control(deep_label, all_text):
             if self._is_final_order_control(deep_label) and not self.place_order_allowed:
-                tasks.append(f"Review the visible '{deep_label}' final order control and report what confirmation would be required before using it.")
+                tasks.append(f"[INFO] Review the visible '{deep_label}' final order control and report what confirmation would be required before using it.")
             elif self.checkout_mode != "discover-only":
-                tasks.append(f"Use the visible '{deep_label}' progression control and report the next required step or confirmation that appears.")
+                tasks.append(f"[INFO] Use the visible '{deep_label}' progression control and report the next required step or confirmation that appears.")
             else:
-                tasks.append(f"Inspect the visible '{deep_label}' progression control and report the next required step without submitting it.")
+                tasks.append(f"[INFO] Inspect the visible '{deep_label}' progression control and report the next required step without submitting it.")
 
         search_label = self._first_label(lines, r"\b(searchbox|textbox|combobox)\b.*search")
         if search_label:
-            tasks.append(f"Use the visible '{search_label}' search field to submit a page-relevant search.")
+            tasks.append(f"[NAV] Use the visible '{search_label}' search field to submit a page-relevant search.")
 
         feedback_label = self._first_label(lines, r"reviews?|comments?|feedback|discussion|rating|stars?")
         if feedback_label:
             feedback_count = self._feedback_count(feedback_label)
             if feedback_count:
-                tasks.append(f"Report the visible feedback count shown by '{feedback_label}'.")
+                tasks.append(f"[INFO] Report the visible feedback count shown by '{feedback_label}'.")
             else:
-                tasks.append(f"Report whether the visible '{feedback_label}' feedback control indicates available feedback.")
+                tasks.append(f"[INFO] Report whether the visible '{feedback_label}' feedback control indicates available feedback.")
 
         hover_label = self._first_label(lines, r"haspopup|menuitem")
         if hover_label:
-            tasks.append(f"Hover over the visible '{hover_label}' menu or expandable control and report one submenu option that appears.")
+            tasks.append(f"[INFO] Hover over the visible '{hover_label}' menu or expandable control and report one submenu option that appears.")
 
         filter_label = self._first_label(lines, r"sort by|filter|facet|refine")
         if filter_label:
-            tasks.append(f"Open the visible '{filter_label}' sort or filter control and report one available option.")
+            tasks.append(f"[INFO] Open the visible '{filter_label}' sort or filter control and report one available option.")
 
         state_label = self._first_label(
             lines,
@@ -464,37 +505,37 @@ class PageExplorer:
             r"publish|post|save|confirm|continue|next|delete|remove|cancel|compare|wishlist|cart",
         )
         if state_label:
-            tasks.append(f"Open the visible '{state_label}' state-changing control and report the available action.")
+            tasks.append(f"[INFO] Open the visible '{state_label}' state-changing control and report the available action.")
 
         if self.checkout_mode != "discover-only":
             checkout_label = self._first_label(lines, r"proceed to checkout|checkout|cart|shipping|payment|billing|review order|order summary")
             if checkout_label:
-                tasks.append(f"Use the visible '{checkout_label}' checkout or order-flow control and report the next required step.")
+                tasks.append(f"[INFO] Use the visible '{checkout_label}' checkout or order-flow control and report the next required step.")
         payment_label = self._first_label(lines, r"shipping method|payment method|billing|order summary|grand total|subtotal")
         if payment_label:
-            tasks.append(f"Review the visible '{payment_label}' order-flow section and report one required option or summary detail.")
+            tasks.append(f"[INFO] Review the visible '{payment_label}' order-flow section and report one required option or summary detail.")
         address_label = self._first_label(lines, r"street address|address|city|state|zip|postal|country|phone")
         if address_label:
-            tasks.append(f"Inspect the visible '{address_label}' address or checkout field and report what input is required.")
+            tasks.append(f"[INFO] Inspect the visible '{address_label}' address or checkout field and report what input is required.")
 
         profile_label = self._first_label(lines, r"my account|account|profile|settings|address book|address|preferences")
         if profile_label:
-            tasks.append(f"Open the visible '{profile_label}' account or settings control and report one visible option.")
+            tasks.append(f"[NAV] Open the visible '{profile_label}' account or settings control and report one visible option.")
 
         history_label = self._first_label(lines, r"my orders|orders?|ticket|issue|request|case|incident|history|refund|reorder")
         if history_label:
-            tasks.append(f"Open the visible '{history_label}' history or record-status control and answer one detail.")
+            tasks.append(f"[INFO] Open the visible '{history_label}' history or record-status control and answer one detail.")
 
         communication_label = self._first_label(lines, r"contact us|contact|message|email|reply|draft")
         if communication_label:
-            tasks.append(f"Open the visible '{communication_label}' communication control and report one visible field or option.")
+            tasks.append(f"[INFO] Open the visible '{communication_label}' communication control and report one visible field or option.")
 
         numeric_hint = self._first_visible_snippet(
             axtree,
             r"\$|price|amount|cost|compare|count|total|date|latest|recent|percent|%|\b\d+(?:[.,]\d+)?\b",
         )
         if numeric_hint:
-            tasks.append(f"Read the visible numeric or dated detail near '{numeric_hint}' and answer a simple lookup question.")
+            tasks.append(f"[INFO] Read the visible numeric or dated detail near '{numeric_hint}' and answer a simple lookup question.")
         return tasks[:6]
 
     @staticmethod
@@ -562,6 +603,9 @@ class Solver:
             step_callback(action, url_before, url_after, traj_steps_so_far)
         This enables real-time URL discovery (callback-based, not DOM-query).
         """
+        # Strip [INFO]/[NAV]/[MOD] tag prefix if present — these are dataset
+        # metadata, not part of the agent's goal instruction.
+        cleaned_goal = re.sub(r'^\[(?:INFO|NAV|MOD)\]\s*', '', goal)
         steps: list[Step] = []
         obs_texts: list[str] = []
         screenshots: list[bytes | None] = []
@@ -577,7 +621,7 @@ class Solver:
         recent_scroll_signatures = deque(maxlen=5)
         for _ in range(self.max_steps):
             prompt_text = (
-                f"# Goal\n{goal}\n\n"
+                f"# Goal\n{cleaned_goal}\n\n"
                 f"# Current page Accessibility Tree\n{obs['axtree'][:6000]}\n\n"
                 f"{_ACTION_SPACE_DOC}\n\n"
                 f"# History of past actions\n"
