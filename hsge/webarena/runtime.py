@@ -31,6 +31,7 @@ from ..library import SkillLibrary
 from ..operators import plan
 from ..predicate_ontology import (
     FactPattern,
+    KERNEL_CURRENT_ROUTE,
     PredicateDefinition,
     PredicateEngine,
     PredicateRegistry,
@@ -964,6 +965,26 @@ class WebArenaExplorer:
         if card.planning_ready:
             self._register_skill_operator(card)
         typed_registered = self._register_typed_skill_operator(card)
+        card.typed_planning_ready = typed_registered
+        card.typed_planning_rejection_reason = (
+            "" if typed_registered
+            else (
+                "empty_typed_effects"
+                if not getattr(card, "typed_action_model", None)
+                or not (
+                    card.typed_action_model.add_effects
+                    or card.typed_action_model.delete_effects
+                )
+                else "typed_effects_not_promoted_or_verified"
+            )
+        )
+        if typed_registered and not card.planning_effects:
+            card.planning_rejection_reason = "legacy_empty_typed_planner_ready"
+        upgraded = bool(getattr(card, "_upgraded_existing", False))
+        if typed_registered:
+            # Typed-only cards belong in the exported skill catalog without
+            # being injected into the legacy OperatorGraph.
+            self.graph.skills[card.skill_id] = card
         self._emit_event("skill", "admitted", level="summary", data={
             "skill_id": card.skill_id,
             "name": card.name,
@@ -975,6 +996,8 @@ class WebArenaExplorer:
             "planning_ready": card.planning_ready,
             "planning_rejection_reason": card.planning_rejection_reason,
             "typed_planning_ready": typed_registered,
+            "typed_planning_rejection_reason": card.typed_planning_rejection_reason,
+            "upgraded": upgraded,
         })
         if card.planning_ready:
             self._emit_event("graph", "operator_added", data={
@@ -990,11 +1013,12 @@ class WebArenaExplorer:
                 "typed_operators": len(self.typed_opgraph.ops),
                 "typed_edges": len(self.typed_opgraph.edges()),
             })
-        self.metrics.skills_verified += 1
-        self.metrics.execution_skills_verified += 1
-        if card.planning_ready:
+        if not upgraded:
+            self.metrics.skills_verified += 1
+            self.metrics.execution_skills_verified += 1
+        if card.planning_ready or typed_registered:
             self.metrics.planner_ready_skills += 1
-        elif not card.planning_effects:
+        elif not card.planning_effects and not self._typed_effects(card):
             self.metrics.effectless_skills += 1
         if getattr(card.stats, "bootstrap_verified", False):
             self.metrics.bootstrap_skills_verified += 1
@@ -1022,12 +1046,23 @@ class WebArenaExplorer:
             "terminal": card.terminal,
             "planning_ready": card.planning_ready,
             "planning_rejection_reason": card.planning_rejection_reason,
+            "typed_planning_ready": card.typed_planning_ready,
+            "typed_planning_rejection_reason": card.typed_planning_rejection_reason,
             "predicate_schema_version": card.predicate_schema_version,
             "typed_action_model": (
                 card.typed_action_model.to_dict() if card.typed_action_model else None
             ),
+            "has_verified_effects": card.has_verified_effects,
+            "effect_summary": card.effect_summary(),
         }
-        self._skills_log.append(info)
+        replaced = False
+        for index, existing in enumerate(self._skills_log):
+            if existing.get("skill_id") == card.skill_id:
+                self._skills_log[index] = info
+                replaced = True
+                break
+        if not replaced:
+            self._skills_log.append(info)
         msg = f"  >>> SKILL admitted: {card.name}  ({card.description[:60]})"
         print(msg)
         if self._log_file:
@@ -1044,7 +1079,7 @@ class WebArenaExplorer:
         # Write skills.json immediately so data survives even if run is interrupted
         skills_path = os.path.join(self.out_dir, "skills.json")
         json.dump(self._skills_log, open(skills_path, "w", encoding="utf-8"), indent=2)
-        if card.planning_ready:
+        if card.planning_ready or typed_registered:
             self._write_graph()
             self._write_curriculum()
         self._write_metrics_snapshot()
@@ -1108,10 +1143,14 @@ class WebArenaExplorer:
                 "terminal": card.terminal,
                 "planning_ready": card.planning_ready,
                 "planning_rejection_reason": card.planning_rejection_reason,
+                "typed_planning_ready": card.typed_planning_ready,
+                "typed_planning_rejection_reason": card.typed_planning_rejection_reason,
                 "predicate_schema_version": card.predicate_schema_version,
                 "typed_action_model": (
                     card.typed_action_model.to_dict() if card.typed_action_model else None
                 ),
+                "has_verified_effects": card.has_verified_effects,
+                "effect_summary": card.effect_summary(),
             }
         graph_out = {
             "low_level": {
@@ -1564,6 +1603,11 @@ class WebArenaExplorer:
             return False
         return True
 
+    @staticmethod
+    def _typed_effects(card) -> bool:
+        model = getattr(card, "typed_action_model", None)
+        return bool(model and (model.add_effects or model.delete_effects))
+
     def _refresh_typed_operators(self) -> None:
         library = getattr(self, "library", None)
         if library is None:
@@ -1636,7 +1680,9 @@ class WebArenaExplorer:
                 for effect in operator.model.add_effects
             }
             for goal in sorted(goals):
-                typed_plan = typed_graph.plan(typed_snapshot.facts, goal)
+                typed_plan = typed_graph.plan(
+                    typed_snapshot.facts, goal, require_action=True
+                )
                 if not typed_plan:
                     continue
                 chain = [step.operator_id for step in typed_plan]
@@ -2160,9 +2206,13 @@ class WebArenaExplorer:
             return
         skills = self.library.all_skills() if hasattr(self, "library") else []
         self.metrics.execution_skills_verified = sum(card.verified for card in skills)
-        self.metrics.planner_ready_skills = sum(card.planning_ready for card in skills)
+        self.metrics.planner_ready_skills = sum(
+            card.planning_ready or getattr(card, "typed_planning_ready", False)
+            for card in skills
+        )
         self.metrics.effectless_skills = sum(
-            card.verified and not card.planning_effects for card in skills
+            card.verified and not card.planning_effects and not self._typed_effects(card)
+            for card in skills
         )
         self.metrics.operators_mined = self._observed_operator_count()
         engine = getattr(self, "predicate_engine", None)
@@ -2290,6 +2340,7 @@ class WebArenaExplorer:
             "predicate_engine_metrics": dict(
                 getattr(getattr(self, "predicate_engine", None), "metrics", {})
             ),
+            "predicate_kernel_revision": 2,
         }
         _atomic_json_dump(self._checkpoint_path, ckpt, indent=2)
         self._emit_event("checkpoint", "saved", data={
@@ -2420,25 +2471,54 @@ class WebArenaExplorer:
         )
 
         registry_state = ckpt.get("predicate_registry")
+        predicate_kernel_upgrade = bool(registry_state) and (
+            int(ckpt.get("predicate_kernel_revision", 1)) < 2
+            or KERNEL_CURRENT_ROUTE not in {
+                item.get("predicate_id")
+                for item in registry_state.get("definitions", [])
+            }
+        )
         if registry_state:
             self.predicate_registry = PredicateRegistry.from_dict(
                 registry_state, self.library.embedder
             )
             self.predicate_engine.registry = self.predicate_registry
+            self.predicate_engine.ensure_kernel_definitions()
             self.typed_opgraph = RelationalOperatorGraph(self.predicate_registry)
         if getattr(self, "predicate_engine", None) is not None:
             self.predicate_engine.metrics = Counter(
                 ckpt.get("predicate_engine_metrics", {})
             )
-        self._restore_skills(self._skills_log)
-        typed_graph_state = ckpt.get("typed_operator_graph")
-        if typed_graph_state:
-            self.typed_opgraph = RelationalOperatorGraph.from_dict(
-                typed_graph_state, self.predicate_registry
+        if predicate_kernel_upgrade:
+            print(
+                "[resume] Predicate kernel upgraded; rebuilding skills from "
+                "episodes to recover typed route effects."
             )
-        self._restore_hierarchical_graph(ckpt.get("hierarchical_graph", {}))
-        self._deserialize_clusterer(ckpt.get("clusterer", {}))
-        self._full_state_restored = True
+            self.library.skills.clear()
+            self.library.subtrajs.clear()
+            self.library.cluster_to_members.clear()
+            self.library._abstracted.clear()
+            self.library.clusterer.clusters.clear()
+            self.library.clusterer._next_id = 0
+            self.graph = HierarchicalGraph()
+            self.opgraph = self.graph.operator_graph
+            self.typed_opgraph = RelationalOperatorGraph(self.predicate_registry)
+            self.discovery.graph = self.graph
+            self._skills_log = []
+            _atomic_json_dump(
+                os.path.join(self.out_dir, "skills.json"), [], indent=2
+            )
+            self._full_state_restored = False
+        else:
+            self._restore_skills(self._skills_log)
+            typed_graph_state = ckpt.get("typed_operator_graph")
+            if typed_graph_state:
+                self.typed_opgraph = RelationalOperatorGraph.from_dict(
+                    typed_graph_state, self.predicate_registry
+                )
+            self._restore_hierarchical_graph(ckpt.get("hierarchical_graph", {}))
+            self._deserialize_clusterer(ckpt.get("clusterer", {}))
+            self._full_state_restored = True
 
     def _restore_skills(self, records: list[dict]) -> None:
         """Restore verified cards, then derive OperatorGraph from those cards."""
@@ -2473,6 +2553,10 @@ class WebArenaExplorer:
                     "planning_rejection_reason",
                     "" if item.get("planning_effects") else "empty_planning_effects",
                 ),
+                typed_planning_ready=bool(item.get("typed_planning_ready", False)),
+                typed_planning_rejection_reason=item.get(
+                    "typed_planning_rejection_reason", ""
+                ),
                 predicate_schema_version=item.get("predicate_schema_version", "legacy-v1"),
                 execution_plan=item.get("execution_plan", []),
                 alternative_templates=item.get("alternative_templates", []),
@@ -2490,7 +2574,11 @@ class WebArenaExplorer:
             self.library._abstracted.add(cid)
             if card.planning_ready:
                 self._register_skill_operator(card)
-            self._register_typed_skill_operator(card)
+            typed_registered = self._register_typed_skill_operator(card)
+            card.typed_planning_ready = typed_registered
+            if typed_registered:
+                card.typed_planning_rejection_reason = ""
+                self.graph.skills[card.skill_id] = card
 
     def _import_legacy_predicates(self, run_dir: str) -> int:
         """Import string predicates as provisional shadow definitions only."""
@@ -3696,30 +3784,54 @@ class WebArenaExplorer:
                     obs_text = ""
                     obs = rec.get("observation", {})
                     if isinstance(obs, dict):
+                        url = str(obs.get("url", ""))
                         ax_path = obs.get("axtree_txt", {}).get("path", "")
                         if ax_path:
                             ax_full = os.path.join(ep_path, ax_path)
                             if os.path.isfile(ax_full):
                                 with open(ax_full, encoding="utf-8") as af:
                                     obs_text = af.read()
-                                # Infer URL from the observation (look for URL pattern)
+                                # Compatibility fallback for artifacts that did
+                                # not store observation.url explicitly.
                                 url_match = re.search(r'URL:\s*(\S+)', obs_text)
-                                if url_match:
+                                if not url and url_match:
                                     url = url_match.group(1)
-                    steps.append(Step(action=action, url=url, obs_summary=rec.get("thought", "")))
+                    steps.append(Step(
+                        action=action,
+                        url=url,
+                        obs_summary=rec.get("thought", ""),
+                        misc=rec.get("misc"),
+                    ))
                     obs_texts.append(obs_text)
             if not steps:
                 continue
-            final_obs = {"url": steps[-1].url if steps else "",
-                         "axtree": obs_texts[-1] if obs_texts else ""}
+            final_state = meta.get("final_state", {})
+            final_ax = ""
+            final_ax_path = final_state.get("axtree_txt", {}).get("path", "")
+            if final_ax_path:
+                full_path = os.path.join(ep_path, final_ax_path)
+                if os.path.isfile(full_path):
+                    with open(full_path, encoding="utf-8") as handle:
+                        final_ax = handle.read()
+            final_obs = {
+                "url": final_state.get("url", steps[-1].url if steps else ""),
+                "axtree": final_ax or (obs_texts[-1] if obs_texts else ""),
+            }
             self.discovery.on_trajectory(
                 steps, site="webarena", task=goal,
                 obs_texts=obs_texts, final_obs=final_obs,
+                provenance={
+                    "source_kind": meta.get("metadata", {}).get(
+                        "task_origin", "local"
+                    ),
+                    "episode_id": int(ep_name.split("_")[1]),
+                },
             )
             rebuilt += 1
         print(f"[resume] Rebuilt library from {rebuilt}/{len(episodes)} successful episodes "
               f"→ {len(self.library.all_skills())} skills, "
-              f"{len(self.graph.operator_graph.ops)} operators")
+              f"{len(self.graph.operator_graph.ops)} legacy operators, "
+              f"{len(self.typed_opgraph.ops)} typed operators")
 
     # ---- per-node info persistence (Go-Browse style) -------------------------
     def _write_node_summary(

@@ -11,7 +11,7 @@ import re
 from typing import Any
 
 from .llm import LLM
-from .predicate_ontology import PredicateFact, lift_transition_to_model
+from .predicate_ontology import PredicateFact, lift_transition_to_model, route_fact
 from .schema import Step, SubTrajectory
 from .webarena.predicates import PredicateExtractor, predicates_from
 
@@ -134,6 +134,12 @@ def _attach_planning_evidence(
             continue
         first_planning = (full_steps[start_idx].misc or {}).get("planning", {})
         last_planning = (full_steps[end_idx].misc or {}).get("planning", {})
+        _ensure_route_facts(
+            first_planning,
+            last_planning,
+            start_url=first_planning.get("pre_url", full_steps[start_idx].url),
+            end_url=last_planning.get("post_url", final_obs.get("url", full_steps[end_idx].url)),
+        )
         sub.predicate_schema_version = (
             first_planning.get("schema_version")
             or getattr(predicate_extractor, "schema_version", "core-v2")
@@ -213,6 +219,34 @@ def _attach_typed_action_model(
     sub.typed_action_model = lift_transition_to_model(
         before, after, required, evidence_id=evidence_id
     )
+
+
+def _ensure_route_facts(
+    first_planning: dict,
+    last_planning: dict,
+    *,
+    start_url: str,
+    end_url: str,
+) -> None:
+    """Backfill deterministic route facts, including for legacy episodes."""
+    pairs = (
+        (first_planning, "typed_pre_facts", route_fact(start_url).to_dict()),
+        (last_planning, "typed_post_facts", route_fact(end_url).to_dict()),
+    )
+    for planning, key, fact in pairs:
+        values = planning.setdefault(key, [])
+        identity = (fact["predicate_id"], tuple(
+            (arg.get("type"), arg.get("key")) for arg in fact.get("arguments", [])
+        ))
+        existing = {
+            (value.get("predicate_id"), tuple(
+                (arg.get("type"), arg.get("key"))
+                for arg in value.get("arguments", [])
+            ))
+            for value in values if isinstance(value, dict)
+        }
+        if identity not in existing:
+            values.append(fact)
 
 
 def _action_level_segments(steps: list[Step], site: str, task: str) -> list[SubTrajectory]:

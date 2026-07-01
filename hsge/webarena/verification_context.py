@@ -95,7 +95,7 @@ def build_verify_contexts_from_episodes(
         seen_start_urls.add(urls_seen[0])
 
         # Build a WebEnv from the trajectory URLs
-        env = _build_env_from_urls(urls_seen[0], urls_seen)
+        env = _build_env_from_urls(origin, urls_seen)
         if env is not None:
             contexts.append(env)
 
@@ -159,7 +159,7 @@ def _build_env_from_urls(start_url: str, urls: list[str]) -> WebEnv | None:
     )
 
 
-def make_verify_contexts_fn(out_dir: str, browser_factory=None) -> Callable[..., list[WebEnv]]:
+def make_verify_contexts_fn(out_dir: str, browser_factory=None) -> Callable[[], list[WebEnv]]:
     """Create the verify_contexts_fn callable for SkillLibrary.
 
     Nếu có browser_factory, dùng browser thật để verify (mở từng URL, lấy axtree).
@@ -173,28 +173,24 @@ def make_verify_contexts_fn(out_dir: str, browser_factory=None) -> Callable[...,
         )
     """
     if browser_factory:
-        return lambda skill=None: _build_browser_contexts(
-            out_dir, browser_factory, skill=skill
-        )
-    return lambda skill=None: build_verify_contexts_from_episodes(out_dir)
+        return lambda: _build_browser_contexts(out_dir, browser_factory)
+    return lambda: build_verify_contexts_from_episodes(out_dir)
 
 
-def _build_browser_contexts(out_dir: str, browser_factory, skill=None) -> list[WebEnv]:
-    """Build effect-compatible browser contexts from successful transitions.
+def _build_browser_contexts(out_dir: str, browser_factory) -> list[WebEnv]:
+    """Build verification contexts using real browser from successful episodes.
 
-    A context starts at the pre-action URL of one successful transition, not at
-    the first URL of the whole episode.  The transition's target metadata is
-    retained so verification can ground a generic skill onto the same semantic
-    kind of control.  Candidates with planning effects only receive contexts
-    whose observed predicate delta contains all declared effects.
+    Each context is a WebEnv with browser_factory so ground_and_execute
+    can use a real browser to verify the skill.  Deduplication is by
+    start URL (not origin) so different episodes on the same site
+    produce distinct contexts.
     """
     ep_dir = os.path.join(out_dir, "episodes")
     if not os.path.isdir(ep_dir):
         return []
 
     contexts: list[WebEnv] = []
-    seen_transitions: set[str] = set()
-    required_effects = set(getattr(skill, "planning_effects", set()) or set())
+    seen_start_urls: set[str] = set()
 
     episodes = sorted(
         [d for d in os.listdir(ep_dir) if d.startswith("ep_")],
@@ -217,59 +213,39 @@ def _build_browser_contexts(out_dir: str, browser_factory, skill=None) -> list[W
         if not meta.get("outcome", {}).get("success"):
             continue
 
-        # One episode can provide several distinct verification contexts.
+        # Lấy URL đầu tiên và cuối cùng từ trajectory
+        first_url = ""
+        last_url = ""
         with open(traj_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
                     continue
                 rec = json.loads(line)
-                action = str(rec.get("parsed_action", "") or "").strip()
-                if not action or action.startswith(("send_msg_to_user(", "goto(")):
-                    continue
                 obs = rec.get("observation", {})
-                observed_url = obs.get("url", "") if isinstance(obs, dict) else ""
-                planning = (rec.get("misc", {}) or {}).get("planning", {}) or {}
-                pre_url = str(planning.get("pre_url") or observed_url or "")
-                post_url = str(planning.get("post_url") or "")
-                if not pre_url or not post_url:
-                    continue
-                pre_predicates = set(planning.get("pre_predicates", []) or [])
-                post_predicates = set(planning.get("post_predicates", []) or [])
-                transition_effects = post_predicates - pre_predicates
-                if required_effects and not required_effects.issubset(transition_effects):
-                    continue
+                url = obs.get("url", "") if isinstance(obs, dict) else ""
+                if url:
+                    if not first_url:
+                        first_url = url
+                    last_url = url
 
-                target_role = str(planning.get("target_role") or "").lower()
-                target_name = str(planning.get("target_name") or "")
-                target_fingerprint = str(planning.get("target_fingerprint") or "")
-                identity = "|".join((
-                    pre_url, post_url, action.split("(", 1)[0],
-                    target_fingerprint or f"{target_role}:{target_name}",
-                    ",".join(sorted(transition_effects)),
-                ))
-                if identity in seen_transitions:
-                    continue
-                seen_transitions.add(identity)
+        if not first_url or not last_url or first_url == last_url:
+            continue
 
-                pages = {
-                    "start": PageState(url=pre_url, affordances=[], goto={}),
-                    "goal": PageState(url=post_url, affordances=[], goto={}),
-                }
-                env = WebEnv(
-                    site=_origin_key(pre_url), pages=pages,
-                    start="start", goal_pages={"goal"},
-                )
-                env.browser_factory = browser_factory
-                env.verification_context_id = identity
-                env.verification_action_kind = action.split("(", 1)[0].lower()
-                env.verification_target_role = target_role
-                env.verification_target_name = target_name
-                env.verification_target_fingerprint = target_fingerprint
-                env.verification_pre_predicates = pre_predicates
-                env.verification_effects = transition_effects
-                contexts.append(env)
-                if len(contexts) >= 10:
-                    return contexts
+        # Dedup by exact start URL, not origin — different episodes on
+        # the same site visit different pages and are valid contexts.
+        if first_url in seen_start_urls:
+            continue
+        seen_start_urls.add(first_url)
+
+        # Tạo WebEnv với browser_factory để verify dùng browser thật
+        site = _origin_key(first_url)
+        pages = {
+            "start": PageState(url=first_url, affordances=[], goto={}),
+            "goal": PageState(url=last_url, affordances=[], goto={}),
+        }
+        env = WebEnv(site=site, pages=pages, start="start", goal_pages={"goal"})
+        env.browser_factory = browser_factory
+        contexts.append(env)
 
     return contexts

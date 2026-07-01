@@ -124,11 +124,38 @@ class SkillCard:
     terminal: bool = False
     planning_ready: bool = False
     planning_rejection_reason: str = ""
+    typed_planning_ready: bool = False
+    typed_planning_rejection_reason: str = ""
     predicate_schema_version: str = ""
     # Phase 4: structured execution plan
     execution_plan: list[dict] = field(default_factory=list)
     alternative_templates: list[list[str]] = field(default_factory=list)
     typed_action_model: TypedActionModel | None = None
+
+    @property
+    def has_verified_effects(self) -> bool:
+        return bool(
+            self.planning_effects
+            or (
+                self.typed_action_model
+                and (
+                    self.typed_action_model.add_effects
+                    or self.typed_action_model.delete_effects
+                )
+            )
+        )
+
+    def effect_summary(self) -> dict[str, Any]:
+        model = self.typed_action_model
+        return {
+            "legacy_add": sorted(self.planning_effects),
+            "typed_add": [
+                pattern.to_dict() for pattern in sorted(model.add_effects)
+            ] if model else [],
+            "typed_delete": [
+                pattern.to_dict() for pattern in sorted(model.delete_effects)
+            ] if model else [],
+        }
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -138,6 +165,8 @@ class SkillCard:
         d["typed_action_model"] = (
             self.typed_action_model.to_dict() if self.typed_action_model else None
         )
+        d["has_verified_effects"] = self.has_verified_effects
+        d["effect_summary"] = self.effect_summary()
         return d
 
     def pretty(self) -> str:

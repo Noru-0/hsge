@@ -245,6 +245,7 @@ def test_checkpoint_v6_persists_scheduler_and_v5_is_not_resumable(tmp_path):
 
     checkpoint = json.loads((tmp_path / "checkpoint.json").read_text())
     assert checkpoint["version"] == 6
+    assert checkpoint["predicate_kernel_revision"] == 2
     assert checkpoint["curriculum_task_attempt_counts"] == {"curriculum_a": 3}
     assert checkpoint["curriculum_task_success_counts"] == {"curriculum_a": 2}
 

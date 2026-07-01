@@ -6,8 +6,6 @@ Lifecycle of an incoming sub-trajectory:
 """
 from __future__ import annotations
 
-import inspect
-import re
 from collections import Counter
 
 import numpy as np
@@ -129,7 +127,7 @@ class SkillLibrary:
                 "cluster_split",
                 original_cluster_id=cid,
                 new_cluster_ids=split_cids,
-                reason="incompatible_behavior_families",
+                reason="incompatible_effect_signatures",
             )
             # Recurse: each new cluster may now be mature on its own.
             admitted = []
@@ -169,7 +167,7 @@ class SkillLibrary:
             card.stats.sites_seen.add(m.source_site)
         print(f"  [library] cluster {cid}: abstracted → \"{card.name}\", "
               f"verifying (k={self.verify_k})...")
-        contexts = self._verification_contexts(card)
+        contexts = self.verify_contexts_fn()
         effective_k = self._effective_verify_k(card, contexts)
         self._diag(
             "skill_abstracted",
@@ -237,30 +235,6 @@ class SkillLibrary:
         # Never require more successes than available contexts.
         return min(self.verify_k, max(1, len(contexts)))
 
-    def _verification_contexts(self, card: SkillCard) -> list:
-        """Ask modern context providers for card-specific held-out states.
-
-        Older/custom providers in tests and downstream integrations take no
-        arguments, so retain that public compatibility.
-        """
-        try:
-            signature = inspect.signature(self.verify_contexts_fn)
-            accepts_card = any(
-                parameter.kind in {
-                    inspect.Parameter.POSITIONAL_ONLY,
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                    inspect.Parameter.VAR_POSITIONAL,
-                }
-                for parameter in signature.parameters.values()
-            )
-        except (TypeError, ValueError):
-            accepts_card = False
-        return (
-            self.verify_contexts_fn(card)
-            if accepts_card
-            else self.verify_contexts_fn()
-        )
-
     # --------------------------------------------------------------- retrieval
     def retrieve(self, query: str, top_k: int = 3) -> list[SkillCard]:
         """Cosine retrieval of admitted skills against a query (used for transfer)."""
@@ -311,40 +285,59 @@ class SkillLibrary:
         return None
 
     # --------------------------------------------------- cluster splitting ---
-    def _split_incompatible_cluster(self, cid: int) -> list[int]:
-        """Split navigation, detail, and state-changing behavior families.
+    def _effect_signature(
+        self, member_ids: list[str]
+    ) -> dict[frozenset[str], list[str]]:
+        """Group member IDs by their planning_effects set."""
+        groups: dict[frozenset[str], list[str]] = {}
+        for mid in member_ids:
+            sub = self.subtrajs.get(mid)
+            if sub is None:
+                continue
+            key = frozenset(sub.planning_effects)
+            groups.setdefault(key, []).append(mid)
+        return groups
 
-        Embedding similarity alone can merge generic clicks whose causal
-        effects are incompatible.  Keep those families separate before asking
-        the LLM to produce a single executable abstraction.
-        """
+    def _split_incompatible_cluster(self, cid: int) -> list[int]:
+        """Split a mature cluster whose members have incompatible effect
+        signatures.  Returns new cluster IDs if a split occurred, or empty
+        list if the cluster is already effect-coherent."""
+        from .webarena.predicates import MILESTONE_COMMERCE
 
         member_ids = self.cluster_to_members.get(cid, [])
         if len(member_ids) < self.maturity:
             return []
 
-        groups: dict[str, list[str]] = {}
-        for mid in member_ids:
-            sub = self.subtrajs.get(mid)
-            if sub is not None:
-                groups.setdefault(self._behavior_family(sub), []).append(mid)
+        groups = self._effect_signature(member_ids)
+        # Single effect group → already coherent
         if len(groups) <= 1:
             return []
 
-        # Two supported families are required; a lone noisy member should not
-        # fragment an otherwise coherent cluster.  Once splitting is warranted,
-        # retain every group so no minority evidence is silently discarded.
-        viable = [(family, mids) for family, mids in groups.items() if len(mids) >= 2]
+        # A split is only warranted when commerce-milestone effects differ.
+        milestone_groups: dict[frozenset[str], list[str]] = {}
+        for eff_key, mids in groups.items():
+            milestone_key = frozenset(eff_key & MILESTONE_COMMERCE)
+            milestone_groups.setdefault(milestone_key, []).extend(mids)
+
+        if len(milestone_groups) <= 1:
+            return []
+
+        # Require at least 2 members per group to avoid noise splits.
+        viable = [
+            (mkey, mids)
+            for mkey, mids in milestone_groups.items()
+            if len(mids) >= 2
+        ]
         if len(viable) < 2:
             return []
 
         print(
-            f"  [library] cluster {cid}: splitting incompatible behavior "
-            f"families: {[(family, len(mids)) for family, mids in groups.items()]}"
+            f"  [library] cluster {cid}: splitting by incompatible commerce "
+            f"effects: {[(list(k), len(v)) for k, v in viable]}"
         )
         # Build new centroids: average of member vectors per group
         member_groups: list[tuple[list[str], np.ndarray]] = []
-        for _family, mids in groups.items():
+        for _mkey, mids in viable:
             vectors = []
             for mid in mids:
                 sub = self.subtrajs.get(mid)
@@ -372,34 +365,3 @@ class SkillLibrary:
         # Clear abstracted flag for the old cluster so new ones can mature
         self._abstracted.discard(cid)
         return new_cids
-
-    @staticmethod
-    def _behavior_family(sub: SubTrajectory) -> str:
-        effects = set(sub.planning_effects)
-        text = " ".join(
-            [sub.subgoal, sub.source_task]
-            + [
-                str(((step.misc or {}).get("planning", {}) or {}).get("target_name", ""))
-                for step in sub.steps
-            ]
-        ).lower()
-        if effects & {
-            "cart_nonempty", "on_cart", "on_checkout", "payment_entered",
-            "order_confirmed", "item_added_to_cart", "transaction_advanced",
-        } or re.search(r"add to (?:cart|basket)|checkout|place order", text):
-            return "state_change"
-        if effects & {"item_saved_to_wishlist"} or re.search(
-            r"wish\s*list|wishlist|favorite|save visible item", text
-        ):
-            return "save_item"
-        if "view:detail" in effects:
-            return "open_detail"
-        if effects & {"results_shown", "has_filter_or_sort"}:
-            return "open_collection"
-        if re.search(r"feedback|review|rating|comment", text):
-            return "inspect_feedback"
-        if re.search(r"search|query", text):
-            return "search"
-        if re.search(r"menu|submenu|hover", text):
-            return "inspect_menu"
-        return f"generic:{sub.action_signature()}"

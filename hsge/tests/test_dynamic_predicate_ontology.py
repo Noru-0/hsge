@@ -1,8 +1,11 @@
 import json
+from types import SimpleNamespace
 
 import numpy as np
 
-from hsge.llm import Embedder, LLM, HashingEmbedder
+from hsge.llm import Embedder, LLM, HashingEmbedder, MockLLM
+from hsge.abstraction import _typed_planning_evidence
+from hsge.library import SkillLibrary
 from hsge.predicate_ontology import (
     EntityRef,
     FactPattern,
@@ -13,10 +16,13 @@ from hsge.predicate_ontology import (
     PredicateRegistry,
     PredicateRelation,
     TypedActionModel,
+    KERNEL_CURRENT_ROUTE,
+    route_fact,
 )
 from hsge.relational_operators import RelationalOperator, RelationalOperatorGraph
 from hsge.graph import HierarchicalGraph
-from hsge.schema import SkillCard, Step
+from hsge.schema import SkillCard, Step, SubTrajectory
+from hsge.segmentation import _attach_planning_evidence
 from hsge.webarena.runtime import RunMetrics, WebArenaExplorer
 
 
@@ -328,3 +334,221 @@ def test_legacy_run_imports_only_provisional_shadow_predicates(tmp_path):
         definition.status == "provisional"
         for definition in explorer.predicate_registry.definitions.values()
     )
+
+
+def test_route_kernel_backfills_reddit_navigation_and_aggregates_effects():
+    subs = []
+    transitions = [
+        ("https://reddit.test/", "https://reddit.test/"),
+        ("https://reddit.test/", "https://reddit.test/forums"),
+        ("https://reddit.test/", "https://reddit.test/wiki"),
+    ]
+    for episode_id, (before_url, after_url) in enumerate(transitions, 1):
+        step = Step("click('1')", before_url, misc={"planning": {
+            "pre_url": before_url,
+            "post_url": after_url,
+            "pre_predicates": [],
+            "post_predicates": [],
+        }})
+        sub = SubTrajectory(
+            [step], "open visible item", "reddit",
+            source_episode_id=episode_id,
+        )
+        _attach_planning_evidence(
+            [sub], [step], ["[1] link 'target'"],
+            {"url": after_url, "axtree": "target page"},
+        )
+        subs.append(sub)
+
+    model = _typed_planning_evidence(subs)
+    assert {pattern.predicate_id for pattern in model.add_effects} == {
+        KERNEL_CURRENT_ROUTE
+    }
+    assert {pattern.predicate_id for pattern in model.delete_effects} == {
+        KERNEL_CURRENT_ROUTE
+    }
+    assert model.verified_effect_contexts == 2
+
+
+class WrappedEvidenceLLM(LLM):
+    def complete_json(self, system: str, _prompt: str) -> dict:
+        if system.startswith("Induce minimal"):
+            return {"predicates": [{
+                "name": "filter_menu_open",
+                "description": "the filter menu is expanded",
+                "arguments": [{"name": "filter", "type": "string"}],
+                "scope": "page",
+                "persistence": "persistent",
+                "kind": "state",
+                "observations": [{
+                    "step_index": 0,
+                    "truth_before": False,
+                    "truth_after": True,
+                    "evidence_before": "Button 'Filter on: Featured' has expanded=False",
+                    "evidence_after": "Button 'Filter on: Featured' has expanded=True",
+                    "argument_values": ["Featured"],
+                }],
+            }]}
+        return {"relation": "unrelated", "confidence": 1.0}
+
+
+def test_wrapped_literal_evidence_is_grounded_without_accepting_paraphrases():
+    registry = PredicateRegistry(HashingEmbedder())
+    engine = PredicateEngine(registry, WrappedEvidenceLLM())
+    accepted = engine.induce_episode(
+        episode_id=1,
+        task="open filter",
+        success=True,
+        steps=[Step("click('122')", "https://reddit.test", misc={"planning": {
+            "pre_url": "https://reddit.test",
+            "post_url": "https://reddit.test",
+        }})],
+        obs_texts=["[122] button 'Filter on: Featured' expanded=false"],
+        final_obs={
+            "url": "https://reddit.test",
+            "axtree": "[122] button 'Filter on: Featured' expanded=true",
+        },
+    )
+    assert len(accepted) == 1
+    predicate_id = accepted[0]["predicate_id"]
+    assert registry.stats[predicate_id].effect_verifications == 1
+    assert PredicateEngine._observation_evidence_valid({
+        "truth_before": False,
+        "truth_after": True,
+        "evidence_after_refs": ["s0_after_l0"],
+    }, {
+        "before": {"url": "", "axtree": "", "evidence_lines": []},
+        "after": {
+            "url": "https://reddit.test",
+            "axtree": "menu",
+            "evidence_lines": [{"id": "s0_after_l0", "text": "menu"}],
+        },
+    })
+
+
+def test_effectful_candidate_upgrades_execution_only_skill(monkeypatch):
+    route_before = FactPattern(
+        KERNEL_CURRENT_ROUTE, ("?route_0",), ("route",)
+    )
+    route_after = FactPattern(
+        KERNEL_CURRENT_ROUTE, ("?route_1",), ("route",)
+    )
+    model = TypedActionModel(
+        parameters=(
+            PredicateArgument("route_0", "route"),
+            PredicateArgument("route_1", "route"),
+        ),
+        optional_context=frozenset({route_before}),
+        add_effects=frozenset({route_after}),
+        delete_effects=frozenset({route_before}),
+        evidence_ids=("ep1", "ep2"),
+        verified_effect_contexts=2,
+    )
+    old = SkillCard(
+        name="open_visible_item", description="old", slots=[],
+        action_template=["click('1')"], precondition="visible",
+        success_predicate="opened", cluster_id="99", verified=True,
+        skill_id="stable_skill",
+    )
+    candidate = SkillCard(
+        name="open_visible_item", description="upgraded", slots=[],
+        action_template=["click('1')"], precondition="visible",
+        success_predicate="opened", cluster_id="0",
+        typed_action_model=model,
+    )
+    library = SkillLibrary(
+        MockLLM(), HashingEmbedder(), lambda: [], maturity=3, verify_k=0
+    )
+    library.skills[99] = old
+    members = []
+    for index in range(3):
+        sub = SubTrajectory(
+            [Step("click('1')", "https://reddit.test")],
+            "open visible item", "reddit", sub_id=f"member_{index}",
+            typed_action_model=model,
+        )
+        library.subtrajs[sub.sub_id] = sub
+        members.append(sub.sub_id)
+    library.cluster_to_members[0] = members
+    monkeypatch.setattr("hsge.library.abstract_cluster", lambda *_args: candidate)
+
+    admitted = library._try_admit(0)
+    assert admitted == "stable_skill"
+    assert 99 not in library.skills
+    assert library.skills[0].typed_action_model.add_effects == frozenset({route_after})
+    assert getattr(library.skills[0], "_upgraded_existing") is True
+
+
+def test_route_operator_can_plan_existential_and_concrete_destination():
+    registry = PredicateRegistry(HashingEmbedder(), effect_verify_k=2)
+    engine = PredicateEngine(registry, None)
+    before = FactPattern(KERNEL_CURRENT_ROUTE, ("?from",), ("route",))
+    after = FactPattern(KERNEL_CURRENT_ROUTE, ("?to",), ("route",))
+    model = TypedActionModel(
+        optional_context=frozenset({before}),
+        add_effects=frozenset({after}),
+        delete_effects=frozenset({before}),
+        evidence_ids=("ep1", "ep2"),
+        verified_effect_contexts=2,
+    )
+    graph = RelationalOperatorGraph(registry)
+    graph.add(RelationalOperator("open", model, "open"))
+    initial = frozenset({route_fact("https://reddit.test/")})
+
+    existential = graph.plan(
+        initial, FactPattern(KERNEL_CURRENT_ROUTE, ("?destination",), ("route",)),
+        require_action=True,
+    )
+    concrete = graph.plan(
+        initial, FactPattern(KERNEL_CURRENT_ROUTE, ("route:/comments",), ("route",))
+    )
+    assert [step.operator_id for step in existential] == ["open"]
+    assert [step.operator_id for step in concrete] == ["open"]
+
+
+def test_episode_replay_preserves_transition_metadata_for_route_migration(tmp_path):
+    episode = tmp_path / "episodes" / "ep_0000"
+    (episode / "page_state").mkdir(parents=True)
+    (episode / "page_state" / "step.txt").write_text("home", encoding="utf-8")
+    (episode / "page_state" / "final.txt").write_text("forums", encoding="utf-8")
+    (episode / "episode_meta.json").write_text(json.dumps({
+        "goal": "open forums",
+        "outcome": {"success": True},
+        "metadata": {"tags": ["LOCAL"], "task_origin": "local"},
+        "final_state": {
+            "url": "https://reddit.test/forums",
+            "axtree_txt": {"path": "page_state/final.txt"},
+        },
+    }), encoding="utf-8")
+    (episode / "episode.jsonl").write_text(json.dumps({
+        "parsed_action": "click('1')",
+        "thought": "open forums",
+        "observation": {
+            "url": "https://reddit.test/",
+            "axtree_txt": {"path": "page_state/step.txt"},
+        },
+        "misc": {"planning": {
+            "pre_url": "https://reddit.test/",
+            "post_url": "https://reddit.test/forums",
+            "pre_predicates": [],
+            "post_predicates": [],
+        }},
+    }) + "\n", encoding="utf-8")
+
+    captured = []
+    explorer = WebArenaExplorer.__new__(WebArenaExplorer)
+    explorer.out_dir = str(tmp_path)
+    explorer._full_state_restored = False
+    explorer._discovered_urls = {}
+    explorer.discovery = SimpleNamespace(
+        on_trajectory=lambda *args, **kwargs: captured.append((args, kwargs))
+    )
+    explorer.library = SimpleNamespace(all_skills=lambda: [])
+    explorer.graph = HierarchicalGraph()
+    explorer.typed_opgraph = SimpleNamespace(ops={})
+
+    explorer._replay_episodes()
+    steps = captured[0][0][0]
+    assert steps[0].url == "https://reddit.test/"
+    assert steps[0].misc["planning"]["post_url"] == "https://reddit.test/forums"
+    assert captured[0][1]["final_obs"]["axtree"] == "forums"

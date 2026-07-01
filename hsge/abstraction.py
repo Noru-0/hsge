@@ -356,6 +356,12 @@ def _typed_planning_evidence(members: list[SubTrajectory]) -> TypedActionModel |
         for parameter in model.parameters:
             parameter_types.setdefault(parameter.name, parameter.arg_type)
     evidence_ids = tuple(sorted({eid for model in models for eid in model.evidence_ids}))
+    effect_evidence_ids = tuple(sorted({
+        eid
+        for model in models
+        if (model.add_effects & add_effects) or (model.delete_effects & delete_effects)
+        for eid in model.evidence_ids
+    }))
     support = min(1.0, len(models) / max(1, len(members)))
     return TypedActionModel(
         parameters=tuple(
@@ -368,7 +374,7 @@ def _typed_planning_evidence(members: list[SubTrajectory]) -> TypedActionModel |
         delete_effects=delete_effects,
         confidence=support,
         evidence_ids=evidence_ids,
-        verified_effect_contexts=len(evidence_ids) if add_effects or delete_effects else 0,
+        verified_effect_contexts=len(effect_evidence_ids),
     )
 
 

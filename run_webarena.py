@@ -568,7 +568,7 @@ def main(argv: list[str] | None = None):
     if args.dry_run:
         llm, embedder = _DryLLM(), HashingEmbedder()
         browser_factory = lambda url: _FakeBrowser(url)
-        explorer_llm = solver_llm = predicate_llm = llm
+        explorer_llm = solver_llm = predicate_llm = non_vision_llm = llm
     else:
         from hsge.backends import OpenAILLM, STEmbedder
         from hsge.webarena.browser import WebArenaBrowser

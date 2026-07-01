@@ -24,6 +24,7 @@ RELATION_KINDS = {"equivalent", "implies", "implied_by", "contradicts", "related
 PREDICATE_SCOPES = {"page", "session", "global"}
 PREDICATE_PERSISTENCE = {"persistent", "transient"}
 PREDICATE_KINDS = {"state", "event", "affordance", "location", "terminal"}
+KERNEL_CURRENT_ROUTE = "kernel:current_route"
 
 
 def _slug(value: str) -> str:
@@ -33,6 +34,22 @@ def _slug(value: str) -> str:
 def _stable_id(prefix: str, payload: Any) -> str:
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return f"{prefix}_{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:16]}"
+
+
+def canonical_route_key(url: str) -> str:
+    """Domain-neutral, stable route identity derived only from URL structure."""
+    parsed = urlparse(url or "")
+    path = re.sub(r"/+", "/", parsed.path or "/")
+    if path != "/":
+        path = path.rstrip("/")
+    return f"route:{path or '/'}"
+
+
+def route_fact(url: str) -> "PredicateFact":
+    return PredicateFact(
+        KERNEL_CURRENT_ROUTE,
+        (EntityRef("route", canonical_route_key(url), "global", url),),
+    )
 
 
 @dataclass(frozen=True, order=True)
@@ -685,6 +702,18 @@ class PredicateEngine:
         )
 
     def _seed_kernel_definitions(self) -> None:
+        self.registry.add_definition(PredicateDefinition(
+            predicate_id=KERNEL_CURRENT_ROUTE,
+            canonical_name="current_route",
+            description="The canonical URL path of the current browser page.",
+            arguments=(PredicateArgument("route", "route"),),
+            scope="session",
+            persistence="persistent",
+            kind="location",
+            detector_instruction="Derive the normalized path from the current URL.",
+            status="promoted",
+            source="kernel",
+        ))
         names = sorted(getattr(self.kernel_extractor, "terminal_predicates", frozenset()))
         for name in names:
             definition = PredicateDefinition(
@@ -696,6 +725,10 @@ class PredicateEngine:
                 source="kernel",
             )
             self.registry.add_definition(definition)
+
+    def ensure_kernel_definitions(self) -> None:
+        """Re-seed deterministic definitions after checkpoint registry restore."""
+        self._seed_kernel_definitions()
 
     @staticmethod
     def _state_signature(url: str, axtree: str, revision: str) -> str:
@@ -724,6 +757,10 @@ class PredicateEngine:
         facts: set[PredicateFact] = set()
         confidence: dict[PredicateFact, float] = {}
         evidence: dict[PredicateFact, str] = {}
+        location = route_fact(url)
+        facts.add(location)
+        confidence[location] = 1.0
+        evidence[location] = url or "/"
         for name in self.extract(url, axtree):
             predicate_id = self.registry.aliases.get(_slug(name))
             if not predicate_id:
@@ -782,7 +819,7 @@ class PredicateEngine:
             self.metrics["rejected_unknown_fact"] += 1
             return None, 0.0, ""
         evidence = str(raw.get("evidence", ""))
-        if not evidence or evidence.lower() not in f"{url}\n{axtree}".lower():
+        if not self._evidence_grounded(evidence, f"{url}\n{axtree}"):
             self.metrics["rejected_hallucinated_evidence"] += 1
             return None, 0.0, ""
         arguments = raw.get("arguments", [])
@@ -803,6 +840,55 @@ class PredicateEngine:
             for spec, value in zip(definition.arguments, arguments)
         )
         return PredicateFact(predicate_id, entities), float(raw.get("confidence", 0.0)), evidence
+
+    @staticmethod
+    def _evidence_lines(url: str, axtree: str, prefix: str) -> list[dict[str, str]]:
+        lines = [{"id": f"{prefix}_url", "text": url or ""}]
+        lines.extend(
+            {"id": f"{prefix}_l{index}", "text": line.strip()}
+            for index, line in enumerate((axtree or "").splitlines())
+            if line.strip()
+        )
+        return lines[:161]
+
+    @staticmethod
+    def _evidence_grounded(evidence: str, source: str) -> bool:
+        """Validate literal evidence while tolerating LLM wrapper prose.
+
+        Exact spans remain preferred. For older prompts, a sufficiently
+        specific quoted span (label, heading, URL, or value) must exist in the
+        source. Unquoted semantic paraphrases are rejected.
+        """
+        evidence = str(evidence or "").strip()
+        source_lower = str(source or "").lower()
+        if not evidence:
+            return False
+        if evidence.lower() in source_lower:
+            return True
+        quoted = [
+            value.strip()
+            for value in re.findall(r"['\"]([^'\"]{3,})['\"]", evidence)
+            if value.strip()
+        ]
+        return any(value.lower() in source_lower for value in quoted)
+
+    @classmethod
+    def _observation_evidence_valid(cls, observation: dict, transition: dict) -> bool:
+        grounded_any = False
+        for side in ("before", "after"):
+            truth = bool(observation.get(f"truth_{side}", False))
+            evidence = str(observation.get(f"evidence_{side}", ""))
+            refs = observation.get(f"evidence_{side}_refs", []) or []
+            lines = transition[side].get("evidence_lines", [])
+            by_id = {line["id"]: line["text"] for line in lines}
+            refs_valid = bool(refs) and all(str(ref) in by_id for ref in refs)
+            text = transition[side]["url"] + "\n" + transition[side]["axtree"]
+            literal_valid = cls._evidence_grounded(evidence, text)
+            side_valid = refs_valid or literal_valid
+            if truth and not side_valid:
+                return False
+            grounded_any = grounded_any or side_valid
+        return grounded_any
 
     def relation_judge(self, candidate: PredicateDefinition, existing: PredicateDefinition) -> tuple[str, float]:
         if self.llm is None:
@@ -844,6 +930,8 @@ class PredicateEngine:
             )
             before_lines = {line.strip() for line in before_ax.splitlines() if line.strip()}
             after_lines = {line.strip() for line in after_ax.splitlines() if line.strip()}
+            before_url = planning.get("pre_url", getattr(step, "url", ""))
+            after_url = planning.get("post_url", final_obs.get("url", ""))
             transitions.append({
                 "step_index": index,
                 "action": getattr(step, "action", ""),
@@ -853,12 +941,18 @@ class PredicateEngine:
                     "fingerprint": planning.get("target_fingerprint", ""),
                 },
                 "before": {
-                    "url": planning.get("pre_url", getattr(step, "url", "")),
+                    "url": before_url,
                     "axtree": before_ax[:3500],
+                    "evidence_lines": self._evidence_lines(
+                        before_url, before_ax[:3500], f"s{index}_before"
+                    ),
                 },
                 "after": {
-                    "url": planning.get("post_url", final_obs.get("url", "")),
+                    "url": after_url,
                     "axtree": after_ax[:3500],
+                    "evidence_lines": self._evidence_lines(
+                        after_url, after_ax[:3500], f"s{index}_after"
+                    ),
                 },
                 "dom_diff": {
                     "added": sorted(after_lines - before_lines)[:40],
@@ -891,6 +985,8 @@ class PredicateEngine:
                     "observations": [{
                         "step_index": 0, "truth_before": False, "truth_after": True,
                         "evidence_before": "", "evidence_after": "exact visible text",
+                        "evidence_before_refs": ["s0_before_l3"],
+                        "evidence_after_refs": ["s0_after_l7"],
                         "argument_values": ["visible entity"],
                         "required_precondition": False,
                     }],
@@ -937,14 +1033,8 @@ class PredicateEngine:
                 if not 0 <= index < len(transitions):
                     continue
                 transition = transitions[index]
-                before_evidence = str(observation.get("evidence_before", ""))
-                after_evidence = str(observation.get("evidence_after", ""))
-                before_text = transition["before"]["url"] + "\n" + transition["before"]["axtree"]
-                after_text = transition["after"]["url"] + "\n" + transition["after"]["axtree"]
-                evidence_valid = (
-                    bool(before_evidence or after_evidence)
-                    and (not before_evidence or before_evidence.lower() in before_text.lower())
-                    and (not after_evidence or after_evidence.lower() in after_text.lower())
+                evidence_valid = self._observation_evidence_valid(
+                    observation, transition
                 )
                 values = list(observation.get("argument_values", []))
                 if evidence_valid and len(values) == candidate.arity:

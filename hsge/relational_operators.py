@@ -121,12 +121,24 @@ def satisfying_bindings(
     return candidates
 
 
-def instantiate(pattern: FactPattern, bindings: dict[str, EntityRef]) -> PredicateFact | None:
+def instantiate(
+    pattern: FactPattern,
+    bindings: dict[str, EntityRef],
+    *,
+    allow_symbolic: bool = False,
+    symbol_prefix: str = "",
+) -> PredicateFact | None:
     arguments = []
     for index, term in enumerate(pattern.terms):
         expected_type = pattern.argument_types[index] if index < len(pattern.argument_types) else "entity"
         if term.startswith("?"):
             entity = bindings.get(term)
+            if entity is None and allow_symbolic:
+                entity = EntityRef(
+                    expected_type or "entity",
+                    f"symbol:{symbol_prefix}:{term.lstrip('?')}",
+                    "plan",
+                )
             if entity is None or (expected_type and entity.entity_type != expected_type):
                 return None
             arguments.append(entity)
@@ -244,7 +256,10 @@ class RelationalOperatorGraph:
     ) -> frozenset[PredicateFact] | None:
         add = {
             fact for pattern in operator.model.add_effects
-            if (fact := instantiate(pattern, bindings)) is not None
+            if (fact := instantiate(
+                pattern, bindings, allow_symbolic=True,
+                symbol_prefix=operator.key,
+            )) is not None
         }
         delete = {
             fact for pattern in operator.model.delete_effects
@@ -253,6 +268,41 @@ class RelationalOperatorGraph:
         if len(add) != len(operator.model.add_effects) or len(delete) != len(operator.model.delete_effects):
             return None
         return frozenset((set(state) - delete) | add)
+
+    def _bind_goal_constants(
+        self,
+        operator: RelationalOperator,
+        goal: FactPattern,
+        bindings: dict[str, EntityRef],
+    ) -> dict[str, EntityRef]:
+        result = dict(bindings)
+        for effect in operator.model.add_effects:
+            if not self.registry.entails(effect.predicate_id, goal.predicate_id):
+                continue
+            if len(effect.terms) != len(goal.terms):
+                continue
+            candidate = dict(result)
+            compatible = True
+            for index, (effect_term, goal_term) in enumerate(zip(effect.terms, goal.terms)):
+                if goal_term.startswith("?"):
+                    continue
+                expected_type = (
+                    effect.argument_types[index]
+                    if index < len(effect.argument_types) else "entity"
+                )
+                entity = EntityRef(expected_type, goal_term, "global")
+                if effect_term.startswith("?"):
+                    existing = candidate.get(effect_term)
+                    if existing is not None and existing != entity:
+                        compatible = False
+                        break
+                    candidate[effect_term] = entity
+                elif effect_term != goal_term:
+                    compatible = False
+                    break
+            if compatible:
+                return candidate
+        return result
 
     def goal_reached(self, state: frozenset[PredicateFact], goal: FactPattern) -> bool:
         return bool(satisfying_bindings(frozenset({goal}), state, self.registry))
@@ -263,8 +313,9 @@ class RelationalOperatorGraph:
         goal: FactPattern,
         *,
         max_states: int = 10000,
+        require_action: bool = False,
     ) -> list[TypedPlanStep] | None:
-        if self.goal_reached(initial, goal):
+        if self.goal_reached(initial, goal) and not require_action:
             return []
         queue = deque([(initial, [])])
         seen = {initial}
@@ -272,6 +323,7 @@ class RelationalOperatorGraph:
             state, path = queue.popleft()
             for operator in sorted(self.ops.values(), key=lambda op: op.key):
                 for bindings in self.applicable(operator, state):
+                    bindings = self._bind_goal_constants(operator, goal, bindings)
                     next_state = self.apply(operator, state, bindings)
                     if next_state is None or next_state == state:
                         continue
