@@ -43,11 +43,16 @@ def segment_trajectory(
     ]}
     prompt = f"Task: {task}\n<payload>{json.dumps(payload)}</payload>"
     out = llm.complete_json(_SYS, prompt)
+    # Spans are code-computed (URL boundaries) and authoritative; the LLM only
+    # supplies subgoal labels. Never trust it to echo spans back correctly.
+    llm_segs = out.get("segments") or []
     subs: list[SubTrajectory] = []
-    for seg in out.get("segments", []):
-        a, b = seg["span"]
+    for i, (a, b) in enumerate(spans):
+        subgoal = hints[i] if i < len(hints) else f"segment {i}"
+        if i < len(llm_segs) and isinstance(llm_segs[i], dict):
+            subgoal = llm_segs[i].get("subgoal") or subgoal
         subs.append(SubTrajectory(
-            steps=steps[a:b], subgoal=seg["subgoal"],
+            steps=steps[a:b], subgoal=subgoal,
             source_site=site, source_task=task, success=True,
         ))
     return subs
