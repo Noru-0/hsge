@@ -3,8 +3,9 @@
 REAL run (needs a hosted WebArena + keys; see docs/04_webarena_runbook.md):
     pip install browsergym-core browsergym-webarena sentence-transformers openai
     playwright install chromium
-    export WA_SHOPPING="http://<host>:7770"   OPENAI_API_KEY=sk-...
-    python run_webarena.py --root-url "$WA_SHOPPING" --out outputs/wa_run --max-nodes 15
+    # secrets + WA_* URLs go in .env; run params in config.yaml:
+    python run_webarena.py                       # uses config.yaml + .env
+    python run_webarena.py --site shopping --max-nodes 5 --headed   # CLI overrides
 
 DRY run (no browser, no network -- verifies the whole pipeline wiring):
     python run_webarena.py --dry-run --out /tmp/wa_dry
@@ -12,11 +13,40 @@ DRY run (no browser, no network -- verifies the whole pipeline wiring):
 from __future__ import annotations
 
 import argparse
+import copy
 import os
 import re
 
+import yaml
+
 from hsge.llm import HashingEmbedder, MockLLM
 from hsge.webarena.runtime import WebArenaExplorer
+
+
+# Built-in defaults; config.yaml overrides these, CLI flags override config.yaml.
+DEFAULTS = {
+    "run": {"site": "shopping", "root_url": None, "out_dir": "outputs/wa_run",
+            "allow": None, "denylist": r"logout|\?p=|product_list_|[?&]sort=",
+            "max_nodes": 15, "max_depth": 6, "max_steps": 15, "maturity": 2,
+            "headed": False, "success_url_re": None, "full_reset_url": None},
+    "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2},
+    "embedder": {"model": "all-MiniLM-L6-v2"},
+}
+
+
+def _load_config(path: str | None) -> dict:
+    """Merge config.yaml (if present) onto DEFAULTS, section by section."""
+    cfg = copy.deepcopy(DEFAULTS)
+    if path and os.path.exists(path):
+        loaded = yaml.safe_load(open(path)) or {}
+        for section in cfg:
+            cfg[section].update(loaded.get(section) or {})
+    return cfg
+
+
+def _pick(cli_val, cfg_val):
+    """CLI wins when the user passed it (not None), else fall back to config."""
+    return cli_val if cli_val is not None else cfg_val
 
 
 # --------------------------- dry-run fakes --------------------------------- #
@@ -98,55 +128,94 @@ def perform_full_reset(url: str, retries: int = 3):
     print("[reset] giving up after retries")
 
 
+def _resolve_llm(cli, llm_cfg):
+    """Pick provider (CLI > config > $LLM_PROVIDER > openai) and resolve its
+    model/base_url/api_key from .env, e.g. DEEPSEEK_API_KEY/_BASE_URL/_MODEL."""
+    provider = (cli.provider or llm_cfg.get("provider")
+                or os.environ.get("LLM_PROVIDER") or "openai").lower()
+    p = provider.upper()
+    model = cli.model or llm_cfg.get("model") or os.environ.get(f"{p}_MODEL")
+    base_url = cli.base_url or llm_cfg.get("base_url") or os.environ.get(f"{p}_BASE_URL")
+    api_key = os.environ.get(f"{p}_API_KEY")
+    from hsge.backends import OpenAILLM
+    print(f"[llm] provider={provider} model={model} base_url={base_url or '(default)'}")
+    return OpenAILLM(model=model, base_url=base_url, api_key=api_key,
+                     temperature=float(llm_cfg.get("temperature", 0.2)))
+
+
 def main():
     _load_dotenv()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root-url", default="http://shop/home")
-    ap.add_argument("--out", default="outputs/wa_run")
+    ap.add_argument("--config", default="config.yaml", help="path to config.yaml")
+    # All below default to None so they only override config.yaml when passed.
+    ap.add_argument("--site", default=None, help="WA_<SITE> to explore (e.g. shopping)")
+    ap.add_argument("--root-url", default=None, help="explicit start URL (overrides --site)")
+    ap.add_argument("--out", default=None)
     ap.add_argument("--allow", default=None, help="regex of allowed child URLs")
-    ap.add_argument("--denylist", default=r"logout|\?p=|product_list_|[?&]sort=",
-                    help="regex of blocked child URLs (denylist wins over allow)")
-    ap.add_argument("--max-nodes", type=int, default=15)
-    ap.add_argument("--max-depth", type=int, default=6)
-    ap.add_argument("--max-steps", type=int, default=15)
-    ap.add_argument("--maturity", type=int, default=2,
-                    help="min times a skill must recur before it becomes an operator")
+    ap.add_argument("--denylist", default=None, help="regex of blocked child URLs")
+    ap.add_argument("--max-nodes", type=int, default=None)
+    ap.add_argument("--max-depth", type=int, default=None)
+    ap.add_argument("--max-steps", type=int, default=None)
+    ap.add_argument("--maturity", type=int, default=None)
+    ap.add_argument("--provider", default=None, help="openai | deepseek")
     ap.add_argument("--model", default=None, help="LLM model id (e.g. gpt-4o-mini, deepseek-chat)")
-    ap.add_argument("--base-url", default=None,
-                    help="OpenAI-compatible base URL (e.g. https://api.deepseek.com); "
-                         "falls back to $OPENAI_BASE_URL")
-    ap.add_argument("--headed", action="store_true", help="run browser headed (for debugging)")
-    ap.add_argument("--full-reset-url", default=os.environ.get("WA_FULL_RESET") or None,
+    ap.add_argument("--base-url", default=None, help="OpenAI-compatible base URL")
+    ap.add_argument("--headed", action="store_const", const=True, default=None,
+                    help="run browser headed (for debugging)")
+    ap.add_argument("--full-reset-url", default=None,
                     help="POST here once before exploring to reset WebArena state")
     ap.add_argument("--success-url-re", default=None,
                     help="override the order_confirmed success-URL regex")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    allow = args.allow or (re.escape(args.root_url.rsplit("/", 1)[0]) + ".*")
+    cfg = _load_config(args.config)
+    run, llm_cfg, emb_cfg = cfg["run"], cfg["llm"], cfg["embedder"]
+
+    out_dir = _pick(args.out, run["out_dir"])
+    max_nodes = _pick(args.max_nodes, run["max_nodes"])
+    max_depth = _pick(args.max_depth, run["max_depth"])
+    max_steps = _pick(args.max_steps, run["max_steps"])
+    maturity = _pick(args.maturity, run["maturity"])
+    denylist = _pick(args.denylist, run["denylist"])
+    headed = _pick(args.headed, run["headed"])
 
     if args.dry_run:
+        root_url = args.root_url or "http://shop/home"
+        allow = _pick(args.allow, run["allow"]) or (re.escape(root_url.rsplit("/", 1)[0]) + ".*")
         llm, embedder = _DryLLM(), HashingEmbedder()
         browser_factory = lambda url: _FakeBrowser(url)
     else:
-        from hsge.backends import OpenAILLM, STEmbedder
+        from hsge.backends import STEmbedder
         from hsge.webarena import predicates
         from hsge.webarena.browser import WebArenaBrowser
-        if args.success_url_re:
-            predicates.configure_terminal(args.success_url_re)
-        if args.full_reset_url:
-            perform_full_reset(args.full_reset_url)
-        llm = OpenAILLM(model=args.model, base_url=args.base_url)
-        embedder = STEmbedder()
-        browser_factory = lambda url: WebArenaBrowser(url, headless=not args.headed)
+        # root URL: explicit --root-url/config, else resolve WA_<SITE> from .env
+        root_url = args.root_url or run["root_url"]
+        if not root_url:
+            site = args.site or run["site"]
+            root_url = os.environ.get(f"WA_{site.upper()}") if site else None
+        if not root_url:
+            ap.error("no start URL: set --root-url, run.root_url, or --site/run.site + WA_<SITE> in .env")
+        allow = _pick(args.allow, run["allow"]) or (re.escape(root_url.rsplit("/", 1)[0]) + ".*")
+
+        success_url_re = _pick(args.success_url_re, run["success_url_re"])
+        if success_url_re:
+            predicates.configure_terminal(success_url_re)
+        full_reset_url = _pick(args.full_reset_url, run["full_reset_url"]) or os.environ.get("WA_FULL_RESET")
+        if full_reset_url:
+            perform_full_reset(full_reset_url)
+
+        llm = _resolve_llm(args, llm_cfg)
+        embedder = STEmbedder(emb_cfg["model"])
+        browser_factory = lambda url: WebArenaBrowser(url, headless=not headed)
 
     explorer = WebArenaExplorer(
-        browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=args.out,
-        allow_pattern=allow, deny_pattern=args.denylist, max_depth=args.max_depth,
-        max_nodes=args.max_nodes, max_steps=args.max_steps, maturity=args.maturity,
+        browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=out_dir,
+        allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
+        max_nodes=max_nodes, max_steps=max_steps, maturity=maturity,
     )
-    explorer.run(args.root_url)
-    print("\nnext: python build_sft_dataset.py", os.path.join(args.out, "episodes"), "train.jsonl")
+    explorer.run(root_url)
+    print("\nnext: python build_sft_dataset.py", os.path.join(out_dir, "episodes"), "train.jsonl")
 
 
 if __name__ == "__main__":

@@ -87,6 +87,19 @@ export OPENAI_API_KEY="sk-..."
 If a domain isn't running, set its URL to `todo` and filter those tasks out — for
 shopping-only collection you don't need gitlab/reddit/map up.
 
+**Secrets vs run params.** Keep API keys, account passwords and `WA_*` URLs in `.env`
+(git-ignored). Non-secret run parameters live in `config.yaml` (committed, easy to
+track): which site, `max_nodes`, `max_steps`, `maturity`, allow/deny, the LLM
+`provider`, etc. The runner resolves the LLM from the provider name — e.g.
+`provider: deepseek` reads `DEEPSEEK_API_KEY`/`DEEPSEEK_BASE_URL`/`DEEPSEEK_MODEL`
+from `.env`. Precedence is **CLI flag > config.yaml > built-in default**, so:
+
+```bash
+python run_webarena.py                              # everything from config.yaml + .env
+python run_webarena.py --site shopping --max-nodes 5 --headed   # override a few
+python run_webarena.py --provider openai --model gpt-4o-mini    # switch LLM
+```
+
 ---
 
 ## 4. Verify the BrowserGym ↔ WebArena link
