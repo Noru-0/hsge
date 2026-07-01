@@ -39,15 +39,25 @@ SOLVER_SYS = (
     "Call send_msg_to_user ONLY when the goal is fully achieved.")
 
 
+READONLY_NOTE = ("\nREAD-ONLY MODE: propose ONLY [INFO] and [NAV] tasks. Do NOT "
+                 "propose any [MOD] / content-modification tasks (no posting, "
+                 "commenting, voting, adding to cart, or checkout).")
+
+
 class PageExplorer:
-    def __init__(self, llm, max_tasks: int = 4):
+    def __init__(self, llm, max_tasks: int = 4, read_only: bool = False):
         self.llm = llm
         self.max_tasks = max_tasks
+        self.read_only = read_only
 
     def propose(self, obs: dict) -> list[str]:
+        system = EXPLORER_SYS + (READONLY_NOTE if self.read_only else "")
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
-        out = self.llm.complete_json(EXPLORER_SYS, prompt)
-        return [t for t in out.get("tasks", [])][: self.max_tasks]
+        out = self.llm.complete_json(system, prompt)
+        tasks = [t for t in out.get("tasks", [])]
+        if self.read_only:                       # belt-and-suspenders: drop any [MOD]
+            tasks = [t for t in tasks if "[MOD]" not in t.upper()]
+        return tasks[: self.max_tasks]
 
 
 class Solver:

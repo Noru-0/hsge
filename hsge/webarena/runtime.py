@@ -37,14 +37,14 @@ class WebArenaExplorer:
                  allow_pattern: str, deny_pattern: str | None = None, max_depth: int = 6,
                  max_nodes: int = 20, max_steps: int = 15,
                  terminal_goal: str = "order_confirmed",
-                 maturity: int = 2, predicate_sim: float = 0.6):
+                 maturity: int = 2, predicate_sim: float = 0.6, read_only: bool = False):
         self.browser_factory = browser_factory
         self.llm = llm
         self.out_dir = out_dir
         self.allow = re.compile(allow_pattern)
         self.deny = re.compile(deny_pattern) if deny_pattern else None
         self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
-        self.explorer = PageExplorer(llm)
+        self.explorer = PageExplorer(llm, read_only=read_only)
         self.solver = Solver(llm, max_steps=max_steps)
         self.opgraph = OperatorGraph()
         # HSGE discovery; verification is by terminal outcome (see _record / reached),

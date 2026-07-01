@@ -167,6 +167,8 @@ def main():
                     help="POST here once before exploring to reset WebArena state")
     ap.add_argument("--success-url-re", default=None,
                     help="override the order_confirmed success-URL regex")
+    ap.add_argument("--read-only", action="store_true",
+                    help="propose only [INFO]/[NAV] tasks; never [MOD] (no writes to the site)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -221,7 +223,7 @@ def main():
         browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=out_dir,
         allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
         max_nodes=max_nodes, max_steps=max_steps, maturity=maturity,
-        terminal_goal=terminal_goal, predicate_sim=predicate_sim,
+        terminal_goal=terminal_goal, predicate_sim=predicate_sim, read_only=args.read_only,
     )
     explorer.run(root_url)
     print("\nnext: python build_sft_dataset.py", os.path.join(out_dir, "episodes"), "train.jsonl")
