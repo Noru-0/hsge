@@ -15,21 +15,42 @@ import argparse
 import os
 import re
 
-from hsge.llm import LLM, HashingEmbedder
+from hsge.llm import HashingEmbedder, MockLLM
 from hsge.webarena.runtime import WebArenaExplorer
 
 
 # --------------------------- dry-run fakes --------------------------------- #
-class _DryLLM(LLM):
-    """Scripted LLM: proposes two tasks, advances one step then declares done."""
+class _DryLLM(MockLLM):
+    """Scripted LLM for the dry run. Delegates segmentation/abstraction to MockLLM
+    (deterministic) and only scripts the explorer, the solver, and operator
+    induction. The solver walks the fake purchase all the way to the success page
+    so Discovery admits skills that then become operators, including a terminal one.
+    """
     def complete_json(self, system: str, prompt: str) -> dict:
-        if system.startswith("PROPOSE"):
+        if system.startswith("PROPOSE"):                        # explorer
             return {"tasks": ["search for an item", "add an item to cart"]}
         if "web agent" in system.lower():                       # solver
-            if "click('1')" in prompt:                          # already acted -> finish
+            if "thank you for your purchase" in prompt.lower():  # goal page -> finish
                 return {"thought": "done", "action": "send_msg_to_user('done')"}
             return {"thought": "advance", "action": "click('1')"}
-        return {}                                               # segment/abstract: no-op
+        if "PLANNING OPERATOR" in system:                       # operator induction
+            return self._induce(prompt)
+        return super().complete_json(system, prompt)            # segment / abstract
+
+    @staticmethod
+    def _induce(prompt: str) -> dict:
+        # Derive a distinct NL effect from the page content (as a real LLM would),
+        # not the near-identical skill name -- otherwise the coarse hashing embedder
+        # collapses them into one canonical predicate.
+        p = MockLLM._payload(prompt)
+        after = " ".join(b.get("after", "") for b in p.get("boundary_states", [])).lower()
+        if "thank you for your purchase" in after:
+            return {"preconditions": [], "effects": ["the purchase is confirmed"], "terminal": True}
+        if "cart" in after:
+            return {"preconditions": [], "effects": ["an item is in the cart"], "terminal": False}
+        if "result" in after:
+            return {"preconditions": [], "effects": ["search results are shown"], "terminal": False}
+        return {"preconditions": [], "effects": ["a page action completed"], "terminal": False}
 
 
 class _FakeBrowser:
@@ -61,6 +82,8 @@ def main():
     ap.add_argument("--max-nodes", type=int, default=15)
     ap.add_argument("--max-depth", type=int, default=6)
     ap.add_argument("--max-steps", type=int, default=15)
+    ap.add_argument("--maturity", type=int, default=2,
+                    help="min times a skill must recur before it becomes an operator")
     ap.add_argument("--model", default=None)
     ap.add_argument("--headless", action="store_true", default=True)
     ap.add_argument("--dry-run", action="store_true")
@@ -81,7 +104,7 @@ def main():
     explorer = WebArenaExplorer(
         browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=args.out,
         allow_pattern=allow, max_depth=args.max_depth, max_nodes=args.max_nodes,
-        max_steps=args.max_steps,
+        max_steps=args.max_steps, maturity=args.maturity,
     )
     explorer.run(args.root_url)
     print("\nnext: python build_sft_dataset.py", os.path.join(args.out, "episodes"), "train.jsonl")

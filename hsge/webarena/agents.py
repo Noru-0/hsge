@@ -58,7 +58,8 @@ class Solver:
             out = self.llm.complete_json(SOLVER_SYS, prompt)
             action = (out.get("action") or "").strip()
             thought = out.get("thought", "")
-            steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100]))
+            steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100],
+                              axtree=obs["axtree"]))
             obs_texts.append(obs["axtree"])
             if not action or action.startswith("send_msg_to_user"):
                 break

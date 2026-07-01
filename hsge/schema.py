@@ -23,6 +23,7 @@ class Step:
     url: str                    # URL after the action
     obs_summary: str = ""       # short NL summary of the resulting observation
     dom_signature: str = ""     # cheap structural fingerprint of the page
+    axtree: str = ""            # full accessibility tree at this step (real backends only)
 
     def action_kind(self) -> str:
         """Verb only, used to build a site-agnostic action signature."""
