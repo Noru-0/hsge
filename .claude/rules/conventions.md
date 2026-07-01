@@ -10,3 +10,6 @@
   no need to ask before each commit. A "finished" unit is a coherent change
   (bug fix, feature, doc/rule update, etc.) that's been checked, not a
   mid-task/partial edit. Never push without explicit request each time.
+- All code and documentation (comments, docstrings, commit messages, docs/*.md,
+  README, etc.) must be written in English, regardless of the language used in
+  conversation.
