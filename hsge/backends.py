@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 
 import numpy as np
 
@@ -38,7 +39,14 @@ class OpenAILLM(LLM):
             return json.loads(txt)
         except json.JSONDecodeError:
             m = re.search(r"\{.*\}", txt, re.S)          # salvage first JSON object
-            return json.loads(m.group(0)) if m else {}
+            if m:
+                try:
+                    return json.loads(m.group(0))
+                except json.JSONDecodeError:
+                    pass
+            print(f"[OpenAILLM] non-JSON response, returning {{}}: {txt[:200]!r}",
+                  file=sys.stderr)
+            return {}
 
     def complete_text(self, system: str, prompt: str) -> str:
         msg = self.client.chat.completions.create(

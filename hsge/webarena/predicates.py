@@ -39,6 +39,18 @@ TERMINALS = {
 }
 
 
+def configure_terminal(success_url_re: str, text: str | None = None) -> None:
+    """Override the success-URL regex (and optional required text) for `order_confirmed`.
+
+    WebArena instances may land checkout on a non-default success URL; point the
+    terminal checker at it without editing code. `text` defaults to None so matching
+    is URL-only (a custom instance may not show the default confirmation phrase);
+    pass a phrase to also require it.
+    """
+    TERMINALS["order_confirmed"]["url"] = success_url_re
+    TERMINALS["order_confirmed"]["text"] = text
+
+
 def reached(goal: str, url: str, axtree: str = "") -> bool:
     spec = TERMINALS.get(goal)
     if not spec:

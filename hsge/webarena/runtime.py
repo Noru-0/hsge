@@ -34,13 +34,15 @@ def _slug(name: str) -> str:
 
 class WebArenaExplorer:
     def __init__(self, browser_factory, llm, embedder, out_dir: str,
-                 allow_pattern: str, max_depth: int = 6, max_nodes: int = 20,
-                 max_steps: int = 15, terminal_goal: str = "order_confirmed",
+                 allow_pattern: str, deny_pattern: str | None = None, max_depth: int = 6,
+                 max_nodes: int = 20, max_steps: int = 15,
+                 terminal_goal: str = "order_confirmed",
                  maturity: int = 2, predicate_sim: float = 0.6):
         self.browser_factory = browser_factory
         self.llm = llm
         self.out_dir = out_dir
         self.allow = re.compile(allow_pattern)
+        self.deny = re.compile(deny_pattern) if deny_pattern else None
         self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
         self.explorer = PageExplorer(llm)
         self.solver = Solver(llm, max_steps=max_steps)
@@ -147,9 +149,10 @@ class WebArenaExplorer:
                              difficulty=gt["difficulty"], tag="GOAL")
                 print(f"    GOAL chain={gt['chain']} verified={success}")
 
-            # 3) expand frontier with allowed child links
+            # 3) expand frontier with allowed child links (denylist wins over allow)
             for link in browser.links():
-                if self.allow.search(link) and link not in visited:
+                if (self.allow.search(link) and link not in visited
+                        and not (self.deny and self.deny.search(link))):
                     frontier.append(link)
             browser.close()
 

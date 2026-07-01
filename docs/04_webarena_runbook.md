@@ -58,7 +58,8 @@ playwright install chromium
 
 ## 3. Set environment variables
 
-Put these in the env file your CLI loads via `load_env_file()` (e.g. `.env`):
+Put these in a `.env` in the working directory (loaded automatically via
+`load_dotenv()` when `python-dotenv` is installed), or `export` them in your shell:
 
 ```bash
 BASE_URL=http://your-server
@@ -116,16 +117,41 @@ otherwise reset the Docker volumes/containers manually per the WebArena docs.
 
 ## 6. Run HSGE exploration
 
-Once a site is up and the env vars are set, run the standalone runtime:
+Once a site is up and the env vars are set, run the standalone runtime. The Solver's
+high-level actions (`click('bid')`, `fill(...)`, `goto(...)`) are executed via
+BrowserGym's `HighLevelActionSet` — no extra action configuration needed.
+
+`run_webarena.py` calls `load_dotenv()` on start, so a `.env` in the working directory
+is picked up automatically (install `python-dotenv`); the `set -a; source .env` form
+still works too.
 
 ```bash
-set -a; source .env; set +a
+# OpenAI (default endpoint):
+export OPENAI_API_KEY=sk-...
 python run_webarena.py \
     --root-url "$WA_SHOPPING" \
     --out outputs/wa_run \
     --allow "http://<your-host>:7770.*" \
-    --max-nodes 15 --max-depth 6 --max-steps 15
+    --max-nodes 15 --max-depth 6 --max-steps 15 \
+    --model gpt-4o-mini
 ```
+
+```bash
+# Deepseek (OpenAI-compatible — just point base-url + model):
+export OPENAI_API_KEY=sk-deepseek-...
+python run_webarena.py --root-url "$WA_SHOPPING" --allow "http://<your-host>:7770.*" \
+    --base-url https://api.deepseek.com --model deepseek-chat --out outputs/wa_run
+```
+
+Useful flags:
+
+| Flag | Purpose |
+| --- | --- |
+| `--headed` | run the browser with a visible window (debug first runs) |
+| `--denylist "<regex>"` | block child URLs from the frontier (default already skips logout / `?p=` / sort / `product_list_`); denylist wins over `--allow` |
+| `--full-reset-url "<url>"` | POST once before exploring to reset WebArena state (defaults to `$WA_FULL_RESET`) |
+| `--success-url-re "<regex>"` | override the checkout success-URL used to verify `order_confirmed` |
+| `--maturity <n>` | how many times a skill must recur before it becomes a planning operator |
 
 See `09_run_on_webarena.md` for a full description of the runtime and a `--dry-run`
 mode that verifies the wiring with no browser or network.

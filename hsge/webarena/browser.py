@@ -8,6 +8,8 @@ and the WA_* env vars pointing at your hosted WebArena (see the runbook).
 """
 from __future__ import annotations
 
+import json
+import os
 import re
 
 
@@ -15,13 +17,27 @@ class WebArenaBrowser:
     def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000):
         import gymnasium as gym
         import browsergym.core            # noqa: registers browsergym/openended
+        from browsergym.core.action.highlevel import HighLevelActionSet
         self._gym = gym
+        # The Solver emits high-level actions as strings, e.g. click('a51'),
+        # fill('b3','x'), goto('url'), go_back(), send_msg_to_user('done'). BrowserGym's
+        # openended env executes Python in the page context, so we map each high-level
+        # string to executable code via the action set (mirrors go-browse's setup).
+        self.action_set = HighLevelActionSet(
+            subsets=["chat", "bid", "infeas", "nav"], strict=False, multiaction=False)
+        env_kwargs = {}
+        headers_path = os.environ.get("PW_EXTRA_HEADERS")
+        if headers_path and os.path.exists(headers_path):
+            with open(headers_path) as f:
+                env_kwargs["pw_context_kwargs"] = {"extra_http_headers": json.load(f)}
         self.env = gym.make(
             "browsergym/openended",
             task_kwargs={"start_url": start_url},
             headless=headless,
             timeout=timeout_ms,
             wait_for_user_message=False,
+            action_mapping=self.action_set.to_python_code,
+            **env_kwargs,
         )
         self._last_obs = None
 
@@ -34,7 +50,9 @@ class WebArenaBrowser:
         from browsergym.utils.obs import flatten_axtree_to_str
         obs = self._last_obs or {}
         try:
-            axtree = flatten_axtree_to_str(obs["axtree_object"])
+            axtree = flatten_axtree_to_str(
+                obs["axtree_object"], filter_visible_only=False,
+                extra_properties=obs.get("extra_element_properties"))
         except Exception:
             axtree = ""
         return {
