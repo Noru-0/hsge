@@ -94,18 +94,25 @@ class WebArenaExplorer:
             return
         members = [self.library.subtrajs.get(mid) for mid in card.member_ids[:2]]
         members = [m for m in members if m and m.steps]
+        if not members:
+            print(f"[operator] skill {skill_id} has no usable member steps; "
+                  "inducing without page context")
         boundary = [(m.steps[0].axtree, m.steps[-1].axtree) for m in members]
         induced = induce_operator(self.llm, card, boundary)
         pre = frozenset(self.registry.canonical(p) for p in induced["preconditions"])
         eff = frozenset(self.registry.canonical(e) for e in induced["effects"])
         if not eff:
             return
-        reached_terminal = any(
+        # terminal only when a real terminal goal is configured and a member reached it
+        reached_terminal = bool(self.terminal_goal) and any(
             reached(self.terminal_goal, m.steps[-1].url, m.steps[-1].axtree) for m in members)
         self.opgraph.add(Operator(_slug(card.name), pre, eff,
                                   terminal=induced["terminal"] or reached_terminal))
 
     def _goal_task(self):
+        # No terminal predicate configured (e.g. a non-shopping site) -> exploration-only.
+        if not self.terminal_goal:
+            return None
         # goal_predicates holds canonical ids contributed by terminal operators;
         # plan toward the first one that is reachable from the empty initial state.
         for goal in sorted(self.opgraph.goal_predicates):
@@ -115,17 +122,29 @@ class WebArenaExplorer:
                         "difficulty": len(chain), "chain": chain}
         return None
 
+    def _admit_url(self, link: str, visited: set) -> bool:
+        return bool(link and self.allow.search(link) and link not in visited
+                    and not (self.deny and self.deny.search(link)))
+
     # ---- the loop ------------------------------------------------------------
     def run(self, root_url: str):
-        frontier, visited = [root_url], set()
+        frontier, visited = [(root_url, 0)], set()
+        if not self.terminal_goal:
+            print("[goal] no terminal predicate for this run -> exploration-only "
+                  "(skills/operators still discovered; goal composition disabled).")
         while frontier and len(visited) < self.max_nodes:
-            url = frontier.pop(0)
+            url, depth = frontier.pop(0)
             if url in visited:
                 continue
             visited.add(url)
             browser = self.browser_factory(url)
             obs = browser.reset()
             print(f"[node {len(visited)}] {obs['url']}")
+            # URLs actually loaded while solving become frontier candidates (the agent
+            # navigates during tasks); open tabs are added too. Page hrefs are not in
+            # the flattened axtree, so this visited-during-solving signal is what grows
+            # the frontier -- same approach as go-browse's open_pages_urls tracking.
+            seen_urls = set()
 
             # 1) local exploration
             for task in self.explorer.propose(obs):
@@ -137,6 +156,8 @@ class WebArenaExplorer:
                     admitted = self.discovery.on_trajectory(steps, site=root_url, task=task)
                     for sid in admitted:
                         self._promote_skill_to_operator(sid)
+                seen_urls.update(st.url for st in steps)
+                seen_urls.add(final_obs.get("url", ""))
                 print(f"    local: {task[:50]!r} success={success}")
 
             # 2) goal-conditioned composed task (once a plan to the goal exists)
@@ -147,13 +168,15 @@ class WebArenaExplorer:
                     browser, gt["goal"], goal_predicate=self.terminal_goal)
                 self._record(gt["goal"], steps, obs_texts, success,
                              difficulty=gt["difficulty"], tag="GOAL")
+                seen_urls.update(st.url for st in steps)
                 print(f"    GOAL chain={gt['chain']} verified={success}")
 
-            # 3) expand frontier with allowed child links (denylist wins over allow)
-            for link in browser.links():
-                if (self.allow.search(link) and link not in visited
-                        and not (self.deny and self.deny.search(link))):
-                    frontier.append(link)
+            # 3) expand frontier (bounded by max_depth) with pages seen while solving
+            if depth < self.max_depth:
+                seen_urls.update(browser.links())
+                for link in sorted(seen_urls):
+                    if self._admit_url(link, visited):
+                        frontier.append((link, depth + 1))
             browser.close()
 
         print(f"\ndone: {len(visited)} nodes, {self.episode} episodes, "

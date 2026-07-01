@@ -28,7 +28,8 @@ DEFAULTS = {
     "run": {"site": "shopping", "root_url": None, "out_dir": "outputs/wa_run",
             "allow": None, "denylist": r"logout|\?p=|product_list_|[?&]sort=",
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "maturity": 2,
-            "headed": False, "success_url_re": None, "full_reset_url": None},
+            "predicate_sim": 0.6, "headed": False, "success_url_re": None,
+            "full_reset_url": None, "terminal_goal": None},
     "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2},
     "embedder": {"model": "all-MiniLM-L6-v2"},
 }
@@ -179,10 +180,12 @@ def main():
     maturity = _pick(args.maturity, run["maturity"])
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
+    predicate_sim = run["predicate_sim"]
 
     if args.dry_run:
         root_url = args.root_url or "http://shop/home"
         allow = _pick(args.allow, run["allow"]) or (re.escape(root_url.rsplit("/", 1)[0]) + ".*")
+        terminal_goal = "order_confirmed"                # fake browser reaches success
         llm, embedder = _DryLLM(), HashingEmbedder()
         browser_factory = lambda url: _FakeBrowser(url)
     else:
@@ -190,9 +193,9 @@ def main():
         from hsge.webarena import predicates
         from hsge.webarena.browser import WebArenaBrowser
         # root URL: explicit --root-url/config, else resolve WA_<SITE> from .env
+        site = args.site or run["site"]
         root_url = args.root_url or run["root_url"]
         if not root_url:
-            site = args.site or run["site"]
             root_url = os.environ.get(f"WA_{site.upper()}") if site else None
         if not root_url:
             ap.error("no start URL: set --root-url, run.root_url, or --site/run.site + WA_<SITE> in .env")
@@ -201,6 +204,11 @@ def main():
         success_url_re = _pick(args.success_url_re, run["success_url_re"])
         if success_url_re:
             predicates.configure_terminal(success_url_re)
+        # terminal goal: explicit config wins; else auto (shopping has a checker, others
+        # are exploration-only). A custom success-url-re also implies order_confirmed.
+        terminal_goal = run["terminal_goal"]
+        if terminal_goal is None and (success_url_re or site == "shopping"):
+            terminal_goal = "order_confirmed"
         full_reset_url = _pick(args.full_reset_url, run["full_reset_url"]) or os.environ.get("WA_FULL_RESET")
         if full_reset_url:
             perform_full_reset(full_reset_url)
@@ -213,6 +221,7 @@ def main():
         browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=out_dir,
         allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
         max_nodes=max_nodes, max_steps=max_steps, maturity=maturity,
+        terminal_goal=terminal_goal, predicate_sim=predicate_sim,
     )
     explorer.run(root_url)
     print("\nnext: python build_sft_dataset.py", os.path.join(out_dir, "episodes"), "train.jsonl")

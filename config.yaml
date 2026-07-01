@@ -4,7 +4,7 @@
 # This file is safe to commit. Precedence: CLI flags > this file > built-in defaults.
 
 run:
-  site: shopping             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
+  site: reddit             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
   root_url: null             # explicit URL; overrides `site` when set
   out_dir: outputs/wa_run
   allow: null                # null -> derived from the root URL's host
@@ -13,9 +13,12 @@ run:
   max_depth: 6
   max_steps: 15
   maturity: 2                # times a skill must recur before it becomes an operator
+  predicate_sim: 0.6         # cosine threshold for the predicate registry (tune per embedder)
   headed: false              # true -> visible browser window (debugging)
   success_url_re: null       # null -> default /checkout/onepage/success
   full_reset_url: null       # null -> $WA_FULL_RESET
+  terminal_goal: null        # planning goal predicate; null -> auto (order_confirmed on
+                             # shopping, disabled/exploration-only elsewhere)
 
 llm:
   provider: null             # openai | deepseek ; null -> $LLM_PROVIDER, else openai

@@ -40,10 +40,12 @@ class WebArenaBrowser:
             **env_kwargs,
         )
         self._last_obs = None
+        self.terminated = False
 
     def reset(self) -> dict:
         obs, _ = self.env.reset()
         self._last_obs = obs
+        self.terminated = False
         return self.observation()
 
     def observation(self) -> dict:
@@ -69,6 +71,7 @@ class WebArenaBrowser:
     def act(self, action: str) -> dict:
         """action is a BrowserGym call string, e.g. click('a51') or fill('b3','x')."""
         self._last_obs, _, term, trunc, _ = self.env.step(action)
+        self.terminated = bool(term or trunc)
         return self.observation()
 
     def links(self) -> list[str]:

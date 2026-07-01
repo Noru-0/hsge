@@ -16,16 +16,27 @@ ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
                "fill('bid','text'), select_option('bid','opt'), goto('url'), "
                "go_back(), send_msg_to_user('done message').")
 
-EXPLORER_SYS = ("PROPOSE feasible, concrete tasks a user could do on THIS page. "
-                "Return JSON {\"tasks\": [\"...\", ...]}. Prefer tasks that make "
-                "progress (open an item, add to cart, proceed to checkout) over "
-                "pure search/sort/filter.")
+EXPLORER_SYS = (
+    "PROPOSE concrete, feasible tasks a typical user could do on THIS page. "
+    "Return JSON {\"tasks\": [\"...\", ...]}.\n"
+    "Rules:\n"
+    "- Be SPECIFIC using names/values visible on the page (e.g. 'Add the Sony PS5 "
+    "to the cart', 'Open the post titled \"Best budget GPU\"'), NOT generic templates "
+    "like 'add item to cart' or 'search for a product'.\n"
+    "- Tag each task by type: [INFO] read/extract info, [NAV] go to a specific page, "
+    "[MOD] change content/state. List them INFO first, then NAV, then MOD.\n"
+    "- Prefer tasks that make progress or reveal new pages over pure search/sort/filter.\n"
+    "- Focus on common things a real user of THIS site would do; skip niche tasks.")
 
-SOLVER_SYS = ("You are a web agent. Given the goal, the page accessibility tree "
-              "(elements shown as [bid] role 'name'), and your recent actions, "
-              "choose the single best next action. " + ACTIONS_DOC +
-              " Return JSON {\"thought\": \"...\", \"action\": \"<one action>\"}. "
-              "Call send_msg_to_user only when the goal is fully achieved.")
+SOLVER_SYS = (
+    "You are a web agent. Reach the GOAL by choosing the single best next action from "
+    "the page accessibility tree (elements shown as [bid] role 'name'). " + ACTIONS_DOC +
+    " Think step by step; reflect on your past actions and any error from your last "
+    "action before deciding. Output ONE action as JSON "
+    "{\"thought\": \"...\", \"action\": \"<one action>\"}. "
+    "Examples: {\"thought\": \"Open the product\", \"action\": \"click('12')\"} ; "
+    "{\"thought\": \"Goal met\", \"action\": \"send_msg_to_user('done: price is $19')\"}. "
+    "Call send_msg_to_user ONLY when the goal is fully achieved.")
 
 
 class PageExplorer:
@@ -45,15 +56,20 @@ class Solver:
         self.max_steps = max_steps
 
     def solve(self, browser, goal: str, goal_predicate: str | None = None):
-        """Drive the browser toward `goal`. Returns (steps, final_obs, success)."""
+        """Drive the browser toward `goal`.
+
+        Returns (steps, obs_texts, final_obs, success).
+        """
         steps: list[Step] = []
         obs_texts: list[str] = []
         history: list[str] = []
         obs = browser.observation()
+        last_error = ""
         success = False
         for _ in range(self.max_steps):
             prompt = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n"
                       + ("\n".join(f"- {h}" for h in history[-6:]) or "(none)")
+                      + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
                       + f"\n\nURL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}")
             out = self.llm.complete_json(SOLVER_SYS, prompt)
             action = (out.get("action") or "").strip()
@@ -65,10 +81,15 @@ class Solver:
                 break
             try:
                 obs = browser.act(action)
+                last_error = ""
             except Exception as e:
-                steps[-1].obs_summary += f" [action error: {e}]"
-                break
+                # feed the error back so the agent can recover, instead of aborting
+                last_error = str(e)[:200]
+                steps[-1].obs_summary += f" [action error: {last_error}]"
+                continue
             history.append(action)
+            if getattr(browser, "terminated", False):
+                break
             if goal_predicate and reached(goal_predicate, obs["url"], obs["axtree"]):
                 success = True
                 break
