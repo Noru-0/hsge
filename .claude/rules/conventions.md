@@ -15,5 +15,11 @@
   no need to ask before each commit. A "finished" unit is a coherent change
   (bug fix, feature, doc/rule update, etc.) that's been checked, not a
   mid-task/partial edit. Never push without explicit request each time.
+- Auto-update the persistent memory system for this project as durable, non-obvious
+  facts come up — don't wait to be asked each time. This covers: user preferences
+  (e.g. language), confirmed or corrected workflow feedback, project state/decisions
+  that aren't derivable from code or git history, and external references. Update
+  `MEMORY.md`'s index alongside every new/changed memory file. Skip anything already
+  covered by this file or derivable from the repo itself.
 - All code and documentation (comments, docstrings, commit messages, docs/*.md,
   README, etc.) must be written in English.
