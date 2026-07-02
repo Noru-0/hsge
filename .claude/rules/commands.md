@@ -28,3 +28,21 @@ python build_sft_dataset.py <episodes_dir> train.jsonl            # trajectories
 
 Most scripts take no CLI args and just run their scenario; `run_webarena.py` and
 `build_sft_dataset.py` are the exceptions (argparse / positional args).
+
+## Real WebArena run
+
+Secrets (API keys, account passwords, `WA_*` site URLs) live in a git-ignored `.env`;
+non-secret run params (site, max_nodes/steps, maturity, LLM provider/model, ...) live
+in the committed `config.yaml`. Precedence is **CLI flag > config.yaml > built-in
+default**.
+
+```bash
+python run_webarena.py                              # everything from config.yaml + .env
+python run_webarena.py --site shopping --max-nodes 5 --headed
+python run_webarena.py --provider deepseek --model deepseek-chat
+python run_webarena.py --read-only --max-nodes 2 --max-steps 4   # smoke-test a shared
+                                                                   # site without writes
+```
+
+`--read-only` is the safe way to smoke-test against a real, shared WebArena instance
+(e.g. reddit) — it restricts task proposals to `[INFO]`/`[NAV]`, never `[MOD]`.

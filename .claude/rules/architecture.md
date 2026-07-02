@@ -39,10 +39,18 @@ LLM-authored, embedding-canonicalized NL predicates instead of a fixed vocabular
 ### WebArena runtime (`hsge/webarena/`)
 
 Standalone real-browser runtime, separate from the mock pipeline:
-- `browser.py` — `WebArenaBrowser`, a BrowserGym `openended` wrapper.
+- `browser.py` — `WebArenaBrowser`, a BrowserGym `openended` wrapper. Actions are
+  executed via a `HighLevelActionSet` (`action_mapping=to_python_code`), so the
+  Solver's `click('bid')`/`fill(...)`/`goto(...)`/`go_back()` strings run for real.
+  Surfaces `self.terminated` (env `term`/`trunc`) so the Solver can stop cleanly.
 - `predicates.py` — URL/DOM → terminal-goal checkers (`reached`), used only to score
-  episode success. Planning predicates are no longer hardcoded here (see below).
-- `agents.py` — `PageExplorer` (proposes tasks) + `Solver` (action-planner loop).
+  episode success; `configure_terminal(url_re, text=None)` overrides the default
+  shopping success-URL for non-default instances. Planning predicates are no longer
+  hardcoded here (see below).
+- `agents.py` — `PageExplorer` (proposes `[INFO]/[NAV]/[MOD]`-tagged, specific tasks;
+  `read_only=True` drops `[MOD]`) + `Solver` (action-planner loop with action-space
+  docs, CoT examples, and last-action-error feedback so it can recover instead of
+  aborting the episode).
 - `runtime.py` — `WebArenaExplorer`: frontier loop, skill→operator promotion, goal
   tasks, persistence.
 
@@ -52,9 +60,28 @@ admits a skill (a cluster that recurred `--maturity` times), `runtime.py`
 `operator_induction.py` asks the LLM for the skill's NL preconditions/effects (from its
 SkillCard + boundary axtrees of a few members), and `predicate_registry.py`
 canonicalizes those free-form NL predicates into stable ids via the same
-cosine-threshold clusterer as the skill library — so the BFS planner in `operators.py`
+cosine-threshold clusterer as the skill library (`predicate_sim` threshold, merging
+disabled so ids stay stable once assigned) — so the BFS planner in `operators.py`
 keeps its unchanged precondition/effect set logic. An operator is terminal iff a member
 actually reached the goal state (via `reached`) or the inducer flagged it.
+
+**`terminal_goal` is site-aware, not hardcoded.** It may be `None` (e.g. a
+non-shopping site like reddit): the run is then exploration-only — skills/operators
+are still discovered, but `_goal_task` returns `None` and no goal-conditioned episode
+is attempted. `run_webarena.py` resolves it as: `config.run.terminal_goal` explicit >
+`"order_confirmed"` auto (when `site == shopping` or `--success-url-re` is set) >
+`None`.
+
+**Frontier expansion** does not rely on `browser.links()` (BrowserGym's
+`open_pages_urls`, which is only open tabs) as its main source — it accumulates every
+URL the agent actually loads while solving a task (each `Step.url` + the final
+observation), plus open tabs, and admits the allow/deny-filtered ones as frontier
+candidates bounded by `max_depth`. This is what lets a real run explore beyond the
+root page.
+
+**`--read-only`** makes `PageExplorer` propose only `[INFO]`/`[NAV]` tasks (never
+`[MOD]`), for smoke-testing a shared, stateful site without writing to it (no posting,
+voting, cart/checkout actions).
 
 Verification here is by **terminal outcome** (did the episode reach the goal state,
 e.g. `checkout/onepage/success`), not the mock's held-out-context execution gate.
