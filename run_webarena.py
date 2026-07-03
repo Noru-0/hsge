@@ -69,7 +69,8 @@ class _DryLLM(MockLLM):
     induction. The solver walks the fake purchase all the way to the success page
     so Discovery admits skills that then become operators, including a terminal one.
     """
-    def complete_json(self, system: str, prompt: str) -> dict:
+    def complete_json(self, system: str, prompt: str,
+                       image_b64: str | None = None, image_detail: str = "low") -> dict:
         if system.startswith("PROPOSE"):                        # explorer
             return {"tasks": ["search for an item", "add an item to cart"]}
         if "web agent" in system.lower():                       # solver
@@ -115,6 +116,19 @@ class _FakeBrowser:
         return self.observation()
     def links(self): return []
     def close(self): pass
+
+    def screenshot_b64(self, som: bool = False) -> str | None:
+        """Tiny stub screenshot so --dry-run exercises the vision code path
+        (capture -> attach -> persist) with no real browser."""
+        try:
+            import base64
+            import io
+            from PIL import Image
+            buf = io.BytesIO()
+            Image.new("RGB", (2, 2), color=(200, 200, 200)).save(buf, format="JPEG")
+            return base64.b64encode(buf.getvalue()).decode("ascii")
+        except ImportError:
+            return None
 
 
 def _load_dotenv():
@@ -173,6 +187,20 @@ def _effective_llm_config(cli, llm_cfg, role: str | None = None) -> dict:
             role_cfg.get("temperature"), llm_cfg.get("temperature"), 0.2,
         )),
     }
+
+
+def _resolve_agent_vision(llm_cfg) -> dict[str, dict]:
+    """Per-role {vision, som, image_detail}: role > shared > default (no CLI override)."""
+    result = {}
+    for role in AGENT_ROLES:
+        role_cfg = (llm_cfg.get("agents") or {}).get(role) or {}
+        result[role] = {
+            "vision": bool(_first_not_none(role_cfg.get("vision"), llm_cfg.get("vision"), False)),
+            "som": bool(_first_not_none(role_cfg.get("som"), llm_cfg.get("som"), True)),
+            "image_detail": _first_not_none(
+                role_cfg.get("image_detail"), llm_cfg.get("image_detail"), "low"),
+        }
+    return result
 
 
 def _resolve_llm(cli, llm_cfg, role: str | None = None):
@@ -238,6 +266,11 @@ def main():
         terminal_goal = "order_confirmed"                # fake browser reaches success
         llm, embedder = _DryLLM(), HashingEmbedder()
         agent_llms = {role: llm for role in AGENT_ROLES}
+        # vision=True for page_explorer/solver exercises the full capture/attach/
+        # persist wiring against _FakeBrowser's stub screenshot, no API key needed.
+        agent_vision = {role: {"vision": role in ("page_explorer", "solver"),
+                                "som": True, "image_detail": "low"}
+                        for role in AGENT_ROLES}
         browser_factory = lambda url: _FakeBrowser(url)
     else:
         from hsge.backends import STEmbedder
@@ -265,6 +298,7 @@ def main():
             perform_full_reset(full_reset_url)
 
         agent_llms = _resolve_agent_llms(args, llm_cfg)
+        agent_vision = _resolve_agent_vision(llm_cfg)
         llm = agent_llms["page_explorer"]  # backwards-compatible runtime fallback
         embedder = STEmbedder(emb_cfg["model"])
         browser_factory = lambda url: WebArenaBrowser(url, headless=not headed)
@@ -274,7 +308,7 @@ def main():
         allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
         max_nodes=max_nodes, max_steps=max_steps, maturity=maturity,
         terminal_goal=terminal_goal, predicate_sim=predicate_sim, read_only=args.read_only,
-        agent_llms=agent_llms,
+        agent_llms=agent_llms, agent_vision=agent_vision,
     )
     explorer.run(root_url)
     print("\nnext: python build_sft_dataset.py", os.path.join(out_dir, "episodes"), "train.jsonl")

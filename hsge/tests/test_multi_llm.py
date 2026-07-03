@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from hsge.llm import HashingEmbedder
 from hsge.webarena.runtime import WebArenaExplorer
-from run_webarena import AGENT_ROLES, _effective_llm_config
+from run_webarena import AGENT_ROLES, _effective_llm_config, _resolve_agent_vision
 
 
 class _RoleLLM:
@@ -65,3 +65,62 @@ def test_runtime_routes_each_helper_to_its_model(tmp_path):
     assert runtime.library.abstraction_llm is llms["skill_abstractor"]
     assert runtime.library.verification_llm is llms["skill_verifier"]
     assert runtime.operator_llm is llms["operator_inducer"]
+
+
+def test_agent_vision_config_inherits_shared_values():
+    cfg = {
+        "vision": False, "som": True, "image_detail": "low",
+        "agents": {
+            "page_explorer": {"vision": True, "image_detail": "high"},
+            "solver": {"vision": True, "som": False},
+        },
+    }
+
+    vision = _resolve_agent_vision(cfg)
+
+    assert vision["page_explorer"] == {"vision": True, "som": True, "image_detail": "high"}
+    assert vision["solver"] == {"vision": True, "som": False, "image_detail": "low"}
+    # a role with no override at all falls all the way back to the built-in defaults
+    assert vision["trajectory_segmenter"] == {"vision": False, "som": True, "image_detail": "low"}
+
+
+def test_runtime_wires_vision_into_explorer_and_solver(tmp_path):
+    llms = {role: _RoleLLM(role) for role in AGENT_ROLES}
+    agent_vision = {
+        "page_explorer": {"vision": True, "som": True, "image_detail": "high"},
+        "solver": {"vision": True, "som": False, "image_detail": "low"},
+        **{role: {"vision": False, "som": True, "image_detail": "low"}
+           for role in AGENT_ROLES if role not in ("page_explorer", "solver")},
+    }
+
+    runtime = WebArenaExplorer(
+        browser_factory=lambda url: None,
+        llm=_RoleLLM("fallback"),
+        embedder=HashingEmbedder(),
+        out_dir=str(tmp_path),
+        allow_pattern=r"https://example\.com/.*",
+        agent_llms=llms,
+        agent_vision=agent_vision,
+    )
+
+    assert runtime.explorer.vision is True
+    assert runtime.explorer.som is True
+    assert runtime.explorer.image_detail == "high"
+    assert runtime.solver.vision is True
+    assert runtime.solver.som is False
+
+
+def test_runtime_defaults_vision_off_when_not_configured(tmp_path):
+    llms = {role: _RoleLLM(role) for role in AGENT_ROLES}
+
+    runtime = WebArenaExplorer(
+        browser_factory=lambda url: None,
+        llm=_RoleLLM("fallback"),
+        embedder=HashingEmbedder(),
+        out_dir=str(tmp_path),
+        allow_pattern=r"https://example\.com/.*",
+        agent_llms=llms,
+    )
+
+    assert runtime.explorer.vision is False
+    assert runtime.solver.vision is False

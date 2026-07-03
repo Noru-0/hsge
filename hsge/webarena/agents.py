@@ -45,15 +45,20 @@ READONLY_NOTE = ("\nREAD-ONLY MODE: propose ONLY [INFO] and [NAV] tasks. Do NOT 
 
 
 class PageExplorer:
-    def __init__(self, llm, max_tasks: int = 4, read_only: bool = False):
+    def __init__(self, llm, max_tasks: int = 4, read_only: bool = False,
+                 vision: bool = False, som: bool = True, image_detail: str = "low"):
         self.llm = llm
         self.max_tasks = max_tasks
         self.read_only = read_only
+        self.vision = vision
+        self.som = som
+        self.image_detail = image_detail
 
-    def propose(self, obs: dict) -> list[str]:
+    def propose(self, obs: dict, screenshot_b64: str | None = None) -> list[str]:
         system = EXPLORER_SYS + (READONLY_NOTE if self.read_only else "")
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
-        out = self.llm.complete_json(system, prompt)
+        image = screenshot_b64 if self.vision else None
+        out = self.llm.complete_json(system, prompt, image_b64=image, image_detail=self.image_detail)
         tasks = [t for t in out.get("tasks", [])]
         if self.read_only:                       # belt-and-suspenders: drop any [MOD]
             tasks = [t for t in tasks if "[MOD]" not in t.upper()]
@@ -61,17 +66,22 @@ class PageExplorer:
 
 
 class Solver:
-    def __init__(self, llm, max_steps: int = 15):
+    def __init__(self, llm, max_steps: int = 15,
+                 vision: bool = False, som: bool = True, image_detail: str = "low"):
         self.llm = llm
         self.max_steps = max_steps
+        self.vision = vision
+        self.som = som
+        self.image_detail = image_detail
 
     def solve(self, browser, goal: str, goal_predicate: str | None = None):
         """Drive the browser toward `goal`.
 
-        Returns (steps, obs_texts, final_obs, success).
+        Returns (steps, obs_texts, obs_screenshots, final_obs, success).
         """
         steps: list[Step] = []
         obs_texts: list[str] = []
+        obs_screenshots: list[str | None] = []
         history: list[str] = []
         obs = browser.observation()
         last_error = ""
@@ -81,12 +91,15 @@ class Solver:
                       + ("\n".join(f"- {h}" for h in history[-6:]) or "(none)")
                       + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
                       + f"\n\nURL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}")
-            out = self.llm.complete_json(SOLVER_SYS, prompt)
+            screenshot_b64 = browser.screenshot_b64(som=self.som) if self.vision else None
+            out = self.llm.complete_json(SOLVER_SYS, prompt,
+                                          image_b64=screenshot_b64, image_detail=self.image_detail)
             action = (out.get("action") or "").strip()
             thought = out.get("thought", "")
             steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100],
                               axtree=obs["axtree"]))
             obs_texts.append(obs["axtree"])
+            obs_screenshots.append(screenshot_b64)
             if not action or action.startswith("send_msg_to_user"):
                 break
             try:
@@ -106,4 +119,4 @@ class Solver:
         # success for non-predicate goals = agent declared done without error
         if goal_predicate is None and steps and steps[-1].action.startswith("send_msg_to_user"):
             success = True
-        return steps, obs_texts, obs, success
+        return steps, obs_texts, obs_screenshots, obs, success

@@ -29,9 +29,17 @@ llm:
 
   agents:
     page_explorer:           # proposes concrete INFO/NAV/MOD tasks for each page
-      model: deepseek-v4-flash
+      provider: openai
+      model: gpt-4o          # called once per node -- worth the stronger model
+      vision: true           # attach a screenshot alongside the axtree
+      som: true              # bid-tagged bounding boxes overlaid on the screenshot
+      image_detail: low      # low | high | auto (OpenAI vision cost/quality knob)
     solver:                  # chooses the next BrowserGym action toward a task
-      model: deepseek-v4-flash
+      provider: openai
+      model: gpt-4o-mini     # called up to max_steps times per episode -- keep cheap
+      vision: true
+      som: true
+      image_detail: low
     trajectory_segmenter:    # splits a successful trajectory into subgoals
       model: deepseek-v4-flash
     skill_abstractor:        # turns a mature trajectory cluster into a SkillCard

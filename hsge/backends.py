@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
 import sys
+import time
 
 import numpy as np
 
@@ -27,11 +29,45 @@ class OpenAILLM(LLM):
         )
         self.temperature = temperature
 
-    def complete_json(self, system: str, prompt: str) -> dict:
-        msg = self.client.chat.completions.create(
+    def _create_with_retry(self, **kwargs):
+        """chat.completions.create with retry/backoff on transient errors only.
+
+        Rate limits, connection blips, and 5xx are retried (up to 3 times,
+        exponential backoff + jitter); auth/bad-request errors are not --
+        those are never going to succeed on retry, so failing fast is better.
+        """
+        import openai
+        retryable = (openai.RateLimitError, openai.APIConnectionError,
+                     openai.APITimeoutError, openai.InternalServerError)
+        delay = 1.0
+        for attempt in range(4):
+            try:
+                return self.client.chat.completions.create(**kwargs)
+            except retryable as e:
+                if attempt == 3:
+                    raise
+                sleep_s = delay + random.uniform(0, delay * 0.25)
+                print(f"[OpenAILLM] retry {attempt + 1}/3 after {type(e).__name__}, "
+                      f"sleeping {sleep_s:.1f}s", file=sys.stderr)
+                time.sleep(sleep_s)
+                delay *= 2
+
+    @staticmethod
+    def _user_content(prompt: str, image_b64: str | None, image_detail: str):
+        if not image_b64:
+            return prompt
+        return [{"type": "text", "text": prompt},
+                {"type": "image_url",
+                 "image_url": {"url": f"data:image/jpeg;base64,{image_b64}",
+                               "detail": image_detail}}]
+
+    def complete_json(self, system: str, prompt: str,
+                       image_b64: str | None = None, image_detail: str = "low") -> dict:
+        msg = self._create_with_retry(
             model=self.model, temperature=self.temperature,
             messages=[{"role": "system", "content": system + "\nReturn ONLY valid JSON."},
-                      {"role": "user", "content": prompt}],
+                      {"role": "user",
+                       "content": self._user_content(prompt, image_b64, image_detail)}],
         )
         txt = msg.choices[0].message.content.strip()
         txt = re.sub(r"^```(?:json)?|```$", "", txt, flags=re.M).strip()
@@ -49,7 +85,7 @@ class OpenAILLM(LLM):
             return {}
 
     def complete_text(self, system: str, prompt: str) -> str:
-        msg = self.client.chat.completions.create(
+        msg = self._create_with_retry(
             model=self.model, temperature=self.temperature,
             messages=[{"role": "system", "content": system},
                       {"role": "user", "content": prompt}],

@@ -13,6 +13,7 @@ chain on real pages. Goal verification stays deterministic via reached().
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
@@ -39,11 +40,16 @@ class WebArenaExplorer:
                  max_nodes: int = 20, max_steps: int = 15,
                  terminal_goal: str = "order_confirmed",
                  maturity: int = 2, predicate_sim: float = 0.6, read_only: bool = False,
-                 agent_llms: dict[str, object] | None = None):
+                 agent_llms: dict[str, object] | None = None,
+                 agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
+        agent_vision = agent_vision or {}
 
         def role(name: str):
             return agent_llms.get(name, llm)
+
+        def vision_cfg(name: str) -> dict:
+            return agent_vision.get(name, {"vision": False, "som": True, "image_detail": "low"})
 
         self.browser_factory = browser_factory
         # Legacy alias: callers that supply one LLM still get the old behaviour.
@@ -53,8 +59,13 @@ class WebArenaExplorer:
         self.allow = re.compile(allow_pattern)
         self.deny = re.compile(deny_pattern) if deny_pattern else None
         self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
-        self.explorer = PageExplorer(role("page_explorer"), read_only=read_only)
-        self.solver = Solver(role("solver"), max_steps=max_steps)
+        pe_vision, sv_vision = vision_cfg("page_explorer"), vision_cfg("solver")
+        self.explorer = PageExplorer(role("page_explorer"), read_only=read_only,
+                                     vision=pe_vision["vision"], som=pe_vision["som"],
+                                     image_detail=pe_vision["image_detail"])
+        self.solver = Solver(role("solver"), max_steps=max_steps,
+                             vision=sv_vision["vision"], som=sv_vision["som"],
+                             image_detail=sv_vision["image_detail"])
         self.opgraph = OperatorGraph()
         # HSGE discovery; verification is by terminal outcome (see _record / reached),
         # so the library's own held-out gate is off (verify_k=0). `maturity` is the
@@ -77,7 +88,7 @@ class WebArenaExplorer:
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
-    def _record(self, goal, steps, obs_texts, success, difficulty, tag):
+    def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
         meta = {"kind": "low_level_trajectory", "goal": goal,
@@ -88,10 +99,16 @@ class WebArenaExplorer:
             for k, st in enumerate(steps):
                 axp = f"page_state/step_{k:03d}_axtree.txt"
                 open(os.path.join(ep, axp), "w").write(obs_texts[k] if k < len(obs_texts) else "")
+                observation = {"axtree_txt": {"path": axp}}
+                shot = obs_screenshots[k] if k < len(obs_screenshots) else None
+                if shot:
+                    shotp = f"page_state/step_{k:03d}_screenshot.jpg"
+                    open(os.path.join(ep, shotp), "wb").write(base64.b64decode(shot))
+                    observation["screenshot"] = {"path": shotp}
                 rec = {"record_type": "step", "index": k,
                        "action": json.dumps({"thought": st.obs_summary, "action": st.action}),
                        "parsed_action": st.action, "thought": st.obs_summary,
-                       "observation": {"axtree_txt": {"path": axp}}}
+                       "observation": observation}
                 f.write(json.dumps(rec) + "\n")
         self.episode += 1
 
@@ -236,7 +253,8 @@ class WebArenaExplorer:
                       f"-- duplicate content of a visited page, skipping")
                 self._log("node_duplicate_skip", index=node_index, url=obs["url"], depth=depth)
                 nodes_log.append({"index": node_index, "url": obs["url"], "depth": depth,
-                                   "duplicate": True, "tasks": [], "frontier_added": 0})
+                                   "duplicate": True, "tasks": [], "frontier_added": 0,
+                                   "screenshot": None})
                 browser.close()
                 self._dump_artifacts(task_stats, len(visited) - duplicate_nodes,
                                       duplicate_nodes, nodes_log)
@@ -247,7 +265,20 @@ class WebArenaExplorer:
                   f"(depth={depth}, frontier={len(frontier)})")
             self._log("node_visit", index=node_index, url=obs["url"], depth=depth)
             node_rec = {"index": node_index, "url": obs["url"], "depth": depth,
-                        "duplicate": False, "tasks": [], "frontier_added": 0}
+                        "duplicate": False, "tasks": [], "frontier_added": 0, "screenshot": None}
+
+            # one screenshot capture reused both for PageExplorer's vision input and
+            # for the on-disk record of what the node looked like.
+            node_screenshot_b64 = (browser.screenshot_b64(som=self.explorer.som)
+                                    if self.explorer.vision else None)
+            if node_screenshot_b64:
+                node_dir = os.path.join(self.out_dir, "node_state")
+                os.makedirs(node_dir, exist_ok=True)
+                shotp = f"node_state/node_{node_index:04d}_screenshot.jpg"
+                open(os.path.join(self.out_dir, shotp), "wb").write(
+                    base64.b64decode(node_screenshot_b64))
+                node_rec["screenshot"] = shotp
+
             # URLs actually loaded while solving become frontier candidates (the agent
             # navigates during tasks); open tabs are added too. Page hrefs are not in
             # the flattened axtree, so this visited-during-solving signal is what grows
@@ -255,11 +286,11 @@ class WebArenaExplorer:
             seen_urls = set()
 
             # 1) local exploration
-            for task in self.explorer.propose(obs):
+            for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64):
                 episode_id = f"ep_{self.episode:04d}"
                 browser.reset()
-                steps, obs_texts, final_obs, success = self.solver.solve(browser, task)
-                self._record(task, steps, obs_texts, success, difficulty=1, tag="LOCAL")
+                steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(browser, task)
+                self._record(task, steps, obs_texts, obs_screenshots, success, difficulty=1, tag="LOCAL")
                 task_stats["LOCAL"]["success" if success else "fail"] += 1
                 node_rec["tasks"].append({"episode": episode_id, "tag": "LOCAL", "task": task,
                                            "success": success, "steps": len(steps)})
@@ -285,9 +316,9 @@ class WebArenaExplorer:
             if gt:
                 episode_id = f"ep_{self.episode:04d}"
                 browser.reset()
-                steps, obs_texts, final_obs, success = self.solver.solve(
+                steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(
                     browser, gt["goal"], goal_predicate=self.terminal_goal)
-                self._record(gt["goal"], steps, obs_texts, success,
+                self._record(gt["goal"], steps, obs_texts, obs_screenshots, success,
                              difficulty=gt["difficulty"], tag="GOAL")
                 task_stats["GOAL"]["success" if success else "fail"] += 1
                 node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],

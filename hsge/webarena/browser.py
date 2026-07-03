@@ -68,6 +68,35 @@ class WebArenaBrowser:
         # bids appear as [123] prefixes in the flattened axtree
         return re.findall(r"\[(\w+)\]", axtree or "")
 
+    def screenshot_bytes(self, som: bool = False) -> bytes | None:
+        """JPEG-encode the last observation's screenshot.
+
+        If som, overlay bid-tagged bounding boxes first via BrowserGym's own
+        browsergym.utils.obs.overlay_som (same extra_element_properties used
+        to flatten the axtree). None on any failure, mirroring observation()'s
+        try/except-to-empty-string pattern.
+        """
+        obs = self._last_obs or {}
+        arr = obs.get("screenshot")
+        if arr is None:
+            return None
+        try:
+            import io
+            from PIL import Image
+            from browsergym.utils.obs import overlay_som
+            if som:
+                arr = overlay_som(arr, obs.get("extra_element_properties") or {})
+            buf = io.BytesIO()
+            Image.fromarray(arr).convert("RGB").save(buf, format="JPEG", quality=80)
+            return buf.getvalue()
+        except Exception:
+            return None
+
+    def screenshot_b64(self, som: bool = False) -> str | None:
+        import base64
+        data = self.screenshot_bytes(som=som)
+        return base64.b64encode(data).decode("ascii") if data else None
+
     def act(self, action: str) -> dict:
         """action is a BrowserGym call string, e.g. click('a51') or fill('b3','x')."""
         self._last_obs, _, term, trunc, _ = self.env.step(action)

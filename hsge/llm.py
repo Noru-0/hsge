@@ -52,8 +52,14 @@ class HashingEmbedder(Embedder):
 # --------------------------------------------------------------------------- #
 class LLM(ABC):
     @abstractmethod
-    def complete_json(self, system: str, prompt: str) -> dict:
-        """Return a parsed JSON object. Real impls should strip code fences."""
+    def complete_json(self, system: str, prompt: str,
+                       image_b64: str | None = None, image_detail: str = "low") -> dict:
+        """Return a parsed JSON object. Real impls should strip code fences.
+
+        image_b64, when given, is a base64-encoded screenshot a vision-capable
+        backend may attach alongside the text prompt; text-only backends (and
+        MockLLM) ignore it.
+        """
 
 
 class MockLLM(LLM):
@@ -74,7 +80,8 @@ class MockLLM(LLM):
                 return json.loads(txt)
     """
 
-    def complete_json(self, system: str, prompt: str) -> dict:
+    def complete_json(self, system: str, prompt: str,
+                       image_b64: str | None = None, image_detail: str = "low") -> dict:
         if "SEGMENT" in system:
             return self._segment(prompt)
         if "ABSTRACT" in system:
