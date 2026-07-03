@@ -98,6 +98,12 @@ class WebArenaExplorer:
     def _card_by_id(self, skill_id: str):
         return next((c for c in self.library.skills.values() if c.skill_id == skill_id), None)
 
+    # ---- structured event log, mirrored to out_dir/run_log.jsonl -------------
+    def _log(self, event: str, **fields):
+        rec = {"event": event, **fields}
+        with open(os.path.join(self.out_dir, "run_log.jsonl"), "a") as f:
+            f.write(json.dumps(rec) + "\n")
+
     # ---- promote a verified/mature skill into a planning operator ------------
     def _promote_skill_to_operator(self, skill_id: str):
         """Turn one admitted SkillCard into an Operator.
@@ -129,6 +135,9 @@ class WebArenaExplorer:
         self.opgraph.add(op)
         print(f"    [operator] {op.name}  pre={sorted(op.preconditions)}  "
               f"eff={sorted(op.effects)}  terminal={op.terminal}")
+        self._log("operator_induced", name=op.name, skill_id=skill_id,
+                   preconditions=sorted(op.preconditions), effects=sorted(op.effects),
+                   terminal=op.terminal)
 
     def _goal_task(self):
         # No terminal predicate configured (e.g. a non-shopping site) -> exploration-only.
@@ -148,12 +157,13 @@ class WebArenaExplorer:
                     and not (self.deny and self.deny.search(link)))
 
     # ---- persist the discovered skill library / operator graph / run stats ---
-    def _dump_artifacts(self, task_stats: dict, nodes_visited: int, duplicate_nodes: int):
-        """Write what was actually learned to disk (not just stdout).
+    def _dump_artifacts(self, task_stats: dict, nodes_visited: int, duplicate_nodes: int,
+                        nodes_log: list):
+        """Write what was actually learned to disk (not just stdout/run_log.jsonl).
 
-        Without this, a completed run's skills/operators only ever existed in
-        memory and in the one-line summary print -- unrecoverable once the
-        process exits.
+        Called after every node so a run interrupted partway through (Ctrl+C,
+        network hiccup, ...) still leaves a consistent, up-to-date snapshot --
+        not just the final tally.
         """
         skills = [card.to_dict() for card in self.library.all_skills()]
         json.dump(skills, open(os.path.join(self.out_dir, "skills.json"), "w"), indent=2)
@@ -172,6 +182,9 @@ class WebArenaExplorer:
         }
         json.dump(graph, open(os.path.join(self.out_dir, "graph.json"), "w"), indent=2)
 
+        # per-node breakdown: which tasks ran at that node and whether they passed
+        json.dump(nodes_log, open(os.path.join(self.out_dir, "nodes.json"), "w"), indent=2)
+
         summary = {
             "nodes_visited": nodes_visited,
             "duplicate_nodes_skipped": duplicate_nodes,
@@ -184,10 +197,12 @@ class WebArenaExplorer:
 
     # ---- the loop ------------------------------------------------------------
     def run(self, root_url: str):
+        open(os.path.join(self.out_dir, "run_log.jsonl"), "w").close()  # fresh log for this run
         frontier, visited = [(root_url, 0)], set()
         seen_content: set[str] = set()   # sha256 of a node's initial axtree
         duplicate_nodes = 0
         task_stats = {"LOCAL": {"success": 0, "fail": 0}, "GOAL": {"success": 0, "fail": 0}}
+        nodes_log: list[dict] = []   # per-node record: url, tasks tried, pass/fail (-> nodes.json)
         if not self.terminal_goal:
             print("[goal] no terminal predicate for this run -> exploration-only "
                   "(skills/operators still discovered; goal composition disabled).")
@@ -196,6 +211,7 @@ class WebArenaExplorer:
             if url in visited:
                 continue
             visited.add(url)
+            node_index = len(visited)
             browser = self.browser_factory(url)
             obs = browser.reset()
 
@@ -206,14 +222,22 @@ class WebArenaExplorer:
             content_hash = hashlib.sha256(obs["axtree"].encode("utf-8")).hexdigest()
             if content_hash in seen_content:
                 duplicate_nodes += 1
-                print(f"[node {len(visited)}/{self.max_nodes}] {obs['url']} "
+                print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
                       f"-- duplicate content of a visited page, skipping")
+                self._log("node_duplicate_skip", index=node_index, url=obs["url"], depth=depth)
+                nodes_log.append({"index": node_index, "url": obs["url"], "depth": depth,
+                                   "duplicate": True, "tasks": [], "frontier_added": 0})
                 browser.close()
+                self._dump_artifacts(task_stats, len(visited) - duplicate_nodes,
+                                      duplicate_nodes, nodes_log)
                 continue
             seen_content.add(content_hash)
 
-            print(f"[node {len(visited)}/{self.max_nodes}] {obs['url']} "
+            print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
                   f"(depth={depth}, frontier={len(frontier)})")
+            self._log("node_visit", index=node_index, url=obs["url"], depth=depth)
+            node_rec = {"index": node_index, "url": obs["url"], "depth": depth,
+                        "duplicate": False, "tasks": [], "frontier_added": 0}
             # URLs actually loaded while solving become frontier candidates (the agent
             # navigates during tasks); open tabs are added too. Page hrefs are not in
             # the flattened axtree, so this visited-during-solving signal is what grows
@@ -222,10 +246,15 @@ class WebArenaExplorer:
 
             # 1) local exploration
             for task in self.explorer.propose(obs):
+                episode_id = f"ep_{self.episode:04d}"
                 browser.reset()
                 steps, obs_texts, final_obs, success = self.solver.solve(browser, task)
                 self._record(task, steps, obs_texts, success, difficulty=1, tag="LOCAL")
                 task_stats["LOCAL"]["success" if success else "fail"] += 1
+                node_rec["tasks"].append({"episode": episode_id, "tag": "LOCAL", "task": task,
+                                           "success": success, "steps": len(steps)})
+                self._log("task_result", node_index=node_index, episode=episode_id, tag="LOCAL",
+                           task=task, success=success, steps=len(steps))
                 if success:
                     # only skills that recur enough to be admitted become operators
                     admitted = self.discovery.on_trajectory(steps, site=root_url, task=task)
@@ -234,6 +263,8 @@ class WebArenaExplorer:
                         if card:
                             print(f"    [skill] admitted {card.skill_id} '{card.name}' "
                                   f"(members={len(card.member_ids)})")
+                            self._log("skill_admitted", skill_id=card.skill_id, name=card.name,
+                                       members=len(card.member_ids))
                         self._promote_skill_to_operator(sid)
                 seen_urls.update(st.url for st in steps)
                 seen_urls.add(final_obs.get("url", ""))
@@ -242,12 +273,17 @@ class WebArenaExplorer:
             # 2) goal-conditioned composed task (once a plan to the goal exists)
             gt = self._goal_task()
             if gt:
+                episode_id = f"ep_{self.episode:04d}"
                 browser.reset()
                 steps, obs_texts, final_obs, success = self.solver.solve(
                     browser, gt["goal"], goal_predicate=self.terminal_goal)
                 self._record(gt["goal"], steps, obs_texts, success,
                              difficulty=gt["difficulty"], tag="GOAL")
                 task_stats["GOAL"]["success" if success else "fail"] += 1
+                node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
+                                           "success": success, "steps": len(steps)})
+                self._log("task_result", node_index=node_index, episode=episode_id, tag="GOAL",
+                           task=gt["goal"], success=success, steps=len(steps), chain=gt["chain"])
                 seen_urls.update(st.url for st in steps)
                 print(f"    GOAL chain={gt['chain']} verified={success} steps={len(steps)}")
 
@@ -257,13 +293,17 @@ class WebArenaExplorer:
                 new_links = [link for link in sorted(seen_urls)
                              if self._admit_url(link, visited)]
                 frontier.extend((link, depth + 1) for link in new_links)
+                node_rec["frontier_added"] = len(new_links)
                 if new_links:
                     print(f"    frontier: +{len(new_links)} new url(s)")
+                    self._log("frontier_expand", node_index=node_index, added=len(new_links))
             browser.close()
 
-        nodes_visited = len(visited) - duplicate_nodes
-        self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes)
+            nodes_log.append(node_rec)
+            nodes_visited = len(visited) - duplicate_nodes
+            self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log)
 
+        nodes_visited = len(visited) - duplicate_nodes
         print(f"\ndone: {nodes_visited} nodes ({duplicate_nodes} duplicate skipped), "
               f"{self.episode} episodes, "
               f"{len(self.library.all_skills())} skills, {len(self.opgraph.ops)} operators")
@@ -272,4 +312,9 @@ class WebArenaExplorer:
               f"GOAL success={task_stats['GOAL']['success']} fail={task_stats['GOAL']['fail']}")
         print(f"trajectories under {self.out_dir}/episodes  "
               f"(feed to build_sft_dataset.py)")
-        print(f"skills/operators/graph/summary under {self.out_dir}")
+        print(f"per-run log/artifacts (run_log.jsonl, nodes.json, skills.json, "
+              f"operators.json, graph.json, summary.json) under {self.out_dir}")
+        self._log("run_summary", nodes_visited=nodes_visited, duplicate_nodes_skipped=duplicate_nodes,
+                   episodes=self.episode, tasks=task_stats,
+                   skills_discovered=len(self.library.all_skills()),
+                   operators_induced=len(self.opgraph.ops))
