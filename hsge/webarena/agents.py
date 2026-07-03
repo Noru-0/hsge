@@ -54,12 +54,28 @@ class PageExplorer:
         self.som = som
         self.image_detail = image_detail
 
+    @staticmethod
+    def _coerce_task(t) -> str | None:
+        """Some models (observed with gpt-4o, not DeepSeek) don't follow the
+        requested flat {"tasks": ["...", ...]} schema and wrap a task in an
+        object instead (e.g. {"task": "...", "type": "NAV"}). Salvage the
+        text instead of letting a non-string crash the rest of the pipeline,
+        which assumes list[str]."""
+        if isinstance(t, str):
+            return t
+        if isinstance(t, dict):
+            for key in ("task", "description", "text"):
+                val = t.get(key)
+                if isinstance(val, str):
+                    return val
+        return None
+
     def propose(self, obs: dict, screenshot_b64: str | None = None) -> list[str]:
         system = EXPLORER_SYS + (READONLY_NOTE if self.read_only else "")
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
         image = screenshot_b64 if self.vision else None
         out = self.llm.complete_json(system, prompt, image_b64=image, image_detail=self.image_detail)
-        tasks = [t for t in out.get("tasks", [])]
+        tasks = [t for t in map(self._coerce_task, out.get("tasks", [])) if t]
         if self.read_only:                       # belt-and-suspenders: drop any [MOD]
             tasks = [t for t in tasks if "[MOD]" not in t.upper()]
         return tasks[: self.max_tasks]
