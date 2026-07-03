@@ -69,7 +69,17 @@ class OpenAILLM(LLM):
                       {"role": "user",
                        "content": self._user_content(prompt, image_b64, image_detail)}],
         )
-        txt = msg.choices[0].message.content.strip()
+        choice = msg.choices[0]
+        content = choice.message.content
+        if content is None:
+            # message.content can be None (safety refusal, content filter, ...),
+            # distinct from a malformed-JSON response -- degrade the same way.
+            refusal = getattr(choice.message, "refusal", None)
+            print(f"[OpenAILLM] empty content (finish_reason={choice.finish_reason!r}"
+                  f"{f', refusal={refusal!r}' if refusal else ''}), returning {{}}",
+                  file=sys.stderr)
+            return {}
+        txt = content.strip()
         txt = re.sub(r"^```(?:json)?|```$", "", txt, flags=re.M).strip()
         try:
             return json.loads(txt)

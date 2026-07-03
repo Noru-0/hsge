@@ -20,13 +20,15 @@ def _make_llm(monkeypatch):
 
 
 class _FakeMessage:
-    def __init__(self, content):
+    def __init__(self, content, refusal=None):
         self.content = content
+        self.refusal = refusal
 
 
 class _FakeResponse:
-    def __init__(self, content):
-        self.choices = [type("C", (), {"message": _FakeMessage(content)})()]
+    def __init__(self, content, refusal=None, finish_reason="stop"):
+        message = _FakeMessage(content, refusal=refusal)
+        self.choices = [type("C", (), {"message": message, "finish_reason": finish_reason})()]
 
 
 def test_retries_transient_error_then_succeeds(monkeypatch):
@@ -107,3 +109,18 @@ def test_no_image_keeps_plain_string_content(monkeypatch):
     llm.complete_json("SYS", "PROMPT")
 
     assert captured["messages"][1]["content"] == "PROMPT"
+
+
+def test_none_content_returns_empty_dict_instead_of_crashing(monkeypatch):
+    """message.content can be None (safety refusal, content filter, ...);
+    this must degrade gracefully like a malformed-JSON response does, not
+    crash with AttributeError: 'NoneType' object has no attribute 'strip'."""
+    llm = _make_llm(monkeypatch)
+
+    def fake_create(**kwargs):
+        return _FakeResponse(None, refusal="I can't help with that.",
+                              finish_reason="content_filter")
+
+    monkeypatch.setattr(llm.client.chat.completions, "create", fake_create)
+
+    assert llm.complete_json("SYS", "PROMPT") == {}
