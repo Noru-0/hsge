@@ -30,6 +30,9 @@ EXPLORER_SYS = (
     "text (NOT 'Find the number of submissions for r/relationship_advice (5,718 "
     "submissions)'). If the answer is already written in the task, it isn't a task -- "
     "whoever solves it must still have to read the page to answer it.\n"
+    "- Do NOT propose a [NAV] task to a page the user is already on (check the URL "
+    "given below) -- e.g. if URL already ends in /wiki, do not propose 'Go to the "
+    "Wiki page'.\n"
     "- Prefer tasks that make progress or reveal new pages over pure search/sort/filter.\n"
     "- Focus on common things a real user of THIS site would do; skip niche tasks.")
 
@@ -90,7 +93,17 @@ class PageExplorer:
         tasks = [t for t in map(self._coerce_task, out.get("tasks", [])) if t]
         if self.read_only:                       # belt-and-suspenders: drop any [MOD]
             tasks = [t for t in tasks if "[MOD]" not in t.upper()]
-        return tasks[: self.max_tasks]
+        if len(tasks) > self.max_tasks:
+            # [INFO] tasks never grow the frontier (solving one reads the page,
+            # it doesn't navigate); [NAV]/[MOD] do. EXPLORER_SYS asks the model
+            # to list INFO first, so naively slicing to max_tasks would silently
+            # drop every NAV/MOD task whenever a page offers more INFO
+            # candidates than fit -- exactly the tasks that matter for
+            # exploration. Drop INFO first instead.
+            nav_mod = [t for t in tasks if "[INFO]" not in t.upper()]
+            info = [t for t in tasks if "[INFO]" in t.upper()]
+            tasks = (nav_mod + info)[: self.max_tasks]
+        return tasks
 
 
 class Solver:

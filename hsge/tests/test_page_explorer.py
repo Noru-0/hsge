@@ -86,3 +86,38 @@ def test_explorer_sys_forbids_leaking_the_answer_in_info_tasks():
     LLM actually complies with a prompt, but this guards against the explicit
     anti-leak instruction being accidentally removed later."""
     assert "must never state the value/answer itself" in EXPLORER_SYS.lower()
+
+
+def test_propose_keeps_nav_mod_over_info_when_truncating():
+    """Regression: a real run on a forum-listing page got back 4 [INFO] tasks
+    and frontier growth was 0 that node. EXPLORER_SYS asks the model to list
+    INFO tasks first, then NAV, then MOD; naively slicing to max_tasks after
+    that ordering silently drops every NAV/MOD task whenever a page offers
+    more INFO candidates than max_tasks -- exactly the tasks that would have
+    grown the frontier. INFO must be what gets dropped, not NAV/MOD."""
+    llm = _StubLLM([
+        "[INFO] a", "[INFO] b", "[INFO] c", "[INFO] d", "[INFO] e",
+        "[NAV] open the AskReddit forum",
+    ])
+    explorer = PageExplorer(llm, max_tasks=4)
+
+    tasks = explorer.propose({"url": "http://x", "axtree": "irrelevant"})
+
+    assert "[NAV] open the AskReddit forum" in tasks
+    assert len(tasks) == 4
+
+
+def test_propose_preserves_order_when_nothing_is_dropped():
+    llm = _StubLLM(["[INFO] a", "[NAV] b", "[MOD] c"])
+    explorer = PageExplorer(llm, max_tasks=4)
+
+    assert explorer.propose({"url": "http://x", "axtree": ""}) == ["[INFO] a", "[NAV] b", "[MOD] c"]
+
+
+def test_explorer_sys_forbids_navigating_to_the_current_page():
+    """Regression guard: a real run showed a [NAV] "Go to the Wiki page" task
+    proposed while the axtree/URL already WAS the wiki page -- the Solver
+    then clicked the same link 15 times and burned the whole episode without
+    ever reaching send_msg_to_user. Can't unit-test LLM compliance, but this
+    guards against the instruction being accidentally removed later."""
+    assert "already on" in EXPLORER_SYS.lower()
