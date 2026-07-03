@@ -33,6 +33,9 @@ LLM-authored, embedding-canonicalized NL predicates instead of a fixed vocabular
 - `env.py` — `WebEnv` with `reset()` / `step(action)` / `check(predicate)`; the
   pipeline needs nothing more. Mock: `demo_sites()`.
 - `backends.py` — real implementations: `OpenAILLM` (OpenAI-compatible) + `STEmbedder`.
+  `OpenAILLM` retries transient API errors (rate limit, connection, timeout, 5xx; not
+  auth/bad-request) up to 3x with exponential backoff, and accepts an optional
+  `image_b64`/`image_detail` for vision-capable models.
 
 **Baselines** for comparison: `flat_baseline.py`, `awm_baseline.py`.
 
@@ -43,16 +46,41 @@ Standalone real-browser runtime, separate from the mock pipeline:
   executed via a `HighLevelActionSet` (`action_mapping=to_python_code`), so the
   Solver's `click('bid')`/`fill(...)`/`goto(...)`/`go_back()` strings run for real.
   Surfaces `self.terminated` (env `term`/`trunc`) so the Solver can stop cleanly.
+  `screenshot_b64(som=...)` JPEG-encodes the screenshot BrowserGym already computes
+  on every observation, optionally overlaying bid-tagged bounding boxes via
+  BrowserGym's own `overlay_som` (Set-of-Marks). `storage_state=` (from `auth.py`)
+  starts the browser context already logged in.
 - `predicates.py` — URL/DOM → terminal-goal checkers (`reached`), used only to score
   episode success; `configure_terminal(url_re, text=None)` overrides the default
   shopping success-URL for non-default instances. Planning predicates are no longer
   hardcoded here (see below).
+- `auth.py` — login/auth: `ensure_login(site, root_url)` returns a cached, still-valid
+  Playwright `storage_state` path for one of the four account-gated sites
+  (reddit/gitlab/shopping/shopping_admin), doing a one-time live login (per-site
+  flows ported from `browsergym.webarena.instance.WebArenaInstance.ui_login`) and
+  caching it under `.auth/<site>_state.json` if none exists or the cached one has
+  expired. Credentials: `WA_<SITE>_USERNAME`/`WA_<SITE>_PASSWORD` in `.env`, falling
+  back to the standard published WebArena benchmark test accounts. `None` for sites
+  with no login flow (wikipedia, map). HSGE doesn't construct `WebArenaInstance`
+  directly — its `__init__` hard-requires all seven `WA_*` site URL env vars to be
+  set, even though a given HSGE run only explores one site.
 - `agents.py` — `PageExplorer` (proposes `[INFO]/[NAV]/[MOD]`-tagged, specific tasks;
   `read_only=True` drops `[MOD]`) + `Solver` (action-planner loop with action-space
   docs, CoT examples, and last-action-error feedback so it can recover instead of
-  aborting the episode).
+  aborting the episode). Both accept `vision`/`som`/`image_detail` (see below) and,
+  when a vision-attached call returns empty (refusal/content-filter), retry once
+  text-only before giving up. `PageExplorer.propose()` coerces non-string task
+  entries (some models wrap a task in an object instead of the requested flat
+  string) and, when truncating to `max_tasks`, keeps `[NAV]`/`[MOD]` over `[INFO]`
+  (`[INFO]` never grows the frontier — no navigation happens when solving one).
 - `runtime.py` — `WebArenaExplorer`: frontier loop, skill→operator promotion, goal
-  tasks, persistence.
+  tasks, persistence. Skips re-exploring a node whose initial axtree hashes
+  identical to an already-visited one (two different URLs can render the same
+  content). Dumps `skills.json`/`operators.json`/`graph.json`/`predicates.json`
+  (canonical `p0`/`p1`/... id → original NL text)/`nodes.json` (per-node task
+  pass/fail)/`summary.json` under `out_dir` after every node (not just at the end,
+  so an interrupted run still leaves a consistent snapshot), and mirrors every
+  event to `out_dir/run_log.jsonl`.
 
 **Operators are derived from verified skills, not raw trajectories.** When Discovery
 admits a skill (a cluster that recurred `--maturity` times), `runtime.py`
@@ -77,11 +105,25 @@ is attempted. `run_webarena.py` resolves it as: `config.run.terminal_goal` expli
 URL the agent actually loads while solving a task (each `Step.url` + the final
 observation), plus open tabs, and admits the allow/deny-filtered ones as frontier
 candidates bounded by `max_depth`. This is what lets a real run explore beyond the
-root page.
+root page. **Known gap:** this means frontier growth depends entirely on solved-task
+*navigation* — a node where every proposed task is `[INFO]` (read-only, no
+navigation) contributes nothing new to the frontier even if the page has plenty of
+unclicked links; mining `<a href>`s directly from the axtree/DOM would be a more
+robust primary source but hasn't been implemented (see `docs/11_vision_auth_
+hardening_session.md`'s "Suggested next steps").
 
 **`--read-only`** makes `PageExplorer` propose only `[INFO]`/`[NAV]` tasks (never
 `[MOD]`), for smoke-testing a shared, stateful site without writing to it (no posting,
 voting, cart/checkout actions).
+
+**`max_tasks`** (config `run.max_tasks` / `--max-tasks`, default 6) caps how many
+tasks `PageExplorer` proposes per node.
+
+**Vision** (`vision`/`som`/`image_detail`, resolved per role the same way as the LLM
+routing below via `run_webarena.py::_resolve_agent_vision`) lets `page_explorer`/
+`solver` attach a screenshot (optionally Set-of-Marks-annotated) alongside the axtree
+to a vision-capable model. Off by default for every role; `config.yaml` turns it on
+for `page_explorer` (`gpt-4o`) and `solver` (`gpt-4o-mini`).
 
 **Each LLM-backed helper can use a different model**, configured per role in
 `config.yaml`'s `llm.agents.<role>` (see `AGENT_ROLES` in `run_webarena.py`):

@@ -95,9 +95,13 @@ python build_sft_dataset.py outputs/wa_run/episodes train.jsonl
 
 ## Limits / honesty
 
-- This runtime has **not** been tested against a live WebArena instance from the
-  authoring environment (no browser/site there); the dry-run validates the wiring
-  and persistence. Expect to tune prompts and `predicates.py` against your real DOM.
+**This page is stale** — it predates the skill-derived-operator/config.yaml work
+and the vision/login/hardening work. See `docs/10_webarena_real_wiring_session.md`
+and `docs/11_vision_auth_hardening_session.md` for what actually changed and what
+was verified against a real, live instance (this environment still has no
+browser/network access to run one directly — all real-instance runs and their
+output/logs came from the user's own machine).
+
 - Skill *verification* here is by terminal outcome (did the episode reach the goal
   state), not the mock's held-out-context execution gate.
 - Run a single worker; WebArena sites are shared mutable state. Reset between runs.

@@ -32,17 +32,31 @@ Most scripts take no CLI args and just run their scenario; `run_webarena.py` and
 ## Real WebArena run
 
 Secrets (API keys, account passwords, `WA_*` site URLs) live in a git-ignored `.env`;
-non-secret run params (site, max_nodes/steps, maturity, LLM provider/model, ...) live
-in the committed `config.yaml`. Precedence is **CLI flag > config.yaml > built-in
+non-secret run params (site, max_nodes/steps/tasks, maturity, LLM provider/model, ...)
+live in the committed `config.yaml`. Precedence is **CLI flag > config.yaml > built-in
 default**.
 
 ```bash
 python run_webarena.py                              # everything from config.yaml + .env
 python run_webarena.py --site shopping --max-nodes 5 --headed
 python run_webarena.py --provider deepseek --model deepseek-chat
+python run_webarena.py --max-tasks 8                 # more tasks proposed per node
 python run_webarena.py --read-only --max-nodes 2 --max-steps 4   # smoke-test a shared
                                                                    # site without writes
 ```
 
 `--read-only` is the safe way to smoke-test against a real, shared WebArena instance
 (e.g. reddit) — it restricts task proposals to `[INFO]`/`[NAV]`, never `[MOD]`.
+
+**Login**: for the four account-gated sites (reddit/gitlab/shopping/shopping_admin),
+`run_webarena.py` logs in once and caches the session under `.auth/<site>_state.json`
+(git-ignored — it's a live session credential). Optional `.env` overrides if your
+instance's seed accounts differ from the standard benchmark ones:
+`WA_<SITE>_USERNAME` / `WA_<SITE>_PASSWORD` (e.g. `WA_REDDIT_USERNAME`).
+
+**Vision** (`page_explorer`/`solver` attaching a screenshot, optionally
+Set-of-Marks-annotated, to a vision-capable model) is configured per role in
+`config.yaml`'s `llm.agents.<role>` alongside `model`: `vision: true`, `som: true`,
+`image_detail: low|high|auto`. Off by default; `config.yaml` turns it on for
+`page_explorer` (`gpt-4o`) and `solver` (`gpt-4o-mini`) — this needs a real
+`OPENAI_API_KEY` and will incur real API cost.
