@@ -275,6 +275,7 @@ def main():
     else:
         from hsge.backends import STEmbedder
         from hsge.webarena import predicates
+        from hsge.webarena.auth import ensure_login
         from hsge.webarena.browser import WebArenaBrowser
         # root URL: explicit --root-url/config, else resolve WA_<SITE> from .env
         site = args.site or run["site"]
@@ -294,14 +295,21 @@ def main():
         if terminal_goal is None and (success_url_re or site == "shopping"):
             terminal_goal = "order_confirmed"
         full_reset_url = _pick(args.full_reset_url, run["full_reset_url"]) or os.environ.get("WA_FULL_RESET")
+        auth_dir = ".auth"
         if full_reset_url:
             perform_full_reset(full_reset_url)
+            # a full reset reseeds the instance's DB, which can invalidate a
+            # previously-cached session -- force ensure_login to log in fresh.
+            stale = os.path.join(auth_dir, f"{site}_state.json")
+            if site and os.path.exists(stale):
+                os.remove(stale)
 
         agent_llms = _resolve_agent_llms(args, llm_cfg)
         agent_vision = _resolve_agent_vision(llm_cfg)
         llm = agent_llms["page_explorer"]  # backwards-compatible runtime fallback
         embedder = STEmbedder(emb_cfg["model"])
-        browser_factory = lambda url: WebArenaBrowser(url, headless=not headed)
+        auth_path = ensure_login(site, root_url, auth_dir=auth_dir, headless=not headed) if site else None
+        browser_factory = lambda url: WebArenaBrowser(url, headless=not headed, storage_state=auth_path)
 
     explorer = WebArenaExplorer(
         browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=out_dir,

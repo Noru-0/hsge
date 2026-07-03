@@ -14,7 +14,8 @@ import re
 
 
 class WebArenaBrowser:
-    def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000):
+    def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000,
+                 storage_state: str | None = None):
         import gymnasium as gym
         import browsergym.core            # noqa: registers browsergym/openended
         from browsergym.core.action.highlevel import HighLevelActionSet
@@ -26,10 +27,18 @@ class WebArenaBrowser:
         self.action_set = HighLevelActionSet(
             subsets=["chat", "bid", "infeas", "nav"], strict=False, multiaction=False)
         env_kwargs = {}
+        pw_context_kwargs = {}
         headers_path = os.environ.get("PW_EXTRA_HEADERS")
         if headers_path and os.path.exists(headers_path):
             with open(headers_path) as f:
-                env_kwargs["pw_context_kwargs"] = {"extra_http_headers": json.load(f)}
+                pw_context_kwargs["extra_http_headers"] = json.load(f)
+        # storage_state (from hsge.webarena.auth.ensure_login) starts the context
+        # already logged in, so every node visit shares one cached session instead
+        # of hitting a login wall.
+        if storage_state:
+            pw_context_kwargs["storage_state"] = storage_state
+        if pw_context_kwargs:
+            env_kwargs["pw_context_kwargs"] = pw_context_kwargs
         self.env = gym.make(
             "browsergym/openended",
             task_kwargs={"start_url": start_url},
