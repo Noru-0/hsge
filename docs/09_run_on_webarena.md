@@ -38,6 +38,29 @@ Uses a scripted LLM + fake browser to exercise the full loop and persistence.
    export OPENAI_API_KEY="sk-..."           # or OPENAI_BASE_URL for a compatible endpoint
    export HSGE_MODEL="gpt-4o-mini"          # or your model
    ```
+   Models can be assigned per helper in `config.yaml`. Each helper inherits any
+   omitted field from the shared `llm` block:
+   ```yaml
+   llm:
+     provider: deepseek
+     temperature: 0.2
+     agents:
+       page_explorer:        # propose page-local tasks
+         model: deepseek-v4-flash
+       solver:               # choose browser actions
+         model: deepseek-v4-flash
+       trajectory_segmenter: # split successful trajectories into subgoals
+         model: deepseek-v4-flash
+       skill_abstractor:     # build a SkillCard from a mature cluster
+         model: deepseek-v4-flash
+       skill_verifier:       # ground and verify a SkillCard
+         model: deepseek-v4-flash
+       operator_inducer:     # infer planning preconditions/effects
+         model: deepseek-v4-flash
+   ```
+   A role may also override `provider`, `base_url`, or `temperature`. API keys
+   remain in `.env` as `${PROVIDER}_API_KEY`. Global CLI flags such as `--model`
+   intentionally override every role for quick experiments.
 4. Run:
    ```bash
    python run_webarena.py \

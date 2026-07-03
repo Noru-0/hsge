@@ -21,10 +21,25 @@ run:
                              # shopping, disabled/exploration-only elsewhere)
 
 llm:
-  provider: null             # openai | deepseek ; null -> $LLM_PROVIDER, else openai
-  model: null                # null -> ${PROVIDER}_MODEL from .env
+  # Shared defaults. Each helper below inherits any field it does not override.
+  provider: deepseek         # openai | deepseek ; null -> $LLM_PROVIDER, else openai
+  model: null                # fallback model; null -> ${PROVIDER}_MODEL from .env
   base_url: null             # null -> ${PROVIDER}_BASE_URL from .env
   temperature: 0.2
+
+  agents:
+    page_explorer:           # proposes concrete INFO/NAV/MOD tasks for each page
+      model: deepseek-v4-flash
+    solver:                  # chooses the next BrowserGym action toward a task
+      model: deepseek-v4-flash
+    trajectory_segmenter:    # splits a successful trajectory into subgoals
+      model: deepseek-v4-flash
+    skill_abstractor:        # turns a mature trajectory cluster into a SkillCard
+      model: deepseek-v4-flash
+    skill_verifier:          # grounds/verifies SkillCards (inactive when verify_k=0)
+      model: deepseek-v4-flash
+    operator_inducer:        # induces planning preconditions/effects from a skill
+      model: deepseek-v4-flash
 
 embedder:
   model: all-MiniLM-L6-v2

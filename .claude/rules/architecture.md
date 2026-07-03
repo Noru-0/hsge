@@ -83,6 +83,21 @@ root page.
 `[MOD]`), for smoke-testing a shared, stateful site without writing to it (no posting,
 voting, cart/checkout actions).
 
+**Each LLM-backed helper can use a different model**, configured per role in
+`config.yaml`'s `llm.agents.<role>` (see `AGENT_ROLES` in `run_webarena.py`):
+`page_explorer`, `solver`, `trajectory_segmenter`, `skill_abstractor`,
+`skill_verifier`, `operator_inducer`. A role inherits any field (`provider`/`model`/
+`base_url`/`temperature`) it doesn't override from the shared `llm.*` block, which in
+turn falls back to `${PROVIDER}_*` env vars. `run_webarena.py::_resolve_agent_llms`
+builds one `OpenAILLM` per role and `WebArenaExplorer(agent_llms=...)` routes each to
+its component (`self.explorer`, `self.solver`, `self.library.abstraction_llm` /
+`.verification_llm`, `self.discovery.segmentation_llm`, `self.operator_llm`). A
+**global CLI flag** (`--provider`/`--model`/`--base-url`) overrides every role at
+once; there's no per-role CLI override, only `config.yaml`. This lets you route
+cheap/fast local tasks to a cheaper model and reserve a stronger one for the
+solver or operator induction. See `hsge/tests/test_multi_llm.py` for the exact
+precedence/wiring contract.
+
 Verification here is by **terminal outcome** (did the episode reach the goal state,
 e.g. `checkout/onepage/success`), not the mock's held-out-context execution gate.
 Run a single worker — WebArena sites are shared mutable state; reset between runs.

@@ -10,14 +10,21 @@ from __future__ import annotations
 
 from .graph import HierarchicalGraph
 from .library import SkillLibrary
+from .llm import LLM
 from .schema import Step
 from .segmentation import segment_trajectory
 
 
 class Discovery:
-    def __init__(self, library: SkillLibrary, graph: HierarchicalGraph):
+    def __init__(
+        self,
+        library: SkillLibrary,
+        graph: HierarchicalGraph,
+        segmentation_llm: LLM | None = None,
+    ):
         self.library = library
         self.graph = graph
+        self.segmentation_llm = segmentation_llm or library.llm
 
     def on_trajectory(
         self,
@@ -33,7 +40,9 @@ class Discovery:
                 self.graph.add_trajectory_edge(a.url, b.url)
 
         # 2. segment + feed the library
-        subs = segment_trajectory(self.library.llm, steps, site, task, subgoal_hints)
+        subs = segment_trajectory(
+            self.segmentation_llm, steps, site, task, subgoal_hints
+        )
         admitted, just_admitted_in_order = [], []
         for sub in subs:
             sid = self.library.observe(sub)

@@ -37,26 +37,41 @@ class WebArenaExplorer:
                  allow_pattern: str, deny_pattern: str | None = None, max_depth: int = 6,
                  max_nodes: int = 20, max_steps: int = 15,
                  terminal_goal: str = "order_confirmed",
-                 maturity: int = 2, predicate_sim: float = 0.6, read_only: bool = False):
+                 maturity: int = 2, predicate_sim: float = 0.6, read_only: bool = False,
+                 agent_llms: dict[str, object] | None = None):
+        agent_llms = agent_llms or {}
+
+        def role(name: str):
+            return agent_llms.get(name, llm)
+
         self.browser_factory = browser_factory
+        # Legacy alias: callers that supply one LLM still get the old behaviour.
         self.llm = llm
+        self.operator_llm = role("operator_inducer")
         self.out_dir = out_dir
         self.allow = re.compile(allow_pattern)
         self.deny = re.compile(deny_pattern) if deny_pattern else None
         self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
-        self.explorer = PageExplorer(llm, read_only=read_only)
-        self.solver = Solver(llm, max_steps=max_steps)
+        self.explorer = PageExplorer(role("page_explorer"), read_only=read_only)
+        self.solver = Solver(role("solver"), max_steps=max_steps)
         self.opgraph = OperatorGraph()
         # HSGE discovery; verification is by terminal outcome (see _record / reached),
         # so the library's own held-out gate is off (verify_k=0). `maturity` is the
         # real bar: a skill must recur that many times before it becomes an operator.
-        self.library = SkillLibrary(llm, embedder, verify_contexts_fn=lambda: [],
-                                    maturity=maturity, verify_k=0)
+        self.library = SkillLibrary(
+            role("skill_abstractor"), embedder, verify_contexts_fn=lambda: [],
+            maturity=maturity, verify_k=0,
+            abstraction_llm=role("skill_abstractor"),
+            verification_llm=role("skill_verifier"),
+        )
         # Planning predicates are LLM-authored NL, canonicalized by embedding here
         # instead of a hardcoded vocabulary; operators reference these canonical ids.
         self.registry = PredicateRegistry(embedder, sim_threshold=predicate_sim)
         self.graph = HierarchicalGraph()
-        self.discovery = Discovery(self.library, self.graph)
+        self.discovery = Discovery(
+            self.library, self.graph,
+            segmentation_llm=role("trajectory_segmenter"),
+        )
         self.episode = 0
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
 
@@ -98,7 +113,7 @@ class WebArenaExplorer:
             print(f"[operator] skill {skill_id} has no usable member steps; "
                   "inducing without page context")
         boundary = [(m.steps[0].axtree, m.steps[-1].axtree) for m in members]
-        induced = induce_operator(self.llm, card, boundary)
+        induced = induce_operator(self.operator_llm, card, boundary)
         pre = frozenset(self.registry.canonical(p) for p in induced["preconditions"])
         eff = frozenset(self.registry.canonical(e) for e in induced["effects"])
         if not eff:

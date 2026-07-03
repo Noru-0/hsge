@@ -25,8 +25,14 @@ class SkillLibrary:
         maturity: int = 3,                  # min cluster size before abstraction
         verify_k: int = 2,
         prune_min_rate: float = 0.34,
+        abstraction_llm: LLM | None = None,
+        verification_llm: LLM | None = None,
     ):
+        # Keep ``llm`` as the backwards-compatible default while allowing the
+        # WebArena runtime to assign cheaper/stronger models by helper role.
         self.llm = llm
+        self.abstraction_llm = abstraction_llm or llm
+        self.verification_llm = verification_llm or llm
         self.embedder = embedder
         self.verify_contexts_fn = verify_contexts_fn
         self.maturity = maturity
@@ -57,11 +63,13 @@ class SkillLibrary:
     def _try_admit(self, cid: int) -> int | None:
         self._abstracted.add(cid)
         members = [self.subtrajs[mid] for mid in self.cluster_to_members[cid]]
-        card = abstract_cluster(self.llm, cid, members)
+        card = abstract_cluster(self.abstraction_llm, cid, members)
         card.stats.n_members = len(members)
         for m in members:
             card.stats.sites_seen.add(m.source_site)
-        ok = verify_skill(self.llm, card, self.verify_contexts_fn(), k=self.verify_k)
+        ok = verify_skill(
+            self.verification_llm, card, self.verify_contexts_fn(), k=self.verify_k
+        )
         if ok:
             self.skills[cid] = card
             return card.skill_id

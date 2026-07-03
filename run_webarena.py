@@ -30,9 +30,21 @@ DEFAULTS = {
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "maturity": 2,
             "predicate_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None},
-    "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2},
+    "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2,
+            "agents": {}},
     "embedder": {"model": "all-MiniLM-L6-v2"},
 }
+
+# Every model-backed helper in the real exploration pipeline. Values under
+# llm.agents.<role> override the shared llm defaults in config.yaml.
+AGENT_ROLES = (
+    "page_explorer",
+    "solver",
+    "trajectory_segmenter",
+    "skill_abstractor",
+    "skill_verifier",
+    "operator_inducer",
+)
 
 
 def _load_config(path: str | None) -> dict:
@@ -129,19 +141,55 @@ def perform_full_reset(url: str, retries: int = 3):
     print("[reset] giving up after retries")
 
 
-def _resolve_llm(cli, llm_cfg):
-    """Pick provider (CLI > config > $LLM_PROVIDER > openai) and resolve its
-    model/base_url/api_key from .env, e.g. DEEPSEEK_API_KEY/_BASE_URL/_MODEL."""
-    provider = (cli.provider or llm_cfg.get("provider")
-                or os.environ.get("LLM_PROVIDER") or "openai").lower()
+def _first_not_none(*values):
+    return next((value for value in values if value is not None), None)
+
+
+def _effective_llm_config(cli, llm_cfg, role: str | None = None) -> dict:
+    """Resolve one helper's effective config without constructing a client.
+
+    Global CLI flags intentionally override every helper. Otherwise a role-level
+    value wins over the shared ``llm`` value, then provider-specific environment
+    variables supply the final fallback.
+    """
+    role_cfg = ((llm_cfg.get("agents") or {}).get(role) or {}) if role else {}
+    provider = (_first_not_none(
+        cli.provider, role_cfg.get("provider"), llm_cfg.get("provider"),
+        os.environ.get("LLM_PROVIDER"), "openai",
+    ) or "openai").lower()
     p = provider.upper()
-    model = cli.model or llm_cfg.get("model") or os.environ.get(f"{p}_MODEL")
-    base_url = cli.base_url or llm_cfg.get("base_url") or os.environ.get(f"{p}_BASE_URL")
-    api_key = os.environ.get(f"{p}_API_KEY")
+    return {
+        "provider": provider,
+        "model": _first_not_none(
+            cli.model, role_cfg.get("model"), llm_cfg.get("model"),
+            os.environ.get(f"{p}_MODEL"),
+        ),
+        "base_url": _first_not_none(
+            cli.base_url, role_cfg.get("base_url"), llm_cfg.get("base_url"),
+            os.environ.get(f"{p}_BASE_URL"),
+        ),
+        "api_key": os.environ.get(f"{p}_API_KEY"),
+        "temperature": float(_first_not_none(
+            role_cfg.get("temperature"), llm_cfg.get("temperature"), 0.2,
+        )),
+    }
+
+
+def _resolve_llm(cli, llm_cfg, role: str | None = None):
+    """Construct the OpenAI-compatible backend for one helper role."""
+    cfg = _effective_llm_config(cli, llm_cfg, role)
     from hsge.backends import OpenAILLM
-    print(f"[llm] provider={provider} model={model} base_url={base_url or '(default)'}")
-    return OpenAILLM(model=model, base_url=base_url, api_key=api_key,
-                     temperature=float(llm_cfg.get("temperature", 0.2)))
+    label = f":{role}" if role else ""
+    print(f"[llm{label}] provider={cfg['provider']} model={cfg['model']} "
+          f"base_url={cfg['base_url'] or '(default)'} temp={cfg['temperature']}")
+    return OpenAILLM(
+        model=cfg["model"], base_url=cfg["base_url"], api_key=cfg["api_key"],
+        temperature=cfg["temperature"],
+    )
+
+
+def _resolve_agent_llms(cli, llm_cfg) -> dict[str, object]:
+    return {role: _resolve_llm(cli, llm_cfg, role) for role in AGENT_ROLES}
 
 
 def main():
@@ -189,6 +237,7 @@ def main():
         allow = _pick(args.allow, run["allow"]) or (re.escape(root_url.rsplit("/", 1)[0]) + ".*")
         terminal_goal = "order_confirmed"                # fake browser reaches success
         llm, embedder = _DryLLM(), HashingEmbedder()
+        agent_llms = {role: llm for role in AGENT_ROLES}
         browser_factory = lambda url: _FakeBrowser(url)
     else:
         from hsge.backends import STEmbedder
@@ -215,7 +264,8 @@ def main():
         if full_reset_url:
             perform_full_reset(full_reset_url)
 
-        llm = _resolve_llm(args, llm_cfg)
+        agent_llms = _resolve_agent_llms(args, llm_cfg)
+        llm = agent_llms["page_explorer"]  # backwards-compatible runtime fallback
         embedder = STEmbedder(emb_cfg["model"])
         browser_factory = lambda url: WebArenaBrowser(url, headless=not headed)
 
@@ -224,6 +274,7 @@ def main():
         allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
         max_nodes=max_nodes, max_steps=max_steps, maturity=maturity,
         terminal_goal=terminal_goal, predicate_sim=predicate_sim, read_only=args.read_only,
+        agent_llms=agent_llms,
     )
     explorer.run(root_url)
     print("\nnext: python build_sft_dataset.py", os.path.join(out_dir, "episodes"), "train.jsonl")
