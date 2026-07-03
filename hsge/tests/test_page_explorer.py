@@ -40,3 +40,39 @@ def test_propose_all_strings_unaffected():
     explorer = PageExplorer(llm)
 
     assert explorer.propose({"url": "http://x", "axtree": ""}) == ["[NAV] a", "[INFO] b"]
+
+
+class _RefusesWithImageLLM:
+    """Simulates a vision model that refuses (empty response) only when an
+    image is attached, succeeding on a plain text-only retry."""
+
+    def __init__(self):
+        self.calls = []
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.calls.append(image_b64)
+        if image_b64:
+            return {}
+        return {"tasks": ["[INFO] text-only fallback task"]}
+
+
+def test_propose_retries_without_image_when_vision_call_is_refused():
+    llm = _RefusesWithImageLLM()
+    explorer = PageExplorer(llm, vision=True)
+
+    tasks = explorer.propose({"url": "http://x", "axtree": "irrelevant"},
+                              screenshot_b64="ZmFrZQ==")
+
+    assert tasks == ["[INFO] text-only fallback task"]
+    assert llm.calls == ["ZmFrZQ==", None]  # first with image, then retried without
+
+
+def test_propose_does_not_retry_when_vision_is_off():
+    llm = _RefusesWithImageLLM()
+    explorer = PageExplorer(llm, vision=False)
+
+    tasks = explorer.propose({"url": "http://x", "axtree": "irrelevant"},
+                              screenshot_b64="ZmFrZQ==")
+
+    assert tasks == ["[INFO] text-only fallback task"]
+    assert llm.calls == [None]  # vision off -> never sent the image in the first place

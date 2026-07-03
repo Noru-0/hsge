@@ -75,6 +75,13 @@ class PageExplorer:
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
         image = screenshot_b64 if self.vision else None
         out = self.llm.complete_json(system, prompt, image_b64=image, image_detail=self.image_detail)
+        if image and not out.get("tasks"):
+            # A vision call can come back empty (some providers get stricter about
+            # a screenshot of a real, named site -- e.g. one annotated with
+            # Set-of-Marks bounding boxes -- than the same request as text-only).
+            # Retry once without the image before giving up on this node entirely.
+            print("    [explorer] empty response with image attached, retrying text-only")
+            out = self.llm.complete_json(system, prompt, image_b64=None, image_detail=self.image_detail)
         tasks = [t for t in map(self._coerce_task, out.get("tasks", [])) if t]
         if self.read_only:                       # belt-and-suspenders: drop any [MOD]
             tasks = [t for t in tasks if "[MOD]" not in t.upper()]
@@ -110,6 +117,12 @@ class Solver:
             screenshot_b64 = browser.screenshot_b64(som=self.som) if self.vision else None
             out = self.llm.complete_json(SOLVER_SYS, prompt,
                                           image_b64=screenshot_b64, image_detail=self.image_detail)
+            if screenshot_b64 and not (out.get("action") or "").strip():
+                # same rationale as PageExplorer.propose(): don't let a refused/
+                # empty vision call silently end the episode -- try text-only.
+                print("    [solver] empty response with image attached, retrying text-only")
+                out = self.llm.complete_json(SOLVER_SYS, prompt,
+                                              image_b64=None, image_detail=self.image_detail)
             action = (out.get("action") or "").strip()
             thought = out.get("thought", "")
             steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100],
