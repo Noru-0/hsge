@@ -8,7 +8,7 @@ through, which crashed downstream code (runtime.py did `task[:50]`,
 str-only operations) with a KeyError on a slice.
 """
 
-from hsge.webarena.agents import PageExplorer
+from hsge.webarena.agents import EXPLORER_SYS, PageExplorer
 
 
 class _StubLLM:
@@ -76,3 +76,13 @@ def test_propose_does_not_retry_when_vision_is_off():
 
     assert tasks == ["[INFO] text-only fallback task"]
     assert llm.calls == [None]  # vision off -> never sent the image in the first place
+
+
+def test_explorer_sys_forbids_leaking_the_answer_in_info_tasks():
+    """Regression guard: a real run showed [INFO] tasks like 'Read the number
+    of submissions for X (5,718 submissions)' -- the goal already contains the
+    answer, so solving it requires zero real navigation/reading and the
+    resulting trajectory is useless as training data. Can't unit-test that an
+    LLM actually complies with a prompt, but this guards against the explicit
+    anti-leak instruction being accidentally removed later."""
+    assert "must never state the value/answer itself" in EXPLORER_SYS.lower()

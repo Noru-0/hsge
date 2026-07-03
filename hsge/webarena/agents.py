@@ -25,6 +25,11 @@ EXPLORER_SYS = (
     "like 'add item to cart' or 'search for a product'.\n"
     "- Tag each task by type: [INFO] read/extract info, [NAV] go to a specific page, "
     "[MOD] change content/state. List them INFO first, then NAV, then MOD.\n"
+    "- [INFO] tasks must name WHAT to find (e.g. 'Find the number of submissions for "
+    "r/relationship_advice'), but must NEVER state the value/answer itself in the task "
+    "text (NOT 'Find the number of submissions for r/relationship_advice (5,718 "
+    "submissions)'). If the answer is already written in the task, it isn't a task -- "
+    "whoever solves it must still have to read the page to answer it.\n"
     "- Prefer tasks that make progress or reveal new pages over pure search/sort/filter.\n"
     "- Focus on common things a real user of THIS site would do; skip niche tasks.")
 
