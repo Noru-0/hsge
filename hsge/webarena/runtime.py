@@ -133,8 +133,9 @@ class WebArenaExplorer:
             reached(self.terminal_goal, m.steps[-1].url, m.steps[-1].axtree) for m in members)
         op = Operator(_slug(card.name), pre, eff, terminal=induced["terminal"] or reached_terminal)
         self.opgraph.add(op)
-        print(f"    [operator] {op.name}  pre={sorted(op.preconditions)}  "
-              f"eff={sorted(op.effects)}  terminal={op.terminal}")
+        pre_txt = [f"{p}:{self.registry.label(p)}" for p in sorted(op.preconditions)]
+        eff_txt = [f"{e}:{self.registry.label(e)}" for e in sorted(op.effects)]
+        print(f"    [operator] {op.name}  pre={pre_txt}  eff={eff_txt}  terminal={op.terminal}")
         self._log("operator_induced", name=op.name, skill_id=skill_id,
                    preconditions=sorted(op.preconditions), effects=sorted(op.effects),
                    terminal=op.terminal)
@@ -169,9 +170,18 @@ class WebArenaExplorer:
         json.dump(skills, open(os.path.join(self.out_dir, "skills.json"), "w"), indent=2)
 
         operators = [{"name": op.name, "preconditions": sorted(op.preconditions),
-                      "effects": sorted(op.effects), "terminal": op.terminal}
+                      "effects": sorted(op.effects), "terminal": op.terminal,
+                      "precondition_labels": {p: self.registry.label(p)
+                                              for p in sorted(op.preconditions)},
+                      "effect_labels": {e: self.registry.label(e)
+                                        for e in sorted(op.effects)}}
                      for op in self.opgraph.ops.values()]
         json.dump(operators, open(os.path.join(self.out_dir, "operators.json"), "w"), indent=2)
+
+        # p0/p1/... are canonical predicate ids (see PredicateRegistry.canonical);
+        # this is the id -> original NL text lookup so operators.json is legible.
+        predicates = {f"p{cid}": label for cid, label in self.registry.labels.items()}
+        json.dump(predicates, open(os.path.join(self.out_dir, "predicates.json"), "w"), indent=2)
 
         graph = {
             "states": sorted(self.graph.states),
@@ -313,7 +323,7 @@ class WebArenaExplorer:
         print(f"trajectories under {self.out_dir}/episodes  "
               f"(feed to build_sft_dataset.py)")
         print(f"per-run log/artifacts (run_log.jsonl, nodes.json, skills.json, "
-              f"operators.json, graph.json, summary.json) under {self.out_dir}")
+              f"operators.json, predicates.json, graph.json, summary.json) under {self.out_dir}")
         self._log("run_summary", nodes_visited=nodes_visited, duplicate_nodes_skipped=duplicate_nodes,
                    episodes=self.episode, tasks=task_stats,
                    skills_discovered=len(self.library.all_skills()),
