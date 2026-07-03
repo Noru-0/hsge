@@ -81,3 +81,67 @@ def test_solver_warns_and_recovers_from_a_repeated_no_progress_action():
     assert len(steps) == 3  # recovered on the 3rd call instead of burning all 15
     assert steps[-1].action == "send_msg_to_user('done')"
     assert any("WARNING" in p for p in llm.prompts)
+
+
+class _StubbornRepeatLLM:
+    """Never listens to the repeat warning -- keeps issuing the exact same
+    action regardless of prompt content. Reproduces a real run (ep_0003,
+    outputs/wa_run_01) where click('117') was issued unchanged for the full
+    15-step budget: page_state axtree dumps confirmed the page never
+    changed at all, yet the WARNING nudge alone (present in the prompt from
+    the 3rd call onward) was not enough to make the model stop."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.calls += 1
+        return {"thought": "Navigate to the Submissions page", "action": "click('117')"}
+
+
+def test_solver_gives_up_after_max_repeats_when_model_ignores_the_warning():
+    """A soft nudge isn't always obeyed -- once the same target has been
+    interacted with _MAX_REPEATS times in a row with no progress, the
+    solver must stop calling the LLM entirely instead of burning the rest
+    of max_steps on a model that keeps ignoring the warning."""
+    llm = _StubbornRepeatLLM()
+    solver = Solver(llm, max_steps=15)
+    browser = _FakeBrowser()
+
+    steps, obs_texts, obs_screenshots, final_obs, success = solver.solve(browser, "goal")
+
+    assert success is False
+    assert len(steps) == Solver._MAX_REPEATS  # gave up well before max_steps=15
+    assert llm.calls == Solver._MAX_REPEATS
+
+
+class _SameTargetDifferentArgsLLM:
+    """Keeps retrying the same dropdown (bid 378) with different-looking
+    but equally ineffective option text each time. Reproduces a real run
+    (ep_0005, outputs/wa_run_01) where select_option('378', ...) was called
+    9 times in a row with varying arguments while the combobox's value
+    never actually changed (confirmed via page_state axtree diffs) -- the
+    *action string* never repeats exactly, but the *target* (bid 378)
+    does, so detection must key off the target, not literal string equality."""
+
+    def __init__(self, options):
+        self._options = list(options)
+        self.calls = 0
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.calls += 1
+        opt = self._options[min(self.calls - 1, len(self._options) - 1)]
+        return {"thought": "select a forum", "action": f"select_option('378', '{opt}')"}
+
+
+def test_solver_gives_up_on_same_target_repeated_with_different_arguments():
+    llm = _SameTargetDifferentArgsLLM(
+        ["Choose one", "Forum Name", "Another Forum Name", "Forum Name"])
+    solver = Solver(llm, max_steps=15)
+    browser = _FakeBrowser()
+
+    steps, obs_texts, obs_screenshots, final_obs, success = solver.solve(browser, "goal")
+
+    assert success is False
+    assert len(steps) == Solver._MAX_REPEATS
+    assert all("378" in s.action for s in steps)

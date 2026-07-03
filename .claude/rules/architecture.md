@@ -87,13 +87,21 @@ Standalone real-browser runtime, separate from the mock pipeline:
   re-proposed at nearly every page. When truncating to `max_tasks`, INFO is still
   what gets dropped first, never NAV/MOD (INFO never grows the frontier — no
   navigation happens when solving one).
-  `Solver` also tracks its own executed-action history: if the same action succeeds
-  twice in a row with no error, the next prompt gets an explicit warning ("this
-  repeated action made no progress — if the goal is already reached, call
-  send_msg_to_user now") — a real run showed the agent click a nav link that
-  successfully navigated, then keep clicking the same-named link (now under a
-  different bid on the new page) 13-14 more times without recognizing it had
-  arrived, burning the full `max_steps` budget on every such episode.
+  `Solver` also tracks whether each executed action actually changed the
+  observation (url/axtree before vs. after) and what target (bid/url) it acted
+  on. A trailing run of actions hitting the *same target* with *no observable
+  change* — not just an identical action string, since a real run showed the
+  model retry a stuck dropdown with different-looking-but-equally-wrong
+  arguments (`select_option('378', 'Forum Name')` then `'Another Forum
+  Name'`), and requiring "no change" (not just "same target") is what keeps
+  this from misfiring on a legitimate multi-step sequence that happens to
+  reuse the same bid across different pages — first gets a warning in the
+  prompt (`_WARN_AFTER_REPEATS`, default 2) and then, since a real run showed
+  the model doesn't reliably obey a text nudge alone (it kept clicking an
+  inert link for the full 15-step budget with the warning present from the
+  3rd call onward), a hard stop (`_MAX_REPEATS`, default 4) that ends the
+  episode without spending any more LLM calls on a target that clearly isn't
+  moving.
 - `runtime.py` — `WebArenaExplorer`: frontier loop, skill→operator promotion, goal
   tasks, persistence. Skips re-exploring a node whose initial axtree hashes
   identical to an already-visited one (two different URLs can render the same

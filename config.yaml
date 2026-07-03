@@ -6,13 +6,13 @@
 run:
   site: reddit             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
   root_url: null             # explicit URL; overrides `site` when set
-  out_dir: outputs/wa_run
+  out_dir: outputs/wa_run_01
   allow: null                # null -> derived from the root URL's host
   denylist: "logout|\\?p=|product_list_|[?&]sort="   # blocked child URLs (deny wins)
   max_nodes: 15
   max_depth: 6
   max_steps: 15
-  max_tasks: 6               # tasks PageExplorer proposes per node (more -> less chance
+  max_tasks: 9               # tasks PageExplorer proposes per node (more -> less chance
                              # of missing a task, but +1 Solver episode per extra task)
   maturity: 2                # times a skill must recur before it becomes an operator
   predicate_sim: 0.6         # cosine threshold for the predicate registry (tune per embedder)

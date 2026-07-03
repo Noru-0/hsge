@@ -166,6 +166,10 @@ class PageExplorer:
 
 
 class Solver:
+    _TARGET_RE = re.compile(r"\('([^']*)'")
+    _WARN_AFTER_REPEATS = 2   # nudge once the same target is hit this many times in a row
+    _MAX_REPEATS = 4          # give up if nudging didn't help after this many
+
     def __init__(self, llm, max_steps: int = 15,
                  vision: bool = False, som: bool = True, image_detail: str = "low"):
         self.llm = llm
@@ -173,6 +177,37 @@ class Solver:
         self.vision = vision
         self.som = som
         self.image_detail = image_detail
+
+    @classmethod
+    def _action_target(cls, action: str) -> str:
+        """The bid/url an action operates on, e.g. click('117') -> '117'.
+        Falls back to the whole action string for argument-less actions
+        (go_back()) so repeats of those still group together."""
+        m = cls._TARGET_RE.search(action)
+        return m.group(1) if m else action
+
+    @classmethod
+    def _stuck_streak(cls, history: list[str], progressed: list[bool]) -> int:
+        """How many trailing actions targeted the same element as the one
+        before them AND produced no observable change (url/axtree
+        identical before vs. after). Grouping by target (not exact action
+        string) is what catches a real-run failure mode where the model
+        keeps re-trying the same stuck element with different-looking
+        arguments each time (e.g. select_option('378', 'Forum Name') then
+        select_option('378', 'Another Forum Name'), neither of which ever
+        changed the page). Requiring no observable change (not just a
+        repeated target) is what avoids flagging a legitimate multi-step
+        sequence that happens to reuse the same bid across different pages
+        (e.g. a scripted/mock solver whose 'advance' bid is always '1' but
+        each click genuinely moves to a new page)."""
+        streak = 0
+        for i in range(len(history) - 1, -1, -1):
+            if progressed[i]:
+                break
+            if i < len(history) - 1 and cls._action_target(history[i]) != cls._action_target(history[i + 1]):
+                break
+            streak += 1
+        return streak
 
     def solve(self, browser, goal: str, goal_predicate: str | None = None):
         """Drive the browser toward `goal`.
@@ -183,24 +218,34 @@ class Solver:
         obs_texts: list[str] = []
         obs_screenshots: list[str | None] = []
         history: list[str] = []
+        progressed: list[bool] = []  # did url/axtree change as a result of history[i]?
         obs = browser.observation()
         last_error = ""
         success = False
         for _ in range(self.max_steps):
+            streak = self._stuck_streak(history, progressed)
+            if streak >= self._MAX_REPEATS:
+                # A text nudge alone isn't reliably obeyed (verified against a
+                # real run: the warning was present in the prompt from the 3rd
+                # call onward and the model kept issuing the exact same click
+                # anyway for all 15 steps). Stop spending steps on a target
+                # that clearly isn't moving instead of exhausting max_steps.
+                print(f"    [solver] giving up: target {self._action_target(history[-1])!r} "
+                      f"hit {streak}x in a row with no progress")
+                break
             repeat_warning = ""
-            if len(history) >= 2 and history[-1] == history[-2]:
-                # The same action just succeeded twice in a row with no error --
+            if streak >= self._WARN_AFTER_REPEATS:
+                # The same target just got hit >=2 times in a row with no error --
                 # e.g. clicking a nav link that navigated fine but re-appears
                 # under a new bid on the destination page, so the model keeps
-                # clicking it without realizing it already arrived. Left
-                # unchecked this repeats until max_steps. Nudge instead of
-                # silently repeating the same prompt.
+                # clicking it without realizing it already arrived. Nudge
+                # instead of silently repeating the same prompt.
                 repeat_warning = (
-                    f"\n\nWARNING: your last action ({history[-1]!r}) was identical to "
-                    "the one before it and produced no error -- repeating it again will "
-                    "not help. If the goal is already achieved, call "
-                    "send_msg_to_user(...) now instead of repeating it. Otherwise choose "
-                    "a genuinely different action.")
+                    f"\n\nWARNING: your last {streak} actions all targeted "
+                    f"{self._action_target(history[-1])!r} with no visible progress -- "
+                    "repeating it again will not help. If the goal is already achieved, "
+                    "call send_msg_to_user(...) now instead. Otherwise choose a "
+                    "genuinely different action/target.")
             prompt = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n"
                       + ("\n".join(f"- {h}" for h in history[-6:]) or "(none)")
                       + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
@@ -223,6 +268,7 @@ class Solver:
             obs_screenshots.append(screenshot_b64)
             if not action or action.startswith("send_msg_to_user"):
                 break
+            pre_url, pre_axtree = obs["url"], obs["axtree"]
             try:
                 obs = browser.act(action)
                 last_error = ""
@@ -232,6 +278,7 @@ class Solver:
                 steps[-1].obs_summary += f" [action error: {last_error}]"
                 continue
             history.append(action)
+            progressed.append(obs["url"] != pre_url or obs["axtree"] != pre_axtree)
             if getattr(browser, "terminated", False):
                 break
             if goal_predicate and reached(goal_predicate, obs["url"], obs["axtree"]):
