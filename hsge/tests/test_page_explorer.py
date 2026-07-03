@@ -121,3 +121,96 @@ def test_explorer_sys_forbids_navigating_to_the_current_page():
     ever reaching send_msg_to_user. Can't unit-test LLM compliance, but this
     guards against the instruction being accidentally removed later."""
     assert "already on" in EXPLORER_SYS.lower()
+
+
+class _RecordingStubLLM:
+    """Like _StubLLM but records every prompt it was called with, and can
+    serve a different batch of tasks per call (one per simulated page)."""
+
+    def __init__(self, batches):
+        self._batches = list(batches)
+        self.prompts = []
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.prompts.append(prompt)
+        return {"tasks": self._batches.pop(0)}
+
+
+def test_propose_drops_near_duplicate_tasks_seen_at_earlier_pages():
+    """Regression: a real 11-page run had 26/57 (46%) of all proposed tasks be
+    near-identical 'Go to the Forums/Wiki/Home page' boilerplate, re-proposed
+    at almost every page because the sitewide nav menu appears everywhere.
+    One PageExplorer instance lives for the whole run (see runtime.py), so it
+    must remember what it already proposed and drop repeats -- even across
+    trivial punctuation/case differences."""
+    llm = _RecordingStubLLM([
+        ["[NAV] Go to the 'Forums' page.", "[INFO] Find the number of notifications."],
+        ["[NAV] Go to the Forums page", "[INFO] Find the number of messages."],
+    ])
+    explorer = PageExplorer(llm)
+
+    first = explorer.propose({"url": "http://x/a", "axtree": ""})
+    second = explorer.propose({"url": "http://x/b", "axtree": ""})
+
+    assert first == ["[NAV] Go to the 'Forums' page.", "[INFO] Find the number of notifications."]
+    # the near-duplicate "Go to the Forums page" is dropped the second time;
+    # the genuinely new INFO task survives
+    assert second == ["[INFO] Find the number of messages."]
+
+
+def test_propose_includes_already_proposed_tasks_as_negative_context():
+    """The prompt for a later page should tell the model what's already been
+    proposed so it can avoid re-proposing sitewide nav boilerplate in the
+    first place, rather than relying only on the after-the-fact code dedup."""
+    llm = _RecordingStubLLM([["[NAV] Go to the Forums page"], ["[INFO] Find something else."]])
+    explorer = PageExplorer(llm)
+
+    explorer.propose({"url": "http://x/a", "axtree": ""})
+    explorer.propose({"url": "http://x/b", "axtree": ""})
+
+    assert "Go to the Forums page" not in llm.prompts[0]
+    assert "Go to the Forums page" in llm.prompts[1]
+
+
+def test_propose_accepts_structured_type_field_without_a_bracket():
+    """Regression: a real run showed 89% (51/57) of returned tasks had no
+    [INFO]/[NAV]/[MOD] bracket at all, despite EXPLORER_SYS asking for one --
+    gpt-4o's natural tendency is to put the classification in a `type` field
+    on an object instead (already handled for text salvage, but the `type`
+    field itself used to be discarded). It must now be read and used."""
+    llm = _StubLLM([
+        {"text": "Find the total number of posts.", "type": "INFO"},
+        {"text": "Create a new post.", "type": "MOD"},
+    ])
+    explorer = PageExplorer(llm)
+
+    tasks = explorer.propose({"url": "http://x", "axtree": ""})
+
+    assert tasks == ["[INFO] Find the total number of posts.", "[MOD] Create a new post."]
+
+
+def test_readonly_drops_mod_task_classified_only_via_type_field():
+    llm = _StubLLM([{"text": "Create a new post.", "type": "MOD"}])
+    explorer = PageExplorer(llm, read_only=True)
+
+    assert explorer.propose({"url": "http://x", "axtree": ""}) == []
+
+
+def test_readonly_drops_untagged_task_fail_closed():
+    """Regression: ep_0050 in a real run was "Click the 'Save' button to
+    create the new page." with NO bracket and NO type field at all -- a real
+    [MOD] action that the old substring-only filter (`"[MOD]" not in text`)
+    would NOT have caught in --read-only mode. An unclassifiable task must be
+    dropped under read_only, not assumed safe."""
+    llm = _StubLLM(["Click the 'Save' button to create the new page."])
+    explorer = PageExplorer(llm, read_only=True)
+
+    assert explorer.propose({"url": "http://x", "axtree": ""}) == []
+
+
+def test_untagged_task_passes_through_unchanged_when_not_read_only():
+    llm = _StubLLM(["Click the 'Save' button to create the new page."])
+    explorer = PageExplorer(llm)
+
+    assert explorer.propose({"url": "http://x", "axtree": ""}) == [
+        "Click the 'Save' button to create the new page."]

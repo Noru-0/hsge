@@ -64,15 +64,36 @@ Standalone real-browser runtime, separate from the mock pipeline:
   with no login flow (wikipedia, map). HSGE doesn't construct `WebArenaInstance`
   directly — its `__init__` hard-requires all seven `WA_*` site URL env vars to be
   set, even though a given HSGE run only explores one site.
-- `agents.py` — `PageExplorer` (proposes `[INFO]/[NAV]/[MOD]`-tagged, specific tasks;
-  `read_only=True` drops `[MOD]`) + `Solver` (action-planner loop with action-space
+- `agents.py` — `PageExplorer` (proposes INFO/NAV/MOD-classified, specific tasks;
+  `read_only=True` drops MOD) + `Solver` (action-planner loop with action-space
   docs, CoT examples, and last-action-error feedback so it can recover instead of
   aborting the episode). Both accept `vision`/`som`/`image_detail` (see below) and,
   when a vision-attached call returns empty (refusal/content-filter), retry once
-  text-only before giving up. `PageExplorer.propose()` coerces non-string task
-  entries (some models wrap a task in an object instead of the requested flat
-  string) and, when truncating to `max_tasks`, keeps `[NAV]`/`[MOD]` over `[INFO]`
-  (`[INFO]` never grows the frontier — no navigation happens when solving one).
+  text-only before giving up.
+  `PageExplorer` asks the LLM for structured `{"tasks": [{"text": ..., "type":
+  "INFO"|"NAV"|"MOD"}, ...]}` objects rather than a `[TAG]`-prefixed string (a real
+  run showed 89% of tasks came back with no bracket at all; gpt-4o's natural
+  tendency is to put the classification in a `type` field instead, which the old
+  code discarded). `_parse_task()` reads the `type` field, falls back to a legacy
+  leading `[TAG]` bracket for models that still emit one, and tags anything with
+  neither as `UNKNOWN`; `read_only` drops `UNKNOWN` along with `MOD` (fail-closed —
+  an unclassifiable task might be a MOD the model forgot to tag) instead of the old
+  literal-substring-on-`[MOD]` check, which an untagged real MOD task would have
+  slipped past. One `PageExplorer` instance lives for the whole run, so it also
+  remembers every task text it has already proposed (normalized, tag stripped) and
+  both echoes recent ones back into the prompt as negative context and drops
+  code-level near-duplicates — a real run had 46% of all proposed tasks be
+  near-identical sitewide-nav-menu boilerplate ("Go to the Forums/Wiki/Home page")
+  re-proposed at nearly every page. When truncating to `max_tasks`, INFO is still
+  what gets dropped first, never NAV/MOD (INFO never grows the frontier — no
+  navigation happens when solving one).
+  `Solver` also tracks its own executed-action history: if the same action succeeds
+  twice in a row with no error, the next prompt gets an explicit warning ("this
+  repeated action made no progress — if the goal is already reached, call
+  send_msg_to_user now") — a real run showed the agent click a nav link that
+  successfully navigated, then keep clicking the same-named link (now under a
+  different bid on the new page) 13-14 more times without recognizing it had
+  arrived, burning the full `max_steps` budget on every such episode.
 - `runtime.py` — `WebArenaExplorer`: frontier loop, skill→operator promotion, goal
   tasks, persistence. Skips re-exploring a node whose initial axtree hashes
   identical to an already-visited one (two different URLs can render the same
@@ -112,9 +133,9 @@ unclicked links; mining `<a href>`s directly from the axtree/DOM would be a more
 robust primary source but hasn't been implemented (see `docs/11_vision_auth_
 hardening_session.md`'s "Suggested next steps").
 
-**`--read-only`** makes `PageExplorer` propose only `[INFO]`/`[NAV]` tasks (never
-`[MOD]`), for smoke-testing a shared, stateful site without writing to it (no posting,
-voting, cart/checkout actions).
+**`--read-only`** makes `PageExplorer` propose only INFO/NAV tasks (drops MOD and
+anything it can't classify), for smoke-testing a shared, stateful site without
+writing to it (no posting, voting, cart/checkout actions).
 
 **`max_tasks`** (config `run.max_tasks` / `--max-tasks`, default 6) caps how many
 tasks `PageExplorer` proposes per node.
