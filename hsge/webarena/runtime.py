@@ -37,7 +37,7 @@ def _slug(name: str) -> str:
 class WebArenaExplorer:
     def __init__(self, browser_factory, llm, embedder, out_dir: str,
                  allow_pattern: str, deny_pattern: str | None = None, max_depth: int = 6,
-                 max_nodes: int = 20, max_steps: int = 15,
+                 max_nodes: int = 20, max_steps: int = 15, max_tasks: int = 4,
                  terminal_goal: str = "order_confirmed",
                  maturity: int = 2, predicate_sim: float = 0.6, read_only: bool = False,
                  agent_llms: dict[str, object] | None = None,
@@ -60,7 +60,7 @@ class WebArenaExplorer:
         self.deny = re.compile(deny_pattern) if deny_pattern else None
         self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
         pe_vision, sv_vision = vision_cfg("page_explorer"), vision_cfg("solver")
-        self.explorer = PageExplorer(role("page_explorer"), read_only=read_only,
+        self.explorer = PageExplorer(role("page_explorer"), max_tasks=max_tasks, read_only=read_only,
                                      vision=pe_vision["vision"], som=pe_vision["som"],
                                      image_detail=pe_vision["image_detail"])
         self.solver = Solver(role("solver"), max_steps=max_steps,

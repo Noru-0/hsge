@@ -27,7 +27,7 @@ from hsge.webarena.runtime import WebArenaExplorer
 DEFAULTS = {
     "run": {"site": "shopping", "root_url": None, "out_dir": "outputs/wa_run",
             "allow": None, "denylist": r"logout|\?p=|product_list_|[?&]sort=",
-            "max_nodes": 15, "max_depth": 6, "max_steps": 15, "maturity": 2,
+            "max_nodes": 15, "max_depth": 6, "max_steps": 15, "max_tasks": 6, "maturity": 2,
             "predicate_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None},
     "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2,
@@ -233,6 +233,8 @@ def main():
     ap.add_argument("--max-nodes", type=int, default=None)
     ap.add_argument("--max-depth", type=int, default=None)
     ap.add_argument("--max-steps", type=int, default=None)
+    ap.add_argument("--max-tasks", type=int, default=None,
+                    help="max tasks PageExplorer proposes per node")
     ap.add_argument("--maturity", type=int, default=None)
     ap.add_argument("--provider", default=None, help="openai | deepseek")
     ap.add_argument("--model", default=None, help="LLM model id (e.g. gpt-4o-mini, deepseek-chat)")
@@ -255,6 +257,7 @@ def main():
     max_nodes = _pick(args.max_nodes, run["max_nodes"])
     max_depth = _pick(args.max_depth, run["max_depth"])
     max_steps = _pick(args.max_steps, run["max_steps"])
+    max_tasks = _pick(args.max_tasks, run["max_tasks"])
     maturity = _pick(args.maturity, run["maturity"])
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
@@ -314,7 +317,7 @@ def main():
     explorer = WebArenaExplorer(
         browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=out_dir,
         allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
-        max_nodes=max_nodes, max_steps=max_steps, maturity=maturity,
+        max_nodes=max_nodes, max_steps=max_steps, max_tasks=max_tasks, maturity=maturity,
         terminal_goal=terminal_goal, predicate_sim=predicate_sim, read_only=args.read_only,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )

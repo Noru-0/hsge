@@ -67,6 +67,19 @@ def test_runtime_routes_each_helper_to_its_model(tmp_path):
     assert runtime.operator_llm is llms["operator_inducer"]
 
 
+def test_runtime_wires_max_tasks_into_explorer(tmp_path):
+    runtime = WebArenaExplorer(
+        browser_factory=lambda url: None,
+        llm=_RoleLLM("fallback"),
+        embedder=HashingEmbedder(),
+        out_dir=str(tmp_path),
+        allow_pattern=r"https://example\.com/.*",
+        max_tasks=6,
+    )
+
+    assert runtime.explorer.max_tasks == 6
+
+
 def test_agent_vision_config_inherits_shared_values():
     cfg = {
         "vision": False, "som": True, "image_detail": "low",
