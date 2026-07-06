@@ -82,17 +82,22 @@ class OpenAILLM(LLM):
         txt = content.strip()
         txt = re.sub(r"^```(?:json)?|```$", "", txt, flags=re.M).strip()
         try:
-            return json.loads(txt)
+            parsed = json.loads(txt)
         except json.JSONDecodeError:
+            parsed = None
             m = re.search(r"\{.*\}", txt, re.S)          # salvage first JSON object
             if m:
                 try:
-                    return json.loads(m.group(0))
+                    parsed = json.loads(m.group(0))
                 except json.JSONDecodeError:
                     pass
-            print(f"[OpenAILLM] non-JSON response, returning {{}}: {txt[:200]!r}",
-                  file=sys.stderr)
-            return {}
+        if isinstance(parsed, dict):
+            return parsed
+        # Callers all rely on the dict contract (see LLM.complete_json docstring);
+        # a bare top-level JSON array/scalar is as unusable to them as malformed JSON.
+        print(f"[OpenAILLM] non-dict JSON response, returning {{}}: {txt[:200]!r}",
+              file=sys.stderr)
+        return {}
 
     def complete_text(self, system: str, prompt: str) -> str:
         msg = self._create_with_retry(

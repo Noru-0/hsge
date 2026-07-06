@@ -124,3 +124,19 @@ def test_none_content_returns_empty_dict_instead_of_crashing(monkeypatch):
     monkeypatch.setattr(llm.client.chat.completions, "create", fake_create)
 
     assert llm.complete_json("SYS", "PROMPT") == {}
+
+
+def test_non_dict_json_response_returns_empty_dict_instead_of_crashing(monkeypatch):
+    """Some models return a bare JSON array/scalar as the top-level response
+    (e.g. '[{"segments": [...]}]' instead of '{"segments": [...]}'). All
+    complete_json callers rely on the dict contract (see LLM.complete_json
+    docstring); a non-dict must degrade the same way malformed JSON does,
+    not propagate an AttributeError from the first caller that does .get()."""
+    llm = _make_llm(monkeypatch)
+
+    def fake_create(**kwargs):
+        return _FakeResponse('[{"segments": []}]')
+
+    monkeypatch.setattr(llm.client.chat.completions, "create", fake_create)
+
+    assert llm.complete_json("SYS", "PROMPT") == {}
