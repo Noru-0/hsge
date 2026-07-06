@@ -59,3 +59,70 @@ def induce_operator(
         "effects": [e for e in out.get("effects", []) if e],
         "terminal": bool(out.get("terminal", False)),
     }
+
+
+_GROUNDING_SYS = (
+    "You verify PLANNING PREDICATES against real page states. You are given "
+    "a list of predicates (each tagged precondition or effect) and, for "
+    "each occurrence of the skill, the page's accessibility tree BEFORE and "
+    "AFTER the skill ran. For a precondition, check it against the BEFORE "
+    "tree of every occurrence; for an effect, check it against the AFTER "
+    "tree of every occurrence. "
+    'Return JSON {"results": [{"predicate": "<exact text>", "type": '
+    '"precondition"|"effect", "member_holds": [true|false, ...]}, ...]}, '
+    "one entry per predicate, with member_holds having exactly one boolean "
+    "per occurrence in the order given."
+)
+
+
+def verify_operator_grounding(
+    llm: LLM,
+    preconditions: list[str],
+    effects: list[str],
+    boundary_obs: list[tuple[str, str]],
+) -> dict:
+    """Check induced preconditions/effects against every member's real
+    boundary axtree (unlike induce_operator, which only samples 2 for
+    context). Returns per-predicate confirmation accuracy; never raises on a
+    malformed LLM response -- an unconfirmed predicate degrades to 0.0
+    rather than breaking the run, since this is a quality signal, not a gate.
+    """
+    member_count = len(boundary_obs)
+    occurrences = [
+        {"before": (start or "")[:_AXTREE_CAP], "after": (end or "")[:_AXTREE_CAP]}
+        for start, end in boundary_obs
+    ]
+    payload = {
+        "preconditions": preconditions,
+        "effects": effects,
+        "occurrences": occurrences,
+    }
+    precondition_accuracy = {p: 0.0 for p in preconditions}
+    effect_accuracy = {e: 0.0 for e in effects}
+    if member_count == 0 and not preconditions and not effects:
+        return {"precondition_accuracy": {}, "effect_accuracy": {}, "member_count": 0}
+
+    out = llm.complete_json(_GROUNDING_SYS, f"<payload>{json.dumps(payload)}</payload>")
+    results = out.get("results", [])
+    if not isinstance(results, list):
+        results = []
+
+    for entry in results:
+        if not isinstance(entry, dict):
+            continue
+        predicate = entry.get("predicate")
+        holds = entry.get("member_holds", [])
+        if not isinstance(holds, list):
+            holds = []
+        confirmed = sum(1 for h in holds[:member_count] if h is True)
+        accuracy = (confirmed / member_count) if member_count else 0.0
+        if entry.get("type") == "precondition" and predicate in precondition_accuracy:
+            precondition_accuracy[predicate] = accuracy
+        elif entry.get("type") == "effect" and predicate in effect_accuracy:
+            effect_accuracy[predicate] = accuracy
+
+    return {
+        "precondition_accuracy": precondition_accuracy,
+        "effect_accuracy": effect_accuracy,
+        "member_count": member_count,
+    }
