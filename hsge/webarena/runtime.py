@@ -18,6 +18,8 @@ import hashlib
 import json
 import os
 import re
+import time
+from datetime import datetime
 
 from ..discovery import Discovery
 from ..graph import HierarchicalGraph
@@ -32,6 +34,12 @@ from .predicates import reached
 
 def _slug(name: str) -> str:
     return re.sub(r"\W+", "_", (name or "").strip().lower())[:24] or "op"
+
+
+def _now() -> tuple[float, str]:
+    """(epoch seconds, ISO 8601 string) pair -- used everywhere timing is recorded,
+    so run_log.jsonl/nodes.json/summary.json all stay in the same two formats."""
+    return time.time(), datetime.now().isoformat()
 
 
 class WebArenaExplorer:
@@ -201,12 +209,17 @@ class WebArenaExplorer:
 
     # ---- persist the discovered skill library / operator graph / run stats ---
     def _dump_artifacts(self, task_stats: dict, nodes_visited: int, duplicate_nodes: int,
-                        nodes_log: list):
+                        nodes_log: list, status: str = "running",
+                        ended_at_epoch: float | None = None, ended_at_iso: str | None = None,
+                        error: str | None = None):
         """Write what was actually learned to disk (not just stdout/run_log.jsonl).
 
         Called after every node so a run interrupted partway through (Ctrl+C,
         network hiccup, ...) still leaves a consistent, up-to-date snapshot --
-        not just the final tally.
+        not just the final tally. `status`/`ended_at_*`/`error` are only non-default
+        on the two final calls in run() (success or exception); every call during
+        the loop leaves them at "running"/None so the on-disk summary always
+        reflects the run's current state.
         """
         skills = [card.to_dict() for card in self.library.all_skills()]
         json.dump(skills, open(os.path.join(self.out_dir, "skills.json"), "w"), indent=2)
@@ -250,130 +263,171 @@ class WebArenaExplorer:
             "tasks": task_stats,
             "skills_discovered": len(skills),
             "operators_induced": len(operators),
+            "status": status,
+            "started_at_epoch": self.run_started_epoch,
+            "started_at_iso": self.run_started_iso,
+            "ended_at_epoch": ended_at_epoch,
+            "ended_at_iso": ended_at_iso,
+            "duration_sec": (ended_at_epoch - self.run_started_epoch) if ended_at_epoch else None,
+            "error": error,
         }
         json.dump(summary, open(os.path.join(self.out_dir, "summary.json"), "w"), indent=2)
 
     # ---- the loop ------------------------------------------------------------
     def run(self, root_url: str):
         open(os.path.join(self.out_dir, "run_log.jsonl"), "w").close()  # fresh log for this run
+        self.run_started_epoch, self.run_started_iso = _now()
+        self._log("run_start", started_at_epoch=self.run_started_epoch,
+                   started_at_iso=self.run_started_iso)
         frontier, visited = [(root_url, 0)], set()
         seen_content: set[str] = set()   # sha256 of a node's initial axtree
         duplicate_nodes = 0
         task_stats = {"LOCAL": {"success": 0, "fail": 0}, "GOAL": {"success": 0, "fail": 0}}
         nodes_log: list[dict] = []   # per-node record: url, tasks tried, pass/fail (-> nodes.json)
+        # updated at the top of each iteration; used by the except block below so an
+        # exception raised before any node completes still reports a sensible value.
+        current_node_index, current_node_url = None, None
         if not self.terminal_goal:
             print("[goal] no terminal predicate for this run -> exploration-only "
                   "(skills/operators still discovered; goal composition disabled).")
-        while frontier and len(visited) < self.max_nodes:
-            url, depth = frontier.pop(0)
-            if url in visited:
-                continue
-            visited.add(url)
-            node_index = len(visited)
-            browser = self.browser_factory(url)
-            obs = browser.reset()
+        try:
+            while frontier and len(visited) < self.max_nodes:
+                url, depth = frontier.pop(0)
+                if url in visited:
+                    continue
+                visited.add(url)
+                node_index = len(visited)
+                current_node_index, current_node_url = node_index, url
+                node_start_epoch, node_start_iso = _now()
+                browser = self.browser_factory(url)
+                obs = browser.reset()
 
-            # Two different URLs can render the same content (redirects, aliases,
-            # already-authenticated login pages, ...). Skip re-exploring content
-            # we've already proposed/solved tasks for -- it wastes a full batch of
-            # explorer+solver LLM calls for zero new discovery.
-            content_hash = hashlib.sha256(obs["axtree"].encode("utf-8")).hexdigest()
-            if content_hash in seen_content:
-                duplicate_nodes += 1
+                # Two different URLs can render the same content (redirects, aliases,
+                # already-authenticated login pages, ...). Skip re-exploring content
+                # we've already proposed/solved tasks for -- it wastes a full batch of
+                # explorer+solver LLM calls for zero new discovery.
+                content_hash = hashlib.sha256(obs["axtree"].encode("utf-8")).hexdigest()
+                if content_hash in seen_content:
+                    duplicate_nodes += 1
+                    print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
+                          f"-- duplicate content of a visited page, skipping")
+                    node_duration = time.time() - node_start_epoch
+                    self._log("node_duplicate_skip", index=node_index, url=obs["url"], depth=depth,
+                               started_at_epoch=node_start_epoch, started_at_iso=node_start_iso)
+                    nodes_log.append({"index": node_index, "url": obs["url"], "depth": depth,
+                                       "duplicate": True, "tasks": [], "frontier_added": 0,
+                                       "screenshot": None,
+                                       "started_at_epoch": node_start_epoch,
+                                       "started_at_iso": node_start_iso,
+                                       "duration_sec": node_duration})
+                    self._log("node_done", index=node_index, duration_sec=node_duration)
+                    browser.close()
+                    self._dump_artifacts(task_stats, len(visited) - duplicate_nodes,
+                                          duplicate_nodes, nodes_log)
+                    continue
+                seen_content.add(content_hash)
+
                 print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
-                      f"-- duplicate content of a visited page, skipping")
-                self._log("node_duplicate_skip", index=node_index, url=obs["url"], depth=depth)
-                nodes_log.append({"index": node_index, "url": obs["url"], "depth": depth,
-                                   "duplicate": True, "tasks": [], "frontier_added": 0,
-                                   "screenshot": None})
+                      f"(depth={depth}, frontier={len(frontier)})")
+                self._log("node_visit", index=node_index, url=obs["url"], depth=depth,
+                           started_at_epoch=node_start_epoch, started_at_iso=node_start_iso)
+                node_rec = {"index": node_index, "url": obs["url"], "depth": depth,
+                            "duplicate": False, "tasks": [], "frontier_added": 0, "screenshot": None}
+
+                # one screenshot capture reused both for PageExplorer's vision input and
+                # for the on-disk record of what the node looked like.
+                node_screenshot_b64 = (browser.screenshot_b64(som=self.explorer.som)
+                                        if self.explorer.vision else None)
+                if node_screenshot_b64:
+                    node_dir = os.path.join(self.out_dir, "node_state")
+                    os.makedirs(node_dir, exist_ok=True)
+                    shotp = f"node_state/node_{node_index:04d}_screenshot.jpg"
+                    open(os.path.join(self.out_dir, shotp), "wb").write(
+                        base64.b64decode(node_screenshot_b64))
+                    node_rec["screenshot"] = shotp
+
+                # URLs actually loaded while solving become frontier candidates (the agent
+                # navigates during tasks); open tabs are added too. Page hrefs are not in
+                # the flattened axtree, so this visited-during-solving signal is what grows
+                # the frontier -- same approach as go-browse's open_pages_urls tracking.
+                seen_urls = set()
+
+                # 1) local exploration
+                for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64):
+                    episode_id = f"ep_{self.episode:04d}"
+                    browser.reset()
+                    steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(browser, task)
+                    self._record(task, steps, obs_texts, obs_screenshots, success, difficulty=1, tag="LOCAL")
+                    task_stats["LOCAL"]["success" if success else "fail"] += 1
+                    node_rec["tasks"].append({"episode": episode_id, "tag": "LOCAL", "task": task,
+                                               "success": success, "steps": len(steps)})
+                    self._log("task_result", node_index=node_index, episode=episode_id, tag="LOCAL",
+                               task=task, success=success, steps=len(steps))
+                    if success:
+                        # only skills that recur enough to be admitted become operators
+                        admitted = self.discovery.on_trajectory(steps, site=root_url, task=task)
+                        for sid in admitted:
+                            card = self._card_by_id(sid)
+                            if card:
+                                print(f"    [skill] admitted {card.skill_id} '{card.name}' "
+                                      f"(members={len(card.member_ids)})")
+                                self._log("skill_admitted", skill_id=card.skill_id, name=card.name,
+                                           members=len(card.member_ids))
+                            self._promote_skill_to_operator(sid)
+                    seen_urls.update(st.url for st in steps)
+                    seen_urls.add(final_obs.get("url", ""))
+                    print(f"    local: {task[:50]!r} success={success} steps={len(steps)}")
+
+                # 2) goal-conditioned composed task (once a plan to the goal exists)
+                gt = self._goal_task()
+                if gt:
+                    episode_id = f"ep_{self.episode:04d}"
+                    browser.reset()
+                    steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(
+                        browser, gt["goal"], goal_predicate=self.terminal_goal)
+                    self._record(gt["goal"], steps, obs_texts, obs_screenshots, success,
+                                 difficulty=gt["difficulty"], tag="GOAL")
+                    task_stats["GOAL"]["success" if success else "fail"] += 1
+                    node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
+                                               "success": success, "steps": len(steps)})
+                    self._log("task_result", node_index=node_index, episode=episode_id, tag="GOAL",
+                               task=gt["goal"], success=success, steps=len(steps), chain=gt["chain"])
+                    seen_urls.update(st.url for st in steps)
+                    print(f"    GOAL chain={gt['chain']} verified={success} steps={len(steps)}")
+
+                # 3) expand frontier (bounded by max_depth) with pages seen while solving
+                if depth < self.max_depth:
+                    seen_urls.update(browser.links())
+                    new_links = [link for link in sorted(seen_urls)
+                                 if self._admit_url(link, visited)]
+                    frontier.extend((link, depth + 1) for link in new_links)
+                    node_rec["frontier_added"] = len(new_links)
+                    if new_links:
+                        print(f"    frontier: +{len(new_links)} new url(s)")
+                        self._log("frontier_expand", node_index=node_index, added=len(new_links))
                 browser.close()
-                self._dump_artifacts(task_stats, len(visited) - duplicate_nodes,
-                                      duplicate_nodes, nodes_log)
-                continue
-            seen_content.add(content_hash)
 
-            print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
-                  f"(depth={depth}, frontier={len(frontier)})")
-            self._log("node_visit", index=node_index, url=obs["url"], depth=depth)
-            node_rec = {"index": node_index, "url": obs["url"], "depth": depth,
-                        "duplicate": False, "tasks": [], "frontier_added": 0, "screenshot": None}
-
-            # one screenshot capture reused both for PageExplorer's vision input and
-            # for the on-disk record of what the node looked like.
-            node_screenshot_b64 = (browser.screenshot_b64(som=self.explorer.som)
-                                    if self.explorer.vision else None)
-            if node_screenshot_b64:
-                node_dir = os.path.join(self.out_dir, "node_state")
-                os.makedirs(node_dir, exist_ok=True)
-                shotp = f"node_state/node_{node_index:04d}_screenshot.jpg"
-                open(os.path.join(self.out_dir, shotp), "wb").write(
-                    base64.b64decode(node_screenshot_b64))
-                node_rec["screenshot"] = shotp
-
-            # URLs actually loaded while solving become frontier candidates (the agent
-            # navigates during tasks); open tabs are added too. Page hrefs are not in
-            # the flattened axtree, so this visited-during-solving signal is what grows
-            # the frontier -- same approach as go-browse's open_pages_urls tracking.
-            seen_urls = set()
-
-            # 1) local exploration
-            for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64):
-                episode_id = f"ep_{self.episode:04d}"
-                browser.reset()
-                steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(browser, task)
-                self._record(task, steps, obs_texts, obs_screenshots, success, difficulty=1, tag="LOCAL")
-                task_stats["LOCAL"]["success" if success else "fail"] += 1
-                node_rec["tasks"].append({"episode": episode_id, "tag": "LOCAL", "task": task,
-                                           "success": success, "steps": len(steps)})
-                self._log("task_result", node_index=node_index, episode=episode_id, tag="LOCAL",
-                           task=task, success=success, steps=len(steps))
-                if success:
-                    # only skills that recur enough to be admitted become operators
-                    admitted = self.discovery.on_trajectory(steps, site=root_url, task=task)
-                    for sid in admitted:
-                        card = self._card_by_id(sid)
-                        if card:
-                            print(f"    [skill] admitted {card.skill_id} '{card.name}' "
-                                  f"(members={len(card.member_ids)})")
-                            self._log("skill_admitted", skill_id=card.skill_id, name=card.name,
-                                       members=len(card.member_ids))
-                        self._promote_skill_to_operator(sid)
-                seen_urls.update(st.url for st in steps)
-                seen_urls.add(final_obs.get("url", ""))
-                print(f"    local: {task[:50]!r} success={success} steps={len(steps)}")
-
-            # 2) goal-conditioned composed task (once a plan to the goal exists)
-            gt = self._goal_task()
-            if gt:
-                episode_id = f"ep_{self.episode:04d}"
-                browser.reset()
-                steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(
-                    browser, gt["goal"], goal_predicate=self.terminal_goal)
-                self._record(gt["goal"], steps, obs_texts, obs_screenshots, success,
-                             difficulty=gt["difficulty"], tag="GOAL")
-                task_stats["GOAL"]["success" if success else "fail"] += 1
-                node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
-                                           "success": success, "steps": len(steps)})
-                self._log("task_result", node_index=node_index, episode=episode_id, tag="GOAL",
-                           task=gt["goal"], success=success, steps=len(steps), chain=gt["chain"])
-                seen_urls.update(st.url for st in steps)
-                print(f"    GOAL chain={gt['chain']} verified={success} steps={len(steps)}")
-
-            # 3) expand frontier (bounded by max_depth) with pages seen while solving
-            if depth < self.max_depth:
-                seen_urls.update(browser.links())
-                new_links = [link for link in sorted(seen_urls)
-                             if self._admit_url(link, visited)]
-                frontier.extend((link, depth + 1) for link in new_links)
-                node_rec["frontier_added"] = len(new_links)
-                if new_links:
-                    print(f"    frontier: +{len(new_links)} new url(s)")
-                    self._log("frontier_expand", node_index=node_index, added=len(new_links))
-            browser.close()
-
-            nodes_log.append(node_rec)
+                node_duration = time.time() - node_start_epoch
+                node_rec["started_at_epoch"] = node_start_epoch
+                node_rec["started_at_iso"] = node_start_iso
+                node_rec["duration_sec"] = node_duration
+                nodes_log.append(node_rec)
+                self._log("node_done", index=node_index, duration_sec=node_duration)
+                nodes_visited = len(visited) - duplicate_nodes
+                self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log)
+        except Exception as e:
+            ended_epoch, ended_iso = _now()
+            duration_sec = ended_epoch - self.run_started_epoch
+            self._log("run_error", started_at_epoch=self.run_started_epoch,
+                       started_at_iso=self.run_started_iso,
+                       ended_at_epoch=ended_epoch, ended_at_iso=ended_iso,
+                       duration_sec=duration_sec, error=str(e), error_type=type(e).__name__,
+                       last_node_index=current_node_index, last_node_url=current_node_url)
             nodes_visited = len(visited) - duplicate_nodes
-            self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log)
+            self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log,
+                                  status="error", ended_at_epoch=ended_epoch, ended_at_iso=ended_iso,
+                                  error=str(e))
+            raise
 
         nodes_visited = len(visited) - duplicate_nodes
         print(f"\ndone: {nodes_visited} nodes ({duplicate_nodes} duplicate skipped), "
@@ -386,7 +440,14 @@ class WebArenaExplorer:
               f"(feed to build_sft_dataset.py)")
         print(f"per-run log/artifacts (run_log.jsonl, nodes.json, skills.json, "
               f"operators.json, predicates.json, graph.json, summary.json) under {self.out_dir}")
+        ended_epoch, ended_iso = _now()
+        duration_sec = ended_epoch - self.run_started_epoch
         self._log("run_summary", nodes_visited=nodes_visited, duplicate_nodes_skipped=duplicate_nodes,
                    episodes=self.episode, tasks=task_stats,
                    skills_discovered=len(self.library.all_skills()),
-                   operators_induced=len(self.opgraph.ops))
+                   operators_induced=len(self.opgraph.ops),
+                   started_at_epoch=self.run_started_epoch, started_at_iso=self.run_started_iso,
+                   ended_at_epoch=ended_epoch, ended_at_iso=ended_iso, duration_sec=duration_sec)
+        self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log,
+                              status="done", ended_at_epoch=ended_epoch, ended_at_iso=ended_iso,
+                              error=None)
