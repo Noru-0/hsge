@@ -22,7 +22,7 @@ import re
 from ..discovery import Discovery
 from ..graph import HierarchicalGraph
 from ..library import SkillLibrary
-from ..operator_induction import induce_operator
+from ..operator_induction import induce_operator, verify_operator_grounding
 from ..operators import Operator, OperatorGraph, plan
 from ..predicate_registry import PredicateRegistry
 from ..segmentation import segment_trajectory
@@ -67,6 +67,10 @@ class WebArenaExplorer:
                              vision=sv_vision["vision"], som=sv_vision["som"],
                              image_detail=sv_vision["image_detail"])
         self.opgraph = OperatorGraph()
+        # name -> {"precondition_accuracy": {pid: float}, "effect_accuracy": {pid:
+        # float}, "member_count": int}; observation-only signal, never gates
+        # admission or planning (see docs/superpowers/specs/2026-07-06-...).
+        self.operator_grounding: dict[str, dict] = {}
         # HSGE discovery; verification is by terminal outcome (see _record / reached),
         # so the library's own held-out gate is off (verify_k=0). `maturity` is the
         # real bar: a skill must recur that many times before it becomes an operator.
@@ -156,6 +160,27 @@ class WebArenaExplorer:
         self._log("operator_induced", name=op.name, skill_id=skill_id,
                    preconditions=sorted(op.preconditions), effects=sorted(op.effects),
                    terminal=op.terminal)
+
+        # Grounding check: unlike induce_operator's 2-member sample, this uses
+        # every member of the skill to score whether each induced predicate
+        # actually holds -- observation-only, never gates admission/planning.
+        all_members = [self.library.subtrajs.get(mid) for mid in card.member_ids]
+        all_members = [m for m in all_members if m and m.steps]
+        all_boundary = [(m.steps[0].axtree, m.steps[-1].axtree) for m in all_members]
+        grounding = verify_operator_grounding(
+            self.operator_llm, induced["preconditions"], induced["effects"], all_boundary)
+        pre_acc = {self.registry.canonical(p): acc
+                   for p, acc in grounding["precondition_accuracy"].items()}
+        eff_acc = {self.registry.canonical(e): acc
+                   for e, acc in grounding["effect_accuracy"].items()}
+        self.operator_grounding[op.name] = {
+            "precondition_accuracy": pre_acc,
+            "effect_accuracy": eff_acc,
+            "member_count": grounding["member_count"],
+        }
+        self._log("operator_grounding_check", name=op.name, skill_id=skill_id,
+                   member_count=grounding["member_count"],
+                   precondition_accuracy=pre_acc, effect_accuracy=eff_acc)
 
     def _goal_task(self):
         # No terminal predicate configured (e.g. a non-shopping site) -> exploration-only.
