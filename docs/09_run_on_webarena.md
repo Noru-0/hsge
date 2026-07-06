@@ -96,8 +96,9 @@ python build_sft_dataset.py outputs/wa_run/episodes train.jsonl
 ## Limits / honesty
 
 **This page is stale** — it predates the skill-derived-operator/config.yaml work
-and the vision/login/hardening work. See `docs/10_webarena_real_wiring_session.md`
-and `docs/11_vision_auth_hardening_session.md` for what actually changed and what
+and the vision/login/hardening work. See `docs/10_webarena_real_wiring_session.md`,
+`docs/11_vision_auth_hardening_session.md`, and
+`docs/12_real_run_bug_fixes_session.md` for what actually changed and what
 was verified against a real, live instance (this environment still has no
 browser/network access to run one directly — all real-instance runs and their
 output/logs came from the user's own machine).
