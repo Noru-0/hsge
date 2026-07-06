@@ -211,13 +211,19 @@ class WebArenaExplorer:
         skills = [card.to_dict() for card in self.library.all_skills()]
         json.dump(skills, open(os.path.join(self.out_dir, "skills.json"), "w"), indent=2)
 
-        operators = [{"name": op.name, "preconditions": sorted(op.preconditions),
-                      "effects": sorted(op.effects), "terminal": op.terminal,
-                      "precondition_labels": {p: self.registry.label(p)
-                                              for p in sorted(op.preconditions)},
-                      "effect_labels": {e: self.registry.label(e)
-                                        for e in sorted(op.effects)}}
-                     for op in self.opgraph.ops.values()]
+        operators = []
+        for op in self.opgraph.ops.values():
+            grounding = self.operator_grounding.get(op.name, {})
+            operators.append({
+                "name": op.name, "preconditions": sorted(op.preconditions),
+                "effects": sorted(op.effects), "terminal": op.terminal,
+                "precondition_labels": {p: self.registry.label(p)
+                                        for p in sorted(op.preconditions)},
+                "effect_labels": {e: self.registry.label(e)
+                                  for e in sorted(op.effects)},
+                "precondition_confirmed": grounding.get("precondition_accuracy", {}),
+                "effect_confirmed": grounding.get("effect_accuracy", {}),
+            })
         json.dump(operators, open(os.path.join(self.out_dir, "operators.json"), "w"), indent=2)
 
         # p0/p1/... are canonical predicate ids (see PredicateRegistry.canonical);
