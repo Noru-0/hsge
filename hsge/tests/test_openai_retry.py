@@ -19,6 +19,19 @@ def _make_llm(monkeypatch):
     return llm
 
 
+def test_client_has_bounded_request_timeout(monkeypatch):
+    """A real run stalled silently for tens of minutes with no error and no
+    log line: the OpenAI SDK's client, constructed with no explicit timeout,
+    defaults to a 600s read/write/pool timeout, and our own retry wrapper
+    multiplies that across up to 4 attempts. The client must be constructed
+    with a much shorter, explicit timeout so a slow/unresponsive API raises
+    (and gets retried/logged like any other transient error) instead of
+    blocking silently for a long time."""
+    llm = _make_llm(monkeypatch)
+
+    assert llm.client.timeout == 60.0
+
+
 class _FakeMessage:
     def __init__(self, content, refusal=None):
         self.content = content
