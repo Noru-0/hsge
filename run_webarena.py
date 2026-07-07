@@ -45,6 +45,9 @@ AGENT_ROLES = (
     "skill_abstractor",
     "skill_verifier",
     "operator_inducer",
+    "node_digester",     # phase 1: distills each node into the SiteKB
+    "task_composer",     # phase 2: generates tasks from the SiteKB
+    "judge",             # phase 2: optional fuzzy_match string judge
 )
 
 

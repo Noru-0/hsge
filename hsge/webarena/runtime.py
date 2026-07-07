@@ -33,6 +33,7 @@ from ..operators import Operator, OperatorGraph, plan
 from ..predicate_registry import PredicateRegistry
 from ..segmentation import segment_trajectory
 from .agents import PageExplorer, Solver
+from .digest import NodeDigester, SiteKB, extract_msg
 from .predicates import reached
 from .recording import record_episode
 
@@ -106,6 +107,8 @@ class WebArenaExplorer:
             self.library, self.graph,
             segmentation_llm=role("trajectory_segmenter"),
         )
+        self.digester = NodeDigester(role("node_digester"))
+        self.sitekb = SiteKB()
         self.episode = 0
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
 
@@ -293,6 +296,7 @@ class WebArenaExplorer:
     def run(self, root_url: str):
         open(os.path.join(self.out_dir, "run_log.jsonl"), "w").close()  # fresh log for this run
         self.run_started_epoch, self.run_started_iso = _now()
+        self.sitekb.site = root_url
         self._log("run_start", started_at_epoch=self.run_started_epoch,
                    started_at_iso=self.run_started_iso)
         # Priority-queue frontier. Entry key: (tier, novelty, depth, seq, url).
@@ -394,6 +398,7 @@ class WebArenaExplorer:
                 # the flattened axtree, so this visited-during-solving signal is what grows
                 # the frontier -- same approach as go-browse's open_pages_urls tracking.
                 seen_urls = set()
+                solved_tasks: list[dict] = []
 
                 # 1) local exploration
                 for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64):
@@ -419,6 +424,10 @@ class WebArenaExplorer:
                             self._promote_skill_to_operator(sid)
                     seen_urls.update(st.url for st in steps)
                     seen_urls.add(final_obs.get("url", ""))
+                    solved_tasks.append({
+                        "task": task, "success": success,
+                        "answer": extract_msg(steps[-1].action) if steps else "",
+                        "final_axtree": obs_texts[-1] if obs_texts else ""})
                     print(f"    local: {task[:50]!r} success={success} steps={len(steps)}")
 
                 # 2) goal-conditioned composed task (once a plan to the goal exists)
@@ -442,6 +451,7 @@ class WebArenaExplorer:
                 #    actually reached while solving (+ open tabs) -- admitted directly,
                 #    no template dedup. Tier 1: mined <a href> off the page -- gated by
                 #    the per-template cap so link-dense pages can't flood the frontier.
+                mined_hrefs: list[str] = []
                 if depth < self.max_depth:
                     seen_urls.update(browser.links())
                     reached_new = [link for link in sorted(seen_urls)
@@ -450,7 +460,8 @@ class WebArenaExplorer:
                         _push(0, link, depth + 1, 0)
                     mined_new = 0
                     if self.mine_hrefs:
-                        for link in browser.page_hrefs(self.max_hrefs_per_page):
+                        mined_hrefs = browser.page_hrefs(self.max_hrefs_per_page)
+                        for link in mined_hrefs:
                             if not self._admit_url(link, visited):
                                 continue
                             tmpl = self._url_template(link)
@@ -464,6 +475,25 @@ class WebArenaExplorer:
                         print(f"    frontier: +{len(reached_new)} reached, +{mined_new} mined url(s)")
                         self._log("frontier_expand", node_index=node_index,
                                    added=len(reached_new), added_mined=mined_new)
+
+                # persist the node's initial axtree + distill it into the SiteKB.
+                # The digest is best-effort: a digester failure loses one node's
+                # knowledge, never the run.
+                node_dir = os.path.join(self.out_dir, "node_state")
+                os.makedirs(node_dir, exist_ok=True)
+                axp = f"node_state/node_{node_index:04d}_axtree.txt"
+                open(os.path.join(self.out_dir, axp), "w").write(obs["axtree"])
+                try:
+                    nd = self.digester.digest(obs, solved_tasks)
+                    nd.update({"node_index": node_index,
+                               "url_template": self._url_template(obs["url"]),
+                               "outlinks": sorted((seen_urls | set(mined_hrefs)) - {""}),
+                               "axtree_path": axp})
+                    self.sitekb.add_node(nd)
+                except Exception as e:
+                    self._log("digest_error", node_index=node_index, error=str(e))
+                self.sitekb.skills = [c.to_dict() for c in self.library.all_skills()]
+                self.sitekb.dump(os.path.join(self.out_dir, "sitekb.json"))
                 browser.close()
 
                 node_duration = time.time() - node_start_epoch
