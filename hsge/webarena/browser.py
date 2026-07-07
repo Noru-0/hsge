@@ -117,6 +117,25 @@ class WebArenaBrowser:
         urls = obs.get("open_pages_urls", []) or []
         return list(urls)
 
+    def page_hrefs(self, limit: int = 100) -> list[str]:
+        """Every <a href> on the current page, as absolute URLs (order-deduped,
+        capped at `limit`). Read straight off the Playwright page because the
+        flattened axtree drops hrefs. Fail-soft to [] like observation()."""
+        try:
+            page = self.env.unwrapped.page
+            hrefs = page.eval_on_selector_all(
+                "a[href]", "els => els.map(e => e.href)")
+        except Exception:
+            return []
+        seen, out = set(), []
+        for h in hrefs or []:
+            if h and h not in seen:
+                seen.add(h)
+                out.append(h)
+                if len(out) >= limit:
+                    break
+        return out
+
     def close(self):
         try:
             self.env.close()

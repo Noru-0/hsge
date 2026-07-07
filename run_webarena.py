@@ -29,7 +29,8 @@ DEFAULTS = {
             "allow": None, "denylist": r"logout|\?p=|product_list_|[?&]sort=",
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "max_tasks": 6, "maturity": 2,
             "predicate_sim": 0.6, "headed": False, "success_url_re": None,
-            "full_reset_url": None, "terminal_goal": None},
+            "full_reset_url": None, "terminal_goal": None,
+            "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
     "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2,
             "agents": {}},
     "embedder": {"model": "all-MiniLM-L6-v2"},
@@ -115,6 +116,9 @@ class _FakeBrowser:
             self.i = min(self.i + 1, len(self.SEQ) - 1)
         return self.observation()
     def links(self): return []
+    def page_hrefs(self, limit: int = 100):
+        # a couple of in-host URLs so --dry-run exercises the href-mining path
+        return ["http://shop/catalog/category/1", "http://shop/catalog/category/2"][:limit]
     def close(self): pass
 
     def screenshot_b64(self, som: bool = False) -> str | None:
@@ -236,6 +240,14 @@ def main():
     ap.add_argument("--max-tasks", type=int, default=None,
                     help="max tasks PageExplorer proposes per node")
     ap.add_argument("--maturity", type=int, default=None)
+    ap.add_argument("--no-mine-hrefs", dest="mine_hrefs", action="store_const",
+                    const=False, default=None,
+                    help="disable mining <a href> links into the frontier (reproduces "
+                         "the old navigated-only behavior)")
+    ap.add_argument("--per-template-cap", type=int, default=None,
+                    help="max mined nodes admitted per URL template (default 3)")
+    ap.add_argument("--max-hrefs-per-page", type=int, default=None,
+                    help="cap on <a href> links mined per page (default 100)")
     ap.add_argument("--provider", default=None, help="openai | deepseek")
     ap.add_argument("--model", default=None, help="LLM model id (e.g. gpt-4o-mini, deepseek-chat)")
     ap.add_argument("--base-url", default=None, help="OpenAI-compatible base URL")
@@ -262,6 +274,9 @@ def main():
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
     predicate_sim = run["predicate_sim"]
+    mine_hrefs = _pick(args.mine_hrefs, run["mine_hrefs"])
+    per_template_cap = _pick(args.per_template_cap, run["per_template_cap"])
+    max_hrefs_per_page = _pick(args.max_hrefs_per_page, run["max_hrefs_per_page"])
 
     if args.dry_run:
         root_url = args.root_url or "http://shop/home"
@@ -319,6 +334,8 @@ def main():
         allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
         max_nodes=max_nodes, max_steps=max_steps, max_tasks=max_tasks, maturity=maturity,
         terminal_goal=terminal_goal, predicate_sim=predicate_sim, read_only=args.read_only,
+        mine_hrefs=mine_hrefs, per_template_cap=per_template_cap,
+        max_hrefs_per_page=max_hrefs_per_page,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
     explorer.run(root_url)

@@ -129,17 +129,27 @@ is attempted. `run_webarena.py` resolves it as: `config.run.terminal_goal` expli
 `"order_confirmed"` auto (when `site == shopping` or `--success-url-re` is set) >
 `None`.
 
-**Frontier expansion** does not rely on `browser.links()` (BrowserGym's
-`open_pages_urls`, which is only open tabs) as its main source — it accumulates every
-URL the agent actually loads while solving a task (each `Step.url` + the final
-observation), plus open tabs, and admits the allow/deny-filtered ones as frontier
-candidates bounded by `max_depth`. This is what lets a real run explore beyond the
-root page. **Known gap:** this means frontier growth depends entirely on solved-task
-*navigation* — a node where every proposed task is `[INFO]` (read-only, no
-navigation) contributes nothing new to the frontier even if the page has plenty of
-unclicked links; mining `<a href>`s directly from the axtree/DOM would be a more
-robust primary source but hasn't been implemented (see `docs/11_vision_auth_
-hardening_session.md`'s "Suggested next steps").
+**Frontier expansion** uses a **priority queue** (`heapq`) with two tiers of
+candidates (see `docs/superpowers/specs/2026-07-07-frontier-href-mining-design.md`):
+- **Tier 0 — URLs the agent actually reached** while solving a task (each `Step.url` +
+  the final observation) plus open tabs (`browser.links()` / `open_pages_urls`).
+  Admitted directly (only the allow/deny/visited guards), highest priority, no dedup.
+- **Tier 1 — mined `<a href>`** off the page via `WebArenaBrowser.page_hrefs()`
+  (Playwright `eval_on_selector_all`, since the flattened axtree drops hrefs). This is
+  the fix for the old frontier-starvation gap: growth no longer depends solely on
+  solved-task navigation, so a node of all-`[INFO]` tasks still contributes its links.
+  Gated by a **per-template cap** (`run.per_template_cap`, default 3): `_url_template`
+  normalizes a URL into a shape (drop scheme/query/fragment; wildcard id-like/digit
+  segments and everything after them, e.g. `/f/AskReddit/comments/*/*`) so
+  near-identical pages (per-post/-comment/-user) can't flood the frontier while
+  distinct forums/types are still all explored. The cap is re-checked **lazily at pop
+  time** (a template's visited count grows during the run). `run.mine_hrefs` (default
+  `true`) is the master toggle; `false` reproduces the old navigated-only behavior.
+  `run.max_hrefs_per_page` (default 100) caps hrefs mined per page.
+
+Priority key `(tier, novelty, depth, seq, url)`: tier 0 before tier 1; within tier 1,
+lower visited-count-of-template first (unseen templates lead); shallower depth next
+(BFS breadth); `seq` for FIFO tiebreak.
 
 **`--read-only`** makes `PageExplorer` propose only INFO/NAV tasks (drops MOD and
 anything it can't classify), for smoke-testing a shared, stateful site without

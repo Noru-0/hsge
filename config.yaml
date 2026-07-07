@@ -6,11 +6,11 @@
 run:
   site: reddit             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
   root_url: null             # explicit URL; overrides `site` when set
-  out_dir: outputs/wa_run_01
+  out_dir: outputs/wa_run_02
   allow: null                # null -> derived from the root URL's host
   denylist: "logout|\\?p=|product_list_|[?&]sort="   # blocked child URLs (deny wins)
-  max_nodes: 15
-  max_depth: 6
+  max_nodes: 500
+  max_depth: 300
   max_steps: 15
   max_tasks: 9               # tasks PageExplorer proposes per node (more -> less chance
                              # of missing a task, but +1 Solver episode per extra task)
@@ -21,6 +21,12 @@ run:
   full_reset_url: null       # null -> $WA_FULL_RESET
   terminal_goal: null        # planning goal predicate; null -> auto (order_confirmed on
                              # shopping, disabled/exploration-only elsewhere)
+  mine_hrefs: true           # mine <a href> links into the frontier (not just URLs the
+                             # agent navigates to) -- prevents early frontier starvation
+                             # on link-dense sites; false = old navigated-only behavior
+  per_template_cap: 3        # max mined nodes admitted per URL "template" (e.g. one
+                             # /f/*/comments/* shape) so near-identical pages don't flood
+  max_hrefs_per_page: 100    # cap on <a href> links mined per page
 
 llm:
   # Shared defaults. Each helper below inherits any field it does not override.

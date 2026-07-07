@@ -15,11 +15,15 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import heapq
+import itertools
 import json
 import os
 import re
 import time
+from collections import Counter
 from datetime import datetime
+from urllib.parse import urlsplit
 
 from ..discovery import Discovery
 from ..graph import HierarchicalGraph
@@ -48,6 +52,8 @@ class WebArenaExplorer:
                  max_nodes: int = 20, max_steps: int = 15, max_tasks: int = 4,
                  terminal_goal: str = "order_confirmed",
                  maturity: int = 2, predicate_sim: float = 0.6, read_only: bool = False,
+                 mine_hrefs: bool = True, per_template_cap: int = 3,
+                 max_hrefs_per_page: int = 100,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
@@ -67,6 +73,9 @@ class WebArenaExplorer:
         self.allow = re.compile(allow_pattern)
         self.deny = re.compile(deny_pattern) if deny_pattern else None
         self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
+        self.mine_hrefs = mine_hrefs
+        self.per_template_cap = per_template_cap
+        self.max_hrefs_per_page = max_hrefs_per_page
         pe_vision, sv_vision = vision_cfg("page_explorer"), vision_cfg("solver")
         self.explorer = PageExplorer(role("page_explorer"), max_tasks=max_tasks, read_only=read_only,
                                      vision=pe_vision["vision"], som=pe_vision["som"],
@@ -207,6 +216,31 @@ class WebArenaExplorer:
         return bool(link and self.allow.search(link) and link not in visited
                     and not (self.deny and self.deny.search(link)))
 
+    @staticmethod
+    def _url_template(url: str) -> str:
+        """Normalize a URL into a "shape" that groups same-kind pages, so the
+        per-template cap can bound how many near-identical pages (per-post /
+        per-comment / per-user) enter the frontier.
+
+        Drops scheme/query/fragment (keeps host + path). A path segment is
+        wildcarded to '*' if it contains a digit (an id-like slug) or follows an
+        already-wildcarded one -- so an entity's trailing title slug collapses
+        too (e.g. reddit's /comments/<id>/<title>). Type-identifying segments
+        (a forum name like 'AskReddit', or 'comments') are kept, so different
+        forums stay different templates and all get explored.
+        """
+        parts = urlsplit(url or "")
+        segs, wildcarding = [], False
+        for seg in parts.path.split("/"):
+            if not seg:
+                continue
+            if wildcarding or any(ch.isdigit() for ch in seg):
+                segs.append("*")
+                wildcarding = True
+            else:
+                segs.append(seg)
+        return parts.netloc + "/" + "/".join(segs)
+
     # ---- persist the discovered skill library / operator graph / run stats ---
     def _dump_artifacts(self, task_stats: dict, nodes_visited: int, duplicate_nodes: int,
                         nodes_log: list, status: str = "running",
@@ -279,7 +313,27 @@ class WebArenaExplorer:
         self.run_started_epoch, self.run_started_iso = _now()
         self._log("run_start", started_at_epoch=self.run_started_epoch,
                    started_at_iso=self.run_started_iso)
-        frontier, visited = [(root_url, 0)], set()
+        # Priority-queue frontier. Entry key: (tier, novelty, depth, seq, url).
+        #   tier    -- 0 = URL the agent actually reached, 1 = mined <a href> (tier 0
+        #              always explored first).
+        #   novelty -- tier-1 only: visited-node count of the URL's template (fewer
+        #              first, so unseen templates lead); 0 for tier 0.
+        #   depth   -- shallower first (BFS breadth). seq -- FIFO tiebreak.
+        seq = itertools.count()
+        visited: set = set()
+        template_counts: Counter = Counter()   # visited nodes per URL template (tier-1 cap)
+        queued: set = set()                     # URLs already pushed (dedup pushes)
+        frontier: list = []
+        heapq.heappush(frontier, (0, 0, 0, next(seq), root_url))
+        queued.add(root_url)
+
+        def _push(tier: int, url: str, depth: int, novelty: int) -> bool:
+            if url in queued:
+                return False
+            queued.add(url)
+            heapq.heappush(frontier, (tier, novelty, depth, next(seq), url))
+            return True
+
         seen_content: set[str] = set()   # sha256 of a node's initial axtree
         duplicate_nodes = 0
         task_stats = {"LOCAL": {"success": 0, "fail": 0}, "GOAL": {"success": 0, "fail": 0}}
@@ -292,10 +346,16 @@ class WebArenaExplorer:
                   "(skills/operators still discovered; goal composition disabled).")
         try:
             while frontier and len(visited) < self.max_nodes:
-                url, depth = frontier.pop(0)
+                tier, _novelty, depth, _seq, url = heapq.heappop(frontier)
                 if url in visited:
                     continue
+                # Lazy per-template cap for mined (tier-1) URLs: the visited count of
+                # a template grows during the run, so a URL under cap when pushed can
+                # be over cap by the time it pops. Tier-0 (reached) URLs are exempt.
+                if tier == 1 and template_counts[self._url_template(url)] >= self.per_template_cap:
+                    continue
                 visited.add(url)
+                template_counts[self._url_template(url)] += 1
                 node_index = len(visited)
                 current_node_index, current_node_url = node_index, url
                 node_start_epoch, node_start_iso = _now()
@@ -332,7 +392,8 @@ class WebArenaExplorer:
                 self._log("node_visit", index=node_index, url=obs["url"], depth=depth,
                            started_at_epoch=node_start_epoch, started_at_iso=node_start_iso)
                 node_rec = {"index": node_index, "url": obs["url"], "depth": depth,
-                            "duplicate": False, "tasks": [], "frontier_added": 0, "screenshot": None}
+                            "duplicate": False, "tasks": [], "frontier_added": 0,
+                            "frontier_added_mined": 0, "screenshot": None}
 
                 # one screenshot capture reused both for PageExplorer's vision input and
                 # for the on-disk record of what the node looked like.
@@ -395,16 +456,32 @@ class WebArenaExplorer:
                     seen_urls.update(st.url for st in steps)
                     print(f"    GOAL chain={gt['chain']} verified={success} steps={len(steps)}")
 
-                # 3) expand frontier (bounded by max_depth) with pages seen while solving
+                # 3) expand frontier (bounded by max_depth). Tier 0: URLs the agent
+                #    actually reached while solving (+ open tabs) -- admitted directly,
+                #    no template dedup. Tier 1: mined <a href> off the page -- gated by
+                #    the per-template cap so link-dense pages can't flood the frontier.
                 if depth < self.max_depth:
                     seen_urls.update(browser.links())
-                    new_links = [link for link in sorted(seen_urls)
-                                 if self._admit_url(link, visited)]
-                    frontier.extend((link, depth + 1) for link in new_links)
-                    node_rec["frontier_added"] = len(new_links)
-                    if new_links:
-                        print(f"    frontier: +{len(new_links)} new url(s)")
-                        self._log("frontier_expand", node_index=node_index, added=len(new_links))
+                    reached_new = [link for link in sorted(seen_urls)
+                                   if self._admit_url(link, visited)]
+                    for link in reached_new:
+                        _push(0, link, depth + 1, 0)
+                    mined_new = 0
+                    if self.mine_hrefs:
+                        for link in browser.page_hrefs(self.max_hrefs_per_page):
+                            if not self._admit_url(link, visited):
+                                continue
+                            tmpl = self._url_template(link)
+                            if template_counts[tmpl] >= self.per_template_cap:
+                                continue
+                            if _push(1, link, depth + 1, template_counts[tmpl]):
+                                mined_new += 1
+                    node_rec["frontier_added"] = len(reached_new)
+                    node_rec["frontier_added_mined"] = mined_new
+                    if reached_new or mined_new:
+                        print(f"    frontier: +{len(reached_new)} reached, +{mined_new} mined url(s)")
+                        self._log("frontier_expand", node_index=node_index,
+                                   added=len(reached_new), added_mined=mined_new)
                 browser.close()
 
                 node_duration = time.time() - node_start_epoch
