@@ -34,6 +34,7 @@ from ..predicate_registry import PredicateRegistry
 from ..segmentation import segment_trajectory
 from .agents import PageExplorer, Solver
 from .predicates import reached
+from .recording import record_episode
 
 
 def _slug(name: str) -> str:
@@ -110,27 +111,8 @@ class WebArenaExplorer:
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag):
-        ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
-        os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
-        meta = {"kind": "low_level_trajectory", "goal": goal,
-                "outcome": {"success": bool(success), "reward": 1.0 if success else 0.0, "response": ""},
-                "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps)}
-        json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w"), indent=2)
-        with open(os.path.join(ep, "episode.jsonl"), "w") as f:
-            for k, st in enumerate(steps):
-                axp = f"page_state/step_{k:03d}_axtree.txt"
-                open(os.path.join(ep, axp), "w").write(obs_texts[k] if k < len(obs_texts) else "")
-                observation = {"axtree_txt": {"path": axp}}
-                shot = obs_screenshots[k] if k < len(obs_screenshots) else None
-                if shot:
-                    shotp = f"page_state/step_{k:03d}_screenshot.jpg"
-                    open(os.path.join(ep, shotp), "wb").write(base64.b64decode(shot))
-                    observation["screenshot"] = {"path": shotp}
-                rec = {"record_type": "step", "index": k,
-                       "action": json.dumps({"thought": st.obs_summary, "action": st.action}),
-                       "parsed_action": st.action, "thought": st.obs_summary,
-                       "observation": observation}
-                f.write(json.dumps(rec) + "\n")
+        record_episode(self.out_dir, self.episode, goal, steps, obs_texts,
+                       obs_screenshots, success, difficulty, tag)
         self.episode += 1
 
     def _card_by_id(self, skill_id: str):
