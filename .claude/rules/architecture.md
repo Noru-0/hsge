@@ -191,6 +191,14 @@ target URL, so prose assertions and pseudo-selectors never reach the runner;
 `url_match` wildcards the path segment after the first numeric segment
 (Postmill retitles change the slug, not the id); and the `judge` role receives
 the task intent, so short references ("Yes") are judged in context.
+A run_04 measurement (77% verified, up from 65%) added five more guards:
+NAV tasks whose `reference_url` is the start page itself are rejected
+(`url_key`, the slug-blind compare, is now a public evaluator helper); the
+NAV probe treats a redirect away from the requested URL (login/permission
+bounce) as unreachable; INFO intents about site UI mechanics (short URL,
+RSS) and any intent with relative times ("17 minutes ago") are rejected;
+and an INFO reference must appear inside its cited `evidence` quote —
+otherwise the solve-time re-grounding could never protect it from drift.
 Re-running phase 2 is idempotent (existing `gen_tasks.json` reused, done
 task_ids skipped). `build_sft_dataset.py` keeps only verified GEN episodes by
 default (`--include-local` opts self-reported LOCAL successes back in), with
