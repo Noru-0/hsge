@@ -13,7 +13,7 @@ import json
 import random
 import re
 
-from .evaluator import normalize_answer
+from .evaluator import normalize_answer, url_key
 
 MOD_DENY_RE = re.compile(
     r"\b(delete|remove|erase|logout|log\s*out|password|ban|deactivate|wipe)\b", re.I)
@@ -127,6 +127,9 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
             return "NAV without url_match"
         if ev.get("reference_url") not in kb.known_urls():
             return "reference_url not in SiteKB"
+        if url_key(ev.get("reference_url") or "") == url_key(
+                task.get("start_url") or kb.site):
+            return "NAV reference_url equals start_url"
     else:  # MOD
         if MOD_DENY_RE.search(intent):
             return "destructive MOD intent"

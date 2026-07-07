@@ -11,7 +11,8 @@ def _kb():
     kb = SiteKB(site="http://s")
     kb.add_node({"node_index": 1, "url": "http://s/f/gaming",
                  "page_type": "forum", "title": "gaming",
-                 "outlinks": ["http://s/f/gaming/post1"],
+                 "outlinks": ["http://s/f/gaming/post1", "http://s",
+                              "http://s/f/gaming/15/a-slug"],
                  "entities": [{"type": "post", "name": "Best budget GPU",
                                "attrs": {"author": "hlz0"}, "grounded": True}],
                  "facts": [{"q": "top post?", "a": "Best budget GPU", "grounded": True},
@@ -141,3 +142,28 @@ def test_validate_mod_self_verifying_gates():
                 [{"url": "last", "locator": "",
                   "required_contents": {"must_include": []}}])
     assert "without must_include" in validate_task(empty, kb, [])
+
+
+def test_validate_nav_rejects_self_referential_target():
+    kb = _kb()
+    # run_04 gen_0004: "Go to the Messages page from the notifications page"
+    # with reference_url == start_url -- unwinnable as specified
+    nav = {"intent": "Go to the Messages page from the notifications page.",
+           "type": "NAV", "start_url": "http://s/f/gaming", "hops": 1,
+           "source_nodes": [1], "answer_fact_refs": [],
+           "eval": {"eval_types": ["url_match"], "reference_answers": None,
+                    "reference_url": "http://s/f/gaming", "program_html": []}}
+    assert "equals start_url" in validate_task(nav, kb, [])
+    # slug drift must not hide the self-reference (slug-blind compare)
+    slugged = dict(nav, start_url="http://s/f/gaming/15/b-slug",
+                   eval=dict(nav["eval"],
+                             reference_url="http://s/f/gaming/15/a-slug"))
+    assert "equals start_url" in validate_task(slugged, kb, [])
+    # missing start_url falls back to kb.site
+    rootless = dict(nav, eval=dict(nav["eval"], reference_url="http://s"))
+    del rootless["start_url"]
+    assert "equals start_url" in validate_task(rootless, kb, [])
+    # a genuine target elsewhere still passes
+    ok = dict(nav, eval=dict(nav["eval"],
+                             reference_url="http://s/f/gaming/post1"))
+    assert validate_task(ok, kb, []) is None

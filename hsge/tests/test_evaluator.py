@@ -5,7 +5,7 @@ import json
 
 from hsge.schema import Step
 from hsge.webarena.evaluator import (evaluate, extract_answer, normalize_answer,
-                                     program_html, string_match, url_match)
+                                     program_html, string_match, url_key, url_match)
 
 
 def test_normalize_and_extract_answer():
@@ -154,3 +154,9 @@ def test_evaluate_passes_intent_to_judge():
     ok, _ = evaluate(task, "done: score is 1", "http://s/p", None, judge=j)
     assert ok
     assert json.loads(j.prompts[0])["question"] == "what is the score?"
+
+
+def test_url_key_public_helper_slug_blind():
+    assert url_key("http://s/f/movies/15/a-slug") == url_key("http://s/f/movies/15/b-slug")
+    assert url_key("http://s/p?a=1&b=2") == url_key("http://s/p?b=2&a=1")
+    assert url_key("http://s/p") != url_key("http://s/q")
