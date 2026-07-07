@@ -56,6 +56,20 @@ llm:
       model: deepseek-v4-flash
     operator_inducer:        # induces planning preconditions/effects from a skill
       model: deepseek-v4-flash
+    node_digester:           # phase 1: distills each visited node into the SiteKB
+      model: deepseek-v4-flash
+    task_composer:           # phase 2: composes WebArena-style tasks from the SiteKB
+      provider: openai
+      model: gpt-4o          # whole-KB reasoning -- worth the stronger model
+    judge:                   # phase 2: fuzzy_match string judge (rarely called)
+      model: deepseek-v4-flash
 
 embedder:
   model: all-MiniLM-L6-v2
+
+gen:                         # phase 2 (run_webarena.py --phase generate|all)
+  quota: {INFO: 60, NAV: 20, MOD: 20}   # generated-task budget per type
+  hops_min: 2                # preferred multi-hop range for composed tasks
+  hops_max: 4
+  max_steps: 25              # solver step budget per generated task
+  skill_hints: true          # inject top-k discovered skills into the solver prompt

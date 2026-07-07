@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import json
 import os
 import re
 
@@ -34,6 +35,8 @@ DEFAULTS = {
     "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2,
             "agents": {}},
     "embedder": {"model": "all-MiniLM-L6-v2"},
+    "gen": {"quota": {"INFO": 60, "NAV": 20, "MOD": 20}, "hops_min": 2, "hops_max": 4,
+            "max_steps": 25, "skill_hints": True},
 }
 
 # Every model-backed helper in the real exploration pipeline. Values under
@@ -75,9 +78,25 @@ class _DryLLM(MockLLM):
     """
     def complete_json(self, system: str, prompt: str,
                        image_b64: str | None = None, image_detail: str = "low") -> dict:
+        if system.startswith("DIGEST"):                          # node digester
+            return {"page_type": "page", "title": "home",
+                    "entities": [{"type": "link", "name": "next", "attrs": {},
+                                  "evidence": "link 'next'"}],
+                    "facts": [{"q": "main link label?", "a": "next",
+                               "evidence": "link 'next'"}]}
+        if system.startswith("COMPOSE"):                         # task composer
+            return {"tasks": [{
+                "intent": "Find the label of the main link on the home page and report it",
+                "type": "INFO", "start_url": "http://shop/home", "hops": 2,
+                "source_nodes": [1], "answer_fact_refs": ["n1.f0"],
+                "eval": {"eval_types": ["string_match"],
+                         "reference_answers": {"must_include": ["next"]},
+                         "reference_url": None, "program_html": []}}]}
         if system.startswith("PROPOSE"):                        # explorer
             return {"tasks": ["search for an item", "add an item to cart"]}
         if "web agent" in system.lower():                       # solver
+            if "report it" in prompt.lower():                    # phase-2 INFO task
+                return {"thought": "answer", "action": "send_msg_to_user('the label is next')"}
             if "thank you for your purchase" in prompt.lower():  # goal page -> finish
                 return {"thought": "done", "action": "send_msg_to_user('done')"}
             return {"thought": "advance", "action": "click('1')"}
@@ -119,6 +138,7 @@ class _FakeBrowser:
             self.i = min(self.i + 1, len(self.SEQ) - 1)
         return self.observation()
     def links(self): return []
+    def eval_js(self, expr: str) -> str: return ""
     def page_hrefs(self, limit: int = 100):
         # a couple of in-host URLs so --dry-run exercises the href-mining path
         return ["http://shop/catalog/category/1", "http://shop/catalog/category/2"][:limit]
@@ -263,10 +283,15 @@ def main():
     ap.add_argument("--read-only", action="store_true",
                     help="propose only [INFO]/[NAV] tasks; never [MOD] (no writes to the site)")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--phase", choices=["explore", "generate", "all"], default="explore",
+                    help="explore = phase-1 frontier loop (default, current behavior); "
+                         "generate = phase-2 task generation + verified collection "
+                         "(needs sitekb.json in --out); all = both")
     args = ap.parse_args()
 
     cfg = _load_config(args.config)
     run, llm_cfg, emb_cfg = cfg["run"], cfg["llm"], cfg["embedder"]
+    gen_cfg = cfg["gen"]
 
     out_dir = _pick(args.out, run["out_dir"])
     max_nodes = _pick(args.max_nodes, run["max_nodes"])
@@ -281,6 +306,7 @@ def main():
     per_template_cap = _pick(args.per_template_cap, run["per_template_cap"])
     max_hrefs_per_page = _pick(args.max_hrefs_per_page, run["max_hrefs_per_page"])
 
+    full_reset_url = None
     if args.dry_run:
         root_url = args.root_url or "http://shop/home"
         allow = _pick(args.allow, run["allow"]) or (re.escape(root_url.rsplit("/", 1)[0]) + ".*")
@@ -341,7 +367,47 @@ def main():
         max_hrefs_per_page=max_hrefs_per_page,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
-    explorer.run(root_url)
+    if args.phase in ("explore", "all"):
+        explorer.run(root_url)
+
+    if args.phase in ("generate", "all"):
+        from hsge.webarena.collect import GenerationRunner
+        from hsge.webarena.composer import TaskComposer
+        from hsge.webarena.digest import SiteKB
+        from hsge.webarena.agents import Solver
+
+        kb_path = os.path.join(out_dir, "sitekb.json")
+        if not os.path.exists(kb_path):
+            ap.error(f"--phase generate needs {kb_path} (run --phase explore first)")
+        kb = SiteKB.load(kb_path)
+
+        gt_path = os.path.join(out_dir, "gen_tasks.json")
+        if os.path.exists(gt_path):    # idempotent re-run: no composer re-burn
+            tasks = json.load(open(gt_path))["accepted"]
+            print(f"[gen] reusing {len(tasks)} tasks from {gt_path}")
+        else:
+            composer = TaskComposer(agent_llms["task_composer"], kb,
+                                    quota=gen_cfg["quota"],
+                                    hops=(gen_cfg["hops_min"], gen_cfg["hops_max"]))
+            tasks, rejected = composer.generate()
+            json.dump({"accepted": tasks, "rejected": rejected},
+                      open(gt_path, "w"), indent=2)
+            print(f"[gen] composed {len(tasks)} tasks ({len(rejected)} rejected) -> {gt_path}")
+
+        sv = agent_vision["solver"]
+        gen_solver = Solver(agent_llms["solver"], max_steps=gen_cfg["max_steps"],
+                            vision=sv["vision"], som=sv["som"],
+                            image_detail=sv["image_detail"])
+        runner = GenerationRunner(
+            browser_factory, gen_solver, out_dir, embedder, kb,
+            judge_llm=agent_llms.get("judge"),
+            discovery=explorer.discovery if args.phase == "all" else None,
+            root_url=root_url,
+            reset_fn=(lambda: perform_full_reset(full_reset_url)) if full_reset_url else None,
+            skill_hints=bool(gen_cfg["skill_hints"]))
+        stats = runner.run(tasks)
+        print(f"[gen] done: {stats['verified']} verified / {stats['attempted']} attempted")
+
     print("\nnext: python build_sft_dataset.py", os.path.join(out_dir, "episodes"), "train.jsonl")
 
 
