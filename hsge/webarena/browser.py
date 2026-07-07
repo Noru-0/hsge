@@ -138,9 +138,13 @@ class WebArenaBrowser:
 
     def eval_js(self, expr: str) -> str:
         """Evaluate a JS expression on the live page (program_html eval spec).
-        Fail-soft to "" like observation()/page_hrefs()."""
+        Playwright can't serialize a DOM element to JSON (it comes back as
+        "{}"), which is what most `document.querySelector(...)` locators
+        return, so unwrap an Element result to its outerHTML instead of the
+        raw expression value. Fail-soft to "" like observation()/page_hrefs()."""
+        wrapped = f"(() => {{ const r = ({expr}); return (r instanceof Element) ? r.outerHTML : r; }})()"
         try:
-            return str(self.env.unwrapped.page.evaluate(expr))
+            return str(self.env.unwrapped.page.evaluate(wrapped))
         except Exception:
             return ""
 

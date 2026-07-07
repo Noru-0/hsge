@@ -10,6 +10,7 @@ import glob
 import json
 import os
 
+from .digest import evidence_grounded
 from .evaluator import evaluate, extract_answer
 from .recording import record_episode
 
@@ -54,6 +55,19 @@ class GenerationRunner:
                 done.add(tid)
         return done
 
+    def _is_stale(self, task: dict, axtree: str) -> bool:
+        """A single-hop INFO task's cited evidence may have been mutated by a
+        later phase-1/phase-2 write to the same shared, mutable page since its
+        digest was captured; re-check it's still literally on the live page
+        before spending a solve+score on what would be a false failure."""
+        if task.get("type") != "INFO" or (task.get("hops") or 1) > 1:
+            return False
+        for ref in task.get("answer_fact_refs") or []:
+            evidence = self.kb.resolve_ref_evidence(ref)
+            if evidence and not evidence_grounded(evidence, axtree):
+                return True
+        return False
+
     def _dump_stats(self, stats: dict):
         """Merge GEN stats into summary.json without clobbering phase-1 fields."""
         spath = os.path.join(self.out_dir, "summary.json")
@@ -71,16 +85,21 @@ class GenerationRunner:
                  + [t for t in tasks if t.get("type") == "MOD"])
         done = self._done_task_ids()
         stats = {"attempted": 0, "verified": 0, "failed": 0, "errors": 0,
+                 "stale_skipped": 0,
                  "by_type": {k: {"verified": 0, "failed": 0}
                              for k in ("INFO", "NAV", "MOD")}}
         ran_mod = False
         for task in order:
             if task["task_id"] in done:
                 continue
-            stats["attempted"] += 1
             browser = self.browser_factory(task["start_url"])
             try:
-                browser.reset()
+                obs = browser.reset()
+                if self._is_stale(task, obs.get("axtree", "")):
+                    stats["stale_skipped"] += 1
+                    self._dump_stats(stats)
+                    continue
+                stats["attempted"] += 1
                 hints = (top_k_skill_hints(self.embedder, self.kb.skills, task["intent"])
                          if self.skill_hints else None)
                 steps, obs_texts, shots, final_obs, _ = self.solver.solve(

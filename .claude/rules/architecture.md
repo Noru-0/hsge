@@ -164,10 +164,23 @@ behavior) reads the SiteKB: `composer.py` (role `task_composer`) samples
 context bundles and generates WebArena-style tasks with eval specs
 (`string_match`/`url_match`/`program_html`), code-gated so INFO reference
 answers must be backed by grounded refs, NAV targets must be known URLs, and
-MOD intents pass a denylist; `collect.py`'s `GenerationRunner` solves each
+MOD intents pass a denylist plus a read-only-phrasing gate ("check if/whether
+..." mutates nothing, so it can't be a MOD — a real run had 6/11 MODs be such
+misclassified state questions); `collect.py`'s `GenerationRunner` solves each
 task (Solver + top-k skill hints), scores it with `evaluator.py`, and records
 tag-`GEN` episodes whose meta carries `verified` — INFO/NAV run before the MOD
 batch, and the (slow) instance reset runs at most once, after all MODs.
+Scoring learned three lessons from `wa_run_03` (INFO verified 1/60 before,
+34/60 after re-score): `string_match` accepts the reference as a *substring*
+of the answer (the Solver answers in sentences, "done: X is Y", not bare
+facts) and falls back to the `judge` role on residual format drift ("score is
+1" vs "1 point") — never consulted when code already matched or the answer is
+empty; `WebArenaBrowser.eval_js` unwraps an `Element` result to `outerHTML`
+(Playwright serializes DOM nodes to `{}`, so `document.querySelector(...)`
+locators could never match); and `GenerationRunner` re-checks a single-hop
+INFO task's cited evidence against the live page at solve time, skipping
+(`stale_skipped`, not failed) tasks whose ground truth a later write mutated —
+the site is shared and mutable, so digests go stale.
 Re-running phase 2 is idempotent (existing `gen_tasks.json` reused, done
 task_ids skipped). `build_sft_dataset.py` keeps only verified GEN episodes by
 default (`--include-local` opts self-reported LOCAL successes back in), with

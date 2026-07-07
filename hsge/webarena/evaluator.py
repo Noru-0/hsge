@@ -31,18 +31,35 @@ def extract_answer(steps) -> str:
     return ""
 
 
+def _judge_match(answer: str, references: list, judge) -> bool:
+    if judge is None or not references or not normalize_answer(answer):
+        return False
+    out = judge.complete_json(JUDGE_SYS, json.dumps(
+        {"answer": answer, "references": references}))
+    return bool(out.get("match"))
+
+
 def string_match(answer: str, reference_answers: dict, judge=None) -> bool:
     refs = reference_answers or {}
     na = normalize_answer(answer)
     if "exact_match" in refs:
-        return na == normalize_answer(str(refs["exact_match"]))
+        target = normalize_answer(str(refs["exact_match"]))
+        # Solver answers are full sentences ("done: X is Y"), not bare facts,
+        # so also accept the reference as a substring of the answer; when even
+        # that fails, fall back to the judge -- most misses are format drift
+        # ("score is 1" vs "1 point"), not wrong facts.
+        if target and (na == target or target in na):
+            return True
+        return _judge_match(answer, [str(refs["exact_match"])], judge)
     if "must_include" in refs:
         items = refs["must_include"] or []
-        return bool(items) and all(normalize_answer(str(x)) in na for x in items)
-    if "fuzzy_match" in refs and judge is not None:
-        out = judge.complete_json(JUDGE_SYS, json.dumps(
-            {"answer": answer, "references": refs["fuzzy_match"]}))
-        return bool(out.get("match"))
+        if items and all(normalize_answer(str(x)) in na for x in items):
+            return True
+        # single joined reference: the answer must convey ALL items, and the
+        # judge is documented to accept a match against ANY one reference
+        return _judge_match(answer, ["; ".join(str(x) for x in items)] if items else [], judge)
+    if "fuzzy_match" in refs:
+        return _judge_match(answer, refs["fuzzy_match"] or [], judge)
     return False
 
 

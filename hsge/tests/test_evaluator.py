@@ -32,6 +32,39 @@ def test_string_match_fuzzy_uses_judge():
     assert not string_match("x", {"fuzzy_match": ["same meaning"]}, judge=None)
 
 
+class _CountingJudge:
+    def __init__(self, match):
+        self.match, self.calls = match, 0
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.calls += 1
+        return {"match": self.match}
+
+
+def test_string_match_falls_back_to_judge_on_format_drift():
+    j = _CountingJudge(True)
+    assert string_match("done: score is 1", {"exact_match": "1 point"}, judge=j)
+    assert j.calls == 1
+    j = _CountingJudge(True)
+    assert string_match("done: it has 2 comments in total",
+                        {"must_include": ["2 comments", "movies"]}, judge=j)
+    assert j.calls == 1
+    # judge verdict is still binding: no match -> fail
+    assert not string_match("done: score is 1", {"exact_match": "1 point"},
+                            judge=_CountingJudge(False))
+    # no judge configured -> behavior unchanged (fail-closed)
+    assert not string_match("done: score is 1", {"exact_match": "1 point"})
+
+
+def test_string_match_judge_not_consulted_when_code_match_or_empty():
+    j = _CountingJudge(False)   # would fail the episode if consulted
+    assert string_match("done: the author is hlz0", {"exact_match": "hlz0"}, judge=j)
+    assert j.calls == 0
+    j = _CountingJudge(True)    # would fake-verify if consulted
+    assert not string_match("", {"exact_match": "x"}, judge=j)
+    assert not string_match("x", {"must_include": []}, judge=j)
+    assert j.calls == 0
+
+
 def test_url_match_normalizes():
     assert url_match("http://s/f/gaming/", "http://s/f/gaming")
     assert url_match("http://s/p?a=1&b=2", "http://s/p?b=2&a=1")

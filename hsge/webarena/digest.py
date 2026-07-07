@@ -86,6 +86,23 @@ class SiteKB:
             return str(val), bool(ent.get("grounded"))
         return str(ent.get("name", "")), bool(ent.get("grounded"))
 
+    def resolve_ref_evidence(self, ref: str) -> str | None:
+        """The axtree evidence snippet a ref's value was grounded on (fact or
+        entity level; attrs share their entity's evidence), or None."""
+        m = _REF_RE.match(ref or "")
+        if not m:
+            return None
+        node = self.node_by_index(int(m.group(1)))
+        if node is None:
+            return None
+        if m.group(2) is not None:
+            facts = node.get("facts") or []
+            i = int(m.group(2))
+            return str(facts[i].get("evidence", "")) if i < len(facts) else None
+        ents = node.get("entities") or []
+        i = int(m.group(3))
+        return str(ents[i].get("evidence", "")) if i < len(ents) else None
+
     def known_urls(self) -> set[str]:
         urls: set[str] = set()
         for n in self.nodes:

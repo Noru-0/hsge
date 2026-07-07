@@ -59,6 +59,14 @@ def test_validate_nav_mod_and_dedup():
                                       "required_contents": {"must_include": ["hello"]}}]}}
     assert validate_task(mod, kb, []) is None
     assert "destructive" in validate_task(dict(mod, intent="delete the Dune review"), kb, [])
+    # read-only phrasings typed as MOD are rejected (they mutate nothing) ...
+    assert "read-only" in validate_task(
+        dict(mod, intent="Check if the 'Formatting help' checkbox is unchecked"), kb, [])
+    assert "read-only" in validate_task(
+        dict(mod, intent="Verify whether there is an RSS link"), kb, [])
+    # ... but an imperative "Check the X box" is a real MOD and still passes
+    assert validate_task(
+        dict(mod, intent="Check the 'notify me' box under Dune review"), kb, []) is None
     mod2 = dict(mod, intent="post another comment under Dune review")
     assert "collides" in validate_task(mod2, kb, [dict(mod, task_id="gen_0000")])
     assert "duplicate" in validate_task(dict(mod), kb, [dict(mod, task_id="gen_0000")])

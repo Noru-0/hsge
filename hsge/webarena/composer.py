@@ -16,6 +16,13 @@ from .evaluator import normalize_answer
 
 MOD_DENY_RE = re.compile(
     r"\b(delete|remove|erase|logout|log\s*out|password|ban|deactivate|wipe)\b", re.I)
+# Read-only phrasings the model keeps typing as MOD ("Check if the checkbox is
+# unchecked..."): they mutate nothing, so program_html can only ever assert
+# pre-existing state. Narrow on purpose -- "Check the 'notify me' box" is a
+# legitimate MOD and must not match.
+MOD_READONLY_RE = re.compile(
+    r"^\s*(?:check|verify|find\s+out)\s+(?:if|whether)\b|^\s*(?:is|are|does|do)\s+there\b",
+    re.I)
 _PUNCT_RE = re.compile(r"[^\w\s]")
 
 COMPOSER_SYS = (
@@ -28,14 +35,19 @@ COMPOSER_SYS = (
     "- intent reads like a real user request; prefer multi-hop (hops = pages the "
     "agent must traverse to solve it). Never put the answer in the intent text.\n"
     '- INFO: eval_types=["string_match"]; reference_answers is {"exact_match": str} '
-    'or {"must_include": [str, ...]}; answer_fact_refs cites the knowledge refs the '
-    'answer comes from (e.g. "n12.f3", "n13.e1.attrs.author") -- ONLY items shown '
-    "with grounded=true.\n"
+    'or {"must_include": [str, ...]}; the reference must be the fact/entity VALUE '
+    "copied verbatim from the knowledge -- never Yes/No, never reworded or "
+    'reformatted; answer_fact_refs cites the knowledge refs the answer comes from '
+    '(e.g. "n12.f3", "n13.e1.attrs.author") -- ONLY items shown with grounded=true.\n'
     '- NAV: eval_types=["url_match"]; reference_url must be a URL from the knowledge.\n'
-    '- MOD: eval_types=["program_html"]; entries are {"url": str|"last", "locator": '
+    '- MOD: must PERFORM a state-changing action (post, edit, subscribe, vote, ...); '
+    'a read-only question ("check if/whether ...") is INFO, not MOD. '
+    'eval_types=["program_html"]; entries are {"url": str|"last", "locator": '
     'str (JS expression, "" = check the whole page), "required_contents": '
-    '{"must_include": [str, ...]}}. Never destructive (no delete/remove/logout/'
-    "password/ban).\n"
+    '{"must_include": [str, ...]}} where every string is literal text that will be '
+    "visible in the checked page/element HTML after the change -- never invented "
+    "serializations like \"checked='false'\". Never destructive (no delete/remove/"
+    "logout/password/ban).\n"
     "- Do not repeat or trivially rephrase ALREADY GENERATED intents.")
 
 
@@ -117,6 +129,8 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
     else:  # MOD
         if MOD_DENY_RE.search(intent):
             return "destructive MOD intent"
+        if MOD_READONLY_RE.search(intent):
+            return "read-only intent typed as MOD"
         if "program_html" not in types or not ev.get("program_html"):
             return "MOD without program_html"
         mine = _mod_target_urls(task)
