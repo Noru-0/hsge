@@ -17,4 +17,9 @@ bugs found and fixed — non-string tasks, `None` message content, answer-leakin
 structured INFO/NAV/MOD classification replacing the unreliable `[TAG]`
 bracket convention, and a two-iteration Solver stuck-loop fix — a same-action
 warning proven insufficient by a real run, escalated to a same-target +
-observation-progress hard stop).
+observation-progress hard stop),
+`13_run02_reddit_exploration_log.md` (exploration log for a real reddit run:
+why it stopped at 57/500 nodes — frontier starvation from the documented
+"mines navigated URLs, not `<a href>`s" gap, not a bug — plus a quality
+assessment of that run's induced operators using the grounding-check feature,
+showing half were tautological or ungrounded).
