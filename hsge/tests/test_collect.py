@@ -74,6 +74,17 @@ def test_runner_resumes_and_skips_done(tmp_path):
     assert len(list((tmp_path / "episodes").iterdir())) == n_eps
 
 
+def test_dump_stats_does_not_clobber_existing_summary_keys(tmp_path):
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text(json.dumps({"nodes_visited": 7, "skills_discovered": 2}))
+    t = _task("gen_0000", ra={"must_include": ["42"]})
+    GenerationRunner(_Browser, _Solver(), str(tmp_path), HashingEmbedder(),
+                     SiteKB(), skill_hints=False).run([t])
+    summary = json.load(open(summary_path))
+    assert summary["nodes_visited"] == 7 and summary["skills_discovered"] == 2
+    assert summary["gen"]["verified"] == 1
+
+
 def test_top_k_skill_hints():
     skills = [{"name": "open_forum", "description": "open a forum page"},
               {"name": "checkout", "description": "complete a purchase"}]
