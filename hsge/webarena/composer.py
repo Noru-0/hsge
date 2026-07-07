@@ -4,7 +4,8 @@ Generation is per "context bundle" (a few related node digests), never the
 whole KB in one prompt, so multi-hop tasks are grounded in pages that really
 link together. Hard gates are code: INFO reference answers must be backed by
 grounded SiteKB refs, NAV targets must be known URLs, MOD intents pass a
-denylist and must not collide on program_html targets.
+denylist, are self-verifying (must_include quoted in the intent, empty
+locator, known target URL), and must not collide on program_html targets.
 """
 from __future__ import annotations
 
@@ -41,13 +42,13 @@ COMPOSER_SYS = (
     '(e.g. "n12.f3", "n13.e1.attrs.author") -- ONLY items shown with grounded=true.\n'
     '- NAV: eval_types=["url_match"]; reference_url must be a URL from the knowledge.\n'
     '- MOD: must PERFORM a state-changing action (post, edit, subscribe, vote, ...); '
-    'a read-only question ("check if/whether ...") is INFO, not MOD. '
-    'eval_types=["program_html"]; entries are {"url": str|"last", "locator": '
-    'str (JS expression, "" = check the whole page), "required_contents": '
-    '{"must_include": [str, ...]}} where every string is literal text that will be '
-    "visible in the checked page/element HTML after the change -- never invented "
-    "serializations like \"checked='false'\". Never destructive (no delete/remove/"
-    "logout/password/ban).\n"
+    'a read-only question ("check if/whether ...") is INFO, not MOD. The intent MUST '
+    'quote, verbatim, the literal text the change will leave visible on the page '
+    '(the comment/reply body you choose, or the expected button/label text after '
+    'the toggle). eval_types=["program_html"]; entries are {"url": <a knowledge URL '
+    'where the change will be visible, or "last">, "locator": "", '
+    '"required_contents": {"must_include": [<exactly that quoted text>]}}. '
+    'Never destructive (no delete/remove/logout/password/ban).\n'
     "- Do not repeat or trivially rephrase ALREADY GENERATED intents.")
 
 
@@ -133,6 +134,20 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
             return "read-only intent typed as MOD"
         if "program_html" not in types or not ev.get("program_html"):
             return "MOD without program_html"
+        ni = normalize_answer(intent)
+        known = kb.known_urls()
+        for spec in ev.get("program_html") or []:
+            if spec.get("locator"):
+                return "MOD locator must be empty (whole-page check)"
+            url = spec.get("url") or "last"
+            if url != "last" and url not in known:
+                return "MOD program_html url not in SiteKB"
+            required = (spec.get("required_contents") or {}).get("must_include") or []
+            if not required:
+                return "MOD without must_include"
+            for s in required:
+                if normalize_answer(str(s)) not in ni:
+                    return f"must_include {s!r} not quoted in intent"
         mine = _mod_target_urls(task)
         for a in accepted:
             if a.get("type") == "MOD" and mine & _mod_target_urls(a):

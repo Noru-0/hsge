@@ -65,9 +65,14 @@ def test_validate_nav_mod_and_dedup():
     assert "read-only" in validate_task(
         dict(mod, intent="Verify whether there is an RSS link"), kb, [])
     # ... but an imperative "Check the X box" is a real MOD and still passes
-    assert validate_task(
-        dict(mod, intent="Check the 'notify me' box under Dune review"), kb, []) is None
-    mod2 = dict(mod, intent="post another comment under Dune review")
+    mod_check = dict(mod, intent="Check the 'notify me' box under Dune review",
+                     eval={"eval_types": ["program_html"], "reference_answers": None,
+                           "reference_url": None,
+                           "program_html": [{"url": "http://s/f/movies", "locator": "",
+                                             "required_contents":
+                                                 {"must_include": ["notify me"]}}]})
+    assert validate_task(mod_check, kb, []) is None
+    mod2 = dict(mod, intent="post another comment saying hello under the Dune thread")
     assert "collides" in validate_task(mod2, kb, [dict(mod, task_id="gen_0000")])
     assert "duplicate" in validate_task(dict(mod), kb, [dict(mod, task_id="gen_0000")])
 
@@ -105,3 +110,34 @@ def test_generate_assigns_ids_and_collects_rejections():
     assert [t["task_id"] for t in accepted] == ["gen_0000"]
     assert len(rejected) >= 2
     assert all(r["reason"] for r in rejected)
+
+
+def test_validate_mod_self_verifying_gates():
+    kb = _kb()
+    def mod(intent, ph):
+        return {"intent": intent, "type": "MOD", "start_url": "http://s", "hops": 2,
+                "source_nodes": [2], "answer_fact_refs": [],
+                "eval": {"eval_types": ["program_html"], "reference_answers": None,
+                         "reference_url": None, "program_html": ph}}
+    good = mod('post a comment saying "great movie" under Dune review',
+               [{"url": "http://s/f/movies", "locator": "",
+                 "required_contents": {"must_include": ["great movie"]}}])
+    assert validate_task(good, kb, []) is None
+    # run_03 gen_0091: prose assertion the DOM will never contain
+    prose = mod("post a new comment on the Dune review",
+                [{"url": "last", "locator": "",
+                  "required_contents": {"must_include": ["comment posted successfully"]}}])
+    assert "not quoted in intent" in validate_task(prose, kb, [])
+    # run_03 gen_0099: jQuery pseudo-selector locator
+    jq = mod('add a comment saying "nice" under Dune review',
+             [{"url": "last", "locator": "a:contains('Create forum')",
+               "required_contents": {"must_include": ["nice"]}}])
+    assert "locator" in validate_task(jq, kb, [])
+    unknown = mod('post a comment saying "nice" under Dune review',
+                  [{"url": "http://elsewhere/x", "locator": "",
+                    "required_contents": {"must_include": ["nice"]}}])
+    assert "not in SiteKB" in validate_task(unknown, kb, [])
+    empty = mod('post a comment saying "nice" under Dune review',
+                [{"url": "last", "locator": "",
+                  "required_contents": {"must_include": []}}])
+    assert "without must_include" in validate_task(empty, kb, [])
