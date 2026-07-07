@@ -121,7 +121,7 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
         refs = task.get("answer_fact_refs") or []
         if not refs:
             return "INFO without answer_fact_refs"
-        resolved = []
+        resolved, evidences = [], []
         for r in refs:
             got = kb.resolve_ref(r)
             if got is None:
@@ -130,6 +130,7 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
             if not grounded:
                 return f"ungrounded ref {r}"
             resolved.append(normalize_answer(val))
+            evidences.append(normalize_answer(kb.resolve_ref_evidence(r) or ""))
         ra = ev.get("reference_answers") or {}
         targets = ([ra["exact_match"]] if "exact_match" in ra
                    else ra.get("must_include") or [])
@@ -139,6 +140,8 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
             nt = normalize_answer(str(t))
             if not any(nt == v or nt in v for v in resolved):
                 return f"reference answer {t!r} not backed by refs"
+            if not any(nt in e for e in evidences if e):
+                return f"reference answer {t!r} not inside cited evidence"
     elif ttype == "NAV":
         if "url_match" not in types:
             return "NAV without url_match"

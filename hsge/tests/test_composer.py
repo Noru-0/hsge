@@ -14,13 +14,18 @@ def _kb():
                  "outlinks": ["http://s/f/gaming/post1", "http://s",
                               "http://s/f/gaming/15/a-slug"],
                  "entities": [{"type": "post", "name": "Best budget GPU",
-                               "attrs": {"author": "hlz0"}, "grounded": True}],
-                 "facts": [{"q": "top post?", "a": "Best budget GPU", "grounded": True},
-                           {"q": "mods?", "a": "bob", "grounded": False}]})
+                               "attrs": {"author": "hlz0"}, "grounded": True,
+                               "evidence": "Best budget GPU submitted by hlz0"}],
+                 "facts": [{"q": "top post?", "a": "Best budget GPU",
+                            "grounded": True,
+                            "evidence": "top post 'Best budget GPU'"},
+                           {"q": "mods?", "a": "bob", "grounded": False,
+                            "evidence": "moderated by bob"}]})
     kb.add_node({"node_index": 2, "url": "http://s/f/movies", "page_type": "forum",
                  "title": "movies", "outlinks": [],
                  "entities": [{"type": "post", "name": "Dune review",
-                               "attrs": {}, "grounded": True}], "facts": []})
+                               "attrs": {}, "grounded": True,
+                               "evidence": "Dune review"}], "facts": []})
     return kb
 
 
@@ -194,3 +199,18 @@ def test_relative_time_and_site_mechanics_gates():
     assert validate_task(
         dict(info, intent="Find the author of the top gaming post"),
         kb, []) is None
+
+
+def test_info_reference_must_be_inside_cited_evidence():
+    kb = _kb()
+    # run_04 gen_0064: score "-1" backed by the fact value but absent from
+    # the evidence quote -- _is_stale re-grounding can never protect it
+    kb.add_node({"node_index": 3, "url": "http://s/f/movies/9/re",
+                 "outlinks": [], "entities": [],
+                 "facts": [{"q": "score?", "a": "-1", "grounded": True,
+                            "evidence": "Re: Your Comment"}]})
+    bad = _info(["n3.f0"], {"exact_match": "-1"})
+    assert "not inside cited evidence" in validate_task(bad, kb, [])
+    # value quoted inside its evidence still passes
+    good = _info(["n1.e0.attrs.author"], {"exact_match": "hlz0"})
+    assert validate_task(good, kb, []) is None
