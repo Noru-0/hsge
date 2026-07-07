@@ -64,9 +64,22 @@ def string_match(answer: str, reference_answers: dict, judge=None) -> bool:
 
 
 def url_match(final_url: str, reference_url: str) -> bool:
+    def slug_blind(path: str) -> str:
+        # Postmill puts a mutable slug (or '-') right after the numeric id
+        # (/f/movies/15/<slug>); a retitle changes the slug, not the id, so
+        # that one segment is wildcarded. Everything else compares exactly.
+        segs = path.split("/")
+        for i, s in enumerate(segs):
+            if s.isdigit():
+                if i + 1 < len(segs) and segs[i + 1]:
+                    segs[i + 1] = "*"
+                break
+        return "/".join(segs)
+
     def key(u: str):
         p = urlsplit(u or "")
-        return (p.netloc, (p.path.rstrip("/") or "/"), tuple(sorted(parse_qsl(p.query))))
+        return (p.netloc, slug_blind(p.path.rstrip("/") or "/"),
+                tuple(sorted(parse_qsl(p.query))))
     return bool(reference_url) and key(final_url) == key(reference_url)
 
 

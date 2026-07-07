@@ -71,6 +71,23 @@ def test_url_match_normalizes():
     assert not url_match("http://s/p", "http://s/q")
 
 
+def test_url_match_ignores_slug_after_first_numeric_id():
+    # Postmill slug drift: post retitled between compose and solve (run_03 gen_0076)
+    assert url_match("http://s/f/movies/15/new-title-here",
+                     "http://s/f/movies/15/your-title-here")
+    # '-' is Postmill's empty-slug placeholder
+    assert url_match("http://s/f/movies/15/-", "http://s/f/movies/15/some-slug")
+    # only the slug slot is blind: comment sub-path still compares exactly
+    assert url_match("http://s/f/movies/13/-/comment/56/edit",
+                     "http://s/f/movies/13/old-slug/comment/56/edit")
+    # structurally different paths must NOT match
+    assert not url_match("http://s/f/movies/13/slug",
+                         "http://s/f/movies/13/slug/comment/56")
+    assert not url_match("http://s/f/movies/14/slug", "http://s/f/movies/15/slug")
+    # no numeric segment -> behavior unchanged
+    assert not url_match("http://s/p", "http://s/q")
+
+
 class _EvalBrowser:
     def __init__(self):
         self.gotos = []
