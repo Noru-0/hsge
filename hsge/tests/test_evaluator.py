@@ -1,6 +1,8 @@
 """WebArena-style eval: string_match on the send_msg_to_user answer, url_match
 on the final URL, program_html against the live page. Only these verdicts gate
 what counts as a verified trajectory."""
+import json
+
 from hsge.schema import Step
 from hsge.webarena.evaluator import (evaluate, extract_answer, normalize_answer,
                                      program_html, string_match, url_match)
@@ -122,3 +124,33 @@ def test_evaluate_combines_types():
     ok, details = evaluate(task, "wrong", "http://s/p/", None)
     assert not ok and details["string_match"] is False
     assert not evaluate({"eval": {"eval_types": []}}, "x", "u", None)[0]
+
+
+class _PayloadJudge:
+    def __init__(self, match=True):
+        self.match, self.prompts = match, []
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.prompts.append(prompt)
+        return {"match": self.match}
+
+
+def test_judge_receives_question():
+    # run_03 gen_0001: reference "Yes" is meaningless without the question
+    j = _PayloadJudge()
+    assert string_match("done: the moderation log is currently empty",
+                        {"exact_match": "Yes"}, judge=j,
+                        question="Check if the moderation log is currently empty.")
+    payload = json.loads(j.prompts[0])
+    assert payload["question"] == "Check if the moderation log is currently empty."
+    assert payload["answer"].startswith("done:")
+    assert payload["references"] == ["Yes"]
+
+
+def test_evaluate_passes_intent_to_judge():
+    j = _PayloadJudge()
+    task = {"intent": "what is the score?",
+            "eval": {"eval_types": ["string_match"],
+                     "reference_answers": {"exact_match": "1 point"}}}
+    ok, _ = evaluate(task, "done: score is 1", "http://s/p", None, judge=j)
+    assert ok
+    assert json.loads(j.prompts[0])["question"] == "what is the score?"

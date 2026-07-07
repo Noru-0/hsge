@@ -13,9 +13,11 @@ from urllib.parse import parse_qsl, urlsplit
 from .digest import extract_msg
 
 JUDGE_SYS = (
-    "You judge whether a web agent's ANSWER conveys the same information as any "
-    "of the REFERENCE answers. Return JSON {\"match\": true|false}. Judge meaning, "
-    "not wording; numbers and names must actually agree.")
+    "You judge whether a web agent's ANSWER to the given QUESTION conveys the "
+    "same information as any of the REFERENCE answers. Return JSON "
+    "{\"match\": true|false}. Judge meaning, not wording; a short reference "
+    "(\"Yes\", a bare number) is judged as an answer to the QUESTION; numbers "
+    "and names must actually agree.")
 
 
 def normalize_answer(text: str) -> str:
@@ -31,15 +33,16 @@ def extract_answer(steps) -> str:
     return ""
 
 
-def _judge_match(answer: str, references: list, judge) -> bool:
+def _judge_match(answer: str, references: list, judge, question: str = "") -> bool:
     if judge is None or not references or not normalize_answer(answer):
         return False
     out = judge.complete_json(JUDGE_SYS, json.dumps(
-        {"answer": answer, "references": references}))
+        {"question": question, "answer": answer, "references": references}))
     return bool(out.get("match"))
 
 
-def string_match(answer: str, reference_answers: dict, judge=None) -> bool:
+def string_match(answer: str, reference_answers: dict, judge=None,
+                 question: str = "") -> bool:
     refs = reference_answers or {}
     na = normalize_answer(answer)
     if "exact_match" in refs:
@@ -50,16 +53,17 @@ def string_match(answer: str, reference_answers: dict, judge=None) -> bool:
         # ("score is 1" vs "1 point"), not wrong facts.
         if target and (na == target or target in na):
             return True
-        return _judge_match(answer, [str(refs["exact_match"])], judge)
+        return _judge_match(answer, [str(refs["exact_match"])], judge, question)
     if "must_include" in refs:
         items = refs["must_include"] or []
         if items and all(normalize_answer(str(x)) in na for x in items):
             return True
         # single joined reference: the answer must convey ALL items, and the
         # judge is documented to accept a match against ANY one reference
-        return _judge_match(answer, ["; ".join(str(x) for x in items)] if items else [], judge)
+        return _judge_match(answer, ["; ".join(str(x) for x in items)] if items else [],
+                            judge, question)
     if "fuzzy_match" in refs:
-        return _judge_match(answer, refs["fuzzy_match"] or [], judge)
+        return _judge_match(answer, refs["fuzzy_match"] or [], judge, question)
     return False
 
 
@@ -104,7 +108,9 @@ def evaluate(task: dict, answer: str, final_url: str, browser, judge=None) -> tu
     details: dict[str, bool] = {}
     for t in ev.get("eval_types") or []:
         if t == "string_match":
-            details[t] = string_match(answer, ev.get("reference_answers") or {}, judge=judge)
+            details[t] = string_match(answer, ev.get("reference_answers") or {},
+                                      judge=judge,
+                                      question=str(task.get("intent") or ""))
         elif t == "url_match":
             details[t] = url_match(final_url, ev.get("reference_url") or "")
         elif t == "program_html":
