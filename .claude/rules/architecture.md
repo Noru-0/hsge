@@ -181,6 +181,16 @@ locators could never match); and `GenerationRunner` re-checks a single-hop
 INFO task's cited evidence against the live page at solve time, skipping
 (`stale_skipped`, not failed) tasks whose ground truth a later write mutated —
 the site is shared and mutable, so digests go stale.
+The run_03 phase-2 re-run added four more: `_is_stale` now re-checks every
+INFO task's cited evidence on the node page it came from (goto + literal
+substring, restoring `start_url` when live) and probes a NAV task's
+`reference_url` for a not-found page before solving; MOD tasks are
+self-verifying — `validate_task` requires every `program_html` `must_include`
+to be quoted verbatim in the intent, an empty `locator`, and a `"last"`/known
+target URL, so prose assertions and pseudo-selectors never reach the runner;
+`url_match` wildcards the path segment after the first numeric segment
+(Postmill retitles change the slug, not the id); and the `judge` role receives
+the task intent, so short references ("Yes") are judged in context.
 Re-running phase 2 is idempotent (existing `gen_tasks.json` reused, done
 task_ids skipped). `build_sft_dataset.py` keeps only verified GEN episodes by
 default (`--include-local` opts self-reported LOCAL successes back in), with
