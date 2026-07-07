@@ -209,9 +209,12 @@ class Solver:
             streak += 1
         return streak
 
-    def solve(self, browser, goal: str, goal_predicate: str | None = None):
+    def solve(self, browser, goal: str, goal_predicate: str | None = None,
+              hints: str | None = None):
         """Drive the browser toward `goal`.
 
+        `hints` (optional) is a short "known procedures" block retrieved from
+        previously discovered skills; it is advisory context, never a script.
         Returns (steps, obs_texts, obs_screenshots, final_obs, success).
         """
         steps: list[Step] = []
@@ -246,7 +249,10 @@ class Solver:
                     "repeating it again will not help. If the goal is already achieved, "
                     "call send_msg_to_user(...) now instead. Otherwise choose a "
                     "genuinely different action/target.")
-            prompt = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n"
+            prompt = (f"GOAL: {goal}\n"
+                      + (f"\nKNOWN PROCEDURES (from earlier runs, may help):\n{hints}\n"
+                         if hints else "")
+                      + "\nRECENT ACTIONS:\n"
                       + ("\n".join(f"- {h}" for h in history[-6:]) or "(none)")
                       + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
                       + repeat_warning

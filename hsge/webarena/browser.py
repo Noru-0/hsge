@@ -136,6 +136,14 @@ class WebArenaBrowser:
                     break
         return out
 
+    def eval_js(self, expr: str) -> str:
+        """Evaluate a JS expression on the live page (program_html eval spec).
+        Fail-soft to "" like observation()/page_hrefs()."""
+        try:
+            return str(self.env.unwrapped.page.evaluate(expr))
+        except Exception:
+            return ""
+
     def close(self):
         try:
             self.env.close()
