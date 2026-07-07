@@ -11,7 +11,7 @@ import json
 import os
 
 from .digest import evidence_grounded
-from .evaluator import evaluate, extract_answer
+from .evaluator import evaluate, extract_answer, url_key
 from .recording import record_episode
 
 # Heuristic tuned for Postmill's likely 404 copy; spot-check against the real site's actual not-found page before relying on it in production.
@@ -72,8 +72,13 @@ class GenerationRunner:
             ref_url = (task.get("eval") or {}).get("reference_url") or ""
             if ref_url:
                 moved = True
-                tree = str(browser.act(f"goto('{ref_url}')").get("axtree", ""))
+                obs = browser.act(f"goto('{ref_url}')")
+                tree = str(obs.get("axtree", ""))
                 stale = any(m in tree.lower() for m in _NOT_FOUND_MARKERS)
+                # landing somewhere else (login page, permission bounce)
+                # means the target is unreachable for this account
+                if not stale and url_key(str(obs.get("url", ""))) != url_key(ref_url):
+                    stale = True
         elif ttype == "INFO":
             for ref in task.get("answer_fact_refs") or []:
                 evidence = self.kb.resolve_ref_evidence(ref)

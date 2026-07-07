@@ -177,3 +177,47 @@ def test_nav_live_reference_url_still_attempted(tmp_path):
                              skill_hints=False).run([task])
     assert stats["attempted"] == 1
     assert browsers[0].gotos == ["http://s/target", "http://s/home"]
+
+
+class _RedirectBrowser(_SiteBrowser):
+    """goto() lands on redirects[target] when mapped (login bounce)."""
+    def __init__(self, url, pages, redirects):
+        super().__init__(url, pages)
+        self.redirects = redirects
+    def act(self, action):
+        m = re.match(r"goto\('([^']+)'\)", action or "")
+        if m:
+            self.url = self.redirects.get(m.group(1), m.group(1))
+            self.gotos.append(self.url)
+        return self.observation()
+
+
+def test_nav_redirected_reference_url_skips_as_stale(tmp_path):
+    # run_04 class: another user's comment-edit page bounces to /login --
+    # page exists (no 404 copy), but is unreachable for this account
+    pages = {"http://s/home": "home page", "http://s/login": "log in please"}
+    redirects = {"http://s/secret/edit": "http://s/login"}
+    task = dict(_task("gen_0000", "NAV"), hops=2)
+    task["eval"] = {"eval_types": ["url_match"], "reference_answers": None,
+                    "reference_url": "http://s/secret/edit", "program_html": []}
+    runner = GenerationRunner(
+        lambda url: _RedirectBrowser(url, pages, redirects), _Solver(),
+        str(tmp_path), HashingEmbedder(), _kb_two_pages(), skill_hints=False)
+    stats = runner.run([task])
+    assert stats["stale_skipped"] == 1 and stats["attempted"] == 0
+
+
+def test_nav_slug_redirect_is_not_stale(tmp_path):
+    # Postmill redirects a stale slug to the canonical one -- same page,
+    # slug-blind equal -> must still be attempted
+    pages = {"http://s/home": "home page",
+             "http://s/f/m/15/real-slug": "target page"}
+    redirects = {"http://s/f/m/15/-": "http://s/f/m/15/real-slug"}
+    task = dict(_task("gen_0000", "NAV"), hops=2)
+    task["eval"] = {"eval_types": ["url_match"], "reference_answers": None,
+                    "reference_url": "http://s/f/m/15/-", "program_html": []}
+    stats = GenerationRunner(
+        lambda url: _RedirectBrowser(url, pages, redirects), _Solver(),
+        str(tmp_path), HashingEmbedder(), _kb_two_pages(),
+        skill_hints=False).run([task])
+    assert stats["attempted"] == 1 and stats["stale_skipped"] == 0
