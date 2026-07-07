@@ -67,3 +67,14 @@ def test_sitekb_resolve_ref_and_known_urls(tmp_path):
     kb.dump(tmp_path / "kb.json")
     kb2 = SiteKB.load(tmp_path / "kb.json")
     assert kb2.site == "http://s" and kb2.resolve_ref("n3.f0") == ("183", False)
+
+
+def test_node_url_of_ref():
+    kb = SiteKB()
+    kb.add_node({"node_index": 3, "url": "http://s/p3",
+                 "entities": [{"name": "x", "grounded": True, "evidence": "x"}],
+                 "facts": [{"q": "?", "a": "y", "grounded": True, "evidence": "y"}]})
+    assert kb.node_url_of_ref("n3.f0") == "http://s/p3"
+    assert kb.node_url_of_ref("n3.e0.attrs.author") == "http://s/p3"
+    assert kb.node_url_of_ref("n9.f0") is None
+    assert kb.node_url_of_ref("garbage") is None

@@ -103,6 +103,14 @@ class SiteKB:
         i = int(m.group(3))
         return str(ents[i].get("evidence", "")) if i < len(ents) else None
 
+    def node_url_of_ref(self, ref: str) -> str | None:
+        """URL of the node a ref points at (where its evidence was captured)."""
+        m = _REF_RE.match(ref or "")
+        if not m:
+            return None
+        node = self.node_by_index(int(m.group(1)))
+        return (node or {}).get("url") or None
+
     def known_urls(self) -> set[str]:
         urls: set[str] = set()
         for n in self.nodes:
