@@ -22,4 +22,10 @@ observation-progress hard stop),
 why it stopped at 57/500 nodes — frontier starvation from the documented
 "mines navigated URLs, not `<a href>`s" gap, not a bug — plus a quality
 assessment of that run's induced operators using the grounding-check feature,
-showing half were tautological or ungrounded).
+showing half were tautological or ungrounded), `14_semantic_trajectory_two_phase_session.md`
+(session report: the two-phase explore→compose pipeline that fixes `wa_run_02`'s
+short, self-reported-success episodes — `NodeDigester`/`SiteKB` with code-side
+evidence grounding, `TaskComposer` generating WebArena-style tasks with eval
+specs, `GenerationRunner` verifying and gating what enters the SFT dataset —
+plus what's still unverified against a real WebArena instance and suggested
+next steps).
