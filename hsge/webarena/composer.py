@@ -24,6 +24,16 @@ MOD_DENY_RE = re.compile(
 MOD_READONLY_RE = re.compile(
     r"^\s*(?:check|verify|find\s+out)\s+(?:if|whether)\b|^\s*(?:is|are|does|do)\s+there\b",
     re.I)
+# Postmill UI trivia ("What is the short URL...") -- the solver reads the
+# permalink instead every time, and the answer is site mechanics, not
+# content; worthless as SFT signal (run_04: 3/3 such tasks failed).
+INFO_META_RE = re.compile(
+    r"\b(short\s*url|rss|formatting\s+help|keyboard\s+shortcut)\b", re.I)
+# "written 17 minutes ago" is true at digest time and false at solve time:
+# the intent itself goes stale, which no page-content re-check can catch.
+RELATIVE_TIME_RE = re.compile(
+    r"\b\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago\b"
+    r"|\b(?:yesterday|today|last\s+(?:week|month|year))\b", re.I)
 _PUNCT_RE = re.compile(r"[^\w\s]")
 
 COMPOSER_SYS = (
@@ -40,6 +50,9 @@ COMPOSER_SYS = (
     "copied verbatim from the knowledge -- never Yes/No, never reworded or "
     'reformatted; answer_fact_refs cites the knowledge refs the answer comes from '
     '(e.g. "n12.f3", "n13.e1.attrs.author") -- ONLY items shown with grounded=true.\n'
+    '- INFO questions ask about page CONTENT (posts, comments, authors, counts, '
+    "dates), never the site's own UI mechanics (short URL, RSS links, formatting "
+    'help, keyboard shortcuts), and never relative to now ("posted 17 minutes ago").\n'
     '- NAV: eval_types=["url_match"]; reference_url must be a URL from the knowledge.\n'
     '- MOD: must PERFORM a state-changing action (post, edit, subscribe, vote, ...); '
     'a read-only question ("check if/whether ...") is INFO, not MOD. The intent MUST '
@@ -96,9 +109,13 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
     key = _norm_intent(intent)
     if any(_norm_intent(a.get("intent", "")) == key for a in accepted):
         return "duplicate intent"
+    if RELATIVE_TIME_RE.search(intent):
+        return "relative-time reference in intent"
     ev = task.get("eval") or {}
     types = ev.get("eval_types") or []
     if ttype == "INFO":
+        if INFO_META_RE.search(intent):
+            return "site-mechanics INFO intent"
         if "string_match" not in types:
             return "INFO without string_match"
         refs = task.get("answer_fact_refs") or []

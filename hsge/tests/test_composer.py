@@ -167,3 +167,30 @@ def test_validate_nav_rejects_self_referential_target():
     ok = dict(nav, eval=dict(nav["eval"],
                              reference_url="http://s/f/gaming/post1"))
     assert validate_task(ok, kb, []) is None
+
+
+def test_relative_time_and_site_mechanics_gates():
+    kb = _kb()
+    info = _info(["n1.e0.attrs.author"], {"exact_match": "hlz0"})
+    # run_04 gen_0074: intent goes stale the moment it is written
+    assert "relative-time" in validate_task(
+        dict(info, intent="Find the text of the comment by MarvelsGrantMan136 "
+                          "written 17 minutes ago"), kb, [])
+    nav = {"intent": "Go to the post submitted yesterday", "type": "NAV",
+           "start_url": "http://s", "hops": 2, "source_nodes": [1],
+           "answer_fact_refs": [],
+           "eval": {"eval_types": ["url_match"], "reference_answers": None,
+                    "reference_url": "http://s/f/gaming/post1",
+                    "program_html": []}}
+    assert "relative-time" in validate_task(nav, kb, [])
+    # run_04 gen_0014/0048/0082: Postmill UI trivia the solver misreads
+    assert "site-mechanics" in validate_task(
+        dict(info, intent="Find the short URL for the post titled "
+                          "'New Edited Title Here'"), kb, [])
+    assert "site-mechanics" in validate_task(
+        dict(info, intent="Is there an RSS link on the gaming forum page"),
+        kb, [])
+    # content questions with absolute wording still pass
+    assert validate_task(
+        dict(info, intent="Find the author of the top gaming post"),
+        kb, []) is None
