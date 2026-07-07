@@ -2,6 +2,7 @@
 skips task_ids already on disk, stats land in summary.json['gen'], and the
 (expensive) instance reset runs once after the MOD batch."""
 import json
+import re
 
 from hsge.llm import HashingEmbedder
 from hsge.schema import Step
@@ -91,3 +92,88 @@ def test_top_k_skill_hints():
     hints = top_k_skill_hints(HashingEmbedder(), skills, "go to the gaming forum", k=1)
     assert hints and hints.count("\n") == 0     # exactly one hint line
     assert top_k_skill_hints(HashingEmbedder(), [], "x") is None
+
+
+class _SiteBrowser:
+    """URL-addressed fake: per-page axtrees, goto() switches pages; a URL not
+    in `pages` renders a not-found page (dead link)."""
+    def __init__(self, url, pages):
+        self.url, self.pages, self.gotos = url, pages, []
+    def reset(self): return self.observation()
+    def observation(self):
+        return {"url": self.url,
+                "axtree": self.pages.get(self.url, "404 Not Found")}
+    def act(self, action):
+        m = re.match(r"goto\('([^']+)'\)", action or "")
+        if m:
+            self.url = m.group(1)
+            self.gotos.append(self.url)
+        return self.observation()
+    def eval_js(self, expr): return ""
+    def close(self): pass
+
+
+def _kb_two_pages():
+    kb = SiteKB(site="http://s")
+    kb.add_node({"node_index": 1, "url": "http://s/home",
+                 "outlinks": ["http://s/page2"], "entities": [], "facts": []})
+    kb.add_node({"node_index": 2, "url": "http://s/page2", "outlinks": [],
+                 "entities": [],
+                 "facts": [{"q": "fact?", "a": "42", "grounded": True,
+                            "evidence": "old fact"}]})
+    return kb
+
+
+def test_multihop_info_stale_evidence_on_linked_node_skips(tmp_path):
+    # evidence "old fact" no longer on page2 -> stale skip, no solve spent
+    pages = {"http://s/home": "home page", "http://s/page2": "fresh content only"}
+    task = dict(_task("gen_0000", ra={"must_include": ["42"]}),
+                hops=3, answer_fact_refs=["n2.f0"])
+    runner = GenerationRunner(lambda url: _SiteBrowser(url, pages), _Solver(),
+                              str(tmp_path), HashingEmbedder(), _kb_two_pages(),
+                              skill_hints=False)
+    stats = runner.run([task])
+    assert stats["stale_skipped"] == 1 and stats["attempted"] == 0
+
+
+def test_multihop_info_live_evidence_solves_from_start_url(tmp_path):
+    pages = {"http://s/home": "home page",
+             "http://s/page2": "page still shows old fact here"}
+    browsers = []
+    def factory(url):
+        b = _SiteBrowser(url, pages); browsers.append(b); return b
+    task = dict(_task("gen_0000", ra={"must_include": ["42"]}),
+                hops=3, answer_fact_refs=["n2.f0"])
+    runner = GenerationRunner(factory, _Solver(), str(tmp_path),
+                              HashingEmbedder(), _kb_two_pages(),
+                              skill_hints=False)
+    stats = runner.run([task])
+    assert stats["attempted"] == 1 and stats["verified"] == 1
+    # stale check visited the evidence node, then restored start_url pre-solve
+    assert browsers[0].gotos == ["http://s/page2", "http://s/home"]
+
+
+def test_nav_dead_reference_url_skips_as_stale(tmp_path):
+    task = dict(_task("gen_0000", "NAV"), hops=2)
+    task["eval"] = {"eval_types": ["url_match"], "reference_answers": None,
+                    "reference_url": "http://s/gone", "program_html": []}
+    runner = GenerationRunner(
+        lambda url: _SiteBrowser(url, {"http://s/home": "home page"}), _Solver(),
+        str(tmp_path), HashingEmbedder(), _kb_two_pages(), skill_hints=False)
+    stats = runner.run([task])
+    assert stats["stale_skipped"] == 1 and stats["attempted"] == 0
+
+
+def test_nav_live_reference_url_still_attempted(tmp_path):
+    pages = {"http://s/home": "home page", "http://s/target": "target page"}
+    browsers = []
+    def factory(url):
+        b = _SiteBrowser(url, pages); browsers.append(b); return b
+    task = dict(_task("gen_0000", "NAV"), hops=2)
+    task["eval"] = {"eval_types": ["url_match"], "reference_answers": None,
+                    "reference_url": "http://s/target", "program_html": []}
+    stats = GenerationRunner(factory, _Solver(), str(tmp_path),
+                             HashingEmbedder(), _kb_two_pages(),
+                             skill_hints=False).run([task])
+    assert stats["attempted"] == 1
+    assert browsers[0].gotos == ["http://s/target", "http://s/home"]

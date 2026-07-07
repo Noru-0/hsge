@@ -14,6 +14,8 @@ from .digest import evidence_grounded
 from .evaluator import evaluate, extract_answer
 from .recording import record_episode
 
+_NOT_FOUND_MARKERS = ("page not found", "404 not found")
+
 
 def top_k_skill_hints(embedder, skills: list[dict], intent: str, k: int = 3) -> str | None:
     texts = [f"{s['name']}: {s.get('description', '')}"
@@ -55,18 +57,38 @@ class GenerationRunner:
                 done.add(tid)
         return done
 
-    def _is_stale(self, task: dict, axtree: str) -> bool:
-        """A single-hop INFO task's cited evidence may have been mutated by a
-        later phase-1/phase-2 write to the same shared, mutable page since its
-        digest was captured; re-check it's still literally on the live page
-        before spending a solve+score on what would be a false failure."""
-        if task.get("type") != "INFO" or (task.get("hops") or 1) > 1:
-            return False
-        for ref in task.get("answer_fact_refs") or []:
-            evidence = self.kb.resolve_ref_evidence(ref)
-            if evidence and not evidence_grounded(evidence, axtree):
-                return True
-        return False
+    def _is_stale(self, task: dict, axtree: str, browser=None) -> bool:
+        """A task's ground truth may have been mutated by a later phase-1/2
+        write to the shared, mutable site since its digest was captured:
+        re-check an INFO task's cited evidence on the node page it came from,
+        and probe a NAV task's reference_url for a dead page, before spending
+        a solve+score on what would be a false failure. May navigate; restores
+        start_url before returning when the task is live."""
+        ttype = task.get("type")
+        start_url = task.get("start_url") or ""
+        moved, stale = False, False
+        if ttype == "NAV" and browser is not None:
+            ref_url = (task.get("eval") or {}).get("reference_url") or ""
+            if ref_url:
+                moved = True
+                tree = str(browser.act(f"goto('{ref_url}')").get("axtree", ""))
+                stale = any(m in tree.lower() for m in _NOT_FOUND_MARKERS)
+        elif ttype == "INFO":
+            for ref in task.get("answer_fact_refs") or []:
+                evidence = self.kb.resolve_ref_evidence(ref)
+                if not evidence:
+                    continue
+                node_url = self.kb.node_url_of_ref(ref)
+                tree = axtree
+                if node_url and node_url != start_url and browser is not None:
+                    moved = True
+                    tree = str(browser.act(f"goto('{node_url}')").get("axtree", ""))
+                if not evidence_grounded(evidence, tree):
+                    stale = True
+                    break
+        if moved and not stale:
+            browser.act(f"goto('{start_url}')")
+        return stale
 
     def _dump_stats(self, stats: dict):
         """Merge GEN stats into summary.json without clobbering phase-1 fields."""
@@ -95,7 +117,7 @@ class GenerationRunner:
             browser = self.browser_factory(task["start_url"])
             try:
                 obs = browser.reset()
-                if self._is_stale(task, obs.get("axtree", "")):
+                if self._is_stale(task, obs.get("axtree", ""), browser):
                     stats["stale_skipped"] += 1
                     self._dump_stats(stats)
                     continue
