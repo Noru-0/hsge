@@ -14,10 +14,10 @@ Curriculum: every example carries a `difficulty` (task chain length; 1 for local
 tasks). Emit train.jsonl sorted easy->hard, or sample by difficulty during training.
 
 Usage:
-    python build_sft_dataset.py <run_dir_or_episode.json> [out.jsonl]
+    python build_sft_dataset.py <run_dir_or_episode.json> [out.jsonl] [--include-local]
 
-Accepts either a run directory (walks node_*/tasks/*/positive_trajs/*/) or a single
-combined episode json (like sample_trajectory.json).
+By default only verified GEN episodes (phase-2, eval-spec-passing) are kept;
+--include-local additionally admits self-reported LOCAL/GOAL successes.
 """
 from __future__ import annotations
 
@@ -82,17 +82,24 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
     return examples
 
 
+def _keep(meta: dict, include_local: bool) -> bool:
+    """Default gate: only GEN episodes that PASSED their eval spec (verified).
+    Self-reported LOCAL/GOAL successes are opt-in via --include-local."""
+    tags = (meta.get("metadata") or {}).get("tags") or []
+    if "GEN" in tags:
+        return bool(meta.get("verified"))
+    return include_local and bool((meta.get("outcome") or {}).get("success"))
+
+
 def load_episodes(path: str):
-    """Yield (goal, steps, episode_dir, difficulty, success) tuples."""
+    """Yield (goal, steps, episode_dir, difficulty, meta) tuples."""
     if os.path.isfile(path) and path.endswith(".json"):
         d = json.load(open(path))
         em = d.get("episode_meta", d)
         ti = d.get("task_info", {})
         steps = d.get("steps") or []
-        success = em.get("outcome", {}).get("success", False)
-        yield em.get("goal", ""), steps, os.path.dirname(path), _difficulty(ti, em), success
+        yield em.get("goal", ""), steps, os.path.dirname(path), _difficulty(ti, em), em
         return
-    # run directory: each episode is a dir with episode_meta.json + episode.jsonl
     for meta_path in glob.glob(os.path.join(path, "**", "episode_meta.json"), recursive=True):
         ep_dir = os.path.dirname(meta_path)
         em = json.load(open(meta_path))
@@ -100,45 +107,38 @@ def load_episodes(path: str):
         steps = [json.loads(l) for l in open(jl)] if os.path.exists(jl) else []
         ti_path = os.path.join(ep_dir, "..", "..", "task_info.json")
         ti = json.load(open(ti_path)) if os.path.exists(ti_path) else {}
-        success = em.get("outcome", {}).get("success", False)
-        yield em.get("goal", ""), steps, ep_dir, _difficulty(ti, em), success
+        yield em.get("goal", ""), steps, ep_dir, _difficulty(ti, em), em
 
 
-def main():
-    if len(sys.argv) < 2:
-        print(__doc__); sys.exit(1)
-    src = sys.argv[1]
-    out = sys.argv[2] if len(sys.argv) > 2 else "train.jsonl"
-
+def build(src: str, out: str, include_local: bool = False) -> dict:
     all_examples, n_ep, n_kept = [], 0, 0
-    for goal, steps, ep_dir, diff, success in load_episodes(src):
+    for goal, steps, ep_dir, diff, meta in load_episodes(src):
         n_ep += 1
-        if not success:                              # only train on successes
+        if not _keep(meta, include_local):
             continue
         n_kept += 1
         all_examples += episode_to_examples(goal, steps, ep_dir, diff)
-
     all_examples.sort(key=lambda e: e["difficulty"])   # curriculum: easy -> hard
     with open(out, "w") as f:
         for ex in all_examples:
             f.write(json.dumps(ex) + "\n")
+    return {"episodes_seen": n_ep, "kept": n_kept, "examples": len(all_examples)}
 
-    by_diff = {}
-    for e in all_examples:
-        by_diff[e["difficulty"]] = by_diff.get(e["difficulty"], 0) + 1
-    loaded = sum(e["axtree_loaded"] for e in all_examples)
-    print(f"episodes seen        : {n_ep}")
-    print(f"successful (kept)    : {n_kept}")
-    print(f"SFT examples written : {len(all_examples)} -> {out}")
-    print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
-    print(f"with real AXTree text : {loaded}/{len(all_examples)} "
-          f"(rest need the run dir's page_state/*.txt files)")
-    if all_examples:
-        print("\n--- example[0] (truncated) ---")
-        ex = all_examples[0]
-        print("system   :", ex["messages"][0]["content"][:90], "...")
-        print("user     :", ex["messages"][1]["content"][:120].replace("\n", " "), "...")
-        print("assistant:", ex["messages"][2]["content"][:120], "...")
+
+def main():
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("src", help="run dir or single episode json")
+    ap.add_argument("out", nargs="?", default="train.jsonl")
+    ap.add_argument("--include-local", action="store_true",
+                    help="also include self-reported LOCAL/GOAL successes "
+                         "(default: verified GEN episodes only)")
+    args = ap.parse_args()
+    stats = build(args.src, args.out, include_local=args.include_local)
+    print(f"episodes seen        : {stats['episodes_seen']}")
+    print(f"kept (verified/gated): {stats['kept']}")
+    print(f"SFT examples written : {stats['examples']} -> {args.out}")
 
 
 if __name__ == "__main__":
