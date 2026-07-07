@@ -151,6 +151,28 @@ Priority key `(tier, novelty, depth, seq, url)`: tier 0 before tier 1; within ti
 lower visited-count-of-template first (unseen templates lead); shallower depth next
 (BFS breadth); `seq` for FIFO tiebreak.
 
+**Semantic-trajectory generation is two-phase** (see
+`docs/superpowers/specs/2026-07-07-semantic-trajectory-two-phase-design.md`).
+Phase 1 (the frontier loop above) additionally runs a `NodeDigester`
+(`digest.py`, role `node_digester`) once per node: it distills the page into
+entities/facts, each carrying quoted `evidence` that code (not the LLM) checks
+is a literal substring of the axtree (`grounded: true/false`); the node's
+axtree is persisted to `node_state/node_XXXX_axtree.txt` and the accumulated
+`sitekb.json` (SiteKB: digests + skills) is dumped after every node. Phase 2
+(`run_webarena.py --phase generate|all`; default `explore` keeps the old
+behavior) reads the SiteKB: `composer.py` (role `task_composer`) samples
+context bundles and generates WebArena-style tasks with eval specs
+(`string_match`/`url_match`/`program_html`), code-gated so INFO reference
+answers must be backed by grounded refs, NAV targets must be known URLs, and
+MOD intents pass a denylist; `collect.py`'s `GenerationRunner` solves each
+task (Solver + top-k skill hints), scores it with `evaluator.py`, and records
+tag-`GEN` episodes whose meta carries `verified` — INFO/NAV run before the MOD
+batch, and the (slow) instance reset runs at most once, after all MODs.
+Re-running phase 2 is idempotent (existing `gen_tasks.json` reused, done
+task_ids skipped). `build_sft_dataset.py` keeps only verified GEN episodes by
+default (`--include-local` opts self-reported LOCAL successes back in), with
+`difficulty` = the task's hops.
+
 **`--read-only`** makes `PageExplorer` propose only INFO/NAV tasks (drops MOD and
 anything it can't classify), for smoke-testing a shared, stateful site without
 writing to it (no posting, voting, cart/checkout actions).

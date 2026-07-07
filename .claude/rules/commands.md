@@ -43,6 +43,10 @@ python run_webarena.py --provider deepseek --model deepseek-chat
 python run_webarena.py --max-tasks 8                 # more tasks proposed per node
 python run_webarena.py --read-only --max-nodes 2 --max-steps 4   # smoke-test a shared
                                                                    # site without writes
+python run_webarena.py --phase all                   # explore + generate/collect in one run
+python run_webarena.py --phase generate --out outputs/wa_run_02   # phase 2 on an existing run
+python build_sft_dataset.py outputs/wa_run_02 train.jsonl          # verified GEN episodes only
+python build_sft_dataset.py outputs/wa_run_02 train.jsonl --include-local
 ```
 
 `--read-only` is the safe way to smoke-test against a real, shared WebArena instance

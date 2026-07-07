@@ -24,7 +24,6 @@ from __future__ import annotations
 import glob
 import json
 import os
-import sys
 
 SYSTEM = (
     "You are a web agent. At each step you receive the task goal, the current page "
