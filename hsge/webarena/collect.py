@@ -14,7 +14,8 @@ from .digest import evidence_grounded
 from .evaluator import evaluate, extract_answer
 from .recording import record_episode
 
-_NOT_FOUND_MARKERS = ("page not found", "404 not found")
+# Heuristic tuned for Postmill's likely 404 copy; spot-check against the real site's actual not-found page before relying on it in production.
+_NOT_FOUND_MARKERS = ("not found", "could not be found", "page not found", "404 not found")
 
 
 def top_k_skill_hints(embedder, skills: list[dict], intent: str, k: int = 3) -> str | None:
