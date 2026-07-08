@@ -339,8 +339,13 @@ class TaskComposer:
         phrased = str(out.get("intent") or "").strip()
         return phrased or template
 
-    def _try_comparisons(self, try_accept) -> None:
+    def _try_comparisons(self, try_accept, remaining) -> None:
+        # Comparison tasks are always type INFO (_comparison_task) -- stop
+        # before spending an LLM call phrasing a pair that try_accept is
+        # guaranteed to reject once the INFO quota is exhausted.
         for pair in find_comparable_pairs(self.kb):
+            if remaining.get("INFO", 0) <= 0:
+                break
             phrased = self._phrase_comparison(pair)
             if try_accept(_comparison_task(pair, self.kb, phrased)):
                 continue
@@ -382,7 +387,7 @@ class TaskComposer:
                 single_hop_accepted += 1
             return True
 
-        self._try_comparisons(try_accept)
+        self._try_comparisons(try_accept, remaining)
 
         for bundle in sample_bundles(self.kb, self.rng):
             if all(v <= 0 for v in remaining.values()):

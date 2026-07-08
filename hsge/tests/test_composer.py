@@ -405,3 +405,39 @@ def test_comparison_task_falls_back_to_template_when_llm_phrasing_fails_gates():
     assert len(accepted) == 1
     assert "minutes ago" not in accepted[0]["intent"]   # template used instead
     assert accepted[0]["intent"].startswith("Which has a higher comments")
+
+
+def test_comparisons_stop_calling_llm_once_info_quota_exhausted():
+    """Comparison tasks are always type INFO (_comparison_task). If the INFO
+    quota is already 0, _try_comparisons must not spend an LLM call phrasing
+    a pair that try_accept is guaranteed to reject anyway -- a real SiteKB can
+    yield many comparable pairs, so an all-NAV/MOD run would otherwise burn
+    one wasted complete_json call per pair."""
+    from hsge.webarena.composer import find_comparable_pairs
+
+    kb = SiteKB(site="http://s")
+    # three grounded same-type entities on different nodes, all pairwise
+    # comparable on "comments" -> find_comparable_pairs returns 3 pairs.
+    for i, n in enumerate((5, 10, 20)):
+        kb.add_node({"node_index": i, "url": f"http://s/p{i}", "outlinks": [],
+                     "entities": [{"type": "post", "name": f"Post {i}",
+                                   "attrs": {"comments": str(n)}, "grounded": True,
+                                   "evidence": f"Post {i} has {n} comments"}],
+                     "facts": []})
+    assert len(find_comparable_pairs(kb)) == 3
+
+    class _CountingLLM:
+        def __init__(self):
+            self.calls = 0
+
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            self.calls += 1
+            return {"tasks": []}
+
+    # NAV/MOD quota also 0 so the bundle loop's own "all quotas exhausted"
+    # break fires immediately -- isolating the assertion to comparison calls.
+    llm = _CountingLLM()
+    comp = TaskComposer(llm, kb, quota={"INFO": 0, "NAV": 0, "MOD": 0})
+    accepted, rejected = comp.generate()
+    assert llm.calls == 0
+    assert accepted == []
