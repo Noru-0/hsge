@@ -48,3 +48,18 @@ def test_step_accepts_hints_and_last_error_explicitly():
               hints="KNOWN PROCEDURES: ...", last_error="TimeoutError: click failed")
     assert s.hints == "KNOWN PROCEDURES: ..."
     assert s.last_error == "TimeoutError: click failed"
+
+
+def test_record_episode_persists_hints_last_error_and_url(tmp_path):
+    steps = [Step(action="click('1')", url="http://s/a", axtree="ax1",
+                   hints="try clicking the nav link", last_error=""),
+             Step(action="send_msg_to_user('done')", url="http://s/b", axtree="ax2",
+                   hints="", last_error="TimeoutError: element not found")]
+    ep_id = record_episode(str(tmp_path), 0, "goal", steps, ["ax1", "ax2"], [None, None],
+                           True, 1, "LOCAL")
+    lines = [json.loads(l) for l in open(tmp_path / "episodes" / ep_id / "episode.jsonl")]
+    assert lines[0]["hints"] == "try clicking the nav link"
+    assert lines[0]["last_error"] == ""
+    assert lines[0]["url"] == "http://s/a"
+    assert lines[1]["last_error"] == "TimeoutError: element not found"
+    assert lines[1]["url"] == "http://s/b"

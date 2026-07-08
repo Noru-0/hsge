@@ -36,6 +36,7 @@ def record_episode(out_dir: str, episode_index: int, goal: str, steps, obs_texts
             rec = {"record_type": "step", "index": k,
                    "action": json.dumps({"thought": st.obs_summary, "action": st.action}),
                    "parsed_action": st.action, "thought": st.obs_summary,
-                   "observation": observation}
+                   "observation": observation, "hints": st.hints,
+                   "last_error": st.last_error, "url": st.url}
             f.write(json.dumps(rec) + "\n")
     return ep_id
