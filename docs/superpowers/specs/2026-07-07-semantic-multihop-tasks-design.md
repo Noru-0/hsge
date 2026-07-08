@@ -1,13 +1,24 @@
 # Semantic multi-hop tasks (Part B) — design
 
-**Date:** 2026-07-07
-**Status:** deferred — approved in brainstorm, implementation postponed until
-Part A (`2026-07-07-phase2-run04-fixes-design.md`) has landed and been
-measured (run_05). Re-review this spec before planning: Part A's gates and
-the run_05 numbers may shift details here.
+**Date:** 2026-07-07 (greenlit + scope-expanded 2026-07-08)
+**Status:** greenlit — after a research-team + cross-verify diagnosis on
+run_05/run_06, the user chose "enforcement-first" and expanded scope to add
+changes 6–8 below (the diversity half of the complaint). Ready to plan.
 
 **Goal:** make phase-2 tasks genuinely multi-hop and semantically richer, so
-verified GEN episodes carry longer, navigation-bearing trajectories for SFT.
+verified GEN episodes carry longer, navigation-bearing trajectories for SFT —
+and diversify the task mix so it stops being 60% single-page INFO lookups.
+
+## run_05/06 confirmation (2026-07-08 cross-verified)
+
+The run_04 premise below still holds on newer runs, independently measured and
+cross-checked: 89–92% of accepted tasks are `hops≤1`; 57–59/60 INFO tasks
+start on the answer page; verified INFO median = 1 step; 60/60 INFO cite
+exactly 1 ref; `hops` still self-reported and never enforced. **A verifier
+agent REFUTED the "bundle collapse / sparse link graph" hypothesis**: the
+SiteKB graph is dense (median 7 KB-outlinks/node, none ≤1), so multi-hop
+material is available — shallowness is missing *enforcement*, not data
+starvation. This validates the link-graph approach in change #1.
 
 ## Why (run_04 evidence)
 
@@ -83,12 +94,57 @@ for every GEN task. General site knowledge — does not leak any specific
 answer. This is the compensation that keeps the far-start policy from
 cratering the verified rate.
 
-### 5. Acceptance metrics (run after implementation)
+### 6. Rebalance the type quota — diversity (RC1)
 
-Beyond verified rate, two new headline numbers vs run_04:
+The static `quota={INFO:60,NAV:20,MOD:20}` (`composer.py:186`,
+`config.yaml:71`) is the *sole* determinant of the type mix (accepted mix ==
+quota exactly in run_05/06), pinning the dataset at 60% single-page INFO
+regardless of the site or WebArena's action-heavier true distribution.
+
+- Rebalance the default toward more MOD/NAV (exact split decided at plan time,
+  e.g. `INFO:40/NAV:20/MOD:40`); keep it in `config.yaml` so it stays tunable.
+- Add a **depth sub-budget orthogonal to type**: enforce a minimum share of
+  accepted tasks with `real_hops ≥ 2` (change #1 makes `real_hops`
+  trustworthy). Reject surplus single-hop tasks once that budget is spent
+  (reason `"single-hop budget exhausted"`), same mechanism as the per-type
+  quota. This subsumes the "near/far quota split for INFO" open question into
+  one global depth budget.
+
+### 7. Composer near-duplicate suppression — diversity (RC5)
+
+Dedup today is exact-normalized-string equality over the last 30 accepted
+intents (`composer.py:68-69,109-110`); near-dups leak and `"duplicate intent"`
+is the #1 rejection (15/38 in run_06 — the model keeps re-converging on one
+template). Add embedding near-dup rejection reusing the project's
+`Embedder`/cosine-threshold clusterer (the same one PageExplorer and the skill
+library use): reject a candidate whose intent embedding is within `intent_sim`
+cosine of any already-accepted intent (reason `"near-duplicate intent"`).
+Threshold in `config.yaml`, default aligned with PageExplorer's. Keep the
+exact-string check as a cheap pre-filter.
+
+### 8. MOD variety — diversity (RC6)
+
+MOD is capped at 20 (quota) and further at **one MOD per target URL** by the
+collision rule (`composer.py:175-177`); MOD attempted 25–29 in run_05/06, so
+the cap binds. Relax the collision key from `target_url` to
+`(target_url, action-shape)` so distinct actions on the same page (post a
+comment vs edit the title) can coexist; combined with the rebalanced MOD quota
+(#6) this widens MOD variety.
+
+**Caveat (check before widening):** run_05 showed verified MOD regress to 65%
+(from 80% in run_04) after Part A's gates. Inspect run_05's rejected MOD tasks
+(memory backlog item) first — don't amplify a broken generation path.
+
+### 9. Acceptance metrics (run after implementation → run_07)
+
+Beyond verified rate, headline numbers vs run_06:
 - median step count of verified INFO episodes: 1 today, target ≥ 3;
-- share of verified tasks with `real_hops ≥ 2`: ~0 today (13 claimed, none
-  code-verified), target ≥ 50%.
+- share of verified tasks with `real_hops ≥ 2`: ~0 today (self-claimed only,
+  none code-verified), target ≥ 50%;
+- accepted type mix reflects the new quota (diversity: INFO no longer 60%);
+- near-duplicate rejection replaces most of the old exact `"duplicate intent"`
+  rejections, and accepted intents are more spread (fewer per-template repeats);
+- distinct MOD actions per URL > 1 where the site supports it.
 
 ## Dependencies / sequencing
 
@@ -98,9 +154,15 @@ Part A's `url_key` helper and evidence-containment gate.
 
 ## Open questions to resolve at plan time
 
-- Exact near/far quota split for INFO (proposed ~20% single-hop cap).
+- Rebalanced type quota target (proposal: `INFO:40/NAV:20/MOD:40`) and the
+  global `real_hops ≥ 2` depth-budget share (proposal: ≥50%, matching the
+  acceptance metric). Subsumes the old "near/far split for INFO".
 - Whether NAV/MOD also get the far-start override or keep LLM-proposed
   start_url (proposal: NAV yes — a NAV task starting at its target is
   already rejected by Part A gate #1; MOD keep as-is, its trajectories are
   already long).
 - Site-map hint format and size cap (proposal: ≤15 template lines).
+- `intent_sim` cosine threshold for change #7 (proposal: align with
+  PageExplorer's).
+- Whether to inspect run_05 rejected MODs (change #8 caveat) as a plan task
+  or a quick pre-plan check.
