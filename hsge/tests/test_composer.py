@@ -279,3 +279,37 @@ def test_generate_forces_info_start_url_to_site_root_and_sets_real_hops():
     assert len(accepted) == 1
     assert accepted[0]["start_url"] == "http://s"
     assert accepted[0]["hops"] == 1
+
+
+def test_single_hop_depth_budget_rejects_surplus_after_share_met():
+    # 1 comparable pair setup: 4 nodes total; force a scenario where 3 of 4
+    # candidate INFO tasks are 1-hop (same page as start after override is
+    # impossible since INFO is always forced to site root -- so use NAV
+    # candidates, which can be 1-hop from the root, to fill the single-hop
+    # budget, then confirm a further 1-hop NAV gets the new rejection reason).
+    kb = _kb()   # http://s -[1 hop]-> gaming, movies; gaming -[1 hop]-> post1 (2 hops)
+
+    def nav(url):
+        return {"intent": f"go to {url}", "type": "NAV", "start_url": "http://s",
+                "hops": 1, "source_nodes": [1], "answer_fact_refs": [],
+                "eval": {"eval_types": ["url_match"], "reference_answers": None,
+                         "reference_url": url, "program_html": []}}
+
+    class _LLM:
+        def __init__(self):
+            self.calls = 0
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            self.calls += 1
+            if self.calls == 1:
+                return {"tasks": [nav("http://s/f/gaming"), nav("http://s/f/movies")]}
+            return {"tasks": [dict(nav("http://s/f/gaming"),
+                                    intent="go to gaming forum again")]}
+
+    # total_quota=2 -> min_hops2_share=0.5 -> max_single_hop = round(2*0.5) = 1
+    comp = TaskComposer(_LLM(), kb, quota={"INFO": 0, "NAV": 2, "MOD": 0},
+                        min_hops2_share=0.5)
+    accepted, rejected = comp.generate()
+    assert len(accepted) == 1                       # only the budget-allowed 1-hop task
+    assert accepted[0]["hops"] == 1
+    reasons = [r["reason"] for r in rejected]
+    assert "single-hop budget exhausted" in reasons

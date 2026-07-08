@@ -251,13 +251,15 @@ def validate_task(task, kb, accepted: list[dict], graph: dict | None = None) -> 
 
 class TaskComposer:
     def __init__(self, llm, kb, quota: dict | None = None, hops: tuple = (2, 4),
-                 tasks_per_call: int = 5, seed: int = 0):
+                 tasks_per_call: int = 5, seed: int = 0,
+                 min_hops2_share: float = 0.5):
         self.llm = llm
         self.kb = kb
         self.quota = dict(quota or {"INFO": 60, "NAV": 20, "MOD": 20})
         self.hops = hops
         self.tasks_per_call = tasks_per_call
         self.rng = random.Random(seed)
+        self.min_hops2_share = min_hops2_share
 
     def _render_bundle(self, bundle: list[dict]) -> str:
         view = []
@@ -277,8 +279,11 @@ class TaskComposer:
         rejected: list[dict] = []
         remaining = dict(self.quota)
         graph = build_link_graph(self.kb)
+        max_single_hop = round(sum(self.quota.values()) * (1 - self.min_hops2_share))
+        single_hop_accepted = 0
 
         def try_accept(t) -> bool:
+            nonlocal single_hop_accepted
             if not isinstance(t, dict) or remaining.get(t.get("type"), 0) <= 0:
                 rejected.append({"task": t, "reason": "quota exhausted for type"})
                 return False
@@ -289,10 +294,16 @@ class TaskComposer:
             if reason:
                 rejected.append({"task": t, "reason": reason})
                 return False
+            hops = real_hops(t, self.kb, graph)
+            if hops < 2 and single_hop_accepted >= max_single_hop:
+                rejected.append({"task": t, "reason": "single-hop budget exhausted"})
+                return False
             t["task_id"] = f"gen_{len(accepted):04d}"
-            t["hops"] = real_hops(t, self.kb, graph)
+            t["hops"] = hops
             accepted.append(t)
             remaining[t["type"]] -= 1
+            if hops < 2:
+                single_hop_accepted += 1
             return True
 
         for bundle in sample_bundles(self.kb, self.rng):
