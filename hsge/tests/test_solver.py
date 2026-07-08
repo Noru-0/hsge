@@ -169,3 +169,60 @@ def test_solver_ends_episode_as_failure_on_report_infeasible():
     assert success is False
     assert len(steps) == 1
     assert steps[0].action.startswith("report_infeasible(")
+
+
+def test_build_solver_prompt_matches_what_solve_sends_to_the_llm():
+    from hsge.webarena.agents import build_solver_prompt
+
+    class _RecordingLLM:
+        def __init__(self):
+            self.last_prompt = None
+
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            self.last_prompt = prompt
+            return {"thought": "done", "action": "send_msg_to_user('done')"}
+
+    llm = _RecordingLLM()
+    solver = Solver(llm)
+    browser = _FakeBrowser()
+
+    solver.solve(browser, "find the price", hints="try the search box first")
+
+    expected = build_solver_prompt("find the price", "try the search box first",
+                                    [], [], "", "http://x", "[1] link 'next'")
+    assert llm.last_prompt == expected
+
+
+def test_step_records_hints_and_last_error_seen_at_that_step():
+    class _ErrorsOnceThenDoneLLM:
+        def __init__(self):
+            self.calls = 0
+
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            self.calls += 1
+            if self.calls == 1:
+                return {"thought": "click it", "action": "click('bad')"}
+            return {"thought": "done", "action": "send_msg_to_user('done')"}
+
+    class _FailsOnceBrowser(_FakeBrowser):
+        def act(self, action):
+            if action == "click('bad')":
+                raise RuntimeError("element not found")
+            return super().act(action)
+
+    llm = _ErrorsOnceThenDoneLLM()
+    solver = Solver(llm)
+    browser = _FailsOnceBrowser()
+
+    steps, *_ = solver.solve(browser, "goal", hints="a known procedure")
+
+    # call 1: click('bad') fails (exception) -> recorded with last_error="" (no
+    # prior error yet), the loop retries without incrementing history.
+    # call 2: LLM (now on its 2nd call) returns send_msg_to_user -> recorded
+    # with last_error="element not found" (carried in from call 1's failure).
+    assert len(steps) == 2
+    assert steps[0].action == "click('bad')"
+    assert steps[0].hints == "a known procedure"
+    assert steps[0].last_error == ""
+    assert steps[1].action == "send_msg_to_user('done')"
+    assert steps[1].last_error == "element not found"

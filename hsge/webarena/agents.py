@@ -250,27 +250,8 @@ class Solver:
                 print(f"    [solver] giving up: target {self._action_target(history[-1])!r} "
                       f"hit {streak}x in a row with no progress")
                 break
-            repeat_warning = ""
-            if streak >= self._WARN_AFTER_REPEATS:
-                # The same target just got hit >=2 times in a row with no error --
-                # e.g. clicking a nav link that navigated fine but re-appears
-                # under a new bid on the destination page, so the model keeps
-                # clicking it without realizing it already arrived. Nudge
-                # instead of silently repeating the same prompt.
-                repeat_warning = (
-                    f"\n\nWARNING: your last {streak} actions all targeted "
-                    f"{self._action_target(history[-1])!r} with no visible progress -- "
-                    "repeating it again will not help. If the goal is already achieved, "
-                    "call send_msg_to_user(...) now instead. Otherwise choose a "
-                    "genuinely different action/target.")
-            prompt = (f"GOAL: {goal}\n"
-                      + (f"\nKNOWN PROCEDURES (from earlier runs, may help):\n{hints}\n"
-                         if hints else "")
-                      + "\nRECENT ACTIONS:\n"
-                      + ("\n".join(f"- {h}" for h in history[-6:]) or "(none)")
-                      + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
-                      + repeat_warning
-                      + f"\n\nURL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}")
+            prompt = build_solver_prompt(goal, hints, history, progressed, last_error,
+                                         obs["url"], obs["axtree"])
             screenshot_b64 = browser.screenshot_b64(som=self.som) if self.vision else None
             out = self.llm.complete_json(SOLVER_SYS, prompt,
                                           image_b64=screenshot_b64, image_detail=self.image_detail)
@@ -283,7 +264,7 @@ class Solver:
             action = (out.get("action") or "").strip()
             thought = out.get("thought", "")
             steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100],
-                              axtree=obs["axtree"]))
+                              axtree=obs["axtree"], hints=hints or "", last_error=last_error))
             obs_texts.append(obs["axtree"])
             obs_screenshots.append(screenshot_b64)
             if not action or action.startswith("send_msg_to_user") or action.startswith("report_infeasible"):
@@ -308,3 +289,34 @@ class Solver:
         if goal_predicate is None and steps and steps[-1].action.startswith("send_msg_to_user"):
             success = True
         return steps, obs_texts, obs_screenshots, obs, success
+
+
+def build_solver_prompt(goal: str, hints: str | None, history: list[str],
+                        progressed: list[bool], last_error: str,
+                        url: str, axtree: str) -> str:
+    """Build the exact user-message text for one Solver step. Used live by
+    Solver.solve() and offline by build_sft_dataset.py so both produce
+    byte-identical prompts from the same inputs -- this is the only place
+    that assembles this text.
+
+    `history`/`progressed` are the full (unsliced) lists Solver.solve()
+    maintains; this function slices history[-6:] for display and passes the
+    full lists to Solver._stuck_streak, exactly matching solve()'s own logic.
+    """
+    streak = Solver._stuck_streak(history, progressed)
+    repeat_warning = ""
+    if streak >= Solver._WARN_AFTER_REPEATS:
+        repeat_warning = (
+            f"\n\nWARNING: your last {streak} actions all targeted "
+            f"{Solver._action_target(history[-1])!r} with no visible progress -- "
+            "repeating it again will not help. If the goal is already achieved, "
+            "call send_msg_to_user(...) now instead. Otherwise choose a "
+            "genuinely different action/target.")
+    return (f"GOAL: {goal}\n"
+            + (f"\nKNOWN PROCEDURES (from earlier runs, may help):\n{hints}\n"
+               if hints else "")
+            + "\nRECENT ACTIONS:\n"
+            + ("\n".join(f"- {h}" for h in history[-6:]) or "(none)")
+            + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
+            + repeat_warning
+            + f"\n\nURL: {url}\n\nPAGE:\n{axtree[:6000]}")
