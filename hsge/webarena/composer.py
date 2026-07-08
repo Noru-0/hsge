@@ -40,13 +40,24 @@ LISTING_PAGE_TYPES = {"forum_listing", "forum", "listing", "index", "home", "cat
 # perform (run_05 gen_0096: "Create a new forum" silently failed 4x). Override
 # via TaskComposer(permission_deny_re=...) / config.yaml's
 # gen.mod_permission_denylist for a site whose account has different rights.
+# "ban" and "delete another's" are deliberately NOT listed here: MOD_DENY_RE
+# (checked first, above) already matches bare "ban"/"delete", so those two
+# categories are unreachable dead code -- kept non-overlapping with MOD_DENY_RE
+# so every remaining alternative's "permission-gated MOD intent" reason is the
+# one actually reported.
 MOD_PERMISSION_RE = re.compile(
-    r"\b(create\s+(?:a\s+)?(?:new\s+)?(?:sub)?forum|ban\b|"
-    r"promote\s+to\s+admin|site\s+settings|admin\s+panel|"
-    r"delete\s+(?:another|other)('s)?\b)", re.I)
-_MOD_VERB_RE = re.compile(
-    r"\b(comment|repl(?:y|ies)|edit|subscribe|unsubscribe|vote|upvote|downvote|"
-    r"post|submit|create|toggle|check|uncheck|select|save|favorite)\b", re.I)
+    r"\b(create\s+(?:a\s+)?(?:new\s+)?(?:sub)?forum|"
+    r"promote\s+to\s+admin|site\s+settings|admin\s+panel)", re.I)
+# Priority order, not string position: `_mod_action_shape` returns the FIRST
+# verb below found anywhere in the intent, most specific/informative first
+# (e.g. "reply" before the generic "post"), so two semantically different
+# MOD intents that both happen to contain "post" earliest by position (e.g.
+# "Post a reply..." vs "Post a correction...") still resolve to distinct
+# shapes instead of spuriously colliding on the same URL.
+_MOD_VERB_PRIORITY = (
+    "comment", "reply", "replies", "edit", "subscribe", "unsubscribe",
+    "vote", "upvote", "downvote", "post", "submit", "create",
+    "toggle", "check", "uncheck", "select", "save", "favorite")
 # "written 17 minutes ago" is true at digest time and false at solve time:
 # the intent itself goes stale, which no page-content re-check can catch.
 RELATIVE_TIME_RE = re.compile(
@@ -143,8 +154,11 @@ def _comparison_task(pair: dict, kb, intent: str) -> dict:
 
 
 def _mod_action_shape(intent: str) -> str:
-    m = _MOD_VERB_RE.search(intent or "")
-    return m.group(1).lower() if m else "other"
+    il = (intent or "").lower()
+    for verb in _MOD_VERB_PRIORITY:
+        if re.search(rf"\b{verb}\b", il):
+            return "reply" if verb == "replies" else verb
+    return "other"
 
 
 def _mod_target_keys(task: dict) -> set[tuple[str, str]]:

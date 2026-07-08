@@ -530,6 +530,67 @@ def test_mod_collision_relaxed_to_url_plus_action_shape():
     assert "collides" in validate_task(comment2, kb, [dict(comment, task_id="gen_0000")])
 
 
+def test_mod_permission_categories_narrowed_non_overlapping_with_deny():
+    kb = _kb()
+    def mod(intent, url):
+        return {"intent": intent, "type": "MOD", "start_url": "http://s", "hops": 1,
+                "source_nodes": [0], "answer_fact_refs": [],
+                "eval": {"eval_types": ["program_html"], "reference_answers": None,
+                         "reference_url": None,
+                         "program_html": [{"url": url, "locator": "",
+                                           "required_contents": {"must_include": ["x"]}}]}}
+    kb.add_node({"node_index": 5, "url": "http://s/admin", "outlinks": [],
+                 "entities": [], "facts": []})
+    kb.nodes[0]["outlinks"].append("http://s/admin")
+    # remaining MOD_PERMISSION_RE categories still fire "permission-gated"
+    assert "permission-gated" in validate_task(
+        mod("Create a new subforum called x", "http://s/admin"), kb, [])
+    assert "permission-gated" in validate_task(
+        mod("Promote to admin the user bob, marking them x", "http://s/admin"), kb, [])
+    assert "permission-gated" in validate_task(
+        mod("Change the site settings to show x", "http://s/admin"), kb, [])
+    assert "permission-gated" in validate_task(
+        mod("Open the admin panel and set the flag to x", "http://s/admin"), kb, [])
+    # "ban" / "delete another's" are caught earlier by MOD_DENY_RE, with the
+    # "destructive" reason, not "permission-gated" -- MOD_PERMISSION_RE no
+    # longer lists them (they were dead code: unreachable behind MOD_DENY_RE)
+    assert "destructive" in validate_task(
+        mod("Ban the user bob for posting x", "http://s/admin"), kb, [])
+    assert "destructive" in validate_task(
+        mod("Delete another user's post saying x", "http://s/admin"), kb, [])
+
+
+def test_mod_action_shape_uses_verb_priority_not_leftmost_position():
+    from hsge.webarena.composer import _mod_action_shape
+    # both strings' leftmost-matching verb by STRING POSITION is "post" (it
+    # appears first in both), but they are semantically different actions
+    # (reply vs. a plain post with no more specific verb) -- priority order
+    # must pick "reply" for the first and fall through to "post" for the
+    # second, not collapse both to "post".
+    assert _mod_action_shape("Post a reply saying thanks") == "reply"
+    assert _mod_action_shape("Post a correction to the title") == "post"
+
+
+def test_mod_collision_uses_verb_priority_not_leftmost_position():
+    kb = _kb()
+    reply = {"intent": 'Post a reply saying "thanks" under Dune review',
+             "type": "MOD", "start_url": "http://s", "hops": 1, "source_nodes": [2],
+             "answer_fact_refs": [],
+             "eval": {"eval_types": ["program_html"], "reference_answers": None,
+                      "reference_url": None,
+                      "program_html": [{"url": "http://s/f/movies", "locator": "",
+                                        "required_contents": {"must_include": ["thanks"]}}]}}
+    correction = dict(
+        reply, intent='Post a correction saying "Updated Dune review" to the title',
+        eval=dict(reply["eval"], program_html=[
+            {"url": "http://s/f/movies", "locator": "",
+             "required_contents": {"must_include": ["Updated Dune review"]}}]))
+    # same target URL, but "reply" vs "post" shapes (verb-priority, not
+    # leftmost-position, which would have collapsed both to "post") -> no
+    # collision, unlike before this fix
+    assert validate_task(correction, kb, [dict(reply, task_id="gen_0000")]) is None
+
+
 def test_generate_wires_embedder_into_dedup():
     class _LLM:
         def __init__(self):
