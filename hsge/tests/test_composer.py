@@ -441,3 +441,51 @@ def test_comparisons_stop_calling_llm_once_info_quota_exhausted():
     accepted, rejected = comp.generate()
     assert llm.calls == 0
     assert accepted == []
+
+
+class _StubEmbedder:
+    """Deterministic 2D embedder: intents sharing a keyword land close."""
+    def encode(self, texts):
+        import numpy as np
+        vecs = []
+        for t in texts:
+            tl = t.lower()
+            x = 1.0 if "gaming" in tl else 0.0
+            y = 1.0 if "movies" in tl else 0.0
+            v = np.array([x, y], dtype=np.float32)
+            n = (v[0]**2 + v[1]**2) ** 0.5
+            vecs.append(v / n if n > 0 else v)
+        return np.vstack(vecs)
+
+
+def test_validate_task_rejects_near_duplicate_intent_via_embedder():
+    kb = _kb()
+    info = _info(["n1.e0.attrs.author"], {"exact_match": "hlz0"})
+    accepted = [dict(info, intent="Find the author of the top gaming post")]
+    near_dup = dict(info, intent="Who wrote the top gaming submission?")
+    assert validate_task(near_dup, kb, accepted,
+                         embedder=_StubEmbedder(), intent_sim=0.6) is not None
+    assert "near-duplicate" in validate_task(
+        near_dup, kb, accepted, embedder=_StubEmbedder(), intent_sim=0.6)
+    # a genuinely different topic still passes
+    different = dict(info, intent="Find the author of the top movies post",
+                     answer_fact_refs=["n1.e0.attrs.author"])
+    assert validate_task(different, kb, accepted, embedder=_StubEmbedder(),
+                         intent_sim=0.6) is None
+
+
+def test_generate_wires_embedder_into_dedup():
+    class _LLM:
+        def __init__(self):
+            self.calls = 0
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            self.calls += 1
+            if self.calls == 1:
+                return {"tasks": [_info_task("Find the author of the top gaming post")]}
+            return {"tasks": [dict(_info_task("Who wrote the top gaming submission?"),
+                                    answer_fact_refs=["n1.e0.attrs.author"])]}
+    comp = TaskComposer(_LLM(), _kb(), quota={"INFO": 5, "NAV": 0, "MOD": 0},
+                        embedder=_StubEmbedder(), intent_sim=0.6)
+    accepted, rejected = comp.generate()
+    assert len(accepted) == 1
+    assert any(r["reason"] == "near-duplicate intent" for r in rejected)

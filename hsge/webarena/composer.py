@@ -212,7 +212,8 @@ def sample_bundles(kb, rng: random.Random, max_nodes: int = 4) -> list[list[dict
     return bundles
 
 
-def validate_task(task, kb, accepted: list[dict], graph: dict | None = None) -> str | None:
+def validate_task(task, kb, accepted: list[dict], graph: dict | None = None,
+                  embedder=None, intent_sim: float = 0.6) -> str | None:
     """Rejection reason, or None when the task passes every code gate."""
     if not isinstance(task, dict):
         return "not an object"
@@ -225,6 +226,12 @@ def validate_task(task, kb, accepted: list[dict], graph: dict | None = None) -> 
     key = _norm_intent(intent)
     if any(_norm_intent(a.get("intent", "")) == key for a in accepted):
         return "duplicate intent"
+    if embedder is not None and accepted:
+        others = [a.get("intent", "") for a in accepted]
+        vecs = embedder.encode([intent] + others)
+        q = vecs[0]
+        if max(float(v @ q) for v in vecs[1:]) >= intent_sim:
+            return "near-duplicate intent"
     if RELATIVE_TIME_RE.search(intent):
         return "relative-time reference in intent"
     graph = graph if graph is not None else build_link_graph(kb)
@@ -307,7 +314,8 @@ def validate_task(task, kb, accepted: list[dict], graph: dict | None = None) -> 
 class TaskComposer:
     def __init__(self, llm, kb, quota: dict | None = None, hops: tuple = (2, 4),
                  tasks_per_call: int = 5, seed: int = 0,
-                 min_hops2_share: float = 0.5):
+                 min_hops2_share: float = 0.5, embedder=None,
+                 intent_sim: float = 0.6):
         self.llm = llm
         self.kb = kb
         self.quota = dict(quota or {"INFO": 60, "NAV": 20, "MOD": 20})
@@ -315,6 +323,8 @@ class TaskComposer:
         self.tasks_per_call = tasks_per_call
         self.rng = random.Random(seed)
         self.min_hops2_share = min_hops2_share
+        self.embedder = embedder
+        self.intent_sim = intent_sim
 
     def _render_bundle(self, bundle: list[dict]) -> str:
         view = []
@@ -371,7 +381,8 @@ class TaskComposer:
             t.setdefault("start_url", self.kb.site)
             if t.get("type") in ("INFO", "NAV"):
                 t["start_url"] = self.kb.site
-            reason = validate_task(t, self.kb, accepted, graph=graph)
+            reason = validate_task(t, self.kb, accepted, graph=graph,
+                                   embedder=self.embedder, intent_sim=self.intent_sim)
             if reason:
                 rejected.append({"task": t, "reason": reason})
                 return False
