@@ -204,6 +204,38 @@ task_ids skipped). `build_sft_dataset.py` keeps only verified GEN episodes by
 default (`--include-local` opts self-reported LOCAL successes back in), with
 `difficulty` = the task's hops.
 
+A 2026-07-08 package (`docs/superpowers/specs/2026-07-07-semantic-multihop-tasks-design.md`)
+replaced the LLM's self-reported `hops` with `real_hops`, a BFS distance over
+the SiteKB's link graph (`composer.py`'s `build_link_graph`/`real_hops`):
+INFO/NAV `start_url` is now forced to the site root regardless of what the
+composer proposes, and any task whose target is unreachable through known
+links is rejected outright. A new comparison/aggregation INFO shape
+(`find_comparable_pairs`) is the pipeline's first genuine two-source task —
+code computes the answer from two grounded entities on different nodes, the
+LLM only phrases the question, with a template fallback. `GenerationRunner`
+now also gives the Solver a compact site-map hint (one example URL per
+template) alongside skill hints, to offset the verified-rate cost of the
+far-start policy. Separately, the composer's type quota widened past a fixed
+60% INFO share, gained a global depth budget (minimum share of accepted
+tasks with `real_hops >= 2`), embedding-based near-duplicate intent
+rejection (the exact-string check alone let paraphrases through), and two
+MOD-specific feasibility gates — a comment/reply-shaped intent may not
+target a listing-type page (`page_type` from the digest), and a small
+permission denylist rejects admin-gated actions the seed account can't
+perform — plus a widened MOD collision key (URL + action-shape, not URL
+alone) for more MOD variety.
+
+The `--dry-run --phase all` fixture's scripted `COMPOSE` task is `NAV`, not
+`INFO`: the dry run's `_FakeBrowser` collapses every frontier node but the
+root into "duplicate content" (its first observation never depends on the
+requested URL), so the SiteKB only ever has one digested node. An `INFO`
+task's target must be a digested node's fact, which under a single-node KB
+is necessarily the root itself, so `real_hops` would always compute 0 and
+get rejected (`"start_url is the answer page"`). A `NAV` target only has to
+be a *known* URL (`SiteKB.known_urls()` includes a node's own `outlinks`),
+so a same-node NAV task can legitimately be one hop away without a second
+digested node.
+
 **`--read-only`** makes `PageExplorer` propose only INFO/NAV tasks (drops MOD and
 anything it can't classify), for smoke-testing a shared, stateful site without
 writing to it (no posting, voting, cart/checkout actions).

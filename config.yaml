@@ -6,7 +6,7 @@
 run:
   site: reddit             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
   root_url: null             # explicit URL; overrides `site` when set
-  out_dir: outputs/wa_run_02
+  out_dir: outputs/wa_run_03
   allow: null                # null -> derived from the root URL's host
   denylist: "logout|\\?p=|product_list_|[?&]sort="   # blocked child URLs (deny wins)
   max_nodes: 500
@@ -68,8 +68,11 @@ embedder:
   model: all-MiniLM-L6-v2
 
 gen:                         # phase 2 (run_webarena.py --phase generate|all)
-  quota: {INFO: 60, NAV: 20, MOD: 20}   # generated-task budget per type
+  quota: {INFO: 40, NAV: 20, MOD: 40}   # generated-task budget per type
   hops_min: 2                # preferred multi-hop range for composed tasks
   hops_max: 4
+  min_hops2_share: 0.5       # min fraction of accepted tasks with real_hops>=2
+  intent_sim: 0.6            # cosine threshold for composer near-dup rejection
+  mod_permission_denylist: null   # regex override for admin/permission-gated MOD verbs
   max_steps: 25              # solver step budget per generated task
   skill_hints: true          # inject top-k discovered skills into the solver prompt

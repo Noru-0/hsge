@@ -35,7 +35,8 @@ DEFAULTS = {
     "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2,
             "agents": {}},
     "embedder": {"model": "all-MiniLM-L6-v2"},
-    "gen": {"quota": {"INFO": 60, "NAV": 20, "MOD": 20}, "hops_min": 2, "hops_max": 4,
+    "gen": {"quota": {"INFO": 40, "NAV": 20, "MOD": 40}, "hops_min": 2, "hops_max": 4,
+            "min_hops2_share": 0.5, "intent_sim": 0.6, "mod_permission_denylist": None,
             "max_steps": 25, "skill_hints": True},
 }
 
@@ -85,13 +86,20 @@ class _DryLLM(MockLLM):
                     "facts": [{"q": "main link label?", "a": "next",
                                "evidence": "link 'next'"}]}
         if system.startswith("COMPOSE"):                         # task composer
+            # NAV, not INFO: the dry run's SiteKB only ever has one digested
+            # node (the root -- node dedup collapses every other frontier
+            # node into "duplicate content"), so an INFO task's answer is
+            # necessarily on that same node and real_hops() would always
+            # compute 0 and get rejected ("start_url is the answer page").
+            # A NAV target only has to be a *known* URL (root's outlinks
+            # count), so it can be one hop away without a second node.
             return {"tasks": [{
-                "intent": "Find the label of the main link on the home page and report it",
-                "type": "INFO", "start_url": "http://shop/home", "hops": 2,
-                "source_nodes": [1], "answer_fact_refs": ["n1.f0"],
-                "eval": {"eval_types": ["string_match"],
-                         "reference_answers": {"must_include": ["next"]},
-                         "reference_url": None, "program_html": []}}]}
+                "intent": "Go to the search results page from the home page",
+                "type": "NAV", "start_url": "http://shop/home",
+                "source_nodes": [1],
+                "eval": {"eval_types": ["url_match"], "reference_answers": {},
+                         "reference_url": "http://shop/catalogsearch/result/?q=x",
+                         "program_html": []}}]}
         if system.startswith("PROPOSE"):                        # explorer
             return {"tasks": ["search for an item", "add an item to cart"]}
         if "web agent" in system.lower():                       # solver
@@ -388,7 +396,10 @@ def main():
         else:
             composer = TaskComposer(agent_llms["task_composer"], kb,
                                     quota=gen_cfg["quota"],
-                                    hops=(gen_cfg["hops_min"], gen_cfg["hops_max"]))
+                                    hops=(gen_cfg["hops_min"], gen_cfg["hops_max"]),
+                                    min_hops2_share=gen_cfg["min_hops2_share"],
+                                    embedder=embedder, intent_sim=gen_cfg["intent_sim"],
+                                    permission_deny_re=gen_cfg.get("mod_permission_denylist"))
             tasks, rejected = composer.generate()
             json.dump({"accepted": tasks, "rejected": rejected},
                       open(gt_path, "w"), indent=2)
