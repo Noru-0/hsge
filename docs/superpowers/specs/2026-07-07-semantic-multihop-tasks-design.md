@@ -131,9 +131,33 @@ the cap binds. Relax the collision key from `target_url` to
 comment vs edit the title) can coexist; combined with the rebalanced MOD quota
 (#6) this widens MOD variety.
 
-**Caveat (check before widening):** run_05 showed verified MOD regress to 65%
-(from 80% in run_04) after Part A's gates. Inspect run_05's rejected MOD tasks
-(memory backlog item) first — don't amplify a broken generation path.
+**Caveat, now root-caused (2026-07-08 inspection of run_05 episodes):** the
+65% MOD verified regression is not composer-rejection noise (only 9/29 MOD
+attempts were rejected pre-solve) — it's 7/20 *accepted* MOD tasks failing at
+solve time, all in one contiguous batch (`gen_0089..0096`), two distinct
+failure modes neither existing gate catches:
+- **Action/page-type mismatch (4/7):** intents like "post a comment on the
+  'AskReddit' **forum page**" — Postmill has no comment affordance on a
+  forum-listing page (comments belong to a submission/thread page); the
+  Solver loops (`goto('/forums')` repeatedly) or improvises a wrong action
+  (creates a whole new submission instead) and never satisfies the
+  `program_html` check. The composer generates the "post a comment" verb
+  without checking the target node's `page_type` (already in SiteKB digests)
+  supports it (see `outputs/wa_run_05/episodes/ep_0078`, `gen_0089`'s trace).
+- **Permission mismatch (1/7, `gen_0096` "Create a new forum"):** Solver fills
+  the form correctly and clicks submit 4x with no effect — plausibly an
+  admin-only action the seed test account can't perform. No gate checks
+  action-vs-account-capability.
+
+**New change for this package: add two feasibility gates to MOD generation**
+(`composer.py` MOD branch, alongside the existing denylist/phrasing/
+must_include gates): (a) reject a comment/reply-shaped intent whose target
+node's `page_type` isn't a submission/thread-type page (reuse the digest's
+existing `page_type` field — no new data needed); (b) a small
+per-site denylist of admin/permission-gated action verbs (create forum,
+ban, delete other's content, site settings) in `config.yaml`, mirroring the
+existing destructive-action denylist. This subsumes the old "inspect before
+widening" caveat — the fix is now specified, not just flagged.
 
 ### 9. Acceptance metrics (run after implementation → run_07)
 
@@ -144,7 +168,9 @@ Beyond verified rate, headline numbers vs run_06:
 - accepted type mix reflects the new quota (diversity: INFO no longer 60%);
 - near-duplicate rejection replaces most of the old exact `"duplicate intent"`
   rejections, and accepted intents are more spread (fewer per-template repeats);
-- distinct MOD actions per URL > 1 where the site supports it.
+- distinct MOD actions per URL > 1 where the site supports it;
+- MOD verified rate recovers toward run_04's 80% (from run_05's 65%) with the
+  two feasibility gates in place, without the accepted MOD count dropping.
 
 ## Dependencies / sequencing
 
