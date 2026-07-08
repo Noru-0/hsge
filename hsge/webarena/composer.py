@@ -30,6 +30,23 @@ MOD_READONLY_RE = re.compile(
 # content; worthless as SFT signal (run_04: 3/3 such tasks failed).
 INFO_META_RE = re.compile(
     r"\b(short\s*url|rss|formatting\s+help|keyboard\s+shortcut)\b", re.I)
+# Postmill has no comment affordance on an index/listing page -- comments
+# belong to a specific submission/thread. A run_05 episode (gen_0089) showed
+# the Solver either loop forever looking for one or improvise a wrong action
+# (create a whole new submission) when the composer targeted a listing page.
+COMMENT_SHAPED_RE = re.compile(r"\b(comment|repl(?:y|ies))\b", re.I)
+LISTING_PAGE_TYPES = {"forum_listing", "forum", "listing", "index", "home", "category"}
+# Admin/permission-gated actions the seeded test account plausibly can't
+# perform (run_05 gen_0096: "Create a new forum" silently failed 4x). Override
+# via TaskComposer(permission_deny_re=...) / config.yaml's
+# gen.mod_permission_denylist for a site whose account has different rights.
+MOD_PERMISSION_RE = re.compile(
+    r"\b(create\s+(?:a\s+)?(?:new\s+)?(?:sub)?forum|ban\b|"
+    r"promote\s+to\s+admin|site\s+settings|admin\s+panel|"
+    r"delete\s+(?:another|other)('s)?\b)", re.I)
+_MOD_VERB_RE = re.compile(
+    r"\b(comment|repl(?:y|ies)|edit|subscribe|unsubscribe|vote|upvote|downvote|"
+    r"post|submit|create|toggle|check|uncheck|select|save|favorite)\b", re.I)
 # "written 17 minutes ago" is true at digest time and false at solve time:
 # the intent itself goes stale, which no page-content re-check can catch.
 RELATIVE_TIME_RE = re.compile(
@@ -125,9 +142,15 @@ def _comparison_task(pair: dict, kb, intent: str) -> dict:
     }
 
 
-def _mod_target_urls(task: dict) -> set[str]:
+def _mod_action_shape(intent: str) -> str:
+    m = _MOD_VERB_RE.search(intent or "")
+    return m.group(1).lower() if m else "other"
+
+
+def _mod_target_keys(task: dict) -> set[tuple[str, str]]:
+    shape = _mod_action_shape(str(task.get("intent") or ""))
     urls = {p.get("url") for p in (task.get("eval") or {}).get("program_html") or []}
-    return {u for u in urls if u and u != "last"}
+    return {(u, shape) for u in urls if u and u != "last"}
 
 
 def build_link_graph(kb) -> dict[str, set[str]]:
@@ -213,7 +236,8 @@ def sample_bundles(kb, rng: random.Random, max_nodes: int = 4) -> list[list[dict
 
 
 def validate_task(task, kb, accepted: list[dict], graph: dict | None = None,
-                  embedder=None, intent_sim: float = 0.6) -> str | None:
+                  embedder=None, intent_sim: float = 0.6,
+                  permission_re=None) -> str | None:
     """Rejection reason, or None when the task passes every code gate."""
     if not isinstance(task, dict):
         return "not an object"
@@ -286,6 +310,14 @@ def validate_task(task, kb, accepted: list[dict], graph: dict | None = None,
             return "destructive MOD intent"
         if MOD_READONLY_RE.search(intent):
             return "read-only intent typed as MOD"
+        perm_re = permission_re if permission_re is not None else MOD_PERMISSION_RE
+        if perm_re.search(intent):
+            return "permission-gated MOD intent"
+        if COMMENT_SHAPED_RE.search(intent):
+            for idx in task.get("source_nodes") or []:
+                node = kb.node_by_index(idx)
+                if node and str(node.get("page_type") or "").lower() in LISTING_PAGE_TYPES:
+                    return "comment MOD targets a listing page, not a submission/thread"
         if "program_html" not in types or not ev.get("program_html"):
             return "MOD without program_html"
         ni = normalize_answer(intent)
@@ -302,9 +334,9 @@ def validate_task(task, kb, accepted: list[dict], graph: dict | None = None,
             for s in required:
                 if normalize_answer(str(s)) not in ni:
                     return f"must_include {s!r} not quoted in intent"
-        mine = _mod_target_urls(task)
+        mine = _mod_target_keys(task)
         for a in accepted:
-            if a.get("type") == "MOD" and mine & _mod_target_urls(a):
+            if a.get("type") == "MOD" and mine & _mod_target_keys(a):
                 return "MOD target collides with an accepted MOD task"
         if real_hops(task, kb, graph) is None:
             return "target unreachable from start_url"
@@ -315,7 +347,7 @@ class TaskComposer:
     def __init__(self, llm, kb, quota: dict | None = None, hops: tuple = (2, 4),
                  tasks_per_call: int = 5, seed: int = 0,
                  min_hops2_share: float = 0.5, embedder=None,
-                 intent_sim: float = 0.6):
+                 intent_sim: float = 0.6, permission_deny_re: str | None = None):
         self.llm = llm
         self.kb = kb
         self.quota = dict(quota or {"INFO": 60, "NAV": 20, "MOD": 20})
@@ -325,6 +357,8 @@ class TaskComposer:
         self.min_hops2_share = min_hops2_share
         self.embedder = embedder
         self.intent_sim = intent_sim
+        self.permission_re = (re.compile(permission_deny_re, re.I)
+                              if permission_deny_re else MOD_PERMISSION_RE)
 
     def _render_bundle(self, bundle: list[dict]) -> str:
         view = []
@@ -382,7 +416,8 @@ class TaskComposer:
             if t.get("type") in ("INFO", "NAV"):
                 t["start_url"] = self.kb.site
             reason = validate_task(t, self.kb, accepted, graph=graph,
-                                   embedder=self.embedder, intent_sim=self.intent_sim)
+                                   embedder=self.embedder, intent_sim=self.intent_sim,
+                                   permission_re=self.permission_re)
             if reason:
                 rejected.append({"task": t, "reason": reason})
                 return False

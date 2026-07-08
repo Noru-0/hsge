@@ -24,7 +24,7 @@ def _kb():
                             "evidence": "top post 'Best budget GPU'"},
                            {"q": "mods?", "a": "bob", "grounded": False,
                             "evidence": "moderated by bob"}]})
-    kb.add_node({"node_index": 2, "url": "http://s/f/movies", "page_type": "forum",
+    kb.add_node({"node_index": 2, "url": "http://s/f/movies", "page_type": "post",
                  "title": "movies", "outlinks": [],
                  "entities": [{"type": "post", "name": "Dune review",
                                "attrs": {}, "grounded": True,
@@ -472,6 +472,62 @@ def test_validate_task_rejects_near_duplicate_intent_via_embedder():
                      answer_fact_refs=["n1.e0.attrs.author"])
     assert validate_task(different, kb, accepted, embedder=_StubEmbedder(),
                          intent_sim=0.6) is None
+
+
+def test_validate_mod_rejects_comment_on_listing_page_type():
+    kb = _kb()
+    kb.add_node({"node_index": 4, "url": "http://s/f/tv", "page_type": "forum_listing",
+                 "title": "tv", "outlinks": [], "entities": [], "facts": []})
+    kb.nodes[0]["outlinks"].append("http://s/f/tv")  # reachable, for the subscribe check below
+    mod = {"intent": "post a comment saying hello on the tv forum page", "type": "MOD",
+           "start_url": "http://s", "hops": 1, "source_nodes": [4], "answer_fact_refs": [],
+           "eval": {"eval_types": ["program_html"], "reference_answers": None,
+                    "reference_url": None,
+                    "program_html": [{"url": "http://s/f/tv", "locator": "",
+                                      "required_contents": {"must_include": ["hello"]}}]}}
+    assert "listing page" in validate_task(mod, kb, [])
+    # a non-comment MOD on the same listing page is unaffected (e.g. subscribe)
+    subscribe = dict(mod, intent="subscribe to the tv forum so it shows 'Unsubscribe'",
+                     eval=dict(mod["eval"], program_html=[
+                         {"url": "http://s/f/tv", "locator": "",
+                          "required_contents": {"must_include": ["Unsubscribe"]}}]))
+    assert validate_task(subscribe, kb, []) is None
+
+
+def test_validate_mod_rejects_permission_gated_action():
+    kb = _kb()
+    mod = {"intent": "Create a new forum titled 'Classics'", "type": "MOD",
+           "start_url": "http://s", "hops": 1, "source_nodes": [0], "answer_fact_refs": [],
+           "eval": {"eval_types": ["program_html"], "reference_answers": None,
+                    "reference_url": None,
+                    "program_html": [{"url": "http://s/create_forum", "locator": "",
+                                      "required_contents": {"must_include": ["Classics"]}}]}}
+    kb.add_node({"node_index": 5, "url": "http://s/create_forum", "outlinks": [],
+                 "entities": [], "facts": []})
+    assert "permission-gated" in validate_task(mod, kb, [])
+
+
+def test_mod_collision_relaxed_to_url_plus_action_shape():
+    kb = _kb()
+    comment = {"intent": 'post a comment saying "great movie" under Dune review',
+               "type": "MOD", "start_url": "http://s", "hops": 1, "source_nodes": [2],
+               "answer_fact_refs": [],
+               "eval": {"eval_types": ["program_html"], "reference_answers": None,
+                        "reference_url": None,
+                        "program_html": [{"url": "http://s/f/movies", "locator": "",
+                                          "required_contents": {"must_include": ["great movie"]}}]}}
+    edit_title = dict(comment, intent="edit the title to say Updated Dune review",
+                      eval=dict(comment["eval"], program_html=[
+                          {"url": "http://s/f/movies", "locator": "",
+                           "required_contents": {"must_include": ["Updated Dune review"]}}]))
+    # same target URL, different action shape (comment vs edit) -> no collision
+    assert validate_task(edit_title, kb, [dict(comment, task_id="gen_0000")]) is None
+    # same target URL, SAME action shape -> still collides
+    comment2 = dict(comment, intent='post another comment saying "nice" under Dune review',
+                    eval=dict(comment["eval"], program_html=[
+                        {"url": "http://s/f/movies", "locator": "",
+                         "required_contents": {"must_include": ["nice"]}}]))
+    assert "collides" in validate_task(comment2, kb, [dict(comment, task_id="gen_0000")])
 
 
 def test_generate_wires_embedder_into_dedup():
