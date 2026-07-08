@@ -606,3 +606,75 @@ def test_generate_wires_embedder_into_dedup():
     accepted, rejected = comp.generate()
     assert len(accepted) == 1
     assert any(r["reason"] == "near-duplicate intent" for r in rejected)
+
+
+class _AllSimilarEmbedder:
+    """Every intent maps to the same unit vector -- cosine similarity is 1.0
+    between any two, the way a real sentence embedder would score two
+    structurally near-identical comparison phrasings ("Which has a higher
+    X: 'A' or 'B'?" vs "...: 'C' or 'D'?")."""
+    def encode(self, texts):
+        import numpy as np
+        return np.tile(np.array([[1.0, 0.0]], dtype=np.float32), (len(texts), 1))
+
+
+def _comparable_kb():
+    kb = SiteKB(site="http://s")
+    kb.add_node({"node_index": 0, "url": "http://s", "page_type": "home",
+                 "title": "home",
+                 "outlinks": ["http://s/p0", "http://s/p1",
+                              "http://s/u0", "http://s/u1"],
+                 "entities": [], "facts": []})
+    kb.add_node({"node_index": 1, "url": "http://s/p0", "outlinks": [],
+                 "entities": [{"type": "post", "name": "Post0",
+                               "attrs": {"comments": "5"}, "grounded": True,
+                               "evidence": "Post0 has 5 comments"}], "facts": []})
+    kb.add_node({"node_index": 2, "url": "http://s/p1", "outlinks": [],
+                 "entities": [{"type": "post", "name": "Post1",
+                               "attrs": {"comments": "10"}, "grounded": True,
+                               "evidence": "Post1 has 10 comments"}], "facts": []})
+    kb.add_node({"node_index": 3, "url": "http://s/u0", "outlinks": [],
+                 "entities": [{"type": "user", "name": "User0",
+                               "attrs": {"karma": "5"}, "grounded": True,
+                               "evidence": "User0 has 5 karma"}], "facts": []})
+    kb.add_node({"node_index": 4, "url": "http://s/u1", "outlinks": [],
+                 "entities": [{"type": "user", "name": "User1",
+                               "attrs": {"karma": "10"}, "grounded": True,
+                               "evidence": "User1 has 10 karma"}], "facts": []})
+    return kb
+
+
+def test_comparison_tasks_skip_near_dup_embedder_check():
+    """find_comparable_pairs already dedups comparison tasks by construction
+    (one per distinct winner/loser/attr combo), so the embedding near-dup
+    check -- designed to catch a different problem, LLM-rephrased bundle
+    intents -- must not fire on them. Without the fix, a real embedder that
+    finds these structurally-similar phrasings near-identical would reject
+    every comparison task after the first, despite each already having spent
+    a real _phrase_comparison LLM call."""
+    kb = _comparable_kb()
+
+    class _LLM:
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            if system.startswith("Phrase"):
+                if "comments" in prompt:
+                    return {"intent": "Which has a higher comments: "
+                                      "'Post1' or 'Post0'?"}
+                return {"intent": "Which has a higher karma: "
+                                  "'User1' or 'User0'?"}
+            return {"tasks": []}
+
+    comp = TaskComposer(_LLM(), kb, quota={"INFO": 5, "NAV": 0, "MOD": 0},
+                        embedder=_AllSimilarEmbedder(), intent_sim=0.6)
+    accepted, rejected = comp.generate()
+    assert len(accepted) == 2
+    assert not any(r["reason"] == "near-duplicate intent" for r in rejected)
+
+
+def test_default_quota_matches_rebalanced_config_default():
+    """The rebalanced {INFO: 40, NAV: 20, MOD: 40} quota (config.yaml,
+    run_webarena.py's DEFAULTS) must also be TaskComposer's own class-level
+    default, so a direct TaskComposer(llm, kb) call with no explicit quota=
+    isn't silently stuck on the old un-rebalanced 60/20/20 mix."""
+    comp = TaskComposer(object(), _kb())
+    assert comp.quota == {"INFO": 40, "NAV": 20, "MOD": 40}

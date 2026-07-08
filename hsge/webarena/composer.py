@@ -364,7 +364,7 @@ class TaskComposer:
                  intent_sim: float = 0.6, permission_deny_re: str | None = None):
         self.llm = llm
         self.kb = kb
-        self.quota = dict(quota or {"INFO": 60, "NAV": 20, "MOD": 20})
+        self.quota = dict(quota or {"INFO": 40, "NAV": 20, "MOD": 40})
         self.hops = hops
         self.tasks_per_call = tasks_per_call
         self.rng = random.Random(seed)
@@ -401,17 +401,26 @@ class TaskComposer:
         # Comparison tasks are always type INFO (_comparison_task) -- stop
         # before spending an LLM call phrasing a pair that try_accept is
         # guaranteed to reject once the INFO quota is exhausted.
+        #
+        # skip_near_dup=True: find_comparable_pairs already dedups these by
+        # construction (one task per distinct winner/loser/attr combo), and
+        # their phrasing is structurally near-identical by design ("Which has
+        # a higher X: 'A' or 'B'?"), so a real embedder would flag most of
+        # them as near-duplicates of the first accepted one -- after each has
+        # already spent a real _phrase_comparison LLM call. The embedding
+        # near-dup check exists for a different problem (LLM-rephrased bundle
+        # intents), not this one.
         for pair in find_comparable_pairs(self.kb):
             if remaining.get("INFO", 0) <= 0:
                 break
             phrased = self._phrase_comparison(pair)
-            if try_accept(_comparison_task(pair, self.kb, phrased)):
+            if try_accept(_comparison_task(pair, self.kb, phrased), skip_near_dup=True):
                 continue
             template = (f"Which has a higher {pair['attr']}: "
                         f"{pair['winner']['entity']['name']!r} or "
                         f"{pair['loser']['entity']['name']!r}?")
             if template != phrased:
-                try_accept(_comparison_task(pair, self.kb, template))
+                try_accept(_comparison_task(pair, self.kb, template), skip_near_dup=True)
 
     def generate(self) -> tuple[list[dict], list[dict]]:
         accepted: list[dict] = []
@@ -421,7 +430,7 @@ class TaskComposer:
         max_single_hop = round(sum(self.quota.values()) * (1 - self.min_hops2_share))
         single_hop_accepted = 0
 
-        def try_accept(t) -> bool:
+        def try_accept(t, skip_near_dup: bool = False) -> bool:
             nonlocal single_hop_accepted
             if not isinstance(t, dict) or remaining.get(t.get("type"), 0) <= 0:
                 rejected.append({"task": t, "reason": "quota exhausted for type"})
@@ -430,7 +439,8 @@ class TaskComposer:
             if t.get("type") in ("INFO", "NAV"):
                 t["start_url"] = self.kb.site
             reason = validate_task(t, self.kb, accepted, graph=graph,
-                                   embedder=self.embedder, intent_sim=self.intent_sim,
+                                   embedder=None if skip_near_dup else self.embedder,
+                                   intent_sim=self.intent_sim,
                                    permission_re=self.permission_re)
             if reason:
                 rejected.append({"task": t, "reason": reason})
