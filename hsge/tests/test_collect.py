@@ -231,3 +231,32 @@ def test_zero_hops_task_records_difficulty_zero(tmp_path):
                      SiteKB(), skill_hints=False).run([t])
     meta = json.load(open(next((tmp_path / "episodes").glob("*/episode_meta.json"))))
     assert meta["metadata"]["difficulty"] == 0
+
+
+def test_build_site_map_groups_by_template_and_caps_lines():
+    from hsge.webarena.collect import build_site_map
+    urls = {"http://s/f/gaming", "http://s/f/movies",
+            "http://s/f/gaming/comments/1/title", "http://s/f/gaming/comments/2/other"}
+    site_map = build_site_map(urls, max_lines=15)
+    lines = site_map.splitlines()
+    assert len(lines) == 3   # /f/gaming, /f/movies, /f/gaming/comments/*/* templates
+    assert any("f/gaming/comments" in l for l in lines)
+
+
+def test_build_site_map_empty_for_no_urls():
+    from hsge.webarena.collect import build_site_map
+    assert build_site_map(set()) == ""
+
+
+def test_runner_passes_site_map_alongside_skill_hints(tmp_path):
+    captured = {}
+    class _CapturingSolver:
+        def solve(self, browser, goal, goal_predicate=None, hints=None):
+            captured["hints"] = hints
+            return ([Step(action="send_msg_to_user('42')", url=browser.url, axtree="ax")],
+                    ["ax"], [None], browser.observation(), True)
+    kb = _kb_two_pages()
+    t = _task("gen_0000", ra={"must_include": ["42"]})
+    GenerationRunner(_Browser, _CapturingSolver(), str(tmp_path), HashingEmbedder(),
+                     kb, skill_hints=False).run([t])
+    assert "http://s/home" in captured["hints"] or "http://s/page2" in captured["hints"]

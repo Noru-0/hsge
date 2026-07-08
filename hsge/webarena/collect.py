@@ -13,9 +13,21 @@ import os
 from .digest import evidence_grounded
 from .evaluator import evaluate, extract_answer, url_key
 from .recording import record_episode
+from .runtime import WebArenaExplorer
 
 # Heuristic tuned for Postmill's likely 404 copy; spot-check against the real site's actual not-found page before relying on it in production.
 _NOT_FOUND_MARKERS = ("not found", "could not be found", "page not found", "404 not found")
+
+
+def build_site_map(known_urls: set[str], max_lines: int = 15) -> str:
+    """One example URL per URL-template (grouped via WebArenaExplorer's own
+    per-template shape logic), for the Solver's general site orientation --
+    never leaks any specific task's answer."""
+    by_template: dict[str, str] = {}
+    for u in sorted(known_urls):
+        by_template.setdefault(WebArenaExplorer._url_template(u), u)
+    lines = [f"- {t} (e.g. {u})" for t, u in sorted(by_template.items())[:max_lines]]
+    return "\n".join(lines)
 
 
 def top_k_skill_hints(embedder, skills: list[dict], intent: str, k: int = 3) -> str | None:
@@ -43,6 +55,7 @@ class GenerationRunner:
         self.root_url = root_url
         self.reset_fn = reset_fn
         self.skill_hints = skill_hints
+        self.site_map = build_site_map(kb.known_urls())
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
         # continue numbering after phase-1 episodes (never overwrite them)
         self.episode = len(glob.glob(os.path.join(out_dir, "episodes", "ep_*")))
@@ -130,8 +143,9 @@ class GenerationRunner:
                 stats["attempted"] += 1
                 hints = (top_k_skill_hints(self.embedder, self.kb.skills, task["intent"])
                          if self.skill_hints else None)
+                combined_hints = "\n".join(h for h in (hints, self.site_map) if h) or None
                 steps, obs_texts, shots, final_obs, _ = self.solver.solve(
-                    browser, task["intent"], hints=hints)
+                    browser, task["intent"], hints=combined_hints)
                 answer = extract_answer(steps)
                 verified, details = evaluate(task, answer, final_obs.get("url", ""),
                                              browser, judge=self.judge_llm)
