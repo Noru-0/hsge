@@ -2,7 +2,7 @@
 gets refused/empty -- retry once text-only before treating it as a dead end.
 """
 
-from hsge.webarena.agents import Solver
+from hsge.webarena.agents import Solver, ACTIONS_DOC
 
 
 class _FakeBrowser:
@@ -145,3 +145,27 @@ def test_solver_gives_up_on_same_target_repeated_with_different_arguments():
     assert success is False
     assert len(steps) == Solver._MAX_REPEATS
     assert all("378" in s.action for s in steps)
+
+
+def test_actions_doc_documents_the_three_new_actions():
+    assert "report_infeasible(" in ACTIONS_DOC
+    assert "press(" in ACTIONS_DOC
+    assert "hover(" in ACTIONS_DOC
+
+
+class _InfeasibleLLM:
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        return {"thought": "no email field exists on this page",
+                "action": "report_infeasible('There is no email field on this page.')"}
+
+
+def test_solver_ends_episode_as_failure_on_report_infeasible():
+    llm = _InfeasibleLLM()
+    solver = Solver(llm)
+    browser = _FakeBrowser()
+
+    steps, obs_texts, obs_screenshots, final_obs, success = solver.solve(browser, "goal")
+
+    assert success is False
+    assert len(steps) == 1
+    assert steps[0].action.startswith("report_infeasible(")

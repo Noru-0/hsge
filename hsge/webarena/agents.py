@@ -13,9 +13,20 @@ import re
 from ..schema import Step
 from .predicates import reached
 
-ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
-               "fill('bid','text'), select_option('bid','opt'), goto('url'), "
-               "go_back(), send_msg_to_user('done message').")
+ACTIONS_DOC = (
+    "Allowed actions (return exactly one):\n"
+    "click('bid') -- click an element.\n"
+    "fill('bid','text') -- type text into an input/textarea.\n"
+    "select_option('bid','opt') -- choose an option in a <select>.\n"
+    "press('bid','key') -- focus the element and press a key or combo, e.g. "
+    "press('12','Enter') to submit a search box, press('12','Escape') to close a dialog.\n"
+    "hover('bid') -- hover an element, e.g. to open a hover-only dropdown menu.\n"
+    "goto('url') -- navigate to a URL.\n"
+    "go_back() -- go to the previous page.\n"
+    "report_infeasible('reason') -- use ONLY when the GOAL cannot be done on this "
+    "site (e.g. a required field or page does not exist); explain why in 'reason'.\n"
+    "send_msg_to_user('done message') -- use ONLY when the GOAL is fully achieved."
+)
 
 EXPLORER_SYS = (
     "PROPOSE concrete, feasible tasks a typical user could do on THIS page. "
@@ -50,7 +61,10 @@ SOLVER_SYS = (
     "action before deciding. Output ONE action as JSON "
     "{\"thought\": \"...\", \"action\": \"<one action>\"}. "
     "Examples: {\"thought\": \"Open the product\", \"action\": \"click('12')\"} ; "
-    "{\"thought\": \"Goal met\", \"action\": \"send_msg_to_user('done: price is $19')\"}. "
+    "{\"thought\": \"Submit the search\", \"action\": \"press('9','Enter')\"} ; "
+    "{\"thought\": \"Goal met\", \"action\": \"send_msg_to_user('done: price is $19')\"} ; "
+    "{\"thought\": \"No email field exists on this page\", "
+    "\"action\": \"report_infeasible('There is no email field on this page.')\"}. "
     "Call send_msg_to_user ONLY when the goal is fully achieved.")
 
 
@@ -272,7 +286,7 @@ class Solver:
                               axtree=obs["axtree"]))
             obs_texts.append(obs["axtree"])
             obs_screenshots.append(screenshot_b64)
-            if not action or action.startswith("send_msg_to_user"):
+            if not action or action.startswith("send_msg_to_user") or action.startswith("report_infeasible"):
                 break
             pre_url, pre_axtree = obs["url"], obs["axtree"]
             try:
