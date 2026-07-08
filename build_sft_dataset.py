@@ -25,27 +25,20 @@ import glob
 import json
 import os
 
-SYSTEM = (
-    "You are a web agent. At each step you receive the task goal, the current page "
-    "accessibility tree, and your recent actions. Respond with a JSON object "
-    '{"thought": <reasoning>, "action": <one BrowserGym action>} where action is one '
-    "of click('bid'), fill('bid','text'), select_option('bid','opt'), "
-    "goto('url'), or send_msg_to_user('text')."
-)
+from hsge.webarena.agents import SOLVER_SYS, build_solver_prompt
 
 
-def _read_axtree(episode_dir: str, step: dict) -> str:
-    """Best-effort load of the step's accessibility-tree text from disk."""
+def _load_axtree(episode_dir: str, step: dict) -> str:
+    """Load the step's full accessibility-tree text from disk."""
     obs = step.get("observation")
     if not isinstance(obs, dict):
         return ""
-    for key in ("axtree_visible_only_txt", "axtree_txt"):
-        node = obs.get(key)
-        if isinstance(node, dict) and node.get("path"):
-            p = node["path"] if os.path.isabs(node["path"]) else os.path.join(episode_dir, node["path"])
-            if os.path.exists(p):
-                return open(p, encoding="utf-8", errors="ignore").read()
-    return ""        # not available (e.g. standalone json without page_state files)
+    node = obs.get("axtree_txt")
+    if isinstance(node, dict) and node.get("path"):
+        p = node["path"] if os.path.isabs(node["path"]) else os.path.join(episode_dir, node["path"])
+        if os.path.exists(p):
+            return open(p, encoding="utf-8", errors="ignore").read()
+    return ""
 
 
 def _difficulty(task_info: dict, episode_meta: dict) -> int:
@@ -58,26 +51,39 @@ def _difficulty(task_info: dict, episode_meta: dict) -> int:
 
 def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
                         difficulty: int) -> list[dict]:
-    examples, history = [], []
-    for step in steps:
-        target = step.get("action")                 # already the JSON the solver emits
+    """Replay an episode's persisted steps and rebuild each step's exact
+    Solver prompt via build_solver_prompt() -- the same function
+    Solver.solve() calls live -- so training data matches inference exactly.
+    A step recorded before hints/last_error/url were persisted is skipped
+    rather than approximated with a different template."""
+    examples: list[dict] = []
+    history: list[str] = []
+    progressed: list[bool] = []
+    n = len(steps)
+    for i, step in enumerate(steps):
+        target = step.get("action")
         if not target:
             continue
-        axtree = _read_axtree(episode_dir, step)
-        obs_block = axtree if axtree else "[accessibility tree omitted]"
-        hist = "\n".join(f"- {h}" for h in history[-5:]) or "(none yet)"
-        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
-                f"CURRENT PAGE (accessibility tree):\n{obs_block}")
+        url = step.get("url")
+        hints = step.get("hints")
+        last_error = step.get("last_error")
+        if url is None or hints is None or last_error is None:
+            continue    # pre-fidelity episode: not enough data to rebuild the exact prompt
+        axtree = _load_axtree(episode_dir, step)
+        prompt = build_solver_prompt(goal, hints, history, progressed, last_error, url, axtree)
         examples.append({
             "messages": [
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": user},
+                {"role": "system", "content": SOLVER_SYS},
+                {"role": "user", "content": prompt},
                 {"role": "assistant", "content": target},
             ],
             "difficulty": difficulty,
-            "axtree_loaded": bool(axtree),
         })
-        history.append(step.get("parsed_action") or target)
+        if i + 1 < n and not steps[i + 1].get("last_error"):
+            next_url = steps[i + 1].get("url")
+            next_axtree = _load_axtree(episode_dir, steps[i + 1])
+            history.append(target)
+            progressed.append(url != next_url or axtree != next_axtree)
     return examples
 
 
