@@ -24,6 +24,8 @@ class Step:
     obs_summary: str = ""       # short NL summary of the resulting observation
     dom_signature: str = ""     # cheap structural fingerprint of the page
     axtree: str = ""            # full accessibility tree at this step (real backends only)
+    hints: str = ""             # KNOWN PROCEDURES block shown to the Solver for this step, if any
+    last_error: str = ""        # LAST ACTION ERROR text shown to the Solver for this step, if any
 
     def action_kind(self) -> str:
         """Verb only, used to build a site-agnostic action signature."""

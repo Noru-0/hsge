@@ -33,3 +33,18 @@ def test_record_episode_no_extra_meta_matches_legacy_shape(tmp_path):
     meta = json.load(open(tmp_path / "episodes" / ep_id / "episode_meta.json"))
     assert set(meta) == {"kind", "goal", "outcome", "metadata", "step_count"}
     assert meta["outcome"]["reward"] == 0.0
+
+
+def test_step_carries_hints_and_last_error_defaults():
+    from hsge.schema import Step
+    s = Step(action="click('1')", url="u", axtree="ax")
+    assert s.hints == ""
+    assert s.last_error == ""
+
+
+def test_step_accepts_hints_and_last_error_explicitly():
+    from hsge.schema import Step
+    s = Step(action="click('1')", url="u", axtree="ax",
+              hints="KNOWN PROCEDURES: ...", last_error="TimeoutError: click failed")
+    assert s.hints == "KNOWN PROCEDURES: ..."
+    assert s.last_error == "TimeoutError: click failed"
