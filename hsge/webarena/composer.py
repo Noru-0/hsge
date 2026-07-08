@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import random
 import re
+from collections import deque
 
 from .evaluator import normalize_answer, url_key
 
@@ -74,6 +75,66 @@ def _mod_target_urls(task: dict) -> set[str]:
     return {u for u in urls if u and u != "last"}
 
 
+def build_link_graph(kb) -> dict[str, set[str]]:
+    """url -> outlink urls, directly from SiteKB nodes (the same adjacency
+    sample_bundles' link-neighborhoods use). The BFS graph for `real_hops`."""
+    graph: dict[str, set[str]] = {}
+    for n in kb.nodes:
+        u = n.get("url")
+        if u:
+            graph.setdefault(u, set()).update(n.get("outlinks") or [])
+    return graph
+
+
+def _bfs_hops(graph: dict[str, set[str]], start: str, target: str) -> int | None:
+    """Shortest #hops from start to target over `graph`, or None if
+    unreachable. 0 when start == target."""
+    if start == target:
+        return 0
+    seen = {start}
+    queue = deque([(start, 0)])
+    while queue:
+        u, d = queue.popleft()
+        for v in graph.get(u, ()):
+            if v == target:
+                return d + 1
+            if v not in seen:
+                seen.add(v)
+                queue.append((v, d + 1))
+    return None
+
+
+def _target_urls(task: dict, kb) -> list[str]:
+    """URLs the task's answer/target must be reached at, by type."""
+    ttype = task.get("type")
+    if ttype == "INFO":
+        urls = [kb.node_url_of_ref(r) for r in task.get("answer_fact_refs") or []]
+    elif ttype == "NAV":
+        ref = (task.get("eval") or {}).get("reference_url")
+        urls = [ref] if ref else []
+    elif ttype == "MOD":
+        urls = [p.get("url") for p in (task.get("eval") or {}).get("program_html") or []]
+    else:
+        urls = []
+    return [u for u in urls if u and u != "last"]
+
+
+def real_hops(task: dict, kb, graph: dict[str, set[str]]) -> int | None:
+    """Ground truth for `hops`/SFT difficulty: the actual BFS distance the
+    Solver must traverse from `start_url` to reach every target the task's
+    eval checks -- never the LLM's self-reported claim. None if any target
+    is unreachable through known links (the task is unwinnable as
+    specified)."""
+    start = task.get("start_url") or kb.site
+    targets = _target_urls(task, kb)
+    if not targets:
+        return 0
+    dists = [_bfs_hops(graph, start, t) for t in targets]
+    if any(d is None for d in dists):
+        return None
+    return max(dists)
+
+
 def sample_bundles(kb, rng: random.Random, max_nodes: int = 4) -> list[list[dict]]:
     """Link-neighborhood bundles (a node + KB nodes it links to) plus
     same-entity-type bundles (e.g. every node holding 'post' entities)."""
@@ -96,7 +157,7 @@ def sample_bundles(kb, rng: random.Random, max_nodes: int = 4) -> list[list[dict
     return bundles
 
 
-def validate_task(task, kb, accepted: list[dict]) -> str | None:
+def validate_task(task, kb, accepted: list[dict], graph: dict | None = None) -> str | None:
     """Rejection reason, or None when the task passes every code gate."""
     if not isinstance(task, dict):
         return "not an object"
@@ -111,6 +172,7 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
         return "duplicate intent"
     if RELATIVE_TIME_RE.search(intent):
         return "relative-time reference in intent"
+    graph = graph if graph is not None else build_link_graph(kb)
     ev = task.get("eval") or {}
     types = ev.get("eval_types") or []
     if ttype == "INFO":
@@ -142,6 +204,11 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
                 return f"reference answer {t!r} not backed by refs"
             if not any(nt in e for e in evidences if e):
                 return f"reference answer {t!r} not inside cited evidence"
+        rh = real_hops(task, kb, graph)
+        if rh is None:
+            return "target unreachable from start_url"
+        if rh < 1:
+            return "INFO start_url is the answer page (0 real hops)"
     elif ttype == "NAV":
         if "url_match" not in types:
             return "NAV without url_match"
@@ -150,6 +217,8 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
         if url_key(ev.get("reference_url") or "") == url_key(
                 task.get("start_url") or kb.site):
             return "NAV reference_url equals start_url"
+        if real_hops(task, kb, graph) is None:
+            return "target unreachable from start_url"
     else:  # MOD
         if MOD_DENY_RE.search(intent):
             return "destructive MOD intent"
@@ -175,6 +244,8 @@ def validate_task(task, kb, accepted: list[dict]) -> str | None:
         for a in accepted:
             if a.get("type") == "MOD" and mine & _mod_target_urls(a):
                 return "MOD target collides with an accepted MOD task"
+        if real_hops(task, kb, graph) is None:
+            return "target unreachable from start_url"
     return None
 
 
@@ -205,6 +276,25 @@ class TaskComposer:
         accepted: list[dict] = []
         rejected: list[dict] = []
         remaining = dict(self.quota)
+        graph = build_link_graph(self.kb)
+
+        def try_accept(t) -> bool:
+            if not isinstance(t, dict) or remaining.get(t.get("type"), 0) <= 0:
+                rejected.append({"task": t, "reason": "quota exhausted for type"})
+                return False
+            t.setdefault("start_url", self.kb.site)
+            if t.get("type") in ("INFO", "NAV"):
+                t["start_url"] = self.kb.site
+            reason = validate_task(t, self.kb, accepted, graph=graph)
+            if reason:
+                rejected.append({"task": t, "reason": reason})
+                return False
+            t["task_id"] = f"gen_{len(accepted):04d}"
+            t["hops"] = real_hops(t, self.kb, graph)
+            accepted.append(t)
+            remaining[t["type"]] -= 1
+            return True
+
         for bundle in sample_bundles(self.kb, self.rng):
             if all(v <= 0 for v in remaining.values()):
                 break
@@ -216,16 +306,5 @@ class TaskComposer:
                       + f"\n\nGenerate up to {self.tasks_per_call} tasks from THIS bundle.")
             out = self.llm.complete_json(COMPOSER_SYS, prompt) or {}
             for t in out.get("tasks") or []:
-                reason = None
-                if isinstance(t, dict) and remaining.get(t.get("type"), 0) <= 0:
-                    reason = "quota exhausted for type"
-                reason = reason or validate_task(t, self.kb, accepted)
-                if reason:
-                    rejected.append({"task": t, "reason": reason})
-                    continue
-                t["task_id"] = f"gen_{len(accepted):04d}"
-                t.setdefault("start_url", self.kb.site)
-                t.setdefault("hops", 1)
-                accepted.append(t)
-                remaining[t["type"]] -= 1
+                try_accept(t)
         return accepted, rejected

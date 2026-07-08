@@ -9,6 +9,9 @@ from hsge.webarena.digest import SiteKB
 
 def _kb():
     kb = SiteKB(site="http://s")
+    kb.add_node({"node_index": 0, "url": "http://s", "page_type": "home",
+                 "title": "home", "outlinks": ["http://s/f/gaming", "http://s/f/movies"],
+                 "entities": [], "facts": []})
     kb.add_node({"node_index": 1, "url": "http://s/f/gaming",
                  "page_type": "forum", "title": "gaming",
                  "outlinks": ["http://s/f/gaming/post1", "http://s",
@@ -214,3 +217,65 @@ def test_info_reference_must_be_inside_cited_evidence():
     # value quoted inside its evidence still passes
     good = _info(["n1.e0.attrs.author"], {"exact_match": "hlz0"})
     assert validate_task(good, kb, []) is None
+
+
+def test_build_link_graph_and_real_hops():
+    from hsge.webarena.composer import build_link_graph, real_hops
+    kb = _kb()
+    graph = build_link_graph(kb)
+    assert graph["http://s"] == {"http://s/f/gaming", "http://s/f/movies"}
+    info = _info(["n1.e0.attrs.author"], {"exact_match": "hlz0"})  # start_url "http://s"
+    assert real_hops(info, kb, graph) == 1        # http://s -> http://s/f/gaming
+    nav = {"type": "NAV", "start_url": "http://s",
+           "eval": {"reference_url": "http://s/f/gaming/post1"}}
+    assert real_hops(nav, kb, graph) == 2          # http://s -> gaming -> post1
+    mod_last = {"type": "MOD", "start_url": "http://s",
+                "eval": {"program_html": [{"url": "last"}]}}
+    assert real_hops(mod_last, kb, graph) == 0     # no real target -> trivially 0
+    unreachable = {"type": "NAV", "start_url": "http://s",
+                   "eval": {"reference_url": "http://s/f/movies/9/re"}}
+    assert real_hops(unreachable, kb, graph) is None
+
+
+def test_validate_task_rejects_unreachable_target():
+    kb = _kb()
+    nav = {"intent": "go to a page nothing links to", "type": "NAV",
+           "start_url": "http://s", "hops": 1, "source_nodes": [1],
+           "answer_fact_refs": [],
+           "eval": {"eval_types": ["url_match"], "reference_answers": None,
+                    "reference_url": "http://s/f/movies", "program_html": []}}
+    kb.add_node({"node_index": 3, "url": "http://s/f/movies/9/re",
+                 "outlinks": [], "entities": [], "facts": [
+                     {"q": "?", "a": "x", "grounded": True, "evidence": "x here"}]})
+    unreachable = dict(nav, eval=dict(nav["eval"], reference_url="http://s/f/movies/9/re"))
+    # not linked from anywhere in the KB -> unreachable
+    assert "unreachable" in validate_task(unreachable, kb, [])
+
+
+def test_validate_task_rejects_info_zero_hop_start():
+    kb = _kb()
+    info = _info(["n1.e0.attrs.author"], {"exact_match": "hlz0"})
+    # start_url IS the answer page itself -> 0 real hops, must be rejected
+    zero_hop = dict(info, start_url="http://s/f/gaming")
+    assert "0 real hops" in validate_task(zero_hop, kb, [])
+    # start_url = site root (kb.site) -> 1 real hop, passes
+    assert validate_task(info, kb, []) is None
+
+
+def test_generate_forces_info_start_url_to_site_root_and_sets_real_hops():
+    class _LLM:
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            return {"tasks": [
+                dict(_info_task("find the author of the top gaming post"),
+                     start_url="http://s/f/gaming"),      # LLM proposed the answer page itself
+            ]}
+    comp = TaskComposer(_LLM(), _kb(), quota={"INFO": 5, "NAV": 0, "MOD": 0})
+    accepted, rejected = comp.generate()
+    # the override happens BEFORE validation, so start_url is forced back to
+    # "http://s" (the site root) regardless of what the LLM proposed, giving
+    # a real BFS distance of 1 hop (http://s -> http://s/f/gaming) instead of
+    # the LLM's claimed 2 -- and instead of the 0-hop rejection it would have
+    # gotten had the LLM's own start_url been trusted
+    assert len(accepted) == 1
+    assert accepted[0]["start_url"] == "http://s"
+    assert accepted[0]["hops"] == 1

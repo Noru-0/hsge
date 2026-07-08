@@ -221,3 +221,13 @@ def test_nav_slug_redirect_is_not_stale(tmp_path):
         str(tmp_path), HashingEmbedder(), _kb_two_pages(),
         skill_hints=False).run([task])
     assert stats["attempted"] == 1 and stats["stale_skipped"] == 0
+
+
+def test_zero_hops_task_records_difficulty_zero(tmp_path):
+    # a task with real_hops == 0 (e.g. a same-page MOD) must record
+    # difficulty=0, not be coerced to 1 by a falsy-value fallback bug
+    t = dict(_task("gen_0000", ra={"must_include": ["42"]}), hops=0)
+    GenerationRunner(_Browser, _Solver(), str(tmp_path), HashingEmbedder(),
+                     SiteKB(), skill_hints=False).run([t])
+    meta = json.load(open(next((tmp_path / "episodes").glob("*/episode_meta.json"))))
+    assert meta["metadata"]["difficulty"] == 0

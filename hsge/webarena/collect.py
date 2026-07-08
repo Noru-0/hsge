@@ -143,7 +143,7 @@ class GenerationRunner:
                 browser.close()
             record_episode(
                 self.out_dir, self.episode, task["intent"], steps, obs_texts, shots,
-                verified, difficulty=int(task.get("hops") or 1), tag="GEN",
+                verified, difficulty=int(task.get("hops", 1)), tag="GEN",
                 extra_meta={"task_id": task["task_id"], "verified": verified,
                             "task_type": task.get("type"), "eval": task.get("eval"),
                             "answer": answer, "eval_details": details})
