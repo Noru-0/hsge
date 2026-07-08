@@ -82,7 +82,7 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
         if i + 1 < n and not steps[i + 1].get("last_error"):
             next_url = steps[i + 1].get("url")
             next_axtree = _load_axtree(episode_dir, steps[i + 1])
-            history.append(target)
+            history.append(step.get("parsed_action") or target)
             progressed.append(url != next_url or axtree != next_axtree)
     return examples
 

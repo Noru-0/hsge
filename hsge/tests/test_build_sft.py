@@ -7,7 +7,7 @@ import json
 from hsge.schema import Step
 from hsge.webarena.agents import SOLVER_SYS, build_solver_prompt
 from hsge.webarena.recording import record_episode
-from build_sft_dataset import build, episode_to_examples
+from build_sft_dataset import build, episode_to_examples, load_episodes
 
 
 def _mk(tmp_path, idx, tag, success, extra=None, difficulty=1, steps=None):
@@ -55,6 +55,29 @@ def test_example_messages_match_build_solver_prompt_exactly(tmp_path):
         ],
         "difficulty": 1,
     }]
+
+
+def test_history_uses_bare_parsed_action_not_json_blob(tmp_path):
+    # record_episode writes "action" as a JSON blob ({"thought":..., "action":...})
+    # but "parsed_action" as the bare action string -- that bare string is what
+    # live Solver.solve() actually appends to its own history and what shows up
+    # in the real RECENT ACTIONS section of the prompt. episode_to_examples must
+    # replay history with the bare string, not the JSON blob, to match inference.
+    steps = [
+        Step(action="click('1')", url="http://s/a", axtree="[1] link 'next'",
+             hints="", last_error="", obs_summary="open the link"),
+        Step(action="fill('2', 'x')", url="http://s/b", axtree="[2] textbox",
+             hints="", last_error="", obs_summary="fill the box"),
+    ]
+    _mk(tmp_path, 0, "LOCAL", True, steps=steps)
+
+    (goal, loaded_steps, ep_dir, diff, meta), = list(load_episodes(str(tmp_path)))
+    examples = episode_to_examples(goal, loaded_steps, ep_dir, diff)
+
+    assert len(examples) == 2
+    recent = examples[1]["messages"][1]["content"]
+    assert "click('1')" in recent
+    assert '"thought"' not in recent
 
 
 def test_step_missing_prompt_fidelity_fields_is_skipped(tmp_path):
