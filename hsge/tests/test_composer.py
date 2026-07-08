@@ -313,3 +313,95 @@ def test_single_hop_depth_budget_rejects_surplus_after_share_met():
     assert accepted[0]["hops"] == 1
     reasons = [r["reason"] for r in rejected]
     assert "single-hop budget exhausted" in reasons
+
+
+def test_find_comparable_pairs_across_different_nodes():
+    from hsge.webarena.composer import find_comparable_pairs
+    kb = SiteKB(site="http://s")
+    kb.add_node({"node_index": 1, "url": "http://s/f/gaming/1", "outlinks": [],
+                 "entities": [{"type": "post", "name": "Post A",
+                               "attrs": {"comments": "45"}, "grounded": True,
+                               "evidence": "Post A has 45 comments"}], "facts": []})
+    kb.add_node({"node_index": 2, "url": "http://s/f/gaming/2", "outlinks": [],
+                 "entities": [{"type": "post", "name": "Post B",
+                               "attrs": {"comments": "10"}, "grounded": True,
+                               "evidence": "Post B has 10 comments"}], "facts": []})
+    pairs = find_comparable_pairs(kb)
+    assert len(pairs) == 1
+    assert pairs[0]["attr"] == "comments"
+    assert pairs[0]["winner"]["entity"]["name"] == "Post A"
+    assert pairs[0]["loser"]["entity"]["name"] == "Post B"
+
+
+def test_find_comparable_pairs_skips_same_node_and_ungrounded():
+    from hsge.webarena.composer import find_comparable_pairs
+    kb = SiteKB(site="http://s")
+    kb.add_node({"node_index": 1, "url": "http://s/x", "outlinks": [],
+                 "entities": [
+                     {"type": "post", "name": "A", "attrs": {"n": "5"}, "grounded": True},
+                     {"type": "post", "name": "B", "attrs": {"n": "1"}, "grounded": True}],
+                 "facts": []})
+    kb.add_node({"node_index": 2, "url": "http://s/y", "outlinks": [],
+                 "entities": [{"type": "post", "name": "C", "attrs": {"n": "9"},
+                               "grounded": False}], "facts": []})
+    pairs = find_comparable_pairs(kb)
+    assert pairs == []   # A/B share a node (skipped); C is ungrounded (skipped)
+
+
+def test_comparison_task_generated_and_verified_by_existing_gates():
+    kb = _kb()
+    kb.add_node({"node_index": 3, "url": "http://s/f/movies/2", "outlinks": [],
+                 "entities": [{"type": "post", "name": "Dune review 2",
+                               "attrs": {"comments": "50"}, "grounded": True,
+                               "evidence": "Dune review 2 has 50 comments"}], "facts": []})
+    # give node 2's "Dune review" a comparable, lower attr value too
+    kb.nodes[2]["entities"][0]["attrs"] = {"comments": "10"}
+    kb.nodes[2]["entities"][0]["evidence"] = "Dune review has 10 comments"
+    # link the movies forum to its new post, like gaming already links to
+    # post1/15 -- otherwise node 3 is unreachable and the existing real_hops
+    # gate rejects the comparison task outright
+    kb.nodes[2]["outlinks"].append("http://s/f/movies/2")
+
+    class _LLM:
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            if system.startswith("Phrase"):
+                return {"intent": "Which movie post has more comments, "
+                                  "'Dune review' or 'Dune review 2'?"}
+            return {"tasks": []}
+
+    comp = TaskComposer(_LLM(), kb, quota={"INFO": 5, "NAV": 0, "MOD": 0})
+    accepted, rejected = comp.generate()
+    assert len(accepted) == 1
+    task = accepted[0]
+    assert task["type"] == "INFO"
+    assert task["eval"]["reference_answers"] == {"exact_match": "Dune review 2"}
+    assert sorted(task["source_nodes"]) == [2, 3]
+    assert task["start_url"] == "http://s"
+    assert task["hops"] >= 1
+
+
+def test_comparison_task_falls_back_to_template_when_llm_phrasing_fails_gates():
+    kb = _kb()
+    kb.add_node({"node_index": 3, "url": "http://s/f/movies/2", "outlinks": [],
+                 "entities": [{"type": "post", "name": "Dune review 2",
+                               "attrs": {"comments": "50"}, "grounded": True,
+                               "evidence": "Dune review 2 has 50 comments"}], "facts": []})
+    kb.nodes[2]["entities"][0]["attrs"] = {"comments": "10"}
+    kb.nodes[2]["entities"][0]["evidence"] = "Dune review has 10 comments"
+    kb.nodes[2]["outlinks"].append("http://s/f/movies/2")
+
+    class _BadLLM:
+        """Phrases the comparison with a relative-time reference, which
+        RELATIVE_TIME_RE rejects -- the composer must fall back to the
+        code-generated template intent instead of dropping the task."""
+        def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+            if system.startswith("Phrase"):
+                return {"intent": "Which had more comments 5 minutes ago, "
+                                  "'Dune review' or 'Dune review 2'?"}
+            return {"tasks": []}
+
+    comp = TaskComposer(_BadLLM(), kb, quota={"INFO": 5, "NAV": 0, "MOD": 0})
+    accepted, rejected = comp.generate()
+    assert len(accepted) == 1
+    assert "minutes ago" not in accepted[0]["intent"]   # template used instead
+    assert accepted[0]["intent"].startswith("Which has a higher comments")

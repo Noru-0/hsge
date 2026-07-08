@@ -36,6 +36,13 @@ RELATIVE_TIME_RE = re.compile(
     r"\b\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago\b"
     r"|\b(?:yesterday|today|last\s+(?:week|month|year))\b", re.I)
 _PUNCT_RE = re.compile(r"[^\w\s]")
+_NUM_RE = re.compile(r"-?\d+(?:\.\d+)?")
+
+COMPARISON_SYS = (
+    "Phrase ONE natural user question comparing two named things by a given "
+    'attribute. Return JSON {"intent": str}. Ask which one is higher/greater/'
+    "more recent for the attribute; do NOT state either value or reveal the "
+    "answer; do NOT reference relative time (e.g. 'X minutes ago').")
 
 COMPOSER_SYS = (
     "COMPOSE realistic WebArena-style tasks for a web agent from the site knowledge "
@@ -68,6 +75,54 @@ COMPOSER_SYS = (
 
 def _norm_intent(text: str) -> str:
     return re.sub(r"\s+", " ", _PUNCT_RE.sub("", (text or "").lower())).strip()
+
+
+def _numeric(val: str) -> float | None:
+    m = _NUM_RE.search(val or "")
+    return float(m.group()) if m else None
+
+
+def find_comparable_pairs(kb) -> list[dict]:
+    """Grounded same-type entity pairs on different nodes sharing a numeric
+    attribute with different values -- material for a code-computed
+    comparison INFO task (the code decides the winner; the LLM only phrases
+    the question)."""
+    by_type: dict[str, list[dict]] = {}
+    for n in kb.nodes:
+        for i, e in enumerate(n.get("entities") or []):
+            if e.get("grounded"):
+                by_type.setdefault(str(e.get("type") or ""), []).append(
+                    {"node_index": n["node_index"], "ent_index": i, "entity": e})
+    pairs = []
+    for items in by_type.values():
+        for a in range(len(items)):
+            for b in range(a + 1, len(items)):
+                x, y = items[a], items[b]
+                if x["node_index"] == y["node_index"]:
+                    continue
+                for key, xv in (x["entity"].get("attrs") or {}).items():
+                    yv = (y["entity"].get("attrs") or {}).get(key)
+                    if yv is None:
+                        continue
+                    nx, ny = _numeric(xv), _numeric(yv)
+                    if nx is None or ny is None or nx == ny:
+                        continue
+                    winner, loser = (x, y) if nx > ny else (y, x)
+                    pairs.append({"attr": key, "winner": winner, "loser": loser})
+    return pairs
+
+
+def _comparison_task(pair: dict, kb, intent: str) -> dict:
+    w, l = pair["winner"], pair["loser"]
+    return {
+        "type": "INFO", "intent": intent, "start_url": kb.site,
+        "source_nodes": [w["node_index"], l["node_index"]],
+        "answer_fact_refs": [f"n{w['node_index']}.e{w['ent_index']}",
+                             f"n{l['node_index']}.e{l['ent_index']}"],
+        "eval": {"eval_types": ["string_match"],
+                 "reference_answers": {"exact_match": w["entity"]["name"]},
+                 "reference_url": None, "program_html": []},
+    }
 
 
 def _mod_target_urls(task: dict) -> set[str]:
@@ -274,6 +329,27 @@ class TaskComposer:
                 "outlinks": (n.get("outlinks") or [])[:20]})
         return json.dumps(view, indent=1)
 
+    def _phrase_comparison(self, pair: dict) -> str:
+        w, l = pair["winner"], pair["loser"]
+        template = (f"Which has a higher {pair['attr']}: "
+                    f"{w['entity']['name']!r} or {l['entity']['name']!r}?")
+        prompt = (f"ATTRIBUTE: {pair['attr']}\nA: {w['entity']['name']}\n"
+                  f"B: {l['entity']['name']}")
+        out = self.llm.complete_json(COMPARISON_SYS, prompt) or {}
+        phrased = str(out.get("intent") or "").strip()
+        return phrased or template
+
+    def _try_comparisons(self, try_accept) -> None:
+        for pair in find_comparable_pairs(self.kb):
+            phrased = self._phrase_comparison(pair)
+            if try_accept(_comparison_task(pair, self.kb, phrased)):
+                continue
+            template = (f"Which has a higher {pair['attr']}: "
+                        f"{pair['winner']['entity']['name']!r} or "
+                        f"{pair['loser']['entity']['name']!r}?")
+            if template != phrased:
+                try_accept(_comparison_task(pair, self.kb, template))
+
     def generate(self) -> tuple[list[dict], list[dict]]:
         accepted: list[dict] = []
         rejected: list[dict] = []
@@ -305,6 +381,8 @@ class TaskComposer:
             if hops < 2:
                 single_hop_accepted += 1
             return True
+
+        self._try_comparisons(try_accept)
 
         for bundle in sample_bundles(self.kb, self.rng):
             if all(v <= 0 for v in remaining.values()):
