@@ -11,7 +11,14 @@ import json
 from .llm import LLM
 from .schema import Step, SubTrajectory
 
-_SYS = "You SEGMENT a web trajectory into coherent sub-goals. Return JSON."
+_SYS = (
+    "You SEGMENT a web trajectory into coherent sub-goals. You are given numbered "
+    "steps and candidate segments (span = [start, end) step indices). Merge "
+    "candidates that serve one sub-goal; split a candidate only where a new "
+    "sub-goal clearly starts. Return JSON "
+    '{"segments": [{"span": [start, end], "subgoal": "short imperative name"}, ...]} '
+    "covering all steps in order."
+)
 
 
 def _axtree_similarity(a: str, b: str) -> float | None:
@@ -44,45 +51,57 @@ def _spans_from_cuts(cuts: list[int], n: int) -> list[tuple[int, int]]:
     return [(bounds[i], bounds[i + 1]) for i in range(len(bounds) - 1)]
 
 
-def _url_boundary_segments(steps: list[Step]) -> list[tuple[int, int]]:
-    """Split where the URL changes; each run of same-URL steps is one segment."""
-    if not steps:
-        return []
-    bounds, start = [], 0
-    for i in range(1, len(steps)):
-        if steps[i].url != steps[i - 1].url:
-            bounds.append((start, i))
-            start = i
-    bounds.append((start, len(steps)))
-    return bounds
-
-
 def segment_trajectory(
     llm: LLM,
     steps: list[Step],
     site: str,
     task: str,
     subgoal_hints: list[str] | None = None,
+    axtree_sim: float = 0.6,
 ) -> list[SubTrajectory]:
-    spans = _url_boundary_segments(steps)
-    hints = subgoal_hints or [f"segment {i}" for i in range(len(spans))]
-    # Hand the LLM the seeded spans; it returns sub-goal labels.
-    payload = {"segments": [
-        {"span": [a, b], "subgoal": hints[i] if i < len(hints) else f"segment {i}"}
-        for i, (a, b) in enumerate(spans)
-    ]}
+    n = len(steps)
+    if n == 0:
+        return []
+    cand_cuts = _candidate_boundaries(steps, axtree_sim)
+    cand_spans = _spans_from_cuts(cand_cuts, n)
+    hints = subgoal_hints or [f"segment {i}" for i in range(len(cand_spans))]
+    payload = {
+        "steps": [{"i": k, "action": st.action, "obs": st.obs_summary}
+                  for k, st in enumerate(steps)],
+        "segments": [
+            {"span": [a, b], "subgoal": hints[i] if i < len(hints) else f"segment {i}"}
+            for i, (a, b) in enumerate(cand_spans)
+        ],
+    }
     prompt = f"Task: {task}\n<payload>{json.dumps(payload)}</payload>"
     out = llm.complete_json(_SYS, prompt)
-    # Spans are code-computed (URL boundaries) and authoritative; the LLM only
-    # supplies subgoal labels. Never trust it to echo spans back correctly.
-    llm_segs = out.get("segments") or []
-    subs: list[SubTrajectory] = []
-    for i, (a, b) in enumerate(spans):
-        subgoal = hints[i] if i < len(hints) else f"segment {i}"
-        if i < len(llm_segs) and isinstance(llm_segs[i], dict):
-            subgoal = llm_segs[i].get("subgoal") or subgoal
-        subs.append(SubTrajectory(
-            steps=steps[a:b], subgoal=subgoal,
-            source_site=site, source_task=task, success=True,
-        ))
-    return subs
+
+    # The LLM proposes cut points via the *start* of each returned span; each
+    # start is validated independently (drop bad ones, keep good ones), and ends
+    # are recomputed, so a malformed span can never corrupt the partition. An
+    # empty cut set from a parseable response is a legitimate merge-everything;
+    # only a response with no parseable span at all falls back to candidates.
+    entries = []
+    for seg in (out.get("segments") or []):
+        if not isinstance(seg, dict):
+            continue
+        span = seg.get("span")
+        if (isinstance(span, (list, tuple)) and span
+                and isinstance(span[0], int) and not isinstance(span[0], bool)
+                and 0 <= span[0] < n):
+            entries.append((span[0], seg.get("subgoal")))
+    if entries:
+        cuts = sorted({s for s, _ in entries if s > 0})
+        labels = {s: g for s, g in entries if isinstance(g, str) and g}
+    else:
+        cuts, labels = cand_cuts, {}
+
+    segs = []
+    for i, (a, b) in enumerate(_spans_from_cuts(cuts, n)):
+        subgoal = labels.get(a) or (hints[i] if i < len(hints) else f"segment {i}")
+        segs.append([a, b, subgoal])
+    return [
+        SubTrajectory(steps=steps[a:b], subgoal=g, source_site=site,
+                      source_task=task, success=True)
+        for a, b, g in segs
+    ]
