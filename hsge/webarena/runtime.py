@@ -51,7 +51,8 @@ class WebArenaExplorer:
                  allow_pattern: str, deny_pattern: str | None = None, max_depth: int = 6,
                  max_nodes: int = 20, max_steps: int = 15, max_tasks: int = 4,
                  terminal_goal: str = "order_confirmed",
-                 maturity: int = 2, predicate_sim: float = 0.6, read_only: bool = False,
+                 maturity: int = 2, predicate_sim: float = 0.6, seg_axtree_sim: float = 0.6,
+                 read_only: bool = False,
                  mine_hrefs: bool = True, per_template_cap: int = 3,
                  max_hrefs_per_page: int = 100,
                  agent_llms: dict[str, object] | None = None,
@@ -104,6 +105,7 @@ class WebArenaExplorer:
         self.discovery = Discovery(
             self.library, self.graph,
             segmentation_llm=role("trajectory_segmenter"),
+            axtree_sim=seg_axtree_sim,
         )
         self.episode = 0
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
@@ -126,7 +128,7 @@ class WebArenaExplorer:
                     shotp = f"page_state/step_{k:03d}_screenshot.jpg"
                     open(os.path.join(ep, shotp), "wb").write(base64.b64decode(shot))
                     observation["screenshot"] = {"path": shotp}
-                rec = {"record_type": "step", "index": k,
+                rec = {"record_type": "step", "index": k, "url": st.url,
                        "action": json.dumps({"thought": st.obs_summary, "action": st.action}),
                        "parsed_action": st.action, "thought": st.obs_summary,
                        "observation": observation}

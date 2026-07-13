@@ -28,7 +28,7 @@ DEFAULTS = {
     "run": {"site": "shopping", "root_url": None, "out_dir": "outputs/wa_run",
             "allow": None, "denylist": r"logout|\?p=|product_list_|[?&]sort=",
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "max_tasks": 6, "maturity": 2,
-            "predicate_sim": 0.6, "headed": False, "success_url_re": None,
+            "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None,
             "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
     "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2,
@@ -240,6 +240,9 @@ def main():
     ap.add_argument("--max-tasks", type=int, default=None,
                     help="max tasks PageExplorer proposes per node")
     ap.add_argument("--maturity", type=int, default=None)
+    ap.add_argument("--seg-axtree-sim", type=float, default=None,
+                    help="axtree-similarity threshold for segmentation boundary "
+                         "candidates (default 0.6; lower = fewer candidate cuts)")
     ap.add_argument("--no-mine-hrefs", dest="mine_hrefs", action="store_const",
                     const=False, default=None,
                     help="disable mining <a href> links into the frontier (reproduces "
@@ -274,6 +277,7 @@ def main():
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
     predicate_sim = run["predicate_sim"]
+    seg_axtree_sim = _pick(args.seg_axtree_sim, run["seg_axtree_sim"])
     mine_hrefs = _pick(args.mine_hrefs, run["mine_hrefs"])
     per_template_cap = _pick(args.per_template_cap, run["per_template_cap"])
     max_hrefs_per_page = _pick(args.max_hrefs_per_page, run["max_hrefs_per_page"])
@@ -333,7 +337,8 @@ def main():
         browser_factory=browser_factory, llm=llm, embedder=embedder, out_dir=out_dir,
         allow_pattern=allow, deny_pattern=denylist, max_depth=max_depth,
         max_nodes=max_nodes, max_steps=max_steps, max_tasks=max_tasks, maturity=maturity,
-        terminal_goal=terminal_goal, predicate_sim=predicate_sim, read_only=args.read_only,
+        terminal_goal=terminal_goal, predicate_sim=predicate_sim, seg_axtree_sim=seg_axtree_sim,
+        read_only=args.read_only,
         mine_hrefs=mine_hrefs, per_template_cap=per_template_cap,
         max_hrefs_per_page=max_hrefs_per_page,
         agent_llms=agent_llms, agent_vision=agent_vision,

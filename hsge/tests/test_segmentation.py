@@ -156,6 +156,13 @@ def test_non_nav_one_step_segment_survives():
     assert subs[0].subgoal == "report answer"     # send_msg is not navigation
 
 
+def test_discovery_passes_axtree_sim_through():
+    from hsge import Discovery, HashingEmbedder, HierarchicalGraph, SkillLibrary
+    lib = SkillLibrary(MockLLM(), HashingEmbedder(), lambda: [], maturity=3)
+    d = Discovery(lib, HierarchicalGraph(), axtree_sim=0.4)
+    assert d.axtree_sim == 0.4
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

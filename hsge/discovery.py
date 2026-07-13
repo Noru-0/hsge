@@ -21,10 +21,12 @@ class Discovery:
         library: SkillLibrary,
         graph: HierarchicalGraph,
         segmentation_llm: LLM | None = None,
+        axtree_sim: float = 0.6,
     ):
         self.library = library
         self.graph = graph
         self.segmentation_llm = segmentation_llm or library.llm
+        self.axtree_sim = axtree_sim
 
     def on_trajectory(
         self,
@@ -41,7 +43,8 @@ class Discovery:
 
         # 2. segment + feed the library
         subs = segment_trajectory(
-            self.segmentation_llm, steps, site, task, subgoal_hints
+            self.segmentation_llm, steps, site, task, subgoal_hints,
+            axtree_sim=self.axtree_sim,
         )
         admitted, just_admitted_in_order = [], []
         for sub in subs:

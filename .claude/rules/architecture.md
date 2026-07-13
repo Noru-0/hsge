@@ -9,7 +9,9 @@ runs as graph search over the high level toward a terminal predicate.
 
 ```
 exploration loop (env.py)
-  → segmentation.py    URL-boundary + LLM trajectory segmentation → SubTrajectories
+  → segmentation.py    candidate cuts (URL change + axtree-similarity drop, run.seg_axtree_sim)
+                       → LLM-arbitrated cut points (validated; 1-step nav segments
+                       merged into a neighbor) → SubTrajectories
   → clustering.py      streaming nonparametric clusterer (cosine-threshold / DP-means)
   → abstraction.py     lift a cluster → parameterized SkillCard
   → verification.py    ground + execute + admit iff ≥k successes in held-out contexts
