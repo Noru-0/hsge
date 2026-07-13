@@ -1,7 +1,7 @@
 # Segmentation v2: axtree-similarity candidates + LLM-arbitrated cut points (design)
 
 **Date:** 2026-07-14
-**Status:** approved, awaiting implementation plan
+**Status:** implemented (see docs/superpowers/plans/2026-07-14-segmentation-v2.md)
 **Context:** [`docs/13_run02_reddit_exploration_log.md`](../../13_run02_reddit_exploration_log.md),
 [`hsge/segmentation.py`](../../../hsge/segmentation.py)
 
