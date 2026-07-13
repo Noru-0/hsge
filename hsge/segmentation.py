@@ -14,6 +14,36 @@ from .schema import Step, SubTrajectory
 _SYS = "You SEGMENT a web trajectory into coherent sub-goals. Return JSON."
 
 
+def _axtree_similarity(a: str, b: str) -> float | None:
+    """Line-set Jaccard between two axtrees; None when either side is empty
+    (mock pipeline / missing observation -> the signal is unavailable)."""
+    la = {ln.strip() for ln in (a or "").splitlines() if ln.strip()}
+    lb = {ln.strip() for ln in (b or "").splitlines() if ln.strip()}
+    if not la or not lb:
+        return None
+    return len(la & lb) / len(la | lb)
+
+
+def _candidate_boundaries(steps: list[Step], axtree_sim: float) -> list[int]:
+    """Candidate cut indices (0 < i < n): URL changes, plus same-URL step pairs
+    whose axtrees changed substantially (similarity below the threshold)."""
+    cuts = []
+    for i in range(1, len(steps)):
+        if steps[i].url != steps[i - 1].url:
+            cuts.append(i)
+            continue
+        sim = _axtree_similarity(steps[i - 1].axtree, steps[i].axtree)
+        if sim is not None and sim < axtree_sim:
+            cuts.append(i)
+    return cuts
+
+
+def _spans_from_cuts(cuts: list[int], n: int) -> list[tuple[int, int]]:
+    """[c1, c2, ...] -> [(0, c1), (c1, c2), ..., (ck, n)]."""
+    bounds = [0] + list(cuts) + [n]
+    return [(bounds[i], bounds[i + 1]) for i in range(len(bounds) - 1)]
+
+
 def _url_boundary_segments(steps: list[Step]) -> list[tuple[int, int]]:
     """Split where the URL changes; each run of same-URL steps is one segment."""
     if not steps:
