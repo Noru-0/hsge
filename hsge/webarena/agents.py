@@ -41,7 +41,10 @@ EXPLORER_SYS = (
     "proposed from one page, do not propose 'go to <that same destination>' again from "
     "a different page. Prefer content unique to THIS page.\n"
     "- Prefer tasks that make progress or reveal new pages over pure search/sort/filter.\n"
-    "- Focus on common things a real user of THIS site would do; skip niche tasks.")
+    "- Focus on common things a real user of THIS site would do; skip niche tasks.\n"
+    "- NEVER propose a task that would delete, deactivate, or close the user's "
+    "account (e.g. 'Delete your account', 'Deactivate your profile'). This account "
+    "is shared across exploration runs.")
 
 SOLVER_SYS = (
     "You are a web agent. Reach the GOAL by choosing the single best next action from "
