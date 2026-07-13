@@ -7,6 +7,7 @@ LLM just echoes the seeded segments with a provided sub-goal label.
 from __future__ import annotations
 
 import json
+import re
 
 from .llm import LLM
 from .schema import Step, SubTrajectory
@@ -49,6 +50,35 @@ def _spans_from_cuts(cuts: list[int], n: int) -> list[tuple[int, int]]:
     """[c1, c2, ...] -> [(0, c1), (c1, c2), ..., (ck, n)]."""
     bounds = [0] + list(cuts) + [n]
     return [(bounds[i], bounds[i + 1]) for i in range(len(bounds) - 1)]
+
+
+# Verbs that, alone in a 1-step segment, are pure navigation -- never a skill.
+_NAV_VERBS = {"click", "goto", "go_back"}
+
+
+def _action_verb(action: str) -> str:
+    """Leading verb of an action, for both mock syntax ("click [go]") and real
+    WebArena syntax ("click('42')")."""
+    m = re.match(r"\s*([A-Za-z_]+)", action or "")
+    return m.group(1).lower() if m else ""
+
+
+def _merge_trivial_nav(segs: list[list], steps: list[Step]) -> list[list]:
+    """Merge 1-step pure-navigation segments into the following segment (into
+    the preceding one when last). Right-to-left so nav chains are absorbed.
+    Runs after LLM output, so it applies to the fallback paths too."""
+    out = [list(s) for s in segs]
+    for i in range(len(out) - 1, -1, -1):
+        if len(out) == 1:
+            break
+        a, b, _subgoal = out[i]
+        if b - a == 1 and _action_verb(steps[a].action) in _NAV_VERBS:
+            if i < len(out) - 1:
+                out[i + 1][0] = a          # absorb into the following segment
+            else:
+                out[i - 1][1] = b          # last segment: absorb backward
+            out.pop(i)
+    return out
 
 
 def segment_trajectory(
@@ -100,6 +130,7 @@ def segment_trajectory(
     for i, (a, b) in enumerate(_spans_from_cuts(cuts, n)):
         subgoal = labels.get(a) or (hints[i] if i < len(hints) else f"segment {i}")
         segs.append([a, b, subgoal])
+    segs = _merge_trivial_nav(segs, steps)
     return [
         SubTrajectory(steps=steps[a:b], subgoal=g, source_site=site,
                       source_task=task, success=True)

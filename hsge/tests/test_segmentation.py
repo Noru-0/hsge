@@ -109,6 +109,53 @@ def test_mockllm_reproduces_old_url_boundary_behavior():
     assert [s.subgoal for s in subs] == ["log in", "search"]
 
 
+def test_one_step_nav_merges_into_following():
+    # candidates: URL change at 1 -> spans (0,1)(1,3); (0,1) is a bare click
+    steps = [Step("click [forums]", "/home"),
+             Step("type [q] x", "/forum"), Step("click [go]", "/forum")]
+    subs = segment_trajectory(ScriptedLLM({}), steps, "site", "task",
+                              subgoal_hints=["open forums", "search in forum"])
+    assert len(subs) == 1
+    assert len(subs[0].steps) == 3
+    assert subs[0].subgoal == "search in forum"   # absorbed into the following
+
+
+def test_trailing_one_step_nav_merges_backward():
+    steps = [Step("type [user] a", "/login"), Step("type [pwd] b", "/login"),
+             Step("click [go]", "/home")]
+    subs = segment_trajectory(ScriptedLLM({}), steps, "site", "task",
+                              subgoal_hints=["log in", "landed"])
+    assert len(subs) == 1
+    assert subs[0].subgoal == "log in"            # last segment absorbed backward
+
+
+def test_nav_chain_is_fully_absorbed():
+    steps = [Step("click [a]", "/one"), Step("click [b]", "/two"),
+             Step("type [q] x", "/three"), Step("click [go]", "/three")]
+    subs = segment_trajectory(ScriptedLLM({}), steps, "site", "task")
+    assert len(subs) == 1
+    assert len(subs[0].steps) == 4
+
+
+def test_single_segment_never_merged_away():
+    subs = segment_trajectory(ScriptedLLM({}), [Step("click [x]", "/a")],
+                              "site", "task")
+    assert len(subs) == 1
+
+
+def test_non_nav_one_step_segment_survives():
+    # real WebArena action syntax: verb must parse from "click('42')" too
+    steps = [Step("send_msg_to_user('done')", "/a"), Step("click('42')", "/b"),
+             Step("fill('7', 'x')", "/b")]
+    llm = ScriptedLLM({"segments": [
+        {"span": [0, 1], "subgoal": "report answer"},
+        {"span": [1, 3], "subgoal": "next task"},
+    ]})
+    subs = segment_trajectory(llm, steps, "site", "task")
+    assert [len(s.steps) for s in subs] == [1, 2]
+    assert subs[0].subgoal == "report answer"     # send_msg is not navigation
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:
