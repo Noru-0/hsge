@@ -19,3 +19,5 @@ Run everything from the repo root (the directory containing `hsge/`).
 - [rules/architecture.md](rules/architecture.md) — module map & data flow
 - [rules/conventions.md](rules/conventions.md) — repo conventions
 - [rules/docs.md](rules/docs.md) — pointers to docs/
+- [rules/memory.md](rules/memory.md) — project memory: changelog + bug log in
+  `memory/` — read at session start, update after every finished change
