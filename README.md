@@ -8,10 +8,12 @@ only those that execute successfully, transfers them to unseen sites, and genera
 an easy→hard curriculum whose deepest chains are full transactions (e.g. a purchase).
 
 This repository is a **runnable skeleton with deterministic mock backends**: the
-whole pipeline runs with no API keys, GPU, or live browser. Swap the mocks for real
-backends (LLM, embedder, WebArena) to scale up.
+whole pipeline runs with no API keys, GPU, or live browser. Real backends
+(LLM, embedder, WebArena browser) are subclass swaps, not rewrites — the
+standalone WebArena runtime under `hsge/webarena/` runs the same discovery
+pipeline against a real browser.
 
-## Quickstart
+## Quickstart (mock, no keys)
 
 ```bash
 pip install numpy
@@ -23,6 +25,46 @@ PYTHONPATH=. python hsge/tests/test_clustering.py
 ```
 
 Run everything from this directory (the one containing `hsge/`).
+
+## Real WebArena run
+
+Secrets (API keys, account passwords, `WA_*` site URLs) go in a git-ignored
+`.env`; non-secret run parameters (site, max_nodes/steps/tasks, maturity, LLM
+provider/model per role, vision) go in the committed `config.yaml`. Precedence
+is **CLI flag > config.yaml > built-in default**.
+
+```bash
+pip install -r requirements.txt        # sentence-transformers, openai, browsergym, ...
+playwright install chromium
+
+python run_webarena.py                               # everything from config.yaml + .env
+python run_webarena.py --site shopping --max-nodes 5 --headed
+python run_webarena.py --provider deepseek --model deepseek-chat   # override every role
+python run_webarena.py --read-only --max-nodes 2 --max-steps 4     # smoke-test a shared
+                                                                   # site without writes
+python run_webarena.py --dry-run --out /tmp/wa_dry   # scripted LLM + fake browser,
+                                                     # exercises the full wiring
+```
+
+Highlights of the runtime (see `.claude/rules/architecture.md` for the full map):
+
+- **Skill → operator promotion**: once a skill recurs enough to be admitted
+  (`--maturity`), an LLM induces its NL preconditions/effects, which an embedding
+  registry canonicalizes into stable predicate ids; a BFS planner composes the
+  resulting operators toward a terminal goal (e.g. `order_confirmed` on shopping).
+  Non-shopping sites run exploration-only.
+- **Per-role LLMs**: each helper (`page_explorer`, `solver`, `trajectory_segmenter`,
+  `skill_abstractor`, `skill_verifier`, `operator_inducer`) can use a different
+  model via `llm.agents.<role>` in `config.yaml`. Optional per-role **vision**
+  (screenshot + Set-of-Marks) for vision-capable models.
+- **Frontier**: priority queue mixing URLs the agent actually reached (tier 0)
+  with `<a href>` links mined off each page (tier 1, bounded by a per-URL-template
+  cap so link-dense pages can't flood the frontier).
+- **Login/auth**: one-time login per account-gated site (reddit/gitlab/shopping/
+  shopping_admin), session cached under `.auth/`.
+- **Persistence**: `skills.json` / `operators.json` / `predicates.json` /
+  `graph.json` / `nodes.json` / `summary.json` + `run_log.jsonl` are rewritten
+  after every node, so an interrupted run still leaves a consistent snapshot.
 
 ## Scripts
 
@@ -45,7 +87,11 @@ Run everything from this directory (the one containing `hsge/`).
 | `03_running_locally.md` | Running every script + interpreting the output |
 | `04_webarena_runbook.md` | Hosting WebArena and running real exploration |
 | `06_training.md` | The collect → SFT → fine-tune → evaluate → loop pipeline |
-| `09_run_on_webarena.md` | Running the standalone WebArena exploration runtime |
+| `09_run_on_webarena.md` | The standalone WebArena runtime (**stale** — predates docs 10–12) |
+| `10_webarena_real_wiring_session.md` | Real WebArena wiring, skill-derived operators, config.yaml/.env split |
+| `11_vision_auth_hardening_session.md` | Node dedup, persisted artifacts, vision + Set-of-Marks, retry/backoff, login/auth |
+| `12_real_run_bug_fixes_session.md` | Task-diversity dedup, structured INFO/NAV/MOD classification, Solver stuck-loop fix |
+| `13_run02_reddit_exploration_log.md` | Real reddit run: frontier-starvation root cause + operator quality via grounding check |
 | `00_package_readme.md` | The original package-level README |
 
 ## The pipeline at a glance
