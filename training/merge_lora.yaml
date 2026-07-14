@@ -1,0 +1,10 @@
+# Merge the trained LoRA adapter into a standalone checkpoint for vLLM serving.
+#   /workspace/venvs/train/bin/llamafactory-cli export training/merge_lora.yaml
+model_name_or_path: /workspace/models/Qwen3.5-9B
+adapter_name_or_path: /workspace/saves/qwen35-9b-lora-hsge
+template: qwen3_5_nothink
+trust_remote_code: true
+export_dir: /workspace/models/Qwen3.5-9B-hsge
+export_size: 5
+export_device: auto
+export_legacy_format: false
