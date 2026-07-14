@@ -87,6 +87,17 @@ def _cap_axtree(axtree: str) -> str:
     return text[:_AXTREE_CAP] + f"\n... [TRUNCATED: {len(text) - _AXTREE_CAP} more characters not shown]"
 
 
+def step_outcome(pre_url: str, pre_axtree: str, url: str, axtree: str) -> str:
+    """Human-readable result of one action: shared by the live Solver prompt
+    and the offline SFT dataset builder / thought re-annotator so all three
+    describe trajectory history identically."""
+    if url != pre_url:
+        return f"now at {url}"
+    if axtree != pre_axtree:
+        return "page changed"
+    return "no change"
+
+
 class PageExplorer:
     _TAG_RE = re.compile(r"^\s*\[(INFO|NAV|MOD)\]\s*", re.I)
     _PUNCT_RE = re.compile(r"[^\w\s]")
@@ -311,12 +322,7 @@ class Solver:
                 steps[-1].obs_summary += f" [action error: {last_error}]"
                 continue
             history.append(action)
-            if obs["url"] != pre_url:
-                outcomes.append(f"now at {obs['url']}")
-            elif obs["axtree"] != pre_axtree:
-                outcomes.append("page changed")
-            else:
-                outcomes.append("no change")
+            outcomes.append(step_outcome(pre_url, pre_axtree, obs["url"], obs["axtree"]))
             progressed.append(obs["url"] != pre_url or obs["axtree"] != pre_axtree)
             if getattr(browser, "terminated", False):
                 exhausted = False

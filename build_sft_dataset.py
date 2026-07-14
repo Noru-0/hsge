@@ -26,13 +26,12 @@ import json
 import os
 import sys
 
-SYSTEM = (
-    "You are a web agent. At each step you receive the task goal, the current page "
-    "accessibility tree, and your recent actions. Respond with a JSON object "
-    '{"thought": <reasoning>, "action": <one BrowserGym action>} where action is one '
-    "of click('bid'), fill('bid','text'), select_option('bid','opt'), "
-    "goto('url'), or send_msg_to_user('text')."
-)
+from hsge.webarena.agents import PageExplorer, SOLVER_SYS, step_outcome
+
+SYSTEM = SOLVER_SYS
+
+_HISTORY_WINDOW = 6  # matches Solver.solve's history[-6:] window exactly
+_TAG_RE = PageExplorer._TAG_RE  # reuse the same "[INFO]/[NAV]/[MOD] " stripper
 
 
 def _read_axtree(episode_dir: str, step: dict) -> str:
@@ -57,42 +56,78 @@ def _difficulty(task_info: dict, episode_meta: dict) -> int:
     return 1
 
 
+def _strip_tag(goal: str) -> str:
+    """Drop a leading [INFO]/[NAV]/[MOD] classification tag from a goal string.
+    Those tags come from PageExplorer's task proposals (see agents.py); a real
+    WebArena eval goal never carries one, so leaving it in would teach the
+    model to expect a prefix that won't be there at inference time."""
+    return _TAG_RE.sub("", goal or "").strip()
+
+
+def _is_error_step(thought: str) -> bool:
+    """A step whose recorded thought carries the '[action error: ...]' suffix
+    Solver.solve appends when browser.act() raised (see agents.py::Solver.solve)
+    -- the *next* LLM call saw the error and picked a different action, so this
+    exact action was never added to Solver.solve's own `history`/`outcomes`
+    either. It must not become an imitation target (it's the mistake, not the
+    recovery) or appear in a later step's history."""
+    return "[action error:" in (thought or "")
+
+
 def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
-                        difficulty: int) -> list[dict]:
-    examples, history = [], []
-    for step in steps:
-        target = step.get("action")                 # already the JSON the solver emits
-        if not target:
+                        difficulty: int, trajectory_id: str) -> list[dict]:
+    goal = _strip_tag(goal)
+    axtrees = [_read_axtree(episode_dir, step) for step in steps]
+    urls = [step.get("url", "") for step in steps]
+    thoughts = [step.get("thought_v2") or step.get("thought", "") for step in steps]
+    total_steps = len(steps)
+
+    history: list[str] = []   # outcome-annotated "- action -> outcome" lines
+    examples = []
+    for k, step in enumerate(steps):
+        target_action = step.get("parsed_action") or ""
+        if not target_action:
             continue
-        axtree = _read_axtree(episode_dir, step)
-        obs_block = axtree if axtree else "[accessibility tree omitted]"
-        hist = "\n".join(f"- {h}" for h in history[-5:]) or "(none yet)"
-        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist}\n\n"
-                f"CURRENT PAGE (accessibility tree):\n{obs_block}")
+        thought = thoughts[k]
+        if _is_error_step(step.get("thought", "")):
+            continue
+        assistant = json.dumps({"thought": thought, "action": target_action})
+        hist_block = "\n".join(history[-_HISTORY_WINDOW:]) or "(none)"
+        obs_block = axtrees[k] if axtrees[k] else "[accessibility tree omitted]"
+        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist_block}\n\n"
+                f"URL: {urls[k]}\n\nPAGE:\n{obs_block}")
         examples.append({
             "messages": [
                 {"role": "system", "content": SYSTEM},
                 {"role": "user", "content": user},
-                {"role": "assistant", "content": target},
+                {"role": "assistant", "content": assistant},
             ],
+            "trajectory_id": trajectory_id,
+            "step_index": step.get("index", k),
+            "total_steps": total_steps,
             "difficulty": difficulty,
-            "axtree_loaded": bool(axtree),
+            "axtree_loaded": bool(axtrees[k]),
         })
-        history.append(step.get("parsed_action") or target)
+        is_terminal = (target_action.startswith("send_msg_to_user")
+                      or target_action.startswith("report_infeasible"))
+        if not is_terminal and k + 1 < len(steps):
+            outcome = step_outcome(urls[k], axtrees[k], urls[k + 1], axtrees[k + 1])
+            history.append(f"- {target_action} -> {outcome}")
     return examples
 
 
 def load_episodes(path: str):
-    """Yield (goal, steps, episode_dir, difficulty, success) tuples."""
+    """Yield (goal, steps, episode_dir, trajectory_id, difficulty, success) tuples."""
     if os.path.isfile(path) and path.endswith(".json"):
         d = json.load(open(path))
         em = d.get("episode_meta", d)
         ti = d.get("task_info", {})
         steps = d.get("steps") or []
         success = em.get("outcome", {}).get("success", False)
-        yield em.get("goal", ""), steps, os.path.dirname(path), _difficulty(ti, em), success
+        trajectory_id = os.path.splitext(os.path.basename(path))[0]
+        yield (em.get("goal", ""), steps, os.path.dirname(path), trajectory_id,
+              _difficulty(ti, em), success)
         return
-    # run directory: each episode is a dir with episode_meta.json + episode.jsonl
     for meta_path in glob.glob(os.path.join(path, "**", "episode_meta.json"), recursive=True):
         ep_dir = os.path.dirname(meta_path)
         em = json.load(open(meta_path))
@@ -101,7 +136,8 @@ def load_episodes(path: str):
         ti_path = os.path.join(ep_dir, "..", "..", "task_info.json")
         ti = json.load(open(ti_path)) if os.path.exists(ti_path) else {}
         success = em.get("outcome", {}).get("success", False)
-        yield em.get("goal", ""), steps, ep_dir, _difficulty(ti, em), success
+        trajectory_id = os.path.basename(ep_dir)
+        yield em.get("goal", ""), steps, ep_dir, trajectory_id, _difficulty(ti, em), success
 
 
 def main():
@@ -111,12 +147,12 @@ def main():
     out = sys.argv[2] if len(sys.argv) > 2 else "train.jsonl"
 
     all_examples, n_ep, n_kept = [], 0, 0
-    for goal, steps, ep_dir, diff, success in load_episodes(src):
+    for goal, steps, ep_dir, trajectory_id, diff, success in load_episodes(src):
         n_ep += 1
         if not success:                              # only train on successes
             continue
         n_kept += 1
-        all_examples += episode_to_examples(goal, steps, ep_dir, diff)
+        all_examples += episode_to_examples(goal, steps, ep_dir, diff, trajectory_id)
 
     all_examples.sort(key=lambda e: e["difficulty"])   # curriculum: easy -> hard
     with open(out, "w") as f:
