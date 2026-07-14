@@ -16,7 +16,8 @@ run:
                              # of missing a task, but +1 Solver episode per extra task)
   maturity: 2                # times a skill must recur before it becomes an operator
   task_retries: 2            # retry a failed task up to N more times (0 = off;
-                             # tasks the model reports infeasible are never retried)
+                             # tasks the model reports infeasible are never retried).
+                             # NOTE: multiplies worst-case LLM cost per task by 1+N
   predicate_sim: 0.6         # cosine threshold for the predicate registry (tune per embedder)
   headed: false              # true -> visible browser window (debugging)
   success_url_re: null       # null -> default /checkout/onepage/success
