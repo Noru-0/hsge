@@ -95,6 +95,55 @@ def test_retries_exhausted_reports_last_failure():
     assert ex.episode == 3
 
 
+class _FlakyResetBrowser:
+    """reset() always raises -- real example: a Playwright Page.goto timeout
+    mid-node, after the node's own initial page load already succeeded."""
+
+    def reset(self):
+        raise TimeoutError("Page.goto: Timeout 10000ms exceeded.")
+
+
+class _RecoversAfterOneResetBrowser:
+    """First reset() raises, every subsequent one succeeds."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def reset(self):
+        self.calls += 1
+        if self.calls == 1:
+            raise TimeoutError("Page.goto: Timeout 10000ms exceeded.")
+        return {"url": "http://x/", "axtree": "ax"}
+
+
+def test_reset_failure_does_not_crash_and_is_bounded_by_retries():
+    ex = _explorer(retries=2)
+    ex.solver = _ScriptedSolver([(True, False)])  # would succeed if ever reached
+
+    (episode_id, steps, final_obs, success, infeasible, attempts,
+     urls_seen) = ex._solve_with_retries(_FlakyResetBrowser(), "task", difficulty=1, tag="LOCAL")
+
+    assert success is False and infeasible is False
+    assert attempts == 3                    # 1 + task_retries, all consumed by reset failures
+    assert episode_id is None               # no episode was ever actually recorded
+    assert steps == []
+    assert ex.episode == 0                  # solver.solve() never even ran
+    assert ex.solver.calls == 0
+
+
+def test_reset_recovers_within_retry_budget():
+    ex = _explorer(retries=2)
+    ex.solver = _ScriptedSolver([(True, False)])
+    browser = _RecoversAfterOneResetBrowser()
+
+    (episode_id, steps, final_obs, success, infeasible, attempts,
+     urls_seen) = ex._solve_with_retries(browser, "task", difficulty=1, tag="LOCAL")
+
+    assert success is True
+    assert ex.solver.calls == 1             # solved normally once the browser recovered
+    assert episode_id == "ep_0000"
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

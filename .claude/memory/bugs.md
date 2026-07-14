@@ -57,4 +57,36 @@ _(none currently)_
   path — the test's "still crashes on a genuinely unexpected exception"
   contract is unchanged, only its trigger point moved.
 
+### Same crash, second call site: `_solve_with_retries` also calls unguarded `browser.reset()`
+- **Status**: fixed (2026-07-14 18:50)
+- **Found**: 2026-07-14, real gitlab exploration run, same session as the bug
+  above -- the previous fix only guarded `run()`'s node-visit `reset()` (the
+  *first* reset when a node is entered); `_solve_with_retries` calls
+  `browser.reset()` again before *every task* at that node (to return to a
+  clean page), and that second call site was still unguarded.
+- **Where**: `hsge/webarena/runtime.py::WebArenaExplorer._solve_with_retries`
+  (line ~156).
+- **Symptom**: identical crash (`playwright._impl._errors.TimeoutError:
+  Page.goto: Timeout 10000ms exceeded`), this time thrown from inside
+  `_solve_with_retries` after the node's own initial page load had already
+  succeeded -- a second/later navigation between tasks at the same node
+  still took down the whole run.
+- **Cause:** audited every `WebArenaBrowser` method call in `runtime.py`
+  (`close`/`screenshot_b64`/`links`/`page_hrefs` are all already
+  internally fail-soft in `browser.py` -- they catch and return a safe
+  default) and found `reset()` is the *only* method with no internal
+  exception handling of its own, since a real network/timeout failure
+  there has no safe default observation to fall back to. It had two call
+  sites in `runtime.py`; only one was guarded by the previous fix.
+- **Fix**: wrapped `_solve_with_retries`'s `browser.reset()` in the same
+  try/except pattern: on failure, logs `task_reset_error`, treats it like
+  a solve failure (bounded by `task_retries`, no bogus 0-step episode
+  recorded since `self.solver.solve()` never even ran), and returns a
+  clean `(None, [], {}, False, False, attempts, urls_seen)` once retries
+  are exhausted instead of propagating. Regression tests added to
+  `hsge/tests/test_task_retries.py`: reset failing every attempt (bounded,
+  no episode recorded, solver never called) and reset recovering after one
+  failure (task completes normally once the browser comes back). Full
+  suite: 113 passed.
+
 _(Bugs fixed before this log existed are documented in `docs/11_vision_auth_hardening_session.md`, `docs/12_real_run_bug_fixes_session.md`, and `docs/13_run02_reddit_exploration_log.md`.)_

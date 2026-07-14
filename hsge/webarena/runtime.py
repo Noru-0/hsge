@@ -152,8 +152,24 @@ class WebArenaExplorer:
         urls_seen: set[str] = set()
         while True:
             attempts += 1
+            try:
+                browser.reset()
+            except Exception as e:
+                # A flaky/slow/unreachable page can fail mid-node too, not
+                # just on the node's first visit (see the guard in run()) --
+                # e.g. a real run hit a Playwright Page.goto timeout here,
+                # between two tasks at the same already-successfully-loaded
+                # node. Treat it like a solve failure: no steps were ever
+                # produced, so nothing is recorded (a bogus 0-step episode
+                # would only pollute SFT data); retry within task_retries,
+                # then give up cleanly instead of crashing the whole run.
+                self._log("task_reset_error", tag=tag, task=task, attempt=attempts,
+                           error=str(e), error_type=type(e).__name__)
+                print(f"    [{tag.lower()}] browser reset failed (attempt {attempts}): {e}")
+                if attempts > self.task_retries:
+                    return None, [], {}, False, False, attempts, urls_seen
+                continue
             episode_id = f"ep_{self.episode:04d}"
-            browser.reset()
             (steps, obs_texts, obs_screenshots, final_obs, success,
              infeasible) = self.solver.solve(browser, task, goal_predicate=goal_predicate)
             self._record(task, steps, obs_texts, obs_screenshots, success,

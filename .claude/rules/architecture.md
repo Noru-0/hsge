@@ -150,6 +150,16 @@ Standalone real-browser runtime, separate from the mock pipeline:
   crash the run, unlike an unexpected exception anywhere else in node
   processing, which still propagates through the whole-loop `try/except`
   (`run_error` event, `summary.json` `status: "error"`, re-raised).
+  `_solve_with_retries`'s own `browser.reset()` (called once per task, to
+  return to a clean page before every Solver run, not just the node's first
+  visit) is guarded the same way -- a reset failure there is logged
+  (`task_reset_error`), bounded by `task_retries`, and returns a clean
+  no-episode-recorded failure instead of crashing. `reset()` is the only
+  `WebArenaBrowser` method without its own internal fail-soft handling
+  (`close`/`screenshot_b64`/`links`/`page_hrefs` all catch-and-default
+  inside `browser.py`), since a real navigation failure there has no safe
+  observation to fall back to -- both of its call sites in `runtime.py` are
+  now guarded.
 
 **Operators are derived from verified skills, not raw trajectories.** When Discovery
 admits a skill (a cluster that recurred `--maturity` times), `runtime.py`
