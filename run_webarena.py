@@ -28,6 +28,7 @@ DEFAULTS = {
     "run": {"site": "shopping", "root_url": None, "out_dir": "outputs/wa_run",
             "allow": None, "denylist": r"logout|\?p=|product_list_|[?&]sort=",
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "max_tasks": 6, "maturity": 2,
+            "task_retries": 0,
             "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None,
             "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
@@ -240,6 +241,9 @@ def main():
     ap.add_argument("--max-tasks", type=int, default=None,
                     help="max tasks PageExplorer proposes per node")
     ap.add_argument("--maturity", type=int, default=None)
+    ap.add_argument("--task-retries", type=int, default=None,
+                    help="retry a failed task up to N more times (default 0; "
+                         "infeasible tasks are never retried)")
     ap.add_argument("--seg-axtree-sim", type=float, default=None,
                     help="axtree-similarity threshold for segmentation boundary "
                          "candidates (default 0.6; lower = fewer candidate cuts)")
@@ -274,6 +278,7 @@ def main():
     max_steps = _pick(args.max_steps, run["max_steps"])
     max_tasks = _pick(args.max_tasks, run["max_tasks"])
     maturity = _pick(args.maturity, run["maturity"])
+    task_retries = _pick(args.task_retries, run["task_retries"])
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
     predicate_sim = run["predicate_sim"]
@@ -340,7 +345,7 @@ def main():
         terminal_goal=terminal_goal, predicate_sim=predicate_sim, seg_axtree_sim=seg_axtree_sim,
         read_only=args.read_only,
         mine_hrefs=mine_hrefs, per_template_cap=per_template_cap,
-        max_hrefs_per_page=max_hrefs_per_page,
+        max_hrefs_per_page=max_hrefs_per_page, task_retries=task_retries,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
     explorer.run(root_url)

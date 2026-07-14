@@ -104,6 +104,14 @@ Standalone real-browser runtime, separate from the mock pipeline:
   3rd call onward), a hard stop (`_MAX_REPEATS`, default 4) that ends the
   episode without spending any more LLM calls on a target that clearly isn't
   moving.
+  When an episode ends exhausted (hard stop or max_steps) on a non-predicate
+  task, the Solver makes one text-only "wrap-up" call -- history is shown
+  with per-action outcomes (`-> now at <url>` / `-> no change`) -- that may
+  only answer send_msg_to_user (declared done -> success) or
+  report_infeasible; anything else is discarded. report_infeasible is a
+  first-class outcome (allowed in ACTIONS_DOC, never executed in the
+  browser, counted in its own `infeasible` bucket, never fed to Discovery,
+  never retried).
 - `runtime.py` — `WebArenaExplorer`: frontier loop, skill→operator promotion, goal
   tasks, persistence. Skips re-exploring a node whose initial axtree hashes
   identical to an already-visited one (two different URLs can render the same
@@ -112,6 +120,11 @@ Standalone real-browser runtime, separate from the mock pipeline:
   pass/fail)/`summary.json` under `out_dir` after every node (not just at the end,
   so an interrupted run still leaves a consistent snapshot), and mirrors every
   event to `out_dir/run_log.jsonl`.
+  `run.task_retries` (default 0, CLI `--task-retries`) retries a failed task
+  up to N more times via `_solve_with_retries`; every attempt is recorded as
+  its own episode, `nodes.json`/`task_result` events carry
+  `attempts`/`infeasible`, and task_stats counts each task once by final
+  outcome (success / fail / infeasible).
 
 **Operators are derived from verified skills, not raw trajectories.** When Discovery
 admits a skill (a cluster that recurred `--maturity` times), `runtime.py`

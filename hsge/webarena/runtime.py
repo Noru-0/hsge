@@ -54,7 +54,7 @@ class WebArenaExplorer:
                  maturity: int = 2, predicate_sim: float = 0.6, seg_axtree_sim: float = 0.6,
                  read_only: bool = False,
                  mine_hrefs: bool = True, per_template_cap: int = 3,
-                 max_hrefs_per_page: int = 100,
+                 max_hrefs_per_page: int = 100, task_retries: int = 0,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
@@ -77,6 +77,7 @@ class WebArenaExplorer:
         self.mine_hrefs = mine_hrefs
         self.per_template_cap = per_template_cap
         self.max_hrefs_per_page = max_hrefs_per_page
+        self.task_retries = task_retries
         pe_vision, sv_vision = vision_cfg("page_explorer"), vision_cfg("solver")
         self.explorer = PageExplorer(role("page_explorer"), max_tasks=max_tasks, read_only=read_only,
                                      vision=pe_vision["vision"], som=pe_vision["som"],
@@ -111,11 +112,13 @@ class WebArenaExplorer:
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
-    def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag):
+    def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag,
+                infeasible: bool = False):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
         meta = {"kind": "low_level_trajectory", "goal": goal,
-                "outcome": {"success": bool(success), "reward": 1.0 if success else 0.0, "response": ""},
+                "outcome": {"success": bool(success), "reward": 1.0 if success else 0.0,
+                             "response": "", "infeasible": bool(infeasible)},
                 "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps)}
         json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w"), indent=2)
         with open(os.path.join(ep, "episode.jsonl"), "w") as f:
@@ -134,6 +137,31 @@ class WebArenaExplorer:
                        "observation": observation}
                 f.write(json.dumps(rec) + "\n")
         self.episode += 1
+
+    # ---- one task, up to 1 + task_retries attempts --------------------------
+    def _solve_with_retries(self, browser, task, difficulty, tag, goal_predicate=None):
+        """Run the Solver on one task, retrying failures up to task_retries
+        times. Every attempt is recorded as its own episode (SFT data and
+        logs stay honest). Infeasible attempts are terminal -- retrying a
+        task the model just declared impossible wastes budget. Returns
+        (episode_id, steps, final_obs, success, infeasible, attempts,
+        urls_seen) for the LAST attempt, with urls_seen accumulated across
+        all attempts so the frontier keeps every reached URL.
+        """
+        attempts = 0
+        urls_seen: set[str] = set()
+        while True:
+            attempts += 1
+            episode_id = f"ep_{self.episode:04d}"
+            browser.reset()
+            (steps, obs_texts, obs_screenshots, final_obs, success,
+             infeasible) = self.solver.solve(browser, task, goal_predicate=goal_predicate)
+            self._record(task, steps, obs_texts, obs_screenshots, success,
+                         difficulty=difficulty, tag=tag, infeasible=infeasible)
+            urls_seen.update(st.url for st in steps)
+            urls_seen.add(final_obs.get("url", ""))
+            if success or infeasible or attempts > self.task_retries:
+                return episode_id, steps, final_obs, success, infeasible, attempts, urls_seen
 
     def _card_by_id(self, skill_id: str):
         return next((c for c in self.library.skills.values() if c.skill_id == skill_id), None)
@@ -338,7 +366,8 @@ class WebArenaExplorer:
 
         seen_content: set[str] = set()   # sha256 of a node's initial axtree
         duplicate_nodes = 0
-        task_stats = {"LOCAL": {"success": 0, "fail": 0}, "GOAL": {"success": 0, "fail": 0}}
+        task_stats = {"LOCAL": {"success": 0, "fail": 0, "infeasible": 0},
+                      "GOAL": {"success": 0, "fail": 0, "infeasible": 0}}
         nodes_log: list[dict] = []   # per-node record: url, tasks tried, pass/fail (-> nodes.json)
         # updated at the top of each iteration; used by the except block below so an
         # exception raised before any node completes still reports a sensible value.
@@ -417,16 +446,16 @@ class WebArenaExplorer:
 
                 # 1) local exploration
                 for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64):
-                    episode_id = f"ep_{self.episode:04d}"
-                    browser.reset()
-                    (steps, obs_texts, obs_screenshots, final_obs, success,
-                     _infeasible) = self.solver.solve(browser, task)
-                    self._record(task, steps, obs_texts, obs_screenshots, success, difficulty=1, tag="LOCAL")
-                    task_stats["LOCAL"]["success" if success else "fail"] += 1
+                    (episode_id, steps, final_obs, success, infeasible, attempts,
+                     urls_seen) = self._solve_with_retries(browser, task, difficulty=1, tag="LOCAL")
+                    bucket = "success" if success else ("infeasible" if infeasible else "fail")
+                    task_stats["LOCAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "LOCAL", "task": task,
-                                               "success": success, "steps": len(steps)})
+                                               "success": success, "infeasible": infeasible,
+                                               "attempts": attempts, "steps": len(steps)})
                     self._log("task_result", node_index=node_index, episode=episode_id, tag="LOCAL",
-                               task=task, success=success, steps=len(steps))
+                               task=task, success=success, infeasible=infeasible,
+                               attempts=attempts, steps=len(steps))
                     if success:
                         # only skills that recur enough to be admitted become operators
                         admitted = self.discovery.on_trajectory(steps, site=root_url, task=task)
@@ -438,26 +467,28 @@ class WebArenaExplorer:
                                 self._log("skill_admitted", skill_id=card.skill_id, name=card.name,
                                            members=len(card.member_ids))
                             self._promote_skill_to_operator(sid)
-                    seen_urls.update(st.url for st in steps)
-                    seen_urls.add(final_obs.get("url", ""))
-                    print(f"    local: {task[:50]!r} success={success} steps={len(steps)}")
+                    seen_urls |= urls_seen
+                    print(f"    local: {task[:50]!r} success={success}"
+                          + (" infeasible" if infeasible else "")
+                          + (f" attempts={attempts}" if attempts > 1 else "")
+                          + f" steps={len(steps)}")
 
                 # 2) goal-conditioned composed task (once a plan to the goal exists)
                 gt = self._goal_task()
                 if gt:
-                    episode_id = f"ep_{self.episode:04d}"
-                    browser.reset()
-                    (steps, obs_texts, obs_screenshots, final_obs, success,
-                     _infeasible) = self.solver.solve(
-                        browser, gt["goal"], goal_predicate=self.terminal_goal)
-                    self._record(gt["goal"], steps, obs_texts, obs_screenshots, success,
-                                 difficulty=gt["difficulty"], tag="GOAL")
-                    task_stats["GOAL"]["success" if success else "fail"] += 1
+                    (episode_id, steps, final_obs, success, infeasible, attempts,
+                     urls_seen) = self._solve_with_retries(
+                        browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
+                        goal_predicate=self.terminal_goal)
+                    bucket = "success" if success else ("infeasible" if infeasible else "fail")
+                    task_stats["GOAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
-                                               "success": success, "steps": len(steps)})
+                                               "success": success, "infeasible": infeasible,
+                                               "attempts": attempts, "steps": len(steps)})
                     self._log("task_result", node_index=node_index, episode=episode_id, tag="GOAL",
-                               task=gt["goal"], success=success, steps=len(steps), chain=gt["chain"])
-                    seen_urls.update(st.url for st in steps)
+                               task=gt["goal"], success=success, infeasible=infeasible,
+                               attempts=attempts, steps=len(steps), chain=gt["chain"])
+                    seen_urls |= urls_seen
                     print(f"    GOAL chain={gt['chain']} verified={success} steps={len(steps)}")
 
                 # 3) expand frontier (bounded by max_depth). Tier 0: URLs the agent
@@ -515,8 +546,11 @@ class WebArenaExplorer:
               f"{self.episode} episodes, "
               f"{len(self.library.all_skills())} skills, {len(self.opgraph.ops)} operators")
         print(f"  tasks: LOCAL success={task_stats['LOCAL']['success']} "
-              f"fail={task_stats['LOCAL']['fail']}  "
-              f"GOAL success={task_stats['GOAL']['success']} fail={task_stats['GOAL']['fail']}")
+              f"fail={task_stats['LOCAL']['fail']} "
+              f"infeasible={task_stats['LOCAL']['infeasible']}  "
+              f"GOAL success={task_stats['GOAL']['success']} "
+              f"fail={task_stats['GOAL']['fail']} "
+              f"infeasible={task_stats['GOAL']['infeasible']}")
         print(f"trajectories under {self.out_dir}/episodes  "
               f"(feed to build_sft_dataset.py)")
         print(f"per-run log/artifacts (run_log.jsonl, nodes.json, skills.json, "

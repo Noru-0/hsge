@@ -1,7 +1,7 @@
 # Solver success-rate improvements: outcome-annotated history, wrap-up call, infeasible outcome, task retries (design)
 
 **Date:** 2026-07-14
-**Status:** approved, awaiting implementation plan
+**Status:** implemented (see docs/superpowers/plans/2026-07-14-solver-success-rate.md)
 **Context:** wa_run_07 failure analysis (521 tasks, 201 fail = 38.6%):
 NAV tasks fail at 73% (116/159) vs INFO at 15%; 61 failed episodes died at
 exactly 5 steps (the `_MAX_REPEATS=4` stuck hard-stop) and 35 exhausted all 15
