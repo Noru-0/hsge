@@ -24,10 +24,16 @@ python -m pytest hsge/tests/ -q                # requires pytest
 # WebArena runtime:
 python run_webarena.py --dry-run --out /tmp/wa_dry --max-nodes 2   # scripted LLM + fake browser, exercises full wiring
 python build_sft_dataset.py <episodes_dir> train.jsonl            # trajectories → curriculum-ordered SFT jsonl
+
+# SFT dataset quality passes (optional, run before build_sft_dataset.py, need a real LLM key):
+python judge_episodes.py <run_dir>                                 # LLM re-checks declared-success episodes
+python reannotate_thoughts.py <run_dir>                            # state/subgoal/reflection/completion-check thoughts
+python build_sft_dataset.py <episodes_dir> train.jsonl --require-judge   # drop never-judged/judge-failed successes
 ```
 
-Most scripts take no CLI args and just run their scenario; `run_webarena.py` and
-`build_sft_dataset.py` are the exceptions (argparse / positional args).
+Most scripts take no CLI args and just run their scenario; `run_webarena.py`,
+`build_sft_dataset.py`, `judge_episodes.py`, and `reannotate_thoughts.py` are the
+exceptions (argparse / positional args).
 
 ## Real WebArena run
 
@@ -60,3 +66,32 @@ Set-of-Marks-annotated, to a vision-capable model) is configured per role in
 `image_detail: low|high|auto`. Off by default; `config.yaml` turns it on for
 `page_explorer` (`gpt-4o`) and `solver` (`gpt-4o-mini`) — this needs a real
 `OPENAI_API_KEY` and will incur real API cost.
+
+## SFT dataset quality passes
+
+Two optional offline scripts improve `train.jsonl` quality before
+`build_sft_dataset.py` runs; both need a real LLM key and mutate
+`<run_dir>/episodes/*/episode_meta.json` / `episode.jsonl` **in place**
+(additively — never touching `outcome.success`/`thought`) rather than
+writing a new directory, so run them against a scratch copy if you want to
+keep the original run artifacts pristine:
+
+```bash
+python judge_episodes.py outputs/wa_run_09                 # judges every declared-success episode
+python judge_episodes.py outputs/wa_run_09 --limit 20       # cap how many episodes get judged
+python reannotate_thoughts.py outputs/wa_run_09             # rewrites thought -> thought_v2 per step
+python reannotate_thoughts.py outputs/wa_run_09 --limit 20 --axtree-sim 0.5
+```
+
+Each resolves its own model via `config.yaml`'s `llm.agents.episode_judge` /
+`llm.agents.thought_reannotator` (falls back to the shared `llm.*` block if
+unset, same precedence as every other role). Then:
+
+```bash
+python build_sft_dataset.py outputs/wa_run_09/episodes train.jsonl --require-judge
+```
+
+`--require-judge` keeps `infeasible` episodes unconditionally (judging
+doesn't apply to them) but drops any declared-success episode that was
+never judged or that the judge marked `FAIL` — without the flag, a plain
+success is kept regardless of whether it was ever judged.

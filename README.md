@@ -76,7 +76,9 @@ Highlights of the runtime (see `.claude/rules/architecture.md` for the full map)
 | `demo_purchase.py` | Planning + curriculum only (operator/precondition model) |
 | `compare.py`, `compare_three_way.py` | Baseline comparisons (Flat / AWM / HSGE) |
 | `run_webarena.py` | Standalone WebArena exploration (real run + `--dry-run`) |
-| `build_sft_dataset.py` | Converts collected trajectories into curriculum-ordered SFT data |
+| `judge_episodes.py` | Optional: LLM re-checks declared-success episodes, catches false positives |
+| `reannotate_thoughts.py` | Optional: rewrites each step's thought into a state/subgoal/reflection/completion-check template |
+| `build_sft_dataset.py` | Converts collected trajectories into curriculum-ordered SFT data (prompt byte-for-byte matches the live Solver; `--require-judge` to only keep judge-verified successes) |
 
 ## Documentation (`docs/`)
 
@@ -97,7 +99,9 @@ Highlights of the runtime (see `.claude/rules/architecture.md` for the full map)
 ## The pipeline at a glance
 
 ```
-explore (collect verified, composed trajectories)
+explore / run_webarena.py (collect verified, composed trajectories)
+   -> judge_episodes.py        (optional: catch false-positive "success")
+   -> reannotate_thoughts.py   (optional: richer per-step thoughts)
    -> build_sft_dataset.py (curriculum-ordered SFT data)
       -> fine-tune a model
          -> evaluate on WebArena

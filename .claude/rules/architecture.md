@@ -45,8 +45,15 @@ LLM-authored, embedding-canonicalized NL predicates instead of a fixed vocabular
 
 Standalone real-browser runtime, separate from the mock pipeline:
 - `browser.py` — `WebArenaBrowser`, a BrowserGym `openended` wrapper. Actions are
-  executed via a `HighLevelActionSet` (`action_mapping=to_python_code`), so the
-  Solver's `click('bid')`/`fill(...)`/`goto(...)`/`go_back()` strings run for real.
+  executed via a `HighLevelActionSet` (`action_mapping=to_python_code`), with the
+  `chat`/`bid`/`infeas`/`nav`/`tab` subsets enabled, so the Solver's
+  `click('bid')`/`fill(...)`/`press('bid','key')`/`goto(...)`/`go_back()`/
+  `new_tab()`/`tab_focus(index)`/`tab_close()` strings all run for real.
+  `observation()` flattens the axtree with `filter_visible_only=True` (hidden
+  elements dropped before the text ever reaches a prompt), reducing how often the
+  6000-char cap below is hit — it does not bound the length outright, since
+  `flatten_axtree_to_str` is not viewport-scoped (a `scroll` action would not
+  change what it returns, which is why HSGE doesn't expose one).
   Surfaces `self.terminated` (env `term`/`trunc`) so the Solver can stop cleanly.
   `screenshot_b64(som=...)` JPEG-encodes the screenshot BrowserGym already computes
   on every observation, optionally overlaying bid-tagged bounding boxes via
@@ -71,7 +78,19 @@ Standalone real-browser runtime, separate from the mock pipeline:
   docs, CoT examples, and last-action-error feedback so it can recover instead of
   aborting the episode). Both accept `vision`/`som`/`image_detail` (see below) and,
   when a vision-attached call returns empty (refusal/content-filter), retry once
-  text-only before giving up.
+  text-only before giving up. `ACTIONS_DOC` documents all 10 actions the executor
+  accepts: `click`/`fill`/`select_option`/`press`/`goto`/`go_back`/`new_tab`/
+  `tab_focus`/`tab_close`/`send_msg_to_user`/`report_infeasible`. `_cap_axtree()`
+  truncates the axtree shown in any prompt at 6000 chars, appending an explicit
+  `[TRUNCATED: N more characters not shown]` marker rather than silently chopping
+  it — used by both `PageExplorer.propose()` and every `Solver.solve()` prompt, and
+  reused (imported, not duplicated) by `build_sft_dataset.py`'s offline SFT prompt
+  builder so a training example's PAGE block never shows content the model
+  wouldn't see at inference time. `step_outcome(pre_url, pre_axtree, url, axtree)`
+  is the single shared "what happened after this action" helper (`"now at
+  <url>"`/`"page changed"`/`"no change"`), used identically by `Solver.solve`'s
+  live history, `build_sft_dataset.py`'s offline history, and
+  `reannotate_thoughts.py`'s reflection prompts.
   `PageExplorer` asks the LLM for structured `{"tasks": [{"text": ..., "type":
   "INFO"|"NAV"|"MOD"}, ...]}` objects rather than a `[TAG]`-prefixed string (a real
   run showed 89% of tasks came back with no bracket at all; gpt-4o's natural
@@ -196,7 +215,10 @@ The subgoal only ever appears in the assistant *target*, never in
 pipeline at inference time to supply "the current subgoal" as an input.
 `build_sft_dataset.py` then turns `episodes/` into `train.jsonl`: its
 system/user prompt is byte-for-byte the live Solver's (`SYSTEM =
-SOLVER_SYS`, imported not duplicated), history lines are outcome-annotated
+SOLVER_SYS`, imported not duplicated), its PAGE block is capped via the same
+`_cap_axtree()` the live Solver uses (so a step whose axtree exceeded 6000
+chars trains on the same truncated-with-marker text the model would ever
+see, not the raw persisted tree), history lines are outcome-annotated
 via the same `step_outcome()` helper `Solver.solve` uses, a leading
 `[INFO]/[NAV]/[MOD]` goal tag is stripped (a real WebArena eval goal never
 carries one), each example carries `trajectory_id`/`step_index`/
