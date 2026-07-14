@@ -214,6 +214,20 @@ def test_include_episode_plain_failure_excluded():
                             require_judge=False) is False
 
 
+def test_page_block_is_capped_like_the_live_solver():
+    ep_dir = tempfile.mkdtemp()
+    long_axtree = "x" * 7000
+    steps = [_step(ep_dir, 0, "http://x/wiki", long_axtree,
+                   "arrived", "send_msg_to_user('done')")]
+
+    examples = episode_to_examples("goal", steps, ep_dir, difficulty=1,
+                                    trajectory_id="ep_0000")
+
+    prompt = examples[0]["messages"][1]["content"]
+    assert "TRUNCATED" in prompt
+    assert len(prompt) < 7000 + 500   # not the raw 7000-char tree
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

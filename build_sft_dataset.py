@@ -26,7 +26,7 @@ import glob
 import json
 import os
 
-from hsge.webarena.agents import PageExplorer, SOLVER_SYS, step_outcome
+from hsge.webarena.agents import PageExplorer, SOLVER_SYS, step_outcome, _cap_axtree
 
 SYSTEM = SOLVER_SYS
 
@@ -110,7 +110,7 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
             continue
         assistant = json.dumps({"thought": thought, "action": target_action})
         hist_block = "\n".join(history[-_HISTORY_WINDOW:]) or "(none)"
-        obs_block = axtrees[k] if axtrees[k] else "[accessibility tree omitted]"
+        obs_block = _cap_axtree(axtrees[k]) if axtrees[k] else "[accessibility tree omitted]"
         user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist_block}\n\n"
                 f"URL: {urls[k]}\n\nPAGE:\n{obs_block}")
         examples.append({
