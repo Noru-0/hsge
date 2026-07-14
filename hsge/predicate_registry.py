@@ -24,18 +24,38 @@ class PredicateRegistry:
         # and never reassigned, so ids already baked into operators stay valid.
         self.clusterer = OnlineClusterer(sim_threshold=sim_threshold, merge_threshold=2.0)
         self.labels: dict[int, str] = {}     # canonical cluster id -> representative NL
+        self.counts: dict[int, int] = {}     # canonical cluster id -> times resolved
 
     def canonical(self, nl: str) -> str:
         """Map one NL predicate to a stable canonical id like 'p3'.
 
         Close predicates (cosine >= sim_threshold) collapse onto the same id; the
-        first NL seen for a cluster is kept as its human-readable label.
+        first NL seen for a cluster is kept as its human-readable label. Usage is
+        counted so vocabulary() can surface the most-shared predicates.
         """
         text = (nl or "").strip()
         vec = self.embedder.encode([text])[0]
         cid = self.clusterer.partial_fit(vec, text)
         self.labels.setdefault(cid, text)
+        self.counts[cid] = self.counts.get(cid, 0) + 1
         return f"p{cid}"
+
+    def vocabulary(self, max_frequent: int = 25, max_recent: int = 25) -> list[str]:
+        """Labels for LLM prompt context: the most-used predicates first (the
+        core vocabulary foundational operators share), then the most recent
+        (new concepts), deduplicated. Recent-only selection would "forget"
+        foundational predicates once the vocabulary outgrows the cap."""
+        by_freq = sorted(self.counts, key=lambda cid: (-self.counts[cid], cid))
+        chosen = by_freq[:max_frequent]
+        chosen_set = set(chosen)
+        by_recent = sorted(self.counts, reverse=True)
+        for cid in by_recent:
+            if len(chosen) >= max_frequent + max_recent:
+                break
+            if cid not in chosen_set:
+                chosen.append(cid)
+                chosen_set.add(cid)
+        return [self.labels[cid] for cid in chosen]
 
     def label(self, pid: str) -> str:
         """Human-readable NL for a canonical id (for printing/audit)."""
