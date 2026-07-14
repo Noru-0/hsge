@@ -1,6 +1,6 @@
 # Operator Chaining + Depth-Gated Goal Tasks — Design
 
-**Status:** approved, awaiting implementation plan
+**Status:** implemented (see docs/superpowers/plans/2026-07-14-operator-chaining-goal-tasks.md)
 **Date:** 2026-07-14
 
 ## Problem

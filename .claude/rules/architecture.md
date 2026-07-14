@@ -172,10 +172,32 @@ disabled so ids stay stable once assigned) — so the BFS planner in `operators.
 keeps its unchanged precondition/effect set logic. An operator is terminal iff a member
 actually reached the goal state (via `reached`) or the inducer flagged it.
 
+Induction is vocabulary-aware: the prompt includes the registry's existing
+predicate labels (`PredicateRegistry.vocabulary()`, 25 most-frequent + 25
+most-recent, deduplicated) with an instruction to reuse an equivalent
+predicate's exact text verbatim -- measured on wa_run_09, embedding-only
+canonicalization cannot unify synonyms (the true synonym pair scored 0.570,
+below the 0.6 threshold, while a false pair scored 0.606). Promotion applies
+an anti-tautology gate: effects that restate a precondition are dropped
+(`eff - pre`, logged as `effects_dropped` on the `operator_induced` event);
+a skill with no novel effects left is rejected (`operator_rejected` event,
+reason `tautological`/`no_effects`) instead of becoming an operator.
+
 **`terminal_goal` is site-aware, not hardcoded.** It may be `None` (e.g. a
-non-shopping site like reddit): the run is then exploration-only — skills/operators
-are still discovered, but `_goal_task` returns `None` and no goal-conditioned episode
-is attempted. `run_webarena.py` resolves it as: `config.run.terminal_goal` explicit >
+non-shopping site like reddit). Goal tasks no longer depend on it: the primary
+mechanism on every site is **depth-based chains** -- `OperatorGraph.all_chains`
+(bounded DFS over effect->precondition edges, `min_len=2`, circuit-broken at
+`max_len=6`/`max_paths=200`) turns each simple chain of >= 2 operators into one
+composed GOAL task with an instruction generated from the chained skills'
+descriptions plus the first operator's recorded init URL (`_op_meta`). Each
+distinct chain is attempted once per run, at most `run.goal_chains_per_node`
+(default 3, CLI `--goal-chains-per-node`) new chains per node. Verification is
+self-graded (send_msg_to_user + offline judge) unless the chain's last operator
+is terminal AND `terminal_goal` is configured -- then `reached()` verifies
+deterministically. `terminal_goal` is the backup: when the graph is too shallow
+to chain but a terminal predicate is plannable, the legacy terminal task
+(original wording, every node, `reached()` verify) still fires.
+`run_webarena.py` resolves it as: `config.run.terminal_goal` explicit >
 `"order_confirmed"` auto (when `site == shopping` or `--success-url-re` is set) >
 `None`.
 

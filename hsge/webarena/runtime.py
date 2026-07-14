@@ -281,7 +281,8 @@ class WebArenaExplorer:
         judge) unless the chain's last operator is terminal AND a terminal
         goal is configured -- then the deterministic reached() check applies.
         The legacy terminal-predicate plan is the backup when the graph is
-        too shallow to chain (< 2 operators) but a terminal goal exists.
+        too shallow to chain (< 2 operators) or once every discoverable chain
+        has already been attempted this run, but a terminal goal exists.
         """
         tasks: list[dict] = []
         for chain in self.opgraph.all_chains(min_len=2):
