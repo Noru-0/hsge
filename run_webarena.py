@@ -29,6 +29,7 @@ DEFAULTS = {
             "allow": None, "denylist": r"logout|\?p=|product_list_|[?&]sort=",
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "max_tasks": 6, "maturity": 2,
             "task_retries": 0,
+            "goal_chains_per_node": 3,
             "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None,
             "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
@@ -244,6 +245,9 @@ def main():
     ap.add_argument("--task-retries", type=int, default=None,
                     help="retry a failed task up to N more times (default 0; "
                          "infeasible tasks are never retried)")
+    ap.add_argument("--goal-chains-per-node", type=int, default=None,
+                    help="max NEW depth-based goal chains attempted per node "
+                         "(default 3; each distinct chain is attempted once per run)")
     ap.add_argument("--seg-axtree-sim", type=float, default=None,
                     help="axtree-similarity threshold for segmentation boundary "
                          "candidates (default 0.6; lower = fewer candidate cuts)")
@@ -279,6 +283,7 @@ def main():
     max_tasks = _pick(args.max_tasks, run["max_tasks"])
     maturity = _pick(args.maturity, run["maturity"])
     task_retries = _pick(args.task_retries, run["task_retries"])
+    goal_chains_per_node = _pick(args.goal_chains_per_node, run["goal_chains_per_node"])
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
     predicate_sim = run["predicate_sim"]
@@ -346,6 +351,7 @@ def main():
         read_only=args.read_only,
         mine_hrefs=mine_hrefs, per_template_cap=per_template_cap,
         max_hrefs_per_page=max_hrefs_per_page, task_retries=task_retries,
+        goal_chains_per_node=goal_chains_per_node,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
     explorer.run(root_url)

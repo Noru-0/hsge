@@ -18,6 +18,8 @@ run:
   task_retries: 0            # retry a failed task up to N more times (0 = off;
                              # tasks the model reports infeasible are never retried).
                              # NOTE: multiplies worst-case LLM cost per task by 1+N
+  goal_chains_per_node: 3    # max NEW depth-based goal chains attempted per node
+                             # (each distinct chain runs once per run)
   predicate_sim: 0.6         # cosine threshold for the predicate registry (tune per embedder)
   headed: false              # true -> visible browser window (debugging)
   success_url_re: null       # null -> default /checkout/onepage/success

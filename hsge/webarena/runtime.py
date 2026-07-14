@@ -55,6 +55,7 @@ class WebArenaExplorer:
                  read_only: bool = False,
                  mine_hrefs: bool = True, per_template_cap: int = 3,
                  max_hrefs_per_page: int = 100, task_retries: int = 0,
+                 goal_chains_per_node: int = 3,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
@@ -78,6 +79,11 @@ class WebArenaExplorer:
         self.per_template_cap = per_template_cap
         self.max_hrefs_per_page = max_hrefs_per_page
         self.task_retries = task_retries
+        self.goal_chains_per_node = goal_chains_per_node
+        # depth-chains already emitted as goal tasks this run (attempt once each;
+        # self-graded repeats mostly duplicate data, unlike the deterministic
+        # terminal path which stays retryable every node).
+        self._attempted_chains: set[tuple[str, ...]] = set()
         pe_vision, sv_vision = vision_cfg("page_explorer"), vision_cfg("solver")
         self.explorer = PageExplorer(role("page_explorer"), max_tasks=max_tasks, read_only=read_only,
                                      vision=pe_vision["vision"], som=pe_vision["som"],
@@ -265,18 +271,52 @@ class WebArenaExplorer:
                    member_count=grounding["member_count"],
                    precondition_accuracy=pre_acc, effect_accuracy=eff_acc)
 
-    def _goal_task(self):
-        # No terminal predicate configured (e.g. a non-shopping site) -> exploration-only.
+    def _goal_task(self) -> list[dict]:
+        """Goal tasks for the current node, 0..N.
+
+        Depth-based chains over the operator graph are the primary source on
+        every site: each simple chain of >= 2 operators becomes one composed
+        task (attempted once per run, at most goal_chains_per_node new chains
+        per node). Verification is self-graded (send_msg_to_user + offline
+        judge) unless the chain's last operator is terminal AND a terminal
+        goal is configured -- then the deterministic reached() check applies.
+        The legacy terminal-predicate plan is the backup when the graph is
+        too shallow to chain (< 2 operators) but a terminal goal exists.
+        """
+        tasks: list[dict] = []
+        for chain in self.opgraph.all_chains(min_len=2):
+            if len(tasks) >= self.goal_chains_per_node:
+                break
+            key = tuple(chain)
+            if key in self._attempted_chains:
+                continue
+            self._attempted_chains.add(key)
+            steps_txt = " ".join(
+                f"{i}) {self._op_meta.get(op, {}).get('description', op)}."
+                for i, op in enumerate(chain, 1))
+            init_url = self._op_meta.get(chain[0], {}).get("init_url", "")
+            prefix = f"Start by navigating to {init_url}. " if init_url else ""
+            ends_terminal = self.opgraph.ops[chain[-1]].terminal
+            goal_predicate = self.terminal_goal if (ends_terminal and self.terminal_goal) else None
+            tasks.append({
+                "goal": f"{prefix}Complete these steps in order: {steps_txt}",
+                "difficulty": len(chain), "chain": chain,
+                "kind": "depth", "goal_predicate": goal_predicate,
+            })
+        if tasks:
+            return tasks
+        # Backup: graph too shallow for chains, but a terminal predicate is
+        # configured and plannable -> legacy behavior, unchanged (every node,
+        # deterministic reached() verify, original wording).
         if not self.terminal_goal:
-            return None
-        # goal_predicates holds canonical ids contributed by terminal operators;
-        # plan toward the first one that is reachable from the empty initial state.
+            return []
         for goal in sorted(self.opgraph.goal_predicates):
             chain = plan(self.opgraph, frozenset(), goal)
             if chain:
-                return {"goal": "Purchase an item: complete the full checkout to order confirmation.",
-                        "difficulty": len(chain), "chain": chain}
-        return None
+                return [{"goal": "Purchase an item: complete the full checkout to order confirmation.",
+                         "difficulty": len(chain), "chain": chain,
+                         "kind": "terminal", "goal_predicate": self.terminal_goal}]
+        return []
 
     def _admit_url(self, link: str, visited: set) -> bool:
         return bool(link and self.allow.search(link) and link not in visited
@@ -541,13 +581,15 @@ class WebArenaExplorer:
                           + (f" attempts={attempts}" if attempts > 1 else "")
                           + f" steps={len(steps)}")
 
-                # 2) goal-conditioned composed task (once a plan to the goal exists)
-                gt = self._goal_task()
-                if gt:
+                # 2) goal-conditioned composed tasks (depth chains; terminal backup)
+                for gt in self._goal_task():
+                    self._log("goal_task_selected", node_index=node_index,
+                               kind=gt["kind"], chain=gt["chain"],
+                               goal_predicate=gt["goal_predicate"])
                     (episode_id, steps, final_obs, success, infeasible, attempts,
                      urls_seen) = self._solve_with_retries(
                         browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
-                        goal_predicate=self.terminal_goal)
+                        goal_predicate=gt["goal_predicate"])
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
@@ -557,7 +599,8 @@ class WebArenaExplorer:
                                task=gt["goal"], success=success, infeasible=infeasible,
                                attempts=attempts, steps=len(steps), chain=gt["chain"])
                     seen_urls |= urls_seen
-                    print(f"    GOAL chain={gt['chain']} verified={success} steps={len(steps)}")
+                    print(f"    GOAL[{gt['kind']}] chain={gt['chain']} verified={success} "
+                          f"steps={len(steps)}")
 
                 # 3) expand frontier (bounded by max_depth). Tier 0: URLs the agent
                 #    actually reached while solving (+ open tabs) -- admitted directly,
