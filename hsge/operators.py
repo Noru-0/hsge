@@ -63,6 +63,44 @@ class OperatorGraph:
                 if b.name != op_name and b.preconditions <= nxt
                 and not b.preconditions <= state]  # newly enabled by op
 
+    def all_chains(self, min_len: int = 2, max_len: int = 6,
+                   max_paths: int = 200) -> list[list[str]]:
+        """Simple paths of min_len..max_len operators over effect->precondition
+        edges (A -> B iff effects(A) & preconditions(B)). DFS with a per-path
+        visited check (cycle-safe), deterministic (sorted starts/successors).
+        max_len and max_paths are circuit breakers: today's graphs are tiny
+        (tens of operators), but once predicates unify the graph becomes
+        densely connected and unbounded simple-path enumeration is O(V!) in
+        the worst case -- DFS stops descending at max_len and returns as soon
+        as max_paths chains are collected. Sub-chains are emitted too (a
+        3-op path also yields its 2-op prefix): each is a distinct, shorter
+        task variation.
+        """
+        succ: dict[str, set[str]] = {name: set() for name in self.ops}
+        for a, b in self.edges():
+            succ[a].add(b)
+        chains: list[list[str]] = []
+
+        def dfs(path: list[str]) -> bool:
+            """Extend `path`; return True when max_paths is exhausted."""
+            if len(path) >= min_len:
+                chains.append(list(path))
+                if len(chains) >= max_paths:
+                    return True
+            if len(path) >= max_len:
+                return False
+            for nxt in sorted(succ[path[-1]]):
+                if nxt in path:
+                    continue
+                if dfs(path + [nxt]):
+                    return True
+            return False
+
+        for start in sorted(self.ops):
+            if dfs([start]):
+                break
+        return chains
+
 
 def plan(graph: OperatorGraph, initial: frozenset[str], goal: str) -> list[str] | None:
     """Forward BFS over operators: shortest sequence reaching `goal`.
