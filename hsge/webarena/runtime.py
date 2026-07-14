@@ -90,6 +90,9 @@ class WebArenaExplorer:
         # float}, "member_count": int}; observation-only signal, never gates
         # admission or planning (see docs/superpowers/specs/2026-07-06-...).
         self.operator_grounding: dict[str, dict] = {}
+        # op name -> {"card_name", "description", "init_url"}: recorded at
+        # promotion, consumed by _goal_task to generate chain instructions.
+        self._op_meta: dict[str, dict] = {}
         # HSGE discovery; verification is by terminal outcome (see _record / reached),
         # so the library's own held-out gate is off (verify_k=0). `maturity` is the
         # real bar: a skill must recur that many times before it becomes an operator.
@@ -207,22 +210,39 @@ class WebArenaExplorer:
             print(f"[operator] skill {skill_id} has no usable member steps; "
                   "inducing without page context")
         boundary = [(m.steps[0].axtree, m.steps[-1].axtree) for m in members]
-        induced = induce_operator(self.operator_llm, card, boundary)
+        induced = induce_operator(self.operator_llm, card, boundary,
+                                  known_predicates=self.registry.vocabulary())
         pre = frozenset(self.registry.canonical(p) for p in induced["preconditions"])
-        eff = frozenset(self.registry.canonical(e) for e in induced["effects"])
+        eff_all = frozenset(self.registry.canonical(e) for e in induced["effects"])
+        # Anti-tautology gate: an "effect" that restates a precondition encodes
+        # no state change (typical for INFO skills that read state rather than
+        # change it) -- wa_run_09 had 3/4 operators with effects == preconditions,
+        # which can never chain toward anything new.
+        eff = eff_all - pre
+        effects_dropped = sorted(eff_all & pre)
         if not eff:
+            reason = "tautological" if eff_all else "no_effects"
+            print(f"    [operator] rejected {_slug(card.name)}: {reason}")
+            self._log("operator_rejected", skill_id=skill_id, name=_slug(card.name),
+                       reason=reason, preconditions=sorted(pre),
+                       effects_dropped=effects_dropped)
             return
         # terminal only when a real terminal goal is configured and a member reached it
         reached_terminal = bool(self.terminal_goal) and any(
             reached(self.terminal_goal, m.steps[-1].url, m.steps[-1].axtree) for m in members)
         op = Operator(_slug(card.name), pre, eff, terminal=induced["terminal"] or reached_terminal)
         self.opgraph.add(op)
+        self._op_meta[op.name] = {
+            "card_name": card.name,
+            "description": card.description or card.name,
+            "init_url": members[0].steps[0].url if members else "",
+        }
         pre_txt = [f"{p}:{self.registry.label(p)}" for p in sorted(op.preconditions)]
         eff_txt = [f"{e}:{self.registry.label(e)}" for e in sorted(op.effects)]
         print(f"    [operator] {op.name}  pre={pre_txt}  eff={eff_txt}  terminal={op.terminal}")
         self._log("operator_induced", name=op.name, skill_id=skill_id,
                    preconditions=sorted(op.preconditions), effects=sorted(op.effects),
-                   terminal=op.terminal)
+                   effects_dropped=effects_dropped, terminal=op.terminal)
 
         # Grounding check: unlike induce_operator's 2-member sample, this uses
         # every member of the skill to score whether each induced predicate
