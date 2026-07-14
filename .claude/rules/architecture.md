@@ -179,6 +179,35 @@ routing below via `run_webarena.py::_resolve_agent_vision`) lets `page_explorer`
 to a vision-capable model. Off by default for every role; `config.yaml` turns it on
 for `page_explorer` (`gpt-4o`) and `solver` (`gpt-4o-mini`).
 
+**SFT dataset assembly is a three-stage offline pipeline**, run after
+`run_webarena.py` finishes collecting `episodes/`:
+`judge_episodes.py` (optional) re-checks every declared-success episode
+against its own final state with a strong LLM and appends
+`outcome.judge_verified`/`outcome.judge_reason` to `episode_meta.json` in
+place (additive; `outcome.success` is left untouched) — catches the agent
+grading its own homework (declaring done without actually satisfying the
+goal). `reannotate_thoughts.py` (optional) rewrites each step's `thought`
+into a `thought_v2` field: a terse state assessment, a reflection when the
+prior action made no progress, and — only on a task's terminal step — a
+completion check, composed with the step's subgoal from an offline replay
+of `segment_trajectory()` (the same segmentation `Discovery` uses live).
+The subgoal only ever appears in the assistant *target*, never in
+`build_sft_dataset.py`'s user prompt, since there is no retrieval/grounding
+pipeline at inference time to supply "the current subgoal" as an input.
+`build_sft_dataset.py` then turns `episodes/` into `train.jsonl`: its
+system/user prompt is byte-for-byte the live Solver's (`SYSTEM =
+SOLVER_SYS`, imported not duplicated), history lines are outcome-annotated
+via the same `step_outcome()` helper `Solver.solve` uses, a leading
+`[INFO]/[NAV]/[MOD]` goal tag is stripped (a real WebArena eval goal never
+carries one), each example carries `trajectory_id`/`step_index`/
+`total_steps` for downstream trajectory-aware batching, a step whose
+recorded thought carries `"[action error:"` is excluded from both training
+targets and later steps' history (it was the mistake, not the recovery, and
+was never in the live Solver's own history either), `report_infeasible`
+episodes are kept as valid targets, and `--require-judge` restricts
+declared-success episodes to `judge_verified is True` (never-judged
+episodes are dropped, not silently trusted).
+
 **Each LLM-backed helper can use a different model**, configured per role in
 `config.yaml`'s `llm.agents.<role>` (see `AGENT_ROLES` in `run_webarena.py`):
 `page_explorer`, `solver`, `trajectory_segmenter`, `skill_abstractor`,

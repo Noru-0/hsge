@@ -195,6 +195,10 @@ def main():
     for e in all_examples:
         by_diff[e["difficulty"]] = by_diff.get(e["difficulty"], 0) + 1
     loaded = sum(e["axtree_loaded"] for e in all_examples)
+    thought_v2_count = sum(1 for e in all_examples
+                           if "State:" in json.loads(e["messages"][2]["content"])["thought"])
+    subgoal_count = sum(1 for e in all_examples
+                        if "Subgoal:" in json.loads(e["messages"][2]["content"])["thought"])
     print(f"episodes seen        : {n_ep}")
     print(f"successful (kept)    : {n_kept}")
     print(f"  of which infeasible : {n_infeasible_kept}  (teaches report_infeasible)")
@@ -205,6 +209,9 @@ def main():
     print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
     print(f"with real AXTree text : {loaded}/{len(all_examples)} "
           f"(rest need the run dir's page_state/*.txt files)")
+    print(f"re-annotated thoughts : {thought_v2_count}/{len(all_examples)} "
+          f"(run reannotate_thoughts.py first to raise this)")
+    print(f"with subgoal in target: {subgoal_count}/{len(all_examples)}")
     if all_examples:
         print("\n--- example[0] (truncated) ---")
         ex = all_examples[0]

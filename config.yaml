@@ -6,7 +6,7 @@
 run:
   site: reddit             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
   root_url: null             # explicit URL; overrides `site` when set
-  out_dir: outputs/wa_run_08
+  out_dir: outputs/wa_run_09
   allow: null                # null -> derived from the root URL's host
   denylist: "logout|\\?p=|product_list_|[?&]sort="   # blocked child URLs (deny wins)
   max_nodes: 500
@@ -15,7 +15,7 @@ run:
   max_tasks: 9               # tasks PageExplorer proposes per node (more -> less chance
                              # of missing a task, but +1 Solver episode per extra task)
   maturity: 2                # times a skill must recur before it becomes an operator
-  task_retries: 2            # retry a failed task up to N more times (0 = off;
+  task_retries: 0            # retry a failed task up to N more times (0 = off;
                              # tasks the model reports infeasible are never retried).
                              # NOTE: multiplies worst-case LLM cost per task by 1+N
   predicate_sim: 0.6         # cosine threshold for the predicate registry (tune per embedder)
@@ -60,6 +60,10 @@ llm:
     skill_verifier:          # grounds/verifies SkillCards (inactive when verify_k=0)
       model: deepseek-v4-pro
     operator_inducer:        # induces planning preconditions/effects from a skill
+      model: deepseek-v4-pro
+    episode_judge:            # judge_episodes.py: re-checks declared-success
+      model: deepseek-v4-pro  # episodes against their final state
+    thought_reannotator:      # reannotate_thoughts.py: rewrites step thoughts
       model: deepseek-v4-pro
 
 embedder:
