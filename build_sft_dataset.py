@@ -117,16 +117,18 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
 
 
 def load_episodes(path: str):
-    """Yield (goal, steps, episode_dir, trajectory_id, difficulty, success) tuples."""
+    """Yield (goal, steps, episode_dir, trajectory_id, difficulty, success,
+    infeasible) tuples."""
     if os.path.isfile(path) and path.endswith(".json"):
         d = json.load(open(path))
         em = d.get("episode_meta", d)
         ti = d.get("task_info", {})
         steps = d.get("steps") or []
-        success = em.get("outcome", {}).get("success", False)
+        outcome = em.get("outcome", {})
         trajectory_id = os.path.splitext(os.path.basename(path))[0]
         yield (em.get("goal", ""), steps, os.path.dirname(path), trajectory_id,
-              _difficulty(ti, em), success)
+              _difficulty(ti, em), outcome.get("success", False),
+              outcome.get("infeasible", False))
         return
     for meta_path in glob.glob(os.path.join(path, "**", "episode_meta.json"), recursive=True):
         ep_dir = os.path.dirname(meta_path)
@@ -135,9 +137,10 @@ def load_episodes(path: str):
         steps = [json.loads(l) for l in open(jl)] if os.path.exists(jl) else []
         ti_path = os.path.join(ep_dir, "..", "..", "task_info.json")
         ti = json.load(open(ti_path)) if os.path.exists(ti_path) else {}
-        success = em.get("outcome", {}).get("success", False)
+        outcome = em.get("outcome", {})
         trajectory_id = os.path.basename(ep_dir)
-        yield em.get("goal", ""), steps, ep_dir, trajectory_id, _difficulty(ti, em), success
+        yield (em.get("goal", ""), steps, ep_dir, trajectory_id, _difficulty(ti, em),
+              outcome.get("success", False), outcome.get("infeasible", False))
 
 
 def main():
@@ -146,12 +149,13 @@ def main():
     src = sys.argv[1]
     out = sys.argv[2] if len(sys.argv) > 2 else "train.jsonl"
 
-    all_examples, n_ep, n_kept = [], 0, 0
-    for goal, steps, ep_dir, trajectory_id, diff, success in load_episodes(src):
+    all_examples, n_ep, n_kept, n_infeasible_kept = [], 0, 0, 0
+    for goal, steps, ep_dir, trajectory_id, diff, success, infeasible in load_episodes(src):
         n_ep += 1
-        if not success:                              # only train on successes
+        if not (success or infeasible):
             continue
         n_kept += 1
+        n_infeasible_kept += int(infeasible)
         all_examples += episode_to_examples(goal, steps, ep_dir, diff, trajectory_id)
 
     all_examples.sort(key=lambda e: e["difficulty"])   # curriculum: easy -> hard
@@ -165,6 +169,7 @@ def main():
     loaded = sum(e["axtree_loaded"] for e in all_examples)
     print(f"episodes seen        : {n_ep}")
     print(f"successful (kept)    : {n_kept}")
+    print(f"  of which infeasible : {n_infeasible_kept}  (teaches report_infeasible)")
     print(f"SFT examples written : {len(all_examples)} -> {out}")
     print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
     print(f"with real AXTree text : {loaded}/{len(all_examples)} "

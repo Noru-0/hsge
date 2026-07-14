@@ -9,7 +9,7 @@ import json
 import os
 import tempfile
 
-from build_sft_dataset import SYSTEM, episode_to_examples
+from build_sft_dataset import SYSTEM, episode_to_examples, load_episodes
 from hsge.webarena.agents import SOLVER_SYS
 
 
@@ -26,6 +26,20 @@ def _step(ep_dir, index, url, axtree, thought, action):
             "action": json.dumps({"thought": thought, "action": action}),
             "parsed_action": action, "thought": thought,
             "observation": {"axtree_txt": {"path": rel}}}
+
+
+def _write_episode_dir(run_dir, ep_name, goal, success, infeasible, steps):
+    ep_dir = os.path.join(run_dir, "episodes", ep_name)
+    os.makedirs(ep_dir, exist_ok=True)
+    meta = {"kind": "low_level_trajectory", "goal": goal,
+            "outcome": {"success": success, "reward": 1.0 if success else 0.0,
+                        "response": "", "infeasible": infeasible},
+            "metadata": {"difficulty": 1, "tags": ["LOCAL"]}, "step_count": len(steps)}
+    json.dump(meta, open(os.path.join(ep_dir, "episode_meta.json"), "w"))
+    with open(os.path.join(ep_dir, "episode.jsonl"), "w") as f:
+        for st in steps:
+            f.write(json.dumps(st) + "\n")
+    return ep_dir
 
 
 def test_system_prompt_is_imported_from_solver_not_duplicated():
@@ -133,6 +147,39 @@ def test_prefers_thought_v2_over_thought_when_present():
 
     assistant = json.loads(examples[0]["messages"][2]["content"])
     assert assistant["thought"] == "State: on the wiki page. original thought"
+
+
+def test_load_episodes_yields_infeasible_flag():
+    run_dir = tempfile.mkdtemp()
+    ep_dir = _write_episode_dir(
+        run_dir, "ep_0000", "delete another user's account", False, True,
+        [_step(os.path.join(run_dir, "episodes", "ep_0000"), 0, "http://x/",
+              "ax", "not possible without admin rights",
+              "report_infeasible('requires admin rights')")])
+
+    results = list(load_episodes(run_dir))
+
+    assert len(results) == 1
+    goal, steps, yielded_ep_dir, trajectory_id, diff, success, infeasible = results[0]
+    assert success is False
+    assert infeasible is True
+
+
+def test_report_infeasible_is_a_valid_training_target():
+    ep_dir = tempfile.mkdtemp()
+    steps = [
+        _step(ep_dir, 0, "http://x/", "ax0", "checking if this is possible",
+             "click('1')"),
+        _step(ep_dir, 1, "http://x/settings", "ax1", "requires admin rights, "
+             "cannot proceed", "report_infeasible('requires admin rights')"),
+    ]
+
+    examples = episode_to_examples("delete another user's account", steps, ep_dir,
+                                    difficulty=1, trajectory_id="ep_0000")
+
+    assert len(examples) == 2
+    last_assistant = json.loads(examples[-1]["messages"][2]["content"])
+    assert last_assistant["action"] == "report_infeasible('requires admin rights')"
 
 
 if __name__ == "__main__":
