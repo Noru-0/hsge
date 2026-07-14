@@ -236,3 +236,30 @@ def test_no_wrapup_for_predicate_goals():
 
     assert success is False
     assert llm.calls == Solver._MAX_REPEATS   # no +1: wrap-up skipped
+
+
+from hsge.webarena.agents import ACTIONS_DOC, _AXTREE_CAP, _cap_axtree
+
+
+def test_actions_doc_documents_press_and_tab_ops():
+    assert "press(" in ACTIONS_DOC
+    assert "new_tab()" in ACTIONS_DOC
+    assert "tab_focus(" in ACTIONS_DOC
+    assert "tab_close()" in ACTIONS_DOC
+
+
+def test_cap_axtree_passes_short_text_through_unchanged():
+    assert _cap_axtree("short tree") == "short tree"
+
+
+def test_cap_axtree_marks_truncation_and_preserves_prefix():
+    long_tree = "x" * (_AXTREE_CAP + 500)
+    capped = _cap_axtree(long_tree)
+    assert capped.startswith("x" * 100)
+    assert "TRUNCATED" in capped
+    assert "500" in capped   # reports how many chars were cut
+
+
+def test_cap_axtree_handles_empty_and_none():
+    assert _cap_axtree("") == ""
+    assert _cap_axtree(None) == ""

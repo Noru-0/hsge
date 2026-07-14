@@ -214,3 +214,23 @@ def test_untagged_task_passes_through_unchanged_when_not_read_only():
 
     assert explorer.propose({"url": "http://x", "axtree": ""}) == [
         "Click the 'Save' button to create the new page."]
+
+
+class _PromptCapturingLLM:
+    def __init__(self):
+        self.prompts = []
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.prompts.append(prompt)
+        return {"tasks": []}
+
+
+def test_propose_truncates_long_axtree_with_marker():
+    llm = _PromptCapturingLLM()
+    explorer = PageExplorer(llm)
+    long_axtree = "y" * 7000
+
+    explorer.propose({"url": "http://x", "axtree": long_axtree})
+
+    assert "TRUNCATED" in llm.prompts[0]
+    assert len(llm.prompts[0]) < 7000 + 200   # not the raw 7000 chars plus a small prompt overhead

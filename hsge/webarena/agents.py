@@ -14,8 +14,11 @@ from ..schema import Step
 from .predicates import reached
 
 ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
-               "fill('bid','text'), select_option('bid','opt'), goto('url'), "
-               "go_back(), send_msg_to_user('done message'), "
+               "fill('bid','text'), select_option('bid','opt'), "
+               "press('bid','key_comb') -- e.g. press('12','Enter') to submit a "
+               "search box or form when there is no separate submit button, "
+               "goto('url'), go_back(), new_tab(), tab_focus(index), tab_close(), "
+               "send_msg_to_user('done message'), "
                "report_infeasible('reason') -- report_infeasible ONLY when the "
                "task cannot be done on this site/page.")
 
@@ -65,6 +68,23 @@ SOLVER_SYS = (
 READONLY_NOTE = ("\nREAD-ONLY MODE: propose ONLY tasks with type INFO or NAV. Do NOT "
                  "propose any type MOD / content-modification tasks (no posting, "
                  "commenting, voting, adding to cart, or checkout).")
+
+_AXTREE_CAP = 6000
+
+
+def _cap_axtree(axtree: str) -> str:
+    """Truncate axtree text to _AXTREE_CAP chars, appending an explicit
+    marker when content was cut. Silently chopping the tree would let the
+    model mistake a truncated view for the complete page; the marker at
+    least tells it more content exists. Note: there is no scroll action
+    that would change what flatten_axtree_to_str returns here -- BrowserGym's
+    axtree is not viewport-scoped, so scrolling wouldn't fix truncation
+    (see WebArenaBrowser.observation() for the filter_visible_only change
+    that reduces how often this cap is even hit)."""
+    text = axtree or ""
+    if len(text) <= _AXTREE_CAP:
+        return text
+    return text[:_AXTREE_CAP] + f"\n... [TRUNCATED: {len(text) - _AXTREE_CAP} more characters not shown]"
 
 
 class PageExplorer:
@@ -130,7 +150,7 @@ class PageExplorer:
 
     def propose(self, obs: dict, screenshot_b64: str | None = None) -> list[str]:
         system = EXPLORER_SYS + (READONLY_NOTE if self.read_only else "")
-        prompt = f"URL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
+        prompt = f"URL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}"
         if self._seen:
             recent = list(self._seen.values())[-self._SEEN_HINT_SIZE:]
             prompt += ("\n\nALREADY PROPOSED (do not repeat these or near-duplicates):\n"
@@ -261,7 +281,7 @@ class Solver:
                       + ("\n".join(recent) or "(none)")
                       + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
                       + repeat_warning
-                      + f"\n\nURL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}")
+                      + f"\n\nURL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}")
             screenshot_b64 = browser.screenshot_b64(som=self.som) if self.vision else None
             out = self.llm.complete_json(SOLVER_SYS, prompt,
                                           image_b64=screenshot_b64, image_detail=self.image_detail)
@@ -315,7 +335,7 @@ class Solver:
             recent = [f"- {h} -> {o}" for h, o in zip(history, outcomes)]
             wrap_prompt = (f"GOAL: {goal}\n\nACTIONS TAKEN:\n"
                            + ("\n".join(recent) or "(none)")
-                           + f"\n\nURL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
+                           + f"\n\nURL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}"
                            + "\n\nYour action budget is exhausted. If the goal has "
                              "ALREADY been achieved (e.g. you are on the requested "
                              "page), call send_msg_to_user('done: ...') NOW. If the "

@@ -25,7 +25,7 @@ class WebArenaBrowser:
         # openended env executes Python in the page context, so we map each high-level
         # string to executable code via the action set (mirrors go-browse's setup).
         self.action_set = HighLevelActionSet(
-            subsets=["chat", "bid", "infeas", "nav"], strict=False, multiaction=False)
+            subsets=["chat", "bid", "infeas", "nav", "tab"], strict=False, multiaction=False)
         env_kwargs = {}
         pw_context_kwargs = {}
         headers_path = os.environ.get("PW_EXTRA_HEADERS")
@@ -62,7 +62,7 @@ class WebArenaBrowser:
         obs = self._last_obs or {}
         try:
             axtree = flatten_axtree_to_str(
-                obs["axtree_object"], filter_visible_only=False,
+                obs["axtree_object"], filter_visible_only=True,
                 extra_properties=obs.get("extra_element_properties"))
         except Exception:
             axtree = ""
