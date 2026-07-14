@@ -143,7 +143,13 @@ Standalone real-browser runtime, separate from the mock pipeline:
   up to N more times via `_solve_with_retries`; every attempt is recorded as
   its own episode, `nodes.json`/`task_result` events carry
   `attempts`/`infeasible`, and task_stats counts each task once by final
-  outcome (success / fail / infeasible).
+  outcome (success / fail / infeasible). A node whose `browser_factory(url)`
+  or `browser.reset()` raises (flaky/slow/unreachable URL -- a live run hit
+  a Playwright navigation timeout) is caught, logged as `node_error`,
+  recorded in `nodes.json` with an `error` field, and skipped -- it does not
+  crash the run, unlike an unexpected exception anywhere else in node
+  processing, which still propagates through the whole-loop `try/except`
+  (`run_error` event, `summary.json` `status: "error"`, re-raised).
 
 **Operators are derived from verified skills, not raw trajectories.** When Discovery
 admits a skill (a cluster that recurred `--maturity` times), `runtime.py`

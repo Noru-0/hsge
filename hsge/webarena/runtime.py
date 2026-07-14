@@ -366,6 +366,7 @@ class WebArenaExplorer:
 
         seen_content: set[str] = set()   # sha256 of a node's initial axtree
         duplicate_nodes = 0
+        node_errors = 0
         task_stats = {"LOCAL": {"success": 0, "fail": 0, "infeasible": 0},
                       "GOAL": {"success": 0, "fail": 0, "infeasible": 0}}
         nodes_log: list[dict] = []   # per-node record: url, tasks tried, pass/fail (-> nodes.json)
@@ -390,8 +391,39 @@ class WebArenaExplorer:
                 node_index = len(visited)
                 current_node_index, current_node_url = node_index, url
                 node_start_epoch, node_start_iso = _now()
-                browser = self.browser_factory(url)
-                obs = browser.reset()
+                browser = None
+                try:
+                    browser = self.browser_factory(url)
+                    obs = browser.reset()
+                except Exception as e:
+                    # A single flaky/slow/unreachable URL (real example: a live
+                    # gitlab tree page whose Page.goto exceeded the navigation
+                    # timeout) must not kill a multi-hour exploration run --
+                    # skip this node the same way node_duplicate_skip does,
+                    # instead of letting the exception reach the outer
+                    # try/except below, which logs it as run_error and re-raises.
+                    node_duration = time.time() - node_start_epoch
+                    print(f"[node {node_index}/{self.max_nodes}] {url} "
+                          f"-- failed to load, skipping: {e}")
+                    self._log("node_error", index=node_index, url=url, depth=depth,
+                               error=str(e), error_type=type(e).__name__,
+                               started_at_epoch=node_start_epoch, started_at_iso=node_start_iso)
+                    nodes_log.append({"index": node_index, "url": url, "depth": depth,
+                                       "duplicate": False, "error": str(e), "tasks": [],
+                                       "frontier_added": 0, "screenshot": None,
+                                       "started_at_epoch": node_start_epoch,
+                                       "started_at_iso": node_start_iso,
+                                       "duration_sec": node_duration})
+                    self._log("node_done", index=node_index, duration_sec=node_duration)
+                    if browser is not None:
+                        try:
+                            browser.close()
+                        except Exception:
+                            pass
+                    node_errors += 1
+                    self._dump_artifacts(task_stats, len(visited) - duplicate_nodes - node_errors,
+                                          duplicate_nodes, nodes_log)
+                    continue
 
                 # Two different URLs can render the same content (redirects, aliases,
                 # already-authenticated login pages, ...). Skip re-exploring content
@@ -413,7 +445,7 @@ class WebArenaExplorer:
                                        "duration_sec": node_duration})
                     self._log("node_done", index=node_index, duration_sec=node_duration)
                     browser.close()
-                    self._dump_artifacts(task_stats, len(visited) - duplicate_nodes,
+                    self._dump_artifacts(task_stats, len(visited) - duplicate_nodes - node_errors,
                                           duplicate_nodes, nodes_log)
                     continue
                 seen_content.add(content_hash)
@@ -525,7 +557,7 @@ class WebArenaExplorer:
                 node_rec["duration_sec"] = node_duration
                 nodes_log.append(node_rec)
                 self._log("node_done", index=node_index, duration_sec=node_duration)
-                nodes_visited = len(visited) - duplicate_nodes
+                nodes_visited = len(visited) - duplicate_nodes - node_errors
                 self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log)
         except Exception as e:
             ended_epoch, ended_iso = _now()
@@ -535,14 +567,15 @@ class WebArenaExplorer:
                        ended_at_epoch=ended_epoch, ended_at_iso=ended_iso,
                        duration_sec=duration_sec, error=str(e), error_type=type(e).__name__,
                        last_node_index=current_node_index, last_node_url=current_node_url)
-            nodes_visited = len(visited) - duplicate_nodes
+            nodes_visited = len(visited) - duplicate_nodes - node_errors
             self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log,
                                   status="error", ended_at_epoch=ended_epoch, ended_at_iso=ended_iso,
                                   error=str(e))
             raise
 
-        nodes_visited = len(visited) - duplicate_nodes
-        print(f"\ndone: {nodes_visited} nodes ({duplicate_nodes} duplicate skipped), "
+        nodes_visited = len(visited) - duplicate_nodes - node_errors
+        print(f"\ndone: {nodes_visited} nodes ({duplicate_nodes} duplicate skipped, "
+              f"{node_errors} failed to load), "
               f"{self.episode} episodes, "
               f"{len(self.library.all_skills())} skills, {len(self.opgraph.ops)} operators")
         print(f"  tasks: LOCAL success={task_stats['LOCAL']['success']} "
