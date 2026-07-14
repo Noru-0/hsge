@@ -9,7 +9,7 @@ import json
 import os
 import tempfile
 
-from build_sft_dataset import SYSTEM, episode_to_examples, load_episodes
+from build_sft_dataset import SYSTEM, _include_episode, episode_to_examples, load_episodes
 from hsge.webarena.agents import SOLVER_SYS
 
 
@@ -160,9 +160,11 @@ def test_load_episodes_yields_infeasible_flag():
     results = list(load_episodes(run_dir))
 
     assert len(results) == 1
-    goal, steps, yielded_ep_dir, trajectory_id, diff, success, infeasible = results[0]
+    (goal, steps, yielded_ep_dir, trajectory_id, diff, success, infeasible,
+     judge_verified) = results[0]
     assert success is False
     assert infeasible is True
+    assert judge_verified is None
 
 
 def test_report_infeasible_is_a_valid_training_target():
@@ -180,6 +182,36 @@ def test_report_infeasible_is_a_valid_training_target():
     assert len(examples) == 2
     last_assistant = json.loads(examples[-1]["messages"][2]["content"])
     assert last_assistant["action"] == "report_infeasible('requires admin rights')"
+
+
+def test_include_episode_success_without_require_judge():
+    assert _include_episode(success=True, infeasible=False, judge_verified=None,
+                            require_judge=False) is True
+
+
+def test_include_episode_infeasible_always_included_regardless_of_judge():
+    assert _include_episode(success=False, infeasible=True, judge_verified=None,
+                            require_judge=True) is True
+
+
+def test_include_episode_require_judge_drops_unjudged_success():
+    assert _include_episode(success=True, infeasible=False, judge_verified=None,
+                            require_judge=True) is False
+
+
+def test_include_episode_require_judge_drops_failed_judgment():
+    assert _include_episode(success=True, infeasible=False, judge_verified=False,
+                            require_judge=True) is False
+
+
+def test_include_episode_require_judge_keeps_verified_success():
+    assert _include_episode(success=True, infeasible=False, judge_verified=True,
+                            require_judge=True) is True
+
+
+def test_include_episode_plain_failure_excluded():
+    assert _include_episode(success=False, infeasible=False, judge_verified=None,
+                            require_judge=False) is False
 
 
 if __name__ == "__main__":

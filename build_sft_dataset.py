@@ -21,10 +21,10 @@ combined episode json (like sample_trajectory.json).
 """
 from __future__ import annotations
 
+import argparse
 import glob
 import json
 import os
-import sys
 
 from hsge.webarena.agents import PageExplorer, SOLVER_SYS, step_outcome
 
@@ -74,6 +74,23 @@ def _is_error_step(thought: str) -> bool:
     return "[action error:" in (thought or "")
 
 
+def _include_episode(success: bool, infeasible: bool, judge_verified: bool | None,
+                     require_judge: bool) -> bool:
+    """Whether one episode's steps should be turned into SFT examples.
+    Infeasible episodes are always eligible (report_infeasible is a real
+    target regardless of judging). A plain success is eligible unless
+    --require-judge is set, in which case it needs judge_verified is True --
+    an episode never judged (judge_verified is None) is dropped, not
+    silently trusted, so --require-judge fails safe."""
+    if infeasible:
+        return True
+    if not success:
+        return False
+    if require_judge:
+        return judge_verified is True
+    return True
+
+
 def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
                         difficulty: int, trajectory_id: str) -> list[dict]:
     goal = _strip_tag(goal)
@@ -118,7 +135,8 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
 
 def load_episodes(path: str):
     """Yield (goal, steps, episode_dir, trajectory_id, difficulty, success,
-    infeasible) tuples."""
+    infeasible, judge_verified) tuples. judge_verified is None if the
+    episode has never been through judge_episodes.py."""
     if os.path.isfile(path) and path.endswith(".json"):
         d = json.load(open(path))
         em = d.get("episode_meta", d)
@@ -128,7 +146,7 @@ def load_episodes(path: str):
         trajectory_id = os.path.splitext(os.path.basename(path))[0]
         yield (em.get("goal", ""), steps, os.path.dirname(path), trajectory_id,
               _difficulty(ti, em), outcome.get("success", False),
-              outcome.get("infeasible", False))
+              outcome.get("infeasible", False), outcome.get("judge_verified"))
         return
     for meta_path in glob.glob(os.path.join(path, "**", "episode_meta.json"), recursive=True):
         ep_dir = os.path.dirname(meta_path)
@@ -140,26 +158,36 @@ def load_episodes(path: str):
         outcome = em.get("outcome", {})
         trajectory_id = os.path.basename(ep_dir)
         yield (em.get("goal", ""), steps, ep_dir, trajectory_id, _difficulty(ti, em),
-              outcome.get("success", False), outcome.get("infeasible", False))
+              outcome.get("success", False), outcome.get("infeasible", False),
+              outcome.get("judge_verified"))
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(__doc__); sys.exit(1)
-    src = sys.argv[1]
-    out = sys.argv[2] if len(sys.argv) > 2 else "train.jsonl"
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("src", help="run directory or single episode json")
+    ap.add_argument("out", nargs="?", default="train.jsonl")
+    ap.add_argument("--require-judge", action="store_true",
+                    help="only keep declared-success episodes whose "
+                         "outcome.judge_verified is true (run judge_episodes.py "
+                         "first); never-judged success episodes are dropped, "
+                         "not silently trusted")
+    args = ap.parse_args()
 
-    all_examples, n_ep, n_kept, n_infeasible_kept = [], 0, 0, 0
-    for goal, steps, ep_dir, trajectory_id, diff, success, infeasible in load_episodes(src):
+    all_examples, n_ep, n_kept, n_infeasible_kept, n_unjudged_dropped = [], 0, 0, 0, 0
+    for (goal, steps, ep_dir, trajectory_id, diff, success, infeasible,
+        judge_verified) in load_episodes(args.src):
         n_ep += 1
-        if not (success or infeasible):
+        if args.require_judge and success and not infeasible and judge_verified is None:
+            n_unjudged_dropped += 1
+        if not _include_episode(success, infeasible, judge_verified, args.require_judge):
             continue
         n_kept += 1
         n_infeasible_kept += int(infeasible)
         all_examples += episode_to_examples(goal, steps, ep_dir, diff, trajectory_id)
 
     all_examples.sort(key=lambda e: e["difficulty"])   # curriculum: easy -> hard
-    with open(out, "w") as f:
+    with open(args.out, "w") as f:
         for ex in all_examples:
             f.write(json.dumps(ex) + "\n")
 
@@ -170,7 +198,10 @@ def main():
     print(f"episodes seen        : {n_ep}")
     print(f"successful (kept)    : {n_kept}")
     print(f"  of which infeasible : {n_infeasible_kept}  (teaches report_infeasible)")
-    print(f"SFT examples written : {len(all_examples)} -> {out}")
+    if args.require_judge:
+        print(f"unjudged success episodes dropped: {n_unjudged_dropped} "
+              f"(run judge_episodes.py first to include them)")
+    print(f"SFT examples written : {len(all_examples)} -> {args.out}")
     print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
     print(f"with real AXTree text : {loaded}/{len(all_examples)} "
           f"(rest need the run dir's page_state/*.txt files)")
