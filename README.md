@@ -46,6 +46,24 @@ python run_webarena.py --dry-run --out /tmp/wa_dry   # scripted LLM + fake brows
                                                      # exercises the full wiring
 ```
 
+### Turning a run into training data
+
+```bash
+python judge_episodes.py outputs/wa_run_XX                 # optional: catch false-positive "success"
+python reannotate_thoughts.py outputs/wa_run_XX             # optional: richer per-step thoughts
+python build_sft_dataset.py outputs/wa_run_XX/episodes train.jsonl --require-judge
+```
+
+`judge_episodes.py`/`reannotate_thoughts.py` write into `episode_meta.json`/
+`episode.jsonl` in place (additively — `outcome.success`/`thought` are never
+touched), so run them against a scratch copy of `outputs/wa_run_XX` first if
+you want to keep that run's original artifacts untouched. Both are optional:
+skipping them and running `build_sft_dataset.py outputs/wa_run_XX/episodes
+train.jsonl` alone still works exactly as before. `--require-judge` only has
+an effect once episodes have actually been judged — without it (or before
+running `judge_episodes.py`), every declared-success episode is kept as
+before.
+
 Highlights of the runtime (see `.claude/rules/architecture.md` for the full map):
 
 - **Skill → operator promotion**: once a skill recurs enough to be admitted
