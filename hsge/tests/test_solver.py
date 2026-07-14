@@ -39,7 +39,7 @@ def test_solver_retries_without_image_when_vision_call_is_refused():
     solver = Solver(llm, vision=True)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
 
     assert success is True
     assert len(steps) == 1
@@ -75,7 +75,7 @@ def test_solver_warns_and_recovers_from_a_repeated_no_progress_action():
     solver = Solver(llm, max_steps=15)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
 
     assert success is True
     assert len(steps) == 3  # recovered on the 3rd call instead of burning all 15
@@ -102,17 +102,18 @@ class _StubbornRepeatLLM:
 def test_solver_gives_up_after_max_repeats_when_model_ignores_the_warning():
     """A soft nudge isn't always obeyed -- once the same target has been
     interacted with _MAX_REPEATS times in a row with no progress, the
-    solver must stop calling the LLM entirely instead of burning the rest
-    of max_steps on a model that keeps ignoring the warning."""
+    solver stops the action loop, then makes exactly one wrap-up call; a
+    non-terminal wrap-up answer (this mock still says click) is discarded."""
     llm = _StubbornRepeatLLM()
     solver = Solver(llm, max_steps=15)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
 
     assert success is False
-    assert len(steps) == Solver._MAX_REPEATS  # gave up well before max_steps=15
-    assert llm.calls == Solver._MAX_REPEATS
+    assert infeasible is False
+    assert len(steps) == Solver._MAX_REPEATS      # wrap-up click was discarded
+    assert llm.calls == Solver._MAX_REPEATS + 1   # action loop + 1 wrap-up call
 
 
 class _SameTargetDifferentArgsLLM:
@@ -140,8 +141,98 @@ def test_solver_gives_up_on_same_target_repeated_with_different_arguments():
     solver = Solver(llm, max_steps=15)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
 
     assert success is False
     assert len(steps) == Solver._MAX_REPEATS
     assert all("378" in s.action for s in steps)
+    assert llm.calls == Solver._MAX_REPEATS + 1
+
+
+class _NavOnceBrowser:
+    """First act() navigates to /wiki; every later act() changes nothing
+    (the sitewide 'Wiki' link is still on the destination page)."""
+
+    def __init__(self):
+        self.i = 0
+
+    def observation(self):
+        if self.i == 0:
+            return {"url": "http://x/", "axtree": "[24] link 'Wiki'"}
+        return {"url": "http://x/wiki", "axtree": "[7] heading 'Wiki'\n[24] link 'Wiki'"}
+
+    def screenshot_b64(self, som=False):
+        return None
+
+    def act(self, action):
+        self.i += 1
+        return self.observation()
+
+
+class _ArrivesButKeepsClickingLLM:
+    """Clicks the same nav link forever (never realizes it arrived); only
+    the wrap-up prompt makes it declare done. Mirrors the dominant real-run
+    NAV failure (wa_run_07: 116 NAV fails, model on the right page but
+    still clicking)."""
+
+    def __init__(self):
+        self.prompts = []
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.prompts.append(prompt)
+        if "budget is exhausted" in prompt:
+            return {"thought": "already on the wiki page",
+                    "action": "send_msg_to_user('done: on the wiki page')"}
+        return {"thought": "go to wiki", "action": "click('24')"}
+
+
+def test_wrapup_call_converts_arrived_but_undeclared_into_success():
+    llm = _ArrivesButKeepsClickingLLM()
+    solver = Solver(llm, max_steps=15)
+
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(
+        _NavOnceBrowser(), "[NAV] Go to the Wiki page")
+
+    assert success is True
+    assert infeasible is False
+    assert steps[-1].action.startswith("send_msg_to_user")
+
+
+def test_history_lines_carry_outcome_annotations():
+    llm = _ArrivesButKeepsClickingLLM()
+    solver = Solver(llm, max_steps=15)
+    solver.solve(_NavOnceBrowser(), "[NAV] Go to the Wiki page")
+
+    # the 2nd action-loop prompt must show the first click actually navigated
+    assert any("click('24') -> now at http://x/wiki" in p for p in llm.prompts)
+    # and later repeats must be visibly inert
+    assert any("click('24') -> no change" in p for p in llm.prompts)
+
+
+class _InfeasibleLLM:
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        return {"thought": "requires admin rights",
+                "action": "report_infeasible('requires admin rights')"}
+
+
+def test_report_infeasible_ends_episode_without_acting():
+    browser = _FakeBrowser()
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = Solver(
+        _InfeasibleLLM()).solve(browser, "goal")
+
+    assert infeasible is True
+    assert success is False
+    assert len(steps) == 1
+    assert browser.acted == []   # report_infeasible is never sent to the browser
+
+
+def test_no_wrapup_for_predicate_goals():
+    """GOAL tasks are verified by reached(); the wrap-up call must not fire."""
+    llm = _StubbornRepeatLLM()
+    solver = Solver(llm, max_steps=15)
+
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(
+        _FakeBrowser(), "goal", goal_predicate="order_confirmed")
+
+    assert success is False
+    assert llm.calls == Solver._MAX_REPEATS   # no +1: wrap-up skipped

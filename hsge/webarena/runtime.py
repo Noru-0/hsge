@@ -419,7 +419,8 @@ class WebArenaExplorer:
                 for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64):
                     episode_id = f"ep_{self.episode:04d}"
                     browser.reset()
-                    steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(browser, task)
+                    (steps, obs_texts, obs_screenshots, final_obs, success,
+                     _infeasible) = self.solver.solve(browser, task)
                     self._record(task, steps, obs_texts, obs_screenshots, success, difficulty=1, tag="LOCAL")
                     task_stats["LOCAL"]["success" if success else "fail"] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "LOCAL", "task": task,
@@ -446,7 +447,8 @@ class WebArenaExplorer:
                 if gt:
                     episode_id = f"ep_{self.episode:04d}"
                     browser.reset()
-                    steps, obs_texts, obs_screenshots, final_obs, success = self.solver.solve(
+                    (steps, obs_texts, obs_screenshots, final_obs, success,
+                     _infeasible) = self.solver.solve(
                         browser, gt["goal"], goal_predicate=self.terminal_goal)
                     self._record(gt["goal"], steps, obs_texts, obs_screenshots, success,
                                  difficulty=gt["difficulty"], tag="GOAL")

@@ -15,7 +15,9 @@ from .predicates import reached
 
 ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
                "fill('bid','text'), select_option('bid','opt'), goto('url'), "
-               "go_back(), send_msg_to_user('done message').")
+               "go_back(), send_msg_to_user('done message'), "
+               "report_infeasible('reason') -- report_infeasible ONLY when the "
+               "task cannot be done on this site/page.")
 
 EXPLORER_SYS = (
     "PROPOSE concrete, feasible tasks a typical user could do on THIS page. "
@@ -54,7 +56,10 @@ SOLVER_SYS = (
     "{\"thought\": \"...\", \"action\": \"<one action>\"}. "
     "Examples: {\"thought\": \"Open the product\", \"action\": \"click('12')\"} ; "
     "{\"thought\": \"Goal met\", \"action\": \"send_msg_to_user('done: price is $19')\"}. "
-    "Call send_msg_to_user ONLY when the goal is fully achieved.")
+    "Call send_msg_to_user ONLY when the goal is fully achieved."
+    " For 'go to page X' goals: once the URL/page has changed to the requested "
+    "destination the goal is DONE -- call send_msg_to_user immediately; do NOT "
+    "click the same link again.")
 
 
 READONLY_NOTE = ("\nREAD-ONLY MODE: propose ONLY tasks with type INFO or NAV. Do NOT "
@@ -215,16 +220,18 @@ class Solver:
     def solve(self, browser, goal: str, goal_predicate: str | None = None):
         """Drive the browser toward `goal`.
 
-        Returns (steps, obs_texts, obs_screenshots, final_obs, success).
+        Returns (steps, obs_texts, obs_screenshots, final_obs, success, infeasible).
         """
         steps: list[Step] = []
         obs_texts: list[str] = []
         obs_screenshots: list[str | None] = []
         history: list[str] = []
+        outcomes: list[str] = []     # human-readable result of history[i]
         progressed: list[bool] = []  # did url/axtree change as a result of history[i]?
         obs = browser.observation()
         last_error = ""
         success = False
+        exhausted = True   # loop ended by budget/hard-stop, not by a terminal action
         for _ in range(self.max_steps):
             streak = self._stuck_streak(history, progressed)
             if streak >= self._MAX_REPEATS:
@@ -249,8 +256,9 @@ class Solver:
                     "repeating it again will not help. If the goal is already achieved, "
                     "call send_msg_to_user(...) now instead. Otherwise choose a "
                     "genuinely different action/target.")
+            recent = [f"- {h} -> {o}" for h, o in zip(history[-6:], outcomes[-6:])]
             prompt = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n"
-                      + ("\n".join(f"- {h}" for h in history[-6:]) or "(none)")
+                      + ("\n".join(recent) or "(none)")
                       + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
                       + repeat_warning
                       + f"\n\nURL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}")
@@ -269,7 +277,9 @@ class Solver:
                               axtree=obs["axtree"]))
             obs_texts.append(obs["axtree"])
             obs_screenshots.append(screenshot_b64)
-            if not action or action.startswith("send_msg_to_user"):
+            if (not action or action.startswith("send_msg_to_user")
+                    or action.startswith("report_infeasible")):
+                exhausted = False
                 break
             pre_url, pre_axtree = obs["url"], obs["axtree"]
             try:
@@ -281,13 +291,47 @@ class Solver:
                 steps[-1].obs_summary += f" [action error: {last_error}]"
                 continue
             history.append(action)
+            if obs["url"] != pre_url:
+                outcomes.append(f"now at {obs['url']}")
+            elif obs["axtree"] != pre_axtree:
+                outcomes.append("page changed")
+            else:
+                outcomes.append("no change")
             progressed.append(obs["url"] != pre_url or obs["axtree"] != pre_axtree)
             if getattr(browser, "terminated", False):
+                exhausted = False
                 break
             if goal_predicate and reached(goal_predicate, obs["url"], obs["axtree"]):
                 success = True
+                exhausted = False
                 break
+
+        if exhausted and goal_predicate is None and steps:
+            # One last chance: real runs (wa_run_07) showed the dominant NAV
+            # failure is arriving at the right page and then looping on the
+            # same sitewide nav link until the budget dies -- achieved, but
+            # never declared. Ask once, accept ONLY a terminal action, never
+            # execute it in the browser.
+            recent = [f"- {h} -> {o}" for h, o in zip(history, outcomes)]
+            wrap_prompt = (f"GOAL: {goal}\n\nACTIONS TAKEN:\n"
+                           + ("\n".join(recent) or "(none)")
+                           + f"\n\nURL: {obs['url']}\n\nPAGE:\n{obs['axtree'][:6000]}"
+                           + "\n\nYour action budget is exhausted. If the goal has "
+                             "ALREADY been achieved (e.g. you are on the requested "
+                             "page), call send_msg_to_user('done: ...') NOW. If the "
+                             "goal cannot be achieved, call report_infeasible('why'). "
+                             "Answer with one of those two actions only.")
+            out = self.llm.complete_json(SOLVER_SYS, wrap_prompt)
+            action = (out.get("action") or "").strip()
+            if action.startswith("send_msg_to_user") or action.startswith("report_infeasible"):
+                steps.append(Step(action=action, url=obs["url"],
+                                  obs_summary=str(out.get("thought", ""))[:100],
+                                  axtree=obs["axtree"]))
+                obs_texts.append(obs["axtree"])
+                obs_screenshots.append(None)
+
+        infeasible = bool(steps) and steps[-1].action.startswith("report_infeasible")
         # success for non-predicate goals = agent declared done without error
         if goal_predicate is None and steps and steps[-1].action.startswith("send_msg_to_user"):
             success = True
-        return steps, obs_texts, obs_screenshots, obs, success
+        return steps, obs_texts, obs_screenshots, obs, success, infeasible
