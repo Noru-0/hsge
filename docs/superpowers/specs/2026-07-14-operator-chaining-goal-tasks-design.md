@@ -54,16 +54,28 @@ def induce_operator(llm, card, boundary_obs,
                     known_predicates: list[str] | None = None) -> dict:
 ```
 
-- Payload gains `"known_predicates": [...]` — the registry's existing labels,
-  capped at the **50 most recent** (prompt-length bound; vocabulary grows slowly:
-  10 labels after 62 nodes in run 09).
+- Payload gains `"known_predicates": [...]` — a **mixed selection of up to 50**
+  of the registry's existing labels: the **25 most frequently used** (by how many
+  times `canonical()` resolved to that id — keeps the core vocabulary that
+  foundational operators share) **+ the 25 most recent** (keeps new concepts
+  visible), deduplicated. Recent-only selection would "forget" foundational
+  predicates once the vocabulary outgrows the cap, prompting the LLM to re-coin
+  phrases for old concepts.
+- `PredicateRegistry` gains a usage counter (`self.counts: dict[int, int]`,
+  incremented on every `canonical()` call) and a selector:
+
+  ```python
+  def vocabulary(self, max_frequent: int = 25, max_recent: int = 25) -> list[str]:
+      """Labels for prompt context: most-used ids first, then most recent,
+      deduplicated, capped at max_frequent + max_recent."""
+  ```
 - `_SYS` gains one rule: *"A list of KNOWN predicates from previously induced
   operators may be provided. If a precondition or effect you want to state is
   semantically equivalent to a known predicate, you MUST reuse that predicate's
   exact text verbatim instead of rephrasing it. Only coin a new phrase when no
   known predicate matches."*
 - `runtime._promote_skill_to_operator` passes
-  `known_predicates=list(self.registry.labels.values())`.
+  `known_predicates=self.registry.vocabulary()`.
 - `PredicateRegistry` is unchanged — cosine 0.6 remains as fallback dedup for
   the cases where the LLM doesn't comply.
 
@@ -83,7 +95,12 @@ if not eff:
 - A skill whose only "effects" restate its preconditions (typical for INFO skills
   that read state rather than change it) does not become an operator.
 - Mixed case: novel effects survive the subtraction; only the tautological subset
-  is dropped.
+  is dropped. The `operator_induced` log event gains an `effects_dropped` field
+  (the tautological subset, canonical ids) so mixed-case promotions are auditable.
+  **Known residual risk (monitor, don't fix yet):** a surviving novel effect can
+  still be semantically trivial (e.g. a hover/focus state change), producing
+  low-value chains. Audit `operator_rejected` + `effects_dropped` on the next
+  real run before deciding whether a semantic-triviality filter is needed.
 - The grounding check (`verify_operator_grounding`) **stays observation-only** —
   the 2026-07-06 design decision is not reversed here. Using `effect_confirmed`
   as a gate is explicitly deferred.
@@ -93,11 +110,15 @@ if not eff:
 New method on `hsge/operators.py::OperatorGraph`:
 
 ```python
-def all_chains(self, min_len: int = 2) -> list[list[str]]:
-    """Every simple path of >= min_len operators over effect->precondition
+def all_chains(self, min_len: int = 2, max_len: int = 6,
+               max_paths: int = 200) -> list[list[str]]:
+    """Simple paths of min_len..max_len operators over effect->precondition
     edges (A -> B iff effects(A) & preconditions(B)). DFS with per-path
-    visited set (cycle-safe). The graph is small (tens of operators), so
-    exhaustive enumeration is fine."""
+    visited set (cycle-safe). max_len and max_paths are circuit breakers:
+    today's graphs are tiny (tens of operators), but once §1 fixes predicate
+    fragmentation the graph becomes densely connected and unbounded
+    simple-path enumeration is O(V!) in the worst case — DFS stops descending
+    at max_len and returns as soon as max_paths chains are collected."""
 ```
 
 `runtime._goal_task()` is rewritten:
@@ -146,11 +167,15 @@ the deterministic terminal path, self-graded repeats mostly duplicate data).
 ### §5 Testing (mock, deterministic)
 
 - **Induction:** payload carries `known_predicates` (and omits it when not given);
-  `_SYS` contains the verbatim-reuse rule; cap at 50 respected.
+  `_SYS` contains the verbatim-reuse rule.
+- **Registry vocabulary:** `counts` increments per `canonical()` call;
+  `vocabulary()` returns most-frequent first + most-recent, deduplicated, capped.
 - **Tautology gate:** eff ⊆ pre → not promoted + `operator_rejected` logged;
-  mixed eff → novel subset survives; existing empty-eff early return preserved.
+  mixed eff → novel subset survives and `effects_dropped` is logged; existing
+  empty-eff early return preserved.
 - **`all_chains`:** correct enumeration on a synthetic 4-op graph (linear chain,
-  branch, cycle) with `min_len` respected; cycle-safe.
+  branch, cycle) with `min_len` respected; cycle-safe; `max_len` stops descent;
+  `max_paths` bounds the result count.
 - **`_goal_task`:** (a) shallow graph + no terminal_goal → `[]`; (b) shallow graph
   + terminal_goal + plannable → legacy terminal task; (c) deep graph → depth tasks
   with generated instruction containing init URL + both card descriptions,
