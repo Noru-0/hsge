@@ -25,6 +25,11 @@ _SYS = (
     "Keep each predicate a terse phrase (e.g. 'search results are shown', 'an "
     "item is in the cart'). Mark terminal=true only if an effect is a final/"
     "transactional state (order placed, purchase confirmed). "
+    "A list of KNOWN predicates from previously induced operators may be "
+    "provided. If a precondition or effect you want to state is semantically "
+    "equivalent to a known predicate, you MUST reuse that predicate's exact "
+    "text verbatim instead of rephrasing it. Only coin a new phrase when no "
+    "known predicate matches. "
     'Return JSON {"preconditions": ["..."], "effects": ["..."], "terminal": bool}.'
 )
 
@@ -35,11 +40,16 @@ def induce_operator(
     llm: LLM,
     card: SkillCard,
     boundary_obs: list[tuple[str, str]],
+    known_predicates: list[str] | None = None,
 ) -> dict:
     """Return {"preconditions": [NL...], "effects": [NL...], "terminal": bool}.
 
     `boundary_obs` is a list of (start_axtree, end_axtree) pairs from a few
     members of the skill's cluster; only a couple are needed for context.
+    `known_predicates` is the registry's existing vocabulary (see
+    PredicateRegistry.vocabulary()) -- shown to the LLM so equivalent
+    predicates are reused verbatim instead of re-coined, which is what lets
+    operators share canonical ids and chain.
     """
     examples = [
         {"before": (start or "")[:_AXTREE_CAP], "after": (end or "")[:_AXTREE_CAP]}
@@ -53,6 +63,8 @@ def induce_operator(
         },
         "boundary_states": examples,
     }
+    if known_predicates:
+        payload["known_predicates"] = list(known_predicates)
     out = llm.complete_json(_SYS, f"<payload>{json.dumps(payload)}</payload>")
     return {
         "preconditions": [p for p in out.get("preconditions", []) if p],
