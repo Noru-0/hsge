@@ -1,6 +1,10 @@
 # Fine-tune Qwen3.5-9B on the HSGE solver dataset + eval on WebArena GitLab
 
 Design: `docs/superpowers/specs/2026-07-15-qwen35-9b-sft-gitlab-eval-design.md`.
+For a narrated walkthrough (why each step is shaped this way, gotchas hit
+along the way, and a two-machine parallel-eval technique) see
+`docs/14_vast_ai_training_eval_tutorial.md`. This file is the terse command
+reference for the same pipeline.
 
 Everything below runs on a vast.ai GPU instance (tested: 1× A100-SXM4-80GB,
 200 GB disk). The only external dependency is a WebArena **GitLab** instance

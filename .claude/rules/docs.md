@@ -22,4 +22,10 @@ observation-progress hard stop),
 why it stopped at 57/500 nodes — frontier starvation from the documented
 "mines navigated URLs, not `<a href>`s" gap, not a bug — plus a quality
 assessment of that run's induced operators using the grounding-check feature,
-showing half were tautological or ungrounded).
+showing half were tautological or ungrounded), `14_vast_ai_training_eval_tutorial.md`
+(step-by-step tutorial: LoRA fine-tuning + WebArena eval on rented vast.ai GPUs —
+venv-isolation rationale, template/thinking-mode gotchas, official-benchmark
+eval via BrowserGym, and a two-machine parallel-eval technique for safely
+running a second eval sweep against a shared live WebArena instance while a
+first sweep is still in progress). See also `training/README.md` for the terse
+command reference covering the same pipeline.
