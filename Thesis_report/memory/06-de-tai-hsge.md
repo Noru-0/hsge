@@ -22,6 +22,12 @@ File này gom sẵn nguyên liệu từ repo để khi viết không phải đà
   data-collection engine; đích đến là SLM làm web agent. Phát biểu bài toán C1
   và phạm vi C3 xoay quanh trục này (skill/operator graph là phương tiện sinh
   semantic task + trajectory chất lượng, không phải đích tự thân).
+- **Thuật ngữ chốt (2026-07-17)**: *low-level task* = task theo trang do
+  PageExplorer đề xuất (INFO/NAV/MOD) — nguyên liệu exploration; *semantic
+  task* = task sinh từ **Operator Graph** (chain operator → composed goal
+  task). Không gọi task của PageExplorer là semantic task.
+- **Phạm vi đánh giá**: official WebArena trên **4 site: Shopping, Shopping
+  Admin, GitLab, Reddit** (GitLab đã có số; 3 site còn lại bổ sung sau).
 - **Thực nghiệm bổ sung**: còn ~25 ngày (đến ~2026-08-11), user nói sẽ kịp chạy
   thêm — ưu tiên theo 05-bai-hoc-review.md: lặp eval nhiều lần/seed để có
   thống kê (fix P0-1), có thể thêm ablation (train từ data khám-phá-graph vs.
@@ -88,5 +94,7 @@ WebArena thật (BrowserGym).
 3. Cấu trúc chương: **đã chọn 6 chương** (dàn ý v1 ở file 07) vì user muốn
    nhấn mạnh Discussion thành chương riêng — cần thầy Vũ xác nhận (slide Khoa
    của thầy mô tả khung 5 chương nhưng không cấm tách Discussion).
-4. Danh sách thực nghiệm bổ sung trong 25 ngày: lặp eval để có mean±CI?
-   ablation graph-explore vs. flat baseline? thêm site ngoài GitLab?
+4. Danh sách thực nghiệm bổ sung trong 25 ngày — đã rõ một phần: eval 4 site
+   (Shopping/Shopping Admin/GitLab/Reddit) là bắt buộc; còn cân nhắc: lặp
+   eval để có mean±CI (ưu tiên #1 theo 05/P0-1), ablation graph-explore vs.
+   flat-explore, judge/reannotation on/off.

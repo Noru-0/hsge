@@ -12,9 +12,18 @@ Chương 6 (Conclusion)** viết đậm; Chương 4 dựng khung trước, các 
 
 Narrative xuyên suốt (nhắc lại ở Abstract, C1, C6): *LLM lớn làm web agent tốt
 nhưng đắt; SLM rẻ nhưng yếu vì thiếu dữ liệu huấn luyện chất lượng; chúng tôi
-xây pipeline khám phá website dựa trên GRAPH, tự phát hiện SEMANTIC TASK đã
-được kiểm chứng, tạo dataset SFT, và cho thấy SLM 9B được fine-tune cải thiện
-trên benchmark WebArena chính thức.*
+xây pipeline khám phá website dựa trên GRAPH — từ các LOW-LEVEL TASK theo trang
+tích lũy thành skill/operator graph, rồi compose graph đó thành các SEMANTIC
+TASK dài hạn đã kiểm chứng — tạo dataset SFT, và cho thấy SLM 9B được
+fine-tune cải thiện trên benchmark WebArena chính thức.*
+
+**Thuật ngữ chốt (user, 2026-07-17)** — dùng nhất quán toàn báo cáo:
+- **Low-level task**: task theo trang do PageExplorer (LLM) đề xuất khi khám
+  phá (INFO/NAV/MOD) — nguyên liệu để thu trajectory và phát hiện skill,
+  KHÔNG gọi đây là semantic task.
+- **Semantic task**: task được **sinh từ Operator Graph** — chain ≥2 operator
+  (effect→precondition) compose thành goal task dài hạn, có ngữ nghĩa, có
+  instruction sinh tự động và có cơ chế verify. Đây là đóng góp trung tâm.
 
 ---
 
@@ -50,15 +59,18 @@ Roadmap đánh số đầu chương; transition cuối chương (áp dụng cho 
   (iv) task dài hạn cần compose nhiều kỹ năng; (v) giới hạn của SLM.
 - **1.4 Objectives and contributions** — liệt kê khớp chuỗi thách thức:
   (1) pipeline khám phá dựa trên **two-level graph** (skill → operator →
-  chained goal task); (2) cơ chế sinh + kiểm chứng **semantic task** (LLM
-  proposal, judge, thought reannotation); (3) dataset SFT + SLM Qwen3.5-9B
+  chained goal task); (2) cơ chế sinh task hai tầng — **low-level task** (LLM
+  đề xuất theo trang) nuôi exploration, **semantic task** (compose từ operator
+  graph) tạo dữ liệu dài hạn — kèm kiểm chứng (judge, thought reannotation);
+  (3) dataset SFT + SLM Qwen3.5-9B
   fine-tuned; (4) đánh giá trên WebArena GitLab chính thức; (5) báo cáo kinh
   nghiệm & best practices vận hành agent trên site thật. Contribution box:
   phân tách rõ cái có sẵn (WebArena, BrowserGym, LLaMA-Factory, Qwen) vs. cái
   đề tài tạo ra.
-- **1.5 Scope** — 1 site family (WebArena self-host, GitLab là site đánh giá);
-  SFT/LoRA (không RL); SLM cỡ 9B; tiếng Anh; không xử lý CAPTCHA/login ngoài
-  phạm vi benchmark.
+- **1.5 Scope** — môi trường WebArena self-host; **đánh giá trên 4 site:
+  Shopping, Shopping Admin, GitLab, Reddit** (GitLab đã có kết quả, 3 site còn
+  lại bổ sung sau); SFT/LoRA (không RL); SLM cỡ 9B; tiếng Anh; không xử lý
+  CAPTCHA/login ngoài phạm vi benchmark (login dùng cached session chuẩn).
 - **1.6 Thesis organization** — kèm **hình Big Picture** (pipeline tổng quan
   từ website → graph exploration → semantic tasks → dataset → SLM → eval).
 
@@ -99,8 +111,9 @@ giả; hạn chế code thật; link repo để footnote.
   Exploration loop → Skill discovery → Operator graph → Goal-task generation →
   Data curation → SFT. Ba design principles: (P1) *verify trước khi tái sử
   dụng* (skill/task/trajectory đều qua cổng kiểm chứng); (P2) *graph thay vì
-  flat* (hai tầng: trang–trạng thái & kỹ năng–operator); (P3) *semantic task
-  do LLM đề xuất, có phân loại và khử trùng lặp*.
+  flat* (hai tầng: trang–trạng thái & kỹ năng–operator); (P3) *task hai tầng*:
+  low-level task (LLM đề xuất theo trang) để khám phá và thu skill; semantic
+  task (compose từ operator graph) để tạo dữ liệu dài hạn có ngữ nghĩa.
 - **3.2 Two-level graph formalism** — định nghĩa & ký hiệu: low-level graph
   (page states + trajectory edges); high-level graph (skill = option ⟨I, π, β⟩,
   initiation/effect edges, skill→skill composition edges); operator =
@@ -111,10 +124,12 @@ giả; hạn chế code thật; link repo để footnote.
     tier 1 = href mining) + **URL templating** với per-template cap (chống
     flood trang trùng dạng) + content dedup bằng axtree hash. Mã giả frontier
     loop. Lý do thiết kế: frontier starvation từ run thật (kể ở C5).
-  - **Semantic task proposal** (PageExplorer): LLM đề xuất task cụ thể theo
+  - **Low-level task proposal** (PageExplorer): LLM đề xuất task cụ thể theo
     trang, phân loại cấu trúc INFO/NAV/MOD, negative context + dedup sitewide,
-    read-only mode, thứ tự cắt (INFO bị cắt trước). Đây là phần "SEMANTIC
-    TASK" — nêu rõ vì sao task LLM-proposed ≠ random walk.
+    read-only mode, thứ tự cắt (INFO bị cắt trước). Nêu rõ vì sao task
+    LLM-proposed ≠ random walk, nhưng cũng nói rõ giới hạn: đây mới là task
+    theo trang, ngắn hạn — nguyên liệu cho skill discovery, chưa phải
+    semantic task (được sinh ở 3.5).
   - **Solver**: action space 10 hành động, history có outcome, phát hiện kẹt
     (same-target + no-progress → warn → hard stop), wrap-up call, infeasible
     là kết cục hạng nhất. Mã giả solve loop.
@@ -128,9 +143,11 @@ giả; hạn chế code thật; link repo để footnote.
   gate `eff − pre`); predicate registry (canonical id, threshold, vì sao
   embedding-only thất bại — số liệu 0.570/0.606 từ wa_run_09); BFS planning;
   **operator chaining** (`all_chains` DFS bounded) → mỗi chain ≥2 operator
-  thành 1 composed GOAL task với instruction sinh tự động — đây chính là cơ
-  chế tạo **long-horizon semantic task**. Verify: deterministic khi có
-  terminal predicate, self-graded + offline judge khi không.
+  thành 1 composed GOAL task với instruction sinh tự động — **đây chính là
+  SEMANTIC TASK** theo định nghĩa của đề tài (mục trọng tâm nhất của C3, đặt
+  tiêu đề mục nêu bật điều đó, vd "Semantic task generation via operator
+  chaining"). Verify: deterministic khi có terminal predicate, self-graded +
+  offline judge khi không.
 - **3.6 Data curation for SFT** — 3 pass offline: judge (LLM re-verify các
   episode tự nhận thành công); thought reannotation (state/reflection/subgoal/
   completion-check, replay segmentation offline; subgoal chỉ ở target, không ở
@@ -158,16 +175,20 @@ giả; hạn chế code thật; link repo để footnote.
   task/skill tiêu biểu.
 - **4.3 Fine-tuning results** — loss (0.32 train / 0.24 eval), thời gian/chi
   phí (bảng từ docs/14).
-- **4.4 Main evaluation: official WebArena GitLab (180 tasks)** — protocol
-  (kể cả two-machine read/write split + reset giữa sweep); kết quả hiện có:
-  baseline 10/180 (5.56%) vs finetuned 12/180 (6.67%), +1.1pp (~20% relative).
-  **Trình bày là tín hiệu định hướng** — hedge theo 05/P0-1, ghi rõ n=1.
+- **4.4 Main evaluation: official WebArena, 4 sites** — đánh giá trên
+  **Shopping, Shopping Admin, GitLab, Reddit** (bảng kết quả per-site + tổng).
+  Protocol chung (kể cả two-machine read/write split + reset giữa sweep).
+  Hiện có: **GitLab** baseline 10/180 (5.56%) vs finetuned 12/180 (6.67%),
+  +1.1pp (~20% relative); **[TO ADD]** kết quả Shopping / Shopping Admin /
+  Reddit. **Trình bày là tín hiệu định hướng** — hedge theo 05/P0-1, ghi rõ
+  n=1 (chừng nào chưa có 4.5).
 - **4.5 [TO ADD] Statistical repeats** — chạy lặp ≥3–5 lần (hoặc nhiều seed)
   cho baseline & finetuned → mean ± SD, 95% CI, test phi tham số. Ưu tiên #1.
 - **4.6 [TO ADD] Ablations** — (a) **graph-explore data vs. flat-explore
   data** (cùng budget LLM/episode — thực nghiệm "đinh" chứng minh giá trị
   pipeline); (b) có/không judge pass; (c) có/không thought reannotation;
-  (d) [nếu kịp] site thứ hai (reddit/shopping) để xem transfer.
+  (d) phân tích cross-site từ kết quả 4 site (train data từ site nào giúp
+  site nào — thay cho ablation "site thứ hai" cũ).
 - **4.7 Analysis** — breakdown theo loại task, ví dụ thành công/thất bại định
   tính, failure taxonomy (nối sang C5).
 
