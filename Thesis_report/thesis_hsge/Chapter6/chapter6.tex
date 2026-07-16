@@ -2,26 +2,139 @@
 \label{ch:conclusion}
 
 This chapter (1) summarizes the products and contributions of the thesis,
-(2) compares the achieved results against the initial objectives, and
-(3) outlines directions for future work.
+(2) compares the achieved results against the objectives set in
+Chapter~\ref{ch:intro}, and (3) outlines directions for future work.
 
 \section{Summary of Contributions and Products}
 \label{sec:conc-summary}
-% TODO: (1) the HSGE pipeline (source code, mock + real backends);
-% (2) the semantic-task + trajectory SFT dataset; (3) the fine-tuned
-% Qwen3.5-9B model; (4) official benchmark results on four WebArena sites;
-% (5) the engineering experience report and reproduction tutorial.
-% Restate the main message. Focus on strengths.
-\textit{[To be written — see outline 07, section 6.1.]}
+
+This thesis set out to make small language models viable as web agents by
+attacking their binding constraint: the absence of high-quality,
+task-annotated interaction data. Our answer is HSGE, a pipeline that turns
+an unannotated website into training data by \emph{exploring with
+structure}. Rather than wandering, the pipeline accumulates a two-level
+graph of what the site affords --- verified skills, lifted into planning
+operators with explicit preconditions and effects --- and then composes that
+graph, by chaining operators, into verified long-horizon \emph{semantic
+tasks} that no single page would suggest. Every trajectory the pipeline
+collects passes automated quality gates before reaching the model, and the
+resulting dataset trains the model on exactly the prompts it will see in
+deployment.
+
+The work produced five concrete artifacts:
+
+\begin{enumerate}
+  \item \textbf{The HSGE pipeline}: an implementation of graph-guided
+  exploration, skill discovery and verification, operator induction with
+  vocabulary-aware predicate canonicalization, and semantic task generation
+  --- runnable end to end against both deterministic mock backends (for
+  testing) and live websites through a real browser.
+  \item \textbf{A curation stack and dataset}: an independent episode judge,
+  a thought re-annotation pass, and a prompt-parity dataset builder, together
+  with the curated fine-tuning dataset collected from self-hosted WebArena
+  sites.
+  \item \textbf{A fine-tuned web-agent SLM}: Qwen3.5-9B adapted with LoRA on
+  the collected data, served locally with the same thinking-disabled
+  configuration it was trained under.
+  \item \textbf{An official benchmark evaluation}: a harness that evaluates
+  base and fine-tuned models on the official WebArena task suites by reusing
+  the live agent's exact prompt, with results on GitLab showing the
+  fine-tuned model improving over its base from 5.56\% to 6.67\% task
+  success from only 352 training examples.
+  % TODO: update with the four-site results once Sections 4.4-4.6 land.
+  \item \textbf{An engineering experience report}: the distilled lessons and
+  best practices of Chapter~\ref{ch:discussion}, together with a
+  step-by-step reproduction guide (Appendix~\ref{app:repro}).
+\end{enumerate}
+
+Beyond the artifacts, the thesis argues for --- and, within its scope,
+demonstrates --- a general recipe: \emph{verify before reuse, structure over
+flat memory, and a two-tier task hierarchy} in which cheap page-local
+proposals fuel exploration while the graph, not the page, authors the
+training goals that matter.
 
 \section{Objectives versus Achievements}
 \label{sec:conc-objectives}
-% TODO: table mapping each objective from Section 1.4 to what was achieved.
-\textit{[To be written — see outline 07, section 6.2.]}
+
+Table~\ref{tab:objectives} revisits the five objectives of
+Section~\ref{sec:intro-contrib}.
+
+\begin{table}[H]
+\centering
+\caption[Objectives of the thesis and their outcomes]{Objectives
+(Section~\ref{sec:intro-contrib}) and their outcomes.}
+\label{tab:objectives}
+\small
+\begin{tabular}{L{1.0cm} L{5.6cm} L{6.4cm}}
+\toprule
+ & \textbf{Objective} & \textbf{Outcome} \\
+\midrule
+O1 & Autonomous, robust, safe trajectory collection from an unannotated
+website & Achieved: two-tier frontier with template caps, fail-soft browsing,
+fail-closed safety modes; multi-hour unattended runs on live sites
+(Sections~\ref{sec:method-exploration}, \ref{sec:exp-data}) \\
+\addlinespace
+O2 & Verified long-horizon semantic tasks from a graph & Achieved: skill
+discovery with recurrence-based admission; operator induction with
+anti-tautology gating; chain-based goal generation with deterministic or
+judged verification (Section~\ref{sec:method-semantic}) \\
+\addlinespace
+O3 & Automated curation under prompt parity & Achieved: judge and
+re-annotation passes; dataset builder importing the live prompt; error-step
+exclusion and curriculum ordering (Section~\ref{sec:method-data}) \\
+\addlinespace
+O4 & Fine-tune and officially evaluate an SLM & Achieved on GitLab
+(5.56\%$\rightarrow$6.67\% from 352 examples); evaluation on the remaining
+three sites and statistical repeats in progress
+(Sections~\ref{sec:exp-main}--\ref{sec:exp-stats}) \\
+\addlinespace
+O5 & Distill engineering lessons & Achieved: ten distilled practices from
+documented incidents across exploration, agent control, induction, and
+training (Chapter~\ref{ch:discussion}) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Future Directions}
 \label{sec:conc-future}
-% TODO: data scaling across sites (transfer machinery exists); RL/DPO on
-% verified trajectories; smaller models (<=3B); online skill retrieval at
-% inference time; broader benchmarks.
-\textit{[To be written — see outline 07, section 6.3.]}
+
+The results point to several natural continuations.
+
+\textbf{Scaling data collection.} The clearest lever identified in
+Chapter~\ref{ch:discussion} is data volume and breadth. The pipeline is
+site-agnostic by construction, and it already includes transfer machinery
+for re-grounding a discovered skill on a new website; running collection
+across many sites --- and letting skills transfer between them --- is the
+direct path to a larger, more diverse corpus.
+
+\textbf{Learning from verification signals.} The pipeline's quality gates
+produce more than a filtered dataset: they produce \emph{labels} ---
+verified successes, judged failures, and infeasibility reports. These are
+exactly the ingredients of preference optimization and reinforcement
+learning, which could extract training signal from the failed trajectories
+that supervised fine-tuning currently discards.
+
+\textbf{Smaller models.} A 9B model is small by frontier standards but not
+by deployment ones. Distilling the fine-tuned agent's behavior into models
+in the 1--3B range would test how far the data-quality-first recipe carries
+as capacity shrinks.
+
+\textbf{Skills at inference time.} In this thesis, the skill graph shapes
+\emph{training data} only; the deployed model receives no runtime hints. The
+graph could instead be queried at inference time --- retrieving relevant
+skills or subgoals as context --- turning the same artifact into both a data
+generator and a runtime memory.
+
+\textbf{Broader and stricter evaluation.} Beyond completing the four-site
+evaluation with statistical repeats, extending to benchmark families beyond
+WebArena, and to constructs finer than binary success, would sharpen the
+external and construct validity discussed in
+Section~\ref{sec:disc-validity}.
+
+\vspace{1em}
+\noindent
+Web automation will belong to the models that operators can afford to run
+and are free to improve. This thesis contributes a way to give those small
+models what they currently lack --- not more parameters, but better
+demonstrations, manufactured by a pipeline that explores with structure and
+verifies what it teaches.

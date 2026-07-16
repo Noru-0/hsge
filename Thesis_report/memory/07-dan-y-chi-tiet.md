@@ -9,12 +9,25 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
 - ✅ **Chapter 5 (Discussion)**: đã viết trọn bản nháp đầu (7 mục, format
   problem→diagnosis→fix→lesson; 5.1 interpret kết quả có TODO refresh khi có
   thêm site; bảng best practices 10 dòng; threats to validity 3 loại).
+- ✅ **Chapter 1 (Introduction)**: đã viết trọn (hook developer/issue-tracker,
+  problem statement dạng Given/Produce/Without, 5 challenges ↔ 5 objectives
+  O1–O5, bảng contributions "existing vs ours", scope 4 site, hình roadmap
+  Big Picture gắn số chương). Số liệu WebArena 14%/78% có TODO(verify).
+- ✅ **Chapter 6 (Conclusion)**: đã viết trọn (5 artifacts, bảng O1–O5 vs
+  outcomes — O4 ghi "in progress" cho 3 site còn lại, 5 hướng future work,
+  closing message). Có TODO cập nhật khi có kết quả 4 site.
 - ✅ Front matter: title (bìa tạm — chờ chốt tên tiếng Anh), acknowledgments,
   chapter summaries, glossary, **abstract đã có bản nháp đầy đủ**.
 - ✅ References/references.bib: 13 entry nền (một số đánh dấu VERIFY).
-- ⬜ Chapter 1, 2, 4, 6: mới có skeleton (roadmap + section stub + TODO
-  comment trỏ về dàn ý này). Thứ tự viết tiếp: **C1+C6 → C2 → C4**.
+- ⬜ Chapter 2, 4: mới có skeleton (roadmap + section stub + TODO comment trỏ
+  về dàn ý này). Thứ tự viết tiếp: **C2 → C4** (C2 cần vòng verify citation;
+  C4 điền số khi thực nghiệm bổ sung xong).
 - Build: `pdflatex → bibtex → pdflatex ×2` từ trong thesis_hsge/ (main.tex).
+  ⚠️ Sau khi THÊM citation mới phải chạy đủ chu trình sạch (rm aux/bbl →
+  4 lệnh trên), nếu không sẽ dính đúng lỗi "reference [0]" mà review mẫu
+  từng bắt (P0-6) — đã gặp và fix khi viết C1.
+- TikZ: không đặt tên style là `step` (key có sẵn của TikZ, gây lỗi
+  pgfkeys) — dùng `stage`.
 - Lưu ý khi viết C5 đã đổi 3 tiêu đề mục cho khỏi tràn dòng: 5.2 "Lessons
   from Exploring Live Websites", 5.3 "Structural Guardrails over Prompt
   Nudges", 5.4 "Lessons from Operator Induction".
