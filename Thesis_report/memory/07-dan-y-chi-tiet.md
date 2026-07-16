@@ -6,12 +6,18 @@ Bản LaTeX sống ở **`Thesis_report/thesis_hsge/`** (fork từ template, ti�
 Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
 - ✅ **Chapter 3 (Method)**: đã viết trọn bản nháp đầu (8 mục, hình pipeline
   TikZ, bảng action space, Algorithm frontier loop, bảng module).
+- ✅ **Chapter 5 (Discussion)**: đã viết trọn bản nháp đầu (7 mục, format
+  problem→diagnosis→fix→lesson; 5.1 interpret kết quả có TODO refresh khi có
+  thêm site; bảng best practices 10 dòng; threats to validity 3 loại).
 - ✅ Front matter: title (bìa tạm — chờ chốt tên tiếng Anh), acknowledgments,
   chapter summaries, glossary, **abstract đã có bản nháp đầy đủ**.
 - ✅ References/references.bib: 13 entry nền (một số đánh dấu VERIFY).
-- ⬜ Chapter 1, 2, 4, 5, 6: mới có skeleton (roadmap + section stub + TODO
-  comment trỏ về dàn ý này). Thứ tự viết tiếp: **C5 → C1+C6 → C2 → C4**.
+- ⬜ Chapter 1, 2, 4, 6: mới có skeleton (roadmap + section stub + TODO
+  comment trỏ về dàn ý này). Thứ tự viết tiếp: **C1+C6 → C2 → C4**.
 - Build: `pdflatex → bibtex → pdflatex ×2` từ trong thesis_hsge/ (main.tex).
+- Lưu ý khi viết C5 đã đổi 3 tiêu đề mục cho khỏi tràn dòng: 5.2 "Lessons
+  from Exploring Live Websites", 5.3 "Structural Guardrails over Prompt
+  Nudges", 5.4 "Lessons from Operator Induction".
 
 Đề tài: **Small Language Models for Web AI Agents** (tên tiếng Anh đề xuất,
 chờ chốt) — "Mô hình ngôn ngữ nhỏ cho tác nhân trí tuệ nhân tạo trên web".

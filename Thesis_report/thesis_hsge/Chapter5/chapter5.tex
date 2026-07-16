@@ -1,57 +1,340 @@
 \chapter{Discussion}
 \label{ch:discussion}
 
-This chapter (1) interprets the experimental results, then distills the
-engineering experience gained while building and running the pipeline into
-lessons on (2) exploring live websites, (3) guarding LLM agents structurally,
-(4) inducing high-quality operators, and (5) training and serving SLMs,
-before (6) summarizing best practices and (7) discussing threats to validity.
-
-% Writing rule: each lesson = real problem -> diagnosis -> fix -> general
-% lesson. Long details go to the appendix; keep key points here.
-% Source material: docs/10-14 session reports, .claude/memory/bugs.md.
+This chapter (1) interprets the experimental results of
+Chapter~\ref{ch:experiments}, then distills the engineering experience gained
+while building and operating the pipeline into lessons on (2) exploring live
+websites, (3) guarding LLM agents structurally rather than through prompt
+wording, (4) inducing high-quality planning operators, and (5) training and
+serving small language models, before (6) summarizing these lessons as best
+practices and (7) discussing threats to validity. Each lesson follows the
+same pattern: a problem actually encountered in our runs, its diagnosis, the
+fix, and the general principle we draw from it. Full incident details are
+collected in Appendix~\ref{app:runs}.
 
 \section{Interpreting the Results}
 \label{sec:disc-results}
-\textit{[To be written — see outline 07, section 5.1.]}
+
+% TODO: refresh this section once the remaining three sites and the
+% statistical repeats (Sections 4.5-4.6) are in.
+
+The headline number so far --- an improvement from 5.56\% to 6.67\% task
+success on the official GitLab suite --- deserves a careful reading rather
+than a triumphant one. In absolute terms the gain is small, and with one
+attempt per task it must be treated as a directional signal until the
+repeated runs of Section~\ref{sec:exp-stats} are complete. What makes the
+signal interesting is its cost profile: it was obtained from only 352
+training examples, collected autonomously from a website with no human
+annotation, and the fine-tuning itself took under half an hour on a single
+GPU. The pipeline, in other words, moved a small model in the right direction
+with a remarkably small amount of data; the open question is how far the
+trend continues as data collection scales, which the cross-site results of
+Section~\ref{sec:exp-main} will begin to answer.
+
+Three factors plausibly bound the current gain. First, dataset size: 352
+examples is two to three orders of magnitude below typical agent fine-tuning
+corpora, so the model sees each interaction pattern only a handful of times.
+Second, coverage: the training data was collected on a subset of site areas,
+while the benchmark draws tasks from the whole site. Third, the base model
+itself: a 9B-parameter model fine-tuned with supervised trajectories alone
+cannot be expected to recover capabilities --- long-horizon planning,
+self-correction --- that the trajectories only sparsely demonstrate. None of
+these factors indicts the pipeline design; all three point to data volume
+and breadth as the binding constraint, which is precisely the constraint the
+pipeline is built to relax.
+
+Equally important is what the end-to-end run \emph{demonstrated}: every stage
+--- exploration, discovery, operator chaining, curation, training, serving,
+and official evaluation --- executed against a real website without manual
+intervention, and the quality gates rejected data that would otherwise have
+polluted training (Section~\ref{sec:disc-slm}). The remainder of this chapter
+reports what it took to make that sentence true.
 
 \section{Lessons from Exploring Live Websites}
 \label{sec:disc-exploration}
-% TODO: frontier starvation -> href mining + template caps; 46% duplicate
-% task proposals -> dedup + negative context; flaky pages -> node-error
-% resilience; shared mutable state -> read-only mode, disciplined resets.
-\textit{[To be written — see outline 07, section 5.2.]}
+
+\subsection{Frontier starvation}
+
+\textbf{Problem.} An early exploration run on the Reddit-style site stalled
+at 57 of a budgeted 500 nodes: the frontier simply ran dry.
+\textbf{Diagnosis.} The frontier then grew only from URLs the solver happened
+to navigate to. Pages whose proposed tasks were all informational produced no
+navigation at all, so entire regions of the site were never queued ---
+exploration was hostage to which tasks the explorer happened to propose.
+\textbf{Fix.} Hyperlink mining was added as a second frontier tier, with URL
+templating and per-template caps to keep near-duplicate pages from flooding
+the queue (Section~\ref{sec:method-frontier}).
+\textbf{Lesson.} On a real website, \emph{reachability must not depend on
+task-driven behavior}. Structural signals (links) and behavioral signals
+(navigation) are complementary frontier sources, and the structural one needs
+explicit diversity controls because it arrives in bulk.
+
+\subsection{Task proposal collapse}
+
+\textbf{Problem.} In one production run, 46\% of all proposed tasks were
+near-identical across pages --- variations of ``go to the Forums page''
+re-proposed on nearly every node.
+\textbf{Diagnosis.} Every page of a site shares its global navigation menu,
+and an explorer prompted page-by-page has no memory of what it already
+proposed elsewhere.
+\textbf{Fix.} The explorer now persists for the whole run: recent proposals
+are echoed into its prompt as negative context, and near-duplicates are
+additionally dropped in code (Section~\ref{sec:method-lowlevel}).
+\textbf{Lesson.} Diversity of generated tasks is a \emph{run-level} property,
+not a page-level one; it must be enforced by state that outlives any single
+LLM call.
+
+\subsection{Unreliable pages}
+
+\textbf{Problem.} A single slow page --- a navigation timeout on one mined
+URL --- crashed an entire multi-hour exploration run.
+\textbf{Diagnosis.} Browser operations were implicitly trusted; one
+unhandled exception anywhere in node processing propagated to the top level.
+\textbf{Fix.} Every browser operation is now fail-soft: a node that cannot be
+opened is logged, recorded with its error, and skipped, while genuinely
+unexpected exceptions still abort the run loudly. Artifacts are persisted
+after every node, so even an aborted run leaves a consistent, resumable
+snapshot.
+\textbf{Lesson.} Treat every interaction with a live website as an
+operation that \emph{will} eventually fail, and decide per operation whether
+failure is survivable; make the run's progress durable at the finest
+granularity the budget allows.
+
+\subsection{Shared, mutable state}
+
+\textbf{Problem.} Benchmark websites are shared and stateful: a careless
+agent can pollute --- or destroy --- the environment other runs depend on.
+\textbf{Fix.} Three layers of discipline: a read-only mode that drops
+state-modifying tasks fail-closed (any task the explorer fails to classify is
+treated as modifying); a standing rule forbidding account-level destructive
+tasks regardless of mode; and, for evaluation on a live shared instance, an
+intent-based classification of benchmark tasks into read-only and
+write-mutating subsets so that two machines can sweep the same site
+concurrently without interfering (Section~\ref{sec:disc-slm}).
+\textbf{Lesson.} On shared infrastructure, safety must be
+\emph{fail-closed}: the burden of proof lies on a task being harmless, not on
+it being harmful.
 
 \section{Structural Guardrails over Prompt Nudges}
 \label{sec:disc-guardrails}
-% TODO: [TAG] convention failure -> structured output; stuck-loop warning
-% insufficient -> hard stop on same-target/no-progress; answer-leaking INFO
-% tasks; empty vision responses -> text-only retry.
-\textit{[To be written — see outline 07, section 5.3.]}
 
-\section{Verified Structure Beats Raw Scale in Operator Induction}
+A recurring theme of our runs is that instructing a model to behave is not
+the same as making the system behave. The incidents below each began as a
+prompt-level convention that a real model quietly violated, and each ended as
+a structural mechanism that does not depend on model obedience.
+
+\subsection{Tag conventions do not survive contact with real models}
+
+\textbf{Problem.} Task proposals were originally classified by a leading
+\texttt{[INFO]}/\texttt{[NAV]}/\texttt{[MOD]} tag that the explorer was
+instructed to emit. In a real run, 89\% of proposals carried no tag at all.
+\textbf{Diagnosis.} The model's natural tendency was to return the
+classification as a structured \texttt{type} field --- which the parser
+discarded --- rather than as a bracket inside a string. Worse, the safety
+check for modifying tasks was a literal substring test on \texttt{[MOD]}, so
+an untagged destructive task would have sailed through it.
+\textbf{Fix.} Proposals are now requested and parsed as structured objects
+with an explicit type field; anything unclassifiable is tagged
+\texttt{UNKNOWN} and dropped in read-only mode.
+\textbf{Lesson.} Ask models for \emph{structure}, not for formatting
+conventions inside free text --- and never build a safety check on a
+convention the model may not follow.
+
+\subsection{The stuck loop, in two iterations}
+
+\textbf{Problem.} Solvers wasted entire step budgets repeating an action that
+visibly did nothing --- in one recorded episode, clicking the same inert
+element for all fifteen steps.
+\textbf{Diagnosis and first fix.} We added a warning, injected into the
+prompt after two consecutive no-effect actions on the same target. The next
+real run falsified the fix: the model kept clicking with the warning present
+from the third call onward. It also revealed a subtlety --- the model
+sometimes retried a stuck dropdown with different-looking but equally wrong
+arguments, so matching identical action strings would miss the loop entirely.
+\textbf{Second fix.} The loop detector now keys on the \emph{target} acted
+on and on whether the observation changed; after a bounded number of
+no-progress repeats, the episode is terminated outright, spending no further
+LLM calls. Requiring ``no observable change'' keeps the guard from misfiring
+on legitimate sequences that reuse one element across changing pages.
+\textbf{Lesson.} A prompt warning is a suggestion; a budget is a mechanism.
+When a model demonstrably ignores the suggestion, escalate to a mechanism ---
+and validate the escalation on real behavior, not on the behavior the prompt
+requests.
+
+\subsection{Smaller incidents, same shape}
+
+Three further incidents followed the same pattern and received the same style
+of fix. Explorer-proposed information tasks sometimes contained their own
+answers (``find the post titled X''), which a solver can ``solve'' without
+learning anything; generation now instructs against it and leaky tasks are
+filtered. Vision-attached calls occasionally returned empty responses
+(upstream refusals); the agent retries once in text-only mode rather than
+failing the step. And episodes that exhausted their budget originally ended
+in an uninformative failure; they now receive one final text-only wrap-up
+call whose \emph{only} admissible outputs are a completion claim or an
+infeasibility report --- turning a silent timeout into a labeled outcome that
+the dataset can use.
+
+\section{Lessons from Operator Induction}
 \label{sec:disc-operators}
-% TODO: tautological operators (3/4 in wa_run_09) -> anti-tautology gate;
-% embedding-only synonym unification fails (0.570 < 0.6 < 0.606) ->
-% vocabulary-aware induction; grounding checks.
-\textit{[To be written — see outline 07, section 5.4.]}
 
-\section{Training and Serving SLMs: Pitfalls}
+The semantic-task mechanism of Section~\ref{sec:method-semantic} is only as
+good as the operators it chains. Two failure modes surfaced when we audited
+the operators induced in an early production run, and both led to structural
+gates rather than prompt adjustments.
+
+\subsection{Tautological operators}
+
+\textbf{Problem.} Three of the four operators induced in that run had effect
+sets identical to their precondition sets.
+\textbf{Diagnosis.} Asked to describe a skill's preconditions and effects,
+an LLM finds it easiest to restate the context --- ``user is on the issue
+list'' before, ``user is on the issue list'' after. Such an operator encodes
+no state change, so it can never appear mid-chain and never lead anywhere
+new; left unchecked, tautologies would have filled the operator graph with
+dead nodes.
+\textbf{Fix.} The anti-tautology gate: effects that restate a precondition
+are dropped, and a skill left without novel effects is rejected from
+promotion altogether, with the rejection logged.
+\textbf{Lesson.} For LLM-authored symbolic artifacts, \emph{define validity
+set-theoretically and enforce it in code}; do not rely on the prompt to
+forbid degenerate answers.
+
+\subsection{Synonymous predicates that embeddings cannot unify}
+
+\textbf{Problem.} Chaining requires an effect of one operator to match a
+precondition of another, but independently induced operators phrase the same
+condition differently.
+\textbf{Diagnosis.} We measured the embedding similarity of predicate pairs
+from the same run: a true paraphrase pair scored 0.570 --- \emph{below} the
+0.6 canonicalization threshold --- while a semantically different pair scored
+0.606, above it. No threshold separates these cases; purely geometric
+canonicalization cannot recover a shared vocabulary after the fact.
+\textbf{Fix.} Prevention rather than cure: induction is vocabulary-aware.
+The prompt presents the registry's existing predicate labels with an
+instruction to reuse an equivalent one verbatim, so unification happens at
+authoring time, where the model has full context, instead of at embedding
+time, where only the surface strings remain.
+\textbf{Lesson.} When two LLM outputs must later \emph{match}, share the
+vocabulary at generation time; do not defer semantic unification to a
+similarity metric.
+
+\section{Pitfalls in Training and Serving SLMs}
 \label{sec:disc-slm}
-% TODO: chat template / thinking mode; the prompt-fidelity bug that looked
-% like a training failure; venv isolation; the judge pass catching
-% self-graded successes; prompt parity between training and inference.
-\textit{[To be written — see outline 07, section 5.5.]}
+
+\subsection{The chat template is part of the model}
+
+The target model family emits explicit reasoning segments by default, while
+our training targets are bare thought--action pairs. The correct,
+thinking-disabled chat template had to be identified from the training
+framework's template registry rather than guessed from documentation, and the
+same setting had to be applied again, per request, at serving time. A
+mismatch on either side silently trains or evaluates a different
+distribution than intended. The general point: \emph{template and decoding
+configuration are part of the model artifact}, and train-time and
+serve-time configurations must be pinned together.
+
+\subsection{The prompt-fidelity bug}
+
+The most instructive failure of the training phase produced no error at all.
+A quick post-training smoke test, written with an \emph{approximation} of the
+solver prompt, made the fine-tuned model emit natural-language descriptions
+instead of executable actions --- which looked exactly like a failed
+fine-tune. The model was fine; the test prompt was unfaithful. Re-testing
+with the production prompt --- imported from the solver, not re-typed ---
+produced correct actions. This incident is why prompt parity
+(Section~\ref{sec:method-data}) is enforced by \emph{importing} the live
+system prompt and its helper routines into the dataset builder and the
+evaluation harness, never by duplicating them. Any test of a fine-tuned
+agent is only as valid as the fidelity of its prompt to production.
+
+\subsection{Dependency isolation}
+
+Supporting a newly released model architecture required the development
+version of the modeling library, which conflicted with the serving engine's
+pinned requirements. Three isolated environments --- training, serving, and
+evaluation --- resolved what no single environment could satisfy. Mundane,
+but it converts an unsolvable version conflict into a routine setup step.
+
+\subsection{Agents grade their own homework}
+
+The judge pass exists because declared success is not success: a solver that
+answers ``done'' has evaluated itself. Re-checking declared successes against
+the episode's own final state caught self-graded failures before they became
+training examples --- and the dataset builder's strict mode inverts the
+default, dropping any declared success that was never judged rather than
+trusting it. Under principle P1, \emph{unverified data is not neutral; it is
+a liability that compounds through training}.
+
+\subsection{Evaluating safely on shared live sites}
+
+Running baseline and fine-tuned sweeps against one live site instance would
+normally serialize a full working day of evaluation. Classifying benchmark
+tasks by intent into read-only and write-mutating subsets let a second
+machine evaluate the read-only subset concurrently with the first machine's
+unrestricted sweep. The classification itself held two traps worth recording:
+noun-phrase collisions (``merge request'' contains a verb only
+syntactically; ``report bugs'' does not name the reporting action the regex
+expected) and word insertion defeating naive phrase patterns (``open a
+\emph{new} issue''). Transfer cost also mattered: moving the 1.7\,GB LoRA
+adapter and re-merging locally beat moving an 18\,GB merged checkpoint.
 
 \section{Best Practices}
 \label{sec:disc-practices}
-% TODO: distilled table: verify-then-admit; prompt parity; fail-soft browser
-% operations; per-node artifact persistence; two-machine eval with read/write
-% task classification; event logging.
-\textit{[To be written — see outline 07, section 5.6.]}
+
+Table~\ref{tab:practices} condenses the lessons of this chapter into
+practices we would adopt from the first day of a similar project.
+
+\begin{table}[H]
+\centering
+\caption[Distilled best practices]{Distilled best practices for
+LLM-agent data-collection pipelines on live websites.}
+\label{tab:practices}
+\small
+\begin{tabular}{L{4.4cm} L{8.8cm}}
+\toprule
+\textbf{Practice} & \textbf{Rationale (section)} \\
+\midrule
+Verify, then admit & Skills, operators, and successes are liabilities until independently checked (\ref{sec:disc-slm}, \ref{sec:disc-operators}). \\
+Prompt parity by import & Training data, live agent, and eval harness share one prompt source; duplication drifts (\ref{sec:disc-slm}). \\
+Structure over conventions & Request typed fields from models; never parse safety-relevant information out of free text (\ref{sec:disc-guardrails}). \\
+Mechanisms over warnings & Convert repeated model misbehavior into budgets and hard stops, validated on real runs (\ref{sec:disc-guardrails}). \\
+Fail-soft browsing & Any page operation may fail; skip and log locally, crash only on the truly unexpected (\ref{sec:disc-exploration}). \\
+Persist per node & Interrupted runs should leave consistent, resumable artifacts (\ref{sec:disc-exploration}). \\
+Fail-closed safety & Unclassifiable tasks count as destructive; destructive account actions are banned outright (\ref{sec:disc-exploration}). \\
+Share vocabulary at authoring time & Symbolic artifacts that must match later should be generated against a shared label set (\ref{sec:disc-operators}). \\
+Pin template with model & Chat template and decoding flags are part of the artifact, for training and serving alike (\ref{sec:disc-slm}). \\
+Log everything as events & A per-run event log makes post-hoc failure analysis --- most of this chapter --- possible at all (\ref{sec:disc-exploration}). \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Threats to Validity}
 \label{sec:disc-validity}
-% TODO: internal (small n, LLM-judge bias), external (site and model
-% coverage), construct (success-rate evaluators).
-\textit{[To be written — see outline 07, section 5.7.]}
+
+\textbf{Internal validity.} The evaluation to date runs each benchmark task
+once per model; individual task outcomes on a live site are noisy, so the
+measured gap could shift under repetition. The planned repeated runs
+(Section~\ref{sec:exp-stats}) address this directly. Several quality gates
+(the judge, the re-annotator) are themselves LLMs and inherit LLM biases;
+we mitigate but do not eliminate this by checking judgments against concrete
+final states rather than against transcripts alone.
+
+\textbf{External validity.} All data and evaluation come from self-hosted
+WebArena sites --- realistic, but four sites of one benchmark family ---
+and from one 9B model. Claims are correspondingly scoped: we report that the
+pipeline improves \emph{this} model on \emph{these} sites, and treat broader
+generalization as future work rather than as an implication.
+
+\textbf{Construct validity.} Task success against official evaluators is the
+field-standard construct, but it is binary and end-state-based: it does not
+credit partial progress, and semantic-task episodes verified by self-report
+plus offline judging are a weaker construct than programmatically checked
+ones. We keep the two verification regimes distinguishable in the data so
+that stricter analyses remain possible.
+
+\vspace{1em}
+\noindent
+These lessons, and the results they contextualize, complete the empirical
+story of the thesis. The final chapter summarizes what was built and learned,
+and where the work goes next.
