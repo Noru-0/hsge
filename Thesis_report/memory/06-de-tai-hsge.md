@@ -85,9 +85,8 @@ WebArena thật (BrowserGym).
    GVHD duyệt).
 2. Deadline nộp đợt nào / lịch bảo vệ (quy trình nộp: xem 01) — user mới nói
    "còn ~25 ngày" cho thực nghiệm.
-3. Yêu cầu riêng của thầy Vũ về cấu trúc chương (slide Khoa của thầy cho phép
-   5 chương Introduction → Related Work → Proposed Approach → Results →
-   Conclusions; hướng dẫn thầy Biên là 6 chương tách Experiments/Discussion) —
-   chốt số chương trước khi lập dàn ý.
+3. Cấu trúc chương: **đã chọn 6 chương** (dàn ý v1 ở file 07) vì user muốn
+   nhấn mạnh Discussion thành chương riêng — cần thầy Vũ xác nhận (slide Khoa
+   của thầy mô tả khung 5 chương nhưng không cấm tách Discussion).
 4. Danh sách thực nghiệm bổ sung trong 25 ngày: lặp eval để có mean±CI?
    ablation graph-explore vs. flat baseline? thêm site ngoài GitLab?
