@@ -1,0 +1,59 @@
+\chapter{Experiments}
+\label{ch:experiments}
+
+This chapter (1) describes the experimental environment and evaluation
+protocol, (2) reports data-collection results, (3) reports fine-tuning
+results, (4) presents the main evaluation on the official WebArena task
+suites of four sites, and (5) analyzes the results.
+
+% NOTE: this chapter is scaffolded first and will grow as the remaining
+% experiments finish (see [TO ADD] markers). Current numbers come from the
+% GitLab evaluation of 2026-07-15.
+
+\section{Experimental Setup}
+\label{sec:exp-setup}
+% TODO: self-hosted WebArena instances; vast.ai A100-80GB for training and
+% serving; per-role LLM configuration table (from config.yaml); run
+% parameters; evaluation via BrowserGym scored environments + official
+% evaluators, replaying the terminal answer action.
+\textit{[To be written — see outline 07, section 4.1.]}
+
+\section{Data Collection Results}
+\label{sec:exp-data}
+% TODO: per-run statistics (nodes, tasks proposed/solved/infeasible, skills,
+% operators, chains); final dataset: 370 examples (352 train / 18 val);
+% 1-2 representative examples of a discovered skill and a semantic task.
+\textit{[To be written — see outline 07, section 4.2.]}
+
+\section{Fine-Tuning Results}
+\label{sec:exp-sft}
+% TODO: LoRA training curves (train loss 0.32 / eval loss 0.24), time and
+% cost table (docs/14).
+\textit{[To be written — see outline 07, section 4.3.]}
+
+\section{Main Evaluation on WebArena}
+\label{sec:exp-main}
+% Evaluation on FOUR sites: Shopping, Shopping Admin, GitLab, Reddit.
+% Current: GitLab — base 10/180 (5.56%) vs fine-tuned 12/180 (6.67%).
+% Present as a directional signal (n=1 per task) until repeats (Sec. 4.5).
+% [TO ADD] Shopping / Shopping Admin / Reddit results + per-site table.
+\textit{[To be written — see outline 07, section 4.4.]}
+
+\section{Statistical Repeats}
+\label{sec:exp-stats}
+% [TO ADD] >=3-5 repeated runs (or seeds) per model -> mean +/- SD, 95% CI,
+% non-parametric significance test. Priority #1.
+\textit{[Planned — see outline 07, section 4.5.]}
+
+\section{Ablation Studies}
+\label{sec:exp-ablation}
+% [TO ADD] (a) graph-explore data vs flat-explore data at equal budget;
+% (b) with/without judge pass; (c) with/without thought re-annotation;
+% (d) cross-site analysis from the 4-site results.
+\textit{[Planned — see outline 07, section 4.6.]}
+
+\section{Analysis}
+\label{sec:exp-analysis}
+% TODO: per-task-type breakdown, qualitative success/failure examples,
+% failure taxonomy (feeds Chapter 5).
+\textit{[To be written — see outline 07, section 4.7.]}

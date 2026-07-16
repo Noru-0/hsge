@@ -1,5 +1,18 @@
 # Dàn ý chi tiết báo cáo (v1 — 2026-07-17, chưa gửi GVHD duyệt)
 
+## Trạng thái viết (cập nhật 2026-07-17)
+
+Bản LaTeX sống ở **`Thesis_report/thesis_hsge/`** (fork từ template, tiếng
+Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
+- ✅ **Chapter 3 (Method)**: đã viết trọn bản nháp đầu (8 mục, hình pipeline
+  TikZ, bảng action space, Algorithm frontier loop, bảng module).
+- ✅ Front matter: title (bìa tạm — chờ chốt tên tiếng Anh), acknowledgments,
+  chapter summaries, glossary, **abstract đã có bản nháp đầy đủ**.
+- ✅ References/references.bib: 13 entry nền (một số đánh dấu VERIFY).
+- ⬜ Chapter 1, 2, 4, 5, 6: mới có skeleton (roadmap + section stub + TODO
+  comment trỏ về dàn ý này). Thứ tự viết tiếp: **C5 → C1+C6 → C2 → C4**.
+- Build: `pdflatex → bibtex → pdflatex ×2` từ trong thesis_hsge/ (main.tex).
+
 Đề tài: **Small Language Models for Web AI Agents** (tên tiếng Anh đề xuất,
 chờ chốt) — "Mô hình ngôn ngữ nhỏ cho tác nhân trí tuệ nhân tạo trên web".
 Báo cáo viết **tiếng Anh**. Cấu trúc **6 chương** (Intro / Related Work /

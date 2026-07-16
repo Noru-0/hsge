@@ -1,0 +1,57 @@
+\chapter{Discussion}
+\label{ch:discussion}
+
+This chapter (1) interprets the experimental results, then distills the
+engineering experience gained while building and running the pipeline into
+lessons on (2) exploring live websites, (3) guarding LLM agents structurally,
+(4) inducing high-quality operators, and (5) training and serving SLMs,
+before (6) summarizing best practices and (7) discussing threats to validity.
+
+% Writing rule: each lesson = real problem -> diagnosis -> fix -> general
+% lesson. Long details go to the appendix; keep key points here.
+% Source material: docs/10-14 session reports, .claude/memory/bugs.md.
+
+\section{Interpreting the Results}
+\label{sec:disc-results}
+\textit{[To be written — see outline 07, section 5.1.]}
+
+\section{Lessons from Exploring Live Websites}
+\label{sec:disc-exploration}
+% TODO: frontier starvation -> href mining + template caps; 46% duplicate
+% task proposals -> dedup + negative context; flaky pages -> node-error
+% resilience; shared mutable state -> read-only mode, disciplined resets.
+\textit{[To be written — see outline 07, section 5.2.]}
+
+\section{Structural Guardrails over Prompt Nudges}
+\label{sec:disc-guardrails}
+% TODO: [TAG] convention failure -> structured output; stuck-loop warning
+% insufficient -> hard stop on same-target/no-progress; answer-leaking INFO
+% tasks; empty vision responses -> text-only retry.
+\textit{[To be written — see outline 07, section 5.3.]}
+
+\section{Verified Structure Beats Raw Scale in Operator Induction}
+\label{sec:disc-operators}
+% TODO: tautological operators (3/4 in wa_run_09) -> anti-tautology gate;
+% embedding-only synonym unification fails (0.570 < 0.6 < 0.606) ->
+% vocabulary-aware induction; grounding checks.
+\textit{[To be written — see outline 07, section 5.4.]}
+
+\section{Training and Serving SLMs: Pitfalls}
+\label{sec:disc-slm}
+% TODO: chat template / thinking mode; the prompt-fidelity bug that looked
+% like a training failure; venv isolation; the judge pass catching
+% self-graded successes; prompt parity between training and inference.
+\textit{[To be written — see outline 07, section 5.5.]}
+
+\section{Best Practices}
+\label{sec:disc-practices}
+% TODO: distilled table: verify-then-admit; prompt parity; fail-soft browser
+% operations; per-node artifact persistence; two-machine eval with read/write
+% task classification; event logging.
+\textit{[To be written — see outline 07, section 5.6.]}
+
+\section{Threats to Validity}
+\label{sec:disc-validity}
+% TODO: internal (small n, LLM-judge bias), external (site and model
+% coverage), construct (success-rate evaluators).
+\textit{[To be written — see outline 07, section 5.7.]}
