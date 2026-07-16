@@ -3,8 +3,8 @@
 Nguồn: `Thesis_report/thesis_v3/review/` (review1/2 + fix-list + master-checklist
 + additional-experiments, cùng bản PDF trong `review_GVHD/`) và
 `Qua_trinh_viet_report/{nhan-xet-GVHD,phan-tich-dot-1,de-xuat-dot-2}.md`.
-Đây là các lỗi **reviewer thật đã bắt** ở một thesis cùng GVHD, cùng dạng
-đề tài thực nghiệm — dùng làm checklist phòng ngừa cho báo cáo HSGE.
+Đây là các lỗi **reviewer thật đã bắt** ở thesis mẫu (cùng Khoa, cùng dạng
+đề tài thực nghiệm) — dùng làm checklist phòng ngừa cho báo cáo HSGE.
 
 ## Lỗi nghiêm trọng (P0) reviewer hay bắt — áp dụng thẳng cho HSGE
 

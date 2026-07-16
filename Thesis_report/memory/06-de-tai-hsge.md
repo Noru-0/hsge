@@ -1,8 +1,41 @@
 # Đề tài HSGE — ngữ cảnh & nguồn tư liệu cho báo cáo
 
-Trạng thái: **chưa chốt dàn ý / tên đề tài / phạm vi chương** — cần xác nhận
-với sinh viên (Kiết) và GVHD trước khi viết. File này gom sẵn nguyên liệu từ
-repo để khi viết không phải đào lại.
+Trạng thái: **đã chốt thông tin cơ bản (2026-07-17)**, chưa chốt dàn ý chi tiết.
+File này gom sẵn nguyên liệu từ repo để khi viết không phải đào lại.
+
+## Thông tin đã chốt (user xác nhận 2026-07-17)
+
+- **Tên đề tài (tiếng Việt)**: "Mô hình ngôn ngữ nhỏ cho tác nhân trí tuệ nhân
+  tạo trên web". Cần đề xuất bản tiếng Anh chính thức (gợi ý: "Small Language
+  Models for Web AI Agents") + tên ngắn cho gáy bìa — xác nhận với GVHD.
+- **Nhóm 2 người**: Trương Bảo Kiệt (22127223) và Hồ Tiến Phát (22127321).
+- **GVHD**: PGS.TS. Nguyễn Văn Vũ — ⚠️ KHÁC GVHD của thesis mẫu (TS. Ngô Huy
+  Biên). Thầy Vũ chính là tác giả slide hướng dẫn chính thức của Khoa
+  (`KLTN/Huong-dan-viet-va-trinh-bay-Khoa-luan-2023-1.pdf`) → slide đó là
+  nguồn sát yêu cầu của thầy nhất; hướng dẫn của thầy Biên (file 02) dùng làm
+  tham khảo tốt nhưng không mặc nhiên là yêu cầu bắt buộc.
+- **Bộ môn**: Công nghệ Phần mềm.
+- **Ngôn ngữ báo cáo**: **tiếng Anh** (xem hệ quả bên dưới).
+- **Câu chuyện chính**: xây dựng **pipeline khám phá dữ liệu (explore data)
+  dựa trên ý tưởng GRAPH**, tự khám phá các **SEMANTIC TASK** trên web, để
+  **train SLM (small language model) tốt hơn**. Tức là: HSGE đóng vai trò
+  data-collection engine; đích đến là SLM làm web agent. Phát biểu bài toán C1
+  và phạm vi C3 xoay quanh trục này (skill/operator graph là phương tiện sinh
+  semantic task + trajectory chất lượng, không phải đích tự thân).
+- **Thực nghiệm bổ sung**: còn ~25 ngày (đến ~2026-08-11), user nói sẽ kịp chạy
+  thêm — ưu tiên theo 05-bai-hoc-review.md: lặp eval nhiều lần/seed để có
+  thống kê (fix P0-1), có thể thêm ablation (train từ data khám-phá-graph vs.
+  data thu ngẫu nhiên/flat) để chứng minh giá trị của pipeline graph.
+
+## Hệ quả của việc viết tiếng Anh
+
+- Template thesis_v3 đang Việt hóa caption (`\chaptername=Chương`...) — cần bỏ
+  các `\renewcommand` đó, dùng mặc định English (Chapter/Figure/Table/Contents).
+- Trang bìa/phụ bìa theo mẫu Khoa: kiểm tra với giáo vụ/GVHD xem bìa ghi song
+  ngữ hay tiếng Anh (mẫu Khoa hiện là tiếng Việt).
+- Văn phong học thuật tiếng Anh: META-PROMPT trong 04-quy-trinh-ai.md áp dụng
+  trực tiếp được (nó vốn viết cho English academic writing).
+- Quy tắc chống đạo văn vẫn nguyên: không chép từ paper gốc, trích dẫn IEEE.
 
 ## Đề tài là gì
 
@@ -46,13 +79,15 @@ WebArena thật (BrowserGym).
 | C6 Kết luận | Đối chiếu sản phẩm (scaffold + runtime + dataset + model + tutorial) với mục tiêu |
 | Phụ lục | Chi tiết thiết kế, bảng số liệu run, config |
 
-## Điểm cần chốt trước khi viết (hỏi user/GVHD)
+## Điểm còn mở (hỏi tiếp user/GVHD)
 
-1. Tên đề tài chính thức (tiếng Việt) + tên ngắn cho gáy bìa; thông tin SV/MSSV/bộ môn.
-2. Câu chuyện chính của khóa luận: (a) HSGE như phương pháp khám phá skill mới,
-   (b) pipeline thu thập dữ liệu → SFT cho web agent, hay (c) cả hai? Điều này
-   quyết định phát biểu bài toán C1 và phạm vi C3.
-3. Có kịp chạy thêm thực nghiệm không (lặp eval nhiều seed, thêm site khác) —
-   ảnh hưởng trực tiếp cách viết claim ở C4 (xem P0-1).
-4. Làm 1 người hay nhóm; deadline nộp đợt nào (quy trình nộp: xem 01).
-5. Ngôn ngữ báo cáo: mặc định tiếng Việt theo mẫu Khoa (thuật ngữ Anh giữ nguyên).
+1. Tên đề tài tiếng Anh chính thức + tên ngắn cho gáy bìa (đề xuất rồi xin
+   GVHD duyệt).
+2. Deadline nộp đợt nào / lịch bảo vệ (quy trình nộp: xem 01) — user mới nói
+   "còn ~25 ngày" cho thực nghiệm.
+3. Yêu cầu riêng của thầy Vũ về cấu trúc chương (slide Khoa của thầy cho phép
+   5 chương Introduction → Related Work → Proposed Approach → Results →
+   Conclusions; hướng dẫn thầy Biên là 6 chương tách Experiments/Discussion) —
+   chốt số chương trước khi lập dàn ý.
+4. Danh sách thực nghiệm bổ sung trong 25 ngày: lặp eval để có mean±CI?
+   ablation graph-explore vs. flat baseline? thêm site ngoài GitLab?

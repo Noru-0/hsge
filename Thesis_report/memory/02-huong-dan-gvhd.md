@@ -1,9 +1,16 @@
-# Hướng dẫn viết báo cáo hướng nghiên cứu — GVHD TS. Ngô Huy Biên
+# Hướng dẫn viết báo cáo hướng nghiên cứu — TS. Ngô Huy Biên (tham khảo)
+
+⚠️ **Lưu ý vai trò (cập nhật 2026-07-17)**: TS. Ngô Huy Biên là GVHD của
+**thesis mẫu**, KHÔNG phải GVHD của nhóm HSGE. GVHD của nhóm là **PGS.TS.
+Nguyễn Văn Vũ** — tác giả slide hướng dẫn chính thức của Khoa (xem
+01-quy-dinh-khoa.md, phần văn phong & cấu trúc 5 chương). Tài liệu dưới đây
+vẫn là khung viết khóa luận hướng nghiên cứu rất tốt (mạch logic từng chương,
+quy tắc trích dẫn), nhưng khi mâu thuẫn với yêu cầu của thầy Vũ thì theo thầy
+Vũ; các mục "GVHD đã trao đổi trực tiếp" phải lấy từ trao đổi với thầy Vũ.
 
 Nguồn: `Thesis_report/thesis_v3/review_GVHD/huong_dan_rp.md` (bản đầy đủ) và
 `Thesis_report/thesis_v3/Qua_trinh_viet_report/Huong-Dan-Viet-Bao-Cao.md`
-(bản tương tự). Đây là hướng dẫn của GVHD cho khóa luận **hướng nghiên cứu** —
-áp dụng trực tiếp cho báo cáo HSGE.
+(bản tương tự). Đây là hướng dẫn cho khóa luận **hướng nghiên cứu**.
 
 ## Nguyên tắc cứng
 
