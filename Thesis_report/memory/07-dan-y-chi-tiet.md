@@ -31,6 +31,16 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
   `VERIFY` (author list đầy đủ / venue cuối) — agent verify đang chạy,
   vá xong thì xóa note.
 - ⬜ Chapter 4: skeleton, điền số khi thực nghiệm bổ sung xong.
+
+**Bản tiếng Việt song song** (user yêu cầu 2026-07-18): sống ở
+`Thesis_report/thesis_hsge_vi/` — dịch trọn C1/C2/C3/C5/C6 + front matter,
+C4 khung; giữ nguyên thuật ngữ chuyên ngành tiếng Anh; có **Bảng chú thích
+thuật ngữ** (28 thuật ngữ Anh → giải nghĩa Việt) + bảng viết tắt trong
+`Appendix/glossary.tex`; caption Việt hóa lại (Chương/Hình/Bảng); build
+sạch 77 trang. ⚠️ Khi sửa nội dung một bản, nhớ sửa bản kia tương ứng
+(hai bản chia sẻ cùng references.bib nội dung nhưng là 2 file riêng).
+Lưu ý build: log chứa ký tự Việt → grep cần cờ `-a`; chuỗi tt dài dùng
+`\slash` để bẻ dòng.
 - Build: `pdflatex → bibtex → pdflatex ×2` từ trong thesis_hsge/ (main.tex).
   ⚠️ Sau khi THÊM citation mới phải chạy đủ chu trình sạch (rm aux/bbl →
   4 lệnh trên), nếu không sẽ dính đúng lỗi "reference [0]" mà review mẫu

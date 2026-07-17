@@ -1,0 +1,520 @@
+\chapter{Phương pháp đề xuất}
+\label{ch:method}
+
+Chương này trình bày HSGE (Hierarchical Skill-Graph Exploration), pipeline
+của chúng tôi để biến một website không nhãn thành dữ liệu huấn luyện cho
+một mô hình ngôn ngữ nhỏ. Chương gồm (1) tổng quan pipeline và các nguyên
+tắc thiết kế, (2) biểu diễn graph hai tầng làm nền cho toàn bộ phương pháp,
+(3) khám phá có định hướng theo graph với các low-level task do LLM đề
+xuất, (4) phát hiện và kiểm chứng các skill tái sử dụng, (5) sinh
+\emph{semantic task} dài hạn bằng cách ghép chuỗi các operator lập kế
+hoạch, (6) tinh lọc trajectory thành tập dữ liệu fine-tuning, (7)
+fine-tune SLM đích, và (8) các ghi chú hiện thực hóa.
+
+\section{Tổng quan}
+\label{sec:method-overview}
+
+Đầu vào của HSGE là một website đang hoạt động không có nhãn task, cùng một
+frontier gồm một hoặc vài URL hạt giống. Đầu ra là một tập dữ liệu tinh
+chỉnh có giám sát (SFT) gồm các trajectory tương tác có điều kiện mục tiêu,
+và sau cùng là một mô hình ngôn ngữ nhỏ được fine-tune trên tập dữ liệu đó.
+Hình~\ref{fig:pipeline} thể hiện kiến trúc tổng thể.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=10mm,
+              inner sep=3pt, text width=26mm},
+  wide/.style={draw, rounded corners=2pt, align=center, minimum height=10mm,
+              inner sep=3pt, text width=40mm},
+  arr/.style={-{Stealth[length=2.5mm]}, thick},
+  node distance=10mm and 6mm
+]
+% Hàng 1: khám phá
+\node[box] (site) {Website\\(URL hạt giống)};
+\node[wide, right=of site] (explore) {Vòng khám phá\\(frontier, explorer,\\solver)};
+\node[wide, right=of explore] (disc) {Phát hiện skill\\(cắt đoạn, gom cụm,\\trừu tượng hóa,\\kiểm chứng)};
+% Hàng 2: graph và semantic task
+\node[wide, below=of disc] (ops) {Induction operator\\+ operator graph};
+\node[wide, below=of explore] (goal) {Sinh semantic task\\(ghép chuỗi operator)};
+% Hàng 3: đường dữ liệu
+\node[box, below=of goal] (episodes) {Episode\\đã ghi};
+\node[wide, right=of episodes] (curate) {Cổng chất lượng\\(judge, viết lại\\suy nghĩ)};
+\node[box, right=of curate] (sft) {Dataset SFT\\$\rightarrow$ LoRA\\$\rightarrow$ SLM};
+% Luồng hàng 1
+\draw[arr] (site) -- (explore);
+\draw[arr] (explore) -- (disc);
+% Xuống graph, quay lại semantic task
+\draw[arr] (disc) -- (ops);
+\draw[arr] (ops) -- (goal);
+% Phản hồi: semantic task quay lại vòng khám phá
+\draw[arr] (goal) -- (explore)
+  node[midway, right] {\scriptsize goal task mới};
+% Episode: đi vòng bên trái hộp semantic task
+\draw[arr] (explore.west) -- ++(-5mm,0) |- (episodes.west)
+  node[pos=0.75, above] {\scriptsize episode};
+% Luồng hàng 3
+\draw[arr] (episodes) -- (curate);
+\draw[arr] (curate) -- (sft);
+\end{tikzpicture}
+\caption[Tổng quan pipeline HSGE]{Tổng quan pipeline HSGE. Vòng khám phá
+giải các low-level task do LLM đề xuất trên các trang frontier; các skill
+phát hiện được nâng thành operator lập kế hoạch, mà các chuỗi của chúng
+được đưa ngược lại vòng khám phá dưới dạng semantic task. Mọi episode ghi
+lại đều qua các cổng chất lượng trước khi trở thành dữ liệu fine-tuning.}
+\label{fig:pipeline}
+\end{figure}
+
+Pipeline vận hành như một vòng lặp. Một \emph{explorer} đề xuất các task cụ
+thể, bám trang, trên mỗi trang được thăm, và một agent \emph{solver} thử
+thực hiện chúng trong trình duyệt thật, tạo ra các trajectory tương tác.
+Thành phần phát hiện (discovery) cắt các trajectory này thành đoạn, gom cụm
+các đoạn lặp lại, trừu tượng hóa mỗi cụm đủ chín thành một \emph{skill} tái
+sử dụng, và nâng các skill đã kiểm chứng thành các \emph{operator} lập kế
+hoạch với precondition và effect tường minh. Ghép chuỗi operator trên graph
+thu được sinh ra các goal task dài hạn --- các \emph{semantic task} ---
+được đưa ngược lại chính solver đó, khép kín vòng lặp. Mọi task được thử,
+dù là low-level hay semantic, đều được ghi thành một episode; các episode
+sau đó đi qua các cổng chất lượng tự động và được biên dịch thành tập dữ
+liệu SFT dùng để fine-tune SLM đích.
+
+Ba nguyên tắc thiết kế xuyên suốt pipeline:
+
+\begin{itemize}
+  \item \textbf{P1 --- Kiểm chứng trước khi tái sử dụng.} Không gì được tin
+  ngay lần đầu. Một skill chỉ được thu nhận sau khi lặp lại qua các
+  trajectory độc lập; một tuyên bố thành công được một judge độc lập chấm
+  lại; một operator bị loại nếu effect của nó rỗng nghĩa.
+  \item \textbf{P2 --- Graph thay vì phẳng.} Thay vì một bể phẳng các trang
+  hay ký ức, HSGE duy trì một graph hai tầng
+  (Mục~\ref{sec:method-graph}). Tầng thấp ghi agent đã \emph{ở đâu}; tầng
+  cao ghi agent \emph{làm được gì}, và các năng lực đó nối nhau thế nào.
+  \item \textbf{P3 --- Hệ task hai tầng.} Các \emph{low-level task} do LLM
+  đề xuất (Mục~\ref{sec:method-exploration}) dẫn dắt khám phá và cung cấp
+  nguyên liệu thô cho việc phát hiện skill. Các \emph{semantic task}
+  (Mục~\ref{sec:method-semantic}) chỉ được sinh từ operator graph, bằng
+  cách ghép các năng lực đã kiểm chứng thành những mục tiêu mà không trang
+  đơn lẻ nào gợi ý.
+\end{itemize}
+
+\section{Biểu diễn graph hai tầng}
+\label{sec:method-graph}
+
+\subsection{Website như một quá trình quyết định}
+
+Chúng tôi mô hình hóa website như một quá trình quyết định quan sát được
+một phần. Tại mỗi bước, agent quan sát $o = (u, x)$, trong đó $u$ là URL
+hiện tại và $x$ là \emph{accessibility tree} (axtree) của trang: bản tuần
+tự hóa dạng văn bản của các phần tử giao diện đang hiển thị, mỗi phần tử
+mang một mã định danh ổn định. Agent hành động qua một action space cố định
+$\mathcal{A}$ (Bảng~\ref{tab:actions}), bao gồm tương tác phần tử, điều
+hướng, quản lý tab, và hai hành động kết thúc episode: trả lời người dùng
+và tuyên bố task bất khả thi. Một \emph{trajectory} là chuỗi
+$\tau = \langle (o_0, a_0), (o_1, a_1), \dots \rangle$ sinh ra khi thực
+hiện một task.
+
+\begin{table}[H]
+\centering
+\caption[Action space của solver]{Action space của solver. Các đối số phần
+tử tham chiếu mã định danh hiển thị trong accessibility tree.}
+\label{tab:actions}
+\small
+\begin{tabular}{L{5.4cm} L{7.8cm}}
+\toprule
+\textbf{Hành động} & \textbf{Ý nghĩa} \\
+\midrule
+\texttt{click(id)} & Click phần tử \texttt{id}. \\
+\texttt{fill(id, text)} & Gõ \texttt{text} vào ô nhập \texttt{id}. \\
+\texttt{select\_option(id, opt)} & Chọn \texttt{opt} trong dropdown \texttt{id}. \\
+\texttt{press(id, key)} & Gửi phím tắt tới \texttt{id}. \\
+\texttt{goto(url)}, \texttt{go\_back()} & Điều hướng trực tiếp / quay lại lịch sử. \\
+\texttt{new\_tab()}, \texttt{tab\_focus(i)}, \texttt{tab\_close()} & Quản lý tab. \\
+\texttt{send\_msg\_to\_user(text)} & Kết thúc: báo câu trả lời hoặc hoàn thành. \\
+\texttt{report\_infeasible(reason)} & Kết thúc: tuyên bố task bất khả thi. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Tầng thấp: trạng thái trang và cạnh trajectory}
+
+Tầng thấp của graph ghi lại trải nghiệm cụ thể: node là các trạng thái
+trang đã thăm, định danh bằng URL và bằng hash của axtree ban đầu; cạnh là
+các hành động agent đã thực sự thực hiện giữa chúng. Việc hash nội dung
+trang, thay vì chỉ tin URL, quan trọng trong thực tế: hai URL khác nhau
+thường render ra cùng một trang, và thăm lại chúng sẽ tiêu tốn cả một ngân
+sách khám phá vào nội dung agent đã thấy.
+
+\subsection{Tầng cao: skill như các option}
+
+Một \emph{skill} là một năng lực tái sử dụng, có tham số, hình thức hóa
+theo khung options~\cite{sutton1999options} thành bộ ba
+$\sigma = \langle I, \pi, \beta \rangle$: tập khởi đầu $I$ (các trạng thái
+trang nơi skill áp dụng được), chính sách $\pi$ (thủ tục hành động), và
+điều kiện kết thúc $\beta$. Cụ thể, HSGE biểu diễn một skill bằng một
+\emph{skill card}: tên, mô tả bằng ngôn ngữ tự nhiên, danh sách các ô tham
+số có kiểu (ví dụ chuỗi tìm kiếm hay giá trị form), và liên kết tới các
+đoạn trajectory thành viên mà nó được trừu tượng hóa từ đó. Các node skill
+nối với trạng thái tầng thấp bằng cạnh khởi đầu và cạnh hiệu ứng, và nối
+với nhau bằng cạnh ghép chuỗi, tạo thành graph tầng cao.
+
+\subsection{Operator: precondition và effect}
+
+Lập kế hoạch trực tiếp trên skill thô rất khó vì điều kiện áp dụng của
+chúng là ngầm định. Vì vậy HSGE nâng mỗi skill đã kiểm chứng thành một
+\emph{operator} theo phong cách STRIPS cổ điển~\cite{fikes1971strips}:
+$\omega = \langle \mathit{pre}, \mathit{eff} \rangle$, trong đó
+$\mathit{pre}$ và $\mathit{eff}$ là các tập mệnh đề ngôn ngữ tự nhiên như
+``người dùng đang xem danh sách issue của một dự án''. Khác lập kế hoạch cổ
+điển, bộ từ vựng mệnh đề không cố định trước: các mệnh đề do LLM tự viết
+trong quá trình induction rồi được \emph{chuẩn hóa} thành các mã định danh
+ổn định bởi một bộ gom cụm dựa trên embedding
+(Mục~\ref{sec:method-semantic}), để hai cách diễn đạt của cùng một điều
+kiện quy về cùng một mệnh đề. \emph{Operator graph} vẽ một cạnh từ operator
+$\omega_1$ sang $\omega_2$ khi một effect của $\omega_1$ thỏa một
+precondition của $\omega_2$; các đường đi trong graph này là các kế hoạch
+đa-skill thực thi được.
+
+\subsection{Thuật ngữ về task}
+
+Xuyên suốt khóa luận, chúng tôi phân biệt hai tầng task. Một
+\emph{low-level task} là chỉ dẫn ngắn, bám một trang, do explorer đề xuất
+khi thăm trang đó (ví dụ ``mở merge request được cập nhật gần nhất''). Một
+\emph{semantic task} là mục tiêu dài hạn sinh từ operator graph bằng cách
+ghép chuỗi ít nhất hai operator; nó chỉ tồn tại nhờ graph tồn tại, và là
+sản phẩm trung tâm của phương pháp.
+
+\section{Khám phá có định hướng theo graph}
+\label{sec:method-exploration}
+
+Khám phá phải trả lời ba câu hỏi ở mỗi bước: đi \emph{đâu} tiếp, thử
+\emph{gì} ở đó, và thử \emph{như thế nào}. HSGE giao ba câu hỏi này lần
+lượt cho frontier, explorer và solver.
+
+\subsection{Quản lý frontier}
+\label{sec:method-frontier}
+
+Frontier là một hàng đợi ưu tiên trên các URL ứng viên với hai tầng.
+\emph{Tầng~0} chứa các URL agent thực sự đi tới khi giải task, cùng các
+trang còn mở trong tab; chúng được nhận thẳng (chỉ qua các bộ lọc
+cho phép/cấm/đã thăm), vì việc agent tới được đó tự nó là bằng chứng chúng
+đáng quan tâm. \emph{Tầng~1} chứa các hyperlink khai thác từ DOM của mỗi
+trang đã thăm. Khai thác hyperlink là thiết yếu: nếu không, tăng trưởng
+frontier phụ thuộc hoàn toàn vào điều hướng khi giải task, và một trang mà
+mọi task đều thuộc dạng tra cứu thông tin sẽ không đóng góp gì cho frontier
+--- một chế độ hỏng mà chúng tôi quay lại ở Chương~\ref{ch:discussion}.
+
+Tuy nhiên, link khai thác đến ồ ạt và bị áp đảo bởi các trang gần trùng
+nhau (mọi bài đăng, bình luận, trang cá nhân của một diễn đàn chung một
+khuôn trang). Để chúng không tràn ngập hàng đợi, mỗi URL được chuẩn hóa
+thành một \emph{URL template}: bỏ scheme, query và fragment; các đoạn
+đường dẫn giống mã định danh --- cùng mọi thứ phía sau --- được thay bằng
+ký tự đại diện, ví dụ
+\begin{center}
+\texttt{/f/AskReddit/comments/12345/title}
+$\;\rightarrow\;$
+\texttt{/f/AskReddit/comments/*/*}.
+\end{center}
+Mỗi template chỉ được thăm tối đa $c$ trang (mặc định $c = 3$), và mức trần
+được kiểm tra lại một cách lười (lazy) lúc lấy ra khỏi hàng đợi, vì số lần
+thăm của một template tăng dần trong run. Trong tầng~1, ứng viên thuộc
+template chưa gặp được ưu tiên trước, rồi tới trang nông hơn, rồi thứ tự
+chèn. Thuật toán~\ref{alg:frontier} tóm tắt vòng lặp; node nào có nội dung
+trang ban đầu hash trùng với một node đã thăm sẽ bị bỏ qua ngay.
+
+\begin{algorithm}[H]
+\caption{Vòng khám phá có định hướng theo graph}
+\label{alg:frontier}
+\begin{algorithmic}[1]
+\State $F \gets$ hàng đợi ưu tiên nạp các URL hạt giống; $V \gets \emptyset$
+\While{$F \neq \emptyset$ \textbf{và} còn ngân sách node}
+  \State $u \gets \textsc{Pop}(F)$ \Comment{khóa: (tầng, độ mới template, độ sâu, thứ tự)}
+  \If{template của $u$ đã kịch trần \textbf{hoặc} $\textsc{Hash}(u) \in V$} \textbf{continue} \EndIf
+  \State $V \gets V \cup \{\textsc{Hash}(u)\}$
+  \State $T \gets \textsc{Explorer}(u)$ \Comment{low-level task, Mục~\ref{sec:method-lowlevel}}
+  \State $T \gets T \cup \textsc{SemanticTasks}()$ \Comment{chuỗi operator, Mục~\ref{sec:method-semantic}}
+  \For{task $t \in T$}
+    \State $\tau \gets \textsc{Solver}(u, t)$; ghi episode; $\textsc{Discovery}(\tau)$
+    \State thêm các URL đạt tới trong $\tau$ vào $F$ ở tầng~0
+  \EndFor
+  \State khai thác hyperlink của $u$; thêm vào tầng~1 theo trần template
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Đề xuất low-level task}
+\label{sec:method-lowlevel}
+
+Trên mỗi trang frontier, một \emph{explorer} dựa trên LLM đề xuất tối đa
+$k$ task cụ thể (mặc định $k = 6$) bám vào nội dung trang. Mỗi đề xuất được
+trả về ở dạng có cấu trúc với trường phân loại tường minh ---
+\texttt{INFO} (tra cứu thông tin), \texttt{NAV} (điều hướng) hoặc
+\texttt{MOD} (thay đổi trạng thái) --- thay vì văn bản tự do gắn thẻ, điều
+mà các run thực tế cho thấy mô hình không tuân thủ ổn định. Việc phân loại
+mang tính then chốt: trong chế độ \emph{read-only} dùng trên website dùng
+chung, các task \texttt{MOD} và mọi task mô hình không phân loại được đều
+bị loại theo nguyên tắc fail-closed, vì một task không phân loại được có
+thể là một task thay đổi trạng thái trá hình.
+
+Hai cơ chế giữ cho các đề xuất đa dạng. Thứ nhất, explorer tồn tại suốt cả
+run và nhớ mọi task nó từng đề xuất; các đề xuất gần đây được đưa ngược vào
+prompt làm ngữ cảnh phủ định, và các bản gần trùng bị loại thêm ở mức mã.
+Thiếu cơ chế này, một tỷ lệ lớn đề xuất sẽ thoái hóa thành các câu điều
+hướng menu lặp lại trên mọi trang. Thứ hai, khi danh sách phải cắt về $k$,
+các task tra cứu thông tin bị cắt trước: giải một task \texttt{INFO} không
+điều hướng đi đâu, nên không bao giờ giúp frontier lớn lên.
+
+Các đề xuất này \emph{cố ý} ở mức thấp: mỗi cái gói trong khả năng của một
+trang. Vai trò của chúng là sinh ra các trajectory đa dạng, thực tế ---
+nguyên liệu thô để từ đó rút ra skill, và sau cùng là semantic task.
+
+\subsection{Solver giải task}
+\label{sec:method-solver}
+
+\emph{Solver} là một vòng lặp agent kiểu ReAct~\cite{yao2023react}: ở mỗi
+bước nó nhận mục tiêu, URL hiện tại, accessibility tree (đã giới hạn độ
+dài), và một cửa sổ các hành động gần đây, mỗi hành động kèm kết quả quan
+sát được (``đang ở $\langle$url$\rangle$'', ``trang đã đổi'', hoặc ``không
+đổi''), rồi trả lời bằng một dòng suy nghĩ và một hành động thuộc
+Bảng~\ref{tab:actions}. Nếu một hành động thực thi lỗi, thông báo lỗi được
+đưa lại ở bước sau để agent tự sửa thay vì hủy episode.
+
+Hai chốt chặn cấu trúc giới hạn vòng lặp. Thứ nhất, solver theo dõi mỗi
+hành động có làm quan sát thay đổi không và nó tác động lên đích nào. Một
+chuỗi cuối gồm các hành động trên \emph{cùng một đích} mà \emph{không có
+thay đổi quan sát được} trước hết kích hoạt một cảnh báo tiêm vào prompt,
+và sau đó --- vì các run thực tế cho thấy cảnh báo bằng lời không đủ để mô
+hình ngừng click một phần tử trơ --- là một lệnh dừng cứng kết thúc
+episode. Yêu cầu ``không có thay đổi quan sát được'', thay vì chỉ so trùng
+chuỗi hành động, giúp chốt chặn không kích hoạt nhầm trên các chuỗi nhiều
+bước hợp lệ tái sử dụng một phần tử qua các trang khác nhau. Thứ hai, khi
+ngân sách bước cạn trên một task không có phép kiểm tra mục tiêu lập trình
+được, solver thực hiện một lời gọi \emph{wrap-up} cuối cùng, chỉ văn bản,
+chỉ được phép trả lời \texttt{send\_msg\_to\_user} (tuyên bố hoàn thành)
+hoặc \texttt{report\_infeasible}; mọi thứ khác bị loại bỏ. Bất khả thi là
+một kết cục hạng nhất: không bao giờ được thực thi trong trình duyệt, không
+bao giờ thử lại, không bao giờ đưa vào phát hiện skill, nhưng \emph{được}
+giữ làm tín hiệu huấn luyện (Mục~\ref{sec:method-data}), dạy mô hình biết
+khi nào nên dừng.
+
+\section{Phát hiện skill}
+\label{sec:method-skills}
+
+Mọi trajectory hoàn tất chảy qua pipeline phát hiện bốn giai đoạn: cắt
+đoạn, gom cụm, trừu tượng hóa, và kiểm chứng.
+
+\subsection{Cắt đoạn (segmentation)}
+
+Một trajectory thường đan xen nhiều hành vi khác nhau (tìm kiếm, rồi lọc,
+rồi mở kết quả). Bước cắt đoạn chia nó thành các \emph{sub-trajectory} mạch
+lạc. Các điểm cắt ứng viên được gieo từ hai tín hiệu: URL thay đổi và độ
+tương đồng giữa hai accessibility tree liên tiếp sụt giảm --- tín hiệu sau
+bắt được các chuyển cảnh trong trang (ví dụ hộp thoại bật lên) không hề
+chạm tới URL. Sau đó một LLM phân xử các ứng viên, gộp hoặc xác nhận điểm
+cắt; đầu ra được kiểm tra hợp lệ so với tập ứng viên, và các đoạn điều
+hướng tầm thường một bước được gộp vào đoạn kề.
+
+\subsection{Gom cụm trực tuyến (streaming clustering)}
+
+Mỗi sub-trajectory được nhúng (bằng biểu diễn sentence
+embedding~\cite{reimers2019sbert}) và gán vào một cụm bởi bộ gom cụm phi
+tham số, trực tuyến thuộc họ DP-means~\cite{kulis2012dpmeans}: đoạn mới gia
+nhập cụm gần nhất nếu độ tương đồng cosine vượt ngưỡng, ngược lại nó lập
+cụm mới. Nhờ đó số lượng skill không cần cố định trước, và việc gom cụm
+diễn ra ngay trong lúc khám phá thay vì trong một pha batch riêng.
+
+\subsection{Trừu tượng hóa}
+
+Khi một cụm chín --- lặp lại đủ một số lần cấu hình được qua các trajectory
+độc lập --- một LLM trừu tượng hóa nó thành một \emph{skill card}: tên, mô
+tả, và các ô tham số có kiểu tổng quát hóa các giá trị cụ thể trong các
+thành viên (ví dụ chuỗi tìm kiếm cụ thể). Các đoạn thành viên được giữ lại
+làm bằng chứng.
+
+\subsection{Kiểm chứng}
+
+Theo nguyên tắc P1, một skill chỉ được nhận vào thư viện sau khi kiểm
+chứng. Trong môi trường mock tất định dùng khi phát triển, kiểm chứng thực
+thi skill trong $k$ ngữ cảnh giữ riêng (held-out) và yêu cầu mọi lần chạy
+thành công. Trên website thật, nơi thực thi lại vừa đắt vừa có tác dụng
+phụ, việc thu nhận dựa vào sự lặp lại qua các trajectory độc lập (ngưỡng
+chín) kết hợp kiểm tra kết cục của các episode liên quan;
+Chương~\ref{ch:discussion} bàn về đánh đổi này.
+
+\section{Sinh semantic task bằng ghép chuỗi operator}
+\label{sec:method-semantic}
+
+Mục này mô tả hạt nhân của phương pháp: graph biến các skill đã kiểm chứng
+thành những task huấn luyện dài hạn, mới, mà không đề xuất bám trang nào
+tạo ra được.
+
+\subsection{Induction operator}
+
+Khi một skill được thu nhận, một LLM \emph{inducer} xem xét skill card của
+nó cùng các quan sát biên (trang trước và sau) của vài đoạn thành viên, rồi
+viết ra precondition và effect của skill dưới dạng các mệnh đề ngôn ngữ tự
+nhiên. Tuy nhiên, để LLM viết tự do sẽ làm vỡ vụn bộ từ vựng: đo trên một
+run thực tế, độ tương đồng embedding không gộp được một cặp diễn đạt tương
+đương thật (0{,}570 --- \emph{dưới} ngưỡng gộp 0{,}6) trong khi chấm một
+cặp khác nghĩa cao hơn (0{,}606). Vì vậy induction được thiết kế
+\emph{nhận biết từ vựng}: prompt kèm các nhãn mệnh đề sẵn có của registry
+--- các mục dùng nhiều nhất và mới nhất --- cùng chỉ thị tái sử dụng nguyên
+văn mệnh đề tương đương thay vì diễn đạt lại.
+
+Operator sau induction đi qua một \emph{cổng chặn tautology}. Effect nào
+chỉ lặp lại một precondition sẽ bị bỏ ($\mathit{eff} \leftarrow
+\mathit{eff} \setminus \mathit{pre}$); skill không còn effect mới nào bị
+loại thẳng thay vì được nâng cấp. Cổng này tồn tại vì nếu thiếu nó, đa số
+operator sinh ra trong các run đầu không mã hóa thay đổi trạng thái nào ---
+và một operator không thay đổi gì thì không bao giờ ghép chuỗi tới đâu
+được. Một operator được đánh dấu \emph{terminal} nếu một episode thành viên
+thật sự chạm trạng thái mục tiêu đã cấu hình, hoặc inducer gắn cờ nó là
+hoàn-thành-mục-tiêu.
+
+\subsection{Chuẩn hóa mệnh đề}
+
+Mỗi mệnh đề được đối chiếu với một \emph{predicate registry}, dùng lại đúng
+bộ gom cụm ngưỡng cosine của thư viện skill nhưng tắt tính năng gộp cụm, để
+mã định danh ổn định một khi đã cấp: mệnh đề mới hoặc gia nhập một cụm
+chuẩn có sẵn (và nhận mã của cụm) hoặc lập cụm mới. Nhờ đó các operator
+chia sẻ một bộ từ vựng chung, tăng dần $P = \{p_0, p_1, \dots\}$, và bộ lập
+kế hoạch có thể khớp effect với precondition bằng so sánh mã định danh ---
+giữ nguyên lập kế hoạch tập hợp cổ điển trên một bộ từ vựng mở do LLM viết.
+
+\subsection{Ghép chuỗi operator thành semantic task}
+
+Operator graph nối $\omega_1 \rightarrow \omega_2$ khi một effect của
+$\omega_1$ khớp chuẩn hóa với một precondition của $\omega_2$. Một phép
+liệt kê tìm kiếm theo chiều sâu có chặn liệt kê mọi chuỗi đơn có độ dài ít
+nhất hai (với các cầu dao ngắt trên độ dài và số lượng đường đi, vì liệt kê
+đường đơn bùng nổ tổ hợp trên graph dày). Mỗi chuỗi phân biệt trở thành một
+\emph{goal task} ghép: chỉ dẫn của nó sinh từ mô tả của các skill trong
+chuỗi, điểm xuất phát là URL khởi đầu ghi nhận cho operator đầu tiên. Ví
+dụ, nếu khám phá lần lượt phát hiện ``tìm kiếm trong danh mục sản phẩm'' và
+``thêm một sản phẩm đang hiển thị vào giỏ'', chuỗi của hai skill này sinh
+task dạng \emph{``tìm một sản phẩm rồi thêm một kết quả vào giỏ hàng''} ---
+một mục tiêu bám chắc vào các năng lực đã kiểm chứng, nhưng chưa từng được
+trang nào đề xuất. Đây chính là \textbf{semantic task} theo định nghĩa của
+khóa luận.
+
+Semantic task được lập lịch dè dặt: mỗi chuỗi phân biệt chỉ thử một lần mỗi
+run, và mỗi node chỉ thử thêm một số chuỗi mới nhất định. Kiểm chứng theo
+hướng tất định khi có thể: nếu operator cuối chuỗi là terminal và website
+có mệnh đề kết thúc cấu hình sẵn (ví dụ URL xác nhận đơn hàng), thành công
+được kiểm tra bằng chương trình. Ngược lại, episode được tự chấm qua câu
+trả lời kết thúc của solver rồi được judge chấm lại offline
+(Mục~\ref{sec:method-data}). Khi graph còn quá nông để ghép chuỗi --- chưa
+đủ hai operator nối nhau --- hệ thống lùi về lập kế hoạch thẳng tới mệnh đề
+kết thúc nếu có, để việc thu dữ liệu có mục tiêu bắt đầu từ trước khi graph
+trưởng thành.
+
+Semantic task quan trọng với đích cuối --- dữ liệu huấn luyện --- theo hai
+cách. Chúng kéo dài \emph{phân phối độ dài} của trajectory thu được vượt
+khỏi mức task bám trang, và chúng mang cấu trúc ghép: episode chứng minh
+được việc xâu chuỗi nhiều năng lực đã kiểm chứng --- đúng loại hành vi mà
+một mô hình nhỏ cần bản mẫu nhất.
+
+\section{Tinh lọc dữ liệu}
+\label{sec:method-data}
+
+Episode thô chưa phải dữ liệu huấn luyện. Ba giai đoạn offline biến chúng
+thành một dataset trong khi thi hành nguyên tắc P1 từ đầu tới cuối.
+
+\subsection{Chấm độc lập các thành công tự tuyên bố}
+
+Một solver trả lời ``xong'' thực chất đã tự chấm bài mình. Bước
+\emph{judge} dùng một LLM mạnh hơn xem xét lại mọi episode tự tuyên bố
+thành công, đối chiếu mục tiêu với chính trạng thái cuối của episode (URL
+và nội dung trang), và ghi phán quyết bên cạnh kết cục gốc. Phán quyết chỉ
+cộng thêm --- kết cục gốc không bao giờ bị ghi đè --- và trình dựng dataset
+có thể được yêu cầu chỉ giữ các thành công đã judge xác nhận, loại các
+episode chưa từng được chấm thay vì âm thầm tin chúng.
+
+\subsection{Viết lại suy nghĩ (thought re-annotation)}
+
+Suy nghĩ tự phát của solver chất lượng không đồng đều, mà chúng lại là đích
+bắt chước của mô hình fine-tune. Một bước viết lại biến suy nghĩ mỗi bước
+thành dạng có cấu trúc gồm: một câu đánh giá gọn trạng thái hiện tại; một
+câu phản tư khi hành động trước không tạo tiến triển; \emph{subgoal} hiện
+tại của bước, khôi phục bằng cách chạy lại đúng phép cắt đoạn của khâu phát
+hiện trên trajectory đã ghi; và --- chỉ ở bước cuối của task --- một phép
+kiểm tra hoàn thành tường minh so với mục tiêu. Điểm cốt yếu: subgoal chỉ
+xuất hiện trong \emph{đích} (assistant target), không bao giờ trong prompt
+người dùng, vì lúc suy luận không có thành phần nào cung cấp ``subgoal hiện
+tại'' làm đầu vào, và huấn luyện không được phép giả định có.
+
+\subsection{Dựng dataset với prompt parity}
+
+Trình dựng cuối biên dịch episode thành các mẫu instruction-tuning dưới
+quy tắc \emph{prompt parity} nghiêm ngặt: prompt lúc huấn luyện giống hệt
+về cấu trúc với prompt của solver đang chạy thật. System prompt được
+import từ solver thay vì chép lại; quan sát trang bị cắt bởi đúng thủ tục
+cắt với đúng dấu hiệu cắt tường minh; các dòng lịch sử render với đúng chú
+thích kết quả mà agent thật nhìn thấy. Bước nào có hành động thực thi lỗi
+bị loại cả khỏi đích lẫn khỏi lịch sử các bước sau --- lỗi đó vốn cũng chưa
+từng nằm trong lịch sử của chính agent lúc chạy. Các episode kết thúc bằng
+\texttt{report\_infeasible} chính đáng được giữ làm đích hợp lệ. Mỗi mẫu
+mang mã trajectory và chỉ số bước để hỗ trợ gom lô theo trajectory, và các
+mẫu được xếp từ dễ đến khó (episode ngắn, đã kiểm chứng lên trước) tạo
+thành một curriculum.
+
+\section{Fine-tune mô hình ngôn ngữ nhỏ}
+\label{sec:method-sft}
+
+Mô hình đích là Qwen3.5-9B~\cite{yang2025qwen3}, fine-tune bằng
+LoRA~\cite{hu2022lora} qua framework
+LLaMA-Factory~\cite{zheng2024llamafactory}. Hai chi tiết mang tính quyết
+định. Thứ nhất, phép chia train/validation thực hiện \emph{theo
+trajectory}, không bao giờ theo bước: các bước của một episode tương quan
+mạnh, chia lẫn chúng giữa hai tập sẽ gây rò rỉ thông tin. Thứ hai, họ mô
+hình này mặc định phát ra các đoạn suy nghĩ tường minh, trong khi đích của
+chúng tôi là các cặp suy nghĩ--hành động trần; do đó chat template phải tắt
+chế độ ``thinking'' của mô hình một cách nhất quán ở cả lúc huấn luyện
+\emph{và} lúc suy luận. Sau huấn luyện, adapter được gộp vào trọng số gốc
+và mô hình được serving bằng vLLM~\cite{kwon2023vllm}, cũng tắt thinking
+trên mọi request, để mô hình triển khai thấy đúng phân phối nó được huấn
+luyện --- phía serving của nguyên tắc prompt parity.
+
+\section{Ghi chú hiện thực hóa}
+\label{sec:method-impl}
+
+HSGE được hiện thực bằng Python. Bảng~\ref{tab:modules} ánh xạ các giai
+đoạn pipeline sang các module. Hai quyết định hiện thực đáng nêu. Thứ nhất,
+mỗi vai trò dùng LLM --- explorer, solver, bộ cắt đoạn, bộ trừu tượng hóa,
+bộ kiểm chứng, inducer, judge, bộ viết lại suy nghĩ --- cấu hình mô hình
+độc lập, nên các vai trò gọi nhiều có thể dùng mô hình rẻ trong khi mô hình
+mạnh được để dành cho induction và chấm bài. Thứ hai, toàn bộ pipeline chạy
+được trên các backend mock tất định (LLM kịch bản, embedder băm, website mô
+phỏng) mà không đổi dòng mã nào: backend thật chỉ là các lớp con thay thế.
+Đường nối này giúp logic phát hiện kiểm thử đơn vị được với các khẳng định
+chính xác, và tách việc phát triển thuật toán khỏi chi phí API lẫn tính sẵn
+sàng của website. Các sản phẩm trung gian (skill, operator, graph, kết quả
+từng node, nhật ký sự kiện) được lưu sau \emph{mỗi} node khám phá, nên một
+run bị ngắt giữa chừng vẫn để lại một bản chụp nhất quán.
+
+\begin{table}[H]
+\centering
+\caption[Các giai đoạn pipeline và module hiện thực]{Các giai đoạn pipeline
+và module hiện thực tương ứng.}
+\label{tab:modules}
+\begin{tabular}{L{5.2cm} L{8.0cm}}
+\toprule
+\textbf{Giai đoạn} & \textbf{Module} \\
+\midrule
+Vòng khám phá, frontier & \texttt{webarena/runtime}, \texttt{webarena/browser} \\
+Đề xuất và giải task & \texttt{webarena/agents} \\
+Cắt đoạn & \texttt{segmentation}, \texttt{discovery} \\
+Gom cụm, thư viện skill & \texttt{clustering}, \texttt{abstraction}, \texttt{library} \\
+Operator và lập kế hoạch & \texttt{operators}, \texttt{operator\_induction}, \texttt{predicate\_registry} \\
+Tinh lọc dữ liệu & \texttt{judge\_episodes}, \texttt{reannotate\_thoughts}, \texttt{build\_sft\_dataset} \\
+Huấn luyện và serving & cấu hình LLaMA-Factory, script vLLM \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{1em}
+\noindent
+Với phương pháp đã hoàn chỉnh, chương tiếp theo chuyển sang đánh giá thực
+nghiệm: pipeline thu được bao nhiêu dữ liệu trong thực tế, và fine-tune
+trên dữ liệu đó có cải thiện một mô hình nhỏ trên benchmark WebArena chính
+thức hay không.
