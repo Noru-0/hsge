@@ -19,9 +19,18 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
 - ✅ Front matter: title (bìa tạm — chờ chốt tên tiếng Anh), acknowledgments,
   chapter summaries, glossary, **abstract đã có bản nháp đầy đủ**.
 - ✅ References/references.bib: 13 entry nền (một số đánh dấu VERIFY).
-- ⬜ Chapter 2, 4: mới có skeleton (roadmap + section stub + TODO comment trỏ
-  về dàn ý này). Thứ tự viết tiếp: **C2 → C4** (C2 cần vòng verify citation;
-  C4 điền số khi thực nghiệm bổ sung xong).
+- ✅ **Chapter 2 (Related Work)**: đã viết trọn (6 mục; mỗi công trình có câu
+  critique "However"; bảng positioning 11 hệ thống × 5 trục với ký hiệu
+  wasysym \CIRCLE/\LEFTcircle). ~20 paper mới được verify qua web search
+  (WebArena số liệu 14.41%/78.24% xác nhận đúng; đối thủ gần nhất:
+  **Go-Browse** — Gandhi & Neubig ICLR 2026, graph-of-pages, 21.7% WebArena
+  7B — phân biệt bằng two-level graph + semantic task; SkillWeaver/ASI cho
+  mảng skill; NNetNav/OS-Genesis/PAE/InSTA/Synatra/AgentTrek cho data-gen;
+  WebRL/WebAgent-R1/WebEvolver cho RL/world-model; AutoWebGLM + NVIDIA
+  position paper cho SLM). Một số entry trong references.bib còn note
+  `VERIFY` (author list đầy đủ / venue cuối) — agent verify đang chạy,
+  vá xong thì xóa note.
+- ⬜ Chapter 4: skeleton, điền số khi thực nghiệm bổ sung xong.
 - Build: `pdflatex → bibtex → pdflatex ×2` từ trong thesis_hsge/ (main.tex).
   ⚠️ Sau khi THÊM citation mới phải chạy đủ chu trình sạch (rm aux/bbl →
   4 lệnh trên), nếu không sẽ dính đúng lỗi "reference [0]" mà review mẫu
@@ -129,9 +138,9 @@ critique** ("However, ...") — tránh lỗi "giống khảo sát tài liệu".
   thuật toán train.
 - **2.6 Positioning** — bảng so sánh các trục: exploration có cấu trúc graph?
   task có verify? có compose dài hạn? train SLM? → khoảng trống mà HSGE lấp.
-- Nguồn cần đọc/kiểm tra: 2 paper PDF trong `Thesis_report/thesis_v3/`
-  (2507.17128v2, 2510.02585v1 — xem có liên quan không), paper WebArena,
-  BrowserGym, AWM; tìm SOTA 2024–2026 bằng web search khi viết.
+- Nguồn: paper WebArena, BrowserGym, AWM; SOTA 2024–2026 qua web search.
+  (Đã kiểm tra 2026-07-17: 2 PDF trong thesis_v3 — 2507.17128v2,
+  2510.02585v1 — đều là paper autoscaling của đề tài mẫu, KHÔNG liên quan.)
 
 ## Chapter 3 — Proposed Method (~18–22 trang) ★ TRỌNG TÂM
 
