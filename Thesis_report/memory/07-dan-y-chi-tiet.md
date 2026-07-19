@@ -41,6 +41,24 @@ sạch 77 trang. ⚠️ Khi sửa nội dung một bản, nhớ sửa bản kia 
 (hai bản chia sẻ cùng references.bib nội dung nhưng là 2 file riêng).
 Lưu ý build: log chứa ký tự Việt → grep cần cờ `-a`; chuỗi tt dài dùng
 `\slash` để bẻ dòng.
+
+**Sơ đồ (2026-07-19)**: đã vẽ 5 sơ đồ draw.io cho Chương 3 (bằng skill
+drawio, theme academic + font Times, export PDF qua draw.io Desktop), nhúng
+vào cả hai bản:
+- `fig_twolevel` (§3.2 graph hai tầng), `fig_solver` (§3.3 vòng lặp solver),
+  `fig_discovery` (§3.4 phát hiện skill), `fig_semantic` (§3.5 sinh semantic
+  task — hình "đắt" nhất), `fig_curation` (§3.6 tinh lọc dữ liệu).
+- Nguồn YAML ở `Thesis_report/.drawio-tmp/*.yaml` (git-ignored); PDF ở
+  `<edition>/Figures/`. Bản EN và VI có YAML/PDF riêng (label dịch).
+- 2 hình cũ (Fig 3.1 pipeline overview, Fig 1.1 roadmap) vẫn là TikZ — style
+  hơi khác draw.io nhưng chấp nhận được; có thể chuyển sau nếu muốn đồng bộ.
+- **Cách chạy skill drawio** (nếu cần vẽ thêm): cần cài `js-yaml@4.1.0` vào
+  `~/.agents/skills/drawio/node_modules` (v5 lỗi default export); font phải
+  khai đủ `primary/cjk/formula`; nhãn nhiều dòng dùng `\n` (KHÔNG dùng `<br>`
+  — bị nhầm là math HTML); nhãn ngắn, chi tiết đưa vào `\caption`; decision
+  (hình thoi) giữ nhãn cực ngắn kẻo tràn. Render: `node
+  ~/.claude/skills/drawio/scripts/cli.js in.yaml out.pdf --validate
+  --use-desktop`.
 - Build: `pdflatex → bibtex → pdflatex ×2` từ trong thesis_hsge/ (main.tex).
   ⚠️ Sau khi THÊM citation mới phải chạy đủ chu trình sạch (rm aux/bbl →
   4 lệnh trên), nếu không sẽ dính đúng lỗi "reference [0]" mà review mẫu

@@ -101,6 +101,18 @@ Three design principles run through the pipeline:
 \section{Two-Level Graph Representation}
 \label{sec:method-graph}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{Figures/fig_twolevel.pdf}
+\caption[The two-level graph]{The two-level graph. The low level records
+visited page states and the trajectory edges (actions) between them; the high
+level records skills, lifted into planning operators and wired by composition
+edges where one operator's effect matches the next one's precondition. Skills
+are grounded in the low level through abstraction and initiation/effect
+links.}
+\label{fig:twolevel}
+\end{figure}
+
 \subsection{The website as a decision process}
 
 We model the website as a partially observable decision process. At each step
@@ -273,6 +285,17 @@ tasks, are derived.
 \subsection{The task solver}
 \label{sec:method-solver}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{Figures/fig_solver.pdf}
+\caption[The solver loop with structural guards]{The solver's
+observe--think--act loop. A stuck-loop guard hard-stops the episode when
+actions repeat on the same target with no observable change; an exhausted
+step budget triggers a single wrap-up call that may only declare success or
+infeasibility.}
+\label{fig:solver}
+\end{figure}
+
 The \emph{solver} is a ReAct-style agent loop~\cite{yao2023react}: at each
 step it receives the goal, the current URL, the (length-capped) accessibility
 tree, and a window of its recent actions, each annotated with its observed
@@ -302,7 +325,18 @@ never fed to skill discovery, but it \emph{is} kept as a training signal
 \label{sec:method-skills}
 
 Every completed trajectory flows through a four-stage discovery pipeline:
-segmentation, clustering, abstraction, and verification.
+segmentation, clustering, abstraction, and verification
+(Figure~\ref{fig:discovery}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.34\textwidth]{Figures/fig_discovery.pdf}
+\caption[The skill discovery pipeline]{The skill discovery pipeline. A
+completed trajectory is segmented into sub-trajectories, streamed into
+clusters, abstracted into a skill card, and admitted to the library only if
+it passes verification; otherwise it is discarded.}
+\label{fig:discovery}
+\end{figure}
 
 \subsection{Segmentation}
 
@@ -349,7 +383,18 @@ episodes involved; Chapter~\ref{ch:discussion} discusses this trade-off.
 
 This section describes the centerpiece of the method: how the graph turns
 verified skills into new, long-horizon training tasks that no single page
-proposal would produce.
+proposal would produce (Figure~\ref{fig:semantic}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\textwidth]{Figures/fig_semantic.pdf}
+\caption[Semantic task generation via operator chaining]{Semantic task
+generation by operator chaining. Each edge is labelled with the shared state
+where one operator's effect matches the next operator's precondition; chaining
+the operators yields a single long-horizon semantic task that no individual
+page proposes.}
+\label{fig:semantic}
+\end{figure}
 
 \subsection{Operator induction}
 
@@ -423,7 +468,17 @@ is precisely the behavior a small model most needs demonstrations of.
 \label{sec:method-data}
 
 Raw episodes are not yet training data. Three offline stages turn them into a
-dataset while enforcing principle P1 end to end.
+dataset while enforcing principle P1 end to end (Figure~\ref{fig:curation}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.36\textwidth]{Figures/fig_curation.pdf}
+\caption[The data curation pipeline]{The data curation pipeline. Recorded
+episodes are re-checked by an independent judge, their thoughts re-annotated,
+and compiled by a prompt-parity dataset builder; declared successes that fail
+judging are dropped.}
+\label{fig:curation}
+\end{figure}
 
 \subsection{Independent judging of declared successes}
 

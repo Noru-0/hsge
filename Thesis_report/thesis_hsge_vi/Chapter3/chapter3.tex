@@ -101,6 +101,17 @@ Ba nguyên tắc thiết kế xuyên suốt pipeline:
 \section{Biểu diễn graph hai tầng}
 \label{sec:method-graph}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{Figures/fig_twolevel.pdf}
+\caption[Graph hai tầng]{Graph hai tầng. Tầng thấp ghi các page state đã
+thăm và các cạnh trajectory (hành động) giữa chúng; tầng cao ghi các skill,
+được nâng thành operator lập kế hoạch và nối bằng cạnh ghép nơi effect của
+một operator khớp precondition của operator kế. Skill được neo vào tầng thấp
+qua các liên kết trừu tượng hóa và initiation/effect.}
+\label{fig:twolevel}
+\end{figure}
+
 \subsection{Website như một quá trình quyết định}
 
 Chúng tôi mô hình hóa website như một quá trình quyết định quan sát được
@@ -271,6 +282,17 @@ nguyên liệu thô để từ đó rút ra skill, và sau cùng là semantic ta
 \subsection{Solver giải task}
 \label{sec:method-solver}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{Figures/fig_solver.pdf}
+\caption[Vòng lặp Solver với chốt chặn cấu trúc]{Vòng lặp quan sát--suy
+nghĩ--hành động của solver. Chốt chặn stuck-loop dừng cứng episode khi các
+hành động lặp trên cùng một đích mà không có thay đổi quan sát được; khi cạn
+ngân sách bước, một lời gọi wrap-up duy nhất chỉ được tuyên bố hoàn thành
+hoặc bất khả thi.}
+\label{fig:solver}
+\end{figure}
+
 \emph{Solver} là một vòng lặp agent kiểu ReAct~\cite{yao2023react}: ở mỗi
 bước nó nhận mục tiêu, URL hiện tại, accessibility tree (đã giới hạn độ
 dài), và một cửa sổ các hành động gần đây, mỗi hành động kèm kết quả quan
@@ -301,7 +323,17 @@ khi nào nên dừng.
 \label{sec:method-skills}
 
 Mọi trajectory hoàn tất chảy qua pipeline phát hiện bốn giai đoạn: cắt
-đoạn, gom cụm, trừu tượng hóa, và kiểm chứng.
+đoạn, gom cụm, trừu tượng hóa, và kiểm chứng (Hình~\ref{fig:discovery}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.34\textwidth]{Figures/fig_discovery.pdf}
+\caption[Pipeline phát hiện skill]{Pipeline phát hiện skill. Một trajectory
+hoàn tất được cắt thành sub-trajectory, gom thành cụm, trừu tượng hóa thành
+skill card, và chỉ được nhận vào thư viện nếu đạt kiểm chứng; nếu không thì
+bị loại bỏ.}
+\label{fig:discovery}
+\end{figure}
 
 \subsection{Cắt đoạn (segmentation)}
 
@@ -346,7 +378,17 @@ Chương~\ref{ch:discussion} bàn về đánh đổi này.
 
 Mục này mô tả hạt nhân của phương pháp: graph biến các skill đã kiểm chứng
 thành những task huấn luyện dài hạn, mới, mà không đề xuất bám trang nào
-tạo ra được.
+tạo ra được (Hình~\ref{fig:semantic}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\textwidth]{Figures/fig_semantic.pdf}
+\caption[Sinh semantic task bằng ghép chuỗi operator]{Sinh semantic task
+bằng ghép chuỗi operator. Mỗi cạnh gắn nhãn là trạng thái chung nơi effect
+của một operator khớp precondition của operator kế; ghép các operator sinh ra
+một semantic task dài hạn mà không trang đơn lẻ nào đề xuất.}
+\label{fig:semantic}
+\end{figure}
 
 \subsection{Induction operator}
 
@@ -418,7 +460,18 @@ một mô hình nhỏ cần bản mẫu nhất.
 \label{sec:method-data}
 
 Episode thô chưa phải dữ liệu huấn luyện. Ba giai đoạn offline biến chúng
-thành một dataset trong khi thi hành nguyên tắc P1 từ đầu tới cuối.
+thành một dataset trong khi thi hành nguyên tắc P1 từ đầu tới cuối
+(Hình~\ref{fig:curation}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.36\textwidth]{Figures/fig_curation.pdf}
+\caption[Pipeline tinh lọc dữ liệu]{Pipeline tinh lọc dữ liệu. Các episode
+đã ghi được một judge độc lập chấm lại, suy nghĩ được viết lại, và được trình
+dựng dataset theo prompt parity biên dịch; các thành công tự tuyên bố không
+qua judge bị loại.}
+\label{fig:curation}
+\end{figure}
 
 \subsection{Chấm độc lập các thành công tự tuyên bố}
 
