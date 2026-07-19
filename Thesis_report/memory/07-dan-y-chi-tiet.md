@@ -50,6 +50,11 @@ vào cả hai bản:
   task — hình "đắt" nhất), `fig_curation` (§3.6 tinh lọc dữ liệu).
 - Nguồn YAML ở `Thesis_report/.drawio-tmp/*.yaml` (git-ignored); PDF ở
   `<edition>/Figures/`. Bản EN và VI có YAML/PDF riêng (label dịch).
+- **Màu (2026-07-19)**: đổi theme `academic` (đen trắng) → `tech-blue` (có
+  màu) + style override theo nghĩa: xanh lá = output/thành công (Skill
+  library, SFT dataset, Episode end, operator); đỏ = loại bỏ (Discarded,
+  Dropped); vàng = decision (auto) + semantic-task output nổi bật; xanh dương
+  = process/skill. Sửa 5 file EN rồi chạy lại script dịch để lan sang VI.
 - 2 hình cũ (Fig 3.1 pipeline overview, Fig 1.1 roadmap) vẫn là TikZ — style
   hơi khác draw.io nhưng chấp nhận được; có thể chuyển sau nếu muốn đồng bộ.
 - **Cách chạy skill drawio** (nếu cần vẽ thêm): cần cài `js-yaml@4.1.0` vào
