@@ -42,9 +42,21 @@ sạch 77 trang. ⚠️ Khi sửa nội dung một bản, nhớ sửa bản kia 
 Lưu ý build: log chứa ký tự Việt → grep cần cờ `-a`; chuỗi tt dài dùng
 `\slash` để bẻ dòng.
 
-**Sơ đồ (2026-07-19)**: đã vẽ 5 sơ đồ draw.io cho Chương 3 (bằng skill
-drawio, theme academic + font Times, export PDF qua draw.io Desktop), nhúng
-vào cả hai bản:
+**Sơ đồ (2026-07-19, bản cuối = Excalidraw)**: 5 sơ đồ Chương 3 đã được vẽ
+lại bằng **Excalidraw** (theme màu, roughness 0, đẹp hơn draw.io) sau khi
+user thấy draw.io còn đơn giản. Nguồn: `Thesis_report/.excalidraw-tmp/`
+(git-ignored) — `build.py` (builder Python: tự lo bindings/seeds/tọa độ,
+tính height label theo số dòng để không chồng chữ) + `diagrams.py` (định
+nghĩa 5 hình + bảng text EN/VI, chạy `python3 diagrams.py en|vi`). Export:
+Kroki API (`curl POST kroki.io/excalidraw/svg`) → SVG → `rsvg-convert -f pdf`
+→ PDF vector ở `<edition>/Figures/*.pdf`. Màu semantic: process xanh dương,
+operator/thành công xanh lá, decision vàng, loại-bỏ đỏ, semantic-task vàng
+nổi bật, start cam. Width trong LaTeX: twolevel 0.95, semantic 0.78, solver
+1.0, discovery 0.48, curation 0.50 \\textwidth (đã chỉnh theo tỉ lệ
+excalidraw). Excalidraw KHÔNG xuất PDF trực tiếp — phải qua SVG. Font là
+Helvetica (không phải Times như body) — chấp nhận đánh đổi để đẹp hơn.
+(Lịch sử trước đó: từng vẽ bằng draw.io theme academic rồi tô màu tech-blue;
+đã thay hết bằng Excalidraw.)
 - `fig_twolevel` (§3.2 graph hai tầng), `fig_solver` (§3.3 vòng lặp solver),
   `fig_discovery` (§3.4 phát hiện skill), `fig_semantic` (§3.5 sinh semantic
   task — hình "đắt" nhất), `fig_curation` (§3.6 tinh lọc dữ liệu).
