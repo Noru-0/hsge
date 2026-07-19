@@ -67,8 +67,10 @@ Helvetica (không phải Times như body) — chấp nhận đánh đổi để 
   library, SFT dataset, Episode end, operator); đỏ = loại bỏ (Discarded,
   Dropped); vàng = decision (auto) + semantic-task output nổi bật; xanh dương
   = process/skill. Sửa 5 file EN rồi chạy lại script dịch để lan sang VI.
-- 2 hình cũ (Fig 3.1 pipeline overview, Fig 1.1 roadmap) vẫn là TikZ — style
-  hơi khác draw.io nhưng chấp nhận được; có thể chuyển sau nếu muốn đồng bộ.
+- **Hình 3.1 (pipeline overview)**: đã vẽ lại bằng Excalidraw (hàm
+  `pipeline()` trong diagrams.py) và thay khối TikZ trong cả hai bản
+  (2026-07-20). Giờ CẢ 6 hình Chương 3 đều là Excalidraw. Chỉ còn **Hình
+  1.1 (roadmap Chương 1)** là TikZ — chưa chuyển.
 - **Cách chạy skill drawio** (nếu cần vẽ thêm): cần cài `js-yaml@4.1.0` vào
   `~/.agents/skills/drawio/node_modules` (v5 lỗi default export); font phải
   khai đủ `primary/cjk/formula`; nhãn nhiều dòng dùng `\n` (KHÔNG dùng `<br>`

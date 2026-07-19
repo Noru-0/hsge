@@ -20,44 +20,9 @@ chỉnh có giám sát (SFT) gồm các trajectory tương tác có điều ki�
 và sau cùng là một mô hình ngôn ngữ nhỏ được fine-tune trên tập dữ liệu đó.
 Hình~\ref{fig:pipeline} thể hiện kiến trúc tổng thể.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[
-  font=\small,
-  box/.style={draw, rounded corners=2pt, align=center, minimum height=10mm,
-              inner sep=3pt, text width=26mm},
-  wide/.style={draw, rounded corners=2pt, align=center, minimum height=10mm,
-              inner sep=3pt, text width=40mm},
-  arr/.style={-{Stealth[length=2.5mm]}, thick},
-  node distance=10mm and 6mm
-]
-% Hàng 1: khám phá
-\node[box] (site) {Website\\(URL hạt giống)};
-\node[wide, right=of site] (explore) {Vòng khám phá\\(frontier, explorer,\\solver)};
-\node[wide, right=of explore] (disc) {Phát hiện skill\\(cắt đoạn, gom cụm,\\trừu tượng hóa,\\kiểm chứng)};
-% Hàng 2: graph và semantic task
-\node[wide, below=of disc] (ops) {Induction operator\\+ operator graph};
-\node[wide, below=of explore] (goal) {Sinh semantic task\\(ghép chuỗi operator)};
-% Hàng 3: đường dữ liệu
-\node[box, below=of goal] (episodes) {Episode\\đã ghi};
-\node[wide, right=of episodes] (curate) {Cổng chất lượng\\(judge, viết lại\\suy nghĩ)};
-\node[box, right=of curate] (sft) {Dataset SFT\\$\rightarrow$ LoRA\\$\rightarrow$ SLM};
-% Luồng hàng 1
-\draw[arr] (site) -- (explore);
-\draw[arr] (explore) -- (disc);
-% Xuống graph, quay lại semantic task
-\draw[arr] (disc) -- (ops);
-\draw[arr] (ops) -- (goal);
-% Phản hồi: semantic task quay lại vòng khám phá
-\draw[arr] (goal) -- (explore)
-  node[midway, right] {\scriptsize goal task mới};
-% Episode: đi vòng bên trái hộp semantic task
-\draw[arr] (explore.west) -- ++(-5mm,0) |- (episodes.west)
-  node[pos=0.75, above] {\scriptsize episode};
-% Luồng hàng 3
-\draw[arr] (episodes) -- (curate);
-\draw[arr] (curate) -- (sft);
-\end{tikzpicture}
+\includegraphics[width=\textwidth]{Figures/fig_pipeline.pdf}
 \caption[Tổng quan pipeline HSGE]{Tổng quan pipeline HSGE. Vòng khám phá
 giải các low-level task do LLM đề xuất trên các trang frontier; các skill
 phát hiện được nâng thành operator lập kế hoạch, mà các chuỗi của chúng

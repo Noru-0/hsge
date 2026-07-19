@@ -20,44 +20,9 @@ frontier of one or more seed URLs. The output is a supervised fine-tuning
 small language model fine-tuned on that dataset. Figure~\ref{fig:pipeline}
 shows the overall architecture.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[
-  font=\small,
-  box/.style={draw, rounded corners=2pt, align=center, minimum height=10mm,
-              inner sep=3pt, text width=26mm},
-  wide/.style={draw, rounded corners=2pt, align=center, minimum height=10mm,
-              inner sep=3pt, text width=40mm},
-  arr/.style={-{Stealth[length=2.5mm]}, thick},
-  node distance=10mm and 6mm
-]
-% Row 1: exploration
-\node[box] (site) {Website\\(seed URLs)};
-\node[wide, right=of site] (explore) {Exploration loop\\(frontier, explorer,\\solver)};
-\node[wide, right=of explore] (disc) {Skill discovery\\(segment, cluster,\\abstract, verify)};
-% Row 2: graph and semantic tasks
-\node[wide, below=of disc] (ops) {Operator induction\\+ operator graph};
-\node[wide, below=of explore] (goal) {Semantic task\\generation\\(operator chaining)};
-% Row 3: data path
-\node[box, below=of goal] (episodes) {Recorded\\episodes};
-\node[wide, right=of episodes] (curate) {Quality gates\\(judge, thought\\re-annotation)};
-\node[box, right=of curate] (sft) {SFT dataset\\$\rightarrow$ LoRA\\$\rightarrow$ SLM};
-% Row 1 flow
-\draw[arr] (site) -- (explore);
-\draw[arr] (explore) -- (disc);
-% Down to the graph, back to semantic tasks
-\draw[arr] (disc) -- (ops);
-\draw[arr] (ops) -- (goal);
-% Feedback: semantic tasks re-enter the exploration loop
-\draw[arr] (goal) -- (explore)
-  node[midway, right] {\scriptsize new goal tasks};
-% Episodes: routed left of the semantic-task box
-\draw[arr] (explore.west) -- ++(-5mm,0) |- (episodes.west)
-  node[pos=0.75, above] {\scriptsize episodes};
-% Row 3 flow
-\draw[arr] (episodes) -- (curate);
-\draw[arr] (curate) -- (sft);
-\end{tikzpicture}
+\includegraphics[width=\textwidth]{Figures/fig_pipeline.pdf}
 \caption[Overview of the HSGE pipeline]{Overview of the HSGE pipeline. The
 exploration loop solves LLM-proposed low-level tasks on frontier pages;
 discovered skills are lifted into planning operators, whose chains are fed
