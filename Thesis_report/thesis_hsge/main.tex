@@ -12,13 +12,16 @@
 \usepackage[utf8]{inputenc}
 \DeclareTextSymbolDefault{\DH}{T1}
 
+% Times New Roman (URW Nimbus Roman via vntex, T5-compatible) per Faculty rule
+\usepackage{mathptmx}
+
 % Bibliography — IEEE style as required by the Faculty guideline
 \usepackage[
 	style=ieee,
 	sorting=none,
 	backend=bibtex,
 	defernumbers=true]{biblatex}
-\usepackage[unicode]{hyperref}
+\usepackage[unicode,hidelinks]{hyperref}
 \addbibresource{References/references.bib}
 
 \makeatletter

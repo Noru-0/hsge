@@ -24,6 +24,13 @@ check_acronyms.py, extract_acronyms.py, sort_glossary.py  # tiện ích glossary
 
 - `\documentclass[oneside,a4paper,14pt]{extreport}` — font 14pt đúng quy định Khoa.
 - Tiếng Việt: `[T5]{fontenc}` + `[utf8]{inputenc}` (không dùng babel/vntex ở đây).
+- **Font Times New Roman**: `\usepackage{mathptmx}` (URW Nimbus Roman qua
+  vntex, tương thích T5) — đã kiểm chứng hiển thị đủ dấu tiếng Việt, không
+  missing glyph. Đây là cách đúng quy định Khoa (template gốc để mặc định
+  Computer Modern là lệch). Áp cho cả `thesis_hsge` và `thesis_hsge_vi`
+  (2026-07-18).
+- **hyperref** dùng `[unicode,hidelinks]` — tắt ô màu/khung quanh trích dẫn
+  và cross-ref cho bản in (không dùng `[unicode]` trơn nữa).
 - Tham khảo: `biblatex` backend **bibtex**, `sorting=nty`, `defernumbers=true`;
   `\addbibresource{References/references.bib}`; in bằng
   `\printbibliography[title={Tài liệu tham khảo}]`.
