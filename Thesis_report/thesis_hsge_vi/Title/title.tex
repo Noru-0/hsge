@@ -1,52 +1,58 @@
+\newcommand{\titlepageframe}{%
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[line width=2pt]
+    ($(current page.north west) + (2cm,-2cm)$)
+    rectangle
+    ($(current page.south east) + (-1.5cm,2cm)$);
+\end{tikzpicture}}
+
 \begin{titlepage}
+\titlepageframe
 
 \begin{center}
-TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN\\
-\textit{KHOA CÔNG NGHỆ THÔNG TIN}\\[2cm]
+{\bfseries TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN\\
+KHOA CÔNG NGHỆ THÔNG TIN}\\[2.5cm]
 
-{ \Large \bfseries Trương Bảo Kiệt -- 22127223\\
-Hồ Tiến Phát -- 22127321\\[2cm] }
+{\bfseries TRƯƠNG BẢO KIỆT \qquad HỒ TIẾN PHÁT}\\[2.5cm]
 
-{ \Large \bfseries XÂY DỰNG DỮ LIỆU VÀ TINH CHỈNH \\
+{\large \bfseries \setlength{\baselineskip}{22pt}
+XÂY DỰNG DỮ LIỆU VÀ TINH CHỈNH \\
 MÔ HÌNH NGÔN NGỮ NHỎ \\
-CHO TÁC NHÂN TRÍ TUỆ NHÂN TẠO TRÊN WEB \\[3cm]}
+CHO TÁC NHÂN TRÍ TUỆ NHÂN TẠO TRÊN WEB}\\[4.5cm]
 
-\large KHÓA LUẬN TỐT NGHIỆP CỬ NHÂN\\[2cm]
+{\bfseries KHÓA LUẬN TỐT NGHIỆP CỬ NHÂN CNTT\\
+CHƯƠNG TRÌNH CHẤT LƯỢNG CAO}\\[2.5cm]
 
-\begin{tikzpicture}[remember picture, overlay]
-  \draw[line width = 2pt] ($(current page.north west) + (2cm,-2cm)$) rectangle ($(current page.south east) + (-1.5cm,2cm)$);
-\end{tikzpicture}
-
-\vfill
-Tp. Hồ Chí Minh, tháng 08/2026
+\vspace*{\fill}
+{\bfseries TP. HỒ CHÍ MINH, <THÁNG 08/2026>}\\[0.5cm]
 
 \end{center}
 
-\pagebreak
+\end{titlepage}
+
+\begin{titlepage}
+\titlepageframe
 
 \begin{center}
 
-TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN\\
-\textit{KHOA CÔNG NGHỆ THÔNG TIN}\\[2cm]
+{\bfseries TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN\\
+KHOA CÔNG NGHỆ THÔNG TIN}\\[2.5cm]
 
-{\large \bfseries Trương Bảo Kiệt -- 22127223\\
-Hồ Tiến Phát -- 22127321\\}
+{\bfseries TRƯƠNG BẢO KIỆT - 22127223  HỒ TIẾN PHÁT - 22127321}\\[2.5cm]
 
-{ \Large \bfseries XÂY DỰNG DỮ LIỆU VÀ TINH CHỈNH \\
+{\large \bfseries \setlength{\baselineskip}{22pt}
+XÂY DỰNG DỮ LIỆU VÀ TINH CHỈNH \\
 MÔ HÌNH NGÔN NGỮ NHỎ \\
-CHO TÁC NHÂN TRÍ TUỆ NHÂN TẠO TRÊN WEB \\[2cm]}
+CHO TÁC NHÂN TRÍ TUỆ NHÂN TẠO TRÊN WEB}\\[2cm]
 
-\large KHÓA LUẬN TỐT NGHIỆP CỬ NHÂN\\[2cm]
+{\bfseries KHÓA LUẬN TỐT NGHIỆP CỬ NHÂN CNTT\\
+CHƯƠNG TRÌNH CHẤT LƯỢNG CAO}\\[2cm]
 
-\textit{NGƯỜI HƯỚNG DẪN}\\
-PGS.TS. Nguyễn Văn Vũ\\
+{\bfseries GIÁO VIÊN HƯỚNG DẪN}\\
+{\bfseries PGS.TS. NGUYỄN VĂN VŨ}\\[1.5cm]
 
-\begin{tikzpicture}[remember picture, overlay]
-  \draw[line width = 2pt] ($(current page.north west) + (2cm,-2cm)$) rectangle ($(current page.south east) + (-1.5cm,2cm)$);
-\end{tikzpicture}
-
-\vfill
-Tp. Hồ Chí Minh, tháng 08/2026
+\vspace*{\fill}
+{\bfseries TP. HỒ CHÍ MINH, THÁNG 08/2026}\\[0.5cm]
 
 \end{center}
 
