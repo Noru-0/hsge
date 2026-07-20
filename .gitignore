@@ -10,3 +10,32 @@
 
 # Real-run artifacts
 outputs/
+
+# Training checkpoints — LoRA adapters/optimizer states run to ~1.7 GB and
+# individual files exceed GitHub's hard 100 MB per-file limit.
+training/artifacts/
+
+# OS / editor / Python junk
+.DS_Store
+**/.DS_Store
+__pycache__/
+*.pyc
+
+# LaTeX build artifacts (the PDFs and sources are tracked; these are not)
+*.aux
+*.bbl
+*.blg
+*.toc
+*.lof
+*.lot
+*.out
+*.synctex.gz
+bibtex.log
+build.log
+texput.log
+
+# Sample thesis used as a reference: a clone of a THIRD PARTY's repository
+# (github.com/quockhanh41/thesis-report) with its own history and remote.
+# Git can only record it as a broken gitlink here, and vendoring it in would
+# copy someone else's work without attribution. Re-clone it if you need it.
+Thesis_report/thesis_v3/

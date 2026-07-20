@@ -4,9 +4,9 @@
 # This file is safe to commit. Precedence: CLI flags > this file > built-in defaults.
 
 run:
-  site: reddit             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
+  site: gitlab             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
   root_url: null             # explicit URL; overrides `site` when set
-  out_dir: outputs/wa_run_09
+  out_dir: outputs/wa_run_12
   allow: null                # null -> derived from the root URL's host
   denylist: "logout|\\?p=|product_list_|[?&]sort="   # blocked child URLs (deny wins)
   max_nodes: 500
