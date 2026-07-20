@@ -13,11 +13,11 @@ vai trò web agent bằng cách tấn công đúng ràng buộc trói buộc ch�
 thiếu vắng dữ liệu tương tác có gán nhãn chất lượng cao. Câu trả lời của
 chúng tôi là HSGE, một pipeline biến website không nhãn thành dữ liệu huấn
 luyện bằng cách \emph{khám phá có cấu trúc}. Thay vì lang thang, pipeline
-tích lũy một graph hai tầng về những gì website cho phép làm --- các skill
-đã kiểm chứng, nâng thành các operator lập kế hoạch với precondition và
-effect tường minh --- rồi ghép graph đó, qua phép ghép chuỗi operator,
-thành các \emph{semantic task} dài hạn đã kiểm chứng mà không trang đơn lẻ
-nào gợi ý. Mọi trajectory pipeline thu được đều qua các cổng chất lượng tự
+tích lũy một graph hai tầng về những gì website cho phép làm: các skill đã
+kiểm chứng, nâng thành các operator lập kế hoạch với precondition và effect
+tường minh. Sau đó nó ghép graph này, qua phép ghép chuỗi operator, thành
+các \emph{semantic task} dài hạn đã kiểm chứng mà không trang đơn lẻ nào
+gợi ý. Mọi trajectory pipeline thu được đều qua các cổng chất lượng tự
 động trước khi chạm tới mô hình, và tập dữ liệu thu được huấn luyện mô hình
 trên đúng những prompt nó sẽ gặp khi triển khai.
 
@@ -47,11 +47,11 @@ Khóa luận tạo ra năm sản phẩm cụ thể:
   (Phụ lục~\ref{app:repro}).
 \end{enumerate}
 
-Vượt trên các sản phẩm, khóa luận lập luận cho --- và trong phạm vi của
-mình, chứng minh --- một công thức tổng quát: \emph{kiểm chứng trước khi
-tái sử dụng, cấu trúc thay vì ký ức phẳng, và hệ task hai tầng} trong đó
-các đề xuất bám trang giá rẻ nuôi khám phá, còn graph --- chứ không phải
-trang web --- mới là bên soạn ra những task huấn luyện quan trọng.
+Vượt trên các sản phẩm, khóa luận lập luận cho một công thức tổng quát, và
+chứng minh nó trong phạm vi của mình: \emph{kiểm chứng trước khi tái sử
+dụng, cấu trúc thay vì ký ức phẳng, và hệ task hai tầng}. Trong hệ đó, các
+đề xuất bám trang giá rẻ nuôi khám phá, còn graph --- chứ không phải trang
+web --- mới là bên soạn ra những task huấn luyện quan trọng.
 
 \section{Đối chiếu mục tiêu và kết quả}
 \label{sec:conc-objectives}
@@ -104,7 +104,7 @@ Các kết quả gợi ra nhiều hướng tiếp nối tự nhiên.
 \textbf{Mở rộng quy mô thu thập dữ liệu.} Đòn bẩy rõ nhất nhận diện ở
 Chương~\ref{ch:discussion} là khối lượng và độ phủ dữ liệu. Pipeline vốn
 không phụ thuộc website cụ thể, và đã có sẵn cơ chế chuyển giao
-(transfer) để tái-neo một skill đã phát hiện sang website mới; chạy thu
+(transfer) để tái-neo một skill đã phát hiện sang website mới. Chạy thu
 thập trên nhiều website --- và để skill chuyển giao giữa chúng --- là con
 đường trực tiếp tới một kho dữ liệu lớn và đa dạng hơn.
 

@@ -148,8 +148,8 @@ chúng là ngầm định. Vì vậy HSGE nâng mỗi skill đã kiểm chứng 
 $\omega = \langle \mathit{pre}, \mathit{eff} \rangle$, trong đó
 $\mathit{pre}$ và $\mathit{eff}$ là các tập mệnh đề ngôn ngữ tự nhiên như
 ``người dùng đang xem danh sách issue của một dự án''. Khác lập kế hoạch cổ
-điển, bộ từ vựng mệnh đề không cố định trước: các mệnh đề do LLM tự viết
-trong quá trình induction rồi được \emph{chuẩn hóa} thành các mã định danh
+điển, bộ từ vựng mệnh đề không cố định trước. Các mệnh đề do LLM tự viết
+trong quá trình induction, rồi được \emph{chuẩn hóa} thành các mã định danh
 ổn định bởi một bộ gom cụm dựa trên embedding
 (Mục~\ref{sec:method-semantic}), để hai cách diễn đạt của cùng một điều
 kiện quy về cùng một mệnh đề. \emph{Operator graph} vẽ một cạnh từ operator
@@ -277,10 +277,10 @@ Bảng~\ref{tab:actions}. Nếu một hành động thực thi lỗi, thông bá
 Hai chốt chặn cấu trúc giới hạn vòng lặp. Thứ nhất, solver theo dõi mỗi
 hành động có làm quan sát thay đổi không và nó tác động lên đích nào. Một
 chuỗi cuối gồm các hành động trên \emph{cùng một đích} mà \emph{không có
-thay đổi quan sát được} trước hết kích hoạt một cảnh báo tiêm vào prompt,
-và sau đó --- vì các run thực tế cho thấy cảnh báo bằng lời không đủ để mô
-hình ngừng click một phần tử trơ --- là một lệnh dừng cứng kết thúc
-episode. Yêu cầu ``không có thay đổi quan sát được'', thay vì chỉ so trùng
+thay đổi quan sát được} trước hết kích hoạt một cảnh báo tiêm vào prompt.
+Nếu chuỗi đó vẫn tiếp diễn, một lệnh dừng cứng kết thúc episode --- vì các
+run thực tế cho thấy cảnh báo bằng lời không đủ để mô hình ngừng click một
+phần tử trơ. Yêu cầu ``không có thay đổi quan sát được'', thay vì chỉ so trùng
 chuỗi hành động, giúp chốt chặn không kích hoạt nhầm trên các chuỗi nhiều
 bước hợp lệ tái sử dụng một phần tử qua các trang khác nhau. Thứ hai, khi
 ngân sách bước cạn trên một task không có phép kiểm tra mục tiêu lập trình
@@ -390,8 +390,8 @@ hoàn-thành-mục-tiêu.
 
 Mỗi mệnh đề được đối chiếu với một \emph{predicate registry}, dùng lại đúng
 bộ gom cụm ngưỡng cosine của thư viện skill nhưng tắt tính năng gộp cụm, để
-mã định danh ổn định một khi đã cấp: mệnh đề mới hoặc gia nhập một cụm
-chuẩn có sẵn (và nhận mã của cụm) hoặc lập cụm mới. Nhờ đó các operator
+mã định danh ổn định một khi đã cấp. Mệnh đề mới hoặc gia nhập một cụm
+chuẩn có sẵn, nhận luôn mã của cụm, hoặc lập cụm mới. Nhờ đó các operator
 chia sẻ một bộ từ vựng chung, tăng dần $P = \{p_0, p_1, \dots\}$, và bộ lập
 kế hoạch có thể khớp effect với precondition bằng so sánh mã định danh ---
 giữ nguyên lập kế hoạch tập hợp cổ điển trên một bộ từ vựng mở do LLM viết.
@@ -404,13 +404,13 @@ liệt kê tìm kiếm theo chiều sâu có chặn liệt kê mọi chuỗi đ�
 nhất hai (với các cầu dao ngắt trên độ dài và số lượng đường đi, vì liệt kê
 đường đơn bùng nổ tổ hợp trên graph dày). Mỗi chuỗi phân biệt trở thành một
 \emph{goal task} ghép: chỉ dẫn của nó sinh từ mô tả của các skill trong
-chuỗi, điểm xuất phát là URL khởi đầu ghi nhận cho operator đầu tiên. Ví
-dụ, nếu khám phá lần lượt phát hiện ``tìm kiếm trong danh mục sản phẩm'' và
-``thêm một sản phẩm đang hiển thị vào giỏ'', chuỗi của hai skill này sinh
-task dạng \emph{``tìm một sản phẩm rồi thêm một kết quả vào giỏ hàng''} ---
-một mục tiêu bám chắc vào các năng lực đã kiểm chứng, nhưng chưa từng được
-trang nào đề xuất. Đây chính là \textbf{semantic task} theo định nghĩa của
-khóa luận.
+chuỗi, điểm xuất phát là URL khởi đầu ghi nhận cho operator đầu tiên. Hãy
+xét một ví dụ. Khám phá lần lượt phát hiện ``tìm kiếm trong danh mục sản
+phẩm'' và ``thêm một sản phẩm đang hiển thị vào giỏ''; chuỗi của hai skill
+này khi đó sinh ra task dạng \emph{``tìm một sản phẩm rồi thêm một kết quả
+vào giỏ hàng''}. Một mục tiêu như vậy bám chắc vào các năng lực đã kiểm
+chứng, song chưa từng được trang nào đề xuất. Đây chính là \textbf{semantic
+task} theo định nghĩa của khóa luận.
 
 Semantic task được lập lịch dè dặt: mỗi chuỗi phân biệt chỉ thử một lần mỗi
 run, và mỗi node chỉ thử thêm một số chuỗi mới nhất định. Kiểm chứng theo
@@ -459,12 +459,13 @@ episode chưa từng được chấm thay vì âm thầm tin chúng.
 \subsection{Viết lại suy nghĩ (thought re-annotation)}
 
 Suy nghĩ tự phát của solver chất lượng không đồng đều, mà chúng lại là đích
-bắt chước của mô hình fine-tune. Một bước viết lại biến suy nghĩ mỗi bước
-thành dạng có cấu trúc gồm: một câu đánh giá gọn trạng thái hiện tại; một
-câu phản tư khi hành động trước không tạo tiến triển; \emph{subgoal} hiện
-tại của bước, khôi phục bằng cách chạy lại đúng phép cắt đoạn của khâu phát
-hiện trên trajectory đã ghi; và --- chỉ ở bước cuối của task --- một phép
-kiểm tra hoàn thành tường minh so với mục tiêu. Điểm cốt yếu: subgoal chỉ
+bắt chước của mô hình fine-tune. Vì vậy một bước viết lại biến suy nghĩ mỗi
+bước thành dạng có cấu trúc. Dạng đó gồm bốn thành phần: một câu đánh giá
+gọn trạng thái hiện tại; một câu phản tư khi hành động trước không tạo tiến
+triển; \emph{subgoal} hiện tại của bước, khôi phục bằng cách chạy lại đúng
+phép cắt đoạn của khâu phát hiện trên trajectory đã ghi; và --- chỉ ở bước
+cuối của task --- một phép kiểm tra hoàn thành tường minh so với mục tiêu.
+Điểm cốt yếu: subgoal chỉ
 xuất hiện trong \emph{đích} (assistant target), không bao giờ trong prompt
 người dùng, vì lúc suy luận không có thành phần nào cung cấp ``subgoal hiện
 tại'' làm đầu vào, và huấn luyện không được phép giả định có.

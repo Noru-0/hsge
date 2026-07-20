@@ -149,8 +149,8 @@ implicit. HSGE therefore lifts each verified skill into an
 $\omega = \langle \mathit{pre}, \mathit{eff} \rangle$, where $\mathit{pre}$
 and $\mathit{eff}$ are sets of natural-language predicates such as ``user is
 viewing a project's issue list''. Unlike classical planning, the predicate
-vocabulary is not fixed in advance: predicates are authored freely by an LLM
-during induction and then \emph{canonicalized} into stable identifiers by an
+vocabulary is not fixed in advance. Predicates are authored freely by an LLM
+during induction, then \emph{canonicalized} into stable identifiers by an
 embedding-based clusterer (Section~\ref{sec:method-semantic}), so that two
 paraphrases of the same condition resolve to the same predicate. The
 \emph{operator graph} draws an edge from operator $\omega_1$ to $\omega_2$
@@ -280,9 +280,9 @@ fed back at the next step so the agent can recover instead of aborting.
 Two structural guards bound the loop. First, the solver tracks whether each
 action changed the observation and which target it acted on. A trailing run
 of actions on the \emph{same target} with \emph{no observable change} first
-triggers a warning injected into the prompt, and then --- because production
-runs showed that a textual warning alone does not reliably stop a model from
-re-clicking an inert element --- a hard stop that ends the episode. Requiring
+triggers a warning injected into the prompt. If the run continues, a hard
+stop ends the episode --- production runs showed that a textual warning alone
+does not reliably stop a model from re-clicking an inert element. Requiring
 ``no observable change'', rather than merely a repeated action string,
 prevents the guard from misfiring on legitimate multi-step sequences that
 reuse one element across different pages. Second, when the step budget is
@@ -397,9 +397,9 @@ goal-completing.
 
 Each authored predicate is resolved against a \emph{predicate registry},
 which reuses the same cosine-threshold clustering as the skill library but
-with merging disabled, so identifiers stay stable once assigned: a new
-predicate either joins an existing canonical cluster (and adopts its
-identifier) or founds a new one. Operators thus share a common, growing
+with merging disabled, so that identifiers stay stable once assigned. A new
+predicate either joins an existing canonical cluster, adopting its
+identifier, or founds a new one. Operators thus share a common, growing
 vocabulary $P = \{p_0, p_1, \dots\}$, and the planner can match effects to
 preconditions by identifier equality --- keeping classical set-based planning
 intact over an open, LLM-authored vocabulary.
@@ -413,11 +413,11 @@ two (with circuit breakers on path length and path count, since simple-path
 enumeration is combinatorial in dense graphs). Each distinct chain becomes
 one composed \emph{goal task}: its instruction is generated from the chained
 skills' descriptions, and its starting point is the initiation URL recorded
-for the first operator. For example, if exploration separately discovered
-``search the product catalog'' and ``add a listed product to the cart'', the
-chain of the two yields a task of the form \emph{``search for a product and
-add one of the results to the cart''} --- a goal grounded in verified
-capabilities, but never proposed by any single page.
+for the first operator. Consider an example. Exploration separately discovers
+``search the product catalog'' and ``add a listed product to the cart''; the
+chain of the two then yields a task of the form \emph{``search for a product
+and add one of the results to the cart''}. Such a goal is grounded in
+verified capabilities, yet no single page would ever propose it.
 
 Semantic tasks are scheduled conservatively: each distinct chain is attempted
 once per run, and at most a fixed number of new chains is attempted per
@@ -466,12 +466,13 @@ never-judged episodes rather than silently trusting them.
 \subsection{Thought re-annotation}
 
 The solver's spontaneous thoughts are uneven in quality, and they are the
-imitation target for the fine-tuned model. A re-annotation pass rewrites each
-step's thought into a structured form composed of: a terse assessment of the
-current state; a reflection when the previous action made no progress; the
-step's current \emph{subgoal}, recovered by replaying the same segmentation
-used during discovery over the recorded trajectory; and, only on a task's
-final step, an explicit completion check against the goal. Crucially, the
+imitation target for the fine-tuned model. A re-annotation pass therefore
+rewrites each step's thought into a structured form. That form has four
+components: a terse assessment of the current state; a reflection when the
+previous action made no progress; the step's current \emph{subgoal},
+recovered by replaying over the recorded trajectory the same segmentation
+used during discovery; and, only on a task's final step, an explicit
+completion check against the goal. Crucially, the
 subgoal appears only in the assistant \emph{target}, never in the user
 prompt: at inference time no component exists to supply ``the current
 subgoal'' as an input, and training must not assume one.

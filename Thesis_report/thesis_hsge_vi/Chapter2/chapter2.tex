@@ -101,8 +101,9 @@ dạng văn bản phẳng, thu nhận không qua cổng kiểm chứng tường 
 được tiêu thụ như gợi ý lúc chạy --- mô hình bên dưới không hề tốt lên.
 Gần đây nhất, skill induction dạng lập trình~\cite{wang2025asi} nâng các
 chuỗi hành động lặp lại thành hàm thực thi được, kiểm chứng ngay khi dùng,
-và SkillWeaver~\cite{zheng2025skillweaver} cho agent tự khám phá, luyện tập
-và tinh luyện skill thành các API gọi được thông qua khám phá lặp, cải
+ghép các hành động nguyên thủy thành những lời gọi ở mức cao hơn.
+SkillWeaver~\cite{zheng2025skillweaver} đi xa hơn: agent tự khám phá, luyện
+tập và tinh luyện skill thành các API gọi được thông qua khám phá lặp, cải
 thiện đáng kể hiệu năng WebArena nhờ tái sử dụng và thậm chí chuyển giao
 skill giữa các agent. Tuy nhiên, ở tất cả các hệ thống này, skill sinh ra
 đều phục vụ việc tái sử dụng lúc suy luận bởi một mô hình lớn; không hệ nào
@@ -170,17 +171,17 @@ thực của world model.
 Gần khóa luận nhất, Go-Browse~\cite{gandhi2026gobrowse} đóng khung việc thu
 thập dữ liệu thành tìm kiếm trên graph của một website: các trang đã thăm
 trở thành các node thăm lại được, nên khám phá tái sử dụng thông tin giữa
-các episode; một mô hình 7B fine-tune trên dữ liệu thu được đạt 21{,}7\%
+các episode. Một mô hình 7B fine-tune trên dữ liệu thu được đạt 21{,}7\%
 trên WebArena --- state of the art cho mô hình dưới 10B tại thời điểm công
 bố. Go-Browse xác nhận đúng tiền đề cốt lõi của khóa luận: khám phá
 \emph{có cấu trúc} thắng rollout không cấu trúc về chất lượng dữ liệu. Tuy
 nhiên, graph của nó là graph \emph{của các trang}, và task của nó vẫn là
 các đề xuất bám trang được giải từ những trang đó. HSGE bổ sung một tầng
 thứ hai mà Go-Browse không xây: các skill đã kiểm chứng được nâng thành
-operator lập kế hoạch với precondition/effect chuẩn hóa, mà các chuỗi của
-chúng sinh ra \emph{semantic task} --- những mục tiêu trải dài trên các
-năng lực phát hiện ở các episode khác nhau, điều mà không đề xuất bám trang
-nào tạo ra được (Mục~\ref{sec:method-semantic}).
+operator lập kế hoạch với precondition/effect chuẩn hóa. Các chuỗi đi qua
+những operator đó sinh ra \emph{semantic task} --- những mục tiêu trải dài
+trên các năng lực phát hiện ở các episode khác nhau, điều mà không đề xuất
+bám trang nào tạo ra được (Mục~\ref{sec:method-semantic}).
 
 \section{Mô hình ngôn ngữ nhỏ trong vai trò agent}
 \label{sec:rel-slm}

@@ -13,8 +13,8 @@ attacking their binding constraint: the absence of high-quality,
 task-annotated interaction data. Our answer is HSGE, a pipeline that turns
 an unannotated website into training data by \emph{exploring with
 structure}. Rather than wandering, the pipeline accumulates a two-level
-graph of what the site affords --- verified skills, lifted into planning
-operators with explicit preconditions and effects --- and then composes that
+graph of what the site affords: verified skills, lifted into planning
+operators with explicit preconditions and effects. It then composes that
 graph, by chaining operators, into verified long-horizon \emph{semantic
 tasks} that no single page would suggest. Every trajectory the pipeline
 collects passes automated quality gates before reaching the model, and the
@@ -48,11 +48,11 @@ The work produced five concrete artifacts:
   step-by-step reproduction guide (Appendix~\ref{app:repro}).
 \end{enumerate}
 
-Beyond the artifacts, the thesis argues for --- and, within its scope,
-demonstrates --- a general recipe: \emph{verify before reuse, structure over
-flat memory, and a two-tier task hierarchy} in which cheap page-local
-proposals fuel exploration while the graph, not the page, authors the
-training goals that matter.
+Beyond the artifacts, the thesis argues for a general recipe, and
+demonstrates it within its scope: \emph{verify before reuse, structure over
+flat memory, and a two-tier task hierarchy}. In that hierarchy, cheap
+page-local proposals fuel exploration, while the graph --- not the page ---
+authors the training goals that matter.
 
 \section{Objectives versus Achievements}
 \label{sec:conc-objectives}
@@ -105,7 +105,7 @@ The results point to several natural continuations.
 \textbf{Scaling data collection.} The clearest lever identified in
 Chapter~\ref{ch:discussion} is data volume and breadth. The pipeline is
 site-agnostic by construction, and it already includes transfer machinery
-for re-grounding a discovered skill on a new website; running collection
+for re-grounding a discovered skill on a new website. Running collection
 across many sites --- and letting skills transfer between them --- is the
 direct path to a larger, more diverse corpus.
 

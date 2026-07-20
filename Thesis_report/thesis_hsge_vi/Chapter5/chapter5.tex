@@ -102,12 +102,13 @@ ngân sách cho phép.
 \textbf{Vấn đề.} Website benchmark là tài nguyên dùng chung và có trạng
 thái: một agent bất cẩn có thể làm bẩn --- hoặc phá hủy --- môi trường mà
 các run khác phụ thuộc.
-\textbf{Khắc phục.} Ba lớp kỷ luật: chế độ read-only loại các task thay đổi
-trạng thái theo nguyên tắc fail-closed (task không phân loại được bị coi là
-có thay đổi); một luật cứng cấm các task phá hoại cấp tài khoản bất kể chế
-độ; và khi đánh giá trên instance sống dùng chung, phân loại task benchmark
-theo ý định thành hai tập chỉ-đọc và có-ghi để hai máy có thể quét cùng
-website đồng thời mà không giẫm chân nhau (Mục~\ref{sec:disc-slm}).
+\textbf{Khắc phục.} Ba lớp kỷ luật. Lớp thứ nhất là chế độ read-only, loại
+các task thay đổi trạng thái theo nguyên tắc fail-closed: task không phân
+loại được thì bị coi là có thay đổi. Lớp thứ hai là một luật cứng cấm các
+task phá hoại cấp tài khoản bất kể chế độ. Lớp thứ ba áp dụng khi đánh giá
+trên instance sống dùng chung: task benchmark được phân loại theo ý định
+thành hai tập chỉ-đọc và có-ghi, để hai máy có thể quét cùng website đồng
+thời mà không giẫm chân nhau (Mục~\ref{sec:disc-slm}).
 \textbf{Bài học.} Trên hạ tầng dùng chung, an toàn phải
 \emph{fail-closed}: gánh nặng chứng minh thuộc về việc một task vô hại,
 chứ không phải việc nó có hại.
@@ -166,9 +167,9 @@ thứ solver ``giải'' được mà không học gì; khâu sinh giờ có ch�
 điều đó và các task lộ đáp án bị lọc. Lời gọi có đính kèm ảnh thỉnh thoảng
 trả về rỗng (từ chối phía thượng nguồn); agent thử lại một lần ở chế độ
 thuần văn bản thay vì hỏng cả bước. Và các episode cạn ngân sách trước đây
-kết thúc bằng một thất bại câm lặng; giờ chúng nhận một lời gọi wrap-up
+kết thúc bằng một thất bại câm lặng. Giờ chúng nhận một lời gọi wrap-up
 cuối, thuần văn bản, mà đầu ra hợp lệ \emph{duy nhất} là tuyên bố hoàn
-thành hoặc báo cáo bất khả thi --- biến một lần hết giờ im lặng thành một
+thành hoặc báo cáo bất khả thi, biến một lần hết giờ im lặng thành một
 kết cục có nhãn mà dataset dùng được.
 
 \section{Bài học từ induction operator}

@@ -104,13 +104,14 @@ granularity the budget allows.
 
 \textbf{Problem.} Benchmark websites are shared and stateful: a careless
 agent can pollute --- or destroy --- the environment other runs depend on.
-\textbf{Fix.} Three layers of discipline: a read-only mode that drops
-state-modifying tasks fail-closed (any task the explorer fails to classify is
-treated as modifying); a standing rule forbidding account-level destructive
-tasks regardless of mode; and, for evaluation on a live shared instance, an
-intent-based classification of benchmark tasks into read-only and
-write-mutating subsets so that two machines can sweep the same site
-concurrently without interfering (Section~\ref{sec:disc-slm}).
+\textbf{Fix.} Three layers of discipline. The first is a read-only mode that
+drops state-modifying tasks fail-closed: any task the explorer fails to
+classify is treated as modifying. The second is a standing rule forbidding
+account-level destructive tasks regardless of mode. The third applies to
+evaluation on a live shared instance: benchmark tasks are classified by
+intent into read-only and write-mutating subsets, so that two machines can
+sweep the same site concurrently without interfering
+(Section~\ref{sec:disc-slm}).
 \textbf{Lesson.} On shared infrastructure, safety must be
 \emph{fail-closed}: the burden of proof lies on a task being harmless, not on
 it being harmful.
@@ -170,10 +171,10 @@ learning anything; generation now instructs against it and leaky tasks are
 filtered. Vision-attached calls occasionally returned empty responses
 (upstream refusals); the agent retries once in text-only mode rather than
 failing the step. And episodes that exhausted their budget originally ended
-in an uninformative failure; they now receive one final text-only wrap-up
+in an uninformative failure. They now receive one final text-only wrap-up
 call whose \emph{only} admissible outputs are a completion claim or an
-infeasibility report --- turning a silent timeout into a labeled outcome that
-the dataset can use.
+infeasibility report, which turns a silent timeout into a labeled outcome
+that the dataset can use.
 
 \section{Lessons from Operator Induction}
 \label{sec:disc-operators}

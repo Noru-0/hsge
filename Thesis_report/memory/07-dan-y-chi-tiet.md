@@ -27,6 +27,19 @@ ghi "Achieved: ... chain-based goal generation"; `Chapter1/chapter1.tex` O2
 hứa "verified, long-horizon semantic tasks". Đúng loại lỗi P0-1 mà review
 thesis mẫu bắt nặng nhất.
 
+**Chỗ thứ BA, phát hiện 2026-07-20 khi rà soát phản biện** (chưa xử lý, cần
+user quyết): `Chapter5/chapter5.tex` §5.1, câu "Equally important is what the
+end-to-end run \emph{demonstrated}: every stage --- exploration, discovery,
+**operator chaining**, curation, training, serving, and official evaluation
+--- executed against a real website without manual intervention". Câu này
+mạnh hơn O2: nó khẳng định khâu ghép chuỗi operator **đã chạy đầu–cuối trên
+site thật**, trong khi `all_chains` trả về rỗng suốt cả 12 run nên không có
+chuỗi nào được ghép. Khâu induction operator thì có chạy thật; khâu *chaining*
+thì không sinh ra gì. Nếu run mới vẫn 0 goal task, phải sửa câu này cùng lúc
+với O2 (bản VI: câu "mọi công đoạn --- khám phá, phát hiện, ghép chuỗi
+operator, ... --- đều chạy..." ở cùng mục). Cố ý CHƯA sửa để giữ đúng quyết
+định "chờ kết quả run mới" của user.
+
 **Quyết định của user (2026-07-20):** tạm gác, **sẽ chạy lại thực nghiệm
 sau**. Giữ nguyên câu chữ hiện tại chờ kết quả run mới. ⚠️ **Nếu run mới
 vẫn không sinh được semantic task thì BẮT BUỘC sửa O2 ở C1/C6** thành

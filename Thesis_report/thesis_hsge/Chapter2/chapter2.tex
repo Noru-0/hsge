@@ -96,12 +96,12 @@ prompts, improving WebArena success substantially. However, workflows are
 stored as flat text, admitted without an explicit verification gate, and
 consumed only as runtime hints --- the underlying model never improves.
 Most recently, programmatic skill induction~\cite{wang2025asi} lifts
-recurring action sequences into executable functions verified on the fly,
-composing primitive actions into higher-level callables, and
-SkillWeaver~\cite{zheng2025skillweaver} has the agent autonomously discover,
-practice, and refine skills as callable APIs through iterative exploration,
-improving WebArena performance substantially through skill reuse and even
-skill transfer between agents. However, in every one of these systems the
+recurring action sequences into executable functions, verified on the fly,
+that compose primitive actions into higher-level callables.
+SkillWeaver~\cite{zheng2025skillweaver} goes further: the agent autonomously
+discovers, practices, and refines skills as callable APIs through iterative
+exploration, improving WebArena performance substantially through skill reuse
+and even skill transfer between agents. However, in every one of these systems the
 induced skills serve inference-time reuse by a large model; none turns its
 skill structure into \emph{training data}.
 
@@ -167,16 +167,16 @@ model's fidelity.
 
 Closest to this thesis, Go-Browse~\cite{gandhi2026gobrowse} frames data
 collection as graph search over a website: visited pages become revisitable
-nodes, so exploration reuses information across episodes, and a 7B model
+nodes, so exploration reuses information across episodes. A 7B model
 fine-tuned on the collected data reaches 21.7\% on WebArena --- state of the
 art for sub-10B models at publication. Go-Browse validates this thesis's core
 premise that \emph{structured} exploration beats unstructured rollouts for
 data quality. However, its graph is a graph of \emph{pages}, and its tasks
 remain page-grounded proposals solved from those pages. HSGE adds a second
 level that Go-Browse does not build: verified skills lifted into planning
-operators with canonicalized preconditions and effects, whose chains generate
-\emph{semantic tasks} --- goals spanning capabilities discovered in different
-episodes, which no page-grounded proposal produces
+operators with canonicalized preconditions and effects. Chains through those
+operators generate \emph{semantic tasks} --- goals spanning capabilities
+discovered in different episodes, which no page-grounded proposal produces
 (Section~\ref{sec:method-semantic}).
 
 \section{Small Language Models as Agents}
