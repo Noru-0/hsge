@@ -130,6 +130,24 @@ Helvetica (không phải Times như body) — chấp nhận đánh đổi để 
   (2026-07-20). Giờ CẢ 6 hình Chương 3 đều là Excalidraw.
 - **Hình 1.1 (roadmap Chương 1)**: đã vẽ lại bằng Excalidraw (hàm
   `roadmap()`, 2026-07-20). **Không còn TikZ picture nào trong cả hai bản.**
+- **⚠️ BẪY LỚN NHẤT của Excalidraw (phát hiện 2026-07-20)**: **không bao giờ
+  gắn nhãn vào mũi tên** bằng `containerId` (bound label). Excalidraw chừa một
+  khoảng trống dọc mũi tên bằng đúng bounding box của nhãn; nhãn ở đây rộng
+  ~100–140px trong khi mũi tên chỉ dài 50–98px, nên khoảng trống nuốt trọn
+  thân mũi tên và bản xuất ra **chỉ còn trơ đầu mũi tên**. Cả 7 hình trong
+  quyển đã dính lỗi này mà không ai phát hiện (hình càng nhiều nhãn càng hỏng
+  nặng: fig_semantic mất cả 3/3 mũi tên). `build.py::Scene.arrow()` giờ đẩy
+  nhãn thành text trôi cạnh mũi tên (`Scene.alabel()`). Quy tắc rút ra: **luôn
+  render PNG và soi bằng mắt sau mỗi lần sinh hình** — lỗi này vô hình trong
+  JSON, chỉ hiện ra khi nhìn ảnh.
+- **`Scene.line(pts, head=False)`** (thêm 2026-07-20): polyline không bind, để
+  vẽ đường cấu trúc (trục gom, nhánh cây, timeline) — `arrow()` bắt buộc bind
+  hai đầu vào shape nên không dùng được cho các đường này.
+- **fig_semantic đã vẽ lại (2026-07-20)** theo mẫu *convergence*. Bản cũ vẽ mũi
+  tên "chain" đi ra từ RIÊNG operator B → đọc thành "B sinh ra semantic task",
+  **sai cơ chế** (task sinh từ cả chuỗi A→B→C). Bản mới: 3 operator đổ vào một
+  trục gom, trục gom hội tụ vào hộp task (hero). Chưa soi bằng mắt:
+  `fig_solver`, `fig_pipeline`, `fig_curation`, `fig_roadmap`.
 - **Export qua Kroki — bẫy quan trọng**: phải gửi `Content-Type: text/plain`.
   Nếu gửi `application/json`, Kroki hiểu body là envelope JSON của nó và báo
   lỗi 400 "Field diagram_source must not be empty".
