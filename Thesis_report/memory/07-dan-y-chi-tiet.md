@@ -79,6 +79,38 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
   `VERIFY` (author list đầy đủ / venue cuối) — agent verify đang chạy,
   vá xong thì xóa note.
 - ⬜ Chapter 4: skeleton, điền số khi thực nghiệm bổ sung xong.
+- ✅ **Đề cương chi tiết (2026-07-20)**: checklist nộp cuốn của Khoa
+  (`KLTN/Quy trình nộp đề tài tốt nghiệp từ năm 2025.docx`) bắt buộc có mục
+  này **giữa Lời cảm ơn và Mục lục** — báo cáo trước đó thiếu hẳn. Nay ở
+  `thesis_hsge_vi/Appendix/decuongchitiet.tex` (**chỉ bản VI**; đề cương là
+  biểu mẫu hành chính nên luôn tiếng Việt). File cũ tên `decuong.tex` thực ra
+  là "Tóm lược nội dung các chương" → đã đổi tên thành `tomluoc.tex`.
+  `glossary` chuyển từ trước Mục lục sang **sau** Mục lục cho đúng checklist.
+  - ⚠️ **`DeCuongKhoaLuan/` chính là bản đã nộp Khoa 06/04/2026** (MD5 trùng
+    `[T826_KL_CNPM04]_DeCuong_06042026.pdf`). Nó mô tả một đề tài **khác hẳn**
+    (pipeline 5 phase trên browser-use, benchmark Mind2Web, schema (s,o,a,v),
+    xác thực L1/L2/L3 + đồng thuận 2 tác nhân, QLoRA + DPO trên
+    Qwen2.5-1.5B/3B). Đừng lấy nó làm nguồn sự thật cho bất cứ gì — bản trong
+    quyển đã viết lại theo HSGE/WebArena/Qwen3.5-9B.
+  - ⚠️ **Tên đề tài đã thống nhất lại** thành tên đầy đủ của đề cương:
+    *"Xây dựng dữ liệu và tinh chỉnh mô hình ngôn ngữ nhỏ cho tác nhân trí tuệ
+    nhân tạo trên web"* / *"Data Construction and Fine-tuning of Small Language
+    Models for Web AI Agents"*, sửa ở **4 chỗ** (`\tenKL` của cả hai bản +
+    `Title/title.tex` của cả hai bản). Trước đó bìa tự rút gọn mất vế "Xây dựng
+    dữ liệu và tinh chỉnh" → lệch hồ sơ Khoa. Giữ tên này thì **không cần Đơn
+    xác nhận đổi tên**; đổi sang tên khác thì bắt buộc phải có, GVHD ký.
+  - Mục 2.3.3 của đề cương **đã nói thẳng 0 semantic task chạy được** và ghi rõ
+    cặp GitLab 10/180→12/180 là n=1. Nếu run mới đổi kết quả thì đây là **chỗ
+    thứ tư** phải sửa đồng bộ cùng O2 ở C1/C6 và câu §5.1 (xem cảnh báo đầu file).
+  - ⚠️ **Sau bảo vệ** checklist đòi đề cương **có chữ ký GVHD** = bản scan.
+    `main.tex` gọi `decuongchitiet.tex` bằng đúng 1 dòng → lúc đó chỉ cần thay
+    ruột file này bằng `\includepdf` bản scan.
+  - Bẫy LaTeX gặp phải: `\caption*` **không dùng được** trong float `table` vì
+    package `float` phá nó (vẫn để lại mục rỗng `*` trong Danh sách bảng) → bỏ
+    float, dùng `minipage` (cũng cần để tiêu đề không rời khỏi bảng qua ranh
+    giới trang). `\multicolumn{2}{c}{...}` **không xuống dòng được** → phải
+    dùng `C{...}`. VI 94→108 trang.
+
 - ✅ **Phụ lục A–D (2026-07-20)**: đã viết trọn cả hai bản, thay 4
   placeholder. A = bản đồ 26 module (longtable, tự ngắt trang) + lược đồ dữ
   liệu + lớp tách backend + cấu hình model theo vai trò + tham số chạy;

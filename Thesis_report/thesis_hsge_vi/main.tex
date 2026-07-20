@@ -121,8 +121,7 @@
 % ======================================================================== %
 \newcommand{\tenSV}{Trương~Bảo~Kiệt~--~22127223~--~Hồ~Tiến~Phát~--~22127321}
 \newcommand{\mssv}{22127223~--~22127321}
-% TODO: confirm the official English title (and a short spine title) with the advisor
-\newcommand{\tenKL}{Small~Language~Models~for~Web~AI~Agents}
+\newcommand{\tenKL}{Data~Construction~and~Fine-tuning~of~Small~Language~Models~for~Web~AI~Agents}
 \newcommand{\tenGVHD}{Assoc.~Prof.~Dr.~Nguyễn~Văn~Vũ}
 \newcommand{\tenBM}{Software Engineering}
 
@@ -137,10 +136,13 @@
 \addcontentsline{toc}{chapter}{Lời cảm ơn}
 \include{Appendix/thanks}
 
-\addcontentsline{toc}{chapter}{Tóm lược nội dung các chương}
-\include{Appendix/decuong}
+% Đề cương chi tiết — bắt buộc theo checklist của Khoa, đặt ngay sau Lời cảm
+% ơn và trước Mục lục. Bản nộp SAU bảo vệ phải thay bằng bản scan có chữ ký.
+\addcontentsline{toc}{chapter}{Đề cương chi tiết}
+\include{Appendix/decuongchitiet}
 
-\include{Appendix/glossary}
+\addcontentsline{toc}{chapter}{Tóm lược nội dung các chương}
+\include{Appendix/tomluoc}
 
 % Table of contents, list of figures, list of tables
 \clearpage
@@ -149,6 +151,8 @@
 \tableofcontents
 \listoffigures
 \listoftables
+
+\include{Appendix/glossary}
 
 \addcontentsline{toc}{chapter}{Tóm tắt}
 \include{Appendix/tomtat}

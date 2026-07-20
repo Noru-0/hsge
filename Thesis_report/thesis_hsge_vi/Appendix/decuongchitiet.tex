@@ -1,0 +1,443 @@
+% Đề cương chi tiết — bắt buộc theo checklist nộp cuốn báo cáo của Khoa
+% (đặt giữa Lời cảm ơn và Mục lục). Bản nộp TRƯỚC bảo vệ không cần chữ ký;
+% bản nộp SAU bảo vệ phải có chữ ký GVHD — khi đó thay toàn bộ nội dung
+% file này bằng \includepdf bản scan đã ký.
+
+\chapter*{Đề cương chi tiết}
+\markboth{Đề cương chi tiết}{Đề cương chi tiết}
+
+\section*{1.\quad THÔNG TIN CHUNG}
+
+\begin{itemize}
+  \item \textbf{Tên đề tài:} Xây dựng dữ liệu và tinh chỉnh mô hình ngôn ngữ
+  nhỏ cho tác nhân trí tuệ nhân tạo trên web \\
+  \textit{(Data Construction and Fine-tuning of Small Language Models for Web
+  AI Agents)}
+  \item \textbf{Người hướng dẫn:} PGS.TS. Nguyễn Văn Vũ (Khoa Công nghệ
+  Thông tin, Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM)
+  \item \textbf{Sinh viên thực hiện:}
+  \begin{enumerate}
+    \item Trương Bảo Kiệt --- MSSV 22127223
+    \item Hồ Tiến Phát --- MSSV 22127321
+  \end{enumerate}
+  \item \textbf{Loại đề tài:} Nghiên cứu
+  \item \textbf{Thời gian thực hiện:} 01/2026 --- 08/2026
+\end{itemize}
+
+\section*{2.\quad NỘI DUNG THỰC HIỆN}
+
+\subsection*{2.1\quad Giới thiệu về đề tài}
+
+\subsubsection*{2.1.1\quad Bối cảnh và vấn đề}
+
+Trình duyệt là giao diện chung của hầu hết các dịch vụ trực tuyến, nên một
+agent phần mềm thao tác được website \emph{qua chính giao diện người dùng} là
+một trong những dạng tự động hóa có phạm vi ứng dụng rộng nhất. Các mô hình
+ngôn ngữ lớn (LLM) gần đây đã khiến những web agent như vậy trở nên khả thi:
+nhận một bản mô tả dạng văn bản của trang cùng một mục tiêu, mô hình quyết
+định được cần click hay gõ gì tiếp theo.
+
+Tuy nhiên, năng lực đó hiện gần như chỉ tồn tại ở các mô hình độc quyền rất
+lớn truy cập qua API, và sự phụ thuộc này gây tốn kém theo nhiều cách cộng
+dồn. Mỗi bước của mỗi task là một lời gọi API trả phí trong khi task của agent
+cần rất nhiều bước; độ trễ bị giới hạn bởi dịch vụ từ xa; toàn bộ nội dung mọi
+trang được duyệt --- có thể chứa dữ liệu riêng tư hoặc nội bộ --- bị gửi cho
+bên thứ ba; và bản thân mô hình là một hàng hóa cố định mà người vận hành
+không kiểm tra hay cải thiện được.
+
+Mô hình ngôn ngữ nhỏ (SLM) --- cỡ mười tỷ tham số trở xuống, tự triển khai
+được trên một GPU --- đảo ngược mọi ràng buộc trên. Thứ chúng thiếu là năng
+lực. Ngay cả các mô hình lớn cũng thấy task web thực tế là khó: trên benchmark
+WebArena gồm các website đầy đủ chức năng tự triển khai, agent dựa trên GPT-4
+chỉ hoàn thành khoảng 14\% số task so với khoảng 78\% của con
+người~\cite{zhou2024webarena}. Phương thuốc tiêu chuẩn --- tinh chỉnh có giám
+sát (SFT) trên các bản mẫu hành vi --- lại vấp phải bài toán dữ liệu:
+trajectory tương tác có gán mục tiêu trên website đích hầu như không tồn tại,
+còn thuê người gán nhãn thì đắt, chậm và phải làm lại cho từng website.
+
+Câu hỏi đề tài đặt ra là: liệu có thể xây dựng một pipeline hoàn toàn tự động
+\emph{khám phá} một website không nhãn, \emph{tự nghĩ ra} các task có ý nghĩa
+dựa trên những gì nó tìm thấy, \emph{kiểm chứng} nỗ lực nào thực sự thành
+công, rồi biên dịch kết quả thành dữ liệu huấn luyện cho một SLM? Nếu được,
+chi phí chuyên hóa một SLM cho một website giảm từ một chiến dịch gán nhãn thủ
+công xuống thành chi phí tính toán.
+
+\subsubsection*{2.1.2\quad Các nghiên cứu liên quan}
+
+\textbf{WebArena}~\cite{zhou2024webarena} xây dựng môi trường web tự triển
+khai với 812 task trên năm loại website, chấm điểm bằng bộ đánh giá tự động
+dựa trên trạng thái cuối thay vì khớp hành động. Đề tài dùng WebArena làm cả
+môi trường khám phá lẫn benchmark đánh giá, và dùng
+BrowserGym~\cite{dechezelles2025browsergym} làm lớp giao tiếp trình duyệt.
+
+\textbf{Go-Browse}~\cite{gandhi2026gobrowse} là công trình gần đề tài nhất:
+khám phá website có cấu trúc bằng một graph các trang để sinh dữ liệu huấn
+luyện, đạt 21,7\% trên WebArena với mô hình 7B. Tuy nhiên graph của Go-Browse
+chỉ ghi \emph{trang}; nó không trừu tượng hóa các năng lực tái sử dụng, nên
+task sinh ra vẫn bám phạm vi một trang. Đề tài phân biệt bằng graph
+\emph{hai tầng} tách biệt "agent đã ở đâu" khỏi "agent làm được gì", cho phép
+ghép chuỗi năng lực thành task dài hạn.
+
+\textbf{SkillWeaver}~\cite{zheng2025skillweaver} và
+\textbf{ASI}~\cite{wang2025asi} phát hiện và tích lũy skill tái sử dụng trong
+quá trình agent hoạt động. Đề tài kế thừa ý tưởng skill nhưng nâng skill đã
+kiểm chứng thành \emph{operator} có precondition/effect tường minh, để có thể
+lập kế hoạch bằng tìm kiếm trên graph.
+
+\textbf{NNetNav}~\cite{murty2024nnetnav}, \textbf{OS-Genesis}~\cite{sun2024osgenesis}
+và \textbf{AgentTrek}~\cite{xu2024agenttrek} sinh dữ liệu huấn luyện agent tự
+động bằng cách tương tác rồi gán nhãn ngược lại mục tiêu. Đề tài khác ở chỗ
+mục tiêu không được suy ngược từ một chuỗi hành động bất kỳ mà được
+\emph{ghép có chủ đích} từ các năng lực đã kiểm chứng.
+
+\textbf{LoRA}~\cite{hu2022lora} là kỹ thuật tinh chỉnh hiệu quả tham số, chèn
+các ma trận phân rã hạng thấp vào lớp Attention thay vì cập nhật toàn bộ trọng
+số. Đề tài áp dụng LoRA để fine-tune mô hình nền
+Qwen3.5-9B~\cite{yang2025qwen3}, huấn luyện qua
+LLaMA-Factory~\cite{zheng2024llamafactory} và phục vụ suy luận bằng
+vLLM~\cite{kwon2023vllm}.
+
+Về mặt hình thức hóa, biểu diễn skill của đề tài dựa trên khung
+\emph{options} trong học tăng cường~\cite{sutton1999options}, còn biểu diễn
+operator dựa trên khung precondition/effect kiểu STRIPS~\cite{fikes1971strips}.
+Việc chuẩn hóa mệnh đề dùng sentence embedding~\cite{reimers2019sbert}.
+
+\subsubsection*{2.1.3\quad Hệ thống thực tế khảo sát}
+
+Đề tài khảo sát và thực nghiệm trên họ website tự triển khai của benchmark
+WebArena --- các bản sao đầy đủ chức năng của phần mềm thật, có dữ liệu thật
+và trạng thái thay đổi được:
+
+\begin{itemize}
+  \item \textbf{Reddit} (diễn đàn): forum, bài đăng, bình luận, bỏ phiếu,
+  trang cá nhân.
+  \item \textbf{GitLab} (kho mã nguồn): dự án, issue, merge request, thành
+  viên, cài đặt.
+  \item \textbf{Shopping} (thương mại điện tử): danh mục, chi tiết sản phẩm,
+  giỏ hàng, thanh toán.
+  \item \textbf{Shopping Admin} (trang quản trị): đơn hàng, tồn kho, khách
+  hàng, báo cáo.
+\end{itemize}
+
+\subsection*{2.2\quad Mục tiêu đề tài}
+
+\textbf{Vấn đề nghiên cứu.} Cho (i) một website đang hoạt động, không có bất
+kỳ nhãn task nào, truy cập qua trình duyệt tiêu chuẩn, và (ii) một mô hình
+ngôn ngữ nhỏ đã pretrain, hãy tạo ra phiên bản fine-tune của mô hình đó có khả
+năng hoàn thành các task phát biểu bằng ngôn ngữ tự nhiên trên website, mà
+không dùng bất kỳ bản mẫu hay nhãn task nào do con người tạo.
+
+\textbf{Các mục tiêu cụ thể.} Đề tài theo đuổi năm mục tiêu, tương ứng một--một
+với năm thách thức của bài toán:
+
+\begin{itemize}
+  \item[\textbf{O1.}] Xây dựng pipeline khám phá tự động thu thập trajectory
+  tương tác từ một website không nhãn, bền vững trước cấu trúc trùng lặp và
+  trang lỗi, an toàn trên trạng thái dùng chung.
+  \item[\textbf{O2.}] Sinh các \emph{semantic task dài hạn đã kiểm chứng} bằng
+  cách phát hiện skill tái sử dụng, nâng chúng thành operator lập kế hoạch, và
+  ghép chuỗi các operator trên graph.
+  \item[\textbf{O3.}] Tinh lọc trajectory thu được thành tập dữ liệu
+  fine-tuning qua các cổng kiểm soát chất lượng tự động, dưới nguyên tắc
+  \emph{prompt parity} nghiêm ngặt giữa huấn luyện và vận hành.
+  \item[\textbf{O4.}] Fine-tune một mô hình ngôn ngữ nhỏ trên tập dữ liệu thu
+  được và đánh giá trên bộ task chính thức của bốn website WebArena.
+  \item[\textbf{O5.}] Đúc kết kinh nghiệm kỹ thuật khi vận hành LLM agent trên
+  website thật thành các bài học và best practice tái sử dụng được.
+\end{itemize}
+
+Mã nguồn pipeline, tập dữ liệu thu thập và tài liệu tái lập thực nghiệm dự
+kiến được công bố sau khi khóa luận hoàn thành.
+
+\subsection*{2.3\quad Phạm vi của đề tài}
+
+\subsubsection*{2.3.1\quad Các giải pháp được thử nghiệm và so sánh}
+
+\begin{itemize}
+  \item \textbf{Baseline:} mô hình nền Qwen3.5-9B-Instruct chưa fine-tune,
+  đánh giá trên bộ task chính thức của WebArena --- đây là ngưỡng tham chiếu
+  cần vượt qua.
+  \item \textbf{Giải pháp đề xuất:} chính mô hình đó sau khi fine-tune bằng
+  LoRA trên tập dữ liệu do pipeline HSGE tự sinh.
+  \item \textbf{So sánh nội bộ (ablation):} dữ liệu khám phá theo graph so với
+  khám phá phẳng cùng ngân sách; có và không có cổng judge; có và không có
+  bước viết lại suy nghĩ.
+\end{itemize}
+
+\subsubsection*{2.3.2\quad Mã nguồn và dữ liệu sẵn có}
+
+\begin{itemize}
+  \item \textbf{WebArena}\footnote{\url{https://github.com/web-arena-x/webarena}}:
+  website, bộ task và bộ chấm điểm tự động; dùng nguyên trạng làm môi trường
+  và benchmark.
+  \item \textbf{BrowserGym}\footnote{\url{https://github.com/ServiceNow/BrowserGym}}:
+  lớp giao tiếp trình duyệt (accessibility tree, action space, ảnh chụp màn
+  hình) trên nền Playwright.
+  \item \textbf{Qwen3.5-9B}\footnote{\url{https://huggingface.co/Qwen}}: mô
+  hình nền được fine-tune.
+  \item \textbf{LLaMA-Factory, vLLM, sentence-transformers}: lần lượt dùng cho
+  huấn luyện LoRA, phục vụ suy luận, và mã hóa embedding phục vụ gom cụm skill
+  và chuẩn hóa mệnh đề.
+\end{itemize}
+
+\subsubsection*{2.3.3\quad Kết quả thực nghiệm đã đạt được}
+
+Tính đến thời điểm lập đề cương này, pipeline đã được cài đặt trọn vẹn và vận
+hành trên website thật:
+
+\begin{itemize}
+  \item \textbf{Khám phá:} 12 lượt chạy trên hai instance (Reddit và GitLab),
+  thăm 301 node, ghi 1.174 episode --- 827 task đạt, 330 hỏng, 48 được agent
+  tuyên bố bất khả thi.
+  \item \textbf{Phát hiện skill:} 37 skill được kiểm chứng và thu nhận, nâng
+  thành 35 operator lập kế hoạch có precondition/effect tường minh.
+  \item \textbf{Tinh lọc dữ liệu:} tập dữ liệu SFT gồm 370 mẫu (352 huấn
+  luyện / 18 kiểm định), dựng dưới ràng buộc prompt parity với agent lúc chạy
+  thật.
+  \item \textbf{Fine-tuning:} Qwen3.5-9B + LoRA huấn luyện thành công trên GPU
+  A100-80GB thuê ngoài (loss huấn luyện 0,32; loss kiểm định 0,24).
+  \item \textbf{Đánh giá sơ bộ:} trên bộ task chính thức của GitLab, mô hình
+  nền đạt 10/180 và mô hình fine-tune đạt 12/180. Mỗi task mới chỉ được chạy
+  \emph{một lần}, nên con số này là tín hiệu định hướng chứ chưa đủ cơ sở
+  thống kê để kết luận.
+\end{itemize}
+
+Một hạn chế cần nêu rõ: \emph{chưa có semantic task ghép chuỗi nào được thực
+thi} trong cả 12 lượt chạy. Thủ tục ghép chuỗi operator đã được cài đặt và có
+kiểm thử tất định trên backend mô phỏng, nhưng trên site thật operator graph
+gần như không có cạnh --- do bước chuẩn hóa mệnh đề bằng độ tương tự embedding
+không tách được synonym thật khỏi các cụm từ không liên quan --- nên điều kiện
+kích hoạt không xảy ra. Khắc phục hạn chế này thuộc phần công việc còn lại
+(mục~2.6).
+
+\subsubsection*{2.3.4\quad Những gì không thuộc phạm vi đề tài}
+
+\begin{itemize}
+  \item Phương pháp huấn luyện chỉ gồm tinh chỉnh có giám sát với LoRA; học
+  tăng cường và tối ưu theo sở thích (DPO) nằm ngoài phạm vi.
+  \item Chỉ thực nghiệm trên các instance WebArena tự triển khai; không tương
+  tác với website công cộng ngoài benchmark.
+  \item Không nghiên cứu tự động hóa cho giao diện native trên di động
+  (Android/iOS).
+  \item Không giải CAPTCHA hay né tránh cơ chế chống bot.
+  \item Không xây dựng hệ thống RPA thương mại đầy đủ, cũng không triển khai
+  mô hình như một dịch vụ API công khai --- đây là công trình nghiên cứu.
+  \item Toàn bộ task bằng tiếng Anh; đa ngữ nằm ngoài phạm vi.
+\end{itemize}
+
+\subsection*{2.4\quad Cách tiếp cận dự kiến}
+
+\subsubsection*{2.4.1\quad Kiến trúc tổng thể}
+
+Đề tài đề xuất \textbf{HSGE} (\textit{Hierarchical Skill-Graph Exploration})
+--- một pipeline khám phá website dựa trên graph, vận hành như một vòng lặp
+khép kín. Một \emph{explorer} đề xuất các task cụ thể bám trang trên mỗi trang
+được thăm; một agent \emph{solver} thử thực hiện chúng trong trình duyệt thật,
+sinh ra trajectory. Thành phần phát hiện cắt trajectory thành đoạn, gom cụm
+các đoạn lặp lại, trừu tượng hóa mỗi cụm đủ chín thành một \emph{skill} tái sử
+dụng, rồi nâng skill đã kiểm chứng thành \emph{operator} lập kế hoạch. Ghép
+chuỗi operator trên graph sinh ra các task dài hạn --- \emph{semantic task}
+--- được đưa ngược lại chính solver đó, khép kín vòng lặp.
+
+Ba nguyên tắc thiết kế xuyên suốt: (P1) \emph{kiểm chứng trước khi tái sử
+dụng} --- không gì được tin ngay lần đầu; (P2) \emph{graph thay vì phẳng} ---
+tách biệt "agent đã ở đâu" khỏi "agent làm được gì"; (P3) \emph{hệ task hai
+tầng} --- low-level task dẫn dắt khám phá, semantic task cung cấp dữ liệu dài
+hạn.
+
+% Không dùng môi trường float `table`: đề cương là phần chèn hành chính, bảng
+% của nó không được đánh số chung với bảng các chương, cũng không vào Danh
+% sách bảng. (`\caption*` không dùng được vì package `float` phá nó.)
+% minipage giữ tiêu đề và bảng trên cùng một trang (center thường vẫn ngắt được)
+\begin{center}
+\begin{minipage}{\textwidth}
+\centering
+\textbf{Sáu giai đoạn của pipeline HSGE.}
+\vspace{0.6em}
+
+\small
+\begin{tabular}{@{}L{3.6cm} L{9.2cm}@{}}
+\toprule
+\textbf{Giai đoạn} & \textbf{Chức năng chính} \\
+\midrule
+Biểu diễn graph hai tầng & Tầng thấp: trạng thái trang + cạnh trajectory.
+Tầng cao: skill dạng option $\langle I, \pi, \beta \rangle$ + operator có
+precondition/effect \\
+\addlinespace
+Khám phá có định hướng & Hàng đợi ưu tiên frontier (URL đã đi tới so với href
+khai thác, có trần theo template); explorer đề xuất low-level task; solver
+thực thi trong trình duyệt thật \\
+\addlinespace
+Phát hiện skill & Cắt đoạn $\rightarrow$ gom cụm trực tuyến $\rightarrow$
+trừu tượng hóa thành SkillCard tham số hóa $\rightarrow$ kiểm chứng bằng thực
+thi lại trong ngữ cảnh mới \\
+\addlinespace
+Sinh semantic task & Induction operator nhận biết từ vựng, chuẩn hóa mệnh đề,
+cổng chặn tautology; ghép chuỗi effect $\rightarrow$ precondition thành goal
+task \\
+\addlinespace
+Tinh lọc dữ liệu & Judge độc lập chấm lại thành công tự tuyên bố; viết lại suy
+nghĩ; dựng dataset dưới ràng buộc prompt parity \\
+\addlinespace
+Fine-tune SLM & LoRA trên Qwen3.5-9B; phục vụ bằng vLLM; đánh giá bằng bộ chấm
+chính thức của WebArena \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{center}
+
+\subsubsection*{2.4.2\quad Khám phá có định hướng theo graph}
+
+Frontier được quản lý bằng hàng đợi ưu tiên hai tầng. Tầng 0 là các URL mà
+solver thực sự đi tới khi giải task, được nạp thẳng. Tầng 1 là các liên kết
+khai thác từ trang, phải qua một trần theo \emph{khuôn} URL --- các đường dẫn
+chỉ khác nhau ở phần định danh được quy về cùng một khuôn --- để những trang
+gần trùng nhau không làm ngập frontier. Node có nội dung trùng với node đã
+thăm bị bỏ qua; node gây lỗi điều hướng được ghi nhận và bỏ qua thay vì làm
+hỏng cả lượt chạy.
+
+Trên mỗi trang, explorer đề xuất các task cụ thể có phân loại (tra cứu thông
+tin / điều hướng / thay đổi trạng thái) và ghi nhớ những task đã đề xuất để
+tránh lặp. Solver thực thi từng task trong action space cố định gồm click, gõ,
+chọn, nhấn phím, điều hướng, thao tác tab, cùng hai kết cục tuyên bố là hoàn
+thành và bất khả thi.
+
+\subsubsection*{2.4.3\quad Phát hiện và kiểm chứng skill}
+
+Mỗi trajectory được cắt thành các đoạn con tại các điểm đổi ngữ cảnh, gom cụm
+trực tuyến bằng ngưỡng cosine trên embedding, và mỗi cụm lặp lại đủ số lần sẽ
+được trừu tượng hóa thành một SkillCard tham số hóa. Skill chỉ được thu nhận
+sau khi thực thi lại thành công trong các ngữ cảnh chưa gặp --- nguyên tắc P1.
+
+\subsubsection*{2.4.4\quad Các độ đo đánh giá}
+
+Độ đo chính là \textbf{tỷ lệ hoàn thành task} (task completion rate) trên bộ
+task chính thức của WebArena, chấm bằng bộ đánh giá tự động của benchmark dựa
+trên trạng thái cuối, so sánh mô hình fine-tune với chính mô hình nền. Các độ
+đo phụ gồm tỷ lệ thành công theo loại task, tỷ lệ episode được judge xác nhận,
+và các thống kê về dữ liệu thu thập (số skill, số operator, số cạnh trong
+operator graph). Kết quả được lặp lại nhiều lượt để báo cáo trung bình kèm độ
+lệch chuẩn và khoảng tin cậy, thay vì một lượt chạy đơn.
+
+\subsubsection*{2.4.5\quad Công nghệ, công cụ và tài nguyên}
+
+\begin{itemize}
+  \item \textbf{Ngôn ngữ:} Python $\geq$ 3.11.
+  \item \textbf{Trình duyệt:} Playwright + Chromium, qua BrowserGym.
+  \item \textbf{LLM vận hành pipeline:} API thương mại, định tuyến theo vai
+  trò (explorer, solver, segmenter, abstractor, verifier, operator inducer,
+  judge).
+  \item \textbf{Huấn luyện và phục vụ:} LLaMA-Factory (LoRA), vLLM.
+  \item \textbf{Tài nguyên GPU:} GPU đám mây thuê ngoài, NVIDIA A100-80GB, cho
+  fine-tuning và phục vụ suy luận khi đánh giá.
+\end{itemize}
+
+\subsection*{2.5\quad Kết quả dự kiến}
+
+\textbf{Mã nguồn mới tạo:}
+\begin{itemize}
+  \item Pipeline HSGE hoàn chỉnh: khám phá có định hướng theo graph, phát hiện
+  và kiểm chứng skill, induction và ghép chuỗi operator.
+  \item Bộ công cụ tinh lọc dữ liệu: judge chấm lại episode, bộ viết lại suy
+  nghĩ, trình dựng dataset tuân thủ prompt parity.
+  \item Bộ script huấn luyện, phục vụ và đánh giá đầu--cuối trên WebArena.
+\end{itemize}
+
+\textbf{Dữ liệu và mô hình:}
+\begin{itemize}
+  \item Tập dữ liệu SFT gồm các trajectory tương tác web có gán mục tiêu, thu
+  thập hoàn toàn tự động, kèm siêu dữ liệu về skill và operator.
+  \item Checkpoint LoRA của mô hình web agent 9B đã fine-tune.
+  \item Bảng so sánh mô hình nền và mô hình fine-tune trên bộ task chính thức
+  của bốn website WebArena.
+\end{itemize}
+
+\textbf{Tài liệu kỹ thuật:}
+\begin{itemize}
+  \item Hướng dẫn cài đặt và chạy pipeline từ khám phá đến đánh giá.
+  \item Hướng dẫn tái lập thực nghiệm với các lệnh cụ thể.
+  \item Báo cáo kinh nghiệm kỹ thuật khi vận hành LLM agent trên website thật.
+\end{itemize}
+
+\subsection*{2.6\quad Kế hoạch thực hiện}
+
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{@{}C{1.0cm} L{5.6cm} C{1.75cm} C{1.75cm} L{2.6cm}@{}}
+\caption*{\textbf{Kế hoạch thực hiện khóa luận.}} \\
+\toprule
+\textbf{STT} & \textbf{Công việc} & \textbf{Bắt đầu} & \textbf{Kết thúc} &
+\textbf{Trạng thái} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{STT} & \textbf{Công việc} & \textbf{Bắt đầu} & \textbf{Kết thúc} &
+\textbf{Trạng thái} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+1 & Nhận đề tài; khảo sát tài liệu về web agent, khám phá skill và sinh dữ
+liệu tự động & 01/2026 & 01/2026 & Hoàn thành \\
+\addlinespace
+2 & Thiết kế kiến trúc HSGE: graph hai tầng, biểu diễn skill và operator &
+02/2026 & 02/2026 & Hoàn thành \\
+\addlinespace
+3 & Triển khai môi trường WebArena tự host; xây lớp trình duyệt và action
+space & 02/2026 & 03/2026 & Hoàn thành \\
+\addlinespace
+4 & Nộp đơn đăng ký thực hiện đề tài & \multicolumn{2}{C{3.6cm}}{Theo lịch Khoa} &
+Hoàn thành \\
+\addlinespace
+5 & Cài đặt vòng khám phá: quản lý frontier, explorer, solver & 03/2026 &
+04/2026 & Hoàn thành \\
+\addlinespace
+6 & Nộp đề cương cho Khoa & \multicolumn{2}{C{3.6cm}}{Theo lịch Khoa} & Hoàn thành \\
+\addlinespace
+7 & Cài đặt phát hiện skill: cắt đoạn, gom cụm, trừu tượng hóa, kiểm chứng &
+04/2026 & 05/2026 & Hoàn thành \\
+\addlinespace
+8 & Cài đặt induction operator và ghép chuỗi thành semantic task & 05/2026 &
+05/2026 & Hoàn thành \\
+\addlinespace
+9 & Thu thập dữ liệu trên Reddit và GitLab (12 lượt chạy, 1.174 episode) &
+05/2026 & 06/2026 & Hoàn thành \\
+\addlinespace
+10 & Tinh lọc dữ liệu và dựng tập SFT theo prompt parity & 06/2026 & 06/2026 &
+Hoàn thành \\
+\addlinespace
+11 & Fine-tune Qwen3.5-9B bằng LoRA; dựng hạ tầng phục vụ và đánh giá &
+06/2026 & 07/2026 & Hoàn thành \\
+\addlinespace
+12 & Đánh giá trên bộ task chính thức của GitLab & 07/2026 & 07/2026 & Hoàn
+thành \\
+\addlinespace
+13 & Viết báo cáo khóa luận (Chương 1--3, 5--6, phụ lục) & 06/2026 & 07/2026 &
+Hoàn thành \\
+\addlinespace
+14 & Khắc phục hợp nhất mệnh đề để kích hoạt ghép chuỗi operator; chạy lại thu
+thập & 07/2026 & 08/2026 & Đang thực hiện \\
+\addlinespace
+15 & Đánh giá trên Shopping, Shopping Admin và Reddit & 07/2026 & 08/2026 &
+Đang thực hiện \\
+\addlinespace
+16 & Lặp lại thống kê nhiều lượt và nghiên cứu ablation & 08/2026 & 08/2026 &
+Chưa bắt đầu \\
+\addlinespace
+17 & Hoàn thiện Chương 4 và toàn bộ báo cáo & 08/2026 & 08/2026 & Chưa bắt
+đầu \\
+\addlinespace
+18 & Nộp đơn đăng ký bảo vệ và bảo vệ khóa luận &
+\multicolumn{2}{C{3.6cm}}{Theo lịch Khoa (08/2026)} & Chưa bắt đầu \\
+\end{longtable}
+
+\vspace{1.5cm}
+
+\noindent
+\begin{tabular}{@{}C{6.6cm} C{6.6cm}@{}}
+\textbf{XÁC NHẬN CỦA NGƯỜI HƯỚNG DẪN} &
+\textbf{TP. Hồ Chí Minh, ngày \ \ \ \ tháng \ \ \ \ năm \ \ \ \ } \\[4pt]
+ & \textbf{NHÓM SINH VIÊN THỰC HIỆN} \\[4pt]
+\textit{(Ký và ghi rõ họ tên)} & \textit{(Ký và ghi rõ họ tên)} \\
+\end{tabular}
+
+\clearpage
