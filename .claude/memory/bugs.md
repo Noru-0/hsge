@@ -15,7 +15,38 @@ Entry format:
 
 ## Open
 
-_(none currently)_
+### Predicate canonicalization never unifies synonyms, so the operator graph stays edgeless and no semantic task is ever generated
+- **Status**: open
+- **Found**: 2026-07-20, while gathering Appendix C statistics for the thesis.
+  Verified directly against `outputs/`: **0 of 1745 episodes** across all 12
+  runs carry a `GOAL` tag, every `summary.json` shows
+  `GOAL: {success: 0, fail: 0}`, and all 370 examples in
+  `training/train_12.jsonl` come from low-level tasks.
+- **Where**: `hsge/predicate_registry.py` + `run.predicate_sim` (0.6) in
+  `config.yaml`; downstream effect in `hsge/operators.py::OperatorGraph.all_chains`
+  and `hsge/webarena/runtime.py::_goal_tasks()`.
+- **Symptom**: the operator graph is effectively edgeless, so
+  `all_chains(min_len=2)` returns nothing and no composed GOAL task is ever
+  attempted on a live site. The largest run (`wa_run_07`, 128 nodes, 13
+  operators) has **exactly one** effect→precondition edge, and it only formed
+  when the 13th and last operator was induced, after the run had been stopped.
+- **Cause**: not a coding defect — embedding-only canonicalization cannot
+  separate synonyms from near-neighbours at any single threshold. Measured on
+  `wa_run_09`: a true synonym pair scored 0.570 while a false pair scored
+  0.606, straddling the 0.6 threshold from both sides. Each operator therefore
+  gets a private predicate vocabulary and nothing chains. The mechanism itself
+  is implemented and passes the deterministic mock tests
+  (`test_operators.py`, `test_goal_task.py`).
+- **Fix**: not started. Must be fixed **before** the planned re-run, otherwise
+  the new run reproduces the same 0-goal-task outcome. Vocabulary-aware
+  induction (reusing the registry's existing labels verbatim at authoring
+  time) already exists and is the lever to lean on; consider also an LLM
+  adjudication step for borderline cosine scores instead of a hard threshold.
+- **Thesis impact**: three places currently overstate this — the O2 rows in
+  `Chapter1`/`Chapter6` and a sentence in `Chapter5` §5.1 claiming operator
+  chaining "executed against a real website". Appendix C.3 already reports the
+  0 honestly, so the book is internally inconsistent until either the re-run
+  succeeds or those three are reworded. See `Thesis_report/memory/07-dan-y-chi-tiet.md`.
 
 ## Fixed
 
