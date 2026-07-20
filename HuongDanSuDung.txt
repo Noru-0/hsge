@@ -50,41 +50,107 @@ PYTHONPATH=. python hsge/tests/test_clustering.py
 ### 3.1. Chuẩn bị
 
 - Đã tạo file `.env` với đầy đủ API key và URL các site WebArena.
-- Đã cài Playwright Chromium: `playwright install chromium`.
+- Đã cài các gói bổ sung:
+  ```bash
+  pip install browsergym-core browsergym-webarena openai sentence-transformers python-dotenv pyyaml pillow requests
+  playwright install chromium
+  ```
 - WebArena instance đang chạy (các site có thể truy cập được).
+- Cấu hình không bí mật trong `config.yaml`, bí mật trong `.env`.
+  Thứ tự ưu tiên: **CLI flag > config.yaml > .env > built-in default**.
 
 ### 3.2. Chạy khám phá
 
 ```bash
-# Chạy với cấu hình mặc định từ config.yaml
+# Dry-run (LLM giả, fake browser) — kiểm tra wiring không cần kết nối thật
+python run_webarena.py --dry-run --out /tmp/wa_dry --max-nodes 2
+
+# Chạy với cấu hình mặc định từ config.yaml + .env
 python run_webarena.py
 
 # Chạy với tham số tùy chỉnh
-python run_webarena.py --site shopping --max-nodes 5 --headed
-python run_webarena.py --provider deepseek --model deepseek-chat
-python run_webarena.py --max-tasks 8
+python run_webarena.py --site shopping --max-nodes 15 --max-depth 6 --max-steps 15
+python run_webarena.py --site gitlab --headed                          # có cửa sổ browser
+python run_webarena.py --provider deepseek --model deepseek-v4-flash   # ghi đè mọi role
+python run_webarena.py --maturity 3 --predicate-sim 0.65               # tinh chỉnh phát hiện skill
 
-# Chế độ read-only (chỉ INFO/NAV, không MOD) — an toàn cho site dùng chung
-python run_webarena.py --read-only --max-nodes 2 --max-steps 4
+# Chế độ read-only (chỉ INFO/NAV, loại MOD + UNKNOWN) — an toàn cho site dùng chung
+python run_webarena.py --read-only --max-nodes 5 --max-steps 10
 
-# Dry-run (LLM giả, không cần browser thật) — kiểm tra wiring
-python run_webarena.py --dry-run --out /tmp/wa_dry --max-nodes 2
+# Ghi đè URL gốc và allow pattern (khi không dùng biến môi trường WA_*)
+python run_webarena.py \
+    --root-url "http://your-host:7770" \
+    --out outputs/wa_run \
+    --allow "http://your-host:7770.*" \
+    --max-nodes 15 --max-depth 6 --max-steps 15
 ```
 
-### 3.3. Kết quả đầu ra
+### 3.3. Các tham số CLI quan trọng
 
-Sau khi chạy, thư mục `outputs/wa_run_XX/` chứa:
+| Tham số | Mô tả | Giá trị mặc định |
+|---|---|---|
+| `--site` | Tên site (shopping, gitlab, reddit, ...) | Từ config.yaml |
+| `--root-url` | URL gốc, ghi đè `--site` | null |
+| `--out` | Thư mục đầu ra | outputs/wa_run |
+| `--allow` | Regex URL được phép | Tự suy từ root URL |
+| `--denylist` | Regex URL bị chặn (thắng allow) | "logout\|\\?p=\|..." |
+| `--max-nodes` | Số node tối đa | 500 |
+| `--max-depth` | Độ sâu tối đa | 300 |
+| `--max-steps` | Số bước tối đa mỗi episode | 15 |
+| `--max-tasks` | Số task đề xuất mỗi node | 9 |
+| `--maturity` | Số lần lặp để skill chín | 2 |
+| `--headed` | Hiện cửa sổ browser | false |
+| `--read-only` | Chỉ task INFO/NAV, chặn MOD + UNKNOWN | false |
+| `--dry-run` | Chạy giả, không cần browser/API | false |
+| `--provider` | LLM provider (openai, deepseek) | Từ .env |
+| `--model` | Model mặc định cho mọi role | Từ .env |
+
+### 3.4. Cấu hình LLM theo vai trò
+
+Mỗi helper có thể dùng model riêng trong `config.yaml`:
+
+```yaml
+llm:
+  provider: deepseek
+  temperature: 0.2
+  agents:
+    page_explorer:          # đề xuất task — cần model mạnh
+      model: gpt-4o
+      vision: true
+      som: true
+    solver:                 # chọn hành động — model rẻ hơn
+      model: gpt-4o-mini
+      vision: true
+      som: true
+    trajectory_segmenter:   # cắt đoạn trajectory
+      model: deepseek-v4-flash
+    skill_abstractor:       # trừu tượng hóa skill
+      model: deepseek-v4-flash
+    operator_inducer:       # induction precondition/effect
+      model: deepseek-v4-flash
+    episode_judge:          # chấm lại episode
+      model: deepseek-v4-flash
+    thought_reannotator:    # viết lại suy nghĩ
+      model: deepseek-v4-flash
+```
+
+### 3.5. Kết quả đầu ra
+
+Sau khi chạy, thư mục đầu ra chứa:
 
 | File | Nội dung |
 |---|---|
-| `skills.json` | Các kỹ năng đã được xác minh |
-| `operators.json` | Các toán tử lập kế hoạch (từ kỹ năng) |
-| `graph.json` | Đồ thị phân cấp (skill → skill) |
-| `predicates.json` | Các vị từ (precondition/effect) |
+| `skills.json` | Các skill đã kiểm chứng |
+| `operators.json` | Các operator lập kế hoạch (từ skill) |
+| `graph.json` | Đồ thị operator (cạnh effect→precondition) |
+| `predicates.json` | Các vị từ đã chuẩn hóa (p0, p1, ...) |
 | `nodes.json` | Kết quả task theo từng node |
 | `summary.json` | Tổng kết toàn bộ run |
 | `run_log.jsonl` | Nhật ký sự kiện theo dòng |
-| `episodes/` | Thư mục chứa từng episode đã chạy |
+| `episodes/` | Thư mục chứa từng episode |
+| `episodes/ep_XXXX/episode_meta.json` | Mục tiêu, kết cục, reward |
+| `episodes/ep_XXXX/episode.jsonl` | Từng bước (hành động + quan sát) |
+| `episodes/ep_XXXX/page_state/` | AXTree + screenshot từng bước |
 
 ## 4. Chuyển đổi dữ liệu huấn luyện (SFT)
 
