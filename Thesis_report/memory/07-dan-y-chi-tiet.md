@@ -115,6 +115,17 @@ excalidraw). Excalidraw KHÔNG xuất PDF trực tiếp — phải qua SVG. Font
 Helvetica (không phải Times như body) — chấp nhận đánh đổi để đẹp hơn.
 (Lịch sử trước đó: từng vẽ bằng draw.io theme academic rồi tô màu tech-blue;
 đã thay hết bằng Excalidraw.)
+- **`fig_frontier` (§3.3 quản lý frontier) — hình thứ 8, thêm 2026-07-20.**
+  Mẫu convergence với **cổng bất đối xứng**: tier 0 (URL solver đã đi tới) vào
+  thẳng hàng đợi, tier 1 (href khai thác) phải qua trần theo template — cổng
+  chỉ nằm trên MỘT trong hai cạnh vào, đó chính là lập luận. Hàng đợi vẽ dạng
+  các ô có thứ tự, tier 0 nằm trên tier 1. Đã chèn §3.3 cả hai bản kèm
+  `\ref{fig:frontier}`. EN 90tr / VI 94tr.
+  **Kết luận về "có thêm hình nữa không": KHÔNG.** C2 đã có bảng positioning;
+  C5 là văn xuôi vấn đề→chẩn đoán→sửa + bảng best practices; C6 là kết luận.
+  Biểu đồ kết quả C4 thì muốn nhưng **bị chặn bởi dữ liệu** — vẽ cột cho một
+  cặp n=1 (10/180 vs 12/180) là thổi phồng bằng đồ họa, đúng lỗi P0-1; đợi đủ
+  4 site + lặp thống kê rồi vẽ kèm thanh sai số.
 - `fig_twolevel` (§3.2 graph hai tầng), `fig_solver` (§3.3 vòng lặp solver),
   `fig_discovery` (§3.4 phát hiện skill), `fig_semantic` (§3.5 sinh semantic
   task — hình "đắt" nhất), `fig_curation` (§3.6 tinh lọc dữ liệu).

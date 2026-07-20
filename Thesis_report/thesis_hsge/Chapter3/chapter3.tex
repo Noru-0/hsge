@@ -176,8 +176,20 @@ to the frontier, the explorer, and the solver, respectively.
 \subsection{Frontier management}
 \label{sec:method-frontier}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{Figures/fig_frontier.pdf}
+\caption[Frontier management]{Frontier management. The two tiers of
+candidates are not treated alike: URLs the solver actually reached enter the
+queue directly, while hyperlinks mined from the page must first pass a
+per-template cap. The queue orders candidates by tier, then by novelty of
+their URL template, then by depth. A popped node is still skipped if its
+page content hashes to one already visited.}
+\label{fig:frontier}
+\end{figure}
+
 The frontier is a priority queue over candidate URLs with two tiers of
-candidates. \emph{Tier~0} contains URLs the agent actually reached while
+candidates (Figure~\ref{fig:frontier}). \emph{Tier~0} contains URLs the agent actually reached while
 solving tasks, together with pages left open in browser tabs; these are
 admitted directly, subject only to allow/deny and visited checks, because
 reaching them is itself evidence that they matter. \emph{Tier~1} contains

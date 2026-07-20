@@ -176,8 +176,20 @@ lượt cho frontier, explorer và solver.
 \subsection{Quản lý frontier}
 \label{sec:method-frontier}
 
-Frontier là một hàng đợi ưu tiên trên các URL ứng viên với hai tầng.
-\emph{Tầng~0} chứa các URL agent thực sự đi tới khi giải task, cùng các
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{Figures/fig_frontier.pdf}
+\caption[Quản lý frontier]{Quản lý frontier. Hai tầng ứng viên không được
+đối xử như nhau: URL mà solver thực sự đi tới được nhận thẳng vào hàng đợi,
+còn các siêu liên kết khai thác từ trang phải qua trần theo template. Hàng
+đợi sắp ứng viên theo tầng, rồi theo độ mới của dạng URL, rồi theo độ sâu.
+Một node đã lấy ra vẫn bị bỏ qua nếu nội dung trang băm trùng một trang đã
+thăm.}
+\label{fig:frontier}
+\end{figure}
+
+Frontier là một hàng đợi ưu tiên trên các URL ứng viên với hai tầng
+(Hình~\ref{fig:frontier}). \emph{Tầng~0} chứa các URL agent thực sự đi tới khi giải task, cùng các
 trang còn mở trong tab; chúng được nhận thẳng (chỉ qua các bộ lọc
 cho phép/cấm/đã thăm), vì việc agent tới được đó tự nó là bằng chứng chúng
 đáng quan tâm. \emph{Tầng~1} chứa các hyperlink khai thác từ DOM của mỗi
