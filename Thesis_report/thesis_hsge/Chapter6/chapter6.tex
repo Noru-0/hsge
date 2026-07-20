@@ -38,9 +38,10 @@ The work produced five concrete artifacts:
   configuration it was trained under.
   \item \textbf{An official benchmark evaluation}: a harness that evaluates
   base and fine-tuned models on the official WebArena task suites by reusing
-  the live agent's exact prompt, with results on GitLab showing the
-  fine-tuned model improving over its base from 5.56\% to 6.67\% task
-  success from only 352 training examples.
+  the live agent's exact prompt. On GitLab the fine-tuned model scored 6.67\%
+  against its base model's 5.56\%, obtained from only 352 training examples.
+  With one attempt per task, this margin is a directional signal rather than
+  a demonstrated difference (Section~\ref{sec:disc-results}).
   % TODO: update with the four-site results once Sections 4.4-4.6 land.
   \item \textbf{An engineering experience report}: the distilled lessons and
   best practices of Chapter~\ref{ch:discussion}, together with a
@@ -84,7 +85,8 @@ re-annotation passes; dataset builder importing the live prompt; error-step
 exclusion and curriculum ordering (Section~\ref{sec:method-data}) \\
 \addlinespace
 O4 & Fine-tune and officially evaluate an SLM & Achieved on GitLab
-(5.56\%$\rightarrow$6.67\% from 352 examples); evaluation on the remaining
+(5.56\%$\rightarrow$6.67\% from 352 examples, a directional signal at one
+attempt per task); evaluation on the remaining
 three sites and statistical repeats in progress
 (Sections~\ref{sec:exp-main}--\ref{sec:exp-stats}) \\
 \addlinespace

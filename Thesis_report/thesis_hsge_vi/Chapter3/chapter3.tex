@@ -66,6 +66,12 @@ Ba nguyên tắc thiết kế xuyên suốt pipeline:
 \section{Biểu diễn graph hai tầng}
 \label{sec:method-graph}
 
+Hình~\ref{fig:twolevel} mô tả biểu diễn mà mục này định nghĩa. Tầng thấp ghi
+lại trải nghiệm cụ thể: các trang agent đã thăm và những hành động nó thực
+hiện giữa các trang đó. Tầng cao ghi lại năng lực tái sử dụng được: các skill
+được trừu tượng hóa từ trải nghiệm ấy, cùng các cạnh operator mà theo đó
+chúng ghép nối được với nhau.
+
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{Figures/fig_twolevel.pdf}
@@ -258,11 +264,13 @@ hoặc bất khả thi.}
 \label{fig:solver}
 \end{figure}
 
-\emph{Solver} là một vòng lặp agent kiểu ReAct~\cite{yao2023react}: ở mỗi
-bước nó nhận mục tiêu, URL hiện tại, accessibility tree (đã giới hạn độ
-dài), và một cửa sổ các hành động gần đây, mỗi hành động kèm kết quả quan
-sát được (``đang ở $\langle$url$\rangle$'', ``trang đã đổi'', hoặc ``không
-đổi''), rồi trả lời bằng một dòng suy nghĩ và một hành động thuộc
+\emph{Solver} là một vòng lặp agent kiểu ReAct~\cite{yao2023react}, phác họa
+ở Hình~\ref{fig:solver}. Ở mỗi bước nó nhận mục tiêu, URL hiện tại,
+accessibility tree (đã giới hạn độ dài), và một cửa sổ các hành động gần đây.
+Mỗi hành động trong cửa sổ đó đều kèm kết quả quan sát được --- ``đang ở
+$\langle$url$\rangle$'', ``trang đã đổi'', hoặc ``không đổi'' --- để mô hình
+phân biệt được tiến triển với giậm chân tại chỗ. Solver sau đó trả lời bằng
+một dòng suy nghĩ và một hành động thuộc
 Bảng~\ref{tab:actions}. Nếu một hành động thực thi lỗi, thông báo lỗi được
 đưa lại ở bước sau để agent tự sửa thay vì hủy episode.
 

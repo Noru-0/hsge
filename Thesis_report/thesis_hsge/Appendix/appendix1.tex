@@ -96,9 +96,10 @@ recorded episodes \\
 \section{Core data schema}
 \label{app:design-schema}
 
-Five dataclasses carry everything through the pipeline. Keeping them in one
-module is what makes the LLM-induced artifacts inspectable, which in turn is
-what makes the verification audit trail possible.
+Five dataclasses carry everything through the pipeline; Table~\ref{tab:app-schema}
+lists their fields. Keeping them in one module is what makes the LLM-induced
+artifacts inspectable, which in turn is what makes the verification audit trail
+possible.
 
 \begin{table}[H]
 \centering
@@ -437,7 +438,8 @@ than through its best runs only.
 \section{Exploration runs}
 \label{app:runs-explore}
 
-Runs 1--9 explored the Reddit instance; runs 10--12 explored GitLab. Runs 4--6
+Table~\ref{tab:app-runs} reports every exploration run behind the collected
+data. Runs 1--9 explored the Reddit instance; runs 10--12 explored GitLab. Runs 4--6
 are task-generation passes that reuse an existing graph and therefore have no
 node counts of their own. A status of \emph{interrupted} means the run was
 stopped manually once it had produced enough trajectories, not that it failed;

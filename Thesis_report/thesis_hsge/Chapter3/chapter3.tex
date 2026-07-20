@@ -66,6 +66,12 @@ Three design principles run through the pipeline:
 \section{Two-Level Graph Representation}
 \label{sec:method-graph}
 
+Figure~\ref{fig:twolevel} shows the representation this section defines. The
+low level records concrete experience: the pages the agent has visited and the
+actions it took between them. The high level records transferable capability:
+the skills abstracted from that experience, and the operator edges along which
+those skills compose.
+
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{Figures/fig_twolevel.pdf}
@@ -261,11 +267,13 @@ infeasibility.}
 \label{fig:solver}
 \end{figure}
 
-The \emph{solver} is a ReAct-style agent loop~\cite{yao2023react}: at each
-step it receives the goal, the current URL, the (length-capped) accessibility
-tree, and a window of its recent actions, each annotated with its observed
-outcome (``now at $\langle$url$\rangle$'', ``page changed'', or ``no
-change''), and it responds with a thought and one action from
+The \emph{solver} is a ReAct-style agent loop~\cite{yao2023react}, sketched in
+Figure~\ref{fig:solver}. At each step it receives the goal, the current URL,
+the (length-capped) accessibility tree, and a window of its recent actions.
+Every action in that window is annotated with its observed outcome --- ``now
+at $\langle$url$\rangle$'', ``page changed'', or ``no change'' --- so the
+model can tell progress from stagnation. The solver then responds with a
+thought and one action from
 Table~\ref{tab:actions}. If an action fails to execute, the error message is
 fed back at the next step so the agent can recover instead of aborting.
 

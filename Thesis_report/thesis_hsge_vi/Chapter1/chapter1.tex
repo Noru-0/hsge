@@ -21,16 +21,16 @@ cả các dịch vụ đó, nên một agent phần mềm có khả năng thao t
 có phạm vi ứng dụng rộng nhất.
 
 Các mô hình ngôn ngữ lớn (LLM) gần đây đã khiến những web agent như vậy trở
-nên khả thi: nhận một bản mô tả dạng văn bản của trang web cùng một mục
-tiêu, LLM có thể quyết định cần click hay gõ gì tiếp theo, và các agent xây
+nên khả thi. Nhận một bản mô tả dạng văn bản của trang web cùng một mục
+tiêu, LLM có thể quyết định cần click hay gõ gì tiếp theo; các agent xây
 theo cách này hoàn thành được nhiều task thực tế trên website thật. Tuy
 nhiên, năng lực đó hiện gần như chỉ tồn tại ở các mô hình độc quyền rất
 lớn, truy cập qua API. Sự phụ thuộc này gây tốn kém theo nhiều cách cộng
-dồn: mỗi bước của mỗi task là một lời gọi API trả phí, trong khi task của
-agent cần rất nhiều bước; độ trễ bị giới hạn bởi dịch vụ từ xa; toàn bộ nội
-dung của mọi trang được duyệt --- có thể chứa dữ liệu riêng tư hoặc nội bộ
---- bị gửi cho bên thứ ba; và bản thân mô hình là một ``hàng hóa cố định''
-mà người vận hành không thể kiểm tra hay cải thiện. Với chính những tổ chức
+dồn. Mỗi bước của mỗi task là một lời gọi API trả phí, trong khi task của
+agent cần rất nhiều bước. Độ trễ bị giới hạn bởi dịch vụ từ xa, và toàn bộ
+nội dung của mọi trang được duyệt --- có thể chứa dữ liệu riêng tư hoặc nội
+bộ --- bị gửi cho bên thứ ba. Cuối cùng, bản thân mô hình là một ``hàng hóa
+cố định'' mà người vận hành không thể kiểm tra hay cải thiện. Với chính những tổ chức
 hưởng lợi nhiều nhất từ tự động hóa web, các ràng buộc này thường loại bỏ
 hoàn toàn lựa chọn dùng mô hình mạnh nhất.
 
@@ -42,22 +42,21 @@ có thể fine-tune tùy ý. Thứ chúng thiếu là năng lực. Ngay cả cá
 các website đầy đủ chức năng tự triển khai, agent dựa trên GPT-4 chỉ hoàn
 thành khoảng 14\% số task, so với khoảng 78\% của con
 người~\cite{zhou2024webarena}.
-% TODO(verify): số chính xác 14,41% và 78,24% theo paper WebArena.
 Các mô hình nhỏ, nếu dùng nguyên bản, còn kém xa hơn. Phương thuốc tiêu
 chuẩn --- tinh chỉnh có giám sát (SFT) trên các bản mẫu hành vi --- vấp
 phải bài toán dữ liệu: trajectory tương tác có gán mục tiêu trên website
 đích hầu như không tồn tại, còn thuê người gán nhãn thì đắt, chậm và phải
 làm lại cho từng website.
 
-Khóa luận này tấn công bài toán dữ liệu đó từ gốc. Nếu một pipeline tự động
-có thể \emph{khám phá} website, \emph{tự nghĩ ra} các task có ý nghĩa dựa
-trên những gì nó tìm thấy, \emph{kiểm chứng} nỗ lực nào thực sự thành công,
-rồi biên dịch kết quả thành dữ liệu huấn luyện, thì chi phí chuyên hóa một
-SLM cho một website giảm từ một chiến dịch gán nhãn thủ công xuống thành
-chi phí tính toán. Ý tưởng trung tâm của chúng tôi là pipeline không nên
-lang thang vô định: nó phải xây dựng một \emph{graph} ghi lại những gì đã
-học được về năng lực của website --- các skill đã kiểm chứng cùng
-precondition và effect của chúng --- rồi \emph{ghép} graph đó thành các
+Khóa luận này tấn công bài toán dữ liệu đó từ gốc. Giả sử một pipeline tự
+động có thể \emph{khám phá} website, \emph{tự nghĩ ra} các task có ý nghĩa
+dựa trên những gì nó tìm thấy, \emph{kiểm chứng} nỗ lực nào thực sự thành
+công, rồi biên dịch kết quả thành dữ liệu huấn luyện. Khi đó chi phí chuyên
+hóa một SLM cho một website giảm từ một chiến dịch gán nhãn thủ công xuống
+thành chi phí tính toán. Ý tưởng trung tâm của chúng tôi là một pipeline như
+vậy không nên lang thang vô định. Nó phải xây dựng một \emph{graph} ghi lại
+những gì đã học được về năng lực của website --- các skill đã kiểm chứng
+cùng precondition và effect của chúng --- rồi \emph{ghép} graph đó thành các
 task huấn luyện dài hạn, có ngữ nghĩa, mà không trang đơn lẻ nào gợi ý
 được.
 
@@ -74,16 +73,16 @@ năng hoàn thành các task phát biểu bằng ngôn ngữ tự nhiên trên w
 \textbf{mà không dùng} bất kỳ bản mẫu hay nhãn task nào do con người tạo.
 \end{quote}
 
-Giao diện agent theo đúng chuẩn của bài toán web agent: tại mỗi bước, mô
-hình quan sát URL hiện tại và accessibility tree của trang (bản mô tả dạng
-văn bản của giao diện đang hiển thị), rồi phát ra một hành động thuộc
-action space cố định --- click, gõ, chọn, điều hướng, hoặc tuyên bố task đã
-xong / bất khả thi. Một \emph{trajectory} là chuỗi các cặp (quan sát, hành
+Giao diện agent theo đúng chuẩn của bài toán web agent. Tại mỗi bước, mô
+hình quan sát URL hiện tại và accessibility tree của trang, tức bản mô tả
+dạng văn bản của giao diện đang hiển thị. Sau đó nó phát ra một hành động
+thuộc action space cố định --- click, gõ, chọn, điều hướng, hoặc tuyên bố
+task đã xong / bất khả thi. Một \emph{trajectory} là chuỗi các cặp (quan sát, hành
 động) sinh ra khi theo đuổi một mục tiêu.
 
 Điểm mấu chốt nằm ở sản phẩm trung gian. Fine-tuning cần một tập dữ liệu
-$D = \{(g_i, \tau_i)\}$ gồm các mục tiêu kèm trajectory thành công, nên câu
-hỏi thực chất là câu hỏi \emph{sinh dữ liệu}: làm thế nào để tự động chế
+$D = \{(g_i, \tau_i)\}$ gồm các mục tiêu kèm trajectory thành công. Vì vậy
+câu hỏi thực chất là câu hỏi \emph{sinh dữ liệu}: làm thế nào để tự động chế
 tạo các mục tiêu $g_i$ có ý nghĩa trên website này, và các trajectory
 $\tau_i$ đạt được chúng một cách kiểm chứng được? Chất lượng được phán xét
 bằng chính mục đích cuối: mô hình sau fine-tune được đánh giá theo
@@ -144,14 +143,15 @@ trên.
 \end{enumerate}
 
 Bảng~\ref{tab:contrib} tách bạch những gì khóa luận kế thừa và những gì
-khóa luận đóng góp. Tóm lại, các đóng góp gồm: HSGE --- pipeline khám phá
-và ghép chuỗi dựa trên graph với hệ task hai tầng (low-level task do LLM đề
-xuất phục vụ khám phá; semantic task sinh từ operator graph phục vụ dữ liệu
-dài hạn); bộ tinh lọc dữ liệu tự động (chấm lại episode và viết lại suy
-nghĩ) nối vào một trình dựng dataset tuân thủ prompt parity; một mô hình
-web agent 9B đã fine-tune cùng tập dữ liệu thu thập được; đánh giá mô hình
-đó trên bộ task WebArena chính thức; và một báo cáo kinh nghiệm về việc vận
-hành các pipeline như vậy một cách ổn định.
+khóa luận đóng góp. Tóm lại, có năm đóng góp. Thứ nhất là chính HSGE:
+pipeline khám phá và ghép chuỗi dựa trên graph với hệ task hai tầng, trong
+đó low-level task do LLM đề xuất phục vụ khám phá, còn semantic task sinh từ
+operator graph cung cấp dữ liệu dài hạn. Thứ hai là bộ tinh lọc dữ liệu tự
+động --- chấm lại episode và viết lại suy nghĩ --- nối vào một trình dựng
+dataset tuân thủ prompt parity. Ba đóng góp còn lại là một mô hình web agent
+9B đã fine-tune cùng tập dữ liệu thu thập được, đánh giá mô hình đó trên bộ
+task WebArena chính thức, và một báo cáo kinh nghiệm về việc vận hành các
+pipeline như vậy một cách ổn định.
 
 \begin{table}[H]
 \centering

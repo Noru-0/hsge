@@ -21,9 +21,10 @@ trajectories pass through automated quality gates (an LLM judge and thought
 re-annotation) before being compiled into a supervised fine-tuning dataset
 whose prompts exactly match the inference-time agent. We fine-tune
 Qwen3.5-9B with LoRA on data collected from self-hosted WebArena sites and
-evaluate on the official WebArena task suites of four sites (Shopping,
-Shopping Admin, GitLab, and Reddit). On GitLab, the fine-tuned model improves
-over its base from 5.56\% to 6.67\% task success — a directional signal,
-given the limited dataset size. Beyond the numbers, the thesis contributes
+evaluate it against the official WebArena task suites. On the GitLab suite,
+the fine-tuned model scores 6.67\% task success against its base model's
+5.56\%; with one attempt per task, we read this margin as a directional
+signal rather than a demonstrated difference. Evaluation on the remaining
+three sites (Shopping, Shopping Admin, and Reddit) is in progress. Beyond the numbers, the thesis contributes
 the pipeline itself, the curated dataset, and a set of engineering practices
 for running LLM agents reliably on live websites.

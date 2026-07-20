@@ -37,9 +37,10 @@ Khóa luận tạo ra năm sản phẩm cụ thể:
   như lúc huấn luyện.
   \item \textbf{Đánh giá benchmark chính thức}: một bộ đánh giá chạy mô
   hình gốc và mô hình fine-tune trên bộ task WebArena chính thức bằng cách
-  tái sử dụng đúng prompt của agent thật; kết quả trên GitLab cho thấy mô
-  hình fine-tune cải thiện so với gốc từ 5{,}56\% lên 6{,}67\% tỷ lệ hoàn
-  thành, chỉ với 352 mẫu huấn luyện.
+  tái sử dụng đúng prompt của agent thật. Trên GitLab, mô hình fine-tune đạt
+  6{,}67\% so với 5{,}56\% của mô hình gốc, chỉ với 352 mẫu huấn luyện. Với
+  một lần thử mỗi task, chênh lệch này là một tín hiệu định hướng chứ chưa
+  phải một khác biệt đã được chứng minh (Mục~\ref{sec:disc-results}).
   % TODO: cập nhật khi có kết quả 4 website (Mục 4.4-4.6).
   \item \textbf{Báo cáo kinh nghiệm kỹ thuật}: các bài học và best practice
   đúc kết ở Chương~\ref{ch:discussion}, cùng hướng dẫn tái lập từng bước
@@ -83,7 +84,8 @@ suy nghĩ; trình dựng dataset import prompt thật; loại bước lỗi và 
 curriculum (Mục~\ref{sec:method-data}) \\
 \addlinespace
 O4 & Fine-tune và đánh giá chính thức một SLM & Đạt trên GitLab
-(5{,}56\%$\rightarrow$6{,}67\% từ 352 mẫu); đánh giá ba website còn lại và
+(5{,}56\%$\rightarrow$6{,}67\% từ 352 mẫu, là tín hiệu định hướng ở mức một
+lần thử mỗi task); đánh giá ba website còn lại và
 lặp thống kê đang tiến hành
 (Mục~\ref{sec:exp-main}--\ref{sec:exp-stats}) \\
 \addlinespace

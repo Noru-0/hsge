@@ -95,7 +95,8 @@ các episode đã ghi \\
 \section{Lược đồ dữ liệu lõi}
 \label{app:design-schema}
 
-Năm dataclass mang toàn bộ dữ liệu đi qua pipeline. Việc gom chúng vào một
+Năm dataclass mang toàn bộ dữ liệu đi qua pipeline;
+Bảng~\ref{tab:app-schema} liệt kê các trường của chúng. Việc gom chúng vào một
 module là điều làm cho các artifact do LLM sinh ra có thể soi xét được, và nhờ
 đó mới có được vết kiểm chứng của khâu verification.
 
@@ -435,6 +436,7 @@ những run đẹp nhất.
 \section{Các run khám phá}
 \label{app:runs-explore}
 
+Bảng~\ref{tab:app-runs} báo cáo mọi run khám phá đứng sau dữ liệu đã thu.
 Run 1--9 khám phá instance Reddit; run 10--12 khám phá GitLab. Run 4--6 là các
 lượt sinh task dùng lại graph có sẵn nên không có số node riêng. Trạng thái
 \emph{bị ngắt} nghĩa là run được dừng thủ công khi đã thu đủ trajectory, không

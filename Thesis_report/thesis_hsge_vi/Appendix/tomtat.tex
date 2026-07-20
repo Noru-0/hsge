@@ -20,9 +20,11 @@ các cổng kiểm soát chất lượng tự động (LLM judge và bước vi�
 suy nghĩ) trước khi được biên dịch thành tập dữ liệu tinh chỉnh có giám sát
 (SFT) với prompt trùng khớp hoàn toàn với agent lúc vận hành. Chúng tôi
 fine-tune Qwen3.5-9B bằng LoRA trên dữ liệu thu thập từ các website WebArena
-tự triển khai và đánh giá trên bộ task chính thức của bốn website (Shopping,
-Shopping Admin, GitLab, Reddit). Trên GitLab, mô hình sau fine-tune cải
-thiện so với mô hình gốc từ 5{,}56\% lên 6{,}67\% tỷ lệ hoàn thành task —
-một tín hiệu định hướng, trong điều kiện tập dữ liệu còn nhỏ. Ngoài các con
+tự triển khai và đánh giá trên bộ task chính thức của WebArena. Trên bộ
+GitLab, mô hình sau fine-tune đạt 6{,}67\% tỷ lệ hoàn thành task so với
+5{,}56\% của mô hình gốc; với một lần thử mỗi task, chúng tôi đọc chênh lệch
+này là một tín hiệu định hướng chứ chưa phải một khác biệt đã được chứng
+minh. Việc đánh giá ba website còn lại (Shopping, Shopping Admin và Reddit)
+đang được tiến hành. Ngoài các con
 số, khóa luận đóng góp chính pipeline, tập dữ liệu đã tinh lọc, và một bộ
 kinh nghiệm kỹ thuật để vận hành LLM agent ổn định trên website thật.

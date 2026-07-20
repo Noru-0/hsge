@@ -25,10 +25,10 @@ click and type next, and agents built this way can complete realistic tasks
 on real websites. The capability, however, currently lives almost entirely
 in very large proprietary models accessed over an API. This dependence is
 costly in several compounding ways. Every step of every task is a paid API
-call, and agent workloads take many steps; latency is bounded by a remote
-service; the full content of every visited page --- possibly including
-private or internal data --- is sent to a third party; and the model itself
-is a fixed commodity that the operator cannot inspect or improve. For
+call, and agent workloads take many steps. Latency is bounded by a remote
+service, and the full content of every visited page --- possibly including
+private or internal data --- is sent to a third party. The model itself,
+finally, is a fixed commodity that the operator cannot inspect or improve. For
 organizations that would benefit most from web automation, these constraints
 often rule out the strongest models entirely.
 
@@ -39,23 +39,22 @@ are the operator's to fine-tune. What they lack is competence. Even
 \emph{large} models find realistic web tasks hard: on the WebArena benchmark
 of self-hosted, fully functional websites, a GPT-4-based agent completed
 about 14\% of tasks, against roughly 78\% for humans~\cite{zhou2024webarena}.
-% TODO(verify): exact figures 14.41% and 78.24% from the WebArena paper.
 Out of the box, small models fare far worse. The standard remedy ---
 supervised fine-tuning on demonstrations of the target behavior --- runs
 into a data problem: goal-annotated interaction trajectories on the target
 website rarely exist, and producing them with human annotators is expensive,
 slow, and site-specific.
 
-This thesis attacks that data problem at its root. If an automated pipeline
-can \emph{explore} a website on its own, \emph{invent} meaningful tasks
-grounded in what it finds, \emph{verify} which of its attempts actually
-succeeded, and compile the results into training data, then the cost of
-specializing an SLM to a website drops from a human annotation campaign to a
-matter of compute. The central idea of our approach is that the pipeline
-should not merely wander: it should build a \emph{graph} of what it has
-learned the site can do --- verified skills and their preconditions and
-effects --- and then \emph{compose} that graph into long-horizon, semantic
-training tasks that no single page would ever suggest.
+This thesis attacks that data problem at its root. Suppose an automated
+pipeline could \emph{explore} a website on its own, \emph{invent} meaningful
+tasks grounded in what it finds, \emph{verify} which of its attempts actually
+succeeded, and compile the results into training data. The cost of
+specializing an SLM to a website would then drop from a human annotation
+campaign to a matter of compute. The central idea of our approach is that
+such a pipeline should not merely wander. It should build a \emph{graph} of
+what it has learned the site can do --- verified skills, with their
+preconditions and effects --- and then \emph{compose} that graph into
+long-horizon, semantic training tasks that no single page would ever suggest.
 
 \section{Problem Statement}
 \label{sec:intro-problem}
@@ -70,17 +69,17 @@ natural-language tasks on the website, \textbf{without} any human-authored
 demonstrations or task labels.
 \end{quote}
 
-The agent interface follows the standard web-agent formulation: at each step
-the model observes the current URL and the page's accessibility tree (a
-textual rendering of the visible interface), and it emits one action from a
+The agent interface follows the standard web-agent formulation. At each step
+the model observes the current URL and the page's accessibility tree, a
+textual rendering of the visible interface. It then emits one action from a
 fixed action space --- clicking, typing, selecting, navigating, or declaring
 the task finished or infeasible. A \emph{trajectory} is the sequence of
 observation--action pairs produced while pursuing one goal.
 
 The crux of the problem is the intermediate artifact. Fine-tuning needs a
-dataset $D = \{(g_i, \tau_i)\}$ of goals paired with successful trajectories,
-so the real question is a \emph{data-generation} one: how can goals $g_i$
-that are meaningful on this website, and trajectories $\tau_i$ that verifiably
+dataset $D = \{(g_i, \tau_i)\}$ of goals paired with successful trajectories.
+The real question is therefore a \emph{data-generation} one: how can goals
+$g_i$ meaningful on this website, and trajectories $\tau_i$ that verifiably
 achieve them, be manufactured automatically? Quality is judged by the end
 use: the fine-tuned model is evaluated by its \emph{task success rate} on the
 official, programmatically checked task suites of the WebArena
@@ -140,13 +139,14 @@ above.
 \end{enumerate}
 
 Table~\ref{tab:contrib} separates what this thesis builds on from what it
-contributes. In brief, the contributions are: HSGE, a graph-based
-exploration-and-composition pipeline with a two-tier task hierarchy
-(LLM-proposed low-level tasks for exploration; operator-graph-generated
-semantic tasks for long-horizon data); an automated curation stack (episode
-judging and thought re-annotation) feeding a prompt-parity dataset builder; a
-fine-tuned 9B web-agent model with its collected dataset; an evaluation of
-that model on official WebArena suites; and an experience report on running
+contributes. In brief, there are five contributions. The first is HSGE
+itself: a graph-based exploration-and-composition pipeline with a two-tier
+task hierarchy, in which LLM-proposed low-level tasks drive exploration and
+operator-graph-generated semantic tasks supply long-horizon data. The second
+is an automated curation stack --- episode judging and thought re-annotation
+--- feeding a prompt-parity dataset builder. The remaining three are a
+fine-tuned 9B web-agent model with its collected dataset, an evaluation of
+that model on official WebArena suites, and an experience report on running
 such pipelines reliably.
 
 \begin{table}[H]
