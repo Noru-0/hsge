@@ -1,0 +1,182 @@
+# Hướng dẫn chạy và sử dụng — HSGE
+
+## 1. Điều kiện trước khi chạy
+
+- Đã hoàn thành **Hướng dẫn cài đặt** (tạo môi trường Conda, cài thư viện).
+- Đã kích hoạt môi trường: `conda activate hsge`.
+- Mọi lệnh đều chạy từ **thư mục gốc của dự án** (thư mục chứa `hsge/`, `config.yaml`).
+
+## 2. Chạy Mock Pipeline (không cần API key)
+
+Đây là các script chạy hoàn toàn trên mô phỏng, không cần kết nối WebArena hay API key.
+
+### 2.1. Exploration loop đầy đủ
+
+```bash
+python explore.py
+```
+
+Chạy vòng lặp khám phá: mở rộng frontier → phát hiện kỹ năng → soạn thảo → xác minh.
+
+### 2.2. Demo theo miền
+
+```bash
+python demo.py                  # Phát hiện → phân cụm → trừu tượng hóa → xác minh → chuyển giao
+python demo_shopping.py         # Mua sắm: lập kế hoạch → thực thi → xác minh đơn hàng
+python demo_purchase.py         # Chỉ lập kế hoạch + curriculum (toán tử / tiền điều kiện)
+```
+
+### 2.3. So sánh baseline
+
+```bash
+python compare.py               # So sánh cặp baseline
+python compare_three_way.py     # So sánh 3 baseline: Flat vs AWM vs HSGE
+```
+
+### 2.4. Chạy kiểm thử
+
+```bash
+python -m pytest hsge/tests/ -q
+```
+
+Hoặc chạy từng test riêng:
+
+```bash
+PYTHONPATH=. python hsge/tests/test_clustering.py
+```
+
+## 3. Chạy Real WebArena (cần API key + WebArena instance)
+
+### 3.1. Chuẩn bị
+
+- Đã tạo file `.env` với đầy đủ API key và URL các site WebArena.
+- Đã cài Playwright Chromium: `playwright install chromium`.
+- WebArena instance đang chạy (các site có thể truy cập được).
+
+### 3.2. Chạy khám phá
+
+```bash
+# Chạy với cấu hình mặc định từ config.yaml
+python run_webarena.py
+
+# Chạy với tham số tùy chỉnh
+python run_webarena.py --site shopping --max-nodes 5 --headed
+python run_webarena.py --provider deepseek --model deepseek-chat
+python run_webarena.py --max-tasks 8
+
+# Chế độ read-only (chỉ INFO/NAV, không MOD) — an toàn cho site dùng chung
+python run_webarena.py --read-only --max-nodes 2 --max-steps 4
+
+# Dry-run (LLM giả, không cần browser thật) — kiểm tra wiring
+python run_webarena.py --dry-run --out /tmp/wa_dry --max-nodes 2
+```
+
+### 3.3. Kết quả đầu ra
+
+Sau khi chạy, thư mục `outputs/wa_run_XX/` chứa:
+
+| File | Nội dung |
+|---|---|
+| `skills.json` | Các kỹ năng đã được xác minh |
+| `operators.json` | Các toán tử lập kế hoạch (từ kỹ năng) |
+| `graph.json` | Đồ thị phân cấp (skill → skill) |
+| `predicates.json` | Các vị từ (precondition/effect) |
+| `nodes.json` | Kết quả task theo từng node |
+| `summary.json` | Tổng kết toàn bộ run |
+| `run_log.jsonl` | Nhật ký sự kiện theo dòng |
+| `episodes/` | Thư mục chứa từng episode đã chạy |
+
+## 4. Chuyển đổi dữ liệu huấn luyện (SFT)
+
+Sau khi có kết quả run, có thể tạo dataset fine-tuning:
+
+### 4.1. (Tùy chọn) Kiểm tra chất lượng episode
+
+```bash
+# Kiểm tra lại các episode declared-success bằng LLM mạnh hơn
+python judge_episodes.py outputs/wa_run_XX
+python judge_episodes.py outputs/wa_run_XX --limit 20
+
+# Viết lại thought cho từng bước
+python reannotate_thoughts.py outputs/wa_run_XX
+python reannotate_thoughts.py outputs/wa_run_XX --limit 20 --axtree-sim 0.5
+```
+
+### 4.2. Xây dựng dataset
+
+```bash
+python build_sft_dataset.py outputs/wa_run_XX/episodes train.jsonl
+python build_sft_dataset.py outputs/wa_run_XX/episodes train.jsonl --require-judge
+```
+
+`--require-judge`: chỉ giữ các episode declared-success đã được judge xác nhận.
+
+## 5. Fine-tuning (huấn luyện lại mô hình)
+
+Xem thư mục `training/`:
+
+```bash
+# Cấu hình LoRA fine-tuning
+training/qwen35_9b_lora.yaml
+
+# Script setup trên vast.ai
+training/vast_setup.sh
+
+# Script serve vLLM
+training/serve_vllm.sh
+```
+
+Tham khảo `docs/14_vast_ai_training_eval_tutorial.md` để biết hướng dẫn chi tiết.
+
+## 6. Dừng và khởi động lại
+
+### Dừng chương trình
+
+- **Trên Windows**: nhấn `Ctrl+C` trong terminal đang chạy.
+- **Trên macOS/Linux**: nhấn `Ctrl+C`.
+- Nếu chạy ở chế độ `--headed`: đóng cửa sổ trình duyệt.
+
+### Khởi động lại
+
+Đơn giản chạy lại lệnh tương ứng. Nếu muốn reset toàn bộ trạng thái:
+
+```bash
+# Xóa thư mục output cũ (nếu không cần)
+rm -rf outputs/wa_run_XX
+
+# Xóa cache đăng nhập (nếu muốn đăng nhập lại)
+rm -rf .auth/
+
+# Chạy lại
+python run_webarena.py
+```
+
+## 7. Kiểm tra chương trình
+
+### Kiểm tra mock pipeline
+
+```bash
+conda activate hsge
+python explore.py
+```
+Kỳ vọng: script chạy không lỗi, in ra thông tin exploration.
+
+### Kiểm tra real run (dry-run)
+
+```bash
+python run_webarena.py --dry-run --out /tmp/wa_dry --max-nodes 2
+```
+Kỳ vọng: tạo các file `skills.json`, `operators.json`, `graph.json`, ... trong thư mục output.
+
+## 8. Lỗi thường gặp
+
+| Lỗi | Nguyên nhân | Cách khắc phục |
+|---|---|---|
+| `conda: command not found` | Chưa cài Conda hoặc chưa khởi tạo | Cài Miniconda, chạy `conda init` |
+| `ModuleNotFoundError` | Thiếu thư viện | `pip install -r requirements.txt` |
+| `playwright` not found | Chưa cài Playwright | `pip install playwright && playwright install chromium` |
+| API key error | Thiếu hoặc sai API key | Kiểm tra `.env`, đảm bảo `OPENAI_API_KEY` hoặc `DEEPSEEK_API_KEY` đúng |
+| WebArena connection refused | Instance chưa chạy | Kiểm tra Docker, URL trong `.env` |
+| Browser timeout | Playwright không mở được trang | Kiểm tra network, thử `--headed` để debug |
+| `[TRUNCATED: ...]` trong axtree | Page quá dài (>6000 ký tự) | Bình thường — cơ chế cắt ngắn có chủ đích |
+| `infeasible` task | Model cho rằng task không khả thi | Bình thường — task được đếm riêng, không retry |
