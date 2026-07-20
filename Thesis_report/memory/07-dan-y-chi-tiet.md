@@ -120,7 +120,14 @@ Helvetica (không phải Times như body) — chấp nhận đánh đổi để 
   task — hình "đắt" nhất), `fig_curation` (§3.6 tinh lọc dữ liệu).
 - Nguồn YAML ở `Thesis_report/.drawio-tmp/*.yaml` (git-ignored); PDF ở
   `<edition>/Figures/`. Bản EN và VI có YAML/PDF riêng (label dịch).
-- **Màu (2026-07-19)**: đổi theme `academic` (đen trắng) → `tech-blue` (có
+- **Màu (2026-07-20, BẢN CUỐI)**: đã đổi sang **palette của skill
+  `excalidraw-diagram`** (`references/color-palette.md`) trong `build.py::PAL`,
+  giữ nguyên ngữ nghĩa cũ: `process` #93c5fd (bước thường), `primary` #60a5fa
+  (bước nhấn), **`llm`/`external` #ddd6fe viền #6d28d9 (vai trò LLM/AI)**,
+  `success` #a7f3d0, `decision` #fef3c7, `error` #fecaca, `trigger` #fed7aa,
+  `neutral` #dbeafe. Chữ trong hộp #374151, chữ chú thích #64748b. Đậm hơn bản
+  cũ. Hộp LLM trong fig_solver đã chuyển từ `primary` sang `llm` cho đúng nghĩa.
+- (lịch sử) **Màu (2026-07-19)**: đổi theme `academic` (đen trắng) → `tech-blue` (có
   màu) + style override theo nghĩa: xanh lá = output/thành công (Skill
   library, SFT dataset, Episode end, operator); đỏ = loại bỏ (Discarded,
   Dropped); vàng = decision (auto) + semantic-task output nổi bật; xanh dương
