@@ -86,12 +86,23 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
   biểu mẫu hành chính nên luôn tiếng Việt). File cũ tên `decuong.tex` thực ra
   là "Tóm lược nội dung các chương" → đã đổi tên thành `tomluoc.tex`.
   `glossary` chuyển từ trước Mục lục sang **sau** Mục lục cho đúng checklist.
-  - ⚠️ **`DeCuongKhoaLuan/` chính là bản đã nộp Khoa 06/04/2026** (MD5 trùng
-    `[T826_KL_CNPM04]_DeCuong_06042026.pdf`). Nó mô tả một đề tài **khác hẳn**
-    (pipeline 5 phase trên browser-use, benchmark Mind2Web, schema (s,o,a,v),
-    xác thực L1/L2/L3 + đồng thuận 2 tác nhân, QLoRA + DPO trên
-    Qwen2.5-1.5B/3B). Đừng lấy nó làm nguồn sự thật cho bất cứ gì — bản trong
-    quyển đã viết lại theo HSGE/WebArena/Qwen3.5-9B.
+  - **Có HAI bản đề cương phải giữ đồng bộ** (2026-07-20):
+    1. `thesis_hsge_vi/Appendix/decuongchitiet.tex` — bản nằm trong quyển.
+    2. `DeCuongKhoaLuan/decuong_webagent.tex` — bản độc lập để **in nộp thầy ký**.
+    Cùng nội dung, khác quy ước trình bày: bản trong quyển dùng `\section*`
+    đánh số tay (vì `\chapter*` làm section tự động thành "0.1"); bản độc lập
+    là `article` + `titlesec` nên dùng `\section` tự đánh số. Bản độc lập có
+    `thebibliography` viết tay 15 mục; bản trong quyển `\cite` thẳng vào
+    bibliography chung của quyển, không in danh sách riêng.
+    **Sửa nội dung một bản thì phải sửa bản kia.**
+  - ⚠️ `[T826_KL_CNPM04]_DeCuong_06042026.pdf` ở gốc `Thesis_report/` là
+    **bản đã nộp Khoa 06/04/2026** — trước 2026-07-20 nó MD5 trùng
+    `DeCuongKhoaLuan/decuong_webagent.pdf`, giờ thì không còn trùng nữa vì
+    bản `DeCuongKhoaLuan/` đã được cập nhật. File PDF ở gốc là ảnh chụp
+    nguyên trạng bản đã nộp, **đừng ghi đè**. Nội dung cũ của nó mô tả một
+    đề tài **khác hẳn** (pipeline 5 phase trên browser-use, benchmark
+    Mind2Web, schema (s,o,a,v), xác thực L1/L2/L3 + đồng thuận 2 tác nhân,
+    QLoRA + DPO trên Qwen2.5-1.5B/3B) — đừng lấy làm nguồn sự thật.
   - ⚠️ **Tên đề tài đã thống nhất lại** thành tên đầy đủ của đề cương:
     *"Xây dựng dữ liệu và tinh chỉnh mô hình ngôn ngữ nhỏ cho tác nhân trí tuệ
     nhân tạo trên web"* / *"Data Construction and Fine-tuning of Small Language
