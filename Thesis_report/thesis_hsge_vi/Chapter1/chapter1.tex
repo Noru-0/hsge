@@ -211,29 +211,7 @@ thuật. Chương~\ref{ch:conclusion} kết luận và nêu hướng phát tri�
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
-  font=\small,
-  stage/.style={draw, rounded corners=2pt, align=center, minimum height=11mm,
-              inner sep=3pt, text width=23mm},
-  tag/.style={font=\scriptsize\itshape, align=center},
-  arr/.style={-{Stealth[length=2.5mm]}, thick},
-  node distance=5mm
-]
-\node[stage] (a) {Website\\không nhãn};
-\node[stage, right=of a] (b) {Khám phá theo\\graph \& sinh\\semantic task};
-\node[stage, right=of b] (c) {Dataset SFT\\đã tinh lọc};
-\node[stage, right=of c] (d) {SLM đã\\fine-tune};
-\node[stage, right=of d] (e) {Đánh giá\\chính thức \&\\bài học};
-\node[tag, below=1.5mm of a] {bài toán\\(Ch.~1)};
-\node[tag, below=1.5mm of b] {phương pháp\\(Ch.~3)};
-\node[tag, below=1.5mm of c] {phương pháp\\(Ch.~3)};
-\node[tag, below=1.5mm of d] {thực nghiệm\\(Ch.~4)};
-\node[tag, below=1.5mm of e] {(Ch.~4--5)};
-\draw[arr] (a) -- (b);
-\draw[arr] (b) -- (c);
-\draw[arr] (c) -- (d);
-\draw[arr] (d) -- (e);
-\end{tikzpicture}
+\includegraphics[width=\textwidth]{Figures/fig_roadmap.pdf}
 \caption[Lộ trình nghiên cứu của khóa luận]{Lộ trình nghiên cứu: từ một
 website không nhãn đến một mô hình ngôn ngữ nhỏ được đánh giá chính thức,
 cùng các chương phụ trách từng giai đoạn. Chương~2 đặt lộ trình này trong

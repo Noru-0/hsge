@@ -208,29 +208,7 @@ outlines future work.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
-  font=\small,
-  stage/.style={draw, rounded corners=2pt, align=center, minimum height=11mm,
-              inner sep=3pt, text width=23mm},
-  tag/.style={font=\scriptsize\itshape, align=center},
-  arr/.style={-{Stealth[length=2.5mm]}, thick},
-  node distance=5mm
-]
-\node[stage] (a) {Unannotated\\website};
-\node[stage, right=of a] (b) {Graph-based\\exploration \&\\semantic tasks};
-\node[stage, right=of b] (c) {Curated SFT\\dataset};
-\node[stage, right=of c] (d) {Fine-tuned\\SLM};
-\node[stage, right=of d] (e) {Official\\evaluation \&\\lessons};
-\node[tag, below=1.5mm of a] {problem\\(Ch.~1)};
-\node[tag, below=1.5mm of b] {method\\(Ch.~3)};
-\node[tag, below=1.5mm of c] {method\\(Ch.~3)};
-\node[tag, below=1.5mm of d] {experiments\\(Ch.~4)};
-\node[tag, below=1.5mm of e] {(Ch.~4--5)};
-\draw[arr] (a) -- (b);
-\draw[arr] (b) -- (c);
-\draw[arr] (c) -- (d);
-\draw[arr] (d) -- (e);
-\end{tikzpicture}
+\includegraphics[width=\textwidth]{Figures/fig_roadmap.pdf}
 \caption[Research roadmap of the thesis]{The research roadmap: from an
 unannotated website to an evaluated small language model, with the chapters
 covering each stage. Chapter~2 grounds the roadmap in prior work.}

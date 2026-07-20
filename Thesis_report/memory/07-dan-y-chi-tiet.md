@@ -69,8 +69,25 @@ Helvetica (không phải Times như body) — chấp nhận đánh đổi để 
   = process/skill. Sửa 5 file EN rồi chạy lại script dịch để lan sang VI.
 - **Hình 3.1 (pipeline overview)**: đã vẽ lại bằng Excalidraw (hàm
   `pipeline()` trong diagrams.py) và thay khối TikZ trong cả hai bản
-  (2026-07-20). Giờ CẢ 6 hình Chương 3 đều là Excalidraw. Chỉ còn **Hình
-  1.1 (roadmap Chương 1)** là TikZ — chưa chuyển.
+  (2026-07-20). Giờ CẢ 6 hình Chương 3 đều là Excalidraw.
+- **Hình 1.1 (roadmap Chương 1)**: đã vẽ lại bằng Excalidraw (hàm
+  `roadmap()`, 2026-07-20). **Không còn TikZ picture nào trong cả hai bản.**
+- **Export qua Kroki — bẫy quan trọng**: phải gửi `Content-Type: text/plain`.
+  Nếu gửi `application/json`, Kroki hiểu body là envelope JSON của nó và báo
+  lỗi 400 "Field diagram_source must not be empty".
+  Lệnh: `curl -s -X POST -H "Content-Type: text/plain" --data-binary
+  @fig_x_en.excalidraw https://kroki.io/excalidraw/svg -o fig_x_en.svg`
+  rồi `rsvg-convert -f pdf -o <edition>/Figures/fig_x.pdf fig_x_en.svg`.
+- **Cỡ chữ trong hình**: canvas Excalidraw bị scale xuống `\textwidth`
+  (~411pt), nên `fontSize` px hiển thị ra pt rất nhỏ. Quy tắc:
+  `pt ≈ fontSize_px × 411 / (chiều rộng canvas px)`. Nhắm ~7,5–9pt (nhỏ hơn
+  body 13pt nhưng còn đọc được); hình roadmap phải để fontsize 22px mới đạt
+  ~7,5pt. Luôn render thử trang PDF ra PNG để kiểm tra trước khi chốt.
+- **Cảnh báo build có sẵn từ trước**: cả hai bản in "LaTeX Warning: There were
+  undefined references" nhưng **mọi `\ref` và `\cite` đều resolve** (đã đối
+  chiếu key trong .tex với `\newlabel` trong .aux và với references.bib —
+  không thiếu cái nào). Nguyên nhân là bookkeeping của biblatex
+  `defernumbers=true`, vô hại. Đừng mất thời gian truy lại.
 - **Cách chạy skill drawio** (nếu cần vẽ thêm): cần cài `js-yaml@4.1.0` vào
   `~/.agents/skills/drawio/node_modules` (v5 lỗi default export); font phải
   khai đủ `primary/cjk/formula`; nhãn nhiều dòng dùng `\n` (KHÔNG dùng `<br>`
