@@ -1,5 +1,40 @@
 # Dàn ý chi tiết báo cáo (v1 — 2026-07-17, chưa gửi GVHD duyệt)
 
+## ⚠️ RỦI RO LỚN NHẤT CHƯA XỬ LÝ (phát hiện 2026-07-20)
+
+**Semantic task chưa từng chạy thật lần nào.** Kiểm chứng trực tiếp trên
+`outputs/`:
+- **0 / 1745** episode có tag `GOAL` (toàn bộ 12 run).
+- `summary.json` mọi run: `GOAL: {success: 0, fail: 0}`; không có sự kiện
+  goal-task nào trong `run_log.jsonl`.
+- 370 example trong `training/train_12.jsonl` **100% từ low-level task**.
+
+Nguyên nhân (không phải bug): operator graph gần như không có cạnh. Ở run
+lớn nhất `wa_run_07` (128 node, 13 operator) chỉ có **đúng 1 cạnh**
+effect→precondition (`clickandexaminelink → navigate_to_post`), và cạnh đó
+chỉ hình thành khi operator thứ 13 — operator cuối — được induce, lúc run
+đã bị ngắt (`status: "running"`). Nên `all_chains(min_len=2)` rỗng suốt run
+và `_goal_tasks()` không sinh được gì. Đây là hệ quả trực tiếp của điểm yếu
+predicate canonicalization đã biết (synonym thật 0,570 < ngưỡng 0,6 < cặp
+sai 0,606): mỗi operator nhận một predicate id riêng nên không nối được.
+
+Cơ chế **có** cài đặt đầy đủ và có test trên mock (`test_operators.py`,
+`test_goal_task.py` assert đúng các chain) — chỉ là chưa kích hoạt được
+trên site thật.
+
+**Chỗ khóa luận đang nói quá:** `Chapter6/chapter6.tex` bảng O1–O5, dòng O2
+ghi "Achieved: ... chain-based goal generation"; `Chapter1/chapter1.tex` O2
+hứa "verified, long-horizon semantic tasks". Đúng loại lỗi P0-1 mà review
+thesis mẫu bắt nặng nhất.
+
+**Quyết định của user (2026-07-20):** tạm gác, **sẽ chạy lại thực nghiệm
+sau**. Giữ nguyên câu chữ hiện tại chờ kết quả run mới. ⚠️ **Nếu run mới
+vẫn không sinh được semantic task thì BẮT BUỘC sửa O2 ở C1/C6** thành
+"cài đặt + kiểm chứng trên mock, chưa kích hoạt được trên run thật", báo
+cáo 0 GOAL episode ở C4, và viết mục C5 phân tích operator graph rỗng cạnh
+như một kết quả âm có giá trị. Không được để "Achieved" nếu số liệu không
+đỡ được.
+
 ## Trạng thái viết (cập nhật 2026-07-17)
 
 Bản LaTeX sống ở **`Thesis_report/thesis_hsge/`** (fork từ template, tiếng
@@ -31,6 +66,16 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
   `VERIFY` (author list đầy đủ / venue cuối) — agent verify đang chạy,
   vá xong thì xóa note.
 - ⬜ Chapter 4: skeleton, điền số khi thực nghiệm bổ sung xong.
+- ✅ **Phụ lục A–D (2026-07-20)**: đã viết trọn cả hai bản, thay 4
+  placeholder. A = bản đồ 26 module (longtable, tự ngắt trang) + lược đồ dữ
+  liệu + lớp tách backend + cấu hình model theo vai trò + tham số chạy;
+  B = 7 prompt nguyên văn lấy thẳng từ source (giữ tiếng Anh ở cả bản VI vì
+  đó là văn bản chạy thật), mỗi prompt kèm một câu nói rõ nó sửa lỗi hành vi
+  nào; C = thống kê 12 run (301 node, 1174 episode, 827/330/48 task, 37
+  skill, 35 operator) + bảng theo loại task run 4–6 (INFO 86% / NAV 72% /
+  MOD 73%) + **mục C.3 báo cáo trung thực 0 goal task** (xem cảnh báo đầu
+  file); D = hướng dẫn tái lập. EN 74→89 trang, VI 78→93 trang, build sạch.
+  ⚠️ Mục C.4 (kết quả 180 task/site) vẫn là `[Sẽ bổ sung]` — chờ thực nghiệm.
 
 **Bản tiếng Việt song song** (user yêu cầu 2026-07-18): sống ở
 `Thesis_report/thesis_hsge_vi/` — dịch trọn C1/C2/C3/C5/C6 + front matter,
