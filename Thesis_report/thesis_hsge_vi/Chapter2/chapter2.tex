@@ -34,8 +34,8 @@ website thật, nhưng đánh giá bằng cách phát lại các bản chụp we
 lưu, nên agent được chấm theo độ khớp với chuỗi hành động ghi sẵn thay vì
 theo việc thật sự đạt mục tiêu trong môi trường sống.
 WebArena~\cite{zhou2024webarena} khép lại khoảng trống này bằng các bản sao
-website đầy đủ chức năng, tự triển khai --- một cửa hàng trực tuyến, trang
-quản trị của nó, một instance GitLab và một diễn đàn kiểu Reddit --- cùng
+website đầy đủ chức năng, tự triển khai (một cửa hàng trực tuyến, trang
+quản trị của nó, một instance GitLab và một diễn đàn kiểu Reddit), cùng
 812 task dài hạn được chấm bằng \emph{bộ chấm tự động} trên trạng thái cuối.
 Kết quả chủ đạo của nó định khung cho cả lĩnh vực: agent tốt nhất dựa trên
 GPT-4 đạt 14{,}41\% tỷ lệ hoàn thành, so với 78{,}24\% của con người. Khóa
@@ -64,12 +64,12 @@ baseline nguyên khối của WebArena. Tuy nhiên, thư viện chính sách c�
 được thiết kế thủ công cho từng họ website, tái nhập chính công sức con
 người mà lĩnh vực đang muốn loại bỏ.
 AgentOccam~\cite{yang2024agentoccam} cho thấy chỉ cần tinh chỉnh cẩn thận
-không gian quan sát và hành động --- không cần bất kỳ bộ máy lập kế hoạch
-nào --- đã vượt nhiều hệ thống cầu kỳ đương thời trên WebArena, một minh
+không gian quan sát và hành động, không cần bất kỳ bộ máy lập kế hoạch
+nào, đã vượt nhiều hệ thống cầu kỳ đương thời trên WebArena, một minh
 chứng tỉnh táo rằng phần lớn ``tiến bộ agent'' thực ra là kỹ thuật giao
 diện. Tuy nhiên, cả hai hướng đều chung hai đặc điểm cấu trúc: chúng coi mô
 hình là hàng hóa cố định (thường là hạng GPT-4, trả phí theo lời gọi), và
-không để lại sản phẩm bền vững nào --- những gì học được về một website
+không để lại sản phẩm bền vững nào: những gì học được về một website
 không sống sót qua episode. Với người vận hành cần agent rẻ, riêng tư và
 cải thiện được, prompt khéo hơn trên mô hình độc quyền không giải quyết
 ràng buộc; nó củng cố ràng buộc.
@@ -81,7 +81,7 @@ ràng buộc; nó củng cố ràng buộc.
 options~\cite{sutton1999options} hình thức hóa một skill thành bộ ba (tập
 khởi đầu, chính sách, điều kiện kết thúc), còn STRIPS~\cite{fikes1971strips}
 cho thấy các năng lực mô tả bằng precondition và effect hỗ trợ lập kế hoạch
-ký hiệu --- cả hai khung hình thức mà HSGE kế thừa trực tiếp
+ký hiệu, cả hai khung hình thức mà HSGE kế thừa trực tiếp
 (Mục~\ref{sec:method-graph}).
 
 Trong kỷ nguyên LLM, Voyager~\cite{wang2024voyager} minh họa việc học skill
@@ -98,7 +98,7 @@ Agent Workflow Memory~\cite{wang2024awm} rút ra các quy trình lặp lại
 (workflow) từ trajectory quá khứ rồi tiêm vào prompt các lần sau, cải thiện
 đáng kể tỷ lệ thành công trên WebArena. Tuy nhiên, workflow được lưu dưới
 dạng văn bản phẳng, thu nhận không qua cổng kiểm chứng tường minh, và chỉ
-được tiêu thụ như gợi ý lúc chạy --- mô hình bên dưới không hề tốt lên.
+được tiêu thụ như gợi ý lúc chạy; mô hình bên dưới không hề tốt lên.
 Gần đây nhất, skill induction dạng lập trình~\cite{wang2025asi} nâng các
 chuỗi hành động lặp lại thành hàm thực thi được, kiểm chứng ngay khi dùng,
 ghép các hành động nguyên thủy thành những lời gọi ở mức cao hơn.
@@ -122,16 +122,16 @@ cần gán nhãn thủ công, phân nhánh theo nguồn dữ liệu.
 
 \subsection{Từ tri thức gián tiếp}
 
-Synatra~\cite{ou2024synatra} chuyển tri thức gián tiếp --- các bài hướng
-dẫn, văn bản how-to trên mạng --- thành bản mẫu tổng hợp ở quy mô lớn, tạo
+Synatra~\cite{ou2024synatra} chuyển tri thức gián tiếp (các bài hướng
+dẫn, tài liệu hướng dẫn thao tác trên mạng) thành bản mẫu tổng hợp ở quy mô lớn, tạo
 ra 100k trajectory với chi phí thấp. Tuy nhiên, các bản mẫu được dựng
 offline, không hề chạm vào website sống, nên không gì bảo đảm chúng thực
 thi được trên môi trường thật.
 AgentTrek~\cite{xu2024agenttrek} cải thiện độ bám thực tế bằng cách phát
 lại các bài hướng dẫn web trong trình duyệt thật, có VLM kiểm chứng từng
 lần phát lại. Tuy nhiên, độ phủ của nó bị chặn bởi những gì đã có bài hướng
-dẫn: các quy trình chưa ai viết ra --- bao gồm mọi thứ đặc thù của một
-website riêng hoặc mới triển khai --- nằm ngoài tầm với.
+dẫn: các quy trình chưa ai viết ra (bao gồm mọi thứ đặc thù của một
+website riêng hoặc mới triển khai) nằm ngoài tầm với.
 
 \subsection{Từ khám phá tự động}
 
@@ -172,14 +172,14 @@ Gần khóa luận nhất, Go-Browse~\cite{gandhi2026gobrowse} đóng khung vi�
 thập dữ liệu thành tìm kiếm trên graph của một website: các trang đã thăm
 trở thành các node thăm lại được, nên khám phá tái sử dụng thông tin giữa
 các episode. Một mô hình 7B fine-tune trên dữ liệu thu được đạt 21{,}7\%
-trên WebArena --- state of the art cho mô hình dưới 10B tại thời điểm công
+trên WebArena, state of the art cho mô hình dưới 10B tại thời điểm công
 bố. Go-Browse xác nhận đúng tiền đề cốt lõi của khóa luận: khám phá
 \emph{có cấu trúc} thắng rollout không cấu trúc về chất lượng dữ liệu. Tuy
 nhiên, graph của nó là graph \emph{của các trang}, và task của nó vẫn là
 các đề xuất bám trang được giải từ những trang đó. HSGE bổ sung một tầng
 thứ hai mà Go-Browse không xây: các skill đã kiểm chứng được nâng thành
 operator lập kế hoạch với precondition/effect chuẩn hóa. Các chuỗi đi qua
-những operator đó sinh ra \emph{semantic task} --- những mục tiêu trải dài
+những operator đó sinh ra \emph{semantic task}: những mục tiêu trải dài
 trên các năng lực phát hiện ở các episode khác nhau, điều mà không đề xuất
 bám trang nào tạo ra được (Mục~\ref{sec:method-semantic}).
 
@@ -188,8 +188,8 @@ bám trang nào tạo ra được (Mục~\ref{sec:method-semantic}).
 
 Luận điểm rằng mô hình nhỏ xứng đáng được đầu tư ngày càng được phát biểu
 tường minh: một position paper gần đây~\cite{belcak2025slm} lập luận rằng
-phần lớn các lời gọi agent đều hẹp và lặp lại, khiến SLM --- rẻ hơn mười
-đến ba mươi lần khi serving và fine-tune được trong vài giờ --- là nền tảng
+phần lớn các lời gọi agent đều hẹp và lặp lại, khiến SLM (rẻ hơn mười
+đến ba mươi lần khi serving và fine-tune được trong vài giờ) là nền tảng
 hợp lý về kinh tế cho các hệ thống agent.
 Về thực nghiệm, AutoWebGLM~\cite{lai2024autowebglm} xây một web agent triển
 khai được trên backbone 6B thông qua SFT theo curriculum và học theo sở
@@ -199,7 +199,7 @@ cung cấp đúng nguồn dữ liệu còn thiếu: mô hình 8B của NNetNav v
 Go-Browse cho thấy bản mẫu thu thập tự động dịch chuyển đáng kể mô hình nhỏ
 trên WebArena, còn WebRL đẩy xa hơn bằng RL. Tuy nhiên, xuyên suốt các công
 trình này, nút thắt nhất quán là pipeline dữ liệu chứ không phải bộ tối ưu
---- và đó chính là thành phần khóa luận thiết kế lại. Mô hình đích của
+và đó chính là thành phần khóa luận thiết kế lại. Mô hình đích của
 chúng tôi là Qwen3.5-9B, một mô hình trọng số mở gần đây mà họ mô hình được
 tài liệu hóa trong báo cáo kỹ thuật Qwen3~\cite{yang2025qwen3}.
 
@@ -217,37 +217,33 @@ không.
 \centering
 \caption[Định vị HSGE so với các hệ thống liên quan gần nhất]{Định vị HSGE
 so với các hệ thống liên quan gần nhất. \CIRCLE{} = có,
-\LEFTcircle{} = một phần, --- = không.}
+\LEFTcircle{} = một phần, - = không.}
 \label{tab:positioning}
 \small
-\begin{tabular}{L{3.2cm} C{1.7cm} C{2.0cm} C{1.9cm} C{2.1cm} C{1.6cm}}
+\begin{tabular}{@{}L{3.2cm} C{1.7cm} C{2.0cm} C{1.9cm} C{2.1cm} C{1.6cm}@{}}
 \toprule
 \textbf{Hệ thống} & \textbf{Tương tác sống} & \textbf{Khám phá có cấu trúc}
 & \textbf{Skill kiểm chứng} & \textbf{Task dài hạn ghép chuỗi}
 & \textbf{Huấn luyện SLM} \\
 \midrule
-Synapse~\cite{zheng2024synapse} & --- & --- & --- & --- & --- \\
-AWM~\cite{wang2024awm} & \CIRCLE & --- & --- & --- & --- \\
-ASI~\cite{wang2025asi} & \CIRCLE & --- & \CIRCLE & \LEFTcircle & --- \\
-SkillWeaver~\cite{zheng2025skillweaver} & \CIRCLE & --- & \CIRCLE & \LEFTcircle & --- \\
-Synatra~\cite{ou2024synatra} & --- & --- & --- & --- & \CIRCLE \\
-AgentTrek~\cite{xu2024agenttrek} & \CIRCLE & --- & --- & --- & \CIRCLE \\
-NNetNav~\cite{murty2024nnetnav} & \CIRCLE & --- & --- & --- & \CIRCLE \\
-OS-Genesis~\cite{sun2024osgenesis} & \CIRCLE & --- & --- & --- & \CIRCLE \\
-PAE~\cite{zhou2024pae} & \CIRCLE & --- & --- & --- & \CIRCLE \\
-WebRL~\cite{qi2025webrl} & \CIRCLE & \LEFTcircle & --- & --- & \CIRCLE \\
-Go-Browse~\cite{gandhi2026gobrowse} & \CIRCLE & \CIRCLE & --- & --- & \CIRCLE \\
+Synapse~\cite{zheng2024synapse} & - & - & - & - & - \\
+AWM~\cite{wang2024awm} & \CIRCLE & - & - & - & - \\
+ASI~\cite{wang2025asi} & \CIRCLE & - & \CIRCLE & \LEFTcircle & - \\
+SkillWeaver~\cite{zheng2025skillweaver} & \CIRCLE & - & \CIRCLE & \LEFTcircle & - \\
+Synatra~\cite{ou2024synatra} & - & - & - & - & \CIRCLE \\
+AgentTrek~\cite{xu2024agenttrek} & \CIRCLE & - & - & - & \CIRCLE \\
+NNetNav~\cite{murty2024nnetnav} & \CIRCLE & - & - & - & \CIRCLE \\
+OS-Genesis~\cite{sun2024osgenesis} & \CIRCLE & - & - & - & \CIRCLE \\
+PAE~\cite{zhou2024pae} & \CIRCLE & - & - & - & \CIRCLE \\
+WebRL~\cite{qi2025webrl} & \CIRCLE & \LEFTcircle & - & - & \CIRCLE \\
+Go-Browse~\cite{gandhi2026gobrowse} & \CIRCLE & \CIRCLE & - & - & \CIRCLE \\
 \textbf{HSGE (của chúng tôi)} & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Tóm lại: hướng kiến trúc agent cải thiện prompting quanh các mô hình lớn cố
-định; hướng khám phá skill tích lũy cấu trúc nhưng chỉ tiêu dùng nó lúc suy
-luận; hướng sinh dữ liệu huấn luyện mô hình nhỏ nhưng khám phá hoặc không
-cấu trúc hoặc chỉ cấu trúc ở mức trang. Tổ hợp mà khóa luận theo đuổi ---
-cấu trúc skill đã kiểm chứng, ghép thành semantic task dài hạn, phục vụ
-huấn luyện một mô hình nhỏ --- theo hiểu biết của chúng tôi, còn bỏ trống.
+Tóm lại, hướng kiến trúc agent chủ yếu cải thiện chiến lược prompting và điều phối quanh các mô hình lớn cố định. Phương pháp khám phá kỹ năng có khả năng tích lũy tri thức có cấu trúc, nhưng phần lớn chỉ sử dụng tri thức này trong giai đoạn suy luận. Trong khi đó, phương pháp sinh dữ liệu hướng đến huấn luyện mô hình nhỏ thường thực hiện khám phá theo cách thiếu cấu trúc hoặc chỉ tổ chức thông tin ở cấp độ trang. Theo hiểu biết của chúng tôi, hướng tiếp cận kết hợp các kỹ năng đã được kiểm chứng, ghép chúng thành các tác vụ ngữ nghĩa dài hạn và sử dụng những tác vụ này để huấn luyện mô hình ngôn ngữ nhỏ vẫn chưa được nghiên cứu đầy đủ. Đây chính là khoảng trống mà khóa luận hướng đến giải quyết.
+
 
 \vspace{1em}
 \noindent

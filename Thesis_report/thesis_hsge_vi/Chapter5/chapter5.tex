@@ -18,8 +18,8 @@ cách khắc phục, và nguyên tắc tổng quát rút ra. Chi tiết đầy �
 % TODO: làm mới mục này khi có kết quả ba website còn lại và các lần lặp
 % thống kê (Mục 4.5-4.6).
 
-Con số nổi bật nhất đến nay --- cải thiện từ 5{,}56\% lên 6{,}67\% tỷ lệ
-hoàn thành trên bộ task GitLab chính thức --- cần được đọc thận trọng thay
+Con số nổi bật nhất đến nay, cải thiện từ 5{,}56\% lên 6{,}67\% tỷ lệ
+hoàn thành trên bộ task GitLab chính thức, cần được đọc thận trọng thay
 vì đắc thắng. Về tuyệt đối, mức tăng là nhỏ, và với mỗi task chỉ chạy một
 lần, nó phải được coi là tín hiệu định hướng cho tới khi các lần chạy lặp
 của Mục~\ref{sec:exp-stats} hoàn tất. Điều khiến tín hiệu này đáng chú ý là
@@ -27,7 +27,7 @@ hồ sơ chi phí của nó: nó thu được từ vỏn vẹn 352 mẫu huấn 
 tự động từ một website không có nhãn, và bản thân việc fine-tune mất chưa
 đầy nửa giờ trên một GPU. Nói cách khác, pipeline đã dịch chuyển một mô
 hình nhỏ đúng hướng với lượng dữ liệu nhỏ đáng kinh ngạc; câu hỏi mở là xu
-hướng này kéo dài tới đâu khi thu thập dữ liệu mở rộng quy mô --- điều mà
+hướng này kéo dài tới đâu khi thu thập dữ liệu mở rộng quy mô, điều mà
 kết quả liên-website ở Mục~\ref{sec:exp-main} sẽ bắt đầu trả lời.
 
 Ba yếu tố nhiều khả năng đang chặn mức tăng hiện tại. Thứ nhất, cỡ dữ
@@ -35,15 +35,15 @@ liệu: 352 mẫu thấp hơn các kho fine-tune agent điển hình hai đến 
 nên mô hình chỉ thấy mỗi khuôn tương tác vài lần. Thứ hai, độ phủ: dữ liệu
 huấn luyện thu từ một phần website, trong khi benchmark rút task từ toàn
 site. Thứ ba, chính mô hình gốc: một mô hình 9B tham số fine-tune thuần
-giám sát không thể được kỳ vọng khôi phục các năng lực --- lập kế hoạch dài
-hạn, tự sửa lỗi --- mà trajectory chỉ minh họa thưa thớt. Không yếu tố nào
+giám sát không thể được kỳ vọng khôi phục các năng lực (lập kế hoạch dài
+hạn, tự sửa lỗi) mà trajectory chỉ minh họa thưa thớt. Không yếu tố nào
 trong ba điều trên quy lỗi cho thiết kế pipeline; cả ba đều chỉ về khối
-lượng và độ phủ dữ liệu như ràng buộc trói buộc --- đúng ràng buộc mà
+lượng và độ phủ dữ liệu như ràng buộc trói buộc, đúng ràng buộc mà
 pipeline được sinh ra để nới lỏng.
 
 Quan trọng không kém là những gì lần chạy đầu--cuối đã \emph{chứng minh}:
-mọi công đoạn --- khám phá, phát hiện, ghép chuỗi operator, tinh lọc, huấn
-luyện, serving, đánh giá chính thức --- đều chạy trên website thật không
+mọi công đoạn (khám phá, phát hiện, ghép chuỗi operator, tinh lọc, huấn
+luyện, serving, đánh giá chính thức) đều chạy trên website thật không
 cần can thiệp tay, và các cổng chất lượng đã chặn được những dữ liệu lẽ ra
 sẽ làm bẩn huấn luyện (Mục~\ref{sec:disc-slm}). Phần còn lại của chương kể
 lại cái giá để câu vừa rồi đúng.
@@ -58,7 +58,7 @@ lại cái giá để câu vừa rồi đúng.
 \textbf{Chẩn đoán.} Khi đó frontier chỉ lớn lên từ các URL solver tình cờ
 điều hướng tới. Trang nào mà mọi task đề xuất đều thuộc dạng tra cứu thì
 không sinh điều hướng nào, nên nguyên vùng website không bao giờ vào hàng
-đợi --- khám phá bị bắt làm con tin bởi việc explorer tình cờ đề xuất gì.
+đợi; khám phá bị bắt làm con tin bởi việc explorer tình cờ đề xuất gì.
 \textbf{Khắc phục.} Bổ sung khai thác hyperlink làm tầng frontier thứ hai,
 kèm URL template và trần mỗi-template để trang gần trùng không tràn hàng
 đợi (Mục~\ref{sec:method-frontier}).
@@ -70,7 +70,7 @@ phụ thuộc hành vi giải task}. Tín hiệu cấu trúc (link) và tín hi�
 \subsection{Đề xuất task bị suy sụp}
 
 \textbf{Vấn đề.} Trong một run thực tế, 46\% tổng số task đề xuất gần như
-trùng nhau giữa các trang --- các biến thể của ``vào trang Diễn đàn'' được
+trùng nhau giữa các trang; các biến thể của ``vào trang Diễn đàn'' được
 đề xuất lại ở hầu như mọi node.
 \textbf{Chẩn đoán.} Mọi trang của một website chung menu điều hướng toàn
 cục, còn một explorer bị prompt theo từng trang thì không nhớ mình đã đề
@@ -84,8 +84,8 @@ hơn bất kỳ lời gọi LLM đơn lẻ nào.
 
 \subsection{Trang không đáng tin}
 
-\textbf{Vấn đề.} Một trang chậm duy nhất --- timeout điều hướng trên một
-URL khai thác được --- làm sập nguyên một run khám phá nhiều giờ.
+\textbf{Vấn đề.} Một trang chậm duy nhất, timeout điều hướng trên một
+URL khai thác được, làm sập nguyên một run khám phá nhiều giờ.
 \textbf{Chẩn đoán.} Các thao tác trình duyệt được tin tưởng ngầm định; một
 ngoại lệ không bắt ở bất kỳ đâu trong xử lý node lan thẳng lên đỉnh.
 \textbf{Khắc phục.} Mọi thao tác trình duyệt giờ đều fail-soft: node không
@@ -100,14 +100,14 @@ ngân sách cho phép.
 \subsection{Trạng thái dùng chung, có thể bị sửa}
 
 \textbf{Vấn đề.} Website benchmark là tài nguyên dùng chung và có trạng
-thái: một agent bất cẩn có thể làm bẩn --- hoặc phá hủy --- môi trường mà
+thái: một agent bất cẩn có thể làm bẩn (hoặc phá hủy) môi trường mà
 các run khác phụ thuộc.
 \textbf{Khắc phục.} Ba lớp kỷ luật. Lớp thứ nhất là chế độ read-only, loại
 các task thay đổi trạng thái theo nguyên tắc fail-closed: task không phân
 loại được thì bị coi là có thay đổi. Lớp thứ hai là một luật cứng cấm các
 task phá hoại cấp tài khoản bất kể chế độ. Lớp thứ ba áp dụng khi đánh giá
 trên instance sống dùng chung: task benchmark được phân loại theo ý định
-thành hai tập chỉ-đọc và có-ghi, để hai máy có thể quét cùng website đồng
+thành hai tập read-only và read-write, để hai máy có thể quét cùng website đồng
 thời mà không giẫm chân nhau (Mục~\ref{sec:disc-slm}).
 \textbf{Bài học.} Trên hạ tầng dùng chung, an toàn phải
 \emph{fail-closed}: gánh nặng chứng minh thuộc về việc một task vô hại,
@@ -127,7 +127,7 @@ bằng một cơ chế cấu trúc không phụ thuộc sự vâng lời của m
 \texttt{[INFO]}\slash\texttt{[NAV]}\slash\texttt{[MOD]} đặt đầu câu mà
 explorer được chỉ thị phải ghi. Trong một run thực tế, 89\% đề xuất không mang thẻ nào.
 \textbf{Chẩn đoán.} Xu hướng tự nhiên của mô hình là trả phân loại trong
-một trường \texttt{type} có cấu trúc --- thứ mà parser vứt bỏ --- thay vì
+một trường \texttt{type} có cấu trúc (thứ mà parser vứt bỏ) thay vì
 một cặp ngoặc trong chuỗi. Tệ hơn, phép kiểm tra an toàn cho task thay đổi
 trạng thái là so khớp chuỗi ký tự trên \texttt{[MOD]}, nên một task phá
 hoại không gắn thẻ sẽ lọt qua êm ái.
@@ -135,18 +135,18 @@ hoại không gắn thẻ sẽ lọt qua êm ái.
 cấu trúc với trường phân loại tường minh; thứ gì không phân loại được gắn
 \texttt{UNKNOWN} và bị loại trong chế độ read-only.
 \textbf{Bài học.} Hãy xin mô hình \emph{cấu trúc}, đừng xin quy ước định
-dạng bên trong văn bản tự do --- và tuyệt đối đừng xây phép kiểm tra an
+dạng bên trong văn bản tự do, và tuyệt đối đừng xây phép kiểm tra an
 toàn trên một quy ước mà mô hình có thể không theo.
 
 \subsection{Vòng kẹt, qua hai lần lặp}
 
 \textbf{Vấn đề.} Solver đốt trọn ngân sách bước để lặp một hành động rõ
-ràng không có tác dụng --- trong một episode ghi lại được, nó click cùng
+ràng không có tác dụng; trong một episode ghi lại được, nó click cùng
 một phần tử trơ suốt cả mười lăm bước.
 \textbf{Chẩn đoán và khắc phục lần một.} Chúng tôi thêm một cảnh báo, tiêm
 vào prompt sau hai hành động liên tiếp không hiệu ứng trên cùng đích. Run
 thật kế tiếp bác bỏ cách sửa này: mô hình tiếp tục click dù cảnh báo hiện
-diện từ lời gọi thứ ba trở đi. Nó cũng lộ ra một điểm tinh vi --- mô hình
+diện từ lời gọi thứ ba trở đi. Nó cũng lộ ra một điểm tinh vi: mô hình
 đôi khi thử lại một dropdown bị kẹt bằng các đối số trông-khác-nhưng-sai-
 như-nhau, nên so trùng nguyên văn chuỗi hành động sẽ bỏ lọt vòng kẹt.
 \textbf{Khắc phục lần hai.} Bộ phát hiện kẹt giờ khóa theo \emph{đích} bị
@@ -156,7 +156,7 @@ nào. Yêu cầu ``không thay đổi quan sát được'' giữ chốt chặn k
 nhầm trên các chuỗi hợp lệ tái dùng một phần tử qua các trang thay đổi.
 \textbf{Bài học.} Cảnh báo trong prompt là một lời gợi ý; ngân sách là một
 cơ chế. Khi mô hình chứng minh nó phớt lờ gợi ý, hãy leo thang thành cơ chế
---- và kiểm chứng bước leo thang trên hành vi thật, không phải trên hành vi
+và kiểm chứng bước leo thang trên hành vi thật, không phải trên hành vi
 mà prompt yêu cầu.
 
 \subsection{Các sự cố nhỏ hơn, cùng một khuôn}
@@ -185,7 +185,7 @@ chặn cấu trúc thay vì chỉnh prompt.
 \textbf{Vấn đề.} Ba trong bốn operator sinh ra trong run đó có tập effect
 trùng hệt tập precondition.
 \textbf{Chẩn đoán.} Khi được yêu cầu mô tả precondition và effect của một
-skill, LLM thấy dễ nhất là nhắc lại bối cảnh --- ``đang ở danh sách issue''
+skill, LLM thấy dễ nhất là nhắc lại bối cảnh: ``đang ở danh sách issue''
 trước, ``đang ở danh sách issue'' sau. Operator như vậy không mã hóa thay
 đổi trạng thái nào, nên không bao giờ đứng giữa chuỗi và không dẫn tới đâu
 mới; nếu bỏ mặc, tautology sẽ lấp đầy operator graph bằng các node chết.
@@ -201,14 +201,14 @@ trông cậy prompt cấm được các câu trả lời thoái hóa.
 precondition của operator kia, nhưng các operator induction độc lập diễn
 đạt cùng một điều kiện theo những cách khác nhau.
 \textbf{Chẩn đoán.} Chúng tôi đo độ tương đồng embedding của các cặp mệnh
-đề trong cùng run: một cặp diễn đạt tương đương thật chấm 0{,}570 ---
-\emph{dưới} ngưỡng chuẩn hóa 0{,}6 --- trong khi một cặp khác nghĩa chấm
+đề trong cùng run: một cặp diễn đạt tương đương thật chấm 0{,}570, 
+\emph{dưới} ngưỡng chuẩn hóa 0{,}6, trong khi một cặp khác nghĩa chấm
 0{,}606, trên ngưỡng. Không ngưỡng nào tách được hai trường hợp; chuẩn hóa
 thuần hình học không thể khôi phục một bộ từ vựng chung sau khi sự đã rồi.
 \textbf{Khắc phục.} Phòng thay vì chữa: induction nhận biết từ vựng. Prompt
 trình các nhãn mệnh đề sẵn có của registry kèm chỉ thị tái sử dụng nguyên
-văn mệnh đề tương đương, để việc thống nhất diễn ra lúc \emph{viết} --- nơi
-mô hình có đủ ngữ cảnh --- thay vì lúc so embedding, nơi chỉ còn bề mặt câu
+văn mệnh đề tương đương, để việc thống nhất diễn ra lúc \emph{viết} (nơi
+mô hình có đủ ngữ cảnh) thay vì lúc so embedding, nơi chỉ còn bề mặt câu
 chữ.
 \textbf{Bài học.} Khi hai đầu ra LLM về sau phải \emph{khớp} nhau, hãy chia
 sẻ bộ từ vựng ngay lúc sinh; đừng ủy thác việc thống nhất ngữ nghĩa cho một
@@ -220,7 +220,7 @@ thước đo tương đồng.
 \subsection{Chat template là một phần của mô hình}
 
 Họ mô hình đích mặc định phát các đoạn suy nghĩ tường minh, trong khi đích
-huấn luyện của chúng tôi là các cặp suy nghĩ--hành động trần. Chat template
+huấn luyện của chúng tôi là các cặp thought-action trần. Chat template
 đúng (đã tắt thinking) phải được tìm từ registry template của framework
 huấn luyện thay vì đoán theo tài liệu, và cùng thiết lập đó phải được áp
 lại, trên từng request, lúc serving. Lệch ở bất kỳ phía nào là âm thầm huấn
@@ -233,9 +233,9 @@ cấu hình lúc huấn luyện với lúc serving phải được ghim cùng nh
 Thất bại nhiều bài học nhất của khâu huấn luyện không sinh ra lỗi nào. Một
 bài kiểm nhanh sau huấn luyện, viết bằng một prompt \emph{xấp xỉ} prompt
 của solver, khiến mô hình fine-tune phát ra mô tả bằng lời thay vì hành
-động thực thi được --- trông y hệt một lần fine-tune hỏng. Mô hình không
+động thực thi được, trông y hệt một lần fine-tune hỏng. Mô hình không
 sao cả; prompt kiểm thử mới là thứ không trung thực. Kiểm lại bằng prompt
-sản xuất --- import từ solver, không gõ lại --- cho hành động đúng. Sự cố
+sản xuất (import từ solver, không gõ lại) cho hành động đúng. Sự cố
 này là lý do prompt parity (Mục~\ref{sec:method-data}) được thi hành bằng
 cách \emph{import} system prompt thật và các hàm phụ trợ của nó vào trình
 dựng dataset lẫn bộ đánh giá, không bao giờ bằng cách chép tay. Mọi bài
@@ -246,26 +246,24 @@ so với sản xuất.
 
 Hỗ trợ một kiến trúc mô hình mới phát hành đòi hỏi bản phát triển của thư
 viện mô hình hóa, xung đột với yêu cầu ghim phiên bản của engine serving.
-Ba môi trường cách ly --- huấn luyện, serving, đánh giá --- giải quyết điều
+Ba môi trường cách ly (huấn luyện, serving, đánh giá) giải quyết điều
 mà không môi trường đơn nào thỏa mãn nổi. Tầm thường, nhưng nó biến một
 xung đột phiên bản vô phương thành một bước cài đặt thường quy.
 
 \subsection{Agent tự chấm bài mình}
 
-Bước judge tồn tại vì thành công tự tuyên bố không phải thành công: solver
-trả lời ``xong'' là đã tự đánh giá chính nó. Việc chấm lại các thành công
-tự tuyên bố dựa trên chính trạng thái cuối của episode đã bắt được các thất
-bại tự-chấm-đỗ trước khi chúng thành mẫu huấn luyện --- và chế độ nghiêm
-ngặt của trình dựng dataset đảo mặc định: loại mọi thành công chưa từng
-được judge thay vì tin nó. Theo nguyên tắc P1, \emph{dữ liệu chưa kiểm
-chứng không trung tính; nó là một khoản nợ và sẽ lãi kép qua huấn luyện}.
+Bước judge được đưa vào vì thành công do solver tự tuyên bố không thể được xem là bằng chứng đáng tin cậy về việc hoàn thành tác vụ. Khi solver trả lời rằng tác vụ đã “hoàn tất”, nó đồng thời tự đánh giá kết quả của chính mình. Vì vậy, các episode được tuyên bố thành công cần được đánh giá lại dựa trên trạng thái cuối thực tế.
+
+Cơ chế này giúp phát hiện những trường hợp solver tự kết luận sai rằng tác vụ đã thành công trước khi các trajectory tương ứng được đưa vào tập dữ liệu huấn luyện. Trong chế độ nghiêm ngặt, trình dựng dataset mặc định loại bỏ mọi trajectory được tuyên bố thành công nhưng chưa qua judge, thay vì mặc nhiên chấp nhận chúng.
+
+Theo nguyên tắc P1, \emph{dữ liệu chưa được kiểm chứng không phải là dữ liệu trung tính; đó là một khoản nợ chất lượng có thể bị khuếch đại trong quá trình huấn luyện}.
 
 \subsection{Đánh giá an toàn trên website sống dùng chung}
 
 Chạy hai lượt đánh giá (gốc và fine-tune) trên một instance website sống
 bình thường sẽ phải xếp hàng trọn một ngày làm việc. Phân loại task
-benchmark theo ý định thành hai tập chỉ-đọc và có-ghi cho phép máy thứ hai
-đánh giá tập chỉ-đọc song song với lượt quét không hạn chế của máy thứ
+benchmark theo ý định thành hai tập read-only và read-write cho phép máy thứ hai
+đánh giá tập read-only song song với lượt quét không hạn chế của máy thứ
 nhất. Bản thân việc phân loại chứa hai cái bẫy đáng ghi lại: va chạm cụm
 danh từ (``merge request'' chứa động từ chỉ về mặt cú pháp; ``report bugs''
 không gọi tên hành động báo cáo mà regex chờ đợi) và việc chèn từ đánh bại
@@ -285,7 +283,7 @@ hành chúng tôi sẽ áp dụng từ ngày đầu của một dự án tương
 thu thập dữ liệu bằng LLM agent trên website thật.}
 \label{tab:practices}
 \small
-\begin{tabular}{L{4.4cm} L{8.8cm}}
+\begin{tabular}{@{}L{4.4cm} L{8.8cm}@{}}
 \toprule
 \textbf{Thực hành} & \textbf{Lý do (mục)} \\
 \midrule
@@ -308,7 +306,7 @@ sinh trên một bộ nhãn chung (\ref{sec:disc-operators}) \\
 Ghim template cùng mô hình & Chat template và cờ giải mã là một phần của
 sản phẩm, cho cả huấn luyện lẫn serving (\ref{sec:disc-slm}) \\
 Ghi mọi thứ thành sự kiện & Nhật ký sự kiện từng run là thứ khiến phân
-tích hậu kỳ --- phần lớn chương này --- khả thi (\ref{sec:disc-exploration}) \\
+tích hậu kỳ (phần lớn chương này) khả thi (\ref{sec:disc-exploration}) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -325,18 +323,13 @@ chúng tôi giảm thiểu nhưng không loại trừ bằng cách đối chiế
 với trạng thái cuối cụ thể thay vì chỉ với bản ghi hội thoại.
 
 \textbf{Hợp lệ ngoại vi.} Toàn bộ dữ liệu và đánh giá đến từ các website
-WebArena tự triển khai --- thực tế, nhưng là bốn website của một họ
-benchmark --- và từ một mô hình 9B duy nhất. Các tuyên bố được giới hạn
+WebArena tự triển khai: thực tế, nhưng là bốn website của một họ
+benchmark, và từ một mô hình 9B duy nhất. Các tuyên bố được giới hạn
 tương ứng: chúng tôi báo cáo pipeline cải thiện \emph{mô hình này} trên
 \emph{các website này}, và coi khái quát hóa rộng hơn là việc tương lai
 thay vì một hệ quả ngầm định.
 
-\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành task theo bộ chấm chính thức là
-thước đo chuẩn của lĩnh vực, nhưng nó nhị phân và chỉ nhìn trạng thái cuối:
-không ghi công tiến bộ một phần, và các episode semantic task kiểm chứng
-bằng tự-báo-cáo cộng judge offline là thước đo yếu hơn loại kiểm bằng
-chương trình. Chúng tôi giữ hai chế độ kiểm chứng phân biệt được trong dữ
-liệu để các phân tích chặt hơn vẫn khả thi.
+\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành tác vụ theo bộ chấm chính thức là thước đo tiêu chuẩn trong lĩnh vực, nhưng đây là một chỉ số nhị phân và chỉ phản ánh trạng thái cuối cùng. Do đó, chỉ số này không ghi nhận mức độ tiến bộ từng phần trong quá trình thực hiện. Bên cạnh đó, các semantic task được xác nhận thông qua tự báo cáo của solver kết hợp với judge ngoại tuyến có mức độ tin cậy thấp hơn so với các tác vụ được kiểm chứng trực tiếp bằng chương trình. Vì vậy, chúng tôi lưu tách biệt hai chế độ kiểm chứng trong dữ liệu, qua đó cho phép thực hiện các phân tích nghiêm ngặt hơn về sau.
 
 \vspace{1em}
 \noindent

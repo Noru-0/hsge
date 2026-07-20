@@ -13,7 +13,7 @@ Hãy hình dung một lập trình viên mỗi sáng đều bắt đầu ngày l
 cùng một chuỗi thao tác trên trang quản lý dự án: mở trình theo dõi issue,
 tìm các bug mới được báo cáo, gắn nhãn cho chúng và phân công những bug
 khẩn cấp. Không bước nào trong quy trình này đòi hỏi phán đoán vượt ra
-ngoài những gì hiển thị trên màn hình --- vậy mà nó vẫn chiếm sự chú ý mỗi
+ngoài những gì hiển thị trên màn hình, vậy mà nó vẫn chiếm sự chú ý mỗi
 ngày, và điều tương tự đúng với vô số quy trình trên các cửa hàng trực
 tuyến, diễn đàn hay trang quản trị. Trình duyệt là giao diện chung của tất
 cả các dịch vụ đó, nên một agent phần mềm có khả năng thao tác website
@@ -28,14 +28,14 @@ nhiên, năng lực đó hiện gần như chỉ tồn tại ở các mô hình 
 lớn, truy cập qua API. Sự phụ thuộc này gây tốn kém theo nhiều cách cộng
 dồn. Mỗi bước của mỗi task là một lời gọi API trả phí, trong khi task của
 agent cần rất nhiều bước. Độ trễ bị giới hạn bởi dịch vụ từ xa, và toàn bộ
-nội dung của mọi trang được duyệt --- có thể chứa dữ liệu riêng tư hoặc nội
-bộ --- bị gửi cho bên thứ ba. Cuối cùng, bản thân mô hình là một ``hàng hóa
+nội dung của mọi trang được duyệt (có thể chứa dữ liệu riêng tư hoặc nội
+bộ) bị gửi cho bên thứ ba. Cuối cùng, bản thân mô hình là một ``hàng hóa
 cố định'' mà người vận hành không thể kiểm tra hay cải thiện. Với chính những tổ chức
 hưởng lợi nhiều nhất từ tự động hóa web, các ràng buộc này thường loại bỏ
 hoàn toàn lựa chọn dùng mô hình mạnh nhất.
 
-Mô hình ngôn ngữ nhỏ (SLM) --- các mô hình cỡ mười tỷ tham số trở xuống,
-tự triển khai được trên một GPU --- đảo ngược mọi ràng buộc trên: suy luận
+Mô hình ngôn ngữ nhỏ (SLM, các mô hình cỡ mười tỷ tham số trở xuống,
+tự triển khai được trên một GPU) đảo ngược mọi ràng buộc trên: suy luận
 rẻ, chạy cục bộ, riêng tư, và trọng số mô hình thuộc quyền người vận hành,
 có thể fine-tune tùy ý. Thứ chúng thiếu là năng lực. Ngay cả các mô hình
 \emph{lớn} cũng thấy task web thực tế là khó: trên benchmark WebArena gồm
@@ -43,7 +43,7 @@ các website đầy đủ chức năng tự triển khai, agent dựa trên GPT-
 thành khoảng 14\% số task, so với khoảng 78\% của con
 người~\cite{zhou2024webarena}.
 Các mô hình nhỏ, nếu dùng nguyên bản, còn kém xa hơn. Phương thuốc tiêu
-chuẩn --- tinh chỉnh có giám sát (SFT) trên các bản mẫu hành vi --- vấp
+chuẩn, tinh chỉnh có giám sát (SFT) trên các bản mẫu hành vi, vấp
 phải bài toán dữ liệu: trajectory tương tác có gán mục tiêu trên website
 đích hầu như không tồn tại, còn thuê người gán nhãn thì đắt, chậm và phải
 làm lại cho từng website.
@@ -55,8 +55,8 @@ công, rồi biên dịch kết quả thành dữ liệu huấn luyện. Khi đ�
 hóa một SLM cho một website giảm từ một chiến dịch gán nhãn thủ công xuống
 thành chi phí tính toán. Ý tưởng trung tâm của chúng tôi là một pipeline như
 vậy không nên lang thang vô định. Nó phải xây dựng một \emph{graph} ghi lại
-những gì đã học được về năng lực của website --- các skill đã kiểm chứng
-cùng precondition và effect của chúng --- rồi \emph{ghép} graph đó thành các
+những gì đã học được về năng lực của website (các skill đã kiểm chứng
+cùng precondition và effect của chúng), rồi \emph{ghép} graph đó thành các
 task huấn luyện dài hạn, có ngữ nghĩa, mà không trang đơn lẻ nào gợi ý
 được.
 
@@ -76,7 +76,7 @@ năng hoàn thành các task phát biểu bằng ngôn ngữ tự nhiên trên w
 Giao diện agent theo đúng chuẩn của bài toán web agent. Tại mỗi bước, mô
 hình quan sát URL hiện tại và accessibility tree của trang, tức bản mô tả
 dạng văn bản của giao diện đang hiển thị. Sau đó nó phát ra một hành động
-thuộc action space cố định --- click, gõ, chọn, điều hướng, hoặc tuyên bố
+thuộc action space cố định: click, gõ, chọn, điều hướng, hoặc tuyên bố
 task đã xong / bất khả thi. Một \emph{trajectory} là chuỗi các cặp (quan sát, hành
 động) sinh ra khi theo đuổi một mục tiêu.
 
@@ -104,7 +104,7 @@ Năm đặc điểm của bài toán khiến nó trở nên khó.
   \item \textbf{Task có ý nghĩa, không phải bước đi ngẫu nhiên.} Chuỗi
   tương tác ngẫu nhiên rất dễ sinh nhưng gần như vô giá trị làm bản mẫu.
   Task huấn luyện hữu ích phải tương ứng với mục tiêu mà một người dùng
-  thật có thể theo đuổi --- và những task giá trị nhất trải dài nhiều trang,
+  thật có thể theo đuổi; những task giá trị nhất trải dài nhiều trang,
   nhiều năng lực.
   \item \textbf{Kiểm chứng.} Agent tự sinh task cũng đồng thời tự chấm bài
   của mình. Các ``thành công'' chưa kiểm chứng không chỉ là dữ liệu bỏ đi:
@@ -112,7 +112,7 @@ Năm đặc điểm của bài toán khiến nó trở nên khó.
   sớm.
   \item \textbf{Ghép chuỗi dài hạn.} Task đề xuất từ một trang đơn lẻ vốn
   dĩ ngắn hạn. Muốn sinh mục tiêu nhiều bước hợp lệ phải biết các năng lực
-  phát hiện ở \emph{những trang khác nhau} nối với nhau thế nào --- tri
+  phát hiện ở \emph{những trang khác nhau} nối với nhau thế nào, tri
   thức mà không quan sát đơn lẻ nào chứa.
   \item \textbf{Chuyển giao trung thực vào mô hình nhỏ.} Những gì pipeline
   thu thập phải đến được mô hình mà không lệch phân phối: prompt huấn
@@ -147,7 +147,7 @@ khóa luận đóng góp. Tóm lại, có năm đóng góp. Thứ nhất là ch�
 pipeline khám phá và ghép chuỗi dựa trên graph với hệ task hai tầng, trong
 đó low-level task do LLM đề xuất phục vụ khám phá, còn semantic task sinh từ
 operator graph cung cấp dữ liệu dài hạn. Thứ hai là bộ tinh lọc dữ liệu tự
-động --- chấm lại episode và viết lại suy nghĩ --- nối vào một trình dựng
+động (chấm lại episode và viết lại suy nghĩ) nối vào một trình dựng
 dataset tuân thủ prompt parity. Ba đóng góp còn lại là một mô hình web agent
 9B đã fine-tune cùng tập dữ liệu thu thập được, đánh giá mô hình đó trên bộ
 task WebArena chính thức, và một báo cáo kinh nghiệm về việc vận hành các
@@ -159,7 +159,7 @@ pipeline như vậy một cách ổn định.
 kế thừa so với những gì khóa luận đóng góp.}
 \label{tab:contrib}
 \small
-\begin{tabular}{L{6.4cm} L{6.8cm}}
+\begin{tabular}{@{}L{6.4cm} L{6.8cm}@{}}
 \toprule
 \textbf{Tài nguyên có sẵn (dùng nguyên trạng)} & \textbf{Đóng góp của khóa luận} \\
 \midrule
@@ -188,7 +188,7 @@ fine-tune (Chương~\ref{ch:experiments}); báo cáo kinh nghiệm kỹ thuật
 
 Khóa luận chủ động giới hạn phạm vi như sau. Môi trường là họ website
 WebArena tự triển khai; đánh giá nhắm vào bộ task chính thức của bốn
-website --- Shopping, Shopping Admin, GitLab và Reddit --- với bộ chấm tự
+website (Shopping, Shopping Admin, GitLab và Reddit) với bộ chấm tự
 động của benchmark. Phương pháp huấn luyện chỉ gồm tinh chỉnh có giám sát
 với LoRA; học tăng cường và tối ưu theo sở thích nằm ngoài phạm vi. Mô hình
 đích là một SLM cỡ $\sim$9B tham số, toàn bộ task bằng tiếng Anh. Đăng nhập

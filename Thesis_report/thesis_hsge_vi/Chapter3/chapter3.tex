@@ -38,7 +38,7 @@ Thành phần phát hiện (discovery) cắt các trajectory này thành đoạn
 các đoạn lặp lại, trừu tượng hóa mỗi cụm đủ chín thành một \emph{skill} tái
 sử dụng, và nâng các skill đã kiểm chứng thành các \emph{operator} lập kế
 hoạch với precondition và effect tường minh. Ghép chuỗi operator trên graph
-thu được sinh ra các goal task dài hạn --- các \emph{semantic task} ---
+thu được sinh ra các goal task dài hạn, gọi là các \emph{semantic task},
 được đưa ngược lại chính solver đó, khép kín vòng lặp. Mọi task được thử,
 dù là low-level hay semantic, đều được ghi thành một episode; các episode
 sau đó đi qua các cổng chất lượng tự động và được biên dịch thành tập dữ
@@ -47,15 +47,15 @@ liệu SFT dùng để fine-tune SLM đích.
 Ba nguyên tắc thiết kế xuyên suốt pipeline:
 
 \begin{itemize}
-  \item \textbf{P1 --- Kiểm chứng trước khi tái sử dụng.} Không gì được tin
+  \item \textbf{P1: Kiểm chứng trước khi tái sử dụng.} Không gì được tin
   ngay lần đầu. Một skill chỉ được thu nhận sau khi lặp lại qua các
   trajectory độc lập; một tuyên bố thành công được một judge độc lập chấm
   lại; một operator bị loại nếu effect của nó rỗng nghĩa.
-  \item \textbf{P2 --- Graph thay vì phẳng.} Thay vì một bể phẳng các trang
+  \item \textbf{P2: Graph thay vì phẳng.} Thay vì một bể phẳng các trang
   hay ký ức, HSGE duy trì một graph hai tầng
   (Mục~\ref{sec:method-graph}). Tầng thấp ghi agent đã \emph{ở đâu}; tầng
   cao ghi agent \emph{làm được gì}, và các năng lực đó nối nhau thế nào.
-  \item \textbf{P3 --- Hệ task hai tầng.} Các \emph{low-level task} do LLM
+  \item \textbf{P3: Hệ task hai tầng.} Các \emph{low-level task} do LLM
   đề xuất (Mục~\ref{sec:method-exploration}) dẫn dắt khám phá và cung cấp
   nguyên liệu thô cho việc phát hiện skill. Các \emph{semantic task}
   (Mục~\ref{sec:method-semantic}) chỉ được sinh từ operator graph, bằng
@@ -102,7 +102,7 @@ hiện một task.
 tử tham chiếu mã định danh hiển thị trong accessibility tree.}
 \label{tab:actions}
 \small
-\begin{tabular}{L{5.4cm} L{7.8cm}}
+\begin{tabular}{@{}L{5.4cm} L{7.8cm}@{}}
 \toprule
 \textbf{Hành động} & \textbf{Ý nghĩa} \\
 \midrule
@@ -155,7 +155,7 @@ trong quá trình induction, rồi được \emph{chuẩn hóa} thành các mã 
 kiện quy về cùng một mệnh đề. \emph{Operator graph} vẽ một cạnh từ operator
 $\omega_1$ sang $\omega_2$ khi một effect của $\omega_1$ thỏa một
 precondition của $\omega_2$; các đường đi trong graph này là các kế hoạch
-đa-skill thực thi được.
+multi-skill thực thi được.
 
 \subsection{Thuật ngữ về task}
 
@@ -196,13 +196,13 @@ cho phép/cấm/đã thăm), vì việc agent tới được đó tự nó là b
 trang đã thăm. Khai thác hyperlink là thiết yếu: nếu không, tăng trưởng
 frontier phụ thuộc hoàn toàn vào điều hướng khi giải task, và một trang mà
 mọi task đều thuộc dạng tra cứu thông tin sẽ không đóng góp gì cho frontier
---- một chế độ hỏng mà chúng tôi quay lại ở Chương~\ref{ch:discussion}.
+một chế độ hỏng mà chúng tôi quay lại ở Chương~\ref{ch:discussion}.
 
 Tuy nhiên, link khai thác đến ồ ạt và bị áp đảo bởi các trang gần trùng
 nhau (mọi bài đăng, bình luận, trang cá nhân của một diễn đàn chung một
 khuôn trang). Để chúng không tràn ngập hàng đợi, mỗi URL được chuẩn hóa
 thành một \emph{URL template}: bỏ scheme, query và fragment; các đoạn
-đường dẫn giống mã định danh --- cùng mọi thứ phía sau --- được thay bằng
+đường dẫn giống mã định danh, cùng mọi thứ phía sau, được thay bằng
 ký tự đại diện, ví dụ
 \begin{center}
 \texttt{/f/AskReddit/comments/12345/title}
@@ -241,9 +241,9 @@ trang ban đầu hash trùng với một node đã thăm sẽ bị bỏ qua ngay
 
 Trên mỗi trang frontier, một \emph{explorer} dựa trên LLM đề xuất tối đa
 $k$ task cụ thể (mặc định $k = 6$) bám vào nội dung trang. Mỗi đề xuất được
-trả về ở dạng có cấu trúc với trường phân loại tường minh ---
+trả về ở dạng có cấu trúc với trường phân loại tường minh
 \texttt{INFO} (tra cứu thông tin), \texttt{NAV} (điều hướng) hoặc
-\texttt{MOD} (thay đổi trạng thái) --- thay vì văn bản tự do gắn thẻ, điều
+\texttt{MOD} (thay đổi trạng thái), thay vì văn bản tự do gắn thẻ, điều
 mà các run thực tế cho thấy mô hình không tuân thủ ổn định. Việc phân loại
 mang tính then chốt: trong chế độ \emph{read-only} dùng trên website dùng
 chung, các task \texttt{MOD} và mọi task mô hình không phân loại được đều
@@ -259,7 +259,7 @@ các task tra cứu thông tin bị cắt trước: giải một task \texttt{IN
 điều hướng đi đâu, nên không bao giờ giúp frontier lớn lên.
 
 Các đề xuất này \emph{cố ý} ở mức thấp: mỗi cái gói trong khả năng của một
-trang. Vai trò của chúng là sinh ra các trajectory đa dạng, thực tế ---
+trang. Vai trò của chúng là sinh ra các trajectory đa dạng, thực tế tạo thành
 nguyên liệu thô để từ đó rút ra skill, và sau cùng là semantic task.
 
 \subsection{Solver giải task}
@@ -268,8 +268,8 @@ nguyên liệu thô để từ đó rút ra skill, và sau cùng là semantic ta
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{Figures/fig_solver.pdf}
-\caption[Vòng lặp Solver với chốt chặn cấu trúc]{Vòng lặp quan sát--suy
-nghĩ--hành động của solver. Chốt chặn stuck-loop dừng cứng episode khi các
+\caption[Vòng lặp Solver với chốt chặn cấu trúc]{Vòng lặp quan sát, suy
+nghĩ, hành động của solver. Chốt chặn stuck-loop dừng cứng episode khi các
 hành động lặp trên cùng một đích mà không có thay đổi quan sát được; khi cạn
 ngân sách bước, một lời gọi wrap-up duy nhất chỉ được tuyên bố hoàn thành
 hoặc bất khả thi.}
@@ -279,8 +279,8 @@ hoặc bất khả thi.}
 \emph{Solver} là một vòng lặp agent kiểu ReAct~\cite{yao2023react}, phác họa
 ở Hình~\ref{fig:solver}. Ở mỗi bước nó nhận mục tiêu, URL hiện tại,
 accessibility tree (đã giới hạn độ dài), và một cửa sổ các hành động gần đây.
-Mỗi hành động trong cửa sổ đó đều kèm kết quả quan sát được --- ``đang ở
-$\langle$url$\rangle$'', ``trang đã đổi'', hoặc ``không đổi'' --- để mô hình
+Mỗi hành động trong cửa sổ đó đều kèm kết quả quan sát được (``đang ở
+$\langle$url$\rangle$'', ``trang đã đổi'', hoặc ``không đổi'') để mô hình
 phân biệt được tiến triển với giậm chân tại chỗ. Solver sau đó trả lời bằng
 một dòng suy nghĩ và một hành động thuộc
 Bảng~\ref{tab:actions}. Nếu một hành động thực thi lỗi, thông báo lỗi được
@@ -290,7 +290,7 @@ Hai chốt chặn cấu trúc giới hạn vòng lặp. Thứ nhất, solver the
 hành động có làm quan sát thay đổi không và nó tác động lên đích nào. Một
 chuỗi cuối gồm các hành động trên \emph{cùng một đích} mà \emph{không có
 thay đổi quan sát được} trước hết kích hoạt một cảnh báo tiêm vào prompt.
-Nếu chuỗi đó vẫn tiếp diễn, một lệnh dừng cứng kết thúc episode --- vì các
+Nếu chuỗi đó vẫn tiếp diễn, một lệnh dừng cứng kết thúc episode, vì các
 run thực tế cho thấy cảnh báo bằng lời không đủ để mô hình ngừng click một
 phần tử trơ. Yêu cầu ``không có thay đổi quan sát được'', thay vì chỉ so trùng
 chuỗi hành động, giúp chốt chặn không kích hoạt nhầm trên các chuỗi nhiều
@@ -325,7 +325,7 @@ bị loại bỏ.}
 Một trajectory thường đan xen nhiều hành vi khác nhau (tìm kiếm, rồi lọc,
 rồi mở kết quả). Bước cắt đoạn chia nó thành các \emph{sub-trajectory} mạch
 lạc. Các điểm cắt ứng viên được gieo từ hai tín hiệu: URL thay đổi và độ
-tương đồng giữa hai accessibility tree liên tiếp sụt giảm --- tín hiệu sau
+tương đồng giữa hai accessibility tree liên tiếp sụt giảm; tín hiệu sau
 bắt được các chuyển cảnh trong trang (ví dụ hộp thoại bật lên) không hề
 chạm tới URL. Sau đó một LLM phân xử các ứng viên, gộp hoặc xác nhận điểm
 cắt; đầu ra được kiểm tra hợp lệ so với tập ứng viên, và các đoạn điều
@@ -342,8 +342,8 @@ diễn ra ngay trong lúc khám phá thay vì trong một pha batch riêng.
 
 \subsection{Trừu tượng hóa}
 
-Khi một cụm chín --- lặp lại đủ một số lần cấu hình được qua các trajectory
-độc lập --- một LLM trừu tượng hóa nó thành một \emph{skill card}: tên, mô
+Khi một cụm chín, tức lặp lại đủ một số lần cấu hình được qua các trajectory
+độc lập, một LLM trừu tượng hóa nó thành một \emph{skill card}: tên, mô
 tả, và các ô tham số có kiểu tổng quát hóa các giá trị cụ thể trong các
 thành viên (ví dụ chuỗi tìm kiếm cụ thể). Các đoạn thành viên được giữ lại
 làm bằng chứng.
@@ -382,21 +382,21 @@ nó cùng các quan sát biên (trang trước và sau) của vài đoạn thàn
 viết ra precondition và effect của skill dưới dạng các mệnh đề ngôn ngữ tự
 nhiên. Tuy nhiên, để LLM viết tự do sẽ làm vỡ vụn bộ từ vựng: đo trên một
 run thực tế, độ tương đồng embedding không gộp được một cặp diễn đạt tương
-đương thật (0{,}570 --- \emph{dưới} ngưỡng gộp 0{,}6) trong khi chấm một
+đương thật (0{,}570, \emph{dưới} ngưỡng gộp 0{,}6) trong khi chấm một
 cặp khác nghĩa cao hơn (0{,}606). Vì vậy induction được thiết kế
 \emph{nhận biết từ vựng}: prompt kèm các nhãn mệnh đề sẵn có của registry
---- các mục dùng nhiều nhất và mới nhất --- cùng chỉ thị tái sử dụng nguyên
+gồm các mục dùng nhiều nhất và mới nhất, cùng chỉ thị tái sử dụng nguyên
 văn mệnh đề tương đương thay vì diễn đạt lại.
 
 Operator sau induction đi qua một \emph{cổng chặn tautology}. Effect nào
 chỉ lặp lại một precondition sẽ bị bỏ ($\mathit{eff} \leftarrow
 \mathit{eff} \setminus \mathit{pre}$); skill không còn effect mới nào bị
 loại thẳng thay vì được nâng cấp. Cổng này tồn tại vì nếu thiếu nó, đa số
-operator sinh ra trong các run đầu không mã hóa thay đổi trạng thái nào ---
+operator sinh ra trong các run đầu không mã hóa thay đổi trạng thái nào
 và một operator không thay đổi gì thì không bao giờ ghép chuỗi tới đâu
 được. Một operator được đánh dấu \emph{terminal} nếu một episode thành viên
 thật sự chạm trạng thái mục tiêu đã cấu hình, hoặc inducer gắn cờ nó là
-hoàn-thành-mục-tiêu.
+hoàn thành mục tiêu.
 
 \subsection{Chuẩn hóa mệnh đề}
 
@@ -405,7 +405,7 @@ bộ gom cụm ngưỡng cosine của thư viện skill nhưng tắt tính năng
 mã định danh ổn định một khi đã cấp. Mệnh đề mới hoặc gia nhập một cụm
 chuẩn có sẵn, nhận luôn mã của cụm, hoặc lập cụm mới. Nhờ đó các operator
 chia sẻ một bộ từ vựng chung, tăng dần $P = \{p_0, p_1, \dots\}$, và bộ lập
-kế hoạch có thể khớp effect với precondition bằng so sánh mã định danh ---
+kế hoạch có thể khớp effect với precondition bằng so sánh mã định danh, 
 giữ nguyên lập kế hoạch tập hợp cổ điển trên một bộ từ vựng mở do LLM viết.
 
 \subsection{Ghép chuỗi operator thành semantic task}
@@ -430,15 +430,15 @@ hướng tất định khi có thể: nếu operator cuối chuỗi là terminal
 có mệnh đề kết thúc cấu hình sẵn (ví dụ URL xác nhận đơn hàng), thành công
 được kiểm tra bằng chương trình. Ngược lại, episode được tự chấm qua câu
 trả lời kết thúc của solver rồi được judge chấm lại offline
-(Mục~\ref{sec:method-data}). Khi graph còn quá nông để ghép chuỗi --- chưa
-đủ hai operator nối nhau --- hệ thống lùi về lập kế hoạch thẳng tới mệnh đề
+(Mục~\ref{sec:method-data}). Khi graph còn quá nông để ghép chuỗi, chưa
+đủ hai operator nối nhau, hệ thống lùi về lập kế hoạch thẳng tới mệnh đề
 kết thúc nếu có, để việc thu dữ liệu có mục tiêu bắt đầu từ trước khi graph
 trưởng thành.
 
-Semantic task quan trọng với đích cuối --- dữ liệu huấn luyện --- theo hai
+Semantic task quan trọng với đích cuối (dữ liệu huấn luyện) theo hai
 cách. Chúng kéo dài \emph{phân phối độ dài} của trajectory thu được vượt
 khỏi mức task bám trang, và chúng mang cấu trúc ghép: episode chứng minh
-được việc xâu chuỗi nhiều năng lực đã kiểm chứng --- đúng loại hành vi mà
+được việc xâu chuỗi nhiều năng lực đã kiểm chứng, đúng loại hành vi mà
 một mô hình nhỏ cần bản mẫu nhất.
 
 \section{Tinh lọc dữ liệu}
@@ -464,7 +464,7 @@ Một solver trả lời ``xong'' thực chất đã tự chấm bài mình. Bư
 \emph{judge} dùng một LLM mạnh hơn xem xét lại mọi episode tự tuyên bố
 thành công, đối chiếu mục tiêu với chính trạng thái cuối của episode (URL
 và nội dung trang), và ghi phán quyết bên cạnh kết cục gốc. Phán quyết chỉ
-cộng thêm --- kết cục gốc không bao giờ bị ghi đè --- và trình dựng dataset
+cộng thêm; kết cục gốc không bao giờ bị ghi đè, và trình dựng dataset
 có thể được yêu cầu chỉ giữ các thành công đã judge xác nhận, loại các
 episode chưa từng được chấm thay vì âm thầm tin chúng.
 
@@ -475,8 +475,8 @@ bắt chước của mô hình fine-tune. Vì vậy một bước viết lại b
 bước thành dạng có cấu trúc. Dạng đó gồm bốn thành phần: một câu đánh giá
 gọn trạng thái hiện tại; một câu phản tư khi hành động trước không tạo tiến
 triển; \emph{subgoal} hiện tại của bước, khôi phục bằng cách chạy lại đúng
-phép cắt đoạn của khâu phát hiện trên trajectory đã ghi; và --- chỉ ở bước
-cuối của task --- một phép kiểm tra hoàn thành tường minh so với mục tiêu.
+phép cắt đoạn của khâu phát hiện trên trajectory đã ghi; và (chỉ ở bước
+cuối của task) một phép kiểm tra hoàn thành tường minh so với mục tiêu.
 Điểm cốt yếu: subgoal chỉ
 xuất hiện trong \emph{đích} (assistant target), không bao giờ trong prompt
 người dùng, vì lúc suy luận không có thành phần nào cung cấp ``subgoal hiện
@@ -490,7 +490,7 @@ về cấu trúc với prompt của solver đang chạy thật. System prompt đ
 import từ solver thay vì chép lại; quan sát trang bị cắt bởi đúng thủ tục
 cắt với đúng dấu hiệu cắt tường minh; các dòng lịch sử render với đúng chú
 thích kết quả mà agent thật nhìn thấy. Bước nào có hành động thực thi lỗi
-bị loại cả khỏi đích lẫn khỏi lịch sử các bước sau --- lỗi đó vốn cũng chưa
+bị loại cả khỏi đích lẫn khỏi lịch sử các bước sau (lỗi đó vốn cũng chưa
 từng nằm trong lịch sử của chính agent lúc chạy. Các episode kết thúc bằng
 \texttt{report\_infeasible} chính đáng được giữ làm đích hợp lệ. Mỗi mẫu
 mang mã trajectory và chỉ số bước để hỗ trợ gom lô theo trajectory, và các
@@ -512,15 +512,15 @@ chế độ ``thinking'' của mô hình một cách nhất quán ở cả lúc 
 \emph{và} lúc suy luận. Sau huấn luyện, adapter được gộp vào trọng số gốc
 và mô hình được serving bằng vLLM~\cite{kwon2023vllm}, cũng tắt thinking
 trên mọi request, để mô hình triển khai thấy đúng phân phối nó được huấn
-luyện --- phía serving của nguyên tắc prompt parity.
+luyện, phía serving của nguyên tắc prompt parity.
 
 \section{Ghi chú hiện thực hóa}
 \label{sec:method-impl}
 
 HSGE được hiện thực bằng Python. Bảng~\ref{tab:modules} ánh xạ các giai
 đoạn pipeline sang các module. Hai quyết định hiện thực đáng nêu. Thứ nhất,
-mỗi vai trò dùng LLM --- explorer, solver, bộ cắt đoạn, bộ trừu tượng hóa,
-bộ kiểm chứng, inducer, judge, bộ viết lại suy nghĩ --- cấu hình mô hình
+mỗi vai trò dùng LLM: explorer, solver, bộ cắt đoạn, bộ trừu tượng hóa,
+bộ kiểm chứng, inducer, judge, bộ viết lại suy luận đều có cấu hình mô hình
 độc lập, nên các vai trò gọi nhiều có thể dùng mô hình rẻ trong khi mô hình
 mạnh được để dành cho induction và chấm bài. Thứ hai, toàn bộ pipeline chạy
 được trên các backend mock tất định (LLM kịch bản, embedder băm, website mô
@@ -536,7 +536,7 @@ run bị ngắt giữa chừng vẫn để lại một bản chụp nhất quán
 \caption[Các giai đoạn pipeline và module hiện thực]{Các giai đoạn pipeline
 và module hiện thực tương ứng.}
 \label{tab:modules}
-\begin{tabular}{L{5.2cm} L{8.0cm}}
+\begin{tabular}{@{}L{5.2cm} L{8.0cm}@{}}
 \toprule
 \textbf{Giai đoạn} & \textbf{Module} \\
 \midrule

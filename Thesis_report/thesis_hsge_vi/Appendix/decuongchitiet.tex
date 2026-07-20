@@ -17,11 +17,11 @@
   Thông tin, Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM)
   \item \textbf{Sinh viên thực hiện:}
   \begin{enumerate}
-    \item Trương Bảo Kiệt --- MSSV 22127223
-    \item Hồ Tiến Phát --- MSSV 22127321
+    \item Trương Bảo Kiệt - MSSV 22127223
+    \item Hồ Tiến Phát - MSSV 22127321
   \end{enumerate}
   \item \textbf{Loại đề tài:} Nghiên cứu
-  \item \textbf{Thời gian thực hiện:} 01/2026 --- 08/2026
+  \item \textbf{Thời gian thực hiện:} 01/2026 - 08/2026
 \end{itemize}
 
 \section*{2.\quad NỘI DUNG THỰC HIỆN}
@@ -41,17 +41,17 @@ Tuy nhiên, năng lực đó hiện gần như chỉ tồn tại ở các mô h�
 lớn truy cập qua API, và sự phụ thuộc này gây tốn kém theo nhiều cách cộng
 dồn. Mỗi bước của mỗi task là một lời gọi API trả phí trong khi task của agent
 cần rất nhiều bước; độ trễ bị giới hạn bởi dịch vụ từ xa; toàn bộ nội dung mọi
-trang được duyệt --- có thể chứa dữ liệu riêng tư hoặc nội bộ --- bị gửi cho
+trang được duyệt (có thể chứa dữ liệu riêng tư hoặc nội bộ) bị gửi cho
 bên thứ ba; và bản thân mô hình là một hàng hóa cố định mà người vận hành
 không kiểm tra hay cải thiện được.
 
-Mô hình ngôn ngữ nhỏ (SLM) --- cỡ mười tỷ tham số trở xuống, tự triển khai
-được trên một GPU --- đảo ngược mọi ràng buộc trên. Thứ chúng thiếu là năng
+Mô hình ngôn ngữ nhỏ (SLM, cỡ mười tỷ tham số trở xuống, tự triển khai
+được trên một GPU) đảo ngược mọi ràng buộc trên. Thứ chúng thiếu là năng
 lực. Ngay cả các mô hình lớn cũng thấy task web thực tế là khó: trên benchmark
 WebArena gồm các website đầy đủ chức năng tự triển khai, agent dựa trên GPT-4
 chỉ hoàn thành khoảng 14\% số task so với khoảng 78\% của con
-người~\cite{zhou2024webarena}. Phương thuốc tiêu chuẩn --- tinh chỉnh có giám
-sát (SFT) trên các bản mẫu hành vi --- lại vấp phải bài toán dữ liệu:
+người~\cite{zhou2024webarena}. Phương thuốc tiêu chuẩn, tinh chỉnh có giám
+sát (SFT) trên các bản mẫu hành vi, lại vấp phải bài toán dữ liệu:
 trajectory tương tác có gán mục tiêu trên website đích hầu như không tồn tại,
 còn thuê người gán nhãn thì đắt, chậm và phải làm lại cho từng website.
 
@@ -105,7 +105,7 @@ Việc chuẩn hóa mệnh đề dùng sentence embedding~\cite{reimers2019sbert
 \subsubsection*{2.1.3\quad Hệ thống thực tế khảo sát}
 
 Đề tài khảo sát và thực nghiệm trên họ website tự triển khai của benchmark
-WebArena --- các bản sao đầy đủ chức năng của phần mềm thật, có dữ liệu thật
+WebArena, các bản sao đầy đủ chức năng của phần mềm thật, có dữ liệu thật
 và trạng thái thay đổi được:
 
 \begin{itemize}
@@ -121,11 +121,15 @@ và trạng thái thay đổi được:
 
 \subsection*{2.2\quad Mục tiêu đề tài}
 
-\textbf{Vấn đề nghiên cứu.} Cho (i) một website đang hoạt động, không có bất
-kỳ nhãn task nào, truy cập qua trình duyệt tiêu chuẩn, và (ii) một mô hình
-ngôn ngữ nhỏ đã pretrain, hãy tạo ra phiên bản fine-tune của mô hình đó có khả
-năng hoàn thành các task phát biểu bằng ngôn ngữ tự nhiên trên website, mà
-không dùng bất kỳ bản mẫu hay nhãn task nào do con người tạo.
+\textbf{Vấn đề nghiên cứu.}
+
+\begin{quote}
+Cho (i) một website đang hoạt động, không có bất kỳ nhãn task nào, truy cập
+qua trình duyệt tiêu chuẩn, và (ii) một mô hình ngôn ngữ nhỏ đã pretrain,
+hãy tạo ra phiên bản fine-tune của mô hình đó có khả năng hoàn thành các
+task phát biểu bằng ngôn ngữ tự nhiên trên website, mà không dùng bất kỳ
+bản mẫu hay nhãn task nào do con người tạo.
+\end{quote}
 
 \textbf{Các mục tiêu cụ thể.} Đề tài theo đuổi năm mục tiêu, tương ứng một--một
 với năm thách thức của bài toán:
@@ -155,7 +159,7 @@ kiến được công bố sau khi khóa luận hoàn thành.
 
 \begin{itemize}
   \item \textbf{Baseline:} mô hình nền Qwen3.5-9B-Instruct chưa fine-tune,
-  đánh giá trên bộ task chính thức của WebArena --- đây là ngưỡng tham chiếu
+  đánh giá trên bộ task chính thức của WebArena; đây là ngưỡng tham chiếu
   cần vượt qua.
   \item \textbf{Giải pháp đề xuất:} chính mô hình đó sau khi fine-tune bằng
   LoRA trên tập dữ liệu do pipeline HSGE tự sinh.
@@ -187,7 +191,7 @@ hành trên website thật:
 
 \begin{itemize}
   \item \textbf{Khám phá:} 12 lượt chạy trên hai instance (Reddit và GitLab),
-  thăm 301 node, ghi 1.174 episode --- 827 task đạt, 330 hỏng, 48 được agent
+  thăm 301 node, ghi 1.174 episode (827 task đạt, 330 hỏng, 48 được agent
   tuyên bố bất khả thi.
   \item \textbf{Phát hiện skill:} 37 skill được kiểm chứng và thu nhận, nâng
   thành 35 operator lập kế hoạch có precondition/effect tường minh.
@@ -205,8 +209,8 @@ hành trên website thật:
 Một hạn chế cần nêu rõ: \emph{chưa có semantic task ghép chuỗi nào được thực
 thi} trong cả 12 lượt chạy. Thủ tục ghép chuỗi operator đã được cài đặt và có
 kiểm thử tất định trên backend mô phỏng, nhưng trên site thật operator graph
-gần như không có cạnh --- do bước chuẩn hóa mệnh đề bằng độ tương tự embedding
-không tách được synonym thật khỏi các cụm từ không liên quan --- nên điều kiện
+gần như không có cạnh, do bước chuẩn hóa mệnh đề bằng độ tương tự embedding
+không tách được synonym thật khỏi các cụm từ không liên quan, nên điều kiện
 kích hoạt không xảy ra. Khắc phục hạn chế này thuộc phần công việc còn lại
 (mục~2.6).
 
@@ -221,7 +225,7 @@ kích hoạt không xảy ra. Khắc phục hạn chế này thuộc phần côn
   (Android/iOS).
   \item Không giải CAPTCHA hay né tránh cơ chế chống bot.
   \item Không xây dựng hệ thống RPA thương mại đầy đủ, cũng không triển khai
-  mô hình như một dịch vụ API công khai --- đây là công trình nghiên cứu.
+  mô hình như một dịch vụ API công khai; đây là công trình nghiên cứu.
   \item Toàn bộ task bằng tiếng Anh; đa ngữ nằm ngoài phạm vi.
 \end{itemize}
 
@@ -230,19 +234,19 @@ kích hoạt không xảy ra. Khắc phục hạn chế này thuộc phần côn
 \subsubsection*{2.4.1\quad Kiến trúc tổng thể}
 
 Đề tài đề xuất \textbf{HSGE} (\textit{Hierarchical Skill-Graph Exploration})
---- một pipeline khám phá website dựa trên graph, vận hành như một vòng lặp
+một pipeline khám phá website dựa trên graph, vận hành như một vòng lặp
 khép kín. Một \emph{explorer} đề xuất các task cụ thể bám trang trên mỗi trang
 được thăm; một agent \emph{solver} thử thực hiện chúng trong trình duyệt thật,
 sinh ra trajectory. Thành phần phát hiện cắt trajectory thành đoạn, gom cụm
 các đoạn lặp lại, trừu tượng hóa mỗi cụm đủ chín thành một \emph{skill} tái sử
 dụng, rồi nâng skill đã kiểm chứng thành \emph{operator} lập kế hoạch. Ghép
-chuỗi operator trên graph sinh ra các task dài hạn --- \emph{semantic task}
---- được đưa ngược lại chính solver đó, khép kín vòng lặp.
+chuỗi operator trên graph sinh ra các task dài hạn, gọi là \emph{semantic task},
+được đưa ngược lại chính solver đó, khép kín vòng lặp.
 
 Ba nguyên tắc thiết kế xuyên suốt: (P1) \emph{kiểm chứng trước khi tái sử
-dụng} --- không gì được tin ngay lần đầu; (P2) \emph{graph thay vì phẳng} ---
+dụng}: không gì được tin ngay lần đầu; (P2) \emph{graph thay vì phẳng}:
 tách biệt "agent đã ở đâu" khỏi "agent làm được gì"; (P3) \emph{hệ task hai
-tầng} --- low-level task dẫn dắt khám phá, semantic task cung cấp dữ liệu dài
+tầng}: low-level task dẫn dắt khám phá, semantic task cung cấp dữ liệu dài
 hạn.
 
 % Không dùng môi trường float `table`: đề cương là phần chèn hành chính, bảng
@@ -290,8 +294,8 @@ chính thức của WebArena \\
 
 Frontier được quản lý bằng hàng đợi ưu tiên hai tầng. Tầng 0 là các URL mà
 solver thực sự đi tới khi giải task, được nạp thẳng. Tầng 1 là các liên kết
-khai thác từ trang, phải qua một trần theo \emph{khuôn} URL --- các đường dẫn
-chỉ khác nhau ở phần định danh được quy về cùng một khuôn --- để những trang
+khai thác từ trang, phải qua một trần theo \emph{khuôn} URL (các đường dẫn
+chỉ khác nhau ở phần định danh được quy về cùng một khuôn) để những trang
 gần trùng nhau không làm ngập frontier. Node có nội dung trùng với node đã
 thăm bị bỏ qua; node gây lỗi điều hướng được ghi nhận và bỏ qua thay vì làm
 hỏng cả lượt chạy.
@@ -307,7 +311,7 @@ thành và bất khả thi.
 Mỗi trajectory được cắt thành các đoạn con tại các điểm đổi ngữ cảnh, gom cụm
 trực tuyến bằng ngưỡng cosine trên embedding, và mỗi cụm lặp lại đủ số lần sẽ
 được trừu tượng hóa thành một SkillCard tham số hóa. Skill chỉ được thu nhận
-sau khi thực thi lại thành công trong các ngữ cảnh chưa gặp --- nguyên tắc P1.
+sau khi thực thi lại thành công trong các ngữ cảnh chưa gặp, theo nguyên tắc P1.
 
 \subsubsection*{2.4.4\quad Các độ đo đánh giá}
 

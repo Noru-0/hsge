@@ -152,8 +152,8 @@ Sự tương ứng với khung options là trực tiếp và có chủ đích: m
 \texttt{SkillCard} chính là một option $\langle I, \pi, \beta \rangle$ với ba
 thành phần lần lượt là \texttt{precondition}, \texttt{action\_template} cùng
 các \texttt{slots}, và \texttt{success\_predicate}. Còn
-\texttt{action\_signature} của một \texttt{SubTrajectory} --- chỉ gồm dãy động
-từ hành động --- là thứ làm cho việc gom cụm không phụ thuộc site: đăng nhập
+\texttt{action\_signature} của một \texttt{SubTrajectory}, chỉ gồm dãy động
+từ hành động, là thứ làm cho việc gom cụm không phụ thuộc site: đăng nhập
 trên hai site khác nhau cho cùng một signature dù mọi selector và giá trị đều
 khác.\par}
 
@@ -163,18 +163,18 @@ khác.\par}
 Ba giao diện tách pipeline khỏi mọi thứ tốn tiền, cần GPU, hoặc cần site thật:
 
 \begin{itemize}
-  \item \texttt{LLM.complete\_json(system, user)} --- dùng bởi segmentation,
+  \item \texttt{LLM.complete\_json(system, user)} dùng bởi segmentation,
         abstraction, grounding, operator induction và cả hai agent.
         \texttt{MockLLM} trả về đáp án kịch bản; \texttt{OpenAILLM} gọi bất kỳ
         endpoint tương thích OpenAI nào, thử lại tối đa ba lần với backoff mũ
-        cho các lỗi tạm thời (rate limit, kết nối, timeout, 5xx --- không bao
+        cho các lỗi tạm thời (rate limit, kết nối, timeout, 5xx - không bao
         giờ thử lại lỗi xác thực hay bad request), và có thể đính kèm ảnh chụp
         màn hình cho model hỗ trợ vision.
-  \item \texttt{Embedder.encode(texts)} --- dùng bởi clustering và predicate
+  \item \texttt{Embedder.encode(texts)} dùng bởi clustering và predicate
         registry. \texttt{HashingEmbedder} là tất định; \texttt{STEmbedder}
         bọc một model sentence-transformers.
   \item \texttt{WebEnv} với \texttt{reset}, \texttt{step} và \texttt{check}
-        --- pipeline không cần gì hơn từ môi trường. Bản mock cung cấp các site
+        pipeline không cần gì hơn từ môi trường. Bản mock cung cấp các site
         kịch bản; \texttt{WebArenaBrowser} điều khiển trình duyệt thật qua
         BrowserGym.
 \end{itemize}
@@ -196,7 +196,7 @@ phân bổ đã dùng cho các run ở Chương~\ref{ch:experiments}.
 \begin{table}[H]
 \centering
 \caption[Phân bổ model theo vai trò]{Phân bổ model theo vai trò. Cột ``Số lần
-gọi'' là bậc độ lớn số lần gọi trên mỗi node --- chính nó biện minh cho đánh
+gọi'' là bậc độ lớn số lần gọi trên mỗi node, chính nó biện minh cho đánh
 đổi chi phí/độ mạnh ở từng dòng.}
 \label{tab:app-roles}
 \footnotesize
@@ -222,7 +222,7 @@ gọi'' là bậc độ lớn số lần gọi trên mỗi node --- chính nó b
 \label{app:design-params}
 
 Bảng~\ref{tab:app-params} liệt kê các tham số chạy không thuộc diện bí mật.
-Các bí mật --- API key, mật khẩu tài khoản và URL của site --- nằm ngoài kho
+Các bí mật (API key, mật khẩu tài khoản và URL của site) nằm ngoài kho
 mã nguồn, trong một tập tin môi trường. Thứ tự ưu tiên là cờ dòng lệnh, rồi
 tập tin cấu hình, rồi giá trị mặc định.
 
@@ -246,7 +246,7 @@ tập tin cấu hình, rồi giá trị mặc định.
 \texttt{mine\_hrefs}    & true & Khai thác liên kết \texttt{<a href>} vào frontier \\
 \texttt{per\_template\_cap} & 3 & Số node nhận vào cho mỗi template URL \\
 \texttt{max\_hrefs\_per\_page} & 100 & Số liên kết khai thác mỗi trang \\
-\texttt{denylist} & --- & Chặn URL đăng xuất, phân trang và sắp xếp \\
+\texttt{denylist} & - & Chặn URL đăng xuất, phân trang và sắp xếp \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -257,7 +257,7 @@ tập tin cấu hình, rồi giá trị mặc định.
 Mọi prompt được chép lại nguyên văn, đúng dạng model thực sự nhận được, và giữ
 nguyên tiếng Anh vì đó chính là văn bản chạy thật. Chúng được đặt ở đây thay vì
 trong Chương~\ref{ch:method} vì cách diễn đạt chính xác của chúng là kết quả
-của những sửa chữa hành vi bàn ở Chương~\ref{ch:discussion} --- việc phân loại
+của những sửa chữa hành vi bàn ở Chương~\ref{ch:discussion}: việc phân loại
 task có cấu trúc, điều cấm lộ đáp án và điều cấm đề xuất trùng lặp ở
 Mục~\ref{app:prompt-explorer} mỗi thứ đều thay thế cho một cách diễn đạt đã bị
 một run thật chứng minh là hỏng.
@@ -271,10 +271,10 @@ suy luận.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 Allowed actions (return exactly one): click('bid'), fill('bid','text'),
-select_option('bid','opt'), press('bid','key_comb') -- e.g. press('12','Enter')
+select_option('bid','opt'), press('bid','key_comb') - e.g. press('12','Enter')
 to submit a search box or form when there is no separate submit button,
 goto('url'), go_back(), new_tab(), tab_focus(index), tab_close(),
-send_msg_to_user('done message'), report_infeasible('reason') --
+send_msg_to_user('done message'), report_infeasible('reason') -
 report_infeasible ONLY when the task cannot be done on this site/page.
 \end{lstlisting}
 
@@ -295,12 +295,12 @@ Rules:
   r/relationship_advice'), but must NEVER state the value/answer itself in the
   task text (NOT 'Find the number of submissions for r/relationship_advice
   (5,718 submissions)'). If the answer is already written in the task, it isn't
-  a task -- whoever solves it must still have to read the page to answer it.
+  a task - whoever solves it must still have to read the page to answer it.
 - Do NOT propose a NAV task to a page the user is already on (check the URL
-  given below) -- e.g. if URL already ends in /wiki, do not propose 'Go to the
+  given below) - e.g. if URL already ends in /wiki, do not propose 'Go to the
   Wiki page'.
 - Do NOT re-propose a task you (or an earlier page) already proposed this run
-  -- see 'ALREADY PROPOSED' below if present. Sitewide nav-menu links
+  - see 'ALREADY PROPOSED' below if present. Sitewide nav-menu links
   (header/footer, present on every page) are especially prone to this: once a
   destination has been proposed from one page, do not propose 'go to <that
   same destination>' again from a different page. Prefer content unique to
@@ -341,7 +341,7 @@ Examples: {"thought": "Open the product", "action": "click('12')"} ;
 {"thought": "Goal met", "action": "send_msg_to_user('done: price is $19')"}.
 Call send_msg_to_user ONLY when the goal is fully achieved.
 For 'go to page X' goals: once the URL/page has changed to the requested
-destination the goal is DONE -- call send_msg_to_user immediately; do NOT
+destination the goal is DONE - call send_msg_to_user immediately; do NOT
 click the same link again.
 \end{lstlisting}
 
@@ -389,13 +389,13 @@ the order given.
 \label{app:prompt-judge}
 
 Judge được yêu cầu một cách có chủ đích là chấm trạng thái cuối chứ không chấm
-lời tự nhận của agent --- đúng thất bại mà nó sinh ra để bắt.
+lời tự nhận của agent, đúng thất bại mà nó sinh ra để bắt.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 You are a strict grader of a web agent's completed task. You are given the GOAL
 the agent was told to accomplish, the actions it took before declaring the task
 done, and the FINAL page (URL + accessibility tree) where it declared done.
-Decide whether the goal was genuinely achieved by the final state -- not
+Decide whether the goal was genuinely achieved by the final state - not
 whether the agent SAID it was done. Common false positives: the agent gave up
 and declared done anyway; it answered an INFO question with a guess not
 actually shown on the final page; it navigated to the wrong page.
@@ -419,7 +419,7 @@ PRIOR action's outcome shows no progress or an error, write a one-sentence
 REFLECTION on why (empty string if the prior action clearly succeeded, or this
 is the first step). If this step is the FINAL step of the task (marked below),
 also judge in COMPLETION_CHECK whether the goal is actually satisfied by the
-current page -- not just whether the agent believes so (empty string
+current page - not just whether the agent believes so (empty string
 otherwise).
 Return JSON {"state": "<one short sentence>", "reflection": "<sentence or empty
 string>", "completion_check": "<sentence or empty string>"}.
@@ -437,12 +437,12 @@ những run đẹp nhất.
 \label{app:runs-explore}
 
 Bảng~\ref{tab:app-runs} báo cáo mọi run khám phá đứng sau dữ liệu đã thu.
-Run 1--9 khám phá instance Reddit; run 10--12 khám phá GitLab. Run 4--6 là các
+Run 1-9 khám phá instance Reddit; run 10-12 khám phá GitLab. Run 4-6 là các
 lượt sinh task dùng lại graph có sẵn nên không có số node riêng. Trạng thái
 \emph{bị ngắt} nghĩa là run được dừng thủ công khi đã thu đủ trajectory, không
-phải là run hỏng; run~10 là run duy nhất kết thúc bằng lỗi --- một timeout điều
+phải là run hỏng; run~10 là run duy nhất kết thúc bằng lỗi (một timeout điều
 hướng của trình duyệt mà cơ chế xử lý lỗi ở mức node đã chuyển thành một node
-bị bỏ qua trước khi run được dừng.
+bị bỏ qua trước khi run được dừng).
 
 \begin{table}[H]
 \centering
@@ -478,7 +478,7 @@ Có hai điểm đáng ghi nhận. Thứ nhất, run lớn nhất (run~7, 128 no
 trước khi có kết cục \emph{bất khả thi}, và đó là lý do tỉ lệ thất bại của nó
 cao nhất: những episode mà một run về sau sẽ xếp là bất khả thi thì ở đây bị
 tính là thất bại. Thứ hai, hiện tượng trùng lặp node là có thật nhưng ở mức vừa
-phải --- 29 node trên toàn bộ các run bị bỏ qua vì axtree ban đầu của chúng băm
+phải: 29 node trên toàn bộ các run bị bỏ qua vì axtree ban đầu của chúng băm
 ra trùng với một node đã thăm, xác nhận rằng chuyện các URL khác nhau hiển thị
 cùng nội dung là có thật trên những site này, nhưng không phải là chi phí chi
 phối.
@@ -486,16 +486,16 @@ phối.
 \section{Các lượt sinh task}
 \label{app:runs-gen}
 
-Run 4--6 đo riêng khâu đề xuất và kiểm chứng task, trên một graph đã khám phá
+Run 4-6 đo riêng khâu đề xuất và kiểm chứng task, trên một graph đã khám phá
 sẵn. Bảng~\ref{tab:app-gen} tách kết cục của chúng theo loại task. Quy luật
 nhất quán ở cả ba lượt: task \texttt{INFO} kiểm chứng đạt ổn định nhất, task
-\texttt{MOD} kém nhất, và khoảng một đề xuất trong mười bị bỏ vì đã cũ --- trang
+\texttt{MOD} kém nhất, và khoảng một đề xuất trong mười bị bỏ vì đã cũ (trang
 mà nó nhắc tới đã thay đổi kể từ lúc graph được ghi.
 
 \begin{table}[H]
 \centering
 \caption[Sinh và kiểm chứng task theo loại]{Sinh và kiểm chứng task theo loại,
-run 4--6.}
+run 4-6.}
 \label{tab:app-gen}
 \small
 \begin{tabular}{@{}lrrrrrrrr@{}}
@@ -520,7 +520,7 @@ run 4--6.}
 Gộp lại, task \texttt{INFO} kiểm chứng đạt 86\%, \texttt{NAV} đạt 72\% và
 \texttt{MOD} đạt 73\%. Việc \texttt{NAV} không hề dễ hơn \texttt{MOD} mới là
 điều phản trực giác: task điều hướng thất bại không phải vì đích đến khó tới,
-mà vì agent thường không nhận ra là mình đã tới nơi --- đúng hành vi mà mệnh đề
+mà vì agent thường không nhận ra là mình đã tới nơi, đúng hành vi mà mệnh đề
 ``một khi URL đã đổi thì mục tiêu ĐÃ XONG'' trong prompt của solver
 (Mục~\ref{app:prompt-solver}) được thêm vào để sửa.
 
@@ -532,14 +532,14 @@ Không có goal task ghép nào được thử trong cả mười hai run: mọi
 mười hai bản tóm tắt run đều bằng không. Nguyên nhân mang tính cấu trúc chứ
 không phải lỗi của thủ tục ghép chuỗi. Một cạnh trong operator graph đòi hỏi
 predicate effect của operator này trùng với precondition của operator kia, mà
-predicate registry lại chuẩn hóa predicate chỉ bằng độ tương tự embedding ---
+predicate registry lại chuẩn hóa predicate chỉ bằng độ tương tự embedding -
 thứ mà, như Mục~\ref{sec:disc-operators} báo cáo, không tách nổi synonym thật
 khỏi những cụm từ không liên quan ở bất kỳ ngưỡng đơn lẻ nào. Trên thực tế gần
 như mỗi operator được induce đều nhận một bộ từ vựng predicate riêng. Run~7,
 graph lớn nhất với mười ba operator, chỉ chứa đúng một cạnh
 effect$\rightarrow$precondition, và cạnh đó chỉ hình thành khi operator thứ
-mười ba, cũng là operator cuối cùng, được induce --- thời điểm mà run đã bị
-dừng.
+mười ba, cũng là operator cuối cùng, được induce (thời điểm mà run đã bị
+dừng).
 
 Hệ quả cho dataset là trực tiếp: các trajectory dùng để fine-tune hoàn toàn đến
 từ task mức thấp, phạm vi một trang, còn những task dài hạn được ghép mà
@@ -570,7 +570,7 @@ chuỗi lệnh chính xác; kho mã nguồn đi kèm khóa luận chứa mã, t�
 \label{app:repro-env}
 
 Pipeline mock chỉ cần \texttt{numpy} và chạy được mà không cần API key, GPU hay
-trình duyệt --- đây là cách nên dùng để xem xét hành vi của pipeline trước khi
+trình duyệt, đây là cách nên dùng để xem xét hành vi của pipeline trước khi
 tiêu tốn bất cứ khoản nào:
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
@@ -592,10 +592,10 @@ Pipeline thật cần thêm \texttt{sentence-transformers}, \texttt{openai},
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 # Kiem tra noi day: LLM kich ban va browser gia, khong ton phi, khong can site.
-python run_webarena.py --dry-run --out /tmp/wa_dry --max-nodes 2
+python run_webarena.py -dry-run -out /tmp/wa_dry -max-nodes 2
 
 # Smoke test tren instance dung chung ma khong ghi gi len no.
-python run_webarena.py --read-only --max-nodes 2 --max-steps 4
+python run_webarena.py -read-only -max-nodes 2 -max-steps 4
 
 # Run thu thap day du (moi tham so lay tu config.yaml).
 python run_webarena.py
@@ -606,9 +606,9 @@ Việc đăng nhập cho bốn site có tài khoản chỉ diễn ra một lần
 dạng storage state của trình duyệt; bản cache này là một thông tin phiên còn
 sống nên bị loại khỏi quản lý phiên bản. Chỉ chạy một worker: các site WebArena
 là trạng thái chia sẻ có thể thay đổi, các run song song sẽ giẫm lên nhau.
-Artifact --- skill, operator, graph, predicate, kết cục task theo node và một
-bản tóm tắt --- được ghi sau mỗi node, nên một run bị ngắt vẫn để lại ảnh chụp
-nhất quán, và mọi sự kiện đều được ghi song song ra một log JSON-lines.
+Artifact (skill, operator, graph, predicate, kết cục task theo node và một
+bản tóm tắt) được ghi sau mỗi node, nên một run bị ngắt vẫn để lại ảnh chụp
+nhất quán, và mọi sự kiện đều được ghi song song ra một log JSON lines.
 
 \section{Tinh lọc dataset}
 \label{app:repro-curate}
@@ -625,7 +625,7 @@ python build_sft_dataset.py outputs/<run>/episodes train.jsonl --require-judge
 \noindent
 \texttt{--require-judge} loại mọi episode tự nhận thành công nhưng chưa từng
 được judge hoặc bị judge đánh trượt, đồng thời vẫn giữ những episode agent báo
-là bất khả thi --- việc chấm không áp dụng cho chúng và chúng vẫn là mục tiêu
+là bất khả thi; việc chấm không áp dụng cho chúng và chúng vẫn là mục tiêu
 huấn luyện hợp lệ.
 
 \section{Fine-tune, phục vụ và đánh giá}

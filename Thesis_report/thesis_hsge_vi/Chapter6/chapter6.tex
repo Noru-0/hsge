@@ -26,7 +26,7 @@ Khóa luận tạo ra năm sản phẩm cụ thể:
 \begin{enumerate}
   \item \textbf{Pipeline HSGE}: hiện thực của khám phá có định hướng theo
   graph, phát hiện và kiểm chứng skill, induction operator với chuẩn hóa
-  mệnh đề nhận biết từ vựng, và sinh semantic task --- chạy trọn vẹn trên
+  mệnh đề nhận biết từ vựng, và sinh semantic task, chạy trọn vẹn trên
   cả backend mock tất định (phục vụ kiểm thử) lẫn website thật qua trình
   duyệt thật.
   \item \textbf{Bộ tinh lọc và tập dữ liệu}: judge chấm độc lập, bước viết
@@ -50,8 +50,8 @@ Khóa luận tạo ra năm sản phẩm cụ thể:
 Vượt trên các sản phẩm, khóa luận lập luận cho một công thức tổng quát, và
 chứng minh nó trong phạm vi của mình: \emph{kiểm chứng trước khi tái sử
 dụng, cấu trúc thay vì ký ức phẳng, và hệ task hai tầng}. Trong hệ đó, các
-đề xuất bám trang giá rẻ nuôi khám phá, còn graph --- chứ không phải trang
-web --- mới là bên soạn ra những task huấn luyện quan trọng.
+đề xuất bám trang giá rẻ nuôi khám phá, còn graph (chứ không phải trang
+web) mới là bên soạn ra những task huấn luyện quan trọng.
 
 \section{Đối chiếu mục tiêu và kết quả}
 \label{sec:conc-objectives}
@@ -65,7 +65,7 @@ Mục~\ref{sec:intro-contrib}.
 (Mục~\ref{sec:intro-contrib}) và kết quả đạt được.}
 \label{tab:objectives}
 \small
-\begin{tabular}{L{1.0cm} L{5.6cm} L{6.4cm}}
+\begin{tabular}{@{}L{1.0cm} L{5.6cm} L{6.4cm}@{}}
 \toprule
  & \textbf{Mục tiêu} & \textbf{Kết quả} \\
 \midrule
@@ -104,25 +104,22 @@ Các kết quả gợi ra nhiều hướng tiếp nối tự nhiên.
 \textbf{Mở rộng quy mô thu thập dữ liệu.} Đòn bẩy rõ nhất nhận diện ở
 Chương~\ref{ch:discussion} là khối lượng và độ phủ dữ liệu. Pipeline vốn
 không phụ thuộc website cụ thể, và đã có sẵn cơ chế chuyển giao
-(transfer) để tái-neo một skill đã phát hiện sang website mới. Chạy thu
-thập trên nhiều website --- và để skill chuyển giao giữa chúng --- là con
+(transfer) để ánh xạ lại một skill đã phát hiện sang website mới. Chạy thu
+thập trên nhiều website và để skill chuyển giao giữa chúng, là con
 đường trực tiếp tới một kho dữ liệu lớn và đa dạng hơn.
 
 \textbf{Học từ tín hiệu kiểm chứng.} Các cổng chất lượng của pipeline tạo
-ra nhiều hơn một tập dữ liệu đã lọc: chúng tạo ra \emph{nhãn} --- thành
+ra nhiều hơn một tập dữ liệu đã lọc: chúng tạo ra \emph{nhãn}: thành
 công đã xác nhận, thất bại đã chấm, báo cáo bất khả thi. Đây chính là
 nguyên liệu của tối ưu theo sở thích và học tăng cường, giúp khai thác tín
 hiệu huấn luyện từ các trajectory thất bại mà SFT hiện phải bỏ đi.
 
-\textbf{Mô hình nhỏ hơn.} 9B là nhỏ so với các mô hình tiên phong nhưng
-chưa nhỏ theo chuẩn triển khai. Chưng cất hành vi của agent đã fine-tune
-xuống các mô hình cỡ 1--3B sẽ kiểm tra công thức lấy-chất-lượng-dữ-liệu-làm-đầu
-chịu được đến đâu khi dung lượng mô hình co lại.
+\textbf{Mô hình nhỏ hơn.} Mô hình 9B có quy mô nhỏ hơn so với các mô hình tiên phong, nhưng vẫn chưa thực sự nhỏ theo yêu cầu triển khai thực tế. Việc chưng cất hành vi của agent đã được fine-tune xuống các mô hình có quy mô từ 1B đến 3B sẽ giúp đánh giá mức độ duy trì hiệu quả của cách tiếp cận ưu tiên chất lượng dữ liệu khi dung lượng mô hình giảm xuống.
 
 \textbf{Skill lúc suy luận.} Trong khóa luận này, skill graph chỉ định hình
 \emph{dữ liệu huấn luyện}; mô hình triển khai không nhận gợi ý runtime nào.
-Graph hoàn toàn có thể được truy vấn lúc suy luận --- truy xuất các skill
-hay subgoal liên quan làm ngữ cảnh --- biến cùng một sản phẩm thành vừa bộ
+Graph hoàn toàn có thể được truy vấn lúc suy luận để truy xuất các skill
+hay subgoal liên quan làm ngữ cảnh, biến cùng một sản phẩm thành vừa bộ
 sinh dữ liệu vừa bộ nhớ runtime.
 
 \textbf{Đánh giá rộng và chặt hơn.} Ngoài việc hoàn tất đánh giá bốn
@@ -134,6 +131,6 @@ vi và cấu trúc đã bàn ở Mục~\ref{sec:disc-validity}.
 \noindent
 Tự động hóa web rồi sẽ thuộc về những mô hình mà người vận hành đủ khả năng
 chạy và toàn quyền cải thiện. Khóa luận này đóng góp một con đường để trao
-cho các mô hình nhỏ thứ chúng đang thiếu --- không phải thêm tham số, mà là
+cho các mô hình nhỏ thứ chúng đang thiếu: không phải thêm tham số, mà là
 những bản mẫu tốt hơn, được chế tạo bởi một pipeline biết khám phá có cấu
 trúc và kiểm chứng những gì nó đem đi dạy.
