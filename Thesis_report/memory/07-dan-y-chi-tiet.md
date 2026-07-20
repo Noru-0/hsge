@@ -143,6 +143,15 @@ Helvetica (không phải Times như body) — chấp nhận đánh đổi để 
 - **`Scene.line(pts, head=False)`** (thêm 2026-07-20): polyline không bind, để
   vẽ đường cấu trúc (trục gom, nhánh cây, timeline) — `arrow()` bắt buộc bind
   hai đầu vào shape nên không dùng được cho các đường này.
+- **Cả 7 hình đã qua vòng render-soi-sửa (2026-07-20)**, theo phương pháp luận
+  skill `excalidraw-diagram`. Giữ bảng màu semantic của dự án (skill nói palette
+  là phần để tùy biến theo brand; 7 hình phải đồng bộ nhau).
+  `fig_solver` vẽ lại thành **cycle** (cũ là một hàng 1670×380, tỉ lệ 4,4:1 →
+  chữ chỉ ~4pt ở `\textwidth`, và đường thẳng nói sai cơ chế: solver là vòng
+  lặp có hai cửa thoát); `fig_pipeline` thêm 2 zone + nắn đường `episodes`;
+  `fig_curation` thêm chú thích nội dung §3.6 vào chỗ trống bên phải.
+  **`fig_roadmap` cố ý giữ nguyên** — 5 chặng trái→phải đúng chức năng roadmap
+  C1, cỡ chữ đã chỉnh, không có lỗi; đổi sang timeline chỉ là restyling.
 - **fig_semantic đã vẽ lại (2026-07-20)** theo mẫu *convergence*. Bản cũ vẽ mũi
   tên "chain" đi ra từ RIÊNG operator B → đọc thành "B sinh ra semantic task",
   **sai cơ chế** (task sinh từ cả chuỗi A→B→C). Bản mới: 3 operator đổ vào một
