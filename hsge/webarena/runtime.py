@@ -110,7 +110,8 @@ class WebArenaExplorer:
         )
         # Planning predicates are LLM-authored NL, canonicalized by embedding here
         # instead of a hardcoded vocabulary; operators reference these canonical ids.
-        self.registry = PredicateRegistry(embedder, sim_threshold=predicate_sim)
+        self.registry = PredicateRegistry(embedder, llm=self.operator_llm,
+                                          sim_threshold=predicate_sim)
         self.graph = HierarchicalGraph()
         self.discovery = Discovery(
             self.library, self.graph,

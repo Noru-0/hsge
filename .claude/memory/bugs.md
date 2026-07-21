@@ -16,7 +16,9 @@ Entry format:
 ## Open
 
 ### Predicate canonicalization never unifies synonyms, so the operator graph stays edgeless and no semantic task is ever generated
-- **Status**: open
+- **Status**: open — root-cause fix **implemented + unit-tested (2026-07-22)**,
+  but the observable symptom (0 goal tasks on a live run) is **not re-measured
+  yet**; stays open until a real WebArena re-run confirms non-zero goal tasks.
 - **Found**: 2026-07-20, while gathering Appendix C statistics for the thesis.
   Verified directly against `outputs/`: **0 of 1745 episodes** across all 12
   runs carry a `GOAL` tag, every `summary.json` shows
@@ -37,11 +39,20 @@ Entry format:
   gets a private predicate vocabulary and nothing chains. The mechanism itself
   is implemented and passes the deterministic mock tests
   (`test_operators.py`, `test_goal_task.py`).
-- **Fix**: not started. Must be fixed **before** the planned re-run, otherwise
-  the new run reproduces the same 0-goal-task outcome. Vocabulary-aware
-  induction (reusing the registry's existing labels verbatim at authoring
-  time) already exists and is the lever to lean on; consider also an LLM
-  adjudication step for borderline cosine scores instead of a hard threshold.
+- **Fix**: LLM adjudication in the borderline band (2026-07-22, unit-tested;
+  see changelog). `PredicateRegistry` now takes an optional `llm` +
+  `adjudication_band` (default 0.15): cosine decides the confident tails
+  (`>= sim_threshold+band` merge, `< sim_threshold-band` new id) and
+  `predicates_equivalent()` settles only the ambiguous middle where a single
+  cutoff provably fails. `OnlineClusterer` gained `nearest`/`add_to`/`spawn`
+  to let the registry interpose that decision; `partial_fit` composes them
+  (unchanged). `runtime.py` wires `operator_llm` in; `llm=None` keeps the old
+  deterministic single-threshold path for the mock pipeline. This also repairs
+  the upstream vocabulary-aware induction that already existed: once two
+  synonyms collapse, the id's count grows, it enters `vocabulary()`'s frequent
+  set, and the inducer starts reusing it verbatim (virtuous cycle). **Still
+  needs a real-run to confirm goal tasks actually appear** — do not reword the
+  three thesis overstatements below until that run succeeds.
 - **Thesis impact**: three places currently overstate this — the O2 rows in
   `Chapter1`/`Chapter6` and a sentence in `Chapter5` §5.1 claiming operator
   chaining "executed against a real website". Appendix C.3 already reports the

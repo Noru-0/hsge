@@ -53,18 +53,26 @@ class OnlineClusterer:
         mat = np.vstack([self.clusters[i].centroid for i in ids])
         return ids, mat
 
-    def partial_fit(self, vec: np.ndarray, item_id: str) -> int:
-        """Assign one vector; return the cluster id it landed in (new or existing)."""
+    def nearest(self, vec: np.ndarray) -> tuple[int | None, float]:
+        """Peek at the closest cluster without mutating anything: return its id
+        and cosine similarity, or (None, 0.0) when the clusterer is empty. Lets a
+        caller (e.g. PredicateRegistry) interpose its own decision between finding
+        the nearest cluster and committing the vector to one."""
         ids, mat = self._matrix()
-        if mat is not None:
-            sims = mat @ vec                      # cosine sims to all centroids
-            best = int(np.argmax(sims))
-            if sims[best] >= self.sim_threshold:
-                cid = ids[best]
-                self.clusters[cid].add(vec, item_id)
-                self._maybe_merge(cid)
-                return cid
-        # spawn
+        if mat is None:
+            return None, 0.0
+        sims = mat @ vec
+        best = int(np.argmax(sims))
+        return ids[best], float(sims[best])
+
+    def add_to(self, cid: int, vec: np.ndarray, item_id: str) -> int:
+        """Force-assign a vector to an existing cluster (caller decided it belongs)."""
+        self.clusters[cid].add(vec, item_id)
+        self._maybe_merge(cid)
+        return cid
+
+    def spawn(self, vec: np.ndarray, item_id: str) -> int:
+        """Force a brand-new cluster seeded at `vec`."""
         cid = self._next_id
         self._next_id += 1
         c = Cluster(cluster_id=cid, centroid=vec.copy())
@@ -73,6 +81,13 @@ class OnlineClusterer:
         c.centroid = vec.copy()
         self.clusters[cid] = c
         return cid
+
+    def partial_fit(self, vec: np.ndarray, item_id: str) -> int:
+        """Assign one vector; return the cluster id it landed in (new or existing)."""
+        cid, sim = self.nearest(vec)
+        if cid is not None and sim >= self.sim_threshold:
+            return self.add_to(cid, vec, item_id)
+        return self.spawn(vec, item_id)
 
     def _maybe_merge(self, cid: int) -> None:
         """Merge `cid` into another cluster if their centroids are very close."""
