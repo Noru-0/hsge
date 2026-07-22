@@ -30,13 +30,13 @@ _NAV = {"click", "goto", "go_back"}
 
 def load_steps(ep_dir: str) -> list[Step]:
     steps = []
-    for line in open(os.path.join(ep_dir, "episode.jsonl")):
+    for line in open(os.path.join(ep_dir, "episode.jsonl"), encoding="utf-8"):
         rec = json.loads(line)
         if rec.get("record_type") != "step":
             continue
         ax_rel = ((rec.get("observation") or {}).get("axtree_txt") or {}).get("path", "")
         ax_path = os.path.join(ep_dir, ax_rel) if ax_rel else ""
-        axtree = open(ax_path).read() if ax_path and os.path.exists(ax_path) else ""
+        axtree = open(ax_path, encoding="utf-8").read() if ax_path and os.path.exists(ax_path) else ""
         steps.append(Step(action=rec.get("parsed_action") or "",
                           url=rec.get("url") or "",
                           obs_summary=rec.get("thought") or "", axtree=axtree))
@@ -49,7 +49,7 @@ def successful_episodes(episodes_dir: str, limit: int) -> list[str]:
         meta_path = os.path.join(ep, "episode_meta.json")
         if not os.path.exists(meta_path):
             continue
-        meta = json.load(open(meta_path))
+        meta = json.load(open(meta_path, encoding="utf-8"))
         if (meta.get("outcome") or {}).get("success"):
             out.append(ep)
         if len(out) >= limit:

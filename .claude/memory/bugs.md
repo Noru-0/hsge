@@ -61,6 +61,36 @@ Entry format:
 
 ## Fixed
 
+### Windows run crashes writing an axtree with non-cp1252 characters (UnicodeEncodeError)
+- **Status**: fixed (2026-07-22 09:10)
+- **Found**: 2026-07-22, a real run on a Windows machine (`D:\...\hsge`,
+  conda env, cp1252 locale) crashed at node 3 with
+  `UnicodeEncodeError: 'charmap' codec can't encode character '↓'`
+  (a `↓` down-arrow in the page's accessibility tree).
+- **Where**: `hsge/webarena/runtime.py::_record` line ~213 (the axtree
+  `page_state/step_*.txt` write) plus every other text-mode `open()` in the
+  pipeline (episode/artifact writes in `runtime.py`, and the readers in
+  `build_sft_dataset.py` / `judge_episodes.py` / `reannotate_thoughts.py` /
+  `replay_segmentation.py`, plus `browser.py` headers and `run_webarena.py`
+  config load).
+- **Symptom**: on Windows the run dies mid-node when any visited page's axtree
+  contains a character outside cp1252 (arrows, bullets, box-drawing, emoji —
+  all common in real sites). Invisible on macOS/Linux, whose default text
+  encoding is UTF-8.
+- **Cause**: `open(path, "w")` / `open(path)` in text mode with no `encoding=`
+  uses the platform default codec, which is cp1252 on a typical Windows
+  install. The axtree files hold **raw** page text (not JSON-escaped), so a
+  non-cp1252 glyph is unencodable. The `json.dump` artifact files did *not*
+  crash (default `ensure_ascii=True` escapes non-ASCII to `\uXXXX`), but their
+  reads would still mis-decode on Windows, so those were hardened too.
+- **Fix**: added `encoding="utf-8"` to every text-mode `open()` across the
+  runtime and the four SFT-pipeline scripts (writes and reads), so files are
+  always UTF-8 regardless of platform locale. Regression test
+  `hsge/tests/test_encoding.py::test_record_writes_axtree_with_non_cp1252_chars`
+  patches `builtins.open` to simulate the Windows cp1252 default and asserts
+  `_record` writes a `↓`-containing axtree without crashing (RED cross-platform
+  before the fix). Full suite 152 passed.
+
 ### A single flaky/slow frontier URL crashes the whole exploration run
 - **Status**: fixed (2026-07-14 18:41)
 - **Found**: 2026-07-14, real gitlab exploration run — a mined `.../tree/main`

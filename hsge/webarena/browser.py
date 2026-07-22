@@ -30,7 +30,7 @@ class WebArenaBrowser:
         pw_context_kwargs = {}
         headers_path = os.environ.get("PW_EXTRA_HEADERS")
         if headers_path and os.path.exists(headers_path):
-            with open(headers_path) as f:
+            with open(headers_path, encoding="utf-8") as f:
                 pw_context_kwargs["extra_http_headers"] = json.load(f)
         # storage_state (from hsge.webarena.auth.ensure_login) starts the context
         # already logged in, so every node visit shares one cached session instead

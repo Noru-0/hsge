@@ -206,11 +206,12 @@ class WebArenaExplorer:
                 "outcome": {"success": bool(success), "reward": 1.0 if success else 0.0,
                              "response": "", "infeasible": bool(infeasible)},
                 "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps)}
-        json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w"), indent=2)
-        with open(os.path.join(ep, "episode.jsonl"), "w") as f:
+        json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w", encoding="utf-8"), indent=2)
+        with open(os.path.join(ep, "episode.jsonl"), "w", encoding="utf-8") as f:
             for k, st in enumerate(steps):
                 axp = f"page_state/step_{k:03d}_axtree.txt"
-                open(os.path.join(ep, axp), "w").write(obs_texts[k] if k < len(obs_texts) else "")
+                open(os.path.join(ep, axp), "w", encoding="utf-8").write(
+                    obs_texts[k] if k < len(obs_texts) else "")
                 observation = {"axtree_txt": {"path": axp}}
                 shot = obs_screenshots[k] if k < len(obs_screenshots) else None
                 if shot:
@@ -271,7 +272,7 @@ class WebArenaExplorer:
     # ---- structured event log, mirrored to out_dir/run_log.jsonl -------------
     def _log(self, event: str, **fields):
         rec = {"event": event, **fields}
-        with open(os.path.join(self.out_dir, "run_log.jsonl"), "a") as f:
+        with open(os.path.join(self.out_dir, "run_log.jsonl"), "a", encoding="utf-8") as f:
             f.write(json.dumps(rec) + "\n")
 
     # ---- promote a verified/mature skill into a planning operator ------------
@@ -440,7 +441,7 @@ class WebArenaExplorer:
         reflects the run's current state.
         """
         skills = [card.to_dict() for card in self.library.all_skills()]
-        json.dump(skills, open(os.path.join(self.out_dir, "skills.json"), "w"), indent=2)
+        json.dump(skills, open(os.path.join(self.out_dir, "skills.json"), "w", encoding="utf-8"), indent=2)
 
         operators = []
         for op in self.opgraph.ops.values():
@@ -455,12 +456,12 @@ class WebArenaExplorer:
                 "precondition_confirmed": grounding.get("precondition_accuracy", {}),
                 "effect_confirmed": grounding.get("effect_accuracy", {}),
             })
-        json.dump(operators, open(os.path.join(self.out_dir, "operators.json"), "w"), indent=2)
+        json.dump(operators, open(os.path.join(self.out_dir, "operators.json"), "w", encoding="utf-8"), indent=2)
 
         # p0/p1/... are canonical predicate ids (see PredicateRegistry.canonical);
         # this is the id -> original NL text lookup so operators.json is legible.
         predicates = {f"p{cid}": label for cid, label in self.registry.labels.items()}
-        json.dump(predicates, open(os.path.join(self.out_dir, "predicates.json"), "w"), indent=2)
+        json.dump(predicates, open(os.path.join(self.out_dir, "predicates.json"), "w", encoding="utf-8"), indent=2)
 
         graph = {
             "states": sorted(self.graph.states),
@@ -469,10 +470,10 @@ class WebArenaExplorer:
             "skill_to_state": {k: sorted(v) for k, v in self.graph.skill_to_state.items()},
             "skill_to_skill": {k: sorted(v) for k, v in self.graph.skill_to_skill.items()},
         }
-        json.dump(graph, open(os.path.join(self.out_dir, "graph.json"), "w"), indent=2)
+        json.dump(graph, open(os.path.join(self.out_dir, "graph.json"), "w", encoding="utf-8"), indent=2)
 
         # per-node breakdown: which tasks ran at that node and whether they passed
-        json.dump(nodes_log, open(os.path.join(self.out_dir, "nodes.json"), "w"), indent=2)
+        json.dump(nodes_log, open(os.path.join(self.out_dir, "nodes.json"), "w", encoding="utf-8"), indent=2)
 
         summary = {
             "nodes_visited": nodes_visited,
@@ -489,7 +490,7 @@ class WebArenaExplorer:
             "duration_sec": (ended_at_epoch - self.run_started_epoch) if ended_at_epoch else None,
             "error": error,
         }
-        json.dump(summary, open(os.path.join(self.out_dir, "summary.json"), "w"), indent=2)
+        json.dump(summary, open(os.path.join(self.out_dir, "summary.json"), "w", encoding="utf-8"), indent=2)
 
     # ---- the loop ------------------------------------------------------------
     def run(self, root_url: str):
@@ -502,7 +503,7 @@ class WebArenaExplorer:
         resume = self._resume_loop_state
         if resume is not None:
             # continue an interrupted run: keep the existing log and restore state
-            open(os.path.join(self.out_dir, "run_log.jsonl"), "a").close()
+            open(os.path.join(self.out_dir, "run_log.jsonl"), "a", encoding="utf-8").close()
             frontier = resume["frontier"]
             visited = resume["visited"]
             queued = resume["queued"]
@@ -518,7 +519,7 @@ class WebArenaExplorer:
                        frontier_size=len(frontier))
             self._resume_loop_state = None
         else:
-            open(os.path.join(self.out_dir, "run_log.jsonl"), "w").close()  # fresh log
+            open(os.path.join(self.out_dir, "run_log.jsonl"), "w", encoding="utf-8").close()  # fresh log
             self.run_started_epoch, self.run_started_iso = _now()
             self._log("run_start", started_at_epoch=self.run_started_epoch,
                        started_at_iso=self.run_started_iso)

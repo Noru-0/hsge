@@ -53,13 +53,13 @@ def _judge_prompt(goal: str, history: list[str], final_url: str, final_axtree: s
 def judge_episode(llm, ep_dir: str) -> dict:
     """Return {"judge_verified": bool, "judge_reason": str} for one episode."""
     steps = []
-    for line in open(os.path.join(ep_dir, "episode.jsonl")):
+    for line in open(os.path.join(ep_dir, "episode.jsonl"), encoding="utf-8"):
         rec = json.loads(line)
         if rec.get("record_type") == "step":
             steps.append(rec)
     if not steps:
         return {"judge_verified": False, "judge_reason": "no steps recorded"}
-    meta = json.load(open(os.path.join(ep_dir, "episode_meta.json")))
+    meta = json.load(open(os.path.join(ep_dir, "episode_meta.json"), encoding="utf-8"))
     goal = meta.get("goal", "")
     history = [rec.get("parsed_action", "") for rec in steps[:-1]]
     final = steps[-1]
@@ -89,14 +89,14 @@ def main():
     checked, verified = 0, 0
     for ep_dir in sorted(glob.glob(os.path.join(episodes_dir, "ep_*")))[: args.limit]:
         meta_path = os.path.join(ep_dir, "episode_meta.json")
-        meta = json.load(open(meta_path))
+        meta = json.load(open(meta_path, encoding="utf-8"))
         if not meta.get("outcome", {}).get("success"):
             continue
         checked += 1
         result = judge_episode(llm, ep_dir)
         meta["outcome"]["judge_verified"] = result["judge_verified"]
         meta["outcome"]["judge_reason"] = result["judge_reason"]
-        json.dump(meta, open(meta_path, "w"), indent=2)
+        json.dump(meta, open(meta_path, "w", encoding="utf-8"), indent=2)
         verified += int(result["judge_verified"])
         print(f"  {os.path.basename(ep_dir)}: "
               f"{'PASS' if result['judge_verified'] else 'FAIL'} -- {result['judge_reason']}")

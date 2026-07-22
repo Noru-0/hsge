@@ -54,7 +54,7 @@ def _load_config(path: str | None) -> dict:
     """Merge config.yaml (if present) onto DEFAULTS, section by section."""
     cfg = copy.deepcopy(DEFAULTS)
     if path and os.path.exists(path):
-        loaded = yaml.safe_load(open(path)) or {}
+        loaded = yaml.safe_load(open(path, encoding="utf-8")) or {}
         for section in cfg:
             cfg[section].update(loaded.get(section) or {})
     return cfg

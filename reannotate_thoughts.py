@@ -113,7 +113,7 @@ def reannotate_episode(reannotate_llm, segment_llm, ep_dir: str, goal: str,
     seg_labels = _segment_labels(segment_llm, steps, site=ep_dir, task=goal,
                                  axtree_sim=axtree_sim)
 
-    lines = [json.loads(l) for l in open(os.path.join(ep_dir, "episode.jsonl"))]
+    lines = [json.loads(l) for l in open(os.path.join(ep_dir, "episode.jsonl"), encoding="utf-8")]
     n = 0
     for k, rec in enumerate(lines):
         if rec.get("record_type") != "step":
@@ -141,7 +141,7 @@ def reannotate_episode(reannotate_llm, segment_llm, ep_dir: str, goal: str,
             completion_check=str(out.get("completion_check", "")).strip() if is_terminal else "")
         n += 1
 
-    with open(os.path.join(ep_dir, "episode.jsonl"), "w") as f:
+    with open(os.path.join(ep_dir, "episode.jsonl"), "w", encoding="utf-8") as f:
         for rec in lines:
             f.write(json.dumps(rec) + "\n")
     return n
@@ -174,7 +174,7 @@ def main():
     for meta_path in sorted(
             glob.glob(os.path.join(episodes_dir, "ep_*", "episode_meta.json")))[: args.limit]:
         ep_dir = os.path.dirname(meta_path)
-        meta = json.load(open(meta_path))
+        meta = json.load(open(meta_path, encoding="utf-8"))
         n = reannotate_episode(reannotate_llm, segment_llm, ep_dir, meta.get("goal", ""),
                                axtree_sim=args.axtree_sim)
         total += n

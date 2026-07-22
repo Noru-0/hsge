@@ -138,7 +138,7 @@ def load_episodes(path: str):
     infeasible, judge_verified) tuples. judge_verified is None if the
     episode has never been through judge_episodes.py."""
     if os.path.isfile(path) and path.endswith(".json"):
-        d = json.load(open(path))
+        d = json.load(open(path, encoding="utf-8"))
         em = d.get("episode_meta", d)
         ti = d.get("task_info", {})
         steps = d.get("steps") or []
@@ -150,11 +150,11 @@ def load_episodes(path: str):
         return
     for meta_path in glob.glob(os.path.join(path, "**", "episode_meta.json"), recursive=True):
         ep_dir = os.path.dirname(meta_path)
-        em = json.load(open(meta_path))
+        em = json.load(open(meta_path, encoding="utf-8"))
         jl = os.path.join(ep_dir, "episode.jsonl")
-        steps = [json.loads(l) for l in open(jl)] if os.path.exists(jl) else []
+        steps = [json.loads(l) for l in open(jl, encoding="utf-8")] if os.path.exists(jl) else []
         ti_path = os.path.join(ep_dir, "..", "..", "task_info.json")
-        ti = json.load(open(ti_path)) if os.path.exists(ti_path) else {}
+        ti = json.load(open(ti_path, encoding="utf-8")) if os.path.exists(ti_path) else {}
         outcome = em.get("outcome", {})
         trajectory_id = os.path.basename(ep_dir)
         yield (em.get("goal", ""), steps, ep_dir, trajectory_id, _difficulty(ti, em),
@@ -187,7 +187,7 @@ def main():
         all_examples += episode_to_examples(goal, steps, ep_dir, diff, trajectory_id)
 
     all_examples.sort(key=lambda e: e["difficulty"])   # curriculum: easy -> hard
-    with open(args.out, "w") as f:
+    with open(args.out, "w", encoding="utf-8") as f:
         for ex in all_examples:
             f.write(json.dumps(ex) + "\n")
 
