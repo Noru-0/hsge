@@ -16,9 +16,9 @@ from __future__ import annotations
 import base64
 import hashlib
 import heapq
-import itertools
 import json
 import os
+import pickle
 import re
 import time
 from collections import Counter
@@ -119,7 +119,83 @@ class WebArenaExplorer:
             axtree_sim=seg_axtree_sim,
         )
         self.episode = 0
+        # Set by load_checkpoint() to the restored loop scalars; run() seeds its
+        # frontier/visited/counters from it instead of starting fresh. None = fresh run.
+        self._resume_loop_state: dict | None = None
         os.makedirs(os.path.join(out_dir, "episodes"), exist_ok=True)
+
+    # ---- crash-resumable checkpoint ------------------------------------------
+    # Backends (LLM clients, embedder) are unpicklable, so they are detached
+    # before pickling and re-injected on load from a freshly-constructed explorer.
+    def _backend_slots(self) -> list[tuple[object, str]]:
+        # verify_contexts_fn is a lambda (unpicklable), detached like a backend.
+        return [(self.library, "llm"), (self.library, "abstraction_llm"),
+                (self.library, "verification_llm"), (self.library, "embedder"),
+                (self.library, "verify_contexts_fn"),
+                (self.registry, "llm"), (self.registry, "embedder"),
+                (self.discovery, "segmentation_llm"), (self.explorer, "llm")]
+
+    def _write_checkpoint(self, loop_state: dict) -> None:
+        """Atomically pickle the full run state (loop scalars + discovery objects)
+        to <out_dir>/checkpoint.pkl. Written after every node so a hard kill loses
+        at most the node in flight. Backends are detached for the dump and always
+        restored (try/finally), so the running explorer keeps working."""
+        path = os.path.join(self.out_dir, "checkpoint.pkl")
+        tmp = path + ".tmp"
+        saved = [(obj, attr, getattr(obj, attr)) for obj, attr in self._backend_slots()]
+        for obj, attr, _ in saved:
+            setattr(obj, attr, None)
+        try:
+            state = {
+                **loop_state,
+                "library": self.library, "registry": self.registry,
+                "opgraph": self.opgraph, "graph": self.graph,
+                "discovery": self.discovery, "explorer": self.explorer,
+                "_op_meta": self._op_meta, "_attempted_chains": self._attempted_chains,
+                "operator_grounding": self.operator_grounding, "episode": self.episode,
+                "run_started_epoch": self.run_started_epoch,
+                "run_started_iso": self.run_started_iso,
+            }
+            try:
+                with open(tmp, "wb") as f:
+                    pickle.dump(state, f)
+                os.replace(tmp, path)
+            except BaseException:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+                raise
+        finally:
+            for obj, attr, val in saved:
+                setattr(obj, attr, val)
+
+    _LOOP_KEYS = ("frontier", "visited", "queued", "template_counts", "seen_content",
+                  "seq", "duplicate_nodes", "node_errors", "task_stats", "nodes_log")
+
+    def load_checkpoint(self, path: str) -> None:
+        """Restore state written by _write_checkpoint. Call on a freshly-built
+        explorer (so its backends are wired) before run(): the unpickled discovery
+        objects take those live backends, and run() picks up _resume_loop_state."""
+        with open(path, "rb") as f:
+            state = pickle.load(f)
+        # copy the live backends from this fresh explorer into the unpickled objects
+        lib, reg = state["library"], state["registry"]
+        lib.llm, lib.abstraction_llm = self.library.llm, self.library.abstraction_llm
+        lib.verification_llm, lib.embedder = self.library.verification_llm, self.library.embedder
+        lib.verify_contexts_fn = self.library.verify_contexts_fn
+        reg.llm, reg.embedder = self.registry.llm, self.registry.embedder
+        state["discovery"].segmentation_llm = self.discovery.segmentation_llm
+        state["explorer"].llm = self.explorer.llm
+        # install restored objects
+        self.library, self.registry = lib, reg
+        self.opgraph, self.graph = state["opgraph"], state["graph"]
+        self.discovery, self.explorer = state["discovery"], state["explorer"]
+        self._op_meta = state["_op_meta"]
+        self._attempted_chains = state["_attempted_chains"]
+        self.operator_grounding = state["operator_grounding"]
+        self.episode = state["episode"]
+        self.run_started_epoch = state["run_started_epoch"]
+        self.run_started_iso = state["run_started_iso"]
+        self._resume_loop_state = {k: state[k] for k in self._LOOP_KEYS}
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag,
@@ -417,37 +493,71 @@ class WebArenaExplorer:
 
     # ---- the loop ------------------------------------------------------------
     def run(self, root_url: str):
-        open(os.path.join(self.out_dir, "run_log.jsonl"), "w").close()  # fresh log for this run
-        self.run_started_epoch, self.run_started_iso = _now()
-        self._log("run_start", started_at_epoch=self.run_started_epoch,
-                   started_at_iso=self.run_started_iso)
         # Priority-queue frontier. Entry key: (tier, novelty, depth, seq, url).
         #   tier    -- 0 = URL the agent actually reached, 1 = mined <a href> (tier 0
         #              always explored first).
         #   novelty -- tier-1 only: visited-node count of the URL's template (fewer
         #              first, so unseen templates lead); 0 for tier 0.
         #   depth   -- shallower first (BFS breadth). seq -- FIFO tiebreak.
-        seq = itertools.count()
-        visited: set = set()
-        template_counts: Counter = Counter()   # visited nodes per URL template (tier-1 cap)
-        queued: set = set()                     # URLs already pushed (dedup pushes)
-        frontier: list = []
-        heapq.heappush(frontier, (0, 0, 0, next(seq), root_url))
-        queued.add(root_url)
+        resume = self._resume_loop_state
+        if resume is not None:
+            # continue an interrupted run: keep the existing log and restore state
+            open(os.path.join(self.out_dir, "run_log.jsonl"), "a").close()
+            frontier = resume["frontier"]
+            visited = resume["visited"]
+            queued = resume["queued"]
+            template_counts = resume["template_counts"]
+            seen_content = resume["seen_content"]
+            seq_box = [resume["seq"]]
+            duplicate_nodes = resume["duplicate_nodes"]
+            node_errors = resume["node_errors"]
+            task_stats = resume["task_stats"]
+            nodes_log = resume["nodes_log"]
+            self._log("run_resume", started_at_epoch=self.run_started_epoch,
+                       started_at_iso=self.run_started_iso, resumed_from_nodes=len(visited),
+                       frontier_size=len(frontier))
+            self._resume_loop_state = None
+        else:
+            open(os.path.join(self.out_dir, "run_log.jsonl"), "w").close()  # fresh log
+            self.run_started_epoch, self.run_started_iso = _now()
+            self._log("run_start", started_at_epoch=self.run_started_epoch,
+                       started_at_iso=self.run_started_iso)
+            seq_box = [0]
+            visited = set()
+            template_counts = Counter()   # visited nodes per URL template (tier-1 cap)
+            queued = set()                # URLs already pushed (dedup pushes)
+            frontier = []
+            seen_content = set()          # sha256 of a node's initial axtree
+            duplicate_nodes = 0
+            node_errors = 0
+            task_stats = {"LOCAL": {"success": 0, "fail": 0, "infeasible": 0},
+                          "GOAL": {"success": 0, "fail": 0, "infeasible": 0}}
+            nodes_log = []                # per-node record (-> nodes.json)
+            heapq.heappush(frontier, (0, 0, 0, seq_box[0], root_url))
+            seq_box[0] += 1
+            queued.add(root_url)
+
+        def _next_seq() -> int:
+            v = seq_box[0]
+            seq_box[0] += 1
+            return v
 
         def _push(tier: int, url: str, depth: int, novelty: int) -> bool:
             if url in queued:
                 return False
             queued.add(url)
-            heapq.heappush(frontier, (tier, novelty, depth, next(seq), url))
+            heapq.heappush(frontier, (tier, novelty, depth, _next_seq(), url))
             return True
 
-        seen_content: set[str] = set()   # sha256 of a node's initial axtree
-        duplicate_nodes = 0
-        node_errors = 0
-        task_stats = {"LOCAL": {"success": 0, "fail": 0, "infeasible": 0},
-                      "GOAL": {"success": 0, "fail": 0, "infeasible": 0}}
-        nodes_log: list[dict] = []   # per-node record: url, tasks tried, pass/fail (-> nodes.json)
+        def _checkpoint() -> None:
+            self._write_checkpoint({
+                "frontier": frontier, "visited": visited, "queued": queued,
+                "template_counts": template_counts, "seen_content": seen_content,
+                "seq": seq_box[0], "duplicate_nodes": duplicate_nodes,
+                "node_errors": node_errors, "task_stats": task_stats,
+                "nodes_log": nodes_log,
+            })
+
         # updated at the top of each iteration; used by the except block below so an
         # exception raised before any node completes still reports a sensible value.
         current_node_index, current_node_url = None, None
@@ -501,6 +611,7 @@ class WebArenaExplorer:
                     node_errors += 1
                     self._dump_artifacts(task_stats, len(visited) - duplicate_nodes - node_errors,
                                           duplicate_nodes, nodes_log)
+                    _checkpoint()
                     continue
 
                 # Two different URLs can render the same content (redirects, aliases,
@@ -525,6 +636,7 @@ class WebArenaExplorer:
                     browser.close()
                     self._dump_artifacts(task_stats, len(visited) - duplicate_nodes - node_errors,
                                           duplicate_nodes, nodes_log)
+                    _checkpoint()
                     continue
                 seen_content.add(content_hash)
 
@@ -640,6 +752,7 @@ class WebArenaExplorer:
                 self._log("node_done", index=node_index, duration_sec=node_duration)
                 nodes_visited = len(visited) - duplicate_nodes - node_errors
                 self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log)
+                _checkpoint()
         except Exception as e:
             ended_epoch, ended_iso = _now()
             duration_sec = ended_epoch - self.run_started_epoch
@@ -652,6 +765,7 @@ class WebArenaExplorer:
             self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log,
                                   status="error", ended_at_epoch=ended_epoch, ended_at_iso=ended_iso,
                                   error=str(e))
+            _checkpoint()
             raise
 
         nodes_visited = len(visited) - duplicate_nodes - node_errors
@@ -680,3 +794,4 @@ class WebArenaExplorer:
         self._dump_artifacts(task_stats, nodes_visited, duplicate_nodes, nodes_log,
                               status="done", ended_at_epoch=ended_epoch, ended_at_iso=ended_iso,
                               error=None)
+        _checkpoint()

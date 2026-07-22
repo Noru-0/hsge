@@ -137,6 +137,22 @@ class _FakeBrowser:
             return None
 
 
+def _check_resume_precondition(out_dir: str, resume: bool):
+    """Guard the --resume flag against the checkpoint on disk. Returns the
+    checkpoint path to resume from, or None for a fresh run. Raises ValueError on
+    a mismatch: --resume without a checkpoint, or an existing checkpoint (an
+    interrupted run) without --resume -- refusing the latter avoids silently
+    truncating run_log.jsonl and overwriting a run that could be continued."""
+    ckpt = os.path.join(out_dir, "checkpoint.pkl")
+    exists = os.path.exists(ckpt)
+    if resume and not exists:
+        raise ValueError(f"--resume given but no checkpoint at {ckpt}")
+    if exists and not resume:
+        raise ValueError(f"{ckpt} exists (interrupted run). Pass --resume to "
+                         f"continue it, or choose a new --out.")
+    return ckpt if resume else None
+
+
 def _load_dotenv():
     """Load a .env if python-dotenv is installed; no-op otherwise."""
     try:
@@ -270,6 +286,10 @@ def main():
                     help="override the order_confirmed success-URL regex")
     ap.add_argument("--read-only", action="store_true",
                     help="propose only [INFO]/[NAV] tasks; never [MOD] (no writes to the site)")
+    ap.add_argument("--resume", action="store_true",
+                    help="continue an interrupted run from <out_dir>/checkpoint.pkl "
+                         "(same --out; frontier, visited set, and discovered skills/"
+                         "operators are restored)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -277,6 +297,10 @@ def main():
     run, llm_cfg, emb_cfg = cfg["run"], cfg["llm"], cfg["embedder"]
 
     out_dir = _pick(args.out, run["out_dir"])
+    try:
+        resume_ckpt = _check_resume_precondition(out_dir, args.resume)
+    except ValueError as e:
+        ap.error(str(e))
     max_nodes = _pick(args.max_nodes, run["max_nodes"])
     max_depth = _pick(args.max_depth, run["max_depth"])
     max_steps = _pick(args.max_steps, run["max_steps"])
@@ -354,6 +378,11 @@ def main():
         goal_chains_per_node=goal_chains_per_node,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
+    if resume_ckpt:
+        explorer.load_checkpoint(resume_ckpt)
+        print(f"[resume] restored from {resume_ckpt}: "
+              f"{len(explorer.library.all_skills())} skills, "
+              f"{len(explorer.opgraph.ops)} operators")
     explorer.run(root_url)
     print("\nnext: python build_sft_dataset.py", os.path.join(out_dir, "episodes"), "train.jsonl")
 
