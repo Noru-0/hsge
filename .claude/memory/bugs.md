@@ -84,6 +84,42 @@ Entry format:
 
 ## Fixed
 
+### Frontier re-explores the same landed page under different URL strings (URL dedup keyed the pre-navigation frontier string, not the page actually loaded)
+- **Status**: fixed (2026-07-22 13:59)
+- **Found**: 2026-07-22, auditing whether already-explored URLs (esp. root) get re-explored.
+- **Where**: `hsge/webarena/runtime.py::run()` — `visited`/`queued` dedup on the
+  frontier `url` (pre-navigation mined/reached string) and `_admit_url`, while the
+  node is logged and content-compared by `obs["url"]` (the POST-navigation landed
+  URL). `_url_template` normalization was used only for the tier-1 per-template cap.
+- **Symptom**: the same logical page fully re-explored (new explorer+solver LLM
+  batch, not skipped) when reached via a different frontier string. Confirmed on
+  run 13: `checkout/cart/#payment` explored **twice** (depths 3 and 4);
+  `electronics.html` **18×** / `sports-outdoors.html` **11×** across `?cat=`/`?price=`
+  variants. Root was at latent risk (its front page is the most dynamic, so the
+  content-hash backstop is least reliable there).
+- **Cause**: URL identity for dedup was the pre-navigation frontier key, but many
+  distinct keys resolve to the same page after navigation (`#fragment`,
+  trailing-slash/case, redirects, login redirects). The only backstop was
+  `seen_content` (sha256 of the initial axtree), which fails whenever the page
+  content differs even slightly between visits (dynamic content). Two compounding
+  gaps: (a) no normalization of the dedup key; (b) no dedup on the actual landed
+  `obs["url"]`, so a redirect/alias to an already-visited page slipped through
+  whenever the content-hash also differed.
+- **Fix**: added `WebArenaExplorer._norm_url` (strips `#fragment`, lowercases
+  scheme+host, drops a non-root trailing `/`, KEEPS the query since `?cat=1`≠`?cat=2`)
+  and keyed `visited`/`queued`/`_admit_url` by it (part 1). Added a `visited_landed`
+  set of normalized POST-navigation urls, checked alongside the content-hash in the
+  duplicate-skip block, so a redirect/alias to an already-loaded page is skipped even
+  when its content changed (part 2). `visited_landed` is checkpointed/restored (kept
+  out of `_LOOP_KEYS`; `load_checkpoint` defaults it via `.get` for back-compat with
+  older checkpoints). Regression tests in `hsge/tests/test_frontier_mining.py`:
+  `_norm_url` canonicalization, `_admit_url` rejecting a fragment/slash variant of a
+  visited url, and an end-to-end redirect browser proving the second route to a
+  canonical page is skipped (RED before the fix). Full suite 157 -> 160 passed.
+  **Not fixed (separate design question):** query-string / tier-0 proliferation
+  (`electronics.html`×18) — different `?cat=` pages are genuinely different content,
+  so whether to cap them is a coverage-vs-cost decision left open.
+
 ### Windows run crashes writing an axtree with non-cp1252 characters (UnicodeEncodeError)
 - **Status**: fixed (2026-07-22 09:10)
 - **Found**: 2026-07-22, a real run on a Windows machine (`D:\...\hsge`,

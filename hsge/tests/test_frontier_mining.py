@@ -89,3 +89,76 @@ def test_mine_hrefs_toggle_off_reproduces_navigated_only(tmp_path):
     # no episodes + no mining => frontier never grows past the root
     nodes = _run(tmp_path, mine_hrefs=False)
     assert [n["url"] for n in nodes] == ["http://site/home"]
+
+
+# --------------------------------------------------------------------------- #
+# URL-identity dedup: the frontier must not re-explore the same landed page
+# reached via a different URL string (fragment/trailing-slash/redirect), even
+# when the page's content differs between visits (bugs.md, 2026-07-22).
+# --------------------------------------------------------------------------- #
+def test_norm_url_canonicalizes_fragment_slash_and_host_case_keeps_query():
+    n = WebArenaExplorer._norm_url
+    # #fragment dropped
+    assert n("http://site/checkout/cart/#payment") == n("http://site/checkout/cart/")
+    # trailing slash on a non-root path dropped; root "/" preserved
+    assert n("http://site/a/") == n("http://site/a")
+    assert n("http://site/") == "http://site/"
+    # host case-insensitive; scheme lowercased
+    assert n("HTTP://SITE/a") == n("http://site/a")
+    # query is meaningful and MUST be kept distinct
+    assert n("http://site/e.html?cat=1") != n("http://site/e.html?cat=2")
+
+
+def test_admit_url_rejects_fragment_or_slash_variant_of_visited():
+    ex = WebArenaExplorer(
+        browser_factory=_MiningBrowser, llm=_NoTasksLLM(),
+        embedder=HashingEmbedder(), out_dir="/tmp",
+        allow_pattern=r"http://site", terminal_goal=None)
+    visited = {ex._norm_url("http://site/checkout/cart/")}
+    # same page reached via a #fragment or without the trailing slash: rejected
+    assert not ex._admit_url("http://site/checkout/cart/#payment", visited)
+    assert not ex._admit_url("http://site/checkout/cart", visited)
+    # a genuinely new path is still admitted
+    assert ex._admit_url("http://site/wishlist", visited)
+
+
+class _RedirectBrowser:
+    """Two distinct frontier URLs (/b, /c) both redirect to the same canonical
+    page, returning DIFFERENT axtree content each visit so the content-hash
+    backstop cannot dedup them -- only landed-URL dedup can."""
+
+    LANDED = "http://site/canonical"
+    _n = 0
+
+    def __init__(self, url):
+        self.url = url
+
+    def reset(self):
+        _RedirectBrowser._n += 1
+        landed = self.LANDED if self.url in ("http://site/b", "http://site/c") else self.url
+        return {"url": landed, "axtree": f"content {_RedirectBrowser._n}", "bids": []}
+
+    def links(self):
+        return []
+
+    def page_hrefs(self, limit=100):
+        return ["http://site/b", "http://site/c"] if self.url == "http://site/home" else []
+
+    def close(self):
+        pass
+
+
+def test_landed_url_dedup_skips_second_route_to_same_page(tmp_path):
+    _RedirectBrowser._n = 0
+    explorer = WebArenaExplorer(
+        browser_factory=_RedirectBrowser, llm=_NoTasksLLM(),
+        embedder=HashingEmbedder(), out_dir=str(tmp_path),
+        allow_pattern=r"http://site", max_nodes=50, max_depth=10,
+        terminal_goal=None)
+    explorer.run("http://site/home")
+    nodes = json.load(open(tmp_path / "nodes.json"))
+    non_dup = [n for n in nodes if not n.get("duplicate")]
+    landed_urls = [n["url"] for n in non_dup]
+    # home + one visit to canonical; the second route to canonical is skipped
+    assert landed_urls.count("http://site/canonical") == 1
+    assert any(n.get("duplicate") for n in nodes)   # the second route recorded as a duplicate skip

@@ -23,7 +23,7 @@ import re
 import time
 from collections import Counter
 from datetime import datetime
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from ..discovery import Discovery
 from ..graph import HierarchicalGraph
@@ -196,6 +196,10 @@ class WebArenaExplorer:
         self.run_started_epoch = state["run_started_epoch"]
         self.run_started_iso = state["run_started_iso"]
         self._resume_loop_state = {k: state[k] for k in self._LOOP_KEYS}
+        # visited_landed is kept out of _LOOP_KEYS so a checkpoint written before
+        # this field existed still restores (defaults to empty -- at worst a few
+        # pages re-explored once on the resumed run, never a crash).
+        self._resume_loop_state["visited_landed"] = state.get("visited_landed", set())
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag,
@@ -398,8 +402,23 @@ class WebArenaExplorer:
         return []
 
     def _admit_url(self, link: str, visited: set) -> bool:
-        return bool(link and self.allow.search(link) and link not in visited
+        return bool(link and self.allow.search(link)
+                    and self._norm_url(link) not in visited
                     and not (self.deny and self.deny.search(link)))
+
+    @staticmethod
+    def _norm_url(url: str) -> str:
+        """Canonical identity for frontier/visited dedup: two URL strings that
+        load the same page must map to the same key. Strips the #fragment,
+        lowercases scheme+host (case-insensitive per RFC 3986), and drops a
+        trailing '/' from a non-root path. Query is KEPT -- '?cat=1' and
+        '?cat=2' are genuinely different pages. This is coarser than
+        `_url_template` (which also wildcards ids and drops the query, for the
+        tier-1 cap only); here we must not merge distinct pages, only alias the
+        same one."""
+        p = urlsplit(url or "")
+        path = p.path.rstrip("/") if len(p.path) > 1 else p.path
+        return urlunsplit((p.scheme.lower(), p.netloc.lower(), path, p.query, ""))
 
     @staticmethod
     def _url_template(url: str) -> str:
@@ -509,6 +528,7 @@ class WebArenaExplorer:
             queued = resume["queued"]
             template_counts = resume["template_counts"]
             seen_content = resume["seen_content"]
+            visited_landed = resume.get("visited_landed", set())
             seq_box = [resume["seq"]]
             duplicate_nodes = resume["duplicate_nodes"]
             node_errors = resume["node_errors"]
@@ -526,9 +546,10 @@ class WebArenaExplorer:
             seq_box = [0]
             visited = set()
             template_counts = Counter()   # visited nodes per URL template (tier-1 cap)
-            queued = set()                # URLs already pushed (dedup pushes)
+            queued = set()                # normalized URLs already pushed (dedup pushes)
             frontier = []
             seen_content = set()          # sha256 of a node's initial axtree
+            visited_landed = set()        # normalized POST-navigation urls actually loaded
             duplicate_nodes = 0
             node_errors = 0
             task_stats = {"LOCAL": {"success": 0, "fail": 0, "infeasible": 0},
@@ -536,7 +557,7 @@ class WebArenaExplorer:
             nodes_log = []                # per-node record (-> nodes.json)
             heapq.heappush(frontier, (0, 0, 0, seq_box[0], root_url))
             seq_box[0] += 1
-            queued.add(root_url)
+            queued.add(self._norm_url(root_url))
 
         def _next_seq() -> int:
             v = seq_box[0]
@@ -544,9 +565,10 @@ class WebArenaExplorer:
             return v
 
         def _push(tier: int, url: str, depth: int, novelty: int) -> bool:
-            if url in queued:
+            key = self._norm_url(url)
+            if key in queued:
                 return False
-            queued.add(url)
+            queued.add(key)
             heapq.heappush(frontier, (tier, novelty, depth, _next_seq(), url))
             return True
 
@@ -554,6 +576,7 @@ class WebArenaExplorer:
             self._write_checkpoint({
                 "frontier": frontier, "visited": visited, "queued": queued,
                 "template_counts": template_counts, "seen_content": seen_content,
+                "visited_landed": visited_landed,
                 "seq": seq_box[0], "duplicate_nodes": duplicate_nodes,
                 "node_errors": node_errors, "task_stats": task_stats,
                 "nodes_log": nodes_log,
@@ -568,14 +591,14 @@ class WebArenaExplorer:
         try:
             while frontier and len(visited) < self.max_nodes:
                 tier, _novelty, depth, _seq, url = heapq.heappop(frontier)
-                if url in visited:
+                if self._norm_url(url) in visited:
                     continue
                 # Lazy per-template cap for mined (tier-1) URLs: the visited count of
                 # a template grows during the run, so a URL under cap when pushed can
                 # be over cap by the time it pops. Tier-0 (reached) URLs are exempt.
                 if tier == 1 and template_counts[self._url_template(url)] >= self.per_template_cap:
                     continue
-                visited.add(url)
+                visited.add(self._norm_url(url))
                 template_counts[self._url_template(url)] += 1
                 node_index = len(visited)
                 current_node_index, current_node_url = node_index, url
@@ -615,12 +638,17 @@ class WebArenaExplorer:
                     _checkpoint()
                     continue
 
-                # Two different URLs can render the same content (redirects, aliases,
-                # already-authenticated login pages, ...). Skip re-exploring content
-                # we've already proposed/solved tasks for -- it wastes a full batch of
-                # explorer+solver LLM calls for zero new discovery.
+                # Two different URLs can render the same page (redirects, aliases,
+                # #fragment/trailing-slash variants, already-authenticated login
+                # pages, ...). Skip re-exploring one we've already visited -- it
+                # wastes a full batch of explorer+solver LLM calls for zero new
+                # discovery. Two guards: the normalized POST-navigation url (catches
+                # a redirect/alias to an already-loaded page even when its content
+                # has since changed -- e.g. a cart or a dynamic front page), and the
+                # content hash (catches distinct urls that render identical text).
+                landed = self._norm_url(obs["url"])
                 content_hash = hashlib.sha256(obs["axtree"].encode("utf-8")).hexdigest()
-                if content_hash in seen_content:
+                if landed in visited_landed or content_hash in seen_content:
                     duplicate_nodes += 1
                     print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
                           f"-- duplicate content of a visited page, skipping")
@@ -640,6 +668,7 @@ class WebArenaExplorer:
                     _checkpoint()
                     continue
                 seen_content.add(content_hash)
+                visited_landed.add(landed)
 
                 print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
                       f"(depth={depth}, frontier={len(frontier)})")
