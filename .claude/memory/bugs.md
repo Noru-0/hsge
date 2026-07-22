@@ -16,9 +16,32 @@ Entry format:
 ## Open
 
 ### Predicate canonicalization never unifies synonyms, so the operator graph stays edgeless and no semantic task is ever generated
-- **Status**: open — root-cause fix **implemented + unit-tested (2026-07-22)**,
-  but the observable symptom (0 goal tasks on a live run) is **not re-measured
-  yet**; stays open until a real WebArena re-run confirms non-zero goal tasks.
+- **Status**: open — the synonym-canonicalization fix **implemented +
+  unit-tested (2026-07-22)** did NOT resolve the symptom. Two fresh live runs
+  (wa_run_13_shopping, wa_run_14_reddit, 77/79 nodes, ~290 episodes each) still
+  show **GOAL 0/0/0**. Re-analysis (2026-07-22) shows the root cause is a
+  **three-stage loss cascade**, of which synonym-merging is only stage 3 and
+  not the binding constraint. Stays open until a run produces non-zero GOAL.
+- **Re-diagnosis (2026-07-22, runs 13/14)**: the cascade, measured directly:
+  (1) **single-hop tasks** — `EXPLORER_SYS` asks for tasks doable on THIS page,
+  so 104/221 (reddit) and 118/230 (shopping) success episodes are literally
+  1 action (median 2 steps); atomic tasks → atomic skills.
+  (2) **anti-tautology gate kills ~half the skills** — 4/7 (reddit), 3/5
+  (shopping) admitted skills are rejected `operator_rejected reason=tautological`
+  because an atomic skill's effect is phrased ≈ its precondition
+  (`uncheck_checkbox`: pre "a checkbox exists" / eff "the checkbox is checked"
+  → `eff-pre=∅`). So only 3/2 operators survive.
+  (3) **effect/precondition vocabulary disjunction** — the survivors' effects
+  are all page-state ("the wiki page is displayed") while preconditions are all
+  element-presence ("a menu toggle is present"); `effects ∩ preconditions = ∅`
+  in BOTH runs → 0 edges (operators.py:44 `A→B iff effects(A)&preconds(B)`)
+  → `all_chains(min_len=2)` empty → 0 GOAL. Synonym canonicalization can't help
+  here because eff/pre are different predicate *types*, not synonyms.
+  Note canonicalization DOES work at the precondition level (reddit `p0` reused
+  across two operators). Grounding `effect_accuracy` is often 0.5 (shaky
+  predicate quality). Chosen fixes: **A** (multi-step task proposals, attacks
+  stage 1 & 2) + **B** (align induced preconditions to page-state vocabulary,
+  attacks stage 3).
 - **Found**: 2026-07-20, while gathering Appendix C statistics for the thesis.
   Verified directly against `outputs/`: **0 of 1745 episodes** across all 12
   runs carry a `GOAL` tag, every `summary.json` shows
