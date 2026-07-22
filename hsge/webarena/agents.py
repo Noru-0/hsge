@@ -71,11 +71,9 @@ EXPLORER_SYS = (
     "- Focus on common things a real user of THIS site would do; skip niche tasks.\n"
     "- NEVER propose an account/authentication task -- log in, log out, sign in, "
     "sign up, register, create an account, change/reset/forgot password, edit "
-    "email/username, or manage security settings. The session is already "
-    "authenticated and the account is shared across exploration runs.\n"
-    "- NEVER propose a task that would delete, deactivate, or close the user's "
-    "account (e.g. 'Delete your account', 'Deactivate your profile'). This account "
-    "is shared across exploration runs.")
+    "email/username, manage security settings, or delete/deactivate/close the "
+    "account. The session is already authenticated and the account is shared "
+    "across exploration runs, so these are useless and risk locking the run out.")
 
 SOLVER_SYS = (
     "You are a web agent. Reach the GOAL by choosing the single best next action from "
