@@ -234,3 +234,34 @@ def test_propose_truncates_long_axtree_with_marker():
 
     assert "TRUNCATED" in llm.prompts[0]
     assert len(llm.prompts[0]) < 7000 + 200   # not the raw 7000 chars plus a small prompt overhead
+
+
+def test_parse_task_accepts_composite_type_and_bracket():
+    assert PageExplorer._parse_task(
+        {"text": "open post then reply", "type": "COMPOSITE"}
+    ) == ("open post then reply", "COMPOSITE")
+    assert PageExplorer._parse_task(
+        "[COMPOSITE] open post then reply"
+    ) == ("open post then reply", "COMPOSITE")
+
+
+def test_read_only_drops_composite_task():
+    llm = _StubLLM([
+        {"text": "read the count", "type": "INFO"},
+        {"text": "go to forums", "type": "NAV"},
+        {"text": "open post then reply", "type": "COMPOSITE"},
+    ])
+    explorer = PageExplorer(llm, read_only=True)
+    tasks = explorer.propose({"url": "http://x", "axtree": ""})
+    assert tasks == ["[INFO] read the count", "[NAV] go to forums"]
+
+
+def test_truncation_keeps_composite_over_info():
+    llm = _StubLLM([
+        {"text": "info one", "type": "INFO"},
+        {"text": "info two", "type": "INFO"},
+        {"text": "open post then reply", "type": "COMPOSITE"},
+    ])
+    explorer = PageExplorer(llm, max_tasks=1)
+    tasks = explorer.propose({"url": "http://x", "axtree": ""})
+    assert tasks == ["[COMPOSITE] open post then reply"]

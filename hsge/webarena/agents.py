@@ -24,14 +24,17 @@ ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
 
 EXPLORER_SYS = (
     "PROPOSE concrete, feasible tasks a typical user could do on THIS page. "
-    "Return JSON {\"tasks\": [{\"text\": \"...\", \"type\": \"INFO\"|\"NAV\"|\"MOD\"}, ...]}.\n"
+    "Return JSON {\"tasks\": [{\"text\": \"...\", \"type\": \"INFO\"|\"NAV\"|\"MOD\"|\"COMPOSITE\"}, ...]}.\n"
     "Rules:\n"
     "- Be SPECIFIC using names/values visible on the page (e.g. 'Add the Sony PS5 "
     "to the cart', 'Open the post titled \"Best budget GPU\"'), NOT generic templates "
     "like 'add item to cart' or 'search for a product'.\n"
     "- \"type\" must be exactly one of: INFO (read/extract info), NAV (go to a "
-    "specific page), MOD (change content/state). List them INFO first, then NAV, "
-    "then MOD.\n"
+    "specific page), MOD (change content/state), COMPOSITE (a 2-3 step sequence a "
+    "real user chains on one flow, e.g. 'Open the post \"Best budget GPU\", upvote "
+    "it, then post a reply' or 'Add the Sony PS5 to the cart, then open the cart' "
+    "-- each step concrete and named from THIS page). List them INFO first, then "
+    "NAV, then MOD, then COMPOSITE.\n"
     "- INFO tasks must name WHAT to find (e.g. 'Find the number of submissions for "
     "r/relationship_advice'), but must NEVER state the value/answer itself in the task "
     "text (NOT 'Find the number of submissions for r/relationship_advice (5,718 "
@@ -46,6 +49,9 @@ EXPLORER_SYS = (
     "proposed from one page, do not propose 'go to <that same destination>' again from "
     "a different page. Prefer content unique to THIS page.\n"
     "- Prefer tasks that make progress or reveal new pages over pure search/sort/filter.\n"
+    "- Prefer a COMPOSITE task when the page affords a natural next step after the "
+    "first action; keep it to 2-3 concrete steps. Multi-step tasks are how "
+    "reusable, chainable skills get discovered.\n"
     "- Focus on common things a real user of THIS site would do; skip niche tasks.\n"
     "- NEVER propose a task that would delete, deactivate, or close the user's "
     "account (e.g. 'Delete your account', 'Deactivate your profile'). This account "
@@ -99,7 +105,7 @@ def step_outcome(pre_url: str, pre_axtree: str, url: str, axtree: str) -> str:
 
 
 class PageExplorer:
-    _TAG_RE = re.compile(r"^\s*\[(INFO|NAV|MOD)\]\s*", re.I)
+    _TAG_RE = re.compile(r"^\s*\[(INFO|NAV|MOD|COMPOSITE)\]\s*", re.I)
     _PUNCT_RE = re.compile(r"[^\w\s]")
     _SEEN_HINT_SIZE = 25  # cap how many prior tasks get echoed back as negative context
 
@@ -147,7 +153,7 @@ class PageExplorer:
                     text = val
                     break
             raw_type = t.get("type")
-            if isinstance(raw_type, str) and raw_type.strip().upper() in ("INFO", "NAV", "MOD"):
+            if isinstance(raw_type, str) and raw_type.strip().upper() in ("INFO", "NAV", "MOD", "COMPOSITE"):
                 explicit_type = raw_type.strip().upper()
         if not text:
             return None
