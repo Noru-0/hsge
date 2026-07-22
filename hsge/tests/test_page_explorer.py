@@ -306,6 +306,25 @@ def test_reserve_does_not_starve_nav_mod_when_composite_is_scarce():
     assert len([t for t in tasks if t.startswith("[NAV]")]) == 3
 
 
+def test_explorer_sys_forbids_account_auth_tasks():
+    """Guard: login/logout/sign-up/register/change-password tasks are useless
+    here (the session is already authenticated, and the account is shared
+    across runs) and risk locking the run out. This guards the anti-auth
+    instruction against accidental removal."""
+    lower = EXPLORER_SYS.lower()
+    assert "account/authentication task" in lower
+    for word in ("log in", "log out", "sign in", "sign up", "register", "password"):
+        assert word in lower
+
+
+def test_explorer_sys_asks_to_fill_whole_form_not_single_field():
+    """Guard: on a multi-field form page the model should propose one task that
+    completes the whole form, not a task per field."""
+    lower = EXPLORER_SYS.lower()
+    assert "multiple input fields" in lower
+    assert "whole form" in lower
+
+
 def test_explorer_sys_uses_intent_phrasing_and_lists_composite_first():
     """Guard the two prompt requirements this change introduced: tasks phrased
     as user intents (WebArena-style) rather than click-by-click scripts, and
