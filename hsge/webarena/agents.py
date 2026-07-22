@@ -25,16 +25,28 @@ ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
 EXPLORER_SYS = (
     "PROPOSE concrete, feasible tasks a typical user could do on THIS page. "
     "Return JSON {\"tasks\": [{\"text\": \"...\", \"type\": \"INFO\"|\"NAV\"|\"MOD\"|\"COMPOSITE\"}, ...]}.\n"
+    "Phrase every task the way a real user would state their GOAL or intent -- a "
+    "natural request, NOT a click-by-click script. Say WHAT they want, not which "
+    "buttons to press. Write like the WebArena benchmark:\n"
+    "  GOOD: 'How much did I spend on shopping in March?', 'Add a Samsung Galaxy "
+    "S21 to my wish list', 'Show me the cheapest in-stock wireless mouse and add "
+    "it to the cart'.\n"
+    "  BAD (too rigid / step-by-step): 'Click the March filter, then read the "
+    "total', 'Open the product page, click Add to Wishlist'.\n"
     "Rules:\n"
     "- Be SPECIFIC using names/values visible on the page (e.g. 'Add the Sony PS5 "
     "to the cart', 'Open the post titled \"Best budget GPU\"'), NOT generic templates "
     "like 'add item to cart' or 'search for a product'.\n"
-    "- \"type\" must be exactly one of: INFO (read/extract info), NAV (go to a "
-    "specific page), MOD (change content/state), COMPOSITE (a 2-3 step sequence a "
-    "real user chains on one flow, e.g. 'Open the post \"Best budget GPU\", upvote "
-    "it, then post a reply' or 'Add the Sony PS5 to the cart, then open the cart' "
-    "-- each step concrete and named from THIS page). List them INFO first, then "
-    "NAV, then MOD, then COMPOSITE.\n"
+    "- \"type\" must be exactly one of: INFO (find/extract a fact), NAV (reach a "
+    "specific page), MOD (change content/state -- post, vote, add to cart, edit), "
+    "COMPOSITE (a goal that inherently needs SEVERAL actions to satisfy, stated as "
+    "ONE natural intent -- e.g. 'Buy the cheapest in-stock wireless mouse', 'Post a "
+    "reply to the top comment on the newest post in r/technology', 'Add all books "
+    "by Jane Smith to the cart and open the cart' -- name the concrete targets from "
+    "THIS page, but do NOT spell out the individual steps). "
+    "List COMPOSITE tasks FIRST, then MOD, then NAV, then INFO, and include at "
+    "least 2-3 COMPOSITE tasks whenever the page affords a multi-step goal -- "
+    "these are how reusable, chainable skills get discovered.\n"
     "- INFO tasks must name WHAT to find (e.g. 'Find the number of submissions for "
     "r/relationship_advice'), but must NEVER state the value/answer itself in the task "
     "text (NOT 'Find the number of submissions for r/relationship_advice (5,718 "
@@ -49,9 +61,6 @@ EXPLORER_SYS = (
     "proposed from one page, do not propose 'go to <that same destination>' again from "
     "a different page. Prefer content unique to THIS page.\n"
     "- Prefer tasks that make progress or reveal new pages over pure search/sort/filter.\n"
-    "- Prefer a COMPOSITE task when the page affords a natural next step after the "
-    "first action; keep it to 2-3 concrete steps. Multi-step tasks are how "
-    "reusable, chainable skills get discovered.\n"
     "- Focus on common things a real user of THIS site would do; skip niche tasks.\n"
     "- NEVER propose a task that would delete, deactivate, or close the user's "
     "account (e.g. 'Delete your account', 'Deactivate your profile'). This account "
@@ -108,6 +117,7 @@ class PageExplorer:
     _TAG_RE = re.compile(r"^\s*\[(INFO|NAV|MOD|COMPOSITE)\]\s*", re.I)
     _PUNCT_RE = re.compile(r"[^\w\s]")
     _SEEN_HINT_SIZE = 25  # cap how many prior tasks get echoed back as negative context
+    _COMPOSITE_RESERVE = 3  # min COMPOSITE tasks kept when a page overflows max_tasks
 
     def __init__(self, llm, max_tasks: int = 4, read_only: bool = False,
                  vision: bool = False, som: bool = True, image_detail: str = "low"):
@@ -198,15 +208,21 @@ class PageExplorer:
             fresh.append((text, tag))
         parsed = fresh
         if len(parsed) > self.max_tasks:
-            # INFO tasks never grow the frontier (solving one reads the page,
-            # it doesn't navigate); NAV/MOD do. EXPLORER_SYS asks the model
-            # to list INFO first, so naively slicing to max_tasks would silently
-            # drop every NAV/MOD task whenever a page offers more INFO
-            # candidates than fit -- exactly the tasks that matter for
-            # exploration. Drop INFO first instead.
-            nav_mod = [p for p in parsed if p[1] != "INFO"]
+            # Keep-priority when a page overflows max_tasks:
+            #  1. up to _COMPOSITE_RESERVE COMPOSITE tasks -- these are the
+            #     multi-step, chainable ones skill discovery depends on, and a
+            #     page can easily flood NAV/MOD single-steps that would
+            #     otherwise crowd them out entirely.
+            #  2. NAV/MOD (and UNKNOWN) -- they grow the frontier.
+            #  3. any COMPOSITE beyond the reserve.
+            #  4. INFO last -- solving one only reads the page, it never
+            #     navigates, so it never grows the frontier (this is why INFO
+            #     is dropped first).
+            composite = [p for p in parsed if p[1] == "COMPOSITE"]
+            other = [p for p in parsed if p[1] not in ("COMPOSITE", "INFO")]
             info = [p for p in parsed if p[1] == "INFO"]
-            parsed = (nav_mod + info)[: self.max_tasks]
+            reserve = composite[: self._COMPOSITE_RESERVE]
+            parsed = (reserve + other + composite[self._COMPOSITE_RESERVE:] + info)[: self.max_tasks]
         return [f"[{tag}] {text}" if tag != "UNKNOWN" else text for text, tag in parsed]
 
 

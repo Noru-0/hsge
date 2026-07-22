@@ -265,3 +265,51 @@ def test_truncation_keeps_composite_over_info():
     explorer = PageExplorer(llm, max_tasks=1)
     tasks = explorer.propose({"url": "http://x", "axtree": ""})
     assert tasks == ["[COMPOSITE] open post then reply"]
+
+
+def test_truncation_reserves_composite_against_a_flood_of_nav_mod():
+    """The whole point of COMPOSITE is multi-step, chainable skills, but a page
+    can easily return more NAV/MOD single-steps than max_tasks. Without a
+    reserve those crowd COMPOSITE out entirely (COMPOSITE used to sit last in
+    the non-INFO bucket and get dropped first). At least _COMPOSITE_RESERVE
+    COMPOSITE must survive overflow."""
+    tasks_in = (
+        [{"text": f"nav {i}", "type": "NAV"} for i in range(6)]
+        + [{"text": "buy the cheapest mouse", "type": "COMPOSITE"},
+           {"text": "reply to the top comment on the newest post", "type": "COMPOSITE"}]
+    )
+    explorer = PageExplorer(_StubLLM(tasks_in), max_tasks=4)
+
+    tasks = explorer.propose({"url": "http://x", "axtree": ""})
+
+    assert len(tasks) == 4
+    composite = [t for t in tasks if t.startswith("[COMPOSITE]")]
+    assert composite == ["[COMPOSITE] buy the cheapest mouse",
+                         "[COMPOSITE] reply to the top comment on the newest post"]
+    # NAV isn't fully starved either -- it fills the remaining slots
+    assert any(t.startswith("[NAV]") for t in tasks)
+
+
+def test_reserve_does_not_starve_nav_mod_when_composite_is_scarce():
+    """The reserve only holds slots for COMPOSITE that actually exist; a single
+    COMPOSITE must not shrink the room left for NAV/MOD below max_tasks-1."""
+    tasks_in = (
+        [{"text": "the one composite", "type": "COMPOSITE"}]
+        + [{"text": f"nav {i}", "type": "NAV"} for i in range(6)]
+    )
+    explorer = PageExplorer(_StubLLM(tasks_in), max_tasks=4)
+
+    tasks = explorer.propose({"url": "http://x", "axtree": ""})
+
+    assert len(tasks) == 4
+    assert "[COMPOSITE] the one composite" in tasks
+    assert len([t for t in tasks if t.startswith("[NAV]")]) == 3
+
+
+def test_explorer_sys_uses_intent_phrasing_and_lists_composite_first():
+    """Guard the two prompt requirements this change introduced: tasks phrased
+    as user intents (WebArena-style) rather than click-by-click scripts, and
+    COMPOSITE listed first so a front-loading model emits more of them."""
+    lower = EXPLORER_SYS.lower()
+    assert "intent" in lower
+    assert "list composite tasks first" in lower
