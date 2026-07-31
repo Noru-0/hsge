@@ -195,6 +195,40 @@ class SiteSeeder:
         return {"description": description.strip(), "capabilities": caps}
 
 
+PLANNER_SYS = (
+    "DECOMPOSE the user's GOAL into an ordered list of concrete subgoals a web "
+    "agent will complete one at a time, in order, to achieve the GOAL on the "
+    "current site. You are given the GOAL and the current page (URL + "
+    "accessibility tree).\n"
+    "Return JSON {\"subgoals\": [\"<subgoal 1>\", \"<subgoal 2>\", ...]}.\n"
+    "Rules:\n"
+    "- 2-5 subgoals. Each is a single, concrete, checkable step stated as an "
+    "intent (e.g. 'Open the Electronics category page', 'Select the first "
+    "in-stock product', 'Add it to the cart'), NOT a click-by-click script.\n"
+    "- Order them so each subgoal leaves the page in the state the next needs.\n"
+    "- The LAST subgoal must correspond to the GOAL's final end-state (what a "
+    "grader would check), so completing it means the whole GOAL is done.\n"
+    "- Ground subgoals in what THIS page/site actually offers; do not invent "
+    "steps for features you cannot see.\n"
+    "- If the GOAL is already a single concrete step, return it as one subgoal.")
+
+
+class GoalPlanner:
+    """Turns a multi-step GOAL into an ordered subgoal list the Solver pursues
+    one at a time. LLM-backed; only used when run.plan_subgoals is on."""
+
+    def __init__(self, llm):
+        self.llm = llm
+
+    def plan(self, goal: str, obs: dict) -> list[str]:
+        prompt = f"GOAL: {goal}\n\nURL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}"
+        out = self.llm.complete_json(PLANNER_SYS, prompt)
+        subs = out.get("subgoals")
+        if not isinstance(subs, list):
+            return []
+        return [s.strip() for s in subs if isinstance(s, str) and s.strip()]
+
+
 class PageExplorer:
     _TAG_RE = re.compile(r"^\s*\[(INFO|NAV|MOD|COMPOSITE)\]\s*", re.I)
     _PUNCT_RE = re.compile(r"[^\w\s]")
