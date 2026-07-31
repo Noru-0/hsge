@@ -21,6 +21,17 @@ def test_seeder_prompt_prefix_and_no_mock_tokens():
         assert tok not in SEEDER_SYS
 
 
+def test_seeder_sys_demands_concrete_verifiable_goals():
+    """Guard: a real run (wa_seed_shopping) produced open-ended seed goals like
+    'Explore the electronics category' / 'Click product showcases to view
+    details', which the self-graded solver trivially declared done at budget
+    exhaustion. SEEDER_SYS must demand a concrete, verifiable end-state and warn
+    off vague verbs. Can't unit-test LLM compliance, but guard the instruction."""
+    lower = SEEDER_SYS.lower()
+    assert "concrete, verifiable" in lower
+    assert "trivial to claim" in lower
+
+
 def test_derive_parses_description_and_capabilities():
     llm = _StubLLM({
         "description": "A demo shopping site for electronics.",
