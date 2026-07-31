@@ -380,6 +380,8 @@ class Solver:
     _WARN_AFTER_REPEATS = 2   # nudge once the same target is hit this many times in a row
     _MAX_REPEATS = 4          # give up if nudging didn't help after this many
     _SUBGOAL_CAP = 8          # max steps on one subgoal before auto-advancing (C2)
+    _NOVELTY_WARN = 4         # warn after this many steps reaching no new page (C3)
+    _NOVELTY_MAX = 8          # hard-stop after this many (C3)
 
     def __init__(self, llm, max_steps: int = 15,
                  vision: bool = False, som: bool = True, image_detail: str = "low"):
@@ -444,7 +446,20 @@ class Solver:
         last_error = ""
         success = False
         exhausted = True   # loop ended by budget/hard-stop, not by a terminal action
+        seen_obs = {(obs["url"], obs["axtree"])}  # observations already reached (C3)
+        novelty_streak = 0                        # trailing steps reaching no new page
         for _ in range(budget):
+            if novelty_streak >= self._NOVELTY_MAX:
+                # Churn across DIFFERENT targets that never reaches a new page is
+                # missed by the same-target guard below (v2: 3 GOALs burned the
+                # whole budget this way). Stop instead of exhausting the budget.
+                print(f"    [solver] giving up: {novelty_streak} steps with no new page reached")
+                break
+            novelty_warning = ""
+            if novelty_streak >= self._NOVELTY_WARN:
+                novelty_warning = ("\n\nWARNING: your recent actions have not reached "
+                                   "any new page. Try a genuinely different approach, or "
+                                   "call report_infeasible if this cannot be done here.")
             streak = self._stuck_streak(history, progressed)
             if streak >= self._MAX_REPEATS:
                 # A text nudge alone isn't reliably obeyed (verified against a
@@ -481,6 +496,7 @@ class Solver:
                       + ("\n".join(recent) or "(none)")
                       + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
                       + repeat_warning
+                      + novelty_warning
                       + subgoal_block
                       + f"\n\nURL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}")
             screenshot_b64 = browser.screenshot_b64(som=self.som) if self.vision else None
@@ -520,6 +536,13 @@ class Solver:
             history.append(action)
             outcomes.append(step_outcome(pre_url, pre_axtree, obs["url"], obs["axtree"]))
             progressed.append(obs["url"] != pre_url or obs["axtree"] != pre_axtree)
+            # C3: track whether this action reached a genuinely new observation
+            key = (obs["url"], obs["axtree"])
+            if key in seen_obs:
+                novelty_streak += 1
+            else:
+                seen_obs.add(key)
+                novelty_streak = 0
             # C2: auto-advance a subgoal the solver is stuck on (never past the last)
             if sg is not None:
                 sg_steps += 1
