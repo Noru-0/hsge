@@ -31,6 +31,7 @@ DEFAULTS = {
             "task_retries": 0,
             "goal_chains_per_node": 3,
             "use_site_seed": False,
+            "goal_max_steps": None,
             "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None,
             "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
@@ -270,6 +271,9 @@ def main():
     ap.add_argument("--goal-chains-per-node", type=int, default=None,
                     help="max NEW depth-based goal chains attempted per node "
                          "(default 3; each distinct chain is attempted once per run)")
+    ap.add_argument("--goal-max-steps", type=int, default=None,
+                    help="step budget for GOAL/composite tasks (default: same as "
+                         "--max-steps); multi-step goals need more room than LOCAL")
     ap.add_argument("--seg-axtree-sim", type=float, default=None,
                     help="axtree-similarity threshold for segmentation boundary "
                          "candidates (default 0.6; lower = fewer candidate cuts)")
@@ -314,6 +318,7 @@ def main():
     maturity = _pick(args.maturity, run["maturity"])
     task_retries = _pick(args.task_retries, run["task_retries"])
     goal_chains_per_node = _pick(args.goal_chains_per_node, run["goal_chains_per_node"])
+    goal_max_steps = _pick(args.goal_max_steps, run["goal_max_steps"])
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
     predicate_sim = run["predicate_sim"]
@@ -384,7 +389,7 @@ def main():
         mine_hrefs=mine_hrefs, per_template_cap=per_template_cap,
         max_hrefs_per_page=max_hrefs_per_page, task_retries=task_retries,
         goal_chains_per_node=goal_chains_per_node,
-        use_site_seed=use_site_seed,
+        use_site_seed=use_site_seed, goal_max_steps=goal_max_steps,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
     if resume_ckpt:

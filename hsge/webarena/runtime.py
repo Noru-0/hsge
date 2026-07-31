@@ -57,6 +57,7 @@ class WebArenaExplorer:
                  max_hrefs_per_page: int = 100, task_retries: int = 0,
                  goal_chains_per_node: int = 3,
                  use_site_seed: bool = False,
+                 goal_max_steps: int | None = None,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
@@ -92,6 +93,9 @@ class WebArenaExplorer:
         self.solver = Solver(role("solver"), max_steps=max_steps,
                              vision=sv_vision["vision"], som=sv_vision["som"],
                              image_detail=sv_vision["image_detail"])
+        # GOAL/composite tasks are multi-step and need more room than LOCAL lookups;
+        # None -> same budget as LOCAL (max_steps), so default behavior is unchanged.
+        self.goal_max_steps = goal_max_steps if goal_max_steps is not None else max_steps
         # Site seed (InfiniteWeb idea): a one-shot {description, capabilities[]}
         # profile derived from the first node, used to condition proposals and to
         # emit top-down GOAL tasks. Off by default so the mock pipeline is untouched.
@@ -243,7 +247,8 @@ class WebArenaExplorer:
         self.episode += 1
 
     # ---- one task, up to 1 + task_retries attempts --------------------------
-    def _solve_with_retries(self, browser, task, difficulty, tag, goal_predicate=None):
+    def _solve_with_retries(self, browser, task, difficulty, tag, goal_predicate=None,
+                            max_steps=None):
         """Run the Solver on one task, retrying failures up to task_retries
         times. Every attempt is recorded as its own episode (SFT data and
         logs stay honest). Infeasible attempts are terminal -- retrying a
@@ -275,7 +280,8 @@ class WebArenaExplorer:
                 continue
             episode_id = f"ep_{self.episode:04d}"
             (steps, obs_texts, obs_screenshots, final_obs, success,
-             infeasible) = self.solver.solve(browser, task, goal_predicate=goal_predicate)
+             infeasible) = self.solver.solve(browser, task, goal_predicate=goal_predicate,
+                                              max_steps=max_steps)
             self._record(task, steps, obs_texts, obs_screenshots, success,
                          difficulty=difficulty, tag=tag, infeasible=infeasible)
             urls_seen.update(st.url for st in steps)
@@ -773,7 +779,7 @@ class WebArenaExplorer:
                     (episode_id, steps, final_obs, success, infeasible, attempts,
                      urls_seen) = self._solve_with_retries(
                         browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
-                        goal_predicate=gt["goal_predicate"])
+                        goal_predicate=gt["goal_predicate"], max_steps=self.goal_max_steps)
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],

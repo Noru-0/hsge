@@ -20,7 +20,7 @@ class _ScriptedSolver:
         self.outcomes = list(outcomes)
         self.calls = 0
 
-    def solve(self, browser, task, goal_predicate=None):
+    def solve(self, browser, task, goal_predicate=None, max_steps=None):
         success, infeasible = self.outcomes[min(self.calls, len(self.outcomes) - 1)]
         self.calls += 1
         action = ("send_msg_to_user('done')" if success
