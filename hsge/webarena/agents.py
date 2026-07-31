@@ -385,11 +385,15 @@ class Solver:
             streak += 1
         return streak
 
-    def solve(self, browser, goal: str, goal_predicate: str | None = None):
+    def solve(self, browser, goal: str, goal_predicate: str | None = None,
+              max_steps: int | None = None):
         """Drive the browser toward `goal`.
 
+        `max_steps` overrides self.max_steps for this call only (used to give
+        GOAL tasks a larger budget than LOCAL); None keeps the instance default.
         Returns (steps, obs_texts, obs_screenshots, final_obs, success, infeasible).
         """
+        budget = max_steps if max_steps is not None else self.max_steps
         steps: list[Step] = []
         obs_texts: list[str] = []
         obs_screenshots: list[str | None] = []
@@ -400,7 +404,7 @@ class Solver:
         last_error = ""
         success = False
         exhausted = True   # loop ended by budget/hard-stop, not by a terminal action
-        for _ in range(self.max_steps):
+        for _ in range(budget):
             streak = self._stuck_streak(history, progressed)
             if streak >= self._MAX_REPEATS:
                 # A text nudge alone isn't reliably obeyed (verified against a
