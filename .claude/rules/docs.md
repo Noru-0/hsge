@@ -32,5 +32,10 @@ first sweep is still in progress),
 Explorer + InfiniteWeb: seed-conditioned bottom-up refinement — a top-down,
 seed-derived GOAL curriculum that bypasses the edgeless operator graph to attack
 open bug O2, plus per-action task refinement and an inline verifier gate;
-7-item priority table + 3-phase rollout, planning only). See also
+7-item priority table + 3-phase rollout, planning only),
+`16_phaseBC_verification_refinement_plan.md` (Phase B/C roadmap, reprioritized by
+the first real seed run `wa_seed_shopping`: verification first — an inline
+Verifier gate + auto verify-predicate — because GOAL success was self-graded and
+inflated, then solver competence — GOAL step budget, bottom-up refinement,
+anti-wandering, grounding-gated operators; planning only). See also
 `training/README.md` for the terse command reference covering the same pipeline.
