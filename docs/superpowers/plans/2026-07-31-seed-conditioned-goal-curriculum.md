@@ -800,21 +800,14 @@ PYTHONPATH=. python -m pytest hsge/tests/ -q
 ```
 Expected: all green (was 165; now 165 + new tests).
 
-Add to `config.yaml` under `run:` (documentation for real runs):
-```yaml
-  # Derive a site-level {description, capabilities[]} seed on the first node and
-  # (a) condition task proposals on it, (b) emit each capability as a top-down
-  # GOAL task -- independent of the operator graph. Off by default.
-  use_site_seed: false
-```
-(Optional, commented, under `llm.agents:`): show `site_seeder:` can override the model, same as any other role.
+`config.yaml` **already carries the GOAL knobs** (added during plan review, this file's git history): `run.use_site_seed: false` (the seed-GOAL switch) and the clarified `run.goal_chains_per_node` comment (now "max GOAL tasks per node = depth chains PLUS seed capabilities"). Verify they are present and correct; no further config edit should be needed unless you rename a knob. (Optional, commented, under `llm.agents:`): `site_seeder:` may override the model, same as any other role.
 
 Append an entry to `.claude/memory/changelog.md` under a `## 2026-07-31` heading (get the time with `date "+%Y-%m-%d %H:%M"`): files touched, the seed-conditioned GOAL curriculum, and that Phase A is done — real-run confirmation of a non-zero GOAL bucket still pending an API-keyed WebArena run.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add config.yaml hsge/tests/ .claude/memory/changelog.md
+git add hsge/tests/ .claude/memory/changelog.md   # config.yaml knobs already committed
 git commit -m "feat(seed): dry-run e2e for seed-conditioned GOAL curriculum + docs"
 ```
 

@@ -4,9 +4,9 @@
 # This file is safe to commit. Precedence: CLI flags > this file > built-in defaults.
 
 run:
-  site: gitlab             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
+  site: shopping             # explore WA_<SITE> from .env (shopping -> $WA_SHOPPING)
   root_url: null             # explicit URL; overrides `site` when set
-  out_dir: outputs/wa_run_12
+  out_dir: outputs/wa_run_demo
   allow: null                # null -> derived from the root URL's host
   denylist: "logout|\\?p=|product_list_|[?&]sort="   # blocked child URLs (deny wins)
   max_nodes: 500
@@ -18,8 +18,15 @@ run:
   task_retries: 0            # retry a failed task up to N more times (0 = off;
                              # tasks the model reports infeasible are never retried).
                              # NOTE: multiplies worst-case LLM cost per task by 1+N
-  goal_chains_per_node: 3    # max NEW depth-based goal chains attempted per node
-                             # (each distinct chain runs once per run)
+  goal_chains_per_node: 3    # max GOAL tasks attempted per node = depth-based operator
+                             # chains PLUS seed capabilities (when use_site_seed is on);
+                             # each distinct chain/capability is attempted once per run
+  use_site_seed: false       # derive a site {description, capabilities[]} seed on the
+                             # first node, emit each capability as a top-down GOAL task
+                             # (independent of the operator graph), and condition
+                             # PageExplorer proposals on it. false = current behavior.
+                             # Total seed GOALs over a run = number of seed capabilities
+                             # (SEEDER_SYS asks for 4-8), bounded per node by the line above
   predicate_sim: 0.6         # cosine threshold for the predicate registry (tune per embedder)
   headed: false              # true -> visible browser window (debugging)
   success_url_re: null       # null -> default /checkout/onepage/success
