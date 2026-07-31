@@ -256,7 +256,12 @@ def _resolve_llm(cli, llm_cfg, role: str | None = None):
 
 
 def _resolve_agent_llms(cli, llm_cfg) -> dict[str, object]:
-    return {role: _resolve_llm(cli, llm_cfg, role) for role in AGENT_ROLES}
+    llms = {role: _resolve_llm(cli, llm_cfg, role) for role in AGENT_ROLES}
+    # solver_goal (C5) is an OPTIONAL role: only build it when the user configured
+    # llm.agents.solver_goal, so GOAL solving falls back to the LOCAL solver otherwise.
+    if "solver_goal" in (llm_cfg.get("agents") or {}):
+        llms["solver_goal"] = _resolve_llm(cli, llm_cfg, "solver_goal")
+    return llms
 
 
 def main():

@@ -66,13 +66,18 @@ llm:
       som: true              # bid-tagged bounding boxes overlaid on the screenshot
       image_detail: low      # low | high | auto (OpenAI vision cost/quality knob)
       temperature: 0.7         # override the shared default for this agent
-    solver:                  # chooses the next BrowserGym action toward a task
+    solver:                  # chooses the next BrowserGym action toward a LOCAL task
       provider: openai
       model: gpt-4o-mini     # called up to max_steps times per episode -- keep cheap
       vision: true
       som: true
       image_detail: low
       temperature: 0.0         # override the shared default for this agent
+    solver_goal:             # C5: stronger model for GOAL/composite tasks (optional).
+      provider: openai       # GOAL solving is multi-step + reasoning-bound, so it gets
+      model: gpt-4o          # a stronger model than the LOCAL solver. Inherits the
+      temperature: 0.0         # solver's vision settings. Remove this block to reuse
+                             # the LOCAL solver for GOAL too.
     trajectory_segmenter:    # splits a successful trajectory into subgoals
       model: deepseek-v4-pro
     skill_abstractor:        # turns a mature trajectory cluster into a SkillCard

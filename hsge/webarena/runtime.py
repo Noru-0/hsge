@@ -96,6 +96,14 @@ class WebArenaExplorer:
         self.solver = Solver(role("solver"), max_steps=max_steps,
                              vision=sv_vision["vision"], som=sv_vision["som"],
                              image_detail=sv_vision["image_detail"])
+        # C5: an optional stronger model for GOAL/composite solving. Built only when
+        # llm.agents.solver_goal is configured (present in agent_llms); otherwise GOAL
+        # reuses the LOCAL solver instance -- no change. Inherits the solver's vision.
+        goal_llm = agent_llms.get("solver_goal")
+        self.goal_solver = (
+            Solver(goal_llm, max_steps=max_steps, vision=sv_vision["vision"],
+                   som=sv_vision["som"], image_detail=sv_vision["image_detail"])
+            if goal_llm is not None else self.solver)
         # GOAL/composite tasks are multi-step and need more room than LOCAL lookups;
         # None -> same budget as LOCAL (max_steps), so default behavior is unchanged.
         self.goal_max_steps = goal_max_steps if goal_max_steps is not None else max_steps
@@ -265,7 +273,7 @@ class WebArenaExplorer:
 
     # ---- one task, up to 1 + task_retries attempts --------------------------
     def _solve_with_retries(self, browser, task, difficulty, tag, goal_predicate=None,
-                            max_steps=None, verify_fn=None, subgoals=None):
+                            max_steps=None, verify_fn=None, subgoals=None, solver=None):
         """Run the Solver on one task, retrying failures up to task_retries
         times. Every attempt is recorded as its own episode (SFT data and
         logs stay honest). Infeasible attempts are terminal -- retrying a
@@ -297,8 +305,9 @@ class WebArenaExplorer:
                 continue
             episode_id = f"ep_{self.episode:04d}"
             (steps, obs_texts, obs_screenshots, final_obs, success,
-             infeasible) = self.solver.solve(browser, task, goal_predicate=goal_predicate,
-                                              max_steps=max_steps, subgoals=subgoals)
+             infeasible) = (solver or self.solver).solve(
+                browser, task, goal_predicate=goal_predicate,
+                max_steps=max_steps, subgoals=subgoals)
             # Inline verifier: only a SELF-GRADED success (goal_predicate is None) is
             # re-checked -- a deterministic reached() result is already trustworthy.
             judge_verified = judge_reason = None
@@ -822,7 +831,7 @@ class WebArenaExplorer:
                         browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
                         goal_predicate=gt["goal_predicate"], max_steps=self.goal_max_steps,
                         verify_fn=self._verify_episode if self.verify_goals else None,
-                        subgoals=subgoals)
+                        subgoals=subgoals, solver=self.goal_solver)
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
