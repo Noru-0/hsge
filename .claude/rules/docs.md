@@ -27,5 +27,10 @@ showing half were tautological or ungrounded), `14_vast_ai_training_eval_tutoria
 venv-isolation rationale, template/thinking-mode gotchas, official-benchmark
 eval via BrowserGym, and a two-machine parallel-eval technique for safely
 running a second eval sweep against a shared live WebArena instance while a
-first sweep is still in progress). See also `training/README.md` for the terse
-command reference covering the same pipeline.
+first sweep is still in progress),
+`15_seed_refinement_improvement_plan.md` (consolidated improvement roadmap from
+Explorer + InfiniteWeb: seed-conditioned bottom-up refinement — a top-down,
+seed-derived GOAL curriculum that bypasses the edgeless operator graph to attack
+open bug O2, plus per-action task refinement and an inline verifier gate;
+7-item priority table + 3-phase rollout, planning only). See also
+`training/README.md` for the terse command reference covering the same pipeline.

@@ -4,6 +4,10 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-07-31
+
+- **12:16** — `docs/15_seed_refinement_improvement_plan.md` (new), `.claude/rules/docs.md` — **Consolidated improvement plan from two papers** (Explorer, Findings ACL 2025; InfiniteWeb) into a concise, implementation-ready roadmap. Core idea: **seed-conditioned bottom-up refinement** — borrow InfiniteWeb's *descriptive* half (self-summarize the real site into a `{description, capabilities[]}` seed) to (a) condition task proposals, (b) emit **GOAL tasks directly from uncovered capabilities — a top-down GOAL source that does NOT depend on the edgeless operator graph**, directly attacking open bug O2 (0 GOAL episodes across all runs), and (c) steer the frontier; combined with Explorer's per-action Refiner (multi-step tasks), inline Verifier gate, and Summarizer (WHAT-not-HOW). 7-item priority table + 3-phase rollout (Phase A = P1/P2/P3, minimal path to a non-zero GOAL bucket). All new roles LLM-backed and `None`-guarded so the deterministic mock pipeline is untouched. Planning/doc only — no code yet.
+
 ## 2026-07-22
 
 - **15:12** — `hsge/webarena/agents.py` — Merged the new account/authentication rule and the pre-existing delete/deactivate-account rule into ONE `EXPLORER_SYS` rule (both were about the shared authenticated account). No test change (no test asserted the delete-rule wording). Full suite still 165 passed.
