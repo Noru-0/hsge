@@ -75,6 +75,32 @@ EXPLORER_SYS = (
     "account. The session is already authenticated and the account is shared "
     "across exploration runs, so these are useless and risk locking the run out.")
 
+SEEDER_SYS = (
+    "SUMMARIZE this website into a reusable profile for an exploration agent. "
+    "You are shown the landing page (its URL and accessibility tree). Infer what "
+    "KIND of site this is and the main GOALS a real user comes here to accomplish.\n"
+    "Return JSON: {\"description\": \"<one or two sentences: what this site is and "
+    "who uses it>\", \"capabilities\": [{\"name\": \"<short slug, e.g. 'checkout'>\", "
+    "\"goal\": \"<one natural user intent that exercises this capability>\"}, ...]}.\n"
+    "Rules:\n"
+    "- List 4-8 capabilities, ordered from most central to most peripheral.\n"
+    "- Each \"goal\" must be a concrete, self-contained user intent phrased the way "
+    "a real user would state it (WHAT they want), NOT a click-by-click script.\n"
+    "- Each \"goal\" must inherently take SEVERAL actions to satisfy -- a multi-step "
+    "flow, not a one-shot lookup. GOOD: 'Buy the cheapest in-stock wireless mouse "
+    "and reach the order confirmation', 'Post a new question to the most active "
+    "forum and add a first comment'. BAD (single lookup): 'Find the store's phone "
+    "number'. BAD (step script): 'Click Cart, then click Checkout, then click Pay'.\n"
+    "- Ground every capability in what THIS site actually offers -- use section/menu "
+    "names visible in the tree. Do NOT invent features you cannot see on the page.\n"
+    "- Prefer capabilities whose completion CHANGES site state or reaches a NEW page "
+    "(these yield chainable, reusable skills) over pure read-only lookups.\n"
+    "- NEVER include an account/authentication goal -- log in/out, sign in/up, "
+    "register, create an account, change/reset/forgot password, edit email/username, "
+    "manage security settings, or delete/deactivate the account. The session is "
+    "already authenticated and the account is shared across runs, so these are "
+    "useless and risk locking the run out.")
+
 SOLVER_SYS = (
     "You are a web agent. Reach the GOAL by choosing the single best next action from "
     "the page accessibility tree (elements shown as [bid] role 'name'). " + ACTIONS_DOC +
@@ -120,6 +146,39 @@ def step_outcome(pre_url: str, pre_axtree: str, url: str, axtree: str) -> str:
     if axtree != pre_axtree:
         return "page changed"
     return "no change"
+
+
+class SiteSeeder:
+    """One-shot per run: turns a landing page into a {description, capabilities[]}
+    profile that conditions task proposals and seeds top-down GOAL tasks. LLM-backed;
+    only used when run.use_site_seed is on, so the mock pipeline is untouched."""
+
+    _AUTH_RE = re.compile(
+        r"\b(log ?in|log ?out|sign ?in|sign ?up|register|create an account|"
+        r"password|deactivate|delete (the |your )?account)\b", re.I)
+
+    def __init__(self, llm):
+        self.llm = llm
+
+    def derive(self, obs: dict) -> dict:
+        prompt = f"URL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}"
+        out = self.llm.complete_json(SEEDER_SYS, prompt)
+        description = out.get("description")
+        raw = out.get("capabilities")
+        if not isinstance(description, str) or not isinstance(raw, list):
+            return {"description": "", "capabilities": []}
+        caps = []
+        for c in raw:
+            if not isinstance(c, dict):
+                continue
+            goal = c.get("goal")
+            name = c.get("name") or (goal or "")
+            if not isinstance(goal, str) or not goal.strip():
+                continue
+            if self._AUTH_RE.search(goal) or self._AUTH_RE.search(str(name)):
+                continue
+            caps.append({"name": str(name).strip(), "goal": goal.strip()})
+        return {"description": description.strip(), "capabilities": caps}
 
 
 class PageExplorer:
