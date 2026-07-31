@@ -4,7 +4,9 @@
 
 **Goal:** Give HSGE a top-down, site-seed-derived GOAL source so a live run produces a **non-zero GOAL bucket** (`summary.json` `GOAL.success + GOAL.fail > 0`) for the first time — bypassing the currently edgeless operator graph (open bug O2).
 
-**Architecture:** At the first node of a run, an LLM `SiteSeeder` self-summarizes the real site into `{description, capabilities[]}`. That seed (a) conditions `PageExplorer.propose()` toward capability-advancing tasks, and (b) is emitted **directly as GOAL tasks** in `_goal_task()` — one per capability, attempted once per run, verified self-graded (`goal_predicate=None`), independent of `all_chains()`. Everything is gated behind `run.use_site_seed` (default `false`) so the deterministic mock pipeline and existing runs are untouched.
+**Architecture:** At the first node of a run, an LLM `SiteSeeder` self-summarizes the real site into `{description, capabilities[]}`. That seed (a) is given to `PageExplorer.propose()` as **extra context** that *adds* seed-aligned COMPOSITE tasks without replacing the diverse page-specific INFO/**NAV**/MOD tasks, and (b) is emitted **directly as GOAL tasks** in `_goal_task()` — one per capability, attempted once per run, verified self-graded (`goal_predicate=None`), independent of `all_chains()`. Every node therefore runs BOTH task sets. Everything is gated behind `run.use_site_seed` (default `false`) so the deterministic mock pipeline and existing runs are untouched.
+
+**Task diversity & frontier (design intent, must be preserved):** each node keeps proposing a diverse set of *local* tasks — crucially the **NAV** tasks, because a solved NAV task adds a **tier-0 "reached" URL** to the frontier (a page the agent actually landed on), which is a higher-signal exploration node than a **tier-1 mined `<a href>`**. Seed conditioning is strictly **additive**: it must never nudge the explorer to drop NAV/INFO/MOD in favor of COMPOSITE, or the frontier degrades to crawl-only and meaningful nodes shrink. The existing `propose()` truncation already protects this (drops INFO first, keeps NAV/MOD + a COMPOSITE reserve); the seed prompt wording below is worded to protect it on the *generation* side too.
 
 **Tech Stack:** Python 3, numpy-only mock core, `LLM.complete_json` backend seam, pytest. Conda env `go-browse`.
 
@@ -55,18 +57,22 @@ Rules:
 
 ### 2. Seed block appended to the `PageExplorer.propose()` **user** prompt — `hsge/webarena/agents.py`
 
-`EXPLORER_SYS` (the system prompt) is **not** modified — the seed is per-site data, so it belongs in the user prompt beside `URL`/`PAGE`, and keeping `EXPLORER_SYS` unchanged preserves its existing prompt-assertion tests. The block is added only when a non-empty seed is passed:
+`EXPLORER_SYS` (the system prompt) is **not** modified — the seed is per-site data, so it belongs in the user prompt beside `URL`/`PAGE`, and keeping `EXPLORER_SYS` unchanged preserves its existing prompt-assertion tests. The block is added only when a non-empty seed is passed. It is worded to be **additive** — seed goals add COMPOSITE tasks, they never replace the diverse page-specific tasks (especially NAV, which grows the tier-0 frontier):
 
 ```
-SITE GOALS (what this whole site is for):
+SITE GOALS (what this whole site is for) -- use as EXTRA context, NOT as a
+replacement for page-specific tasks:
 <description>
 Capabilities a user comes here to accomplish:
 - <name>: <goal>
 - <name>: <goal>
 ...
-Prefer proposing COMPOSITE tasks on THIS page that make progress toward one of
-these site goals, grounded in what is actually visible on this page. Do NOT
-propose a capability this page cannot support.
+Still propose a DIVERSE mix grounded in THIS page: keep the NAV tasks that reach
+other pages (they are what makes exploration discover new pages) and the
+INFO/MOD tasks specific to this page. In ADDITION, when this page affords it,
+include 1-2 COMPOSITE tasks that advance one of the site goals above. Do NOT let
+the site goals crowd out page-specific NAV/INFO/MOD tasks, and do NOT propose a
+capability this page cannot support.
 ```
 
 ---
@@ -268,6 +274,9 @@ def test_propose_injects_site_goals_when_seed_present():
     assert "SITE GOALS" in llm.prompt
     assert "A shop for gadgets." in llm.prompt
     assert "Buy a gadget and confirm the order." in llm.prompt
+    # additive, not suppressive: the block must protect NAV / page-specific tasks
+    assert "NAV" in llm.prompt
+    assert "crowd out" in llm.prompt
 
 
 def test_propose_omits_site_goals_when_seed_absent_or_empty():
@@ -295,14 +304,18 @@ Change the `propose` signature and add the block after the `PAGE` section (befor
         if caps:
             cap_lines = "\n".join(f"- {c['name']}: {c['goal']}" for c in caps)
             prompt += (
-                "\n\nSITE GOALS (what this whole site is for):\n"
+                "\n\nSITE GOALS (what this whole site is for) -- use as EXTRA "
+                "context, NOT as a replacement for page-specific tasks:\n"
                 f"{site_seed.get('description', '')}\n"
                 "Capabilities a user comes here to accomplish:\n"
                 f"{cap_lines}\n"
-                "Prefer proposing COMPOSITE tasks on THIS page that make progress "
-                "toward one of these site goals, grounded in what is actually "
-                "visible on this page. Do NOT propose a capability this page cannot "
-                "support.")
+                "Still propose a DIVERSE mix grounded in THIS page: keep the NAV "
+                "tasks that reach other pages (they are what makes exploration "
+                "discover new pages) and the INFO/MOD tasks specific to this page. "
+                "In ADDITION, when this page affords it, include 1-2 COMPOSITE tasks "
+                "that advance one of the site goals above. Do NOT let the site goals "
+                "crowd out page-specific NAV/INFO/MOD tasks, and do NOT propose a "
+                "capability this page cannot support.")
         if self._seen:
             recent = list(self._seen.values())[-self._SEEN_HINT_SIZE:]
             prompt += ("\n\nALREADY PROPOSED (do not repeat these or near-duplicates):\n"
