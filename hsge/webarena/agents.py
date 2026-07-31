@@ -508,14 +508,18 @@ class Solver:
                 print("    [solver] empty response with image attached, retrying text-only")
                 out = self.llm.complete_json(SOLVER_SYS, prompt,
                                               image_b64=None, image_detail=self.image_detail)
-            # C2: advance to the next subgoal on the model's signal (never past the
-            # last -- the final subgoal ends via send_msg_to_user, as normal).
-            if sg is not None and out.get("subgoal_done") and sg_idx < len(sg) - 1:
+            action = (out.get("action") or "").strip()
+            thought = out.get("thought", "")
+            # C2: advance to the next subgoal on the model's signal. gpt-4o-mini
+            # often emits it as a TERMINAL send_msg_to_user('subgoal_done...') rather
+            # than the JSON field (run v3: episodes ended at subgoal 1), so BOTH a
+            # `subgoal_done` field and a send_msg_to_user count as "advance" while a
+            # next subgoal exists -- only the LAST subgoal may actually end the run.
+            if sg is not None and sg_idx < len(sg) - 1 and (
+                    out.get("subgoal_done") or action.startswith("send_msg_to_user")):
                 sg_idx += 1
                 sg_steps = 0
                 continue
-            action = (out.get("action") or "").strip()
-            thought = out.get("thought", "")
             steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100],
                               axtree=obs["axtree"]))
             obs_texts.append(obs["axtree"])
@@ -535,7 +539,13 @@ class Solver:
                 continue
             history.append(action)
             outcomes.append(step_outcome(pre_url, pre_axtree, obs["url"], obs["axtree"]))
-            progressed.append(obs["url"] != pre_url or obs["axtree"] != pre_axtree)
+            # "progress" for the same-target stuck guard = the URL changed. Keying on
+            # url-OR-axtree let run v3 hammer one control (click('247') x9) forever,
+            # because each click wiggled the axtree (dropdown/toggle) and reset the
+            # streak while the page never actually advanced. A legitimate multi-step
+            # flow uses DIFFERENT targets (so the same-target guard never groups it)
+            # or genuinely changes the URL, so url-only progress is safe here.
+            progressed.append(obs["url"] != pre_url)
             # C3: track whether this action reached a genuinely new observation
             key = (obs["url"], obs["axtree"])
             if key in seen_obs:

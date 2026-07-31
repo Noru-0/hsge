@@ -66,6 +66,32 @@ class _NeverDone:
         return {"thought": "work", "action": "click('1')"}
 
 
+class _HijackLLM:
+    """Reproduces run v3: gpt-4o-mini emits the advance as a TERMINAL action
+    send_msg_to_user('subgoal_done...') instead of the JSON field, which used to
+    end the episode at subgoal 1."""
+    def __init__(self):
+        self.calls = 0
+        self.prompts = []
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.prompts.append(prompt)
+        self.calls += 1
+        if self.calls == 1:
+            return {"thought": "sub1 done",
+                    "action": "send_msg_to_user('subgoal_done: page open')"}
+        return {"thought": "finish", "action": "send_msg_to_user('done')"}
+
+
+def test_send_msg_on_nonlast_subgoal_advances_not_terminates():
+    llm = _HijackLLM()
+    steps, _, _, _, success, _ = Solver(llm, max_steps=10).solve(
+        _Browser(), "goal", subgoals=["do A", "do B"])
+    # must NOT end at subgoal 1: it reached the 2/2 subgoal and only then finished
+    assert any("CURRENT SUBGOAL (2/2): do B" in p for p in llm.prompts)
+    assert success is True
+
+
 def test_per_subgoal_cap_auto_advances():
     # never signals subgoal_done -> the cap advances through subgoals; the last
     # subgoal then runs until the outer budget, so we see the final subgoal shown.
