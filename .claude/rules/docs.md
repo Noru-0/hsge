@@ -37,5 +37,11 @@ open bug O2, plus per-action task refinement and an inline verifier gate;
 the first real seed run `wa_seed_shopping`: verification first — an inline
 Verifier gate + auto verify-predicate — because GOAL success was self-graded and
 inflated, then solver competence — GOAL step budget, bottom-up refinement,
-anti-wandering, grounding-gated operators; planning only). See also
+anti-wandering, grounding-gated operators; planning only),
+`17_phaseC_solver_competence_plan.md` (Phase C design, reprioritized by the
+second real run `wa_seed_shopping_v2`: with the B1 verifier + goal_max_steps on,
+GOAL = 2 verified / 4 infeasible and ALL infeasibles are multi-step
+state-changing goals — so the binding constraint is now solver competence;
+tasks C2 subgoal-guided GOAL solving, C3 progress-based anti-wandering, C5
+stronger GOAL solver, C4 grounding-gated operators; planning only). See also
 `training/README.md` for the terse command reference covering the same pipeline.
