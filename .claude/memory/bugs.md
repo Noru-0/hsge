@@ -15,6 +15,21 @@ Entry format:
 
 ## Open
 
+### C2 subgoal-advance signal is hijacked into send_msg_to_user, ending the episode at subgoal 1
+- **Status**: open — found in the first real run with C2 on (`outputs/wa_seed_shopping_v3`, 2026-07-31).
+- **Found**: 2026-07-31, run v3 GOAL dropped to 0 success / 4 fail / 2 infeasible (v2 was 2/0/4). 3/6 GOAL episodes ended after 2-3 steps.
+- **Where**: `hsge/webarena/agents.py::Solver.solve` subgoal-mode advance (the `out.get("subgoal_done")` JSON-field check) + the subgoal user-prompt block.
+- **Symptom**: on multi-subgoal GOALs, gpt-4o-mini emits the advance as a **terminal action** `send_msg_to_user('subgoal_done': true)` / `send_msg_to_user('subgoal_done: Electronics category page is open')` instead of the JSON field `{"subgoal_done": true}`. `solve` treats any `send_msg_to_user` as episode-end → the episode terminates after subgoal 1, self-declares success, and the B1 verifier correctly FAILs it ("navigated to Electronics but did not add to cart"; "only performed the search, did not open the top result"). The 2 easy nav/read goals that PASSED in v2 are exactly the ones killed. Confirmed: 3 episodes contain `send_msg_to_user('subgoal_done...`.
+- **Cause**: the `subgoal_done` JSON field is unreliable with gpt-4o-mini, which conflates "advance subgoal" with the send_msg terminal action; the prompt ("output {\"subgoal_done\": true, ...} to advance. Call send_msg_to_user ONLY after the LAST subgoal") did not prevent it.
+- **Fix (planned)**: treat `send_msg_to_user` (or a `subgoal_done` field) while `sg_idx < len(sg)-1` as an ADVANCE signal, not termination — only allow real termination on the last subgoal. Optionally tighten the prompt / add a dedicated non-terminal `next_subgoal()` action. (Silver lining: B1 verify caught the regression honestly instead of it becoming false successes.)
+
+### C3 novelty guard misses "changing-but-not-progressing" churn
+- **Status**: open — found in run v3 (2026-07-31).
+- **Where**: `hsge/webarena/agents.py::Solver.solve` novelty tracking (`seen_obs` keyed on exact `(url, axtree)`).
+- **Symptom**: episodes that click the same control repeatedly (e.g. `click('247')` ×9, `click('1790')` ×8) burned ~10-19 steps without progressing; neither the same-target `_stuck_streak` (needs no observable change) nor the novelty guard (resets on ANY axtree diff) fired, because each click perturbs the axtree slightly (dropdown/toggle) without reaching a new page.
+- **Cause**: novelty keyed on exact axtree equality is too strict; a slightly-mutating page defeats it.
+- **Fix (planned)**: coarsen the novelty key (e.g. URL-only, or a normalized/hashed axtree), or also flag same-target repeats regardless of small axtree changes.
+
 ### Predicate canonicalization never unifies synonyms, so the operator graph stays edgeless and no semantic task is ever generated
 - **Status**: open — the synonym-canonicalization fix **implemented +
   unit-tested (2026-07-22)** did NOT resolve the symptom. Two fresh live runs
