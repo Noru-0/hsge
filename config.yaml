@@ -21,7 +21,7 @@ run:
   goal_chains_per_node: 3    # max GOAL tasks attempted per node = depth-based operator
                              # chains PLUS seed capabilities (when use_site_seed is on);
                              # each distinct chain/capability is attempted once per run
-  use_site_seed: false       # derive a site {description, capabilities[]} seed on the
+  use_site_seed: true        # derive a site {description, capabilities[]} seed on the
                              # first node, emit each capability as a top-down GOAL task
                              # (independent of the operator graph), and condition
                              # PageExplorer proposals on it. false = current behavior.
@@ -48,6 +48,9 @@ llm:
   temperature: 0.2
 
   agents:
+    site_seeder:             # once per run: summarizes the landing page into a
+      provider: openai       # {description, capabilities[]} seed that drives GOAL tasks
+      model: gpt-4o          # -- one call, and seed quality decides GOAL quality
     page_explorer:           # proposes concrete INFO/NAV/MOD tasks for each page
       provider: openai
       model: gpt-4o          # called once per node -- worth the stronger model
