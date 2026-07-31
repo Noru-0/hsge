@@ -33,6 +33,7 @@ from ..operators import Operator, OperatorGraph, plan
 from ..predicate_registry import PredicateRegistry
 from ..segmentation import segment_trajectory
 from .agents import PageExplorer, SiteSeeder, Solver
+from .verify import JUDGE_SYS, judge_prompt
 from .predicates import reached
 
 
@@ -58,6 +59,7 @@ class WebArenaExplorer:
                  goal_chains_per_node: int = 3,
                  use_site_seed: bool = False,
                  goal_max_steps: int | None = None,
+                 verify_goals: bool = False,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
@@ -103,6 +105,11 @@ class WebArenaExplorer:
         self.seeder = SiteSeeder(role("site_seeder"))
         self.site_seed = None            # None = not derived yet; dict once derived
         self._attempted_capabilities: set[str] = set()
+        # Inline GOAL verifier (B1): re-check every self-graded GOAL success with a
+        # strong judge; a FAIL demotes it to fail so the solver can't grade its own
+        # homework. Reuses judge_episodes' grader prompt live. Off by default.
+        self.verify_goals = verify_goals
+        self.judge_llm = role("episode_judge")
         self.opgraph = OperatorGraph()
         # name -> {"precondition_accuracy": {pid: float}, "effect_accuracy": {pid:
         # float}, "member_count": int}; observation-only signal, never gates
@@ -220,12 +227,17 @@ class WebArenaExplorer:
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag,
-                infeasible: bool = False):
+                infeasible: bool = False, judge_verified=None, judge_reason=None):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
-        meta = {"kind": "low_level_trajectory", "goal": goal,
-                "outcome": {"success": bool(success), "reward": 1.0 if success else 0.0,
-                             "response": "", "infeasible": bool(infeasible)},
+        outcome = {"success": bool(success), "reward": 1.0 if success else 0.0,
+                   "response": "", "infeasible": bool(infeasible)}
+        if judge_verified is not None:
+            # inline GOAL verifier result -- lets build_sft_dataset --require-judge
+            # treat this episode as already-judged (same field judge_episodes writes)
+            outcome["judge_verified"] = bool(judge_verified)
+            outcome["judge_reason"] = judge_reason or ""
+        meta = {"kind": "low_level_trajectory", "goal": goal, "outcome": outcome,
                 "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps)}
         json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w", encoding="utf-8"), indent=2)
         with open(os.path.join(ep, "episode.jsonl"), "w", encoding="utf-8") as f:
@@ -248,7 +260,7 @@ class WebArenaExplorer:
 
     # ---- one task, up to 1 + task_retries attempts --------------------------
     def _solve_with_retries(self, browser, task, difficulty, tag, goal_predicate=None,
-                            max_steps=None):
+                            max_steps=None, verify_fn=None):
         """Run the Solver on one task, retrying failures up to task_retries
         times. Every attempt is recorded as its own episode (SFT data and
         logs stay honest). Infeasible attempts are terminal -- retrying a
@@ -282,12 +294,31 @@ class WebArenaExplorer:
             (steps, obs_texts, obs_screenshots, final_obs, success,
              infeasible) = self.solver.solve(browser, task, goal_predicate=goal_predicate,
                                               max_steps=max_steps)
+            # Inline verifier: only a SELF-GRADED success (goal_predicate is None) is
+            # re-checked -- a deterministic reached() result is already trustworthy.
+            judge_verified = judge_reason = None
+            if verify_fn is not None and success and goal_predicate is None and steps:
+                verified, judge_reason = verify_fn(task, steps, final_obs)
+                judge_verified = verified
+                if not verified:
+                    success = False
             self._record(task, steps, obs_texts, obs_screenshots, success,
-                         difficulty=difficulty, tag=tag, infeasible=infeasible)
+                         difficulty=difficulty, tag=tag, infeasible=infeasible,
+                         judge_verified=judge_verified, judge_reason=judge_reason)
             urls_seen.update(st.url for st in steps)
             urls_seen.add(final_obs.get("url", ""))
             if success or infeasible or attempts > self.task_retries:
                 return episode_id, steps, final_obs, success, infeasible, attempts, urls_seen
+
+    def _verify_episode(self, goal, steps, final_obs) -> tuple[bool, str]:
+        """LLM re-check of a self-declared GOAL success against its final page.
+        Reuses the offline judge prompt (hsge.webarena.verify), run live."""
+        history = [st.action for st in steps[:-1]]
+        prompt = judge_prompt(goal, history, final_obs.get("url", ""),
+                              final_obs.get("axtree", ""))
+        out = self.judge_llm.complete_json(JUDGE_SYS, prompt)
+        verdict = str(out.get("verdict", "")).strip().upper()
+        return verdict == "PASS", str(out.get("reason", ""))[:200]
 
     def _card_by_id(self, skill_id: str):
         return next((c for c in self.library.skills.values() if c.skill_id == skill_id), None)
@@ -779,7 +810,8 @@ class WebArenaExplorer:
                     (episode_id, steps, final_obs, success, infeasible, attempts,
                      urls_seen) = self._solve_with_retries(
                         browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
-                        goal_predicate=gt["goal_predicate"], max_steps=self.goal_max_steps)
+                        goal_predicate=gt["goal_predicate"], max_steps=self.goal_max_steps,
+                        verify_fn=self._verify_episode if self.verify_goals else None)
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
