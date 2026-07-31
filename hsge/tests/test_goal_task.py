@@ -109,6 +109,61 @@ def test_per_node_cap_defers_extra_chains_to_later_nodes():
     assert first[0]["chain"] != second[0]["chain"]
 
 
+# --- Task 4: seed capabilities as a top-down GOAL source ---------------------
+
+def _seed(ex, caps):
+    ex.site_seed = {"description": "d", "capabilities": caps}
+
+
+def test_seed_capabilities_become_goal_tasks_when_no_chains():
+    ex = _explorer(terminal_goal=None)          # empty operator graph -> no chains
+    _seed(ex, [{"name": "checkout", "goal": "Buy a mouse and confirm the order."},
+               {"name": "review", "goal": "Write a review for a purchased item."}])
+
+    tasks = ex._goal_task()
+
+    assert [t["kind"] for t in tasks] == ["seed", "seed"]
+    assert tasks[0]["goal"] == "Buy a mouse and confirm the order."
+    assert tasks[0]["goal_predicate"] is None
+    assert tasks[0]["chain"] == ()
+
+
+def test_seed_capabilities_attempted_once_per_run():
+    ex = _explorer(terminal_goal=None)
+    _seed(ex, [{"name": "checkout", "goal": "Buy a mouse and confirm the order."}])
+
+    assert len(ex._goal_task()) == 1        # first node emits it
+    assert ex._goal_task() == []            # second node: already attempted
+
+
+def test_seed_respects_goal_chains_per_node_cap():
+    ex = _explorer(terminal_goal=None, goal_chains_per_node=1)
+    _seed(ex, [{"name": "a", "goal": "goal a"}, {"name": "b", "goal": "goal b"}])
+
+    assert len(ex._goal_task()) == 1        # capped at 1 per node
+
+
+def test_chains_take_precedence_over_seed_when_budget_is_tight():
+    # budget = 1: the depth chain fills the single slot, so seed is excluded
+    ex = _explorer(terminal_goal=None, goal_chains_per_node=1)
+    _add_chain_ops(ex)                       # yields a depth chain
+    _seed(ex, [{"name": "x", "goal": "seed goal"}])
+
+    assert [t["kind"] for t in ex._goal_task()] == ["depth"]
+
+
+def test_seed_fills_remaining_budget_after_chains():
+    # budget = 3, one chain -> depth first, then seed fills the remaining slots
+    ex = _explorer(terminal_goal=None, goal_chains_per_node=3)
+    _add_chain_ops(ex)
+    _seed(ex, [{"name": "x", "goal": "seed goal one"},
+               {"name": "y", "goal": "seed goal two"}])
+
+    kinds = [t["kind"] for t in ex._goal_task()]
+    assert kinds[0] == "depth"               # chain taken first
+    assert kinds.count("seed") == 2          # seed fills the remaining 2 slots
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for fn in fns:

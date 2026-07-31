@@ -399,6 +399,20 @@ class WebArenaExplorer:
                 "difficulty": len(chain), "chain": chain,
                 "kind": "depth", "goal_predicate": goal_predicate,
             })
+        # Seed capabilities: a top-down GOAL source that does NOT need the operator
+        # graph to have edges (attacks bug O2). Fills any remaining per-node budget
+        # with uncovered capabilities, each attempted once per run. Self-graded.
+        if self.site_seed and len(tasks) < self.goal_chains_per_node:
+            for cap in self.site_seed.get("capabilities", []):
+                if len(tasks) >= self.goal_chains_per_node:
+                    break
+                goal = cap.get("goal")
+                name = cap.get("name") or goal or ""
+                if not goal or name in self._attempted_capabilities:
+                    continue
+                self._attempted_capabilities.add(name)
+                tasks.append({"goal": goal, "difficulty": 2, "chain": (),
+                              "kind": "seed", "goal_predicate": None})
         if tasks:
             return tasks
         # Backup: graph too shallow for chains, but a terminal predicate is
