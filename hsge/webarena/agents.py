@@ -379,6 +379,7 @@ class Solver:
     _TARGET_RE = re.compile(r"\('([^']*)'")
     _WARN_AFTER_REPEATS = 2   # nudge once the same target is hit this many times in a row
     _MAX_REPEATS = 4          # give up if nudging didn't help after this many
+    _SUBGOAL_CAP = 8          # max steps on one subgoal before auto-advancing (C2)
 
     def __init__(self, llm, max_steps: int = 15,
                  vision: bool = False, som: bool = True, image_detail: str = "low"):
@@ -420,14 +421,19 @@ class Solver:
         return streak
 
     def solve(self, browser, goal: str, goal_predicate: str | None = None,
-              max_steps: int | None = None):
+              max_steps: int | None = None, subgoals=None):
         """Drive the browser toward `goal`.
 
         `max_steps` overrides self.max_steps for this call only (used to give
         GOAL tasks a larger budget than LOCAL); None keeps the instance default.
+        `subgoals` (C2): an ordered list the solver pursues one at a time --
+        the current subgoal is shown in the prompt and advances on the model's
+        `subgoal_done` signal or after `_SUBGOAL_CAP` steps. None -> plain loop.
         Returns (steps, obs_texts, obs_screenshots, final_obs, success, infeasible).
         """
         budget = max_steps if max_steps is not None else self.max_steps
+        sg = list(subgoals) if subgoals else None
+        sg_idx, sg_steps = 0, 0
         steps: list[Step] = []
         obs_texts: list[str] = []
         obs_screenshots: list[str | None] = []
@@ -462,11 +468,20 @@ class Solver:
                     "repeating it again will not help. If the goal is already achieved, "
                     "call send_msg_to_user(...) now instead. Otherwise choose a "
                     "genuinely different action/target.")
+            subgoal_block = ""
+            if sg is not None and sg_idx < len(sg):
+                subgoal_block = (
+                    f"\n\nOVERALL GOAL: {goal}\nCURRENT SUBGOAL "
+                    f"({sg_idx + 1}/{len(sg)}): {sg[sg_idx]}\n"
+                    "Work ONLY on the current subgoal right now. When THIS subgoal "
+                    'is done, output {"subgoal_done": true, ...} to advance. Call '
+                    "send_msg_to_user ONLY after the LAST subgoal is complete.")
             recent = [f"- {h} -> {o}" for h, o in zip(history[-6:], outcomes[-6:])]
             prompt = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n"
                       + ("\n".join(recent) or "(none)")
                       + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
                       + repeat_warning
+                      + subgoal_block
                       + f"\n\nURL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}")
             screenshot_b64 = browser.screenshot_b64(som=self.som) if self.vision else None
             out = self.llm.complete_json(SOLVER_SYS, prompt,
@@ -477,6 +492,12 @@ class Solver:
                 print("    [solver] empty response with image attached, retrying text-only")
                 out = self.llm.complete_json(SOLVER_SYS, prompt,
                                               image_b64=None, image_detail=self.image_detail)
+            # C2: advance to the next subgoal on the model's signal (never past the
+            # last -- the final subgoal ends via send_msg_to_user, as normal).
+            if sg is not None and out.get("subgoal_done") and sg_idx < len(sg) - 1:
+                sg_idx += 1
+                sg_steps = 0
+                continue
             action = (out.get("action") or "").strip()
             thought = out.get("thought", "")
             steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100],
@@ -499,6 +520,12 @@ class Solver:
             history.append(action)
             outcomes.append(step_outcome(pre_url, pre_axtree, obs["url"], obs["axtree"]))
             progressed.append(obs["url"] != pre_url or obs["axtree"] != pre_axtree)
+            # C2: auto-advance a subgoal the solver is stuck on (never past the last)
+            if sg is not None:
+                sg_steps += 1
+                if sg_steps >= self._SUBGOAL_CAP and sg_idx < len(sg) - 1:
+                    sg_idx += 1
+                    sg_steps = 0
             if getattr(browser, "terminated", False):
                 exhausted = False
                 break
