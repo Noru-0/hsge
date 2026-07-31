@@ -84,6 +84,14 @@ Entry format:
 
 ## Fixed
 
+### Real run crashes on GPT-5.x/o-series models that reject a custom temperature
+- **Status**: fixed (2026-07-31 23:10)
+- **Found**: 2026-07-31, first real run with `solver_goal: gpt-5.6-terra` — `openai.BadRequestError 400: "Unsupported value: 'temperature' does not support 0.0 with this model. Only the default (1) value is supported."` (`run_webarena.py` → `Solver.solve` → `OpenAILLM.complete_json`).
+- **Where**: `hsge/backends.py::OpenAILLM.complete_json` / `_create_with_retry` (always sent `temperature`).
+- **Symptom**: any GPT-5.x / o-series model 400s when given a non-default temperature (the whole run aborts), because `config.yaml` set `solver_goal.temperature: 0.0`.
+- **Cause**: those models only accept the default temperature (1); the backend unconditionally passed the configured value.
+- **Fix**: `OpenAILLM` now (a) catches the temperature-specific 400, drops the param, retries, and sets `self._omit_temperature` so later calls skip it (`_is_unsupported_temperature`); and (b) `complete_json` omits `temperature` once flagged. Also set `config.yaml` `solver_goal.temperature: 1` to avoid the first wasted 400. Tests in `hsge/tests/test_backends_temperature.py`.
+
 ### C2 subgoal-advance signal is hijacked into send_msg_to_user, ending the episode at subgoal 1
 - **Status**: fixed (2026-07-31 19:58, commit 685a93b)
 - **Found**: 2026-07-31, run v3 (`outputs/wa_seed_shopping_v3`) GOAL dropped to 0 success / 4 fail / 2 infeasible (v2 was 2/0/4); 3/6 GOAL episodes ended after 2-3 steps.

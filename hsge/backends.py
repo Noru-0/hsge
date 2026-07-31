@@ -36,6 +36,21 @@ class OpenAILLM(LLM):
             timeout=self._REQUEST_TIMEOUT_S,
         )
         self.temperature = temperature
+        # Set once a model rejects a custom temperature (GPT-5.x / o-series only
+        # accept the default), so later calls omit the param instead of re-hitting
+        # the 400 every time.
+        self._omit_temperature = False
+
+    @staticmethod
+    def _is_unsupported_temperature(e) -> bool:
+        """True if a 400 is specifically about a temperature the model won't accept
+        (e.g. 'temperature does not support 0.0 ... Only the default (1) value is
+        supported')."""
+        body = getattr(e, "body", None)
+        if isinstance(body, dict) and (body.get("error") or {}).get("param") == "temperature":
+            return True
+        msg = str(e).lower()
+        return "temperature" in msg and ("does not support" in msg or "unsupported" in msg)
 
     def _create_with_retry(self, **kwargs):
         """chat.completions.create with retry/backoff on transient errors only.
@@ -43,6 +58,8 @@ class OpenAILLM(LLM):
         Rate limits, connection blips, and 5xx are retried (up to 3 times,
         exponential backoff + jitter); auth/bad-request errors are not --
         those are never going to succeed on retry, so failing fast is better.
+        The one exception: a 400 that rejects a custom temperature (GPT-5.x /
+        o-series) is recovered by dropping the param and retrying once.
         """
         import openai
         retryable = (openai.RateLimitError, openai.APIConnectionError,
@@ -51,6 +68,14 @@ class OpenAILLM(LLM):
         for attempt in range(4):
             try:
                 return self.client.chat.completions.create(**kwargs)
+            except openai.BadRequestError as e:
+                if "temperature" in kwargs and self._is_unsupported_temperature(e):
+                    print(f"[OpenAILLM] model {self.model!r} rejects a custom "
+                          "temperature; retrying without it", file=sys.stderr)
+                    self._omit_temperature = True
+                    kwargs.pop("temperature", None)
+                    continue
+                raise
             except retryable as e:
                 if attempt == 3:
                     raise
@@ -71,12 +96,15 @@ class OpenAILLM(LLM):
 
     def complete_json(self, system: str, prompt: str,
                        image_b64: str | None = None, image_detail: str = "low") -> dict:
-        msg = self._create_with_retry(
-            model=self.model, temperature=self.temperature,
+        kwargs = dict(
+            model=self.model,
             messages=[{"role": "system", "content": system + "\nReturn ONLY valid JSON."},
                       {"role": "user",
                        "content": self._user_content(prompt, image_b64, image_detail)}],
         )
+        if not self._omit_temperature:
+            kwargs["temperature"] = self.temperature
+        msg = self._create_with_retry(**kwargs)
         choice = msg.choices[0]
         content = choice.message.content
         if content is None:

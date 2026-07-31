@@ -76,7 +76,10 @@ llm:
     solver_goal:             # C5: stronger model for GOAL/composite tasks (optional).
       provider: openai       # GOAL solving is multi-step + reasoning-bound, so it gets
       model: gpt-5.6-terra   # a stronger model than the LOCAL solver (gpt-4o-mini).
-      temperature: 0.0         # GPT-5.6 Terra: vision, agentic, ~matches 5.5 at half
+      temperature: 1         # GPT-5.x/o-series ONLY accept the default temperature (1);
+                             # any other value 400s. (OpenAILLM also drops temperature
+                             # automatically if a model rejects it -- this just avoids
+                             # the first wasted 400.) GPT-5.6 Terra: vision, ~5.5 at half
                              # cost. Inherits the solver's vision settings. Remove
                              # this block to reuse the LOCAL solver for GOAL too.
                              # NOTE: verify this exact model id + your account access
