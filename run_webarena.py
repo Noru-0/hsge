@@ -30,6 +30,7 @@ DEFAULTS = {
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "max_tasks": 6, "maturity": 2,
             "task_retries": 0,
             "goal_chains_per_node": 3,
+            "use_site_seed": False,
             "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None,
             "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
@@ -41,6 +42,7 @@ DEFAULTS = {
 # Every model-backed helper in the real exploration pipeline. Values under
 # llm.agents.<role> override the shared llm defaults in config.yaml.
 AGENT_ROLES = (
+    "site_seeder",
     "page_explorer",
     "solver",
     "trajectory_segmenter",
@@ -74,6 +76,10 @@ class _DryLLM(MockLLM):
     """
     def complete_json(self, system: str, prompt: str,
                        image_b64: str | None = None, image_detail: str = "low") -> dict:
+        if system.startswith("SUMMARIZE"):                      # site seeder
+            return {"description": "A demo shopping site.",
+                    "capabilities": [{"name": "checkout",
+                                      "goal": "Buy an item and reach the order confirmation page."}]}
         if system.startswith("PROPOSE"):                        # explorer
             return {"tasks": ["search for an item", "add an item to cart"]}
         if "web agent" in system.lower():                       # solver
@@ -315,6 +321,8 @@ def main():
     mine_hrefs = _pick(args.mine_hrefs, run["mine_hrefs"])
     per_template_cap = _pick(args.per_template_cap, run["per_template_cap"])
     max_hrefs_per_page = _pick(args.max_hrefs_per_page, run["max_hrefs_per_page"])
+    # dry-run turns the seed on so --dry-run exercises the seed->GOAL path end-to-end
+    use_site_seed = True if args.dry_run else run["use_site_seed"]
 
     if args.dry_run:
         root_url = args.root_url or "http://shop/home"
@@ -376,6 +384,7 @@ def main():
         mine_hrefs=mine_hrefs, per_template_cap=per_template_cap,
         max_hrefs_per_page=max_hrefs_per_page, task_retries=task_retries,
         goal_chains_per_node=goal_chains_per_node,
+        use_site_seed=use_site_seed,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
     if resume_ckpt:

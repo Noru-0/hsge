@@ -105,6 +105,22 @@ def test_checkpoint_roundtrip_restores_loop_and_discovery_state():
     assert [k[4] for k in popped] == ["http://shop/a", "http://shop/b", "http://shop/c"]
 
 
+def test_checkpoint_round_trips_site_seed():
+    out = tempfile.mkdtemp()
+    ex = _explorer(out_dir=out)
+    ex.run_started_epoch, ex.run_started_iso = 1.0, "x"
+    ex.site_seed = {"description": "d", "capabilities": [{"name": "c", "goal": "g"}]}
+    ex._attempted_capabilities = {"c"}
+
+    ex._write_checkpoint(_loop_state())
+
+    ex2 = _explorer(out_dir=out)
+    ex2.load_checkpoint(os.path.join(out, "checkpoint.pkl"))
+
+    assert ex2.site_seed == {"description": "d", "capabilities": [{"name": "c", "goal": "g"}]}
+    assert ex2._attempted_capabilities == {"c"}
+
+
 def test_backends_reattached_after_load():
     out = tempfile.mkdtemp()
     ex = _explorer(out_dir=out)

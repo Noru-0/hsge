@@ -123,6 +123,21 @@ def test_runtime_wires_vision_into_explorer_and_solver(tmp_path):
     assert runtime.solver.som is False
 
 
+def test_site_seeder_role_is_wired(tmp_path):
+    assert "site_seeder" in AGENT_ROLES
+    llms = {role: _RoleLLM(role) for role in AGENT_ROLES}
+    runtime = WebArenaExplorer(
+        browser_factory=lambda url: None,
+        llm=_RoleLLM("fallback"),
+        embedder=HashingEmbedder(),
+        out_dir=str(tmp_path),
+        allow_pattern=r"https://example\.com/.*",
+        agent_llms=llms,
+        use_site_seed=True,
+    )
+    assert runtime.seeder.llm is llms["site_seeder"]
+
+
 def test_runtime_defaults_vision_off_when_not_configured(tmp_path):
     llms = {role: _RoleLLM(role) for role in AGENT_ROLES}
 

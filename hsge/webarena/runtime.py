@@ -32,7 +32,7 @@ from ..operator_induction import induce_operator, verify_operator_grounding
 from ..operators import Operator, OperatorGraph, plan
 from ..predicate_registry import PredicateRegistry
 from ..segmentation import segment_trajectory
-from .agents import PageExplorer, Solver
+from .agents import PageExplorer, SiteSeeder, Solver
 from .predicates import reached
 
 
@@ -56,6 +56,7 @@ class WebArenaExplorer:
                  mine_hrefs: bool = True, per_template_cap: int = 3,
                  max_hrefs_per_page: int = 100, task_retries: int = 0,
                  goal_chains_per_node: int = 3,
+                 use_site_seed: bool = False,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
@@ -91,6 +92,13 @@ class WebArenaExplorer:
         self.solver = Solver(role("solver"), max_steps=max_steps,
                              vision=sv_vision["vision"], som=sv_vision["som"],
                              image_detail=sv_vision["image_detail"])
+        # Site seed (InfiniteWeb idea): a one-shot {description, capabilities[]}
+        # profile derived from the first node, used to condition proposals and to
+        # emit top-down GOAL tasks. Off by default so the mock pipeline is untouched.
+        self.use_site_seed = use_site_seed
+        self.seeder = SiteSeeder(role("site_seeder"))
+        self.site_seed = None            # None = not derived yet; dict once derived
+        self._attempted_capabilities: set[str] = set()
         self.opgraph = OperatorGraph()
         # name -> {"precondition_accuracy": {pid: float}, "effect_accuracy": {pid:
         # float}, "member_count": int}; observation-only signal, never gates
@@ -152,6 +160,8 @@ class WebArenaExplorer:
                 "opgraph": self.opgraph, "graph": self.graph,
                 "discovery": self.discovery, "explorer": self.explorer,
                 "_op_meta": self._op_meta, "_attempted_chains": self._attempted_chains,
+                "site_seed": self.site_seed,
+                "_attempted_capabilities": self._attempted_capabilities,
                 "operator_grounding": self.operator_grounding, "episode": self.episode,
                 "run_started_epoch": self.run_started_epoch,
                 "run_started_iso": self.run_started_iso,
@@ -191,6 +201,9 @@ class WebArenaExplorer:
         self.discovery, self.explorer = state["discovery"], state["explorer"]
         self._op_meta = state["_op_meta"]
         self._attempted_chains = state["_attempted_chains"]
+        # .get for back-compat with checkpoints written before the seed feature
+        self.site_seed = state.get("site_seed")
+        self._attempted_capabilities = state.get("_attempted_capabilities", set())
         self.operator_grounding = state["operator_grounding"]
         self.episode = state["episode"]
         self.run_started_epoch = state["run_started_epoch"]
@@ -462,6 +475,10 @@ class WebArenaExplorer:
         skills = [card.to_dict() for card in self.library.all_skills()]
         json.dump(skills, open(os.path.join(self.out_dir, "skills.json"), "w", encoding="utf-8"), indent=2)
 
+        if self.site_seed is not None:
+            json.dump(self.site_seed, open(os.path.join(self.out_dir, "seed.json"), "w",
+                                           encoding="utf-8"), indent=2)
+
         operators = []
         for op in self.opgraph.ops.values():
             grounding = self.operator_grounding.get(op.name, {})
@@ -670,6 +687,14 @@ class WebArenaExplorer:
                 seen_content.add(content_hash)
                 visited_landed.add(landed)
 
+                # Derive the site seed once, from the first real node (skipped on
+                # resume, where site_seed is restored from the checkpoint).
+                if self.use_site_seed and self.site_seed is None:
+                    self.site_seed = self.seeder.derive(obs) or {"description": "", "capabilities": []}
+                    n = len(self.site_seed.get("capabilities", []))
+                    self._log("site_seed_derived", capabilities=n)
+                    print(f"    [seed] derived site profile with {n} capabilities")
+
                 print(f"[node {node_index}/{self.max_nodes}] {obs['url']} "
                       f"(depth={depth}, frontier={len(frontier)})")
                 self._log("node_visit", index=node_index, url=obs["url"], depth=depth,
@@ -697,7 +722,8 @@ class WebArenaExplorer:
                 seen_urls = set()
 
                 # 1) local exploration
-                for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64):
+                for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64,
+                                                  site_seed=self.site_seed):
                     (episode_id, steps, final_obs, success, infeasible, attempts,
                      urls_seen) = self._solve_with_retries(browser, task, difficulty=1, tag="LOCAL")
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
