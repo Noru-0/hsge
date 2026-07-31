@@ -44,9 +44,14 @@ EXPLORER_SYS = (
     "reply to the top comment on the newest post in r/technology', 'Add all books "
     "by Jane Smith to the cart and open the cart' -- name the concrete targets from "
     "THIS page, but do NOT spell out the individual steps). "
-    "List COMPOSITE tasks FIRST, then MOD, then NAV, then INFO, and include at "
-    "least 2-3 COMPOSITE tasks whenever the page affords a multi-step goal -- "
-    "these are how reusable, chainable skills get discovered.\n"
+    "List COMPOSITE tasks FIRST, then MOD, then INFO. Include at least 2-3 "
+    "COMPOSITE tasks whenever the page affords a multi-step goal -- these are how "
+    "reusable, chainable skills get discovered -- and include a few INFO fact-lookup "
+    "tasks specific to this page (information-seeking is common in real use). "
+    "Propose AT MOST ONE NAV task (list it LAST), and only to reach an important "
+    "page that no COMPOSITE/MOD task here would visit: COMPOSITE and MOD tasks "
+    "already navigate to new pages as they act, so a single NAV is enough as a "
+    "reserve.\n"
     "- INFO tasks must name WHAT to find (e.g. 'Find the number of submissions for "
     "r/relationship_advice'), but must NEVER state the value/answer itself in the task "
     "text (NOT 'Find the number of submissions for r/relationship_advice (5,718 "
@@ -186,6 +191,8 @@ class PageExplorer:
     _PUNCT_RE = re.compile(r"[^\w\s]")
     _SEEN_HINT_SIZE = 25  # cap how many prior tasks get echoed back as negative context
     _COMPOSITE_RESERVE = 3  # min COMPOSITE tasks kept when a page overflows max_tasks
+    _NAV_CAP = 1       # NAV is a thin reserve; COMPOSITE/MOD already grow the frontier
+    _INFO_RESERVE = 2  # keep some INFO for SFT data (WebArena is info-seeking heavy)
 
     def __init__(self, llm, max_tasks: int = 4, read_only: bool = False,
                  vision: bool = False, som: bool = True, image_detail: str = "low"):
@@ -243,9 +250,25 @@ class PageExplorer:
         text = text.strip()
         return (text, tag) if text else None
 
-    def propose(self, obs: dict, screenshot_b64: str | None = None) -> list[str]:
+    def propose(self, obs: dict, screenshot_b64: str | None = None,
+                site_seed: dict | None = None) -> list[str]:
         system = EXPLORER_SYS + (READONLY_NOTE if self.read_only else "")
         prompt = f"URL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}"
+        caps = (site_seed or {}).get("capabilities") or []
+        if caps:
+            cap_lines = "\n".join(f"- {c['name']}: {c['goal']}" for c in caps)
+            prompt += (
+                "\n\nSITE GOALS (what this whole site is for) -- use as EXTRA "
+                "context, NOT as a replacement for page-specific tasks:\n"
+                f"{site_seed.get('description', '')}\n"
+                "Capabilities a user comes here to accomplish:\n"
+                f"{cap_lines}\n"
+                "Still propose a DIVERSE mix of page-specific tasks grounded in THIS "
+                "page (COMPOSITE, MOD, INFO, and at most one reserve NAV). In "
+                "ADDITION, when this page affords it, include 1-2 COMPOSITE tasks "
+                "that advance one of the site goals above. Do NOT let the site goals "
+                "crowd out page-specific tasks, and do NOT propose a capability this "
+                "page cannot support.")
         if self._seen:
             recent = list(self._seen.values())[-self._SEEN_HINT_SIZE:]
             prompt += ("\n\nALREADY PROPOSED (do not repeat these or near-duplicates):\n"
@@ -275,22 +298,37 @@ class PageExplorer:
             self._seen[key] = text
             fresh.append((text, tag))
         parsed = fresh
+        # NAV is a thin reserve, capped UNCONDITIONALLY: COMPOSITE/MOD tasks
+        # already navigate to new pages as they act (adding tier-0 frontier
+        # URLs), and pure-NAV skills are low value + prone to sitewide-menu
+        # boilerplate, so keep at most _NAV_CAP NAV tasks regardless of budget.
+        nav_kept = 0
+        capped = []
+        for text, tag in parsed:
+            if tag == "NAV":
+                if nav_kept >= self._NAV_CAP:
+                    continue
+                nav_kept += 1
+            capped.append((text, tag))
+        parsed = capped
         if len(parsed) > self.max_tasks:
-            # Keep-priority when a page overflows max_tasks:
-            #  1. up to _COMPOSITE_RESERVE COMPOSITE tasks -- these are the
-            #     multi-step, chainable ones skill discovery depends on, and a
-            #     page can easily flood NAV/MOD single-steps that would
-            #     otherwise crowd them out entirely.
-            #  2. NAV/MOD (and UNKNOWN) -- they grow the frontier.
-            #  3. any COMPOSITE beyond the reserve.
-            #  4. INFO last -- solving one only reads the page, it never
-            #     navigates, so it never grows the frontier (this is why INFO
-            #     is dropped first).
+            # Keep-priority on overflow:
+            #   COMPOSITE(reserve) -> MOD -> INFO(reserve) -> NAV(<=cap, already
+            #   enforced above) -> COMPOSITE(extra) -> UNKNOWN -> INFO(extra).
+            # INFO gets a guaranteed reserve (it is the WebArena-aligned SFT data),
+            # but INFO beyond the reserve is dropped first (it never grows frontier).
             composite = [p for p in parsed if p[1] == "COMPOSITE"]
-            other = [p for p in parsed if p[1] not in ("COMPOSITE", "INFO")]
+            mod = [p for p in parsed if p[1] == "MOD"]
+            nav = [p for p in parsed if p[1] == "NAV"]
+            unknown = [p for p in parsed if p[1] == "UNKNOWN"]
             info = [p for p in parsed if p[1] == "INFO"]
-            reserve = composite[: self._COMPOSITE_RESERVE]
-            parsed = (reserve + other + composite[self._COMPOSITE_RESERVE:] + info)[: self.max_tasks]
+            parsed = (composite[: self._COMPOSITE_RESERVE]
+                      + mod
+                      + info[: self._INFO_RESERVE]
+                      + nav
+                      + composite[self._COMPOSITE_RESERVE:]
+                      + unknown
+                      + info[self._INFO_RESERVE:])[: self.max_tasks]
         return [f"[{tag}] {text}" if tag != "UNKNOWN" else text for text, tag in parsed]
 
 

@@ -267,14 +267,13 @@ def test_truncation_keeps_composite_over_info():
     assert tasks == ["[COMPOSITE] open post then reply"]
 
 
-def test_truncation_reserves_composite_against_a_flood_of_nav_mod():
-    """The whole point of COMPOSITE is multi-step, chainable skills, but a page
-    can easily return more NAV/MOD single-steps than max_tasks. Without a
-    reserve those crowd COMPOSITE out entirely (COMPOSITE used to sit last in
-    the non-INFO bucket and get dropped first). At least _COMPOSITE_RESERVE
-    COMPOSITE must survive overflow."""
+def test_truncation_reserves_composite_against_a_flood_of_mod():
+    """COMPOSITE reserve must survive overflow even when MOD floods the page
+    (COMPOSITE used to sit last in the non-INFO bucket and get dropped first).
+    At least _COMPOSITE_RESERVE COMPOSITE must survive. (NAV no longer floods:
+    it is capped to _NAV_CAP unconditionally -- see the NAV-cap tests below.)"""
     tasks_in = (
-        [{"text": f"nav {i}", "type": "NAV"} for i in range(6)]
+        [{"text": f"mod {i}", "type": "MOD"} for i in range(6)]
         + [{"text": "buy the cheapest mouse", "type": "COMPOSITE"},
            {"text": "reply to the top comment on the newest post", "type": "COMPOSITE"}]
     )
@@ -286,13 +285,13 @@ def test_truncation_reserves_composite_against_a_flood_of_nav_mod():
     composite = [t for t in tasks if t.startswith("[COMPOSITE]")]
     assert composite == ["[COMPOSITE] buy the cheapest mouse",
                          "[COMPOSITE] reply to the top comment on the newest post"]
-    # NAV isn't fully starved either -- it fills the remaining slots
-    assert any(t.startswith("[NAV]") for t in tasks)
+    # MOD isn't fully starved either -- it fills the remaining slots
+    assert any(t.startswith("[MOD]") for t in tasks)
 
 
-def test_reserve_does_not_starve_nav_mod_when_composite_is_scarce():
-    """The reserve only holds slots for COMPOSITE that actually exist; a single
-    COMPOSITE must not shrink the room left for NAV/MOD below max_tasks-1."""
+def test_nav_capped_to_one_even_when_composite_is_scarce():
+    """NAV is a thin reserve (_NAV_CAP=1): a page flooding NAV keeps at most one,
+    and the single COMPOSITE still survives."""
     tasks_in = (
         [{"text": "the one composite", "type": "COMPOSITE"}]
         + [{"text": f"nav {i}", "type": "NAV"} for i in range(6)]
@@ -301,9 +300,8 @@ def test_reserve_does_not_starve_nav_mod_when_composite_is_scarce():
 
     tasks = explorer.propose({"url": "http://x", "axtree": ""})
 
-    assert len(tasks) == 4
     assert "[COMPOSITE] the one composite" in tasks
-    assert len([t for t in tasks if t.startswith("[NAV]")]) == 3
+    assert len([t for t in tasks if t.startswith("[NAV]")]) == 1
 
 
 def test_explorer_sys_forbids_account_auth_tasks():
@@ -332,3 +330,76 @@ def test_explorer_sys_uses_intent_phrasing_and_lists_composite_first():
     lower = EXPLORER_SYS.lower()
     assert "intent" in lower
     assert "list composite tasks first" in lower
+
+
+# --- Task 2: NAV/INFO rebalance + seed-conditioned proposals -----------------
+
+class _SeedCapturingLLM:
+    """Records the last user prompt and serves a fixed task list."""
+
+    def __init__(self, tasks=None):
+        self.prompt = None
+        self._tasks = tasks if tasks is not None else ["[NAV] a"]
+
+    def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
+        self.prompt = prompt
+        return {"tasks": self._tasks}
+
+
+def test_explorer_sys_demotes_nav_to_one_reserve():
+    # generation-side: ask for at most one NAV, listed last
+    assert "at most one nav" in EXPLORER_SYS.lower()
+    # the old "then NAV, then INFO" ordering must be gone
+    assert "then nav, then info" not in EXPLORER_SYS.lower()
+
+
+def test_propose_caps_nav_to_one_even_under_budget():
+    # 3 NAV proposed, max_tasks high enough that overflow truncation does NOT fire
+    llm = _StubLLM(["[NAV] a", "[NAV] b", "[NAV] c", "[MOD] m", "[COMPOSITE] c1"])
+    tasks = PageExplorer(llm, max_tasks=10).propose({"url": "http://x", "axtree": ""})
+    assert sum(t.startswith("[NAV]") for t in tasks) == 1
+    assert "[MOD] m" in tasks and "[COMPOSITE] c1" in tasks
+
+
+def test_propose_keep_order_reserves_info_and_one_nav_on_overflow():
+    # 2 COMPOSITE, 1 MOD, 2 NAV, 4 INFO; max_tasks=6.
+    # NAV cap -> 1 NAV. keep-order: COMPOSITE[:3] + MOD + INFO[:2] + NAV[:1] + ...
+    llm = _StubLLM([
+        "[COMPOSITE] c1", "[COMPOSITE] c2", "[MOD] m1",
+        "[NAV] n1", "[NAV] n2",
+        "[INFO] i1", "[INFO] i2", "[INFO] i3", "[INFO] i4"])
+    tasks = PageExplorer(llm, max_tasks=6).propose({"url": "http://x", "axtree": ""})
+    assert len(tasks) == 6
+    assert sum(t.startswith("[COMPOSITE]") for t in tasks) == 2
+    assert sum(t.startswith("[MOD]") for t in tasks) == 1
+    assert sum(t.startswith("[INFO]") for t in tasks) == 2   # INFO reserve honored
+    assert sum(t.startswith("[NAV]") for t in tasks) == 1    # NAV capped to reserve
+
+
+def test_info_reserve_survives_a_composite_heavy_page():
+    # INFO reserve is placed before extra COMPOSITE, so a page with lots of
+    # COMPOSITE still keeps >=1 INFO for training data.
+    llm = _StubLLM([
+        "[COMPOSITE] c1", "[COMPOSITE] c2", "[COMPOSITE] c3", "[COMPOSITE] c4",
+        "[MOD] m1", "[INFO] i1", "[INFO] i2"])
+    tasks = PageExplorer(llm, max_tasks=6).propose({"url": "http://x", "axtree": ""})
+    assert sum(t.startswith("[INFO]") for t in tasks) >= 1
+
+
+def test_propose_injects_site_goals_when_seed_present():
+    llm = _SeedCapturingLLM(["[NAV] a"])
+    seed = {"description": "A shop for gadgets.",
+            "capabilities": [{"name": "checkout", "goal": "Buy a gadget and confirm the order."}]}
+    PageExplorer(llm).propose({"url": "http://x", "axtree": "tree"}, site_seed=seed)
+    assert "SITE GOALS" in llm.prompt
+    assert "A shop for gadgets." in llm.prompt
+    assert "Buy a gadget and confirm the order." in llm.prompt
+    # additive, not suppressive
+    assert "crowd out" in llm.prompt
+
+
+def test_propose_omits_site_goals_when_seed_absent_or_empty():
+    for seed in (None, {"description": "", "capabilities": []}):
+        llm = _SeedCapturingLLM(["[NAV] a"])
+        PageExplorer(llm).propose({"url": "http://x", "axtree": "tree"}, site_seed=seed)
+        assert "SITE GOALS" not in llm.prompt
