@@ -75,9 +75,12 @@ llm:
       temperature: 0.0         # override the shared default for this agent
     solver_goal:             # C5: stronger model for GOAL/composite tasks (optional).
       provider: openai       # GOAL solving is multi-step + reasoning-bound, so it gets
-      model: gpt-4o          # a stronger model than the LOCAL solver. Inherits the
-      temperature: 0.0         # solver's vision settings. Remove this block to reuse
-                             # the LOCAL solver for GOAL too.
+      model: gpt-5.6-terra   # a stronger model than the LOCAL solver (gpt-4o-mini).
+      temperature: 0.0         # GPT-5.6 Terra: vision, agentic, ~matches 5.5 at half
+                             # cost. Inherits the solver's vision settings. Remove
+                             # this block to reuse the LOCAL solver for GOAL too.
+                             # NOTE: verify this exact model id + your account access
+                             # + current price in the OpenAI dashboard before a real run.
     trajectory_segmenter:    # splits a successful trajectory into subgoals
       model: deepseek-v4-pro
     skill_abstractor:        # turns a mature trajectory cluster into a SkillCard
