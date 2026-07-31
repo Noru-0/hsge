@@ -6,7 +6,7 @@
 
 **Architecture:** At the first node of a run, an LLM `SiteSeeder` self-summarizes the real site into `{description, capabilities[]}`. That seed (a) is given to `PageExplorer.propose()` as **extra context** that *adds* seed-aligned COMPOSITE tasks without replacing the diverse page-specific INFO/**NAV**/MOD tasks, and (b) is emitted **directly as GOAL tasks** in `_goal_task()` — one per capability, attempted once per run, verified self-graded (`goal_predicate=None`), independent of `all_chains()`. Every node therefore runs BOTH task sets. Everything is gated behind `run.use_site_seed` (default `false`) so the deterministic mock pipeline and existing runs are untouched.
 
-**Task diversity & frontier (design intent, must be preserved):** each node keeps proposing a diverse set of *local* tasks — crucially the **NAV** tasks, because a solved NAV task adds a **tier-0 "reached" URL** to the frontier (a page the agent actually landed on), which is a higher-signal exploration node than a **tier-1 mined `<a href>`**. Seed conditioning is strictly **additive**: it must never nudge the explorer to drop NAV/INFO/MOD in favor of COMPOSITE, or the frontier degrades to crawl-only and meaningful nodes shrink. The existing `propose()` truncation already protects this (drops INFO first, keeps NAV/MOD + a COMPOSITE reserve); the seed prompt wording below is worded to protect it on the *generation* side too.
+**Task diversity & frontier (design intent):** frontier growth comes **primarily from COMPOSITE / MOD / GOAL** tasks — they navigate to new URLs *as a side effect of doing something meaningful*, and every URL the agent lands on becomes a **tier-0 "reached" node** (higher-signal than a **tier-1 mined `<a href>`**). Because those tasks already feed the frontier, dedicated **NAV** tasks are demoted to a **thin capped reserve** (`_NAV_CAP = 1` per page): NAV exists only to reach an important page when no action task on this page would, so a node is never left crawl-only, but pure-NAV skills (low value, prone to sitewide-menu boilerplate — ~46% of proposals in a real run) no longer flood the task set. This rebalance is **not** gated by `use_site_seed` — it is a general local-task priority change (Task 2). New keep-priority when a page overflows `max_tasks`: **COMPOSITE (reserve ≤3) → MOD (all) → NAV (≤`_NAV_CAP`) → COMPOSITE (extra) → UNKNOWN → INFO (dropped first)**. Seed conditioning stays strictly **additive**: it adds seed-aligned COMPOSITE, never crowds out page-specific tasks.
 
 **Tech Stack:** Python 3, numpy-only mock core, `LLM.complete_json` backend seam, pytest. Conda env `go-browse`.
 
@@ -24,7 +24,7 @@
 
 ## Prompts for review (verbatim)
 
-These are the only two new/changed prompts in Phase A. Everything downstream (GOAL task text) reuses `capabilities[i].goal` **as-is**, so the seeder prompt is where GOAL quality is decided — review it hardest.
+Three new/changed prompts in Phase A. Everything downstream (GOAL task text) reuses `capabilities[i].goal` **as-is**, so the seeder prompt is where GOAL quality is decided — review it hardest.
 
 ### 1. `SEEDER_SYS` — new, `hsge/webarena/agents.py`
 
@@ -55,9 +55,29 @@ Rules:
   useless and risk locking the run out.
 ```
 
-### 2. Seed block appended to the `PageExplorer.propose()` **user** prompt — `hsge/webarena/agents.py`
+### 2. `EXPLORER_SYS` ordering rule — CHANGED, `hsge/webarena/agents.py`
 
-`EXPLORER_SYS` (the system prompt) is **not** modified — the seed is per-site data, so it belongs in the user prompt beside `URL`/`PAGE`, and keeping `EXPLORER_SYS` unchanged preserves its existing prompt-assertion tests. The block is added only when a non-empty seed is passed. It is worded to be **additive** — seed goals add COMPOSITE tasks, they never replace the diverse page-specific tasks (especially NAV, which grows the tier-0 frontier):
+Only the one "List ... FIRST" rule changes (de-emphasize NAV to a single reserve). Everything else in `EXPLORER_SYS` is untouched.
+
+Old:
+```
+List COMPOSITE tasks FIRST, then MOD, then NAV, then INFO, and include at least
+2-3 COMPOSITE tasks whenever the page affords a multi-step goal -- these are how
+reusable, chainable skills get discovered.
+```
+New:
+```
+List COMPOSITE tasks FIRST, then MOD, then INFO. Include at least 2-3 COMPOSITE
+tasks whenever the page affords a multi-step goal -- these are how reusable,
+chainable skills get discovered. Propose AT MOST ONE NAV task (list it LAST), and
+only to reach an important page that no COMPOSITE/MOD task here would visit:
+COMPOSITE and MOD tasks already navigate to new pages as they act, so a single
+NAV is enough as a reserve.
+```
+
+### 3. Seed block appended to the `PageExplorer.propose()` **user** prompt — `hsge/webarena/agents.py`
+
+The rest of `EXPLORER_SYS` (the system prompt) is otherwise unchanged; the seed is per-site data, so it goes in the user prompt beside `URL`/`PAGE`. The block is added only when a non-empty seed is passed, and is worded to be **additive** — seed goals add COMPOSITE tasks, they never replace the diverse page-specific tasks:
 
 ```
 SITE GOALS (what this whole site is for) -- use as EXTRA context, NOT as a
@@ -67,11 +87,10 @@ Capabilities a user comes here to accomplish:
 - <name>: <goal>
 - <name>: <goal>
 ...
-Still propose a DIVERSE mix grounded in THIS page: keep the NAV tasks that reach
-other pages (they are what makes exploration discover new pages) and the
-INFO/MOD tasks specific to this page. In ADDITION, when this page affords it,
-include 1-2 COMPOSITE tasks that advance one of the site goals above. Do NOT let
-the site goals crowd out page-specific NAV/INFO/MOD tasks, and do NOT propose a
+Still propose a DIVERSE mix of page-specific tasks grounded in THIS page
+(COMPOSITE, MOD, INFO, and at most one reserve NAV). In ADDITION, when this page
+affords it, include 1-2 COMPOSITE tasks that advance one of the site goals above.
+Do NOT let the site goals crowd out page-specific tasks, and do NOT propose a
 capability this page cannot support.
 ```
 
@@ -243,57 +262,118 @@ git commit -m "feat(seed): add SiteSeeder + SEEDER_SYS to derive a site profile"
 
 ---
 
-## Task 2: Seed-condition `PageExplorer.propose()`
+## Task 2: Seed-condition `PageExplorer.propose()` + rebalance local task priority (fewer NAV)
+
+Two changes to the same method, done together because both touch `propose()` and `EXPLORER_SYS`:
+- **(a) Seed conditioning** — additive `SITE GOALS` block in the user prompt (gated on a non-empty `site_seed`).
+- **(b) NAV rebalance** — de-emphasize NAV to a single reserve, in `EXPLORER_SYS` (generation) and in the truncation keep-order (safety net). This part is **always on** (not gated by `use_site_seed`): it is a general local-task priority change.
 
 **Files:**
-- Modify: `hsge/webarena/agents.py` (`PageExplorer.propose` signature + user-prompt block)
-- Test: `hsge/tests/test_page_explorer.py` (add cases)
+- Modify: `hsge/webarena/agents.py` (`EXPLORER_SYS` ordering rule, `_NAV_CAP` const, `PageExplorer.propose` signature + seed block + NAV cap + new truncation keep-order)
+- Test: `hsge/tests/test_page_explorer.py` (add cases; update existing truncation cases to the new keep-order)
 
 **Interfaces:**
 - Consumes: seed shape from Task 1 (`{"description": str, "capabilities": [{"name","goal"}]}`).
-- Produces: `PageExplorer.propose(self, obs, screenshot_b64=None, site_seed=None)` — new optional keyword `site_seed`; when it carries capabilities, a `SITE GOALS` block is appended to the user prompt. `None`/empty → prompt identical to today.
+- Produces: `PageExplorer.propose(self, obs, screenshot_b64=None, site_seed=None)` — new optional keyword `site_seed`; when it carries capabilities, a `SITE GOALS` block is appended. New class const `PageExplorer._NAV_CAP = 1`. Keep-priority on overflow: **COMPOSITE(≤`_COMPOSITE_RESERVE`) → MOD → NAV(≤`_NAV_CAP`) → COMPOSITE(extra) → UNKNOWN → INFO**; NAV is also capped to `_NAV_CAP` **unconditionally** (even when under `max_tasks`).
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the failing tests**
 
 ```python
 # append to hsge/tests/test_page_explorer.py
+from hsge.webarena.agents import EXPLORER_SYS   # already imported at top; keep one import
+
+
 class _PromptCapturingLLM:
-    def __init__(self):
+    def __init__(self, tasks=None):
         self.prompt = None
+        self._tasks = tasks if tasks is not None else ["[NAV] a"]
 
     def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
         self.prompt = prompt
-        return {"tasks": ["[NAV] a"]}
+        return {"tasks": self._tasks}
+
+
+def test_explorer_sys_demotes_nav_to_one_reserve():
+    # generation-side: the ordering rule must ask for at most one NAV, listed last
+    assert "AT MOST ONE NAV" in EXPLORER_SYS
+    # the old "then NAV, then INFO" ordering must be gone
+    assert "then NAV, then INFO" not in EXPLORER_SYS
+
+
+def test_propose_caps_nav_to_one_even_under_budget():
+    # 3 NAV proposed, max_tasks high enough that overflow truncation does NOT fire
+    llm = _PromptCapturingLLM(["[NAV] a", "[NAV] b", "[NAV] c", "[MOD] m", "[COMPOSITE] c1"])
+    tasks = PageExplorer(llm, max_tasks=10).propose({"url": "http://x", "axtree": ""})
+    assert sum(t.startswith("[NAV]") for t in tasks) == 1
+    # non-NAV tasks are all kept
+    assert "[MOD] m" in tasks and "[COMPOSITE] c1" in tasks
+
+
+def test_propose_keep_order_on_overflow_prefers_composite_mod_over_nav_info():
+    # 2 COMPOSITE, 2 MOD, 2 NAV, 2 INFO; max_tasks=4 -> keep-order:
+    # composite reserve(<=3) + mod + nav(<=1) ... truncated to 4 = 2 COMPOSITE + 2 MOD
+    llm = _PromptCapturingLLM([
+        "[COMPOSITE] c1", "[COMPOSITE] c2", "[MOD] m1", "[MOD] m2",
+        "[NAV] n1", "[NAV] n2", "[INFO] i1", "[INFO] i2"])
+    tasks = PageExplorer(llm, max_tasks=4).propose({"url": "http://x", "axtree": ""})
+    assert len(tasks) == 4
+    assert sum(t.startswith("[COMPOSITE]") for t in tasks) == 2
+    assert sum(t.startswith("[MOD]") for t in tasks) == 2
+    assert not any(t.startswith("[NAV]") for t in tasks)   # NAV loses to COMPOSITE+MOD here
+    assert not any(t.startswith("[INFO]") for t in tasks)
 
 
 def test_propose_injects_site_goals_when_seed_present():
-    llm = _PromptCapturingLLM()
+    llm = _PromptCapturingLLM(["[NAV] a"])
     seed = {"description": "A shop for gadgets.",
             "capabilities": [{"name": "checkout", "goal": "Buy a gadget and confirm the order."}]}
     PageExplorer(llm).propose({"url": "http://x", "axtree": "tree"}, site_seed=seed)
     assert "SITE GOALS" in llm.prompt
     assert "A shop for gadgets." in llm.prompt
     assert "Buy a gadget and confirm the order." in llm.prompt
-    # additive, not suppressive: the block must protect NAV / page-specific tasks
-    assert "NAV" in llm.prompt
+    # additive, not suppressive
     assert "crowd out" in llm.prompt
 
 
 def test_propose_omits_site_goals_when_seed_absent_or_empty():
     for seed in (None, {"description": "", "capabilities": []}):
-        llm = _PromptCapturingLLM()
+        llm = _PromptCapturingLLM(["[NAV] a"])
         PageExplorer(llm).propose({"url": "http://x", "axtree": "tree"}, site_seed=seed)
         assert "SITE GOALS" not in llm.prompt
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+> **Also update existing truncation tests** in `test_page_explorer.py` (the ones added on 2026-07-22, e.g. "reserve honored against a NAV flood", "reserve doesn't starve NAV") to the new keep-order: NAV is now capped at 1, so any assertion expecting multiple NAV kept must change to expect ≤1 NAV and MOD/COMPOSITE preferred. Read them first; adjust expectations, don't delete coverage.
+
+- [ ] **Step 2: Run tests to verify they fail**
 
 Run: `PYTHONPATH=. python -m pytest hsge/tests/test_page_explorer.py -q`
-Expected: FAIL — `propose()` got an unexpected keyword argument `site_seed`.
+Expected: FAIL — `_NAV_CAP`/new ordering not present; `propose()` has no `site_seed` kwarg.
 
 - [ ] **Step 3: Write minimal implementation**
 
-Change the `propose` signature and add the block after the `PAGE` section (before the `ALREADY PROPOSED` block) in `hsge/webarena/agents.py`:
+3a. In `EXPLORER_SYS`, replace the one ordering rule (lines ~47-49):
+
+```python
+    # OLD:
+    "List COMPOSITE tasks FIRST, then MOD, then NAV, then INFO, and include at "
+    "least 2-3 COMPOSITE tasks whenever the page affords a multi-step goal -- "
+    "these are how reusable, chainable skills get discovered.\n"
+    # NEW:
+    "List COMPOSITE tasks FIRST, then MOD, then INFO. Include at least 2-3 "
+    "COMPOSITE tasks whenever the page affords a multi-step goal -- these are how "
+    "reusable, chainable skills get discovered. Propose AT MOST ONE NAV task (list "
+    "it LAST), and only to reach an important page that no COMPOSITE/MOD task here "
+    "would visit: COMPOSITE and MOD tasks already navigate to new pages as they "
+    "act, so a single NAV is enough as a reserve.\n"
+```
+
+3b. Add the class const next to `_COMPOSITE_RESERVE`:
+
+```python
+    _NAV_CAP = 1  # NAV is a thin reserve; COMPOSITE/MOD already grow the frontier
+```
+
+3c. Change the `propose` signature + seed block + NAV cap + new keep-order:
 
 ```python
     def propose(self, obs: dict, screenshot_b64: str | None = None,
@@ -309,30 +389,73 @@ Change the `propose` signature and add the block after the `PAGE` section (befor
                 f"{site_seed.get('description', '')}\n"
                 "Capabilities a user comes here to accomplish:\n"
                 f"{cap_lines}\n"
-                "Still propose a DIVERSE mix grounded in THIS page: keep the NAV "
-                "tasks that reach other pages (they are what makes exploration "
-                "discover new pages) and the INFO/MOD tasks specific to this page. "
-                "In ADDITION, when this page affords it, include 1-2 COMPOSITE tasks "
+                "Still propose a DIVERSE mix of page-specific tasks grounded in THIS "
+                "page (COMPOSITE, MOD, INFO, and at most one reserve NAV). In "
+                "ADDITION, when this page affords it, include 1-2 COMPOSITE tasks "
                 "that advance one of the site goals above. Do NOT let the site goals "
-                "crowd out page-specific NAV/INFO/MOD tasks, and do NOT propose a "
-                "capability this page cannot support.")
+                "crowd out page-specific tasks, and do NOT propose a capability this "
+                "page cannot support.")
         if self._seen:
             recent = list(self._seen.values())[-self._SEEN_HINT_SIZE:]
             prompt += ("\n\nALREADY PROPOSED (do not repeat these or near-duplicates):\n"
                        + "\n".join(f"- {s}" for s in recent))
-        # ...rest of the method is unchanged...
+        image = screenshot_b64 if self.vision else None
+        out = self.llm.complete_json(system, prompt, image_b64=image, image_detail=self.image_detail)
+        if image and not out.get("tasks"):
+            print("    [explorer] empty response with image attached, retrying text-only")
+            out = self.llm.complete_json(system, prompt, image_b64=None, image_detail=self.image_detail)
+        parsed = [p for p in map(self._parse_task, out.get("tasks", [])) if p]
+        if self.read_only:
+            parsed = [(text, tag) for text, tag in parsed if tag in ("INFO", "NAV")]
+        fresh = []
+        for text, tag in parsed:
+            key = self._normalize(text)
+            if key in self._seen:
+                continue
+            self._seen[key] = text
+            fresh.append((text, tag))
+        parsed = fresh
+        # NAV is a thin reserve, capped UNCONDITIONALLY: COMPOSITE/MOD tasks
+        # already navigate to new pages as they act (adding tier-0 frontier
+        # URLs), and pure-NAV skills are low value + prone to sitewide-menu
+        # boilerplate, so keep at most _NAV_CAP NAV tasks regardless of budget.
+        nav_kept = 0
+        capped = []
+        for text, tag in parsed:
+            if tag == "NAV":
+                if nav_kept >= self._NAV_CAP:
+                    continue
+                nav_kept += 1
+            capped.append((text, tag))
+        parsed = capped
+        if len(parsed) > self.max_tasks:
+            # Keep-priority on overflow: COMPOSITE(reserve) -> MOD -> NAV(<=cap,
+            # already enforced above) -> COMPOSITE(extra) -> UNKNOWN -> INFO.
+            # INFO is dropped first (it never grows the frontier).
+            composite = [p for p in parsed if p[1] == "COMPOSITE"]
+            mod = [p for p in parsed if p[1] == "MOD"]
+            nav = [p for p in parsed if p[1] == "NAV"]
+            unknown = [p for p in parsed if p[1] == "UNKNOWN"]
+            info = [p for p in parsed if p[1] == "INFO"]
+            parsed = (composite[: self._COMPOSITE_RESERVE]
+                      + mod
+                      + nav
+                      + composite[self._COMPOSITE_RESERVE:]
+                      + unknown
+                      + info)[: self.max_tasks]
+        return [f"[{tag}] {text}" if tag != "UNKNOWN" else text for text, tag in parsed]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Run tests to verify they pass**
 
 Run: `PYTHONPATH=. python -m pytest hsge/tests/test_page_explorer.py -q`
-Expected: PASS (all existing + 2 new).
+Expected: PASS (all existing-and-updated + 5 new).
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add hsge/webarena/agents.py hsge/tests/test_page_explorer.py
-git commit -m "feat(seed): condition PageExplorer proposals on the site seed"
+git commit -m "feat(explorer): seed-conditioned proposals + demote NAV to one reserve"
 ```
 
 ---
@@ -676,8 +799,8 @@ git commit -m "feat(seed): dry-run e2e for seed-conditioned GOAL curriculum + do
 
 ## Self-review checklist (run before handing off)
 
-1. **Spec coverage:** P1 = Task 1+3 (derive+persist); P2 = Task 4 (seed→GOAL); P3 = Task 2 (conditioned proposals); default-off + mock-determinism = Global Constraints + the `use_site_seed` guard in every task. Verification criterion (non-zero GOAL bucket) = Task 5.
-2. **Type consistency:** seed shape `{"description": str, "capabilities": [{"name": str, "goal": str}]}` is identical in Tasks 1/2/3/4. `SiteSeeder(llm).derive(obs)`, `PageExplorer.propose(obs, screenshot_b64=None, site_seed=None)`, `WebArenaExplorer(..., use_site_seed=False)`, role name `"site_seeder"` — consistent across tasks.
+1. **Spec coverage:** P1 = Task 1+3 (derive+persist); P2 = Task 4 (seed→GOAL); P3 = Task 2a (conditioned proposals); **NAV rebalance = Task 2b** (`_NAV_CAP=1`, always on, both `EXPLORER_SYS` and truncation keep-order); default-off + mock-determinism = Global Constraints + the `use_site_seed` guard on the seed-only parts. Verification criterion (non-zero GOAL bucket) = Task 5.
+2. **Type consistency:** seed shape `{"description": str, "capabilities": [{"name": str, "goal": str}]}` is identical in Tasks 1/2/3/4. `SiteSeeder(llm).derive(obs)`, `PageExplorer.propose(obs, screenshot_b64=None, site_seed=None)`, `PageExplorer._NAV_CAP`, `WebArenaExplorer(..., use_site_seed=False)`, role name `"site_seeder"` — consistent across tasks. **Note:** the NAV rebalance (Task 2b) is NOT behind `use_site_seed`; the seed block (Task 2a) is.
 3. **Open risk to watch during implementation:** the exact `summary.json` GOAL-bucket key path (Task 5) — confirm against a real `--dry-run` output before locking the assertion. Everything else is unit-covered.
 
 ## What Phase A does NOT do (deferred to later plans)
