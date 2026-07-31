@@ -23,6 +23,9 @@ run:
   verify_goals: true         # re-check every self-graded GOAL success with the
                              # episode_judge model; a FAIL demotes it to fail (stops
                              # the solver grading its own homework). false = old behavior
+  plan_subgoals: true        # decompose each GOAL into ordered subgoals (goal_planner)
+                             # the solver pursues one at a time -- for multi-step,
+                             # state-changing goals the plain loop churns on. false = off
   goal_chains_per_node: 3    # max GOAL tasks attempted per node = depth-based operator
                              # chains PLUS seed capabilities (when use_site_seed is on);
                              # each distinct chain/capability is attempted once per run

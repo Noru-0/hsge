@@ -32,7 +32,7 @@ from ..operator_induction import induce_operator, verify_operator_grounding
 from ..operators import Operator, OperatorGraph, plan
 from ..predicate_registry import PredicateRegistry
 from ..segmentation import segment_trajectory
-from .agents import PageExplorer, SiteSeeder, Solver
+from .agents import GoalPlanner, PageExplorer, SiteSeeder, Solver
 from .verify import JUDGE_SYS, judge_prompt
 from .predicates import reached
 
@@ -60,6 +60,7 @@ class WebArenaExplorer:
                  use_site_seed: bool = False,
                  goal_max_steps: int | None = None,
                  verify_goals: bool = False,
+                 plan_subgoals: bool = False,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
         agent_llms = agent_llms or {}
@@ -110,6 +111,10 @@ class WebArenaExplorer:
         # homework. Reuses judge_episodes' grader prompt live. Off by default.
         self.verify_goals = verify_goals
         self.judge_llm = role("episode_judge")
+        # Subgoal-guided GOAL solving (C2): decompose a GOAL into ordered subgoals
+        # the Solver pursues one at a time. Off by default.
+        self.plan_subgoals = plan_subgoals
+        self.planner = GoalPlanner(role("goal_planner"))
         self.opgraph = OperatorGraph()
         # name -> {"precondition_accuracy": {pid: float}, "effect_accuracy": {pid:
         # float}, "member_count": int}; observation-only signal, never gates
@@ -260,7 +265,7 @@ class WebArenaExplorer:
 
     # ---- one task, up to 1 + task_retries attempts --------------------------
     def _solve_with_retries(self, browser, task, difficulty, tag, goal_predicate=None,
-                            max_steps=None, verify_fn=None):
+                            max_steps=None, verify_fn=None, subgoals=None):
         """Run the Solver on one task, retrying failures up to task_retries
         times. Every attempt is recorded as its own episode (SFT data and
         logs stay honest). Infeasible attempts are terminal -- retrying a
@@ -293,7 +298,7 @@ class WebArenaExplorer:
             episode_id = f"ep_{self.episode:04d}"
             (steps, obs_texts, obs_screenshots, final_obs, success,
              infeasible) = self.solver.solve(browser, task, goal_predicate=goal_predicate,
-                                              max_steps=max_steps)
+                                              max_steps=max_steps, subgoals=subgoals)
             # Inline verifier: only a SELF-GRADED success (goal_predicate is None) is
             # re-checked -- a deterministic reached() result is already trustworthy.
             judge_verified = judge_reason = None
@@ -807,11 +812,17 @@ class WebArenaExplorer:
                     self._log("goal_task_selected", node_index=node_index,
                                kind=gt["kind"], chain=gt["chain"],
                                goal_predicate=gt["goal_predicate"])
+                    subgoals = None
+                    if self.plan_subgoals:
+                        subgoals = self.planner.plan(gt["goal"], obs)
+                        self._log("goal_subgoals_planned", node_index=node_index,
+                                   goal=gt["goal"][:80], n=len(subgoals))
                     (episode_id, steps, final_obs, success, infeasible, attempts,
                      urls_seen) = self._solve_with_retries(
                         browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
                         goal_predicate=gt["goal_predicate"], max_steps=self.goal_max_steps,
-                        verify_fn=self._verify_episode if self.verify_goals else None)
+                        verify_fn=self._verify_episode if self.verify_goals else None,
+                        subgoals=subgoals)
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],

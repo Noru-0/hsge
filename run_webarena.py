@@ -33,6 +33,7 @@ DEFAULTS = {
             "use_site_seed": False,
             "goal_max_steps": None,
             "verify_goals": False,
+            "plan_subgoals": False,
             "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None,
             "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
@@ -52,6 +53,7 @@ AGENT_ROLES = (
     "skill_verifier",
     "operator_inducer",
     "episode_judge",
+    "goal_planner",
 )
 
 
@@ -79,6 +81,8 @@ class _DryLLM(MockLLM):
     """
     def complete_json(self, system: str, prompt: str,
                        image_b64: str | None = None, image_detail: str = "low") -> dict:
+        if system.startswith("DECOMPOSE"):                      # goal planner
+            return {"subgoals": ["open the item", "add it to the cart"]}
         if system.startswith("You are a strict grader"):        # inline GOAL verifier
             # the scripted dry-run solver declares done without truly finishing,
             # so the judge catches the false positive -> demotes GOAL success
@@ -335,6 +339,7 @@ def main():
     # dry-run turns the seed on so --dry-run exercises the seed->GOAL path end-to-end
     use_site_seed = True if args.dry_run else run["use_site_seed"]
     verify_goals = True if args.dry_run else run["verify_goals"]
+    plan_subgoals = True if args.dry_run else run["plan_subgoals"]
 
     if args.dry_run:
         root_url = args.root_url or "http://shop/home"
@@ -397,7 +402,7 @@ def main():
         max_hrefs_per_page=max_hrefs_per_page, task_retries=task_retries,
         goal_chains_per_node=goal_chains_per_node,
         use_site_seed=use_site_seed, goal_max_steps=goal_max_steps,
-        verify_goals=verify_goals,
+        verify_goals=verify_goals, plan_subgoals=plan_subgoals,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )
     if resume_ckpt:

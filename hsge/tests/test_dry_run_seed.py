@@ -29,6 +29,17 @@ def test_dry_run_produces_seed_and_goal_episode(tmp_path):
     assert goal["success"] + goal["fail"] + goal["infeasible"] > 0
 
 
+def test_dry_run_plans_subgoals_for_goal(tmp_path):
+    """--dry-run enables plan_subgoals; the planner decomposes each GOAL and logs
+    a goal_subgoals_planned event before solving."""
+    out = str(tmp_path / "wa_dry")
+    subprocess.run([sys.executable, "run_webarena.py", "--dry-run",
+                    "--out", out, "--max-nodes", "2"], check=True, cwd=REPO)
+    log = [json.loads(l) for l in open(os.path.join(out, "run_log.jsonl"), encoding="utf-8")]
+    planned = [e for e in log if e.get("event") == "goal_subgoals_planned"]
+    assert planned and planned[0]["n"] >= 1
+
+
 def test_dry_run_verifier_demotes_false_positive_goal(tmp_path):
     """--dry-run enables verify_goals; the scripted solver self-declares done but
     the grader FAILs it, so the GOAL success is demoted to fail end-to-end."""
