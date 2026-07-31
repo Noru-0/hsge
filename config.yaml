@@ -18,6 +18,11 @@ run:
   task_retries: 0            # retry a failed task up to N more times (0 = off;
                              # tasks the model reports infeasible are never retried).
                              # NOTE: multiplies worst-case LLM cost per task by 1+N
+  goal_max_steps: 25         # step budget for GOAL/composite tasks (null -> max_steps);
+                             # multi-step GOALs need more room than LOCAL lookups
+  verify_goals: true         # re-check every self-graded GOAL success with the
+                             # episode_judge model; a FAIL demotes it to fail (stops
+                             # the solver grading its own homework). false = old behavior
   goal_chains_per_node: 3    # max GOAL tasks attempted per node = depth-based operator
                              # chains PLUS seed capabilities (when use_site_seed is on);
                              # each distinct chain/capability is attempted once per run

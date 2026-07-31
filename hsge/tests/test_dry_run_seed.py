@@ -27,3 +27,15 @@ def test_dry_run_produces_seed_and_goal_episode(tmp_path):
     summary = json.load(open(os.path.join(out, "summary.json"), encoding="utf-8"))
     goal = summary["tasks"]["GOAL"]
     assert goal["success"] + goal["fail"] + goal["infeasible"] > 0
+
+
+def test_dry_run_verifier_demotes_false_positive_goal(tmp_path):
+    """--dry-run enables verify_goals; the scripted solver self-declares done but
+    the grader FAILs it, so the GOAL success is demoted to fail end-to-end."""
+    out = str(tmp_path / "wa_dry")
+    subprocess.run([sys.executable, "run_webarena.py", "--dry-run",
+                    "--out", out, "--max-nodes", "2"], check=True, cwd=REPO)
+    summary = json.load(open(os.path.join(out, "summary.json"), encoding="utf-8"))
+    goal = summary["tasks"]["GOAL"]
+    assert goal["fail"] >= 1        # the inline verifier caught the false positive
+    assert goal["success"] == 0     # nothing survived the grader in the dry run
