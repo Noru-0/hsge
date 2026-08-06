@@ -8,210 +8,236 @@ luyện tự động cho agent, và (5) mô hình ngôn ngữ nhỏ trong vai tr
 trước khi (6) định vị khóa luận so với các hướng nghiên cứu này. Trong mỗi
 chủ đề, các công trình được trình bày từ cũ đến mới.
 
+
 \section{Kiến thức nền tảng}
 \label{sec:rel-background}
 
-\subsection{Bài toán web agent}
+\subsection{Bài toán tác nhân web (Web agent)}
 
-Một web agent nhận mục tiêu bằng ngôn ngữ tự nhiên và phải hoàn thành nó
-bằng cách thao tác website như một người dùng: đọc trang rồi click, gõ và
-điều hướng. Trong cách hình thức hóa dạng văn bản đã thành chuẩn, quan sát
-là bản tuần tự hóa của accessibility tree, còn action space là một tập nhỏ
-các thao tác giao diện có tham số (Mục~\ref{sec:method-graph} nêu bản cụ
-thể hóa của chúng tôi). Chính sách của agent thường được xây trên khuôn mẫu
-ReAct~\cite{yao2023react}: đan xen suy luận dạng văn bản với hành động, để
-mỗi quyết định dựa trên một dòng suy nghĩ tường minh về trạng thái hiện
-tại.
+Một tác nhân web (web agent) tiếp nhận các yêu cầu bằng ngôn ngữ tự nhiên
+và có nhiệm vụ thực thi chúng bằng cách tương tác với website giống như
+một người dùng thực tế: phân tích nội dung, nhấp chuột, nhập liệu và điều
+hướng. Trong cách mô hình hóa dưới dạng văn bản tiêu chuẩn, thông tin quan
+sát (observation) của hệ thống là bản biểu diễn tuần tự hóa từ cây trợ năng
+(accessibility tree). Không gian hành động (action space) là một tập hữu hạn
+các thao tác giao diện đi kèm tham số; chi tiết cấu trúc này trong nghiên cứu
+của chúng tôi được trình bày tại Mục~\ref{sec:method-graph}.
+Cấu trúc ra quyết định (policy) của các tác nhân này thường được thiết kế dựa trên
+kiến trúc ReAct~\cite{yao2023react}. Kiến trúc này luân phiên kết hợp quá trình suy
+luận ngôn ngữ với việc thực thi hành động, qua đó đảm bảo mọi quyết định đưa ra đều
+được dẫn dắt bởi một luồng tư duy tường minh dựa trên trạng thái hiện hành của môi trường.
 
 \subsection{Benchmark và môi trường}
 
-Hạ tầng đánh giá phát triển theo hướng ngày càng sát thực tế.
-WebShop~\cite{yao2022webshop} đưa ra một trang thương mại điện tử mô phỏng
-với hơn một triệu sản phẩm thật và các chỉ dẫn mua sắm thu thập từ cộng
-đồng; tuy nhiên, nó chỉ có một website đơn giản hóa với một thể loại task.
-Mind2Web~\cite{deng2023mind2web} mở rộng lên hơn 2{.}000 task trên 137
-website thật, nhưng đánh giá bằng cách phát lại các bản chụp website đã
-lưu, nên agent được chấm theo độ khớp với chuỗi hành động ghi sẵn thay vì
-theo việc thật sự đạt mục tiêu trong môi trường sống.
-WebArena~\cite{zhou2024webarena} khép lại khoảng trống này bằng các bản sao
-website đầy đủ chức năng, tự triển khai (một cửa hàng trực tuyến, trang
-quản trị của nó, một instance GitLab và một diễn đàn kiểu Reddit), cùng
-812 task dài hạn được chấm bằng \emph{bộ chấm tự động} trên trạng thái cuối.
-Kết quả chủ đạo của nó định khung cho cả lĩnh vực: agent tốt nhất dựa trên
-GPT-4 đạt 14{,}41\% tỷ lệ hoàn thành, so với 78{,}24\% của con người. Khóa
-luận này dùng WebArena vừa làm môi trường khám phá vừa làm đích đánh giá
-chính thức. Cuối cùng, hệ sinh thái
-BrowserGym~\cite{dechezelles2025browsergym} chuẩn hóa giao diện quan sát và
-hành động giữa các benchmark; runtime của chúng tôi xây trên nền này.
+Các benchmark dành cho web agent ngày càng được thiết kế gần với các tình
+huống sử dụng trong thực tế. WebShop~\cite{yao2022webshop} giới thiệu một
+website thương mại điện tử mô phỏng với hơn một triệu sản phẩm thật cùng
+các yêu cầu mua sắm được thu thập từ cộng đồng. Tuy nhiên, benchmark này
+chỉ gồm một website đơn giản hóa và chỉ hỗ trợ một loại task.
 
-\subsection{Tinh chỉnh tiết kiệm tham số}
+Mind2Web~\cite{deng2023mind2web} mở rộng quy mô lên hơn 2{.}000 task trên
+137 website thật. Tuy nhiên, việc đánh giá được thực hiện bằng cách phát
+lại các bản chụp website đã lưu, nên agent được chấm dựa trên mức độ khớp
+với chuỗi hành động tham chiếu thay vì khả năng thực sự hoàn thành mục tiêu
+trong môi trường đang hoạt động.
 
-Fine-tune toàn bộ một mô hình 9B tham số vẫn rất tốn bộ nhớ.
-LoRA~\cite{hu2022lora} thay vào đó đóng băng trọng số pretrain và chỉ huấn
-luyện các ma trận cập nhật hạng thấp cộng thêm, giảm số tham số huấn luyện
-đi nhiều bậc mà chất lượng hầu như không đổi; adapter sau đó có thể gộp
-ngược vào trọng số gốc để serving. Toàn bộ fine-tuning trong khóa luận dùng
-LoRA.
+WebArena~\cite{zhou2024webarena} khắc phục hạn chế này bằng cách cung cấp
+các bản sao đầy đủ chức năng của nhiều website có thể tự triển khai, gồm
+một cửa hàng trực tuyến, trang quản trị của cửa hàng, một instance GitLab
+và một diễn đàn kiểu Reddit. Benchmark này bao gồm 812 task dài hạn, được
+đánh giá bằng bộ chấm tự động trên trạng thái cuối của môi trường. Kết quả
+của WebArena cũng cho thấy mức độ khó của bài toán: tại thời điểm công bố
+benchmark, agent tốt nhất sử dụng GPT-4 chỉ đạt tỷ lệ hoàn thành 14{,}41\%,
+trong khi con người đạt 78{,}24\%. Trong khóa luận này, WebArena vừa đóng vai trò là môi trường
+khám phá, vừa là benchmark đánh giá chính thức.
+
+Cuối cùng, BrowserGym~\cite{drouin2024workarena, dechezelles2025browsergym}
+chuẩn hóa giao diện quan sát và hành động giữa nhiều benchmark web agent.
+Runtime của khóa luận được xây dựng trên nền tảng này.
+
+\subsection{Tinh chỉnh hiệu quả tham số (Parameter-Efficient Fine-Tuning)}
+
+Quá trình tinh chỉnh toàn phần (full fine-tuning) một mô hình ngôn ngữ cỡ 9
+tỷ tham số (9B) vẫn đòi hỏi lượng bộ nhớ rất lớn. Để giải
+quyết rào cản này, kỹ thuật LoRA~\cite{hu2022lora} được áp dụng thông qua
+cơ chế đóng băng các trọng số đã qua tiền huấn luyện (pre-trained weights),
+đồng thời chỉ tiến hành huấn luyện các ma trận cập nhật có hạng thấp
+(low-rank matrices) được chèn thêm vào mô hình. Giải pháp này giúp giảm
+thiểu số lượng tham số cần tối ưu hóa đi nhiều bậc độ lớn trong khi vẫn
+bảo toàn được hiệu năng tổng thể. Hơn nữa, các trọng số thích ứng (adapter)
+thu được sau huấn luyện có thể dễ dàng được tích hợp (merge) trở lại vào
+trọng số gốc nhằm tối ưu hóa giai đoạn phục vụ suy luận (serving). Trong
+khuôn khổ khóa luận, toàn bộ quy trình tinh chỉnh mô hình đều được thực
+hiện dựa trên phương pháp LoRA.
 
 \section{Web agent dựa trên LLM}
 \label{sec:rel-llm-agents}
 
-Làn sóng đầu tiên của thời kỳ WebArena cải thiện \emph{kiến trúc agent}
-quanh một mô hình lớn cố định. SteP~\cite{sodhi2024step} tổ chức một chồng
-(stack) các chính sách LLM, tự động đẩy vào và lấy ra các chính sách con
-(đăng nhập, tìm kiếm, điền form) như trạng thái điều khiển; nó vượt xa
-baseline nguyên khối của WebArena. Tuy nhiên, thư viện chính sách của SteP
-được thiết kế thủ công cho từng họ website, tái nhập chính công sức con
-người mà lĩnh vực đang muốn loại bỏ.
-AgentOccam~\cite{yang2024agentoccam} cho thấy chỉ cần tinh chỉnh cẩn thận
-không gian quan sát và hành động, không cần bất kỳ bộ máy lập kế hoạch
-nào, đã vượt nhiều hệ thống cầu kỳ đương thời trên WebArena, một minh
-chứng tỉnh táo rằng phần lớn ``tiến bộ agent'' thực ra là kỹ thuật giao
-diện. Tuy nhiên, cả hai hướng đều chung hai đặc điểm cấu trúc: chúng coi mô
-hình là hàng hóa cố định (thường là hạng GPT-4, trả phí theo lời gọi), và
-không để lại sản phẩm bền vững nào: những gì học được về một website
-không sống sót qua episode. Với người vận hành cần agent rẻ, riêng tư và
-cải thiện được, prompt khéo hơn trên mô hình độc quyền không giải quyết
-ràng buộc; nó củng cố ràng buộc.
+Các nghiên cứu đầu tiên trên benchmark WebArena chủ yếu tập trung cải tiến
+\emph{kiến trúc agent} trong khi vẫn sử dụng một mô hình ngôn ngữ lớn làm
+thành phần trung tâm. SteP~\cite{sodhi2024step} đề xuất một kiến trúc phân
+tầng gồm nhiều chính sách LLM, cho phép tự động chuyển đổi giữa các chính
+sách con (đăng nhập, tìm kiếm, điền form) tùy theo trạng thái hiện tại của
+agent. Cách tiếp cận này nâng tỷ lệ hoàn thành trên WebArena từ 14{,}9\% lên
+33{,}5\%. Tuy nhiên, các chính sách con của SteP vẫn phải được thiết kế thủ
+công cho từng họ website, nên chưa loại bỏ được sự phụ thuộc vào công sức và tri thức từ
+con người trong quá trình xây dựng agent.
 
-\section{Khám phá skill và workflow}
+AgentOccam~\cite{yang2024agentoccam} cho thấy chỉ cần thiết kế cẩn thận
+không gian quan sát và hành động, không cần bổ sung cơ chế lập kế hoạch
+phức tạp, cũng có thể đạt 43{,}1\% trên WebArena --- vượt qua nhiều hệ thống
+đương thời, trong đó có chính SteP. Kết
+quả này cho thấy phần lớn mức cải thiện về hiệu năng của agent đến từ cách
+biểu diễn giao diện và không gian hành động, thay vì chỉ từ các cơ chế lập
+kế hoạch.
+
+Mặc dù khác nhau về kiến trúc, cả hai hướng tiếp cận đều có hai đặc điểm
+chung. Thứ nhất, chúng đều sử dụng một mô hình nền cố định (thường là các
+mô hình thuộc họ GPT-4) được truy cập thông qua API. Thứ hai, tri thức thu
+được trong quá trình tương tác với website không được lưu giữ để tái sử
+dụng ở các episode tiếp theo. Đối với những hệ thống cần chi phí thấp, bảo
+đảm quyền riêng tư và có khả năng tiếp tục cải thiện sau khi triển khai,
+việc tối ưu prompt trên các mô hình độc quyền chưa giải quyết được những
+hạn chế cốt lõi này.
+
+\section{Khám phá kỹ năng (skill) và quy trình nghiệp vụ (workflow)}
 \label{sec:rel-skills}
 
-Ý tưởng agent nên tích lũy các hành vi tái sử dụng có gốc rễ sâu. Khung
-options~\cite{sutton1999options} hình thức hóa một skill thành bộ ba (tập
-khởi đầu, chính sách, điều kiện kết thúc), còn STRIPS~\cite{fikes1971strips}
-cho thấy các năng lực mô tả bằng precondition và effect hỗ trợ lập kế hoạch
-ký hiệu, cả hai khung hình thức mà HSGE kế thừa trực tiếp
-(Mục~\ref{sec:method-graph}).
+Quan điểm cho rằng các tác nhân AI cần được trang bị khả năng tích lũy các chuỗi
+hành vi để tái sử dụng đã có một nền tảng lịch sử vững chắc. Từ rất sớm,
+STRIPS~\cite{fikes1971strips} đã cho thấy các năng lực của tác nhân có thể được
+đặc tả qua điều kiện tiên quyết (precondition) và hiệu ứng tác động (effect),
+nhờ đó phục vụ được các thuật toán lập kế hoạch ký hiệu (symbolic planning).
+Nhiều thập niên sau, khung lý thuyết options~\cite{sutton1999options} mô hình hóa
+một kỹ năng thành một bộ ba toán học gồm tập trạng thái khởi đầu, chính sách hành
+động và điều kiện kết thúc. Hai khung này được nối lại với nhau bởi các công trình
+sau đó: Konidaris và Barto~\cite{konidaris2009skillchaining} ghép chuỗi kỹ năng bằng
+cách khớp điều kiện kết thúc của kỹ năng trước với tập trạng thái khởi đầu của kỹ
+năng sau, còn Konidaris và cộng sự~\cite{konidaris2018skills2symbols} chứng minh
+options có thể được nâng thành các toán tử ký hiệu dạng precondition/effect phục vụ
+lập kế hoạch trừu tượng. HSGE kế thừa trực tiếp nguyên lý từ cả bốn công trình này
+(chi tiết tại Mục~\ref{sec:method-graph}).
 
-Trong kỷ nguyên LLM, Voyager~\cite{wang2024voyager} minh họa việc học skill
-suốt đời trong Minecraft: một thư viện ngày càng lớn các skill dạng mã thực
-thi, mỗi skill được kiểm chứng bằng thực thi trước khi thu nhận. Tuy nhiên,
-môi trường của nó có chân lý nền lập trình được (trạng thái game) mà
-website không có, và skill của nó phục vụ runtime của một agent chứ không
-phục vụ pipeline huấn luyện nào.
-Synapse~\cite{zheng2024synapse} lưu nguyên trajectory làm mẫu (exemplar) và
-truy xuất theo độ tương đồng để đưa vào prompt. Tuy nhiên, bộ nhớ
-trajectory là phẳng: các mẫu không ghép được với nhau, và không gì phân
-biệt một trajectory đã kiểm chứng với một trajectory ăn may.
-Agent Workflow Memory~\cite{wang2024awm} rút ra các quy trình lặp lại
-(workflow) từ trajectory quá khứ rồi tiêm vào prompt các lần sau, cải thiện
-đáng kể tỷ lệ thành công trên WebArena. Tuy nhiên, workflow được lưu dưới
-dạng văn bản phẳng, thu nhận không qua cổng kiểm chứng tường minh, và chỉ
-được tiêu thụ như gợi ý lúc chạy; mô hình bên dưới không hề tốt lên.
-Gần đây nhất, skill induction dạng lập trình~\cite{wang2025asi} nâng các
-chuỗi hành động lặp lại thành hàm thực thi được, kiểm chứng ngay khi dùng,
-ghép các hành động nguyên thủy thành những lời gọi ở mức cao hơn.
-SkillWeaver~\cite{zheng2025skillweaver} đi xa hơn: agent tự khám phá, luyện
-tập và tinh luyện skill thành các API gọi được thông qua khám phá lặp, cải
-thiện đáng kể hiệu năng WebArena nhờ tái sử dụng và thậm chí chuyển giao
-skill giữa các agent. Tuy nhiên, ở tất cả các hệ thống này, skill sinh ra
-đều phục vụ việc tái sử dụng lúc suy luận bởi một mô hình lớn; không hệ nào
-biến cấu trúc skill thành \emph{dữ liệu huấn luyện}.
+Trong kỷ nguyên của các mô hình ngôn ngữ lớn (LLM), Voyager~\cite{wang2024voyager}
+là minh chứng tiêu biểu cho khả năng học tập kỹ năng liên tục (lifelong learning)
+của tác nhân trong môi trường Minecraft. Hệ thống này xây dựng một thư viện các kỹ
+năng dưới dạng mã thực thi có khả năng tự mở rộng, trong đó mỗi kỹ năng bắt buộc phải
+ được nghiệm chứng thông qua thực thi trước khi được tích hợp. Tuy nhiên, giới hạn của
+ phương pháp này nằm ở chỗ môi trường giả lập cung cấp sẵn các trạng thái chân lý nền
+ (ground truth) có thể truy xuất chính xác bằng mã nguồn, một đặc quyền không tồn tại
+ trong môi trường website thực tế. Thêm vào đó, kỹ năng thu thập được chỉ đóng vai trò
+ hỗ trợ quá trình thực thi (runtime) của tác nhân, hoàn toàn không được tái sử dụng để
+ xây dựng dữ liệu huấn luyện.
 
-HSGE đi theo hướng ngược lại: skill được phát hiện và kiểm chứng trên cùng
-tinh thần, nhưng mục đích của chúng là được nâng thành các operator lập kế
-hoạch mà các phép ghép chuỗi sẽ \emph{sinh ra} những task dài hạn để huấn
-luyện một mô hình nhỏ.
+Ở một hướng tiếp cận khác, Synapse~\cite{zheng2024synapse} lược bớt các chi tiết không
+liên quan tới tác vụ trong chuỗi tương tác (trajectory), lưu phần còn lại làm bản mẫu
+(exemplar) rồi truy xuất theo độ tương đồng để nhúng vào prompt. Mặc dù vậy, bộ nhớ này
+mang tính tuyến tính (phẳng): các bản mẫu bị cô lập và không thể ghép nối với nhau. Hạn
+chế lớn hơn là các bản mẫu đó vốn được xây từ thao tác mẫu do con người thực hiện, nên
+bộ nhớ không thể tự mở rộng khi agent gặp tình huống mới.
 
-\section{Sinh dữ liệu huấn luyện tự động cho agent}
+Tương tự, Agent Workflow Memory~\cite{wang2024awm} tiến hành trích xuất các quy trình
+nghiệp vụ mang tính chu kỳ (workflow) từ dữ liệu lịch sử và tích hợp chúng vào prompt
+ở các lượt tương tác sau, nâng tỷ lệ hoàn thành tác vụ trên WebArena từ 23{,}5\% lên
+35{,}5\%. Phiên bản trực tuyến của AWM có dùng một mô hình ngôn ngữ để chấm nhị phân
+xem episode có thành công hay không trước khi trích workflow, nhưng bộ chấm này chỉ
+xét kết quả của episode chứ không thực thi lại workflow để xác nhận nó dùng lại được.
+Bên cạnh đó, mỗi workflow là một chuỗi bước tuyến tính, không có precondition/effect
+tường minh, nên không thể ghép chuỗi bằng thuật toán lập kế hoạch. Quan trọng hơn,
+chúng chỉ được tiêu thụ dưới dạng tri thức bổ trợ ngữ cảnh (in-context suggestions)
+khi mô hình đưa ra suy luận; do đó, năng lực cốt lõi (intrinsic capability) của bản
+thân mô hình nền tảng không được cải thiện.
+
+Gần đây, phương pháp quy nạp kỹ năng dưới dạng lập trình~\cite{wang2025asi} nâng
+các chuỗi hành động lặp lại thành những hàm có khả năng thực thi, tự động kiểm
+chứng lúc vận hành và gom các thao tác nguyên thủy thành các lệnh gọi hàm bậc cao.
+
+Tiến thêm một bước, SkillWeaver~\cite{zheng2025skillweaver} cho phép tác nhân tự
+khám phá, tinh chỉnh và đóng gói kỹ năng thành những API độc lập qua nhiều vòng
+lặp, đồng thời chia sẻ chúng giữa các tác nhân khác nhau.
+
+Điểm chung của tất cả các kiến trúc trên là kỹ năng sinh ra chỉ phục vụ giai đoạn
+suy luận (inference) của những LLM cỡ lớn, không hề cập nhật tham số của mô hình.
+Ở chiều ngược lại, một số công trình có biến quá trình khám phá thành dữ liệu huấn
+luyện, chẳng hạn NNetNav~\cite{murty2024nnetnav} hay PAE~\cite{zhou2024pae}
+(Mục~\ref{sec:rel-datagen}), nhưng chúng xuất phát từ những chuỗi thực thi đơn lẻ
+hoặc từ tác vụ đề xuất theo ngữ cảnh tĩnh, chứ không từ các kỹ năng đã kiểm chứng
+và có thể ghép chuỗi. Theo khảo sát của chúng tôi, việc kiểm chứng kỹ năng, nâng
+chúng thành toán tử có precondition/effect rồi \emph{ghép chuỗi} các toán tử đó để
+sinh \emph{dữ liệu huấn luyện} là hướng đi chưa được khai thác.
+
+Đây chính là khoảng trống mà HSGE nhắm tới. Kỹ năng vẫn trải qua các bước phát
+hiện và nghiệm chứng tương tự, nhưng thay vì dừng lại ở đó, chúng được nâng thành
+các toán tử lập kế hoạch (planning operator). Từ các toán tử này, hệ thống ghép
+chuỗi để tổng hợp những tác vụ ngữ nghĩa dài hạn, và chính chúng mới là nguồn dữ
+liệu dùng để huấn luyện một mô hình ngôn ngữ nhỏ.
+
+\section{Sinh dữ liệu huấn luyện tự động cho tác nhân web}
 \label{sec:rel-datagen}
 
-Hướng nghiên cứu gần khóa luận nhất là sinh dữ liệu huấn luyện agent không
-cần gán nhãn thủ công, phân nhánh theo nguồn dữ liệu.
+Hướng nghiên cứu có nhiều nét tương đồng nhất với khóa luận là quá trình sinh dữ liệu huấn luyện cho tác nhân (agent) mà không cần gán nhãn thủ công. Hướng tiếp cận này có thể được phân loại dựa trên nguồn dữ liệu đầu vào.
 
-\subsection{Từ tri thức gián tiếp}
+\subsection{Khai thác từ tri thức gián tiếp}
 
-Synatra~\cite{ou2024synatra} chuyển tri thức gián tiếp (các bài hướng
-dẫn, tài liệu hướng dẫn thao tác trên mạng) thành bản mẫu tổng hợp ở quy mô lớn, tạo
-ra 100k trajectory với chi phí thấp. Tuy nhiên, các bản mẫu được dựng
-offline, không hề chạm vào website sống, nên không gì bảo đảm chúng thực
-thi được trên môi trường thật.
-AgentTrek~\cite{xu2024agenttrek} cải thiện độ bám thực tế bằng cách phát
-lại các bài hướng dẫn web trong trình duyệt thật, có VLM kiểm chứng từng
-lần phát lại. Tuy nhiên, độ phủ của nó bị chặn bởi những gì đã có bài hướng
-dẫn: các quy trình chưa ai viết ra (bao gồm mọi thứ đặc thù của một
-website riêng hoặc mới triển khai) nằm ngoài tầm với.
+Synatra~\cite{ou2024synatra} đề xuất phương pháp chuyển hóa tri thức gián tiếp (từ các bài viết hoặc tài liệu hướng dẫn trực tuyến) thành các bản mẫu tổng hợp ở quy mô lớn, qua đó tạo ra khoảng 100 nghìn bản mẫu tổng hợp với chi phí chỉ vào khoảng 0{,}031 USD mỗi mẫu. Mặc dù vậy, hạn chế của phương pháp này là các bản mẫu được tổng hợp ngoại tuyến (offline) và không qua tương tác trực tiếp với môi trường website động; do đó, tính khả thi của chúng khi triển khai thực tế không được đảm bảo.
 
-\subsection{Từ khám phá tự động}
+AgentTrek~\cite{xu2024agenttrek} khắc phục điểm yếu này bằng cách tái hiện (replay) các bài hướng dẫn trực tiếp trên trình duyệt thực, kết hợp với một mô hình VLM để nghiệm chứng tính đúng đắn của toàn bộ quỹ đạo. Tuy nhiên, độ phủ (coverage) của hệ thống lại bị giới hạn nghiêm ngặt bởi lượng tài liệu hướng dẫn có sẵn: những quy trình nghiệp vụ chưa từng được tài liệu hóa, hoặc các thao tác đặc thù trên những nền tảng nội bộ và website mới triển khai, đều nằm ngoài khả năng xử lý của phương pháp này.
 
-Họ thứ hai, giống HSGE, để agent tự khám phá môi trường đích và chế tạo
-task từ những gì tìm thấy.
-NNetNav~\cite{murty2024nnetnav} khám phá website rồi gán nhãn hồi tố các
-episode tương tác bằng chỉ dẫn, cắt tỉa những nhánh không chấp nhận nhãn
-sub-task có nghĩa; fine-tune Llama-3.1-8B trên các bản mẫu này đạt trên
-16\% trên WebArena. Tuy nhiên, khám phá là các rollout không cấu trúc:
-những gì agent học được về năng lực của website bị vứt bỏ thay vì tích lũy,
-mỗi episode lại bắt đầu từ con số không.
-OS-Genesis~\cite{sun2024osgenesis} áp cùng ý tưởng tổng hợp ngược cho
-trajectory GUI: tương tác trước, suy ra task sau. Tuy nhiên, task được suy
-theo từng chuỗi tương tác, không có cơ chế ghép các năng lực phát hiện ở
-các episode khác nhau.
-PAE~\cite{zhou2024pae} khép vòng bằng học tăng cường: một bộ đề xuất task,
-một chính sách hành động và một VLM đánh giá mà phán quyết trở thành phần
-thưởng. Tuy nhiên, việc đề xuất task chỉ dựa trên ngữ cảnh cục bộ, và RL
-trên phần thưởng nhị phân thưa vừa ngốn mẫu vừa nặng hạ tầng so với SFT.
-InSTA~\cite{trabucco2025insta} đẩy công thức này lên bề rộng internet, sinh
-task cho 150k website sống bằng LLM ở cả khâu sinh lẫn khâu chấm. Tuy
-nhiên, bề rộng đánh đổi với chiều sâu: một lượt quét qua nhiều website
-không thể khám phá các task nhiều bước, ghép nhiều năng lực, vốn đòi hỏi
-tri thức bền vững về một website.
-WebRL~\cite{qi2025webrl} tiến hóa một curriculum từ chính các thất bại của
-agent, huấn luyện các mô hình mở trên WebArena-Lite với mức cải thiện mạnh,
-còn WebAgent-R1~\cite{wei2025webagentr1} huấn luyện mô hình mở đầu--cuối
-bằng học tăng cường nhiều lượt trên các rollout song song. Tuy nhiên, cả
-hai đều giả định sẵn một phân phối task ban đầu để cải thiện, và vòng tự
-tiến hóa của chúng cần bộ máy RL trực tuyến mà SFT tránh được. Một hướng bổ
-trợ thay hẳn website sống: WebEvolver~\cite{fang2025webevolver} đồng tiến
-hóa một world model với agent để sinh rollout tổng hợp mà không chạm môi
-trường thật. Tuy nhiên, một trình mô phỏng học được thừa kế độ phủ của dữ
-liệu đã huấn luyện nó, và trajectory của nó chỉ đáng tin ngang độ trung
-thực của world model.
+\subsection{Khai thác qua tự động khám phá}
 
-Gần khóa luận nhất, Go-Browse~\cite{gandhi2026gobrowse} đóng khung việc thu
-thập dữ liệu thành tìm kiếm trên graph của một website: các trang đã thăm
-trở thành các node thăm lại được, nên khám phá tái sử dụng thông tin giữa
-các episode. Một mô hình 7B fine-tune trên dữ liệu thu được đạt 21{,}7\%
-trên WebArena, state of the art cho mô hình dưới 10B tại thời điểm công
-bố. Go-Browse xác nhận đúng tiền đề cốt lõi của khóa luận: khám phá
-\emph{có cấu trúc} thắng rollout không cấu trúc về chất lượng dữ liệu. Tuy
-nhiên, graph của nó là graph \emph{của các trang}, và task của nó vẫn là
-các đề xuất bám trang được giải từ những trang đó. HSGE bổ sung một tầng
-thứ hai mà Go-Browse không xây: các skill đã kiểm chứng được nâng thành
-operator lập kế hoạch với precondition/effect chuẩn hóa. Các chuỗi đi qua
-những operator đó sinh ra \emph{semantic task}: những mục tiêu trải dài
-trên các năng lực phát hiện ở các episode khác nhau, điều mà không đề xuất
-bám trang nào tạo ra được (Mục~\ref{sec:method-semantic}).
+Nhóm nghiên cứu thứ hai, mang triết lý tương đồng với HSGE, cho phép tác nhân tự chủ khám phá môi trường đích và tự định nghĩa tác vụ từ những tri thức thu thập được.
+
+NNetNav~\cite{murty2024nnetnav} tiến hành khám phá website, sau đó gán nhãn hồi tố (retroactive labeling) cho các chu kỳ tương tác (episode) dựa trên các chỉ dẫn, đồng thời loại bỏ các nhánh tương tác không mang ngữ nghĩa tác vụ con (sub-task) rõ ràng. Phương pháp tinh chỉnh mô hình Llama-3.1-8B trên tập dữ liệu này đã giúp hệ thống đạt hiệu năng 16{,}3\% trên toàn bộ 812 tác vụ của WebArena.\footnote{Go-Browse~\cite{gandhi2026gobrowse} tái lập NNetNav ở quy mô 7B và báo cáo con số 18{,}8\%; đây là mốc mà Go-Browse dùng để so sánh, khác với 16{,}3\% do chính nhóm NNetNav công bố.} Tuy nhiên, hạn chế lớn nhất là tri thức tác nhân thu được về cấu trúc website không được tích lũy giữa các episode, buộc mỗi episode phải khởi tạo lại từ con số không.
+
+OS-Genesis~\cite{sun2024osgenesis} cũng áp dụng cơ chế tổng hợp ngược tương tự đối với các trajectory trên giao diện đồ họa (GUI): thực hiện tương tác trước, sau đó mới suy diễn tác vụ. Dẫu vậy, các tác vụ chỉ được trích xuất dựa trên từng chuỗi tương tác đơn lẻ, hoàn toàn thiếu vắng cơ chế ghép nối và kế thừa năng lực giữa các episode khác biệt.
+
+PAE~\cite{zhou2024pae} hoàn thiện chu trình này bằng cơ chế học tăng cường (RL), tích hợp một bộ đề xuất tác vụ, một chính sách hành động và một mô hình VLM đóng vai trò hàm phần thưởng. Điểm yếu của hướng đi này là việc đề xuất tác vụ chỉ dựa trên ngữ cảnh tĩnh và thô (tên website hoặc một vài thao tác mẫu của người dùng), không bám vào trạng thái thực tế của trang. Thêm vào đó, việc áp dụng RL với tín hiệu phần thưởng nhị phân thưa thớt (sparse binary reward) không chỉ tiêu tốn lượng lớn dữ liệu mẫu (sample-inefficient) mà còn đòi hỏi hạ tầng tính toán phức tạp hơn đáng kể so với phương pháp SFT.
+
+InSTA~\cite{trabucco2025insta} mở rộng kiến trúc trên ra quy mô toàn cầu, sử dụng LLM để tự động sinh và đánh giá tác vụ trên 150.000 website thực tế. Thế nhưng, sự đánh đổi giữa chiều rộng và chiều sâu là không thể tránh khỏi: một lượt rà soát bề mặt không đủ để hệ thống khám phá ra các tác vụ chuỗi đa bước phức tạp --- thứ đòi hỏi một nền tảng tri thức lưu trữ bền vững về cấu trúc website.
+
+WebRL~\cite{qi2025webrl} xây dựng một chương trình học (curriculum) tự tiến hóa dựa trên chính những lần thử nghiệm thất bại của tác nhân, cho thấy sự cải thiện mạnh mẽ khi huấn luyện các mô hình mã nguồn mở trên WebArena-Lite. Song song đó, WebAgent-R1~\cite{wei2025webagentr1} huấn luyện mô hình mở (end-to-end) bằng RL nhiều lượt thông qua các rollout chạy song song. Hạn chế chung của cả hai công trình là đều phụ thuộc vào một phân phối tác vụ mồi (initial task distribution) có sẵn, đồng thời vòng lặp tự tiến hóa đòi hỏi duy trì một hạ tầng RL trực tuyến, trong khi SFT có thể tối giản hóa khâu này.
+
+Một hướng tiếp cận bổ trợ nhằm loại bỏ sự phụ thuộc vào môi trường website động là WebEvolver~\cite{fang2025webevolver}. Công trình này đồng tiến hóa một mô hình thế giới (world model) cùng tác nhân để sinh các rollout tổng hợp. Dù vậy, một trình mô phỏng học máy sẽ luôn kế thừa những thiên kiến từ dữ liệu huấn luyện, và tính xác tín của các trajectory sinh ra hoàn toàn bị giới hạn bởi độ chính xác (fidelity) của mô hình thế giới đó.
+
+Công trình chia sẻ nhiều điểm giao thoa nhất với khóa luận là Go-Browse~\cite{gandhi2026gobrowse}. Nghiên cứu này mô hình hóa việc thu thập dữ liệu thành bài toán tìm kiếm trên đồ thị (graph) của website: các trang đã duyệt được lưu trữ thành các node có thể tái truy cập, cho phép quá trình khám phá kế thừa thông tin giữa các episode. Mô hình 7B khi được tinh chỉnh trên tập dữ liệu này đã đạt hiệu năng 21{,}7\% trên WebArena --- xác lập mức tiên tiến nhất (state-of-the-art) cho phân khúc mô hình dưới 10B tại thời điểm công bố. Kết quả của Go-Browse củng cố tiền đề cốt lõi của khóa luận: khám phá \emph{có cấu
+trúc} cho chất lượng dữ liệu tốt hơn các chuỗi rollout thiếu cấu trúc.
+
+Tuy nhiên, đồ thị của Go-Browse chỉ có một tầng duy nhất --- node là URL, cạnh là
+quỹ đạo --- và không tồn tại tầng trừu tượng nào phía trên: không có node kỹ năng đã
+kiểm chứng, không có precondition/effect chuẩn hóa, do đó không có cơ chế ghép chuỗi
+năng lực. Hệ quả là các tác vụ sinh ra bị ràng buộc ngữ nghĩa vào một trang đơn lẻ
+(page-bound); bộ đề xuất tác vụ của Go-Browse được yêu cầu tường minh chỉ tìm những
+việc \emph{làm được ngay trên trang hiện tại mà không cần điều hướng sang trang
+khác}. Cần phân biệt điều này với quỹ đạo giải tác vụ, vốn vẫn có thể đi qua nhiều
+trang. HSGE bổ sung một tầng đồ thị thứ hai để xử lý điểm này: các kỹ năng (skill) sau khi được kiểm chứng sẽ được nâng thành toán
+tử lập kế hoạch, kèm điều kiện tiên quyết và hiệu ứng tác động (precondition/effect)
+đã chuẩn hóa. Việc nối các toán tử này với nhau cho phép sinh ra những \emph{tác vụ
+ngữ nghĩa (semantic task)} trải dài qua nhiều năng lực thu thập từ các episode khác
+nhau --- khả năng mà cách sinh tác vụ theo từng trang đơn lẻ không cung cấp
+(Mục~\ref{sec:method-semantic}).
 
 \section{Mô hình ngôn ngữ nhỏ trong vai trò agent}
 \label{sec:rel-slm}
 
-Luận điểm rằng mô hình nhỏ xứng đáng được đầu tư ngày càng được phát biểu
-tường minh: một position paper gần đây~\cite{belcak2025slm} lập luận rằng
-phần lớn các lời gọi agent đều hẹp và lặp lại, khiến SLM (rẻ hơn mười
-đến ba mươi lần khi serving và fine-tune được trong vài giờ) là nền tảng
-hợp lý về kinh tế cho các hệ thống agent.
-Về thực nghiệm, AutoWebGLM~\cite{lai2024autowebglm} xây một web agent triển
-khai được trên backbone 6B thông qua SFT theo curriculum và học theo sở
-thích. Tuy nhiên, dữ liệu huấn luyện của nó khởi động từ các mẫu gán nhãn
-thủ công và curriculum dựng tay. Các hệ thống dựa trên khám phá ở mục trước
-cung cấp đúng nguồn dữ liệu còn thiếu: mô hình 8B của NNetNav và 7B của
-Go-Browse cho thấy bản mẫu thu thập tự động dịch chuyển đáng kể mô hình nhỏ
-trên WebArena, còn WebRL đẩy xa hơn bằng RL. Tuy nhiên, xuyên suốt các công
-trình này, nút thắt nhất quán là pipeline dữ liệu chứ không phải bộ tối ưu
-và đó chính là thành phần khóa luận thiết kế lại. Mô hình đích của
-chúng tôi là Qwen3.5-9B, một mô hình trọng số mở gần đây mà họ mô hình được
-tài liệu hóa trong báo cáo kỹ thuật Qwen3~\cite{yang2025qwen3}.
+Tiềm năng ứng dụng của các mô hình ngôn ngữ nhỏ (SLM) đang ngày càng được khẳng định rõ nét. Một nghiên cứu định hướng (position paper) gần đây~\cite{belcak2025slm} đã chỉ ra rằng phần lớn các tác vụ của agent đều có phạm vi hẹp và mang tính lặp lại. Đặc điểm này khiến SLM trở thành một nền tảng giải pháp tối ưu về mặt kinh tế cho các hệ thống agent: chi phí phục vụ (xét trên độ trễ, năng lượng tiêu thụ và số phép tính FLOPs) của một SLM 7B thấp hơn từ 10 đến 30 lần so với một LLM 70--175B, trong khi việc tinh chỉnh hiệu quả tham số chỉ tốn vài GPU-hour. Cũng theo nghiên cứu này, SLM được định nghĩa chủ yếu qua khả năng triển khai trên thiết bị tiêu dùng phổ thông; trên thực tế, các mô hình dưới mười tỷ tham số thường được xem là SLM.
+
+Về mặt thực nghiệm, hệ thống AutoWebGLM~\cite{lai2024autowebglm} đã xây dựng thành công một web agent trên kiến trúc mô hình 6B thông qua phương pháp tinh chỉnh có giám sát (SFT) theo lộ trình (curriculum) và học theo sở thích (preference learning). Mặc dù vậy, hạn chế của hệ thống này là nguồn dữ liệu huấn luyện vẫn phụ thuộc vào các mẫu được gán nhãn thủ công và lộ trình do con người thiết kế. Các phương pháp dựa trên tự động khám phá được trình bày ở mục trước đã bù đắp được khoảng trống dữ liệu này. Cụ thể, kết quả từ mô hình 8B của NNetNav và 7B của Go-Browse đã minh chứng rằng dữ liệu thu thập tự động giúp cải thiện đáng kể hiệu năng của các mô hình nhỏ trên benchmark WebArena; trong khi đó, WebRL tiếp tục nâng cao thành tích này nhờ áp dụng phương pháp Học tăng cường (Reinforcement Learning - RL).
+
+Tuy nhiên, điểm nghẽn cốt lõi xuyên suốt các nghiên cứu nói trên thường nằm ở quy trình xây dựng dữ liệu (data pipeline) thay vì thuật toán tối ưu, và đây cũng chính là thành phần được khóa luận này tập trung tái thiết kế. Mô hình đích được lựa chọn cho nghiên cứu của chúng tôi là Qwen3.5-9B~\cite{qwen2026qwen35}, một mô hình dense trọng số mở (open-weights) 9 tỷ tham số thuộc thế hệ Qwen3.5, kế thừa dòng Qwen3~\cite{yang2025qwen3}.
 
 \section{Định vị khóa luận}
 \label{sec:rel-positioning}
 
-Bảng~\ref{tab:positioning} định vị HSGE theo năm trục: dữ liệu có đến từ
-tương tác sống với website đích không; khám phá có được cấu trúc hóa bằng
-một biểu diễn bền vững không; skill tái sử dụng có được kiểm chứng trước
-khi dùng lại không; task dài hạn có được sinh bằng cách \emph{ghép} các
-năng lực đã khám phá không; và pipeline có huấn luyện một mô hình nhỏ
-không.
+Bảng~\ref{tab:positioning} định vị phương pháp HSGE dựa trên năm trục tiêu chí.
+Ba trục đầu xét cách hệ thống thu thập tri thức: dữ liệu có xuất phát từ tương tác
+thực tế (live interaction) trên website đích hay không; quá trình khám phá có được
+cấu trúc hóa bằng một cơ chế biểu diễn bền vững hay không; và các kỹ năng tái sử
+dụng có được kiểm chứng trước khi đưa vào dùng hay không. Hai trục còn lại xét cách
+hệ thống sử dụng tri thức đó: các tác vụ dài hạn có được sinh ra bằng cách
+\emph{ghép chuỗi} những năng lực đã khám phá hay không, và pipeline có phục vụ mục
+tiêu huấn luyện một mô hình ngôn ngữ nhỏ hay không. Các ô trong bảng được điền dựa
+trên nội dung công bố của chính các tác giả; ô \LEFTcircle{} đánh dấu những trường
+hợp hệ thống chỉ đáp ứng một phần tiêu chí.
 
 \begin{table}[H]
 \centering
@@ -222,12 +248,12 @@ so với các hệ thống liên quan gần nhất. \CIRCLE{} = có,
 \small
 \begin{tabular}{@{}L{3.2cm} C{1.7cm} C{2.0cm} C{1.9cm} C{2.1cm} C{1.6cm}@{}}
 \toprule
-\textbf{Hệ thống} & \textbf{Tương tác sống} & \textbf{Khám phá có cấu trúc}
-& \textbf{Skill kiểm chứng} & \textbf{Task dài hạn ghép chuỗi}
+\textbf{Hệ thống} & \textbf{Tương tác với website thực} & \textbf{Khám phá có cấu trúc}
+& \textbf{Skill được kiểm chứng} & \textbf{Task dài hạn từ ghép chuỗi}
 & \textbf{Huấn luyện SLM} \\
 \midrule
 Synapse~\cite{zheng2024synapse} & - & - & - & - & - \\
-AWM~\cite{wang2024awm} & \CIRCLE & - & - & - & - \\
+AWM~\cite{wang2024awm} & \CIRCLE & - & \LEFTcircle & - & - \\
 ASI~\cite{wang2025asi} & \CIRCLE & - & \CIRCLE & \LEFTcircle & - \\
 SkillWeaver~\cite{zheng2025skillweaver} & \CIRCLE & - & \CIRCLE & \LEFTcircle & - \\
 Synatra~\cite{ou2024synatra} & - & - & - & - & \CIRCLE \\
@@ -235,15 +261,17 @@ AgentTrek~\cite{xu2024agenttrek} & \CIRCLE & - & - & - & \CIRCLE \\
 NNetNav~\cite{murty2024nnetnav} & \CIRCLE & - & - & - & \CIRCLE \\
 OS-Genesis~\cite{sun2024osgenesis} & \CIRCLE & - & - & - & \CIRCLE \\
 PAE~\cite{zhou2024pae} & \CIRCLE & - & - & - & \CIRCLE \\
+InSTA~\cite{trabucco2025insta} & \CIRCLE & - & - & - & \CIRCLE \\
 WebRL~\cite{qi2025webrl} & \CIRCLE & \LEFTcircle & - & - & \CIRCLE \\
+WebAgent-R1~\cite{wei2025webagentr1} & \CIRCLE & - & - & - & \CIRCLE \\
+WebEvolver~\cite{fang2025webevolver} & \LEFTcircle & - & - & - & \CIRCLE \\
 Go-Browse~\cite{gandhi2026gobrowse} & \CIRCLE & \CIRCLE & - & - & \CIRCLE \\
 \textbf{HSGE (của chúng tôi)} & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Tóm lại, hướng kiến trúc agent chủ yếu cải thiện chiến lược prompting và điều phối quanh các mô hình lớn cố định. Phương pháp khám phá kỹ năng có khả năng tích lũy tri thức có cấu trúc, nhưng phần lớn chỉ sử dụng tri thức này trong giai đoạn suy luận. Trong khi đó, phương pháp sinh dữ liệu hướng đến huấn luyện mô hình nhỏ thường thực hiện khám phá theo cách thiếu cấu trúc hoặc chỉ tổ chức thông tin ở cấp độ trang. Theo hiểu biết của chúng tôi, hướng tiếp cận kết hợp các kỹ năng đã được kiểm chứng, ghép chúng thành các tác vụ ngữ nghĩa dài hạn và sử dụng những tác vụ này để huấn luyện mô hình ngôn ngữ nhỏ vẫn chưa được nghiên cứu đầy đủ. Đây chính là khoảng trống mà khóa luận hướng đến giải quyết.
-
+Tóm lại, các nghiên cứu hiện tại về kiến trúc agent chủ yếu tập trung vào việc cải thiện chiến lược prompt và cơ chế điều phối xoay quanh các mô hình ngôn ngữ lớn có sẵn. Các phương pháp khám phá kỹ năng dù có khả năng tích lũy tri thức có cấu trúc, nhưng đa số chỉ tận dụng những tri thức này trong giai đoạn suy luận (inference). Ở chiều ngược lại, các phương pháp tự động sinh dữ liệu phục vụ huấn luyện mô hình nhỏ lại thường tiến hành khám phá một cách thiếu định hướng cấu trúc, hoặc chỉ dừng lại ở việc tổ chức thông tin ở cấp độ trang đơn lẻ. Theo khảo sát của chúng tôi, việc kết hợp các kỹ năng đã qua kiểm chứng, ghép chuỗi chúng thành những tác vụ ngữ nghĩa dài hạn và dùng chính các tác vụ này làm dữ liệu huấn luyện cho một mô hình ngôn ngữ nhỏ là một hướng tiếp cận chưa được nghiên cứu thấu đáo. Đây chính là khoảng trống tri thức mà khóa luận này hướng đến giải quyết.
 
 \vspace{1em}
 \noindent

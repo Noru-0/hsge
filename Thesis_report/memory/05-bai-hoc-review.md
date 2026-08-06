@@ -55,6 +55,14 @@ Vòng 2 (de-xuat-dot-2): thêm câu critique cuối mỗi mục related work (tr
 nhánh theo RQ). Lỗi trực quan (node TikZ chồng lấp) chỉ người kiểm tra PDF
 phát hiện được — luôn mở PDF soát bằng mắt sau khi Claude sửa.
 
+## Quy ước dùng thuật ngữ tiếng Anh (yêu cầu của user, 2026-08-06)
+
+Áp dụng khi sửa văn tiếng Việt cho báo cáo (thesis_hsge_vi): nếu chèn từ/cụm
+tiếng Anh vào câu tiếng Việt thì phải chú thích nghĩa (ngoặc đơn ở lần xuất
+hiện đầu, hoặc footnote) — không tự ý trộn 2 ngôn ngữ mà không giải thích.
+Ngoại lệ: từ đã có trong Bảng thuật ngữ/chữ viết tắt (mục 10 cấu trúc quyển,
+xem [[01-quy-dinh-khoa]]) thì khỏi chú thích lại mỗi lần dùng.
+
 ## Quy trình làm việc với GVHD
 
 - GVHD nhận xét **định hướng** (không phải fix-list) qua email/tin nhắn —

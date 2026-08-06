@@ -19,6 +19,8 @@ action space & Không gian hành động: tập hữu hạn các thao tác agent
 phép thực hiện (click, điền form, điều hướng, \dots). \\
 agent & Tác nhân phần mềm tự trị: chương trình tự quan sát môi trường,
 suy luận và hành động để đạt một mục tiêu. \\
+baseline & Phương pháp đối chứng: hệ thống dùng làm mốc so sánh khi đánh
+giá một phương pháp mới. \\
 benchmark & Bộ chuẩn đánh giá: môi trường + tập task + thang đo thống nhất
 để so sánh các phương pháp. \\
 best practice & Kinh nghiệm thực hành tốt đã được kiểm chứng, nên áp dụng
@@ -27,14 +29,20 @@ chat template & Khuôn dạng hội thoại mà một mô hình ngôn ngữ đư
 để đọc (cách đánh dấu vai trò, lượt nói, chế độ suy nghĩ). \\
 crawl / crawling & Duyệt và thu thập trang web tự động theo liên kết. \\
 curriculum & Trình tự huấn luyện sắp xếp dữ liệu từ dễ đến khó. \\
+episode & Một lượt agent thực hiện trọn vẹn một task, tính từ trạng thái
+khởi đầu đến khi thành công, thất bại hoặc hết ngân sách bước. \\
 fine-tune / fine-tuning & Tinh chỉnh: huấn luyện tiếp một mô hình đã
 pretrain trên dữ liệu chuyên biệt để chuyên hóa nó cho một nhiệm vụ. \\
 frontier & Biên khám phá: hàng đợi các URL ứng viên chưa thăm, quyết định
 ``đi đâu tiếp theo'' trong quá trình khám phá website. \\
+instance & Một bản triển khai cụ thể của website hoặc dịch vụ (ví dụ bản
+GitLab được dựng riêng cho benchmark). \\
 judge & Bộ chấm độc lập: một LLM thứ hai kiểm tra lại các episode mà agent
 tự tuyên bố thành công. \\
 low-level task & Task mức thấp: nhiệm vụ ngắn, gắn với một trang cụ thể, do
 LLM đề xuất khi khám phá (phân biệt với semantic task). \\
+node & Đỉnh của đồ thị; trong khóa luận là một trang web đã thăm (đồ thị
+tầng thấp) hoặc một skill/operator (đồ thị tầng cao). \\
 operator & Toán tử lập kế hoạch: một skill được nâng lên dạng
 $\langle$precondition, effect$\rangle$ (điều kiện tiên quyết, hiệu ứng) để
 có thể ghép chuỗi bằng thuật toán lập kế hoạch. \\
@@ -49,6 +57,8 @@ gọi (bao gồm chỉ dẫn hệ thống, quan sát, lịch sử). \\
 prompt parity & Nguyên tắc ``đồng nhất prompt'': prompt trong dữ liệu huấn
 luyện phải trùng khớp từng cấu trúc với prompt agent nhìn thấy lúc chạy
 thật. \\
+runtime & Giai đoạn agent thực sự chạy trong môi trường (phân biệt với giai
+đoạn huấn luyện); cũng dùng để chỉ phần mã lo việc vận hành đó. \\
 self-host / self-hosted & Tự triển khai trên hạ tầng của mình thay vì dùng
 dịch vụ bên thứ ba. \\
 semantic task & Task ngữ nghĩa: nhiệm vụ dài hạn được sinh ra từ operator
@@ -81,6 +91,7 @@ CI & Confidence Interval - khoảng tin cậy \\
 CoT & Chain-of-Thought - chuỗi suy luận \\
 DFS & Depth-First Search - tìm kiếm theo chiều sâu \\
 DOM & Document Object Model - mô hình đối tượng tài liệu \\
+GUI & Graphical User Interface - giao diện đồ họa người dùng \\
 HSGE & Hierarchical Skill-Graph Exploration - khám phá dựa trên graph kỹ
 năng phân tầng (phương pháp của khóa luận) \\
 LLM & Large Language Model - mô hình ngôn ngữ lớn \\

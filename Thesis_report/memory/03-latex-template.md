@@ -68,6 +68,27 @@ Kiểm tra sau build: 0 error, không còn "Hình ??"/cross-ref chưa resolve
 (review thesis mẫu từng bắt lỗi này), số trang hợp lý (mẫu: 76 trang).
 Cần TeX Live có gói tiếng Việt (vntex/T5).
 
+### Cạm bẫy build (gặp thật 2026-08-07, thesis_hsge_vi)
+
+- **Bước xóa file tạm là BẮT BUỘC, không phải tùy chọn.** Bỏ qua nó thì mỗi
+  lần build lại cross-ref hỏng thêm (đo được: 0 → 96 → 181 reference chưa
+  resolve qua 3 lần build liên tiếp trên cùng source đúng). Luôn chạy trọn
+  gói clean → pdflatex → bibtex → pdflatex → pdflatex.
+- **Đừng dùng `latexmk`** cho thesis_hsge_vi: nó gọi bibtex sai thời điểm
+  (khi `main.aux` chưa có `\citation`) rồi ghi `main.bbl` rỗng, và kết thúc
+  bằng "pdflatex needed too many passes".
+- Bibliography dùng **biblatex `style=ieee` với `backend=bibtex`**
+  (`main.tex` dòng 18–25) — nên chạy `bibtex main`, KHÔNG phải `biber`.
+  `biber` sẽ báo "Cannot find main.bcf".
+- **Trường `note` trong `.bib` được IN RA** trong mục tài liệu tham khảo ở
+  style IEEE. Ghi chú nội bộ (kiểu "VERIFY: cần kiểm venue") phải để dưới
+  dạng comment `%` phía trên entry, không để trong `note` — đã bị lọt ra
+  PDF một lần.
+- Máy này đọc file rời rạc giữa các lệnh shell hay dính **bản cache cũ**
+  (`main.bbl` báo 0 byte dù vừa ghi 55 KB). Chạy build + kiểm tra trong
+  **một script duy nhất**, và xác minh trên `pdftotext main.pdf` thay vì
+  tin vào `.log`/`.blg` đọc ở lần gọi sau.
+
 ## Việc cần làm khi fork template cho HSGE
 
 - Sửa `\tenSV`/`\mssv`/`\tenKL`/`\tenGVHD`/`\tenBM` trong main.tex.
