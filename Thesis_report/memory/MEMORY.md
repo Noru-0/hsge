@@ -13,7 +13,7 @@ viết report, rồi mở đúng file chủ đề cần dùng.
 | [05-bai-hoc-review.md](05-bai-hoc-review.md) | Bài học từ các vòng review của thesis mẫu: lỗi reviewer hay bắt, pattern nhận xét của GVHD |
 | [06-de-tai-hsge.md](06-de-tai-hsge.md) | Ngữ cảnh đề tài HSGE: bài toán, kết quả đã có, nguồn tư liệu trong repo, mapping vào từng chương |
 | [07-dan-y-chi-tiet.md](07-dan-y-chi-tiet.md) | Dàn ý chi tiết 6 chương (v1, tiếng Anh, trọng tâm C3/C5/C6, C4 để khung `[TO ADD]`) + thứ tự viết + checklist mỗi chương |
-| [08-citation-audit-ch2.md](08-citation-audit-ch2.md) | Kết quả xác minh 28 citation của Chương 2: claim nào từng sai và đã sửa, số liệu nào đã đúng, các mục còn treo trước khi nộp |
+| [08-citation-audit-ch2.md](08-citation-audit-ch2.md) | Kết quả xác minh citation Chương 1–2: claim nào từng sai và đã sửa, số liệu nào đã đúng, các mục còn treo trước khi nộp |
 
 ## Nguồn gốc
 

@@ -13,7 +13,7 @@ Hãy hình dung một người quản lý cửa hàng trực tuyến, mỗi sán
 
 Sự bùng nổ của các mô hình ngôn ngữ lớn (LLM) trong thời gian qua đã tạo tiền đề để hiện
 thực hóa các web agent nói trên. Dựa vào bản mô tả giao diện trang web và mục tiêu do
-người dùng đặt ra, LLM có thể tự suy luận lên kế hoạch và thực hiện các thao tác tương tác với trang web để hoàn thành tác vụ. Cách tiếp cận này đã giúp các agent thực hiện thành công nhiều chuỗi tác vụ phức tạp trên môi trường website thực tế.
+người dùng đặt ra, LLM có thể tự suy luận lên kế hoạch và thực hiện các thao tác tương tác với trang web để hoàn thành tác vụ. Cách tiếp cận này đã giúp các agent hoàn thành nhiều chuỗi tác vụ phức tạp trên những website mô phỏng đầy đủ chức năng~\cite{sodhi2024step, yang2024agentoccam}.
 
 Tuy nhiên, năng lực này hiện vẫn chủ yếu thuộc vào các mô hình độc quyền có quy mô rất lớn
 và chỉ được cung cấp thông qua API. Sự phụ thuộc này mang lại hàng loạt bất cập cộng dồn.
@@ -24,20 +24,25 @@ nội dung hiển thị trên trang (bao gồm cả dữ liệu nội bộ nhạ
 của bên thứ ba. Cuối cùng, các mô hình này mang tính chất "hộp đen" (black-box), khiến người
 triển khai không thể can thiệp, kiểm tra hay cải thiện bộ trọng số bên trong.
 
-Mô hình ngôn ngữ nhỏ (SLM - các mô hình có dưới mười tỷ tham số) chính là lời giải cho những rào cản kể trên. Các mô hình này mang lại ưu thế vượt trội về chi phí suy luận, khả năng chạy cục bộ,
+Mô hình ngôn ngữ nhỏ (SLM) chính là lời giải cho những rào cản kể trên. Theo~\cite{belcak2025slm}, SLM được định nghĩa chủ yếu qua khả năng chạy được trên một thiết bị tiêu dùng phổ thông; trên thực tế, các mô hình dưới mười tỷ tham số thường được xem là SLM. Các mô hình này mang lại ưu thế vượt trội về chi phí suy luận, khả năng chạy cục bộ,
 đảm bảo quyền riêng tư tuyệt đối và đặc biệt là người vận hành hoàn toàn làm chủ trọng
 số để có thể tùy ý tinh chỉnh (fine-tune). Dù vậy, điểm yếu lớn nhất của SLM hiện nay
 nằm ở năng lực xử lý. Cần lưu ý rằng ngay cả những mô hình \emph{khổng lồ} cũng chật vật
 với các tác vụ web trong thực tế. Cụ thể, trên benchmark WebArena (môi trường mô
-phỏng các website thực tế với đầy đủ chức năng), agent sử dụng GPT-4 chỉ hoàn thành
-khoảng 14\% số lượng tác vụ, kém xa mức 78\% của con người~\cite{zhou2024webarena}.
+phỏng các website thực tế với đầy đủ chức năng), tại thời điểm benchmark được công bố,
+agent sử dụng GPT-4 chỉ hoàn thành khoảng 14\% số lượng tác vụ, kém xa mức 78\% của
+con người~\cite{zhou2024webarena}.
 Do đó, các mô hình nhỏ nếu không được tinh chỉnh sẽ còn cho ra mức hiệu năng thấp hơn rất nhiều.
 
 Phương pháp phổ biến nhất để khắc phục điểm yếu này là tinh chỉnh có giám sát (SFT) dựa trên
-các mẫu hành vi của người dùng. Tuy nhiên, cách tiếp cận này lại vấp phải rào cản lớn về dữ
-liệu: các chuỗi tương tác (trajectory) có gán nhãn mục tiêu cụ thể trên website đích gần như
-không tồn tại; đồng thời, việc thuê chuyên gia gán nhãn thủ công vừa tốn kém, mất thời gian,
-lại vừa thiếu tính tái sử dụng cho các website khác.
+các mẫu hành vi của người dùng~\cite{lai2024autowebglm}. Tuy nhiên, cách tiếp cận này lại vấp
+phải rào cản lớn về dữ liệu: các chuỗi tương tác (trajectory) có gán nhãn mục tiêu cụ thể trên
+website đích gần như không tồn tại; đồng thời, việc thuê chuyên gia gán nhãn thủ công vừa tốn
+kém, mất thời gian, lại vừa thiếu tính tái sử dụng cho các website khác. Mức chi phí này là
+có thật chứ không phải phỏng đoán: AutoWebGLM cần 20 người gán nhãn làm việc trong một
+tháng để dựng tập dữ liệu duyệt web của họ~\cite{lai2024autowebglm}, trong khi Synatra báo cáo
+rằng một bản mẫu tổng hợp chỉ tốn khoảng 3\% chi phí của một bản mẫu do con người
+tạo~\cite{ou2024synatra}.
 
 Khóa luận này tập trung giải quyết chính bài toán dữ liệu đó.
 Trọng tâm là xây dựng một luồng xử lý (pipeline) tự động có khả năng \emph{khám phá} website,
@@ -149,12 +154,13 @@ giao diện trình duyệt BrowserGym~\cite{dechezelles2025browsergym} &
 Chu trình HSGE: đồ thị hai tầng, khám phá có định hướng, phát hiện và kiểm
 chứng kỹ năng (Chương~\ref{ch:method}) \\
 \addlinespace
-Mô hình gốc Qwen3.5-9B~\cite{yang2025qwen3}; LoRA~\cite{hu2022lora};
+Mô hình gốc Qwen3.5-9B~\cite{qwen2026qwen35}; LoRA~\cite{hu2022lora};
 LLaMA-Factory~\cite{zheng2024llamafactory}; vLLM~\cite{kwon2023vllm} &
 Sinh tác vụ ngữ nghĩa bằng cách ghép chuỗi toán tử, kết hợp cơ chế quy nạp (induction) nhận thức từ vựng và cổng chặn lỗi lặp logic (tautology) (Mục~\ref{sec:method-semantic}) \\
 \addlinespace
 Bộ mã hóa sentence embedding~\cite{reimers2019sbert};
-khung hình thức options và STRIPS~\cite{sutton1999options, fikes1971strips} &
+khung hình thức options, STRIPS và các công trình nâng options thành toán tử
+ký hiệu~\cite{sutton1999options,fikes1971strips,konidaris2009skillchaining,konidaris2018skills2symbols} &
 Tinh lọc dữ liệu tự động (giám khảo LLM, cấu trúc lại suy luận) và trình dựng dataset
 prompt-parity (Mục~\ref{sec:method-data}); tập dữ liệu và mô hình
 fine-tune (Chương~\ref{ch:experiments}); báo cáo kinh nghiệm kỹ thuật

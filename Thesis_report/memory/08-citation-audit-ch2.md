@@ -1,4 +1,9 @@
-# Chương 2 — kết quả xác minh citation (2026-08-07)
+# Chương 1–2 — kết quả xác minh citation (2026-08-07)
+
+> Chương 1 đã rà cùng đợt (xem mục cuối file). Lỗi Qwen3.5-9B quy nhầm cho
+> báo cáo Qwen3 xuất hiện ở **cả ba** Chương 1, 2, 3 — đã sửa hết; nếu sau
+> này viết thêm chỗ nào nhắc Qwen3.5-9B, nhớ dùng `qwen2026qwen35`.
+
 
 Ba agent đã tra cứu trực tiếp arXiv/ACL/OpenReview/HuggingFace cho toàn bộ
 28 citation của Chương 2. File này ghi lại **cái gì đã sai và đã sửa**, cùng
@@ -33,13 +38,12 @@ LoRA giảm 10.000 lần tham số (so với GPT-3 175B + Adam).
 
 ## Còn treo — cần làm trước khi nộp
 
-1. **NNetNav venue**: nhiều dấu hiệu là COLM 2025 (OpenReview `fQcUZMPIvu`)
-   nhưng agent bị chặn không mở được PDF. Mở tay
-   `https://openreview.net/pdf?id=fQcUZMPIvu`, nếu đúng thì đổi sang
-   `@inproceedings` + booktitle COLM. Hiện để preprint, `year=2025`.
-   Ghi chú nhắc việc nằm ở dạng comment `%` trong `references.bib` (KHÔNG
-   để trong trường `note`, vì `note` bị in ra PDF — xem [[03-latex-template]]).
-2. **Claim "SOTA <10B" của Go-Browse có thể đã cũ**: arXiv:2604.07776
+1. ~~NNetNav venue~~ — **ĐÃ XONG (user xác nhận 2026-08-07)**: camera-ready
+   trên OpenReview `fQcUZMPIvu` ghi "Published as a conference paper at
+   COLM 2025". Bib đã đổi sang `@inproceedings` + booktitle COLM.
+2. **Claim "SOTA <10B" của Go-Browse — user quyết định GIỮ NGUYÊN**
+   (2026-08-07), vì câu văn đã có cụm "tại thời điểm công bố". Vẫn nên
+   biết để trả lời nếu hội đồng hỏi: arXiv:2604.07776
    (Lù & Reddy, 04/2026) báo mô hình 9B đạt **41,5%** trên WebArena. Câu văn
    hiện có kèm "tại thời điểm công bố" nên vẫn đúng, nhưng hội đồng có thể
    biết con số này — và nó cao hơn hẳn kết quả HSGE hiện tại (xem
@@ -53,3 +57,22 @@ LoRA giảm 10.000 lần tham số (so với GPT-3 175B + Adam).
    tower). Nếu pipeline SFT chỉ huấn luyện trên prompt axtree dạng text thì
    nên nói rõ trong Chương 4, phòng khi hội đồng hỏi tại sao chọn VLM cho
    agent quan sát bằng text.
+
+## Chương 1 — kết quả rà (2026-08-07)
+
+Trước khi rà: 9 citation, tất cả key đều tồn tại, nhưng **4 phát biểu sự
+thật không có dẫn chứng** — đúng thứ rubric coi là "sai hoặc không đáng tin
+cậy" (xem [[01-quy-dinh-khoa]] mục 5). Đã bổ sung:
+
+| Phát biểu | Nay dẫn chứng bằng |
+|---|---|
+| "agent đã hoàn thành nhiều chuỗi tác vụ phức tạp trên website" | SteP + AgentOccam (hai hệ thống thực sự làm được trên WebArena) |
+| SLM = "dưới mười tỷ tham số" (trước đây tự khẳng định) | `belcak2025slm`, kèm định nghĩa gốc theo khả năng chạy trên thiết bị phổ thông |
+| "phương pháp phổ biến nhất là SFT trên mẫu hành vi người dùng" | `lai2024autowebglm` |
+| "gán nhãn thủ công tốn kém, mất thời gian" | Số cụ thể: AutoWebGLM cần 20 người gán nhãn × 1 tháng; Synatra: bản mẫu tổng hợp chỉ tốn ~3% chi phí bản mẫu người |
+
+Sửa thêm: bảng 1.1 cite `qwen2026qwen35` thay `yang2025qwen3`; hàng
+options/STRIPS bổ sung 2 công trình Konidaris cho khớp với §2.3 (trước đó
+Chương 1 nói 2 khung, Chương 2 nói "cả bốn công trình"); thêm cụm "tại thời
+điểm benchmark được công bố" vào con số 14%/78% để không chọi với 43,1% của
+AgentOccam nêu ở Chương 2.
