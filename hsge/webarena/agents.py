@@ -236,6 +236,13 @@ class PageExplorer:
     _COMPOSITE_RESERVE = 3  # min COMPOSITE tasks kept when a page overflows max_tasks
     _NAV_CAP = 1       # NAV is a thin reserve; COMPOSITE/MOD already grow the frontier
     _INFO_RESERVE = 2  # keep some INFO for SFT data (WebArena is info-seeking heavy)
+    # INFO is capped UNCONDITIONALLY, like NAV: the reserve above only bounds INFO
+    # when a page overflows max_tasks, so a page proposing few tasks let every INFO
+    # through. Measured on a 158-node reddit run, that made INFO 49% of all
+    # successful episodes (272/560) -- and 237 of those 272 finished with
+    # send_msg_to_user and NO browser action at all, which is answer-lookup data,
+    # not the acting behaviour the SFT target needs.
+    _INFO_CAP = 2
 
     def __init__(self, llm, max_tasks: int = 4, read_only: bool = False,
                  vision: bool = False, som: bool = True, image_detail: str = "low"):
@@ -345,13 +352,14 @@ class PageExplorer:
         # already navigate to new pages as they act (adding tier-0 frontier
         # URLs), and pure-NAV skills are low value + prone to sitewide-menu
         # boilerplate, so keep at most _NAV_CAP NAV tasks regardless of budget.
-        nav_kept = 0
+        kept = {"NAV": 0, "INFO": 0}
+        caps = {"NAV": self._NAV_CAP, "INFO": self._INFO_CAP}
         capped = []
         for text, tag in parsed:
-            if tag == "NAV":
-                if nav_kept >= self._NAV_CAP:
+            if tag in caps:
+                if kept[tag] >= caps[tag]:
                     continue
-                nav_kept += 1
+                kept[tag] += 1
             capped.append((text, tag))
         parsed = capped
         if len(parsed) > self.max_tasks:

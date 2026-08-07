@@ -94,7 +94,10 @@ def test_propose_keeps_nav_mod_over_info_when_truncating():
     INFO tasks first, then NAV, then MOD; naively slicing to max_tasks after
     that ordering silently drops every NAV/MOD task whenever a page offers
     more INFO candidates than max_tasks -- exactly the tasks that would have
-    grown the frontier. INFO must be what gets dropped, not NAV/MOD."""
+    grown the frontier. INFO must be what gets dropped, not NAV/MOD.
+
+    INFO is now also capped UNCONDITIONALLY at _INFO_CAP (it used to be bounded
+    only on overflow), so the surviving INFO count is that cap, not max_tasks."""
     llm = _StubLLM([
         "[INFO] a", "[INFO] b", "[INFO] c", "[INFO] d", "[INFO] e",
         "[NAV] open the AskReddit forum",
@@ -104,7 +107,8 @@ def test_propose_keeps_nav_mod_over_info_when_truncating():
     tasks = explorer.propose({"url": "http://x", "axtree": "irrelevant"})
 
     assert "[NAV] open the AskReddit forum" in tasks
-    assert len(tasks) == 4
+    assert sum(t.startswith("[INFO]") for t in tasks) == PageExplorer._INFO_CAP
+    assert len(tasks) == PageExplorer._INFO_CAP + 1
 
 
 def test_propose_preserves_order_when_nothing_is_dropped():

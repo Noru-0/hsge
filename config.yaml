@@ -34,7 +34,12 @@ run:
                              # (independent of the operator graph), and condition
                              # PageExplorer proposals on it. false = current behavior.
                              # Total seed GOALs over a run = number of seed capabilities
-                             # (SEEDER_SYS asks for 4-8), bounded per node by the line above
+                             # (SEEDER_SYS asks for 4-8) x seed_capability_repeats below,
+                             # bounded per node by the line above
+  seed_capability_repeats: 3 # how many times ONE seed capability may be attempted per
+                             # run, each from a different kind of page (url template).
+                             # Was effectively 1, which spent the whole GOAL budget in
+                             # the first ~3 nodes: a 158-node run emitted 7 GOAL tasks
   predicate_sim: 0.6         # cosine threshold for the predicate registry (tune per embedder)
   headed: false              # true -> visible browser window (debugging)
   success_url_re: null       # null -> default /checkout/onepage/success
@@ -46,6 +51,11 @@ run:
                              # on link-dense sites; false = old navigated-only behavior
   per_template_cap: 3        # max mined nodes admitted per URL "template" (e.g. one
                              # /f/*/comments/* shape) so near-identical pages don't flood
+  reached_template_cap: 8    # same cap for tier-0 (URLs the solver actually navigated
+                             # to). Looser than the mined cap because reaching a page
+                             # while solving is evidence it matters -- but NOT unbounded:
+                             # tier-0 used to be exempt, and one forum's comment threads
+                             # took 58 of 158 nodes on a real reddit run
   max_hrefs_per_page: 100    # cap on <a href> links mined per page
 
 llm:

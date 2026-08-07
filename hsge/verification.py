@@ -49,7 +49,16 @@ def verify_skill(
     contexts: list[WebEnv],
     k: int = 2,
 ) -> bool:
-    """Admit iff the skill succeeds in >= k distinct contexts. Mutates skill.stats."""
+    """Admit iff the skill succeeds in >= k distinct contexts. Mutates skill.stats.
+
+    The returned value is the ADMISSION decision; `skill.verified` is the weaker,
+    honest claim "execution verification actually ran and passed". They differ
+    exactly when verification is disabled (the WebArena runtime passes k=0 and no
+    contexts, because there it verifies by terminal episode outcome instead): the
+    skill is still admitted, but `successes >= k` is vacuously true, so calling it
+    verified would be a lie. A real run's skills.json showed every skill as
+    `"verified": true` next to `"n_verify_attempts": 0`.
+    """
     successes = 0
     for env in contexts:
         skill.stats.n_verify_attempts += 1
@@ -58,5 +67,6 @@ def verify_skill(
             successes += 1
             skill.stats.n_verify_success += 1
             skill.stats.sites_seen.add(env.site)
-    skill.verified = successes >= k
-    return skill.verified
+    admit = successes >= k
+    skill.verified = admit and skill.stats.n_verify_attempts > 0
+    return admit

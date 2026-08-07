@@ -17,7 +17,31 @@ _SYS = (
     '"slots": [{"name": "...", "slot_type": "value|selector|url", '
     '"description": "...", "example": "..."}], '
     '"action_template": ["step 1", "step 2"], '
-    '"precondition": "...", "success_predicate": "..."}')
+    '"precondition": "...", "success_predicate": "..."}\n'
+    "\n"
+    "action_template RULES -- every entry must be a runnable action string in the "
+    "SAME action space as the <example_actions> in the payload, with a slot "
+    "placeholder written as {slot_name} substituted for whatever is site-specific:\n"
+    "  click('{bid}')                    -- ONE argument\n"
+    "  fill('{bid}', '{text}')           -- TWO arguments, element FIRST, text SECOND\n"
+    "  select_option('{bid}', '{option}')-- TWO arguments\n"
+    "  press('{bid}', 'Enter')           -- TWO arguments, element then key name\n"
+    "  goto('{url}') / go_back()         -- navigation\n"
+    "  send_msg_to_user('{answer}')      -- answer/finish\n"
+    "An element is addressed by its BID -- the short numeric id the accessibility "
+    "tree assigns it, like '68' or '1790'. NEVER emit a CSS or XPath selector "
+    "(no '#id', no '.class', no '//div'): those do not exist in this action space. "
+    "A slot standing for an element must therefore use slot_type 'selector' with a "
+    "BID example such as '68'. Quote every argument, and respect the argument count "
+    "above exactly.")
+
+
+_MAX_EXAMPLE_MEMBERS = 3   # enough to show the syntax without bloating the prompt
+
+
+def _example_actions(members: list[SubTrajectory]) -> list[list[str]]:
+    """The literal action strings of a few members, as syntax exemplars."""
+    return [[s.action for s in m.steps] for m in members[:_MAX_EXAMPLE_MEMBERS]]
 
 
 def abstract_cluster(
@@ -34,6 +58,12 @@ def abstract_cluster(
     payload = {
         "dominant_subgoal": dominant,
         "action_verbs": verbs,
+        # The concrete action strings the members actually executed. Without these
+        # the model only sees bare verbs and invents a plausible-looking but
+        # unrunnable syntax -- a real run produced "click({sel})" (unquoted),
+        # "fill('{text}', '')" (arguments swapped) and CSS examples like
+        # "#notification-bell" for an action space that only addresses bids.
+        "example_actions": _example_actions(members),
         "success_predicate": f"{dominant} completed",
         "n_examples": len(members),
     }

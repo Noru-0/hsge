@@ -26,10 +26,18 @@ def test_client_has_bounded_request_timeout(monkeypatch):
     multiplies that across up to 4 attempts. The client must be constructed
     with a much shorter, explicit timeout so a slow/unresponsive API raises
     (and gets retried/logged like any other transient error) instead of
-    blocking silently for a long time."""
+    blocking silently for a long time.
+
+    The bound must still leave room for a reasoning model (solver_goal): at 60s
+    every GOAL task stalled, because one non-streaming gpt-5.x call over a
+    6000-char axtree + screenshot routinely runs longer than that.
+
+    max_retries=0 matters just as much: the SDK retries internally by default,
+    which silently multiplied each of _create_with_retry's 4 attempts by 3."""
     llm = _make_llm(monkeypatch)
 
-    assert llm.client.timeout == 60.0
+    assert llm.client.timeout == 180.0
+    assert llm.client.max_retries == 0
 
 
 class _FakeMessage:

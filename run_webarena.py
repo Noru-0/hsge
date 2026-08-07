@@ -30,13 +30,14 @@ DEFAULTS = {
             "max_nodes": 15, "max_depth": 6, "max_steps": 15, "max_tasks": 6, "maturity": 2,
             "task_retries": 0,
             "goal_chains_per_node": 3,
-            "use_site_seed": False,
+            "use_site_seed": False, "seed_capability_repeats": 3,
             "goal_max_steps": None,
             "verify_goals": False,
             "plan_subgoals": False,
             "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
             "full_reset_url": None, "terminal_goal": None,
-            "mine_hrefs": True, "per_template_cap": 3, "max_hrefs_per_page": 100},
+            "mine_hrefs": True, "per_template_cap": 3, "reached_template_cap": 8,
+            "max_hrefs_per_page": 100},
     "llm": {"provider": None, "model": None, "base_url": None, "temperature": 0.2,
             "agents": {}},
     "embedder": {"model": "all-MiniLM-L6-v2"},
@@ -296,6 +297,9 @@ def main():
                     const=False, default=None,
                     help="disable mining <a href> links into the frontier (reproduces "
                          "the old navigated-only behavior)")
+    ap.add_argument("--reached-template-cap", type=int, default=None,
+                    help="max visited nodes per URL template for tier-0 (navigated-to) "
+                         "URLs; stops one page shape from monopolising the frontier")
     ap.add_argument("--per-template-cap", type=int, default=None,
                     help="max mined nodes admitted per URL template (default 3)")
     ap.add_argument("--max-hrefs-per-page", type=int, default=None,
@@ -340,6 +344,8 @@ def main():
     seg_axtree_sim = _pick(args.seg_axtree_sim, run["seg_axtree_sim"])
     mine_hrefs = _pick(args.mine_hrefs, run["mine_hrefs"])
     per_template_cap = _pick(args.per_template_cap, run["per_template_cap"])
+    reached_template_cap = _pick(args.reached_template_cap, run["reached_template_cap"])
+    seed_capability_repeats = run["seed_capability_repeats"]
     max_hrefs_per_page = _pick(args.max_hrefs_per_page, run["max_hrefs_per_page"])
     # dry-run turns the seed on so --dry-run exercises the seed->GOAL path end-to-end
     use_site_seed = True if args.dry_run else run["use_site_seed"]
@@ -404,6 +410,8 @@ def main():
         terminal_goal=terminal_goal, predicate_sim=predicate_sim, seg_axtree_sim=seg_axtree_sim,
         read_only=args.read_only,
         mine_hrefs=mine_hrefs, per_template_cap=per_template_cap,
+        reached_template_cap=reached_template_cap,
+        seed_capability_repeats=seed_capability_repeats,
         max_hrefs_per_page=max_hrefs_per_page, task_retries=task_retries,
         goal_chains_per_node=goal_chains_per_node,
         use_site_seed=use_site_seed, goal_max_steps=goal_max_steps,

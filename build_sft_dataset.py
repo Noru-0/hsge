@@ -133,6 +133,22 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
     return examples
 
 
+_TERMINAL_PREFIXES = ("send_msg_to_user", "report_infeasible")
+
+
+def _n_browser_actions(steps: list[dict]) -> int:
+    """How many steps actually acted on the page.
+
+    send_msg_to_user / report_infeasible end an episode without touching it, so an
+    episode made only of those taught the model to answer, never to act. On a real
+    158-node reddit run 244 of 560 successful episodes (44%) were exactly that --
+    an INFO question the solver answered straight off the landing page.
+    """
+    return sum(1 for s in steps
+               if (s.get("parsed_action") or "").strip()
+               and not (s.get("parsed_action") or "").strip().startswith(_TERMINAL_PREFIXES))
+
+
 def load_episodes(path: str):
     """Yield (goal, steps, episode_dir, trajectory_id, difficulty, success,
     infeasible, judge_verified) tuples. judge_verified is None if the
@@ -172,15 +188,27 @@ def main():
                          "outcome.judge_verified is true (run judge_episodes.py "
                          "first); never-judged success episodes are dropped, "
                          "not silently trusted")
+    ap.add_argument("--min-actions", type=int, default=0, metavar="N",
+                    help="drop episodes with fewer than N steps that actually act on "
+                         "the page (send_msg_to_user/report_infeasible do not count). "
+                         "0 = keep everything (default). Use 1 to exclude "
+                         "answer-only INFO episodes, which were 44%% of the "
+                         "successes in a real reddit run. report_infeasible "
+                         "episodes are exempt -- refusing IS their target.")
     args = ap.parse_args()
 
     all_examples, n_ep, n_kept, n_infeasible_kept, n_unjudged_dropped = [], 0, 0, 0, 0
+    n_too_few_actions = 0
     for (goal, steps, ep_dir, trajectory_id, diff, success, infeasible,
         judge_verified) in load_episodes(args.src):
         n_ep += 1
         if args.require_judge and success and not infeasible and judge_verified is None:
             n_unjudged_dropped += 1
         if not _include_episode(success, infeasible, judge_verified, args.require_judge):
+            continue
+        if (args.min_actions and not infeasible
+                and _n_browser_actions(steps) < args.min_actions):
+            n_too_few_actions += 1
             continue
         n_kept += 1
         n_infeasible_kept += int(infeasible)
@@ -205,6 +233,9 @@ def main():
     if args.require_judge:
         print(f"unjudged success episodes dropped: {n_unjudged_dropped} "
               f"(run judge_episodes.py first to include them)")
+    if args.min_actions:
+        print(f"dropped, < {args.min_actions} real action(s): {n_too_few_actions} "
+              f"(answer-only episodes, no page interaction)")
     print(f"SFT examples written : {len(all_examples)} -> {args.out}")
     print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
     print(f"with real AXTree text : {loaded}/{len(all_examples)} "

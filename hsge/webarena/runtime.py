@@ -55,9 +55,10 @@ class WebArenaExplorer:
                  maturity: int = 2, predicate_sim: float = 0.6, seg_axtree_sim: float = 0.6,
                  read_only: bool = False,
                  mine_hrefs: bool = True, per_template_cap: int = 3,
+                 reached_template_cap: int = 8,
                  max_hrefs_per_page: int = 100, task_retries: int = 0,
                  goal_chains_per_node: int = 3,
-                 use_site_seed: bool = False,
+                 use_site_seed: bool = False, seed_capability_repeats: int = 3,
                  goal_max_steps: int | None = None,
                  verify_goals: bool = False,
                  plan_subgoals: bool = False,
@@ -82,6 +83,13 @@ class WebArenaExplorer:
         self.max_depth, self.max_nodes, self.terminal_goal = max_depth, max_nodes, terminal_goal
         self.mine_hrefs = mine_hrefs
         self.per_template_cap = per_template_cap
+        # Tier-0 (URLs the solver actually navigated to) used to be exempt from the
+        # per-template cap AND to outrank everything in the queue. On a 158-node
+        # reddit run that let one forum's comment threads take 58 nodes and two
+        # forums 47% of the run: solving one task inside a thread pushes every
+        # /f/<forum>/<id>/.../comment/<n> it touched, ungated, ahead of the whole
+        # frontier. Tier 0 still wins ties, but no longer without bound.
+        self.reached_template_cap = reached_template_cap
         self.max_hrefs_per_page = max_hrefs_per_page
         self.task_retries = task_retries
         self.goal_chains_per_node = goal_chains_per_node
@@ -113,7 +121,16 @@ class WebArenaExplorer:
         self.use_site_seed = use_site_seed
         self.seeder = SiteSeeder(role("site_seeder"))
         self.site_seed = None            # None = not derived yet; dict once derived
-        self._attempted_capabilities: set[str] = set()
+        # A seed capability used to be attempted once per RUN, which spent the whole
+        # GOAL budget in the first few nodes: a 158-node reddit run emitted 7 GOAL
+        # tasks total (6 seed + 1 chain) and none after node ~3. Now a capability may
+        # be re-attempted from a different KIND of page (url template), up to
+        # seed_capability_repeats times overall -- the same goal pursued from a
+        # different starting page is a genuinely different trajectory, while the
+        # repeat cap stops one capability from monopolising the budget.
+        self._attempted_capabilities: set[tuple[str, str]] = set()
+        self._capability_attempts: Counter = Counter()
+        self.seed_capability_repeats = seed_capability_repeats
         # Inline GOAL verifier (B1): re-check every self-graded GOAL success with a
         # strong judge; a FAIL demotes it to fail so the solver can't grade its own
         # homework. Reuses judge_episodes' grader prompt live. Off by default.
@@ -186,6 +203,7 @@ class WebArenaExplorer:
                 "_op_meta": self._op_meta, "_attempted_chains": self._attempted_chains,
                 "site_seed": self.site_seed,
                 "_attempted_capabilities": self._attempted_capabilities,
+                "_capability_attempts": self._capability_attempts,
                 "operator_grounding": self.operator_grounding, "episode": self.episode,
                 "run_started_epoch": self.run_started_epoch,
                 "run_started_iso": self.run_started_iso,
@@ -227,7 +245,11 @@ class WebArenaExplorer:
         self._attempted_chains = state["_attempted_chains"]
         # .get for back-compat with checkpoints written before the seed feature
         self.site_seed = state.get("site_seed")
+        # A checkpoint written before capabilities became (name, template)-keyed
+        # holds a set of bare names; those keys simply never match, so the run
+        # resumes by re-offering each capability rather than crashing.
         self._attempted_capabilities = state.get("_attempted_capabilities", set())
+        self._capability_attempts = state.get("_capability_attempts", Counter())
         self.operator_grounding = state["operator_grounding"]
         self.episode = state["episode"]
         self.run_started_epoch = state["run_started_epoch"]
@@ -417,7 +439,7 @@ class WebArenaExplorer:
                    member_count=grounding["member_count"],
                    precondition_accuracy=pre_acc, effect_accuracy=eff_acc)
 
-    def _goal_task(self) -> list[dict]:
+    def _goal_task(self, node_url: str = "") -> list[dict]:
         """Goal tasks for the current node, 0..N.
 
         Depth-based chains over the operator graph are the primary source on
@@ -452,16 +474,21 @@ class WebArenaExplorer:
             })
         # Seed capabilities: a top-down GOAL source that does NOT need the operator
         # graph to have edges (attacks bug O2). Fills any remaining per-node budget
-        # with uncovered capabilities, each attempted once per run. Self-graded.
+        # with capabilities not yet tried from this KIND of page, each bounded by
+        # seed_capability_repeats attempts over the run. Self-graded.
         if self.site_seed and len(tasks) < self.goal_chains_per_node:
+            template = self._url_template(node_url)
             for cap in self.site_seed.get("capabilities", []):
                 if len(tasks) >= self.goal_chains_per_node:
                     break
                 goal = cap.get("goal")
                 name = cap.get("name") or goal or ""
-                if not goal or name in self._attempted_capabilities:
+                if not goal or (name, template) in self._attempted_capabilities:
                     continue
-                self._attempted_capabilities.add(name)
+                if self._capability_attempts[name] >= self.seed_capability_repeats:
+                    continue
+                self._attempted_capabilities.add((name, template))
+                self._capability_attempts[name] += 1
                 tasks.append({"goal": goal, "difficulty": 2, "chain": (),
                               "kind": "seed", "goal_predicate": None})
         if tasks:
@@ -675,10 +702,12 @@ class WebArenaExplorer:
                 tier, _novelty, depth, _seq, url = heapq.heappop(frontier)
                 if self._norm_url(url) in visited:
                     continue
-                # Lazy per-template cap for mined (tier-1) URLs: the visited count of
-                # a template grows during the run, so a URL under cap when pushed can
-                # be over cap by the time it pops. Tier-0 (reached) URLs are exempt.
-                if tier == 1 and template_counts[self._url_template(url)] >= self.per_template_cap:
+                # Lazy per-template cap: the visited count of a template grows during
+                # the run, so a URL under cap when pushed can be over cap by the time
+                # it pops. Tier 0 (reached) gets its own, looser cap rather than an
+                # exemption -- see reached_template_cap in __init__.
+                cap = self.per_template_cap if tier == 1 else self.reached_template_cap
+                if template_counts[self._url_template(url)] >= cap:
                     continue
                 visited.add(self._norm_url(url))
                 template_counts[self._url_template(url)] += 1
@@ -817,7 +846,7 @@ class WebArenaExplorer:
                           + f" steps={len(steps)}")
 
                 # 2) goal-conditioned composed tasks (depth chains; terminal backup)
-                for gt in self._goal_task():
+                for gt in self._goal_task(url):
                     self._log("goal_task_selected", node_index=node_index,
                                kind=gt["kind"], chain=gt["chain"],
                                goal_predicate=gt["goal_predicate"])

@@ -16,7 +16,17 @@ Entry format:
 ## Open
 
 ### Predicate canonicalization never unifies synonyms, so the operator graph stays edgeless and no semantic task is ever generated
-- **Status**: open — the synonym-canonicalization fix **implemented +
+- **Status**: open, but **downgraded 2026-08-08 — the symptom is no longer zero.**
+  `outputs/wa_eval_reddit` (158 nodes, 887 episodes) induced 4 operators whose
+  predicate sets finally intersect: `p5 "a post listing page is shown"` is an
+  effect of `attempt_to_find_comment_` AND a precondition of
+  `apply_featured_filter` -> **1 edge**, 1 depth-chain, and GOAL
+  **2 success / 4 fail / 1 infeasible** (first non-zero GOAL on a live site).
+  The three thesis overstatements can now be reworded against real evidence,
+  though "1 edge out of 4 operators" is still weak and 3/7 skills were rejected
+  as tautological. Grounding stays shaky: `effect_confirmed` was 0.0 for
+  `navigate_to_wiki`, 0.5 for two others, 1.0 for only one.
+  Earlier status: the synonym-canonicalization fix **implemented +
   unit-tested (2026-07-22)** did NOT resolve the symptom. Two fresh live runs
   (wa_run_13_shopping, wa_run_14_reddit, 77/79 nodes, ~290 episodes each) still
   show **GOAL 0/0/0**. Re-analysis (2026-07-22) shows the root cause is a
@@ -83,6 +93,21 @@ Entry format:
   succeeds or those three are reworded. See `Thesis_report/memory/07-dan-y-chi-tiet.md`.
 
 ## Fixed
+
+### Five data-quality defects found by auditing the wa_eval_reddit run (frontier flooding, GOAL starvation, INFO flood, unrunnable SkillCards, vacuous `verified`)
+- **Status**: fixed (2026-08-08 03:08) — all five; each has a regression test in `hsge/tests/test_run_quality_fixes.py`.
+- **Found**: 2026-08-08, auditing `outputs/wa_eval_reddit` (158 nodes, 887 episodes) before building an SFT dataset from it.
+- **Where**: `hsge/webarena/runtime.py` (frontier pop-time cap, `_goal_task`), `hsge/webarena/agents.py::PageExplorer` (tag caps), `hsge/abstraction.py::_SYS`, `hsge/verification.py::verify_skill`, `build_sft_dataset.py`.
+- **Symptoms, measured**:
+  1. **Frontier flooding** — 58/158 nodes were `/f/AskReddit/*/*/*/*`; two forums accounted for 47% of the whole run, despite `per_template_cap: 3`.
+  2. **GOAL starvation** — 7 GOAL tasks total (6 seed + 1 depth chain) across 158 nodes, none after node ~3.
+  3. **INFO flood** — INFO was 272/560 (49%) of successful episodes, and 237 of those had ZERO browser actions (only `send_msg_to_user`). 44% of all successes were answer-only; 60% had <= 1 real action.
+  4. **Unrunnable SkillCards** — `click({sel})` (unquoted), `fill('{{text}}', '')` (arguments swapped), `press('{{btn}}')` (one arg where two are needed), CSS-selector slot examples (`#notification-bell`) for a bid-only action space.
+  5. **Vacuous `verified`** — every skill in `skills.json` was `"verified": true` next to `"n_verify_attempts": 0`.
+- **Causes**: (1) the cap was written `if tier == 1 and ...`, exempting tier-0 — which is also the highest-priority tier, so solving one task inside a thread pushed every comment URL it touched ahead of the entire frontier. (2) `_attempted_capabilities` was a set of bare capability names, blocking a capability for the rest of the run after one attempt. (3) `_INFO_RESERVE` only bounds INFO inside the `len(parsed) > max_tasks` overflow branch, so a page proposing <= max_tasks tasks was never truncated at all. (4) the abstraction prompt passed only bare action verbs and never described the action space. (5) `successes >= k` is vacuously true at `k=0`, which is what the WebArena runtime passes (it verifies by terminal episode outcome instead).
+- **Fixes**: (1) `reached_template_cap` (default 8) applied to tier 0 by the same lazy pop-time check — still looser than the mined cap, since reaching a page while solving is evidence it matters. (2) capabilities keyed `(name, url_template)` plus a `seed_capability_repeats` global cap (default 3). (3) unconditional `_INFO_CAP = 2`, mirroring the existing `_NAV_CAP`. (4) `_SYS` documents each action's exact arity and that elements are addressed by BID, never CSS/XPath; payload gained `example_actions` (members' literal action strings). (5) admission decision unchanged, but `.verified` now additionally requires `n_verify_attempts > 0`. Also `build_sft_dataset.py --min-actions N` (default 0, old behavior) to drop answer-only episodes.
+- **Note**: `--min-actions 1` on the real reddit data drops 249 episodes (34%) but only 6.6% of examples (3767 -> 3518) — the dropped episodes were one step each, so the trade is heavily favourable.
+- **Related, still open**: an LLM exception during a task still kills the whole run (see the API-timeout entry below).
 
 ### Every GOAL task stalls ~12 minutes then can kill the run (60s API timeout x the SDK's hidden retries, vs a reasoning goal-solver)
 - **Status**: fixed (2026-08-07 17:22)
