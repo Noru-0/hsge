@@ -180,7 +180,10 @@ class _ArrivesButKeepsClickingLLM:
 
     def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
         self.prompts.append(prompt)
-        if "budget is exhausted" in prompt:
+        # Match the wrap-up by its stable closing instruction, not by the opening
+        # sentence: that now varies with WHY the episode stopped (budget vs a
+        # guard), so keying on "budget is exhausted" silently stopped matching.
+        if "Answer with one of those two actions only." in prompt:
             return {"thought": "already on the wiki page",
                     "action": "send_msg_to_user('done: on the wiki page')"}
         return {"thought": "go to wiki", "action": "click('24')"}

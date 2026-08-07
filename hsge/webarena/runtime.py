@@ -48,6 +48,10 @@ def _now() -> tuple[float, str]:
 
 
 class WebArenaExplorer:
+    # Consecutive failed attempts after which a seed capability is retired for the
+    # rest of the run (see _capability_failures in __init__).
+    _CAPABILITY_MAX_FAILS = 2
+
     def __init__(self, browser_factory, llm, embedder, out_dir: str,
                  allow_pattern: str, deny_pattern: str | None = None, max_depth: int = 6,
                  max_nodes: int = 20, max_steps: int = 15, max_tasks: int = 4,
@@ -131,6 +135,11 @@ class WebArenaExplorer:
         self._attempted_capabilities: set[tuple[str, str]] = set()
         self._capability_attempts: Counter = Counter()
         self.seed_capability_repeats = seed_capability_repeats
+        # Repeats alone spend the budget on capabilities the solver cannot do: a
+        # shopping_admin run retried "update the status of an order to 'Shipped'"
+        # all 3 times, all 3 infeasible. Consecutive failures retire a capability
+        # early; a success resets the count (a one-off failure means little).
+        self._capability_failures: Counter = Counter()
         # Inline GOAL verifier (B1): re-check every self-graded GOAL success with a
         # strong judge; a FAIL demotes it to fail so the solver can't grade its own
         # homework. Reuses judge_episodes' grader prompt live. Off by default.
@@ -204,6 +213,7 @@ class WebArenaExplorer:
                 "site_seed": self.site_seed,
                 "_attempted_capabilities": self._attempted_capabilities,
                 "_capability_attempts": self._capability_attempts,
+                "_capability_failures": self._capability_failures,
                 "operator_grounding": self.operator_grounding, "episode": self.episode,
                 "run_started_epoch": self.run_started_epoch,
                 "run_started_iso": self.run_started_iso,
@@ -250,6 +260,7 @@ class WebArenaExplorer:
         # resumes by re-offering each capability rather than crashing.
         self._attempted_capabilities = state.get("_attempted_capabilities", set())
         self._capability_attempts = state.get("_capability_attempts", Counter())
+        self._capability_failures = state.get("_capability_failures", Counter())
         self.operator_grounding = state["operator_grounding"]
         self.episode = state["episode"]
         self.run_started_epoch = state["run_started_epoch"]
@@ -487,10 +498,13 @@ class WebArenaExplorer:
                     continue
                 if self._capability_attempts[name] >= self.seed_capability_repeats:
                     continue
+                if self._capability_failures[name] >= self._CAPABILITY_MAX_FAILS:
+                    continue
                 self._attempted_capabilities.add((name, template))
                 self._capability_attempts[name] += 1
                 tasks.append({"goal": goal, "difficulty": 2, "chain": (),
-                              "kind": "seed", "goal_predicate": None})
+                              "kind": "seed", "goal_predicate": None,
+                              "capability": name})
         if tasks:
             return tasks
         # Backup: graph too shallow for chains, but a terminal predicate is
@@ -863,6 +877,12 @@ class WebArenaExplorer:
                         subgoals=subgoals, solver=self.goal_solver)
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1
+                    capability = gt.get("capability")
+                    if capability:
+                        if success:
+                            self._capability_failures[capability] = 0
+                        else:
+                            self._capability_failures[capability] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
                                                "success": success, "infeasible": infeasible,
                                                "attempts": attempts, "steps": len(steps)})

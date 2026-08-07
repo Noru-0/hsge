@@ -390,6 +390,15 @@ class Solver:
     _SUBGOAL_CAP = 8          # max steps on one subgoal before auto-advancing (C2)
     _NOVELTY_WARN = 4         # warn after this many steps reaching no new page (C3)
     _NOVELTY_MAX = 8          # hard-stop after this many (C3)
+    # What the wrap-up prompt tells the model about WHY the episode stopped. Only
+    # "budget" means the step allowance ran out; the guards fire much earlier, and
+    # claiming otherwise puts a false reason into report_infeasible.
+    _STOP_REASONS = {
+        "budget": "Your action budget is exhausted.",
+        "stuck": ("You were stopped early: your last actions kept targeting the same "
+                  "element with no visible progress."),
+        "novelty": ("You were stopped early: your recent actions reached no new page."),
+    }
 
     def __init__(self, llm, max_steps: int = 15,
                  vision: bool = False, som: bool = True, image_detail: str = "low"):
@@ -454,10 +463,18 @@ class Solver:
         last_error = ""
         success = False
         exhausted = True   # loop ended by budget/hard-stop, not by a terminal action
+        # Why the loop ended, for the wrap-up prompt below. The two guards stop an
+        # episode after a handful of steps, so telling the model its budget ran out
+        # would be false -- and a real shopping_admin run shows it repeats whatever
+        # the prompt claims: episodes that stopped at 5-6 steps recorded
+        # report_infeasible('action budget exhausted, ...'), which then became both
+        # the analysis record and the SFT target.
+        stop_reason = "budget"
         seen_obs = {(obs["url"], obs["axtree"])}  # observations already reached (C3)
         novelty_streak = 0                        # trailing steps reaching no new page
         for _ in range(budget):
             if novelty_streak >= self._NOVELTY_MAX:
+                stop_reason = "novelty"
                 # Churn across DIFFERENT targets that never reaches a new page is
                 # missed by the same-target guard below (v2: 3 GOALs burned the
                 # whole budget this way). Stop instead of exhausting the budget.
@@ -477,6 +494,7 @@ class Solver:
                 # that clearly isn't moving instead of exhausting max_steps.
                 print(f"    [solver] giving up: target {self._action_target(history[-1])!r} "
                       f"hit {streak}x in a row with no progress")
+                stop_reason = "stuck"
                 break
             repeat_warning = ""
             if streak >= self._WARN_AFTER_REPEATS:
@@ -585,11 +603,12 @@ class Solver:
             wrap_prompt = (f"GOAL: {goal}\n\nACTIONS TAKEN:\n"
                            + ("\n".join(recent) or "(none)")
                            + f"\n\nURL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}"
-                           + "\n\nYour action budget is exhausted. If the goal has "
+                           + f"\n\n{self._STOP_REASONS[stop_reason]} If the goal has "
                              "ALREADY been achieved (e.g. you are on the requested "
                              "page), call send_msg_to_user('done: ...') NOW. If the "
-                             "goal cannot be achieved, call report_infeasible('why'). "
-                             "Answer with one of those two actions only.")
+                             "goal cannot be achieved, call report_infeasible('why') "
+                             "-- state the REAL obstacle, not the fact that you "
+                             "stopped. Answer with one of those two actions only.")
             out = self.llm.complete_json(SOLVER_SYS, wrap_prompt)
             action = (out.get("action") or "").strip()
             if action.startswith("send_msg_to_user") or action.startswith("report_infeasible"):

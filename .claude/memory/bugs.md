@@ -94,6 +94,22 @@ Entry format:
 
 ## Fixed
 
+### Wrap-up prompt claims "action budget is exhausted" after a guard stop, so report_infeasible records a false reason
+- **Status**: fixed (2026-08-08 04:31)
+- **Found**: 2026-08-08, evaluating `outputs/wa_eval_shopping_admin` — episodes that ran only 5-6 steps recorded `report_infeasible('action budget exhausted, cannot uncheck the checkbox')` while `max_steps=15` and `goal_max_steps=25`.
+- **Where**: `hsge/webarena/agents.py::Solver.solve` wrap-up prompt.
+- **Symptom**: the recorded infeasible reason is wrong whenever the same-target stuck guard (`_MAX_REPEATS`) or the novelty guard (`_NOVELTY_MAX`) ended the episode — which is most short infeasible episodes. Pollutes failure analysis (can't separate "ran out of steps" from "got stuck") AND the SFT data, since infeasible episodes are kept as training targets: the model is taught to plead budget exhaustion when that is not what happened.
+- **Cause**: the prompt hardcoded one sentence for every exit path; the model faithfully repeats whatever the prompt asserts.
+- **Fix**: `stop_reason` (`budget`/`stuck`/`novelty`) is tracked at each exit and rendered from `Solver._STOP_REASONS`; the prompt also now asks for "the REAL obstacle, not the fact that you stopped". Tests in `test_stop_reason_and_capability_retire.py`.
+
+### Seed capabilities are retried up to the repeat cap even when every attempt fails
+- **Status**: fixed (2026-08-08 04:31)
+- **Found**: 2026-08-08, same run — "Review recent orders and update the status of an order to 'Shipped'" ran 3 times (ep_0009/0015/0026), all infeasible, consuming 3 of the run's GOAL slots.
+- **Where**: `hsge/webarena/runtime.py::_goal_task` — introduced by the 2026-08-08 03:08 `seed_capability_repeats` fix.
+- **Symptom**: a capability beyond the solver's ability spends its whole repeat budget on identical failures.
+- **Cause**: `_capability_attempts` counted attempts but never looked at outcomes.
+- **Fix**: `_capability_failures` retires a capability after `_CAPABILITY_MAX_FAILS = 2` *consecutive* failures (a success resets it). Seed tasks now carry their `capability` name so the GOAL result loop can score them; the counter is checkpointed for `--resume`.
+
 ### Five data-quality defects found by auditing the wa_eval_reddit run (frontier flooding, GOAL starvation, INFO flood, unrunnable SkillCards, vacuous `verified`)
 - **Status**: fixed (2026-08-08 03:08) — all five; each has a regression test in `hsge/tests/test_run_quality_fixes.py`.
 - **Found**: 2026-08-08, auditing `outputs/wa_eval_reddit` (158 nodes, 887 episodes) before building an SFT dataset from it.
