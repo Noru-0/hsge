@@ -84,6 +84,15 @@ Entry format:
 
 ## Fixed
 
+### Every GOAL task stalls ~12 minutes then can kill the run (60s API timeout x the SDK's hidden retries, vs a reasoning goal-solver)
+- **Status**: fixed (2026-08-07 17:22)
+- **Found**: 2026-08-07, first 4-domain eval collection run — `outputs/wa_eval_shopping` produced 3 LOCAL episodes then froze with no file activity for 13 min, printing only `[OpenAILLM] retry 1/3` and `2/3 after APITimeoutError`. The reddit run in parallel was fine (13 episodes, 0 retries) — it had not reached a GOAL task yet.
+- **Where**: `hsge/backends.py::OpenAILLM.__init__` (`_REQUEST_TIMEOUT_S`, missing `max_retries`).
+- **Symptom**: the first GOAL task of a run hangs ~12 min, then raises `APITimeoutError`. That exception is not caught per-task (only browser errors get `node_error` + skip), so it propagates to the whole-loop handler, writes `run_error`, and re-raises — killing a long unattended run.
+- **Cause**: `_REQUEST_TIMEOUT_S = 60.0` is below what `solver_goal: gpt-5.6-terra` needs — a non-streaming reasoning call over a 6000-char axtree + screenshot routinely takes longer. Compounding it, `OpenAI()` was constructed without `max_retries`, so the SDK's default 2 internal retries tripled each of `_create_with_retry`'s 4 attempts: 4 x 3 x 60s ~ 12 min of silent blocking. `sample <pid>` confirmed the stack (`_ssl__SSLSocket_read -> PySSL_select -> poll`), and `/v1/models` confirmed `gpt-5.6-terra` is present on the account — slowness, not a bad model id.
+- **Fix**: `_REQUEST_TIMEOUT_S` 60 -> 180s, and `max_retries=0` on the client so this class's own logged, transient-only backoff loop is the single retry policy (worst case 4 x 180s, and every wait is now logged instead of hidden inside the SDK).
+- **Note (still open, separate)**: an LLM exception during a task still kills the whole run rather than failing just that task. `--resume` recovers, but a per-task guard like the existing `node_error` one would be more robust for long unattended runs.
+
 ### Real run crashes on GPT-5.x/o-series models that reject a custom temperature
 - **Status**: fixed (2026-07-31 23:10)
 - **Found**: 2026-07-31, first real run with `solver_goal: gpt-5.6-terra` — `openai.BadRequestError 400: "Unsupported value: 'temperature' does not support 0.0 with this model. Only the default (1) value is supported."` (`run_webarena.py` → `Solver.solve` → `OpenAILLM.complete_json`).

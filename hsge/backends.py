@@ -22,9 +22,12 @@ class OpenAILLM(LLM):
     # The SDK's own default (connect=5.0, read/write/pool=600) lets a single
     # stalled request block for up to 10 minutes with no error and no log
     # line -- and _create_with_retry can multiply that across 4 attempts.
-    # A much shorter, explicit timeout makes a slow/unresponsive API raise
-    # (and get retried/logged like any other transient error) instead.
-    _REQUEST_TIMEOUT_S = 60.0
+    # A shorter, explicit timeout makes a slow/unresponsive API raise (and get
+    # retried/logged like any other transient error) instead. 60s was too tight
+    # once solver_goal started using a reasoning model (gpt-5.x): a real run
+    # stalled on every GOAL task because a single non-streaming reasoning call
+    # over a 6000-char axtree + screenshot routinely needs more than that.
+    _REQUEST_TIMEOUT_S = 180.0
 
     def __init__(self, model: str | None = None, base_url: str | None = None,
                  api_key: str | None = None, temperature: float = 0.2):
@@ -34,6 +37,11 @@ class OpenAILLM(LLM):
             api_key=api_key or os.environ.get("OPENAI_API_KEY"),
             base_url=base_url or os.environ.get("OPENAI_BASE_URL"),
             timeout=self._REQUEST_TIMEOUT_S,
+            # _create_with_retry below is this class's retry policy (logged,
+            # transient-only, exponential backoff). The SDK's own default
+            # max_retries=2 silently triples every attempt on top of it, so one
+            # unresponsive call costs 4 x 3 x timeout of wall-clock silence.
+            max_retries=0,
         )
         self.temperature = temperature
         # Set once a model rejects a custom temperature (GPT-5.x / o-series only
