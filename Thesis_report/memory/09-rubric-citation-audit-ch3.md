@@ -76,6 +76,35 @@ là sai hoặc không đáng tin cậy."
   `sec:method-skills`, `sec:method-sft`, `sec:method-impl`,
   `sec:method-overview`.
 
+## Đã sửa (2026-08-07, cùng ngày audit)
+
+Hạng mục 1–4 trong danh sách đề xuất đã làm xong, build sạch (0 error,
+0 undefined, 0 dấu `??`, 123 trang):
+
+1. Thêm 4 cross-ref sang Chương 5 (`sec:disc-guardrails` ×2,
+   `sec:disc-exploration`, `sec:disc-operators`); thêm 4 tham chiếu
+   `app:design-params` (trước đó Ch3 không trỏ phụ lục lần nào); ghi rõ
+   `k = 6` là mặc định còn các lượt chạy dùng `k = 9`, bổ sung maturity = 2
+   và ngưỡng predicate 0,6 vào thân bài.
+2. Thêm 3 entry `.bib` mới (`kaelbling1998pomdp`, `bengio2009curriculum`,
+   `zheng2023judge`) + cite `zhou2024webarena`/`dechezelles2025browsergym`
+   cho axtree & action space, kèm một câu nói thẳng đây là quy ước kế thừa
+   chứ không phải đóng góp của khóa luận. Thêm ngày truy cập cho
+   `qwen2026qwen35`. Ch3 giờ có 14 citation (trước: 9).
+3. Chuẩn hóa "graph" → "đồ thị" trong Ch3 (kể cả tiêu đề §3.3); giữ
+   "operator graph"/"(graph)" ở dạng chú thích tiếng Anh một lần. Chú thích
+   8 thuật ngữ: tautology, vocabulary-aware, predicate registry, goal task,
+   subgoal, instruction-tuning, backend, serving.
+4. Tách câu/đoạn dài: đoạn > 200 âm tiết 5 → 2 (hai đoạn còn lại là danh
+   sách roadmap và itemize P1–P3); câu ≥ 45 âm tiết 24 → 17; câu ≥ 55 âm
+   tiết 6 → 1 (câu còn lại là liệt kê (i)–(iv), để nguyên cho dễ đọc).
+
+⚠️ **Còn nợ**: "graph" vẫn còn ở các chương khác (Ch1 ×3, Ch2 ×3, Ch5 ×1,
+Ch6 ×8, Phụ lục ×11) — nếu muốn nhất quán toàn quyển thì phải quét thêm.
+Hai việc chưa làm: bổ sung mã giả cho §3.4/§3.5.3, và câu phát biểu điểm mới
+so với nền vay mượn (TC3). Việc lớn nhất còn treo là viết mục ở Chương 5 cho
+đánh đổi kiểm chứng skill mà §3.4.4 đang hứa.
+
 ## Đánh giá tổng thể
 
 Phần đóng góp của Chương 3 vào rubric: **TC2 ~7,5/10** (kiến trúc + hình +
