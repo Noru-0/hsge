@@ -1,31 +1,11 @@
 \chapter*{Tóm tắt}
 
-Các tác nhân tự trị thao tác website qua giao diện người dùng có tiềm năng
-tự động hóa nhiều công việc trực tuyến lặp lại. Tuy nhiên, các web agent
-hiện nay chủ yếu phụ thuộc vào mô hình ngôn ngữ lớn độc quyền, dẫn đến chi
-phí vận hành cao và rủi ro về quyền riêng tư. Mô hình ngôn ngữ nhỏ có thể
-tự triển khai là một lựa chọn thay thế, nhưng hiệu năng còn hạn chế do
-thiếu dữ liệu tương tác được gán nhãn và kiểm soát chất lượng.
+Để một mô hình ngôn ngữ nhỏ (SLM) đóng được vai trò web agent, nó cần được huấn luyện trên một lượng lớn trajectory chất lượng cao. Tuy nhiên, việc thu thập dữ liệu như vậy hiện vẫn phụ thuộc vào gán nhãn thủ công, hoặc các phương pháp khám phá web tự động chỉ sinh ra những task đơn lẻ, rời rạc và khó tái sử dụng.
 
-Đề tài hướng đến xây dựng một phương pháp tự động khám phá website không có
-nhãn và sinh dữ liệu huấn luyện chất lượng cao nhằm cải thiện khả năng thực
-hiện tác vụ web của mô hình ngôn ngữ nhỏ.
+Khóa luận hướng đến xây dựng một pipeline vừa khám phá website vừa lưu lại các hành động lặp lại ở nhiều tác vụ thành kỹ năng có thể tái sử dụng, nhằm tạo ra dữ liệu trajectory chất lượng cao để tinh chỉnh một SLM làm web agent.
 
-Khóa luận đề xuất HSGE (Hierarchical Skill-Graph Exploration), một pipeline
-vừa khám phá website vừa xây dựng đồ thị kỹ năng hai tầng. Các tác vụ mức
-thấp do LLM đề xuất được thực thi để thu thập trajectory; từ đó, các kỹ
-năng có khả năng tái sử dụng được phát hiện, kiểm chứng và chuyển thành các
-operator lập kế hoạch. Việc kết hợp các operator cho phép sinh các tác vụ
-dài hạn có ý nghĩa và đã được xác minh. Dữ liệu tiếp tục được kiểm soát
-bằng LLM judge, bước viết lại suy luận và được chuyển thành tập dữ liệu
-tinh chỉnh có giám sát phù hợp với prompt của agent khi vận hành.
+Khóa luận đề xuất HSGE (Hierarchical Skill-Graph Exploration) - một pipeline vừa khám phá website, vừa xây dựng dần một đồ thị kỹ năng hai tầng song song với quá trình đó. Ở tầng thấp, agent thực thi các task do LLM đề xuất để thu thập trajectory trên trang web và từ đó hình thành những kỹ năng có khả năng tái sử dụng. Sau đó mỗi kỹ năng đã được xác nhận sẽ chuyển thành một operator - một hành động trừu tượng, được mô tả bằng điều kiện áp dụng (precondition) và kết quả nó tạo ra (effect). Nhờ cách biểu diễn này, hệ thống có thể ghép nhiều operator nối tiếp nhau theo chuỗi effect-precondition để tự sinh ra những tác vụ dài hơn và có ý nghĩa (semantic task), thay vì chỉ dừng lại ở các task rời rạc ban đầu. Dữ liệu thu được sau đó được LLM judge kiểm tra và đóng gói thành tập huấn luyện tinh chỉnh có giám sát (SFT) khớp định dạng prompt của agent.
 
-Qwen3.5-9B được fine-tune bằng LoRA trên dữ liệu thu thập từ các website
-WebArena tự triển khai. Trên nhóm tác vụ GitLab, mô hình sau fine-tune đạt
-tỷ lệ hoàn thành 6{,}67\%, so với 5{,}56\% của mô hình gốc. Do mỗi tác vụ
-mới được đánh giá một lần, kết quả hiện được xem là tín hiệu ban đầu; các
-website Shopping, Shopping Admin và Reddit đang tiếp tục được đánh giá.
+HSGE được hiện thực trên cả backend mô phỏng lẫn môi trường WebArena thật, dùng để thu thập trajectory, xây tập dữ liệu tinh chỉnh có giám sát và fine-tune LoRA cho mô hình Qwen3.5-9B. Trên bộ 180 task WebArena GitLab, mô hình đã fine-tune đạt tỉ lệ thành công 6.67\% so với 5.56\% của baseline - một tín hiệu tích cực ban đầu, dù quy mô mẫu còn nhỏ để kết luận chắc chắn.
 
-Đề tài đóng góp một pipeline thu thập dữ liệu tự động, tập dữ liệu đã tinh
-lọc và các kinh nghiệm kỹ thuật hỗ trợ triển khai web agent sử dụng mô hình
-nhỏ trên website thực tế.
+Kết quả bước đầu cho thấy tổ chức dữ liệu khám phá thành đồ thị kỹ năng, thay vì thu thập trajectory rời rạc, là một hướng khả thi để cải thiện năng lực web agent của các mô hình nhỏ. Khóa luận để lại một bộ khung hoàn chỉnh gồm pipeline khám phá, runtime WebArena, bộ dữ liệu và mô hình đã huấn luyện làm nền tảng cho các đánh giá mở rộng trên nhiều domain với số liệu thống kê chặt chẽ hơn.
