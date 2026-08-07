@@ -14,6 +14,7 @@ viết report, rồi mở đúng file chủ đề cần dùng.
 | [06-de-tai-hsge.md](06-de-tai-hsge.md) | Ngữ cảnh đề tài HSGE: bài toán, kết quả đã có, nguồn tư liệu trong repo, mapping vào từng chương |
 | [07-dan-y-chi-tiet.md](07-dan-y-chi-tiet.md) | Dàn ý chi tiết 6 chương (v1, tiếng Anh, trọng tâm C3/C5/C6, C4 để khung `[TO ADD]`) + thứ tự viết + checklist mỗi chương |
 | [08-citation-audit-ch2.md](08-citation-audit-ch2.md) | Kết quả xác minh citation Chương 1–2: claim nào từng sai và đã sửa, số liệu nào đã đúng, các mục còn treo trước khi nộp |
+| [09-rubric-citation-audit-ch3.md](09-rubric-citation-audit-ch3.md) | Rà Chương 3 theo rubric (TC2/TC3/TC5) + audit 9 citation: chỗ thiếu cite, claim thiếu dẫn chứng, lời hứa gãy sang Chương 5, mâu thuẫn tham số với phụ lục |
 
 ## Nguồn gốc
 
