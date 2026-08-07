@@ -125,9 +125,40 @@ operator graph") và `Figures/fig_roadmap.pdf` vẫn còn chữ "graph" bên tro
 (20/07). Muốn sửa phải vẽ lại. Đây là loại lỗi chỉ người mở PDF mới thấy,
 đúng cảnh báo trong [05-bai-hoc-review](05-bai-hoc-review.md).
 
-Hai việc chưa làm: bổ sung mã giả cho §3.4/§3.5.3, và câu phát biểu điểm mới
-so với nền vay mượn (TC3). Việc lớn nhất còn treo là viết mục ở Chương 5 cho
-đánh đổi kiểm chứng skill mà §3.4.4 đang hứa.
+## Mã giả §3.4 và §3.5.3 (2026-08-07)
+
+Đã thêm 2 thuật toán, viết bám sát code thật chứ không phác theo văn xuôi:
+
+- `alg:discovery` (§3.4) ← `segmentation._candidate_boundaries` /
+  `_merge_trivial_nav` / `segment_trajectory`, `clustering.OnlineClusterer`,
+  `library.observe` + `_try_admit`. Có ghi rõ pipeline chỉ chạy trên quỹ đạo
+  **thành công** (`runtime.py:802` — `if success:` mới gọi `on_trajectory`).
+- `alg:semantic` (§3.5.3) ← `operators.OperatorGraph.all_chains` (DFS có
+  chặn `min_len`/`max_len`/`max_paths`, thứ tự tất định, chuỗi con cũng được
+  phát ra) + `runtime._goal_tasks` (ngân sách mỗi node, `_attempted_chains`,
+  chọn `reached()` khi operator cuối terminal và có `terminal_goal`, ngược
+  lại là solver + judge; backup `plan()` khi đồ thị quá thưa).
+
+Sửa kèm trong `main.tex`: `\ALG@name` → "Thuật toán" (trước đó caption ra
+"Algorithm" tiếng Anh giữa quyển tiếng Việt), `\numberwithin{algorithm}
+{chapter}` (trước đó đánh số 1,2,3 trong khi Hình/Bảng đánh 3.1, 3.2),
+`\algorithmicrequire/ensure` → "Đầu vào/Đầu ra". Giờ là Thuật toán 3.1–3.3,
+cả ba đều được tham chiếu trong thân bài.
+
+⚠️ **Bài học kỹ thuật**: `\textsc{}` với chữ tiếng Việt có dấu bị vỡ dưới font
+encoding T5 ("P HÂN X Ử"). Tên thủ tục trong mã giả phải để ASCII —
+đúng cách `alg:frontier` vốn đã làm.
+
+⚠️ **Lỗ hổng mới phát hiện**: `runtime.py` còn một nguồn sinh GOAL task thứ
+ba là **seed capabilities** (`self.site_seed`, lấp phần ngân sách còn dư khi
+chuỗi operator không đủ) — **Chương 3 không mô tả cơ chế này ở đâu cả**, dù
+theo [[phase-a-seed-goal-validated]] nó đã được dùng trong run
+`wa_seed_shopping`. `alg:semantic` cố ý viết đúng phạm vi mà chương mô tả
+(ghép chuỗi + backup terminal). Cần quyết định: hoặc viết thêm một tiểu mục
+cho seed, hoặc nói rõ nó nằm ngoài phạm vi báo cáo.
+
+Còn lại: câu phát biểu điểm mới so với nền vay mượn (TC3), và việc lớn nhất
+là viết mục ở Chương 5 cho đánh đổi kiểm chứng skill mà §3.4.4 đang hứa.
 
 ## Đánh giá tổng thể
 

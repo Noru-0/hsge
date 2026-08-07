@@ -168,6 +168,49 @@ Mọi quỹ đạo tương tác (trajectory) sau khi hoàn tất sẽ đi qua ch
 \label{fig:discovery}
 \end{figure}
 
+Thuật toán~\ref{alg:discovery} trình bày toàn bộ bốn giai đoạn dưới dạng mã
+giả; các mục tiếp theo giải thích chi tiết từng giai đoạn. Điểm cần lưu ý là
+pipeline chỉ được kích hoạt trên những quỹ đạo của tác vụ đã giải thành công:
+một episode thất bại hoặc kết thúc bằng \texttt{report\_infeasible} không bao
+giờ tham gia vào quá trình phát hiện kỹ năng.
+
+\begin{algorithm}[H]
+\caption{Phát hiện kỹ năng từ một quỹ đạo tương tác}
+\label{alg:discovery}
+\begin{algorithmic}[1]
+\Require quỹ đạo $\tau$ gồm $n$ bước của một tác vụ đã giải thành công, với
+quan sát $o_i = (u_i, x_i)$; thư viện skill $L$; ngưỡng axtree
+$\theta_{\mathrm{ax}}$, ngưỡng gom cụm $\theta_{\mathrm{sim}}$, độ chín $m$
+\Ensure tập các skill được thu nhận thêm vào $L$
+\State $C \gets \emptyset$ \Comment{điểm cắt ứng viên}
+\For{$i \gets 1$ \textbf{đến} $n-1$}
+  \If{$u_i \neq u_{i-1}$ \textbf{hoặc} $\textsc{Sim}(x_{i-1}, x_i) < \theta_{\mathrm{ax}}$}
+    \State $C \gets C \cup \{i\}$
+  \EndIf
+\EndFor
+\State $S \gets \textsc{Arbitrate}(\tau, C)$ \Comment{LLM gộp/xác nhận; điểm cắt không hợp lệ bị bỏ, không phản hồi thì giữ nguyên $C$}
+\State $S \gets \textsc{MergeNav}(S)$ \Comment{đoạn một bước thuần điều hướng gộp vào đoạn kề}
+\State $A \gets \emptyset$
+\For{mỗi quỹ đạo con $\sigma \in S$}
+  \State $v \gets \textsc{Embed}(\sigma)$ \Comment{sentence embedding, đã chuẩn hóa $L_2$}
+  \State $c \gets \arg\max_j \cos(v, \mu_j)$ \Comment{$\mu_j$ là tâm cụm $j$}
+  \If{$L$ chưa có cụm nào \textbf{hoặc} $\cos(v, \mu_c) < \theta_{\mathrm{sim}}$}
+    \State $c \gets$ cụm mới, tâm khởi tạo bằng $v$
+  \Else
+    \State thêm $\sigma$ vào cụm $c$; cập nhật $\mu_c$ theo trung bình lũy tiến rồi chuẩn hóa lại
+  \EndIf
+  \If{$|\textsc{Members}(c)| \ge m$ \textbf{và} $c$ chưa được trừu tượng hóa}
+    \State đánh dấu $c$ đã trừu tượng hóa
+    \State $\mathit{card} \gets \textsc{Abstract}(\textsc{Members}(c))$ \Comment{LLM sinh skill card}
+    \If{$\textsc{Verify}(\mathit{card})$}
+      \State $L \gets L \cup \{\mathit{card}\}$; \; $A \gets A \cup \{\mathit{card}\}$
+    \EndIf
+  \EndIf
+\EndFor
+\State \Return $A$
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Phân cắt quỹ đạo (Segmentation)}
 
 Một quỹ đạo tương tác thường là sự đan xen của nhiều hành vi khác nhau (như tìm kiếm, lọc, và mở kết quả). Bước phân cắt sẽ chia trajectory ban đầu thành các \emph{quỹ đạo con} (sub-trajectory) có tính liền mạch và đồng nhất về mặt ngữ nghĩa. Các điểm phân cắt tiềm năng (candidate cut points) được xác định dựa trên hai tín hiệu: sự thay đổi của URL và sự sụt giảm độ tương đồng giữa hai cây trợ năng (accessibility tree) liên tiếp. Tín hiệu thứ hai giúp hệ thống nắm bắt được các chuyển đổi trạng thái ngay bên trong một trang (ví dụ: một hộp thoại pop-up xuất hiện) mà không làm thay đổi URL. Sau đó, một LLM sẽ đóng vai trò phân xử các điểm cắt tiềm năng này để đưa ra quyết định gộp hoặc xác nhận phân cắt. Kết quả đầu ra sẽ được kiểm tra tính hợp lệ so với tập ứng viên ban đầu; đồng thời, các đoạn thao tác điều hướng đơn giản (chỉ gồm một bước) sẽ được gộp chung vào quỹ đạo con liền kề.
@@ -284,7 +327,57 @@ từ quan hệ giữa các năng lực đã được kiểm chứng.
 
 Các semantic task được thực thi theo chiến lược bảo thủ nhằm hạn chế lặp lại.
 Trong mỗi lượt khám phá, mỗi chuỗi operator chỉ được thử tối đa một lần và
-mỗi node chỉ sinh thêm một số lượng hữu hạn chuỗi mới.
+mỗi node chỉ sinh thêm một số lượng hữu hạn chuỗi mới. Thuật
+toán~\ref{alg:semantic} mô tả toàn bộ quá trình này, từ việc liệt kê chuỗi
+trên đồ thị toán tử cho tới cách chọn cơ chế kiểm chứng cho từng task.
+
+\begin{algorithm}[H]
+\caption{Sinh semantic task bằng ghép chuỗi operator}
+\label{alg:semantic}
+\begin{algorithmic}[1]
+\Require đồ thị toán tử $G = (\Omega, E)$ với
+$E = \{(\omega_1, \omega_2) : \mathit{eff}(\omega_1) \cap \mathit{pre}(\omega_2) \neq \emptyset\}$;
+ngân sách $b$ chuỗi mới cho mỗi node; tập chuỗi đã thử trong lượt chạy $X$;
+mục tiêu kết thúc $g_T$ (có thể không được cấu hình, ký hiệu $\bot$)
+\Ensure danh sách semantic task kèm cơ chế kiểm chứng tương ứng
+\State $P \gets \emptyset$
+\For{mỗi $\omega \in \Omega$ theo thứ tự tất định}
+  \State $\textsc{Dfs}([\omega])$
+\EndFor
+\State $T \gets \emptyset$
+\For{mỗi chuỗi $p \in P$}
+  \If{$|T| \ge b$} \textbf{break} \EndIf
+  \If{$p \in X$} \textbf{continue} \Comment{mỗi chuỗi chỉ thử một lần trong một lượt chạy} \EndIf
+  \State $X \gets X \cup \{p\}$
+  \State $\mathit{instr} \gets$ URL khởi đầu ghi nhận của $p_1$, nối với mô tả các skill trong $p$ theo đúng thứ tự
+  \If{$p_{|p|}$ được đánh dấu terminal \textbf{và} $g_T \neq \bot$}
+    \State $\mathit{verify} \gets \textsc{Reached}(g_T)$ \Comment{kiểm chứng tất định}
+  \Else
+    \State $\mathit{verify} \gets$ kết luận của solver, judge kiểm tra lại ngoại tuyến
+  \EndIf
+  \State $T \gets T \cup \{(\mathit{instr}, \mathit{verify}, |p|)\}$ \Comment{$|p|$ là độ khó}
+\EndFor
+\If{$T = \emptyset$ \textbf{và} $g_T \neq \bot$} \Comment{đồ thị còn quá thưa để ghép chuỗi}
+  \State $p \gets \textsc{Plan}(G, \emptyset, g_T)$ \Comment{BFS tiến trên precondition/effect}
+  \If{$p \neq \bot$}
+    \State $T \gets \{(\text{tác vụ đạt mục tiêu kết thúc}, \textsc{Reached}(g_T), |p|)\}$
+  \EndIf
+\EndIf
+\State \Return $T$
+\Statex
+\Function{Dfs}{$p$} \Comment{trả về \textbf{đúng} khi đã đủ số chuỗi cần liệt kê}
+  \If{$|p| \ge \mathit{min\_len}$}
+    \State $P \gets P \cup \{p\}$ \Comment{chuỗi con cũng là một task hợp lệ, ngắn hơn}
+    \If{$|P| \ge \mathit{max\_paths}$} \State \Return \textbf{đúng} \EndIf
+  \EndIf
+  \If{$|p| \ge \mathit{max\_len}$} \State \Return \textbf{sai} \EndIf
+  \For{mỗi $\omega'$ kế tiếp của $p_{|p|}$ theo thứ tự tất định, với $\omega' \notin p$}
+    \If{$\textsc{Dfs}(p \text{ nối thêm } \omega')$} \State \Return \textbf{đúng} \EndIf
+  \EndFor
+  \State \Return \textbf{sai}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 Việc đánh giá kết quả ưu tiên các tiêu chí tất định khi có thể. Nếu operator
 cuối cùng là \emph{terminal} và website cung cấp điều kiện kết thúc có thể

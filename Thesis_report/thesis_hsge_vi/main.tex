@@ -69,7 +69,11 @@
 \usepackage[noend]{algpseudocode}
 \makeatletter
 \def\BState{\State\hskip-\ALG@thistlm}
+\renewcommand{\ALG@name}{Thuật toán}
 \makeatother
+\numberwithin{algorithm}{chapter}
+\renewcommand{\algorithmicrequire}{\textbf{Đầu vào:}}
+\renewcommand{\algorithmicensure}{\textbf{Đầu ra:}}
 
 % Tables
 \usepackage{multirow}
