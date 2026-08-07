@@ -1,7 +1,7 @@
 \chapter{Phương pháp đề xuất}
 \label{ch:method}
 
-Chương này trình bày chi tiết về HSGE (Hierarchical Skill-Graph Exploration) -- chuỗi xử lý (pipeline) do nhóm nghiên cứu đề xuất nhằm chuyển đổi một website chưa được gán nhãn thành tập dữ liệu huấn luyện cho các mô hình ngôn ngữ nhỏ. Nội dung chương được cấu trúc thành các phần chính bao gồm: (1) tổng quan về pipeline và các nguyên tắc thiết kế lõi; (2) cơ chế biểu diễn đồ thị (graph) hai tầng làm nền tảng cho toàn bộ phương pháp; (3) quá trình khám phá có định hướng dựa trên đồ thị thông qua các tác vụ mức thấp (low-level task) do LLM đề xuất; (4) phương pháp phát hiện và kiểm chứng các kỹ năng (skill) có khả năng tái sử dụng; (5) cơ chế sinh các tác vụ ngữ nghĩa (\emph{semantic task}) dài hạn thông qua việc ghép chuỗi các toán tử (operator) lập kế hoạch; (6) quy trình tinh lọc quỹ đạo tương tác (trajectory) để xây dựng tập dữ liệu tinh chỉnh (fine-tuning); (7) thực hiện tinh chỉnh mô hình SLM mục tiêu; và cuối cùng là (8) một số ghi chú trong quá trình cài đặt và hiện thực hóa hệ thống.
+Chương này trình bày chi tiết về HSGE (Hierarchical Skill-Graph Exploration) -- chuỗi xử lý (pipeline) do nhóm nghiên cứu đề xuất nhằm chuyển đổi một website chưa được gán nhãn thành tập dữ liệu huấn luyện cho các mô hình ngôn ngữ nhỏ. Nội dung chương được cấu trúc thành các phần chính bao gồm: (1) tổng quan về pipeline và các nguyên tắc thiết kế lõi; (2) cơ chế biểu diễn đồ thị hai tầng làm nền tảng cho toàn bộ phương pháp; (3) quá trình khám phá có định hướng dựa trên đồ thị thông qua các tác vụ mức thấp (low-level task) do LLM đề xuất; (4) phương pháp phát hiện và kiểm chứng các kỹ năng (skill) có khả năng tái sử dụng; (5) cơ chế sinh các tác vụ ngữ nghĩa (\emph{semantic task}) dài hạn thông qua việc ghép chuỗi các toán tử (operator) lập kế hoạch; (6) quy trình tinh lọc quỹ đạo tương tác (trajectory) để xây dựng tập dữ liệu tinh chỉnh (fine-tuning); (7) thực hiện tinh chỉnh mô hình SLM mục tiêu; và cuối cùng là (8) một số ghi chú trong quá trình cài đặt và hiện thực hóa hệ thống.
 
 \section{Tổng quan}
 \label{sec:method-overview}
@@ -17,7 +17,7 @@ Chương này trình bày chi tiết về HSGE (Hierarchical Skill-Graph Explora
 
 Chuỗi xử lý (pipeline) này vận hành dưới dạng một vòng lặp khép kín. Tại mỗi trang được truy cập, một mô-đun khám phá (\emph{explorer}) sẽ đề xuất các tác vụ cụ thể gắn liền với nội dung của trang đó. Tiếp theo, một tác nhân giải quyết (\emph{solver} agent) sẽ thử nghiệm thực thi các tác vụ này trên trình duyệt thực, qua đó tạo ra các quỹ đạo tương tác. Thành phần phát hiện (discovery) chịu trách nhiệm phân cắt các quỹ đạo này thành từng đoạn nhỏ, gom cụm các đoạn có tính lặp lại, rồi trừu tượng hóa những cụm đã đạt độ chín thành các kỹ năng (\emph{skill}) có khả năng tái sử dụng.
 
-Kế tiếp, hệ thống nâng cấp các skill đã qua kiểm chứng thành các toán tử (\emph{operator}) lập kế hoạch với điều kiện tiên quyết (precondition) và hiệu ứng (effect) được xác định rõ ràng. Quá trình ghép chuỗi các toán tử trên đồ thị (graph) sẽ kiến tạo nên các tác vụ mục tiêu dài hạn, được gọi là tác vụ ngữ nghĩa (\emph{semantic task}). Các tác vụ này sau đó được đưa ngược lại cho chính solver, tạo thành một vòng lặp khép kín. Mọi tác vụ được thử nghiệm, bất kể ở mức thấp hay mức ngữ nghĩa, đều được ghi nhận thành một phiên (episode). Các episode này còn phải vượt qua những cổng kiểm duyệt chất lượng tự động trước khi được biên dịch thành tập dữ liệu SFT phục vụ cho quá trình tinh chỉnh SLM mục tiêu.
+Kế tiếp, hệ thống nâng cấp các skill đã qua kiểm chứng thành các toán tử (\emph{operator}) lập kế hoạch với điều kiện tiên quyết (precondition) và hiệu ứng (effect) được xác định rõ ràng. Quá trình ghép chuỗi các toán tử trên đồ thị sẽ kiến tạo nên các tác vụ mục tiêu dài hạn, được gọi là tác vụ ngữ nghĩa (\emph{semantic task}). Các tác vụ này sau đó được đưa ngược lại cho chính solver, tạo thành một vòng lặp khép kín. Mọi tác vụ được thử nghiệm, bất kể ở mức thấp hay mức ngữ nghĩa, đều được ghi nhận thành một phiên (episode). Các episode này còn phải vượt qua những cổng kiểm duyệt chất lượng tự động trước khi được biên dịch thành tập dữ liệu SFT phục vụ cho quá trình tinh chỉnh SLM mục tiêu.
 
 Quá trình thiết kế pipeline được định hướng bởi ba nguyên tắc xuyên suốt:
 
@@ -35,7 +35,7 @@ Hình~\ref{fig:twolevel} minh họa cấu trúc biểu diễn được đề xu�
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{Figures/fig_twolevel.pdf}
-\caption[Graph hai tầng]{Đồ thị hai tầng. Tầng thấp ghi nhận các trạng thái trang (page state) đã thăm và các cạnh quỹ đạo tương tác (hành động) giữa chúng; tầng cao biểu diễn các skill được nâng cấp thành các operator lập kế hoạch và nối với nhau bằng các cạnh ghép (nơi effect của operator trước khớp với precondition của operator sau). Các skill được neo vào tầng thấp thông qua các liên kết trừu tượng hóa và initiation/effect.}
+\caption[Đồ thị hai tầng]{Đồ thị hai tầng. Tầng thấp ghi nhận các trạng thái trang (page state) đã thăm và các cạnh quỹ đạo tương tác (hành động) giữa chúng; tầng cao biểu diễn các skill được nâng cấp thành các operator lập kế hoạch và nối với nhau bằng các cạnh ghép (nơi effect của operator trước khớp với precondition của operator sau). Các skill được neo vào tầng thấp thông qua các liên kết trừu tượng hóa và initiation/effect.}
 \label{fig:twolevel}
 \end{figure}
 

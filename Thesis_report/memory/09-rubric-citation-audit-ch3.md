@@ -99,8 +99,32 @@ Hạng mục 1–4 trong danh sách đề xuất đã làm xong, build sạch (0
    sách roadmap và itemize P1–P3); câu ≥ 45 âm tiết 24 → 17; câu ≥ 55 âm
    tiết 6 → 1 (câu còn lại là liệt kê (i)–(iv), để nguyên cho dễ đọc).
 
-⚠️ **Còn nợ**: "graph" vẫn còn ở các chương khác (Ch1 ×3, Ch2 ×3, Ch5 ×1,
-Ch6 ×8, Phụ lục ×11) — nếu muốn nhất quán toàn quyển thì phải quét thêm.
+## Chuẩn hóa "graph" toàn quyển (2026-08-07)
+
+Quét nốt các chương còn lại: Ch1 ×1, Ch2 ×1, Ch5 ×1, Ch6 ×8, `appendix1.tex`
+×10, `glossary.tex` ×2, và tiêu đề ngắn `\caption[Graph hai tầng]` của
+`fig:twolevel` (lệch với tiêu đề đầy đủ, hiện ra ở Danh sách hình).
+
+Quy ước đã chốt: **"đồ thị"** là từ chính; "operator graph" → **"đồ thị toán
+tử"**; "skill graph" → **"đồ thị kỹ năng"**. Chỉ giữ chú thích tiếng Anh
+`(graph)` đúng **một lần** ở lần xuất hiện đầu tiên trong Chương 1, và
+`(operator graph)` một lần ở §3.2.3 — đúng quy ước thuật ngữ của user; hai
+chỗ chú thích lặp trong Chương 3 đã bị bỏ.
+
+**Cố ý không sửa:**
+- `Appendix/decuongchitiet.tex` (~14 chỗ) — đây là **đề cương chi tiết đã có
+  chữ ký GVHD**, mục 8 cấu trúc quyển (xem [01-quy-dinh-khoa](01-quy-dinh-khoa.md)).
+  Sửa câu chữ của nó là sửa nội dung đã được duyệt và ký.
+- `Chapter4/chapter4.tex` dòng 49 — nằm trong comment `%` của khung chưa viết.
+- `graph.py`, "Hierarchical Skill-Graph Exploration", "Graphical User
+  Interface" — tên file và tên riêng.
+
+⚠️ **Còn nợ**: hai hình `Figures/fig_pipeline.pdf` ("Induction operator +
+operator graph") và `Figures/fig_roadmap.pdf` vẫn còn chữ "graph" bên trong.
+**Không tìm thấy file nguồn sinh hình** trong repo — chỉ có PDF đã render
+(20/07). Muốn sửa phải vẽ lại. Đây là loại lỗi chỉ người mở PDF mới thấy,
+đúng cảnh báo trong [05-bai-hoc-review](05-bai-hoc-review.md).
+
 Hai việc chưa làm: bổ sung mã giả cho §3.4/§3.5.3, và câu phát biểu điểm mới
 so với nền vay mượn (TC3). Việc lớn nhất còn treo là viết mục ở Chương 5 cho
 đánh đổi kiểm chứng skill mà §3.4.4 đang hứa.

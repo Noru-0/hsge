@@ -12,13 +12,13 @@ Mục tiêu của khóa luận là nâng cao khả năng sử dụng mô hình n
 trong vai trò web agent thông qua việc xây dựng một quy trình thu thập dữ
 liệu huấn luyện tự động từ các website không có nhãn. Để đạt mục tiêu này,
 khóa luận đề xuất HSGE, một pipeline khám phá có cấu trúc, trong đó quá
-trình tương tác với website được tổ chức dựa trên biểu diễn graph thay vì
+trình tương tác với website được tổ chức dựa trên biểu diễn đồ thị thay vì
 chỉ khai thác các task độc lập.
 
 Trong quá trình khám phá, hệ thống phát hiện các skill lặp lại từ trajectory,
 kiểm chứng chúng trước khi đưa vào thư viện skill, rồi trừu tượng hóa thành
 các operator có precondition và effect tường minh. Trên cơ sở các operator
-đã thu nhận, pipeline tiếp tục xây dựng operator graph và ghép chuỗi các
+đã thu nhận, pipeline tiếp tục xây dựng đồ thị toán tử và ghép chuỗi các
 operator tương thích để sinh ra các semantic task nhiều bước. Cách tiếp cận
 này cho phép tạo ra những mục tiêu huấn luyện mới dựa trên các năng lực đã
 được kiểm chứng thay vì chỉ dựa trên các task gắn với từng trang web riêng
@@ -33,8 +33,8 @@ Khóa luận tạo ra năm sản phẩm chính như sau.
 
 \item \textbf{Pipeline HSGE.}
 Hệ thống hiện thực đầy đủ quy trình khám phá có cấu trúc, bao gồm khám phá
-website theo graph, phát hiện và kiểm chứng skill, induction operator với cơ
-chế chuẩn hóa predicate, sinh semantic task từ operator graph và thu thập dữ
+website theo đồ thị, phát hiện và kiểm chứng skill, induction operator với cơ
+chế chuẩn hóa predicate, sinh semantic task từ đồ thị toán tử và thu thập dữ
 liệu huấn luyện. Pipeline có thể vận hành trên cả backend mô phỏng phục vụ
 kiểm thử và website thực thông qua trình duyệt.
 
@@ -68,7 +68,7 @@ nghiệm ở Phụ lục~\ref{app:repro}.
 \end{enumerate}
 
 Bên cạnh các sản phẩm cụ thể, khóa luận cũng đề xuất một cách tổ chức quá
-trình thu thập dữ liệu cho web agent dựa trên biểu diễn graph. Thay vì sinh
+trình thu thập dữ liệu cho web agent dựa trên biểu diễn đồ thị. Thay vì sinh
 trực tiếp các task huấn luyện từ từng trang web, phương pháp trước hết xây
 dựng một biểu diễn có cấu trúc về các skill đã được kiểm chứng, sau đó khai
 thác biểu diễn này để tạo ra các semantic task nhiều bước. Cách tiếp cận đó
@@ -104,7 +104,7 @@ thực (Mục~\ref{sec:method-exploration},
 \addlinespace
 
 O2 &
-Sinh semantic task nhiều bước từ graph các skill đã kiểm chứng &
+Sinh semantic task nhiều bước từ đồ thị các skill đã kiểm chứng &
 Hoàn thành. Khóa luận xây dựng quy trình phát hiện và kiểm chứng skill,
 trừu tượng hóa thành operator có precondition và effect, sau đó sinh
 semantic task bằng cách ghép chuỗi các operator tương thích. Việc kiểm
@@ -177,8 +177,8 @@ của agent đã fine-tune xuống các mô hình có quy mô từ 1B đến 3B 
 giá mức độ duy trì hiệu quả của phương pháp khi dung lượng mô hình tiếp tục
 giảm.
 
-\textbf{Khai thác skill graph trong giai đoạn suy luận.}
-Trong phạm vi khóa luận, skill graph chỉ được sử dụng để sinh dữ liệu huấn
+\textbf{Khai thác đồ thị kỹ năng trong giai đoạn suy luận.}
+Trong phạm vi khóa luận, đồ thị kỹ năng chỉ được sử dụng để sinh dữ liệu huấn
 luyện. Tuy nhiên, cùng một biểu diễn này cũng có thể được khai thác ở thời
 điểm suy luận nhằm truy xuất các skill hoặc subgoal liên quan để bổ sung ngữ
 cảnh cho mô hình. Điều này mở ra khả năng kết hợp giữa dữ liệu đã học và tri
