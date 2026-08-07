@@ -32,6 +32,17 @@ def test_seeder_sys_demands_concrete_verifiable_goals():
     assert "trivial to claim" in lower
 
 
+def test_seeder_sys_forbids_goals_needing_an_invented_value():
+    """Guard: a shopping_admin run produced 'Edit a product's details, such as
+    price and quantity, and save the changes' -- no product, no values. The
+    solver correctly refused ("The new Price and Quantity values were not
+    provided"), so 2 of 6 infeasible GOALs were the seed's fault, not the
+    solver's. SEEDER_SYS must require every input to be stated or derivable."""
+    lower = SEEDER_SYS.lower()
+    assert "derivable from the page" in lower
+    assert "never leave a value for the agent to invent" in lower
+
+
 def test_derive_parses_description_and_capabilities():
     llm = _StubLLM({
         "description": "A demo shopping site for electronics.",
