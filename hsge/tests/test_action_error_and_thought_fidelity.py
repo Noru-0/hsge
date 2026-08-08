@@ -65,7 +65,7 @@ def test_failed_action_is_marked_and_fed_back_to_the_solver():
     solver = Solver(llm, max_steps=5)
     browser = _FailingBrowser()
 
-    steps, _, _, _, success, infeasible = solver.solve(browser, "set the price")
+    steps, _, _, _, success, infeasible, _ = solver.solve(browser, "set the price")
 
     # the failed step carries the marker build_sft_dataset.py filters on
     assert "[action error:" in steps[0].obs_summary
@@ -124,7 +124,7 @@ class _NoopBrowser:
 
 def test_solver_keeps_the_whole_thought():
     llm = _LongThoughtLLM()
-    steps, _, _, _, _, _ = Solver(llm).solve(_NoopBrowser(), "goal")
+    steps, _, _, _, _, _, _ = Solver(llm).solve(_NoopBrowser(), "goal")
 
     assert len(_LongThoughtLLM.THOUGHT) > 100
     assert steps[0].obs_summary == _LongThoughtLLM.THOUGHT

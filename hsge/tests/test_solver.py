@@ -39,7 +39,7 @@ def test_solver_retries_without_image_when_vision_call_is_refused():
     solver = Solver(llm, vision=True)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible, _ = solver.solve(browser, "goal")
 
     assert success is True
     assert len(steps) == 1
@@ -75,7 +75,7 @@ def test_solver_warns_and_recovers_from_a_repeated_no_progress_action():
     solver = Solver(llm, max_steps=15)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible, _ = solver.solve(browser, "goal")
 
     assert success is True
     assert len(steps) == 3  # recovered on the 3rd call instead of burning all 15
@@ -108,7 +108,7 @@ def test_solver_gives_up_after_max_repeats_when_model_ignores_the_warning():
     solver = Solver(llm, max_steps=15)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible, _ = solver.solve(browser, "goal")
 
     assert success is False
     assert infeasible is False
@@ -141,7 +141,7 @@ def test_solver_gives_up_on_same_target_repeated_with_different_arguments():
     solver = Solver(llm, max_steps=15)
     browser = _FakeBrowser()
 
-    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(browser, "goal")
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible, _ = solver.solve(browser, "goal")
 
     assert success is False
     assert len(steps) == Solver._MAX_REPEATS
@@ -193,7 +193,7 @@ def test_wrapup_call_converts_arrived_but_undeclared_into_success():
     llm = _ArrivesButKeepsClickingLLM()
     solver = Solver(llm, max_steps=15)
 
-    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible, _ = solver.solve(
         _NavOnceBrowser(), "[NAV] Go to the Wiki page")
 
     assert success is True
@@ -220,7 +220,7 @@ class _InfeasibleLLM:
 
 def test_report_infeasible_ends_episode_without_acting():
     browser = _FakeBrowser()
-    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = Solver(
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible, _ = Solver(
         _InfeasibleLLM()).solve(browser, "goal")
 
     assert infeasible is True
@@ -234,7 +234,7 @@ def test_no_wrapup_for_predicate_goals():
     llm = _StubbornRepeatLLM()
     solver = Solver(llm, max_steps=15)
 
-    steps, obs_texts, obs_screenshots, final_obs, success, infeasible = solver.solve(
+    steps, obs_texts, obs_screenshots, final_obs, success, infeasible, _ = solver.solve(
         _FakeBrowser(), "goal", goal_predicate="order_confirmed")
 
     assert success is False

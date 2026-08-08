@@ -52,7 +52,7 @@ def test_solve_with_retries_demotes_unverified_goal_success():
     steps = [Step(action="send_msg_to_user('done')", url="http://x", axtree="b")]
     with mock.patch.object(
             ex.solver, "solve",
-            return_value=(steps, ["b"], [None], {"url": "http://x", "axtree": "b"}, True, False)):
+            return_value=(steps, ["b"], [None], {"url": "http://x", "axtree": "b"}, True, False, "")):
         _, _, _, success, infeasible, _, _ = ex._solve_with_retries(
             mock.MagicMock(), "goal", difficulty=2, tag="GOAL",
             goal_predicate=None, verify_fn=ex._verify_episode)
@@ -65,7 +65,7 @@ def test_verify_skipped_when_goal_predicate_present():
     steps = [Step(action="send_msg_to_user('done')", url="http://x", axtree="b")]
     with mock.patch.object(
             ex.solver, "solve",
-            return_value=(steps, ["b"], [None], {"url": "http://x", "axtree": "b"}, True, False)):
+            return_value=(steps, ["b"], [None], {"url": "http://x", "axtree": "b"}, True, False, "")):
         _, _, _, success, *_ = ex._solve_with_retries(
             mock.MagicMock(), "goal", difficulty=2, tag="GOAL",
             goal_predicate="order_confirmed", verify_fn=ex._verify_episode)

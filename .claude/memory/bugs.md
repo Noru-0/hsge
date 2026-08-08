@@ -103,6 +103,37 @@ Entry format:
 
 ## Fixed
 
+### `infeasible` conflates "impossible" with "out of steps", and a state-changing task can succeed without changing anything
+- **Status**: fixed (2026-08-08 17:09)
+- **Found**: 2026-08-08, auditing `outputs/wa_eval_shopping_admin` (222 episodes).
+  27 of 56 infeasible episodes have `step_count` exactly at the budget (16);
+  `[MOD] Send an email confirmation for order #000000299` is a one-step success
+  whose only action is `send_msg_to_user('done: The order confirmation email was
+  already sent.')`.
+- **Where**: `hsge/webarena/agents.py::Solver.solve` (wrap-up block + the
+  non-predicate success rule), `hsge/webarena/runtime.py::_record`,
+  `build_sft_dataset.py::_include_episode`.
+- **Symptom**: (a) the wrap-up call fires *because* a guard or the budget stopped
+  the episode and is told so; whatever it then declares is a rationalization, not
+  a conclusion. Those `report_infeasible` episodes were kept as SFT targets,
+  teaching the model to give up. (b) a MOD/COMPOSITE task the model declared done
+  counted as a success even when no action ever touched the page.
+- **Cause**: `stop_reason` was computed (2026-08-08 04:31) only to make the
+  wrap-up *prompt* honest; it was never returned or persisted, so no consumer
+  could tell a wrap-up verdict from a self-decided one. And the non-predicate
+  success rule was purely "the last action is send_msg_to_user", with no evidence
+  requirement for tasks whose whole point is to change the site.
+- **Fix**: `Solver.solve` returns a 7th value `stop_reason` (`""` = self-decided,
+  else `budget`/`stuck`/`novelty`); `_record` writes `outcome.stop_reason`;
+  `_include_episode` accepts an infeasible episode only when it is empty
+  (pre-existing episodes lack the key and default to self-decided, since nothing
+  can distinguish them retroactively). A `[MOD]`/`[COMPOSITE]` goal additionally
+  requires one executed action that changed url or axtree. Measured on the real
+  run the second gate demotes 1 of 33 MOD/COMPOSITE successes -- the rest of the
+  inflation came from failing actions that silently no-op'd, which the
+  `ActionError` fix above addresses instead. Tests:
+  `hsge/tests/test_honest_outcomes.py`. Suite 241 -> 249.
+
 ### `WebArenaBrowser.act` never sees a failed action — BrowserGym swallows it into `last_action_error`
 - **Status**: fixed (2026-08-08 17:12)
 - **Found**: 2026-08-08, auditing `outputs/wa_eval_shopping_admin` (222 episodes).

@@ -38,7 +38,7 @@ class _ScriptLLM:
 
 def test_subgoal_mode_shows_current_subgoal_and_advances():
     llm = _ScriptLLM()
-    steps, _, _, _, success, _ = Solver(llm, max_steps=10).solve(
+    steps, _, _, _, success, _, _ = Solver(llm, max_steps=10).solve(
         _Browser(), "overall goal", subgoals=["do A", "do B"])
     assert "CURRENT SUBGOAL (1/2): do A" in llm.prompts[0]
     assert any("CURRENT SUBGOAL (2/2): do B" in p for p in llm.prompts)
@@ -56,7 +56,7 @@ class _CapturingDone:
 
 def test_no_subgoals_leaves_prompt_unchanged():
     llm = _CapturingDone()
-    _, _, _, _, success, _ = Solver(llm, max_steps=5).solve(_Browser(), "g")
+    _, _, _, _, success, _, _ = Solver(llm, max_steps=5).solve(_Browser(), "g")
     assert success is True
     assert "CURRENT SUBGOAL" not in llm.prompts[0]
 
@@ -85,7 +85,7 @@ class _HijackLLM:
 
 def test_send_msg_on_nonlast_subgoal_advances_not_terminates():
     llm = _HijackLLM()
-    steps, _, _, _, success, _ = Solver(llm, max_steps=10).solve(
+    steps, _, _, _, success, _, _ = Solver(llm, max_steps=10).solve(
         _Browser(), "goal", subgoals=["do A", "do B"])
     # must NOT end at subgoal 1: it reached the 2/2 subgoal and only then finished
     assert any("CURRENT SUBGOAL (2/2): do B" in p for p in llm.prompts)

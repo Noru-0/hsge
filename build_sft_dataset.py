@@ -75,15 +75,21 @@ def _is_error_step(thought: str) -> bool:
 
 
 def _include_episode(success: bool, infeasible: bool, judge_verified: bool | None,
-                     require_judge: bool) -> bool:
+                     require_judge: bool, stop_reason: str = "") -> bool:
     """Whether one episode's steps should be turned into SFT examples.
-    Infeasible episodes are always eligible (report_infeasible is a real
-    target regardless of judging). A plain success is eligible unless
-    --require-judge is set, in which case it needs judge_verified is True --
-    an episode never judged (judge_verified is None) is dropped, not
-    silently trusted, so --require-judge fails safe."""
+    An infeasible episode is eligible only if the agent decided that WHILE
+    solving (stop_reason ""); a non-empty stop_reason means a guard stopped the
+    episode and the wrap-up call produced the report_infeasible after being told
+    it had stopped -- that is a rationalization, not a conclusion, and training
+    on it teaches the model to give up. 27 of the 56 infeasible episodes in the
+    shopping_admin run ended at exactly the step budget this way. Episodes
+    recorded before stop_reason existed have no key and are treated as
+    self-decided, since nothing can distinguish them retroactively.
+    A plain success is eligible unless --require-judge is set, in which case it
+    needs judge_verified is True -- an episode never judged (judge_verified is
+    None) is dropped, not silently trusted, so --require-judge fails safe."""
     if infeasible:
-        return True
+        return not stop_reason
     if not success:
         return False
     if require_judge:
@@ -151,8 +157,10 @@ def _n_browser_actions(steps: list[dict]) -> int:
 
 def load_episodes(path: str):
     """Yield (goal, steps, episode_dir, trajectory_id, difficulty, success,
-    infeasible, judge_verified) tuples. judge_verified is None if the
-    episode has never been through judge_episodes.py."""
+    infeasible, judge_verified, stop_reason) tuples. judge_verified is None if
+    the episode has never been through judge_episodes.py; stop_reason is "" for
+    an episode that ended on a terminal action of its own (and for every episode
+    recorded before the field existed)."""
     if os.path.isfile(path) and path.endswith(".json"):
         d = json.load(open(path, encoding="utf-8"))
         em = d.get("episode_meta", d)
@@ -162,7 +170,8 @@ def load_episodes(path: str):
         trajectory_id = os.path.splitext(os.path.basename(path))[0]
         yield (em.get("goal", ""), steps, os.path.dirname(path), trajectory_id,
               _difficulty(ti, em), outcome.get("success", False),
-              outcome.get("infeasible", False), outcome.get("judge_verified"))
+              outcome.get("infeasible", False), outcome.get("judge_verified"),
+              outcome.get("stop_reason", ""))
         return
     for meta_path in glob.glob(os.path.join(path, "**", "episode_meta.json"), recursive=True):
         ep_dir = os.path.dirname(meta_path)
@@ -175,7 +184,7 @@ def load_episodes(path: str):
         trajectory_id = os.path.basename(ep_dir)
         yield (em.get("goal", ""), steps, ep_dir, trajectory_id, _difficulty(ti, em),
               outcome.get("success", False), outcome.get("infeasible", False),
-              outcome.get("judge_verified"))
+              outcome.get("judge_verified"), outcome.get("stop_reason", ""))
 
 
 def main():
@@ -198,13 +207,16 @@ def main():
     args = ap.parse_args()
 
     all_examples, n_ep, n_kept, n_infeasible_kept, n_unjudged_dropped = [], 0, 0, 0, 0
-    n_too_few_actions = 0
+    n_too_few_actions = n_wrapup_infeasible_dropped = 0
     for (goal, steps, ep_dir, trajectory_id, diff, success, infeasible,
-        judge_verified) in load_episodes(args.src):
+        judge_verified, stop_reason) in load_episodes(args.src):
         n_ep += 1
+        if infeasible and stop_reason:
+            n_wrapup_infeasible_dropped += 1
         if args.require_judge and success and not infeasible and judge_verified is None:
             n_unjudged_dropped += 1
-        if not _include_episode(success, infeasible, judge_verified, args.require_judge):
+        if not _include_episode(success, infeasible, judge_verified,
+                                args.require_judge, stop_reason):
             continue
         if (args.min_actions and not infeasible
                 and _n_browser_actions(steps) < args.min_actions):
@@ -230,6 +242,9 @@ def main():
     print(f"episodes seen        : {n_ep}")
     print(f"successful (kept)    : {n_kept}")
     print(f"  of which infeasible : {n_infeasible_kept}  (teaches report_infeasible)")
+    if n_wrapup_infeasible_dropped:
+        print(f"dropped, wrap-up infeasible: {n_wrapup_infeasible_dropped} "
+              f"(a guard stopped the episode and the wrap-up rationalized it)")
     if args.require_judge:
         print(f"unjudged success episodes dropped: {n_unjudged_dropped} "
               f"(run judge_episodes.py first to include them)")

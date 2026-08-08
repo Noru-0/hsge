@@ -161,7 +161,7 @@ def test_load_episodes_yields_infeasible_flag():
 
     assert len(results) == 1
     (goal, steps, yielded_ep_dir, trajectory_id, diff, success, infeasible,
-     judge_verified) = results[0]
+     judge_verified, stop_reason) = results[0]
     assert success is False
     assert infeasible is True
     assert judge_verified is None

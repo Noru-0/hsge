@@ -171,6 +171,11 @@ def step_outcome(pre_url: str, pre_axtree: str, url: str, axtree: str) -> str:
     return "no change"
 
 
+# Task tags whose goal is to change the site's state, so "I declared done" is not
+# on its own evidence that anything happened (see Solver.solve's success gate).
+_STATE_CHANGING_TAGS = ("[MOD]", "[COMPOSITE]")
+
+
 def terminal_message(action: str) -> str:
     """The message argument of a terminal `send_msg_to_user(...)` /
     `report_infeasible(...)` action, or "" for any other action.
@@ -477,7 +482,12 @@ class Solver:
         `subgoals` (C2): an ordered list the solver pursues one at a time --
         the current subgoal is shown in the prompt and advances on the model's
         `subgoal_done` signal or after `_SUBGOAL_CAP` steps. None -> plain loop.
-        Returns (steps, obs_texts, obs_screenshots, final_obs, success, infeasible).
+        Returns (steps, obs_texts, obs_screenshots, final_obs, success, infeasible,
+        stop_reason). `stop_reason` is "" when the episode ended on a terminal
+        action of its own, else the guard that stopped it ("budget"/"stuck"/
+        "novelty") -- i.e. the terminal action came from the wrap-up call, so
+        whatever it declared is a post-hoc rationalization, not a decision the
+        agent reached while solving.
         """
         budget = max_steps if max_steps is not None else self.max_steps
         sg = list(subgoals) if subgoals else None
@@ -655,4 +665,16 @@ class Solver:
         # success for non-predicate goals = agent declared done without error
         if goal_predicate is None and steps and steps[-1].action.startswith("send_msg_to_user"):
             success = True
-        return steps, obs_texts, obs_screenshots, obs, success, infeasible
+            # ...but a task that CHANGES the site cannot have been done if nothing
+            # on the page ever changed, whatever the model declares. A real
+            # shopping_admin episode declared "[MOD] Send an email confirmation for
+            # order #000000299" done in one step, zero browser actions, on the
+            # grounds that it "was already sent". `outcomes` only holds actions that
+            # actually executed, so an errored or terminal action can't satisfy this.
+            if (goal.strip().startswith(_STATE_CHANGING_TAGS)
+                    and not any(o != "no change" for o in outcomes)):
+                print("    [solver] declared done but no action ever changed the "
+                      "page -- not a success for a state-changing task")
+                success = False
+        return (steps, obs_texts, obs_screenshots, obs, success, infeasible,
+                stop_reason if exhausted else "")

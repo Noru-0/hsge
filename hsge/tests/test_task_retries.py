@@ -28,7 +28,8 @@ class _ScriptedSolver:
                   else "click('1')")
         url = f"http://x/attempt{self.calls}"
         steps = [Step(action=action, url=url, obs_summary="", axtree="ax")]
-        return steps, ["ax"], [None], {"url": url, "axtree": "ax"}, success, infeasible
+        return (steps, ["ax"], [None], {"url": url, "axtree": "ax"}, success,
+                infeasible, "")
 
 
 class _Browser:

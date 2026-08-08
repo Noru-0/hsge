@@ -273,15 +273,24 @@ class WebArenaExplorer:
 
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag,
-                infeasible: bool = False, judge_verified=None, judge_reason=None):
+                infeasible: bool = False, judge_verified=None, judge_reason=None,
+                stop_reason: str = ""):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
         # `response` = the message the episode ended on (an INFO task's answer, or
         # the stated reason for report_infeasible). Derived here rather than
         # threaded through Solver.solve's return tuple so every call site gets it.
         response = terminal_message(steps[-1].action) if steps else ""
+        # stop_reason "" = the episode ended on a terminal action it chose while
+        # solving; anything else names the guard that stopped it, meaning the
+        # terminal action came from the wrap-up call. build_sft_dataset.py uses
+        # this to refuse a wrap-up report_infeasible as a training target: the
+        # model was told it had stopped and rationalized, it did not conclude the
+        # task was impossible. 27 of 56 infeasible shopping_admin episodes ended
+        # at exactly the step budget this way.
         outcome = {"success": bool(success), "reward": 1.0 if success else 0.0,
-                   "response": response, "infeasible": bool(infeasible)}
+                   "response": response, "infeasible": bool(infeasible),
+                   "stop_reason": stop_reason or ""}
         if judge_verified is not None:
             # inline GOAL verifier result -- lets build_sft_dataset --require-judge
             # treat this episode as already-judged (same field judge_episodes writes)
@@ -342,7 +351,7 @@ class WebArenaExplorer:
                 continue
             episode_id = f"ep_{self.episode:04d}"
             (steps, obs_texts, obs_screenshots, final_obs, success,
-             infeasible) = (solver or self.solver).solve(
+             infeasible, stop_reason) = (solver or self.solver).solve(
                 browser, task, goal_predicate=goal_predicate,
                 max_steps=max_steps, subgoals=subgoals)
             # Inline verifier: only a SELF-GRADED success (goal_predicate is None) is
@@ -355,7 +364,8 @@ class WebArenaExplorer:
                     success = False
             self._record(task, steps, obs_texts, obs_screenshots, success,
                          difficulty=difficulty, tag=tag, infeasible=infeasible,
-                         judge_verified=judge_verified, judge_reason=judge_reason)
+                         judge_verified=judge_verified, judge_reason=judge_reason,
+                         stop_reason=stop_reason)
             urls_seen.update(st.url for st in steps)
             urls_seen.add(final_obs.get("url", ""))
             if success or infeasible or attempts > self.task_retries:

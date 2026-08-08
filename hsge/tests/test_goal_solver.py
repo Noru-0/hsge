@@ -40,7 +40,7 @@ def test_goal_solver_uses_configured_model_when_present():
 def test_solve_with_retries_uses_the_given_solver():
     ex = _ex()
     alt = mock.MagicMock()
-    alt.solve.return_value = ([], [], [], {"url": ""}, False, False)
+    alt.solve.return_value = ([], [], [], {"url": ""}, False, False, "")
     with mock.patch.object(ex, "_record"):
         ex._solve_with_retries(mock.MagicMock(), "g", difficulty=2, tag="GOAL", solver=alt)
     assert alt.solve.called

@@ -137,6 +137,19 @@ Standalone real-browser runtime, separate from the mock pipeline:
   first-class outcome (allowed in ACTIONS_DOC, never executed in the
   browser, counted in its own `infeasible` bucket, never fed to Discovery,
   never retried).
+  `solve()` returns a 7th value, `stop_reason`: `""` when the episode ended on
+  a terminal action it chose while solving, else the guard that stopped it
+  (`budget`/`stuck`/`novelty`), meaning the terminal action came from the
+  wrap-up call above. `runtime.py` persists it as `outcome.stop_reason`, and
+  `build_sft_dataset.py` refuses a wrap-up `report_infeasible` as a training
+  target — the model was told it had stopped and rationalized, it did not
+  conclude the task was impossible (27 of 56 infeasible shopping_admin
+  episodes ended at exactly the step budget).
+  A `[MOD]`/`[COMPOSITE]` task cannot be a success unless some executed action
+  actually changed the page (url or axtree): a real episode declared "[MOD]
+  Send an email confirmation for order #000000299" done in one step with zero
+  browser actions. `[INFO]`/`[NAV]` are unaffected — answering off the landing
+  page is what an INFO task looks like.
 - `runtime.py` — `WebArenaExplorer`: frontier loop, skill→operator promotion, goal
   tasks, persistence. Skips re-exploring a node whose initial axtree hashes
   identical to an already-visited one (two different URLs can render the same
