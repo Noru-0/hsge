@@ -15,6 +15,67 @@ Entry format:
 
 ## Open
 
+### `WebArenaBrowser.act` never sees a failed action — BrowserGym swallows it into `last_action_error`
+- **Status**: open
+- **Found**: 2026-08-08, auditing `outputs/wa_eval_shopping_admin` (222 episodes).
+  **Zero** episodes out of 222 contain the `[action error:` marker, even though
+  70/1683 steps (4.2%) call `fill()`/`click()` with a field *label* instead of a
+  bid (`fill('[global] Price * $', '19.99')`, `fill('[store view] Product Name *',
+  ...)`, `fill('123 New Street', '789 New Ave')`).
+- **Where**: `hsge/webarena/browser.py::WebArenaBrowser.act` (line ~104);
+  consumers `hsge/webarena/agents.py:569-572` (`except Exception` /
+  `last_error`) and `build_sft_dataset.py` (its `[action error:` filter).
+- **Symptom**: an action that fails in the browser is reported to the Solver as a
+  normal successful step. The Solver's error-recovery feedback
+  (`LAST ACTION ERROR: ...` in the prompt) is dead code — `last_error` is always
+  `""`. `build_sft_dataset.py`'s `[action error:` exclusion never fires, so
+  **failed actions are exported as correct SFT targets**. 18/222 episodes contain
+  at least one invalid bid and 6 of those are marked `success`.
+- **Cause**: `browsergym.core.env.BrowserEnv.step` catches the action exception
+  itself (`self.last_action_error = f"{type(e).__name__}: {e}"`, env.py:405-407)
+  and returns it as the `last_action_error` observation key. It never raises, so
+  HSGE's `try/except Exception` around `browser.act()` can never trigger.
+- **Fix**: not yet applied. Plan: surface `obs["last_action_error"]` from
+  `act()`/`observation()` and raise (or return it) so `Solver` populates
+  `last_error` and appends the `[action error:` marker as designed.
+
+### Persisted `thought` is truncated at 100 characters, mid-word
+- **Status**: open
+- **Found**: 2026-08-08, same audit — 694/1683 steps (41.2%) have a `thought`
+  sitting exactly at the 100-char ceiling, cut mid-word ("...as indicated by the
+  message on th").
+- **Where**: `hsge/webarena/agents.py:557` (`Step(..., obs_summary=thought[:100])`),
+  persisted by `hsge/webarena/runtime.py:301-302` as both `action.thought` and
+  the top-level `thought` field.
+- **Symptom**: `thought` is the SFT training target's reasoning; 41% of examples
+  train the model to emit a sentence that stops mid-word. Also degrades
+  `reannotate_thoughts.py`'s input and segmentation's `obs_summary` signal.
+- **Cause**: `obs_summary` was originally a short display summary; it later became
+  the persisted training target without the truncation being revisited.
+- **Fix**: not yet applied. Plan: keep the full thought on `Step` (or add a
+  separate untruncated field) and only truncate at display sites.
+
+### `outcome.response` is always empty — INFO answers are never captured
+- **Status**: open
+- **Found**: 2026-08-08, same audit — 0/222 episodes have a non-empty
+  `outcome.response`, although 44 successes are single-step
+  `send_msg_to_user('done: Lifetime Sales value is $194.40')`.
+- **Where**: `hsge/webarena/runtime.py` episode-meta assembly.
+- **Symptom**: the answer text an INFO task produced only exists inside the raw
+  `parsed_action` string. `judge_episodes.py` cannot check the answer against the
+  page without re-parsing, and no eval can score INFO correctness.
+- **Fix**: not yet applied. Plan: parse the `send_msg_to_user(...)` argument into
+  `outcome.response` when the episode ends on one.
+
+### `goal_task_selected` logs an empty `goal`
+- **Status**: open
+- **Found**: 2026-08-08, same audit — all 16 `goal_task_selected` events in
+  `run_log.jsonl` carry `"goal": ""`.
+- **Where**: `hsge/webarena/runtime.py`, `goal_task_selected` event emission.
+- **Symptom**: GOAL selection cannot be traced from the log alone; the goal has to
+  be recovered by joining against `episodes/*/episode_meta.json`.
+- **Fix**: not yet applied.
+
 ### Predicate canonicalization never unifies synonyms, so the operator graph stays edgeless and no semantic task is ever generated
 - **Status**: open, but **downgraded 2026-08-08 — the symptom is no longer zero.**
   `outputs/wa_eval_reddit` (158 nodes, 887 episodes) induced 4 operators whose
