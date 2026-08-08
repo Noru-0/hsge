@@ -200,7 +200,25 @@ below the 0.6 threshold, while a false pair scored 0.606). Promotion applies
 an anti-tautology gate: effects that restate a precondition are dropped
 (`eff - pre`, logged as `effects_dropped` on the `operator_induced` event);
 a skill with no novel effects left is rejected (`operator_rejected` event,
-reason `tautological`/`no_effects`) instead of becoming an operator.
+reason `tautological`/`no_effects`) instead of becoming an operator. Because
+that gate and the page-state vocabulary pull against each other for a
+*page-local* skill (entry state == exit state -> effect dropped -> operator
+thrown away; 3 of 6 shopping_admin skills died this way), the prompt requires
+the exit page-state to DIFFER from the entry one by naming the same page
+**qualified** by what the skill established ("on the product edit page" -> "on
+the product edit page with a save confirmation"), never a bare repetition and
+never an element-level fallback ("the description field is filled"), which no
+other skill can phrase as its entry precondition.
+
+`verify_operator_grounding` then **gates effects**, rather than only logging as
+it used to: an effect confirmed on fewer than `_EFFECT_GROUNDING_MIN` (0.5) of
+the skill's members is dropped (`effects_ungrounded`), and an operator left with
+none is rejected with reason `ungrounded`. shopping_admin admitted
+`enter_new_description` with effect accuracy **0.0** — an effect that held on no
+member at all — and planned over it. Preconditions are scored but never dropped:
+removing a shaky one makes the operator applicable everywhere, which is worse
+than being over-conservative. When `member_count` is 0 (no usable member steps)
+the gate is skipped rather than rejecting everything.
 
 **`terminal_goal` is site-aware, not hardcoded.** It may be `None` (e.g. a
 non-shopping site like reddit). Goal tasks no longer depend on it: the primary

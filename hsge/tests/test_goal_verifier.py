@@ -53,7 +53,7 @@ def test_solve_with_retries_demotes_unverified_goal_success():
     with mock.patch.object(
             ex.solver, "solve",
             return_value=(steps, ["b"], [None], {"url": "http://x", "axtree": "b"}, True, False, "")):
-        _, _, _, success, infeasible, _, _ = ex._solve_with_retries(
+        _, _, _, success, infeasible, *_ = ex._solve_with_retries(
             mock.MagicMock(), "goal", difficulty=2, tag="GOAL",
             goal_predicate=None, verify_fn=ex._verify_episode)
     assert success is False

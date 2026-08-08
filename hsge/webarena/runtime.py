@@ -51,6 +51,10 @@ class WebArenaExplorer:
     # Consecutive failed attempts after which a seed capability is retired for the
     # rest of the run (see _capability_failures in __init__).
     _CAPABILITY_MAX_FAILS = 2
+    # An induced effect confirmed on fewer than this fraction of the skill's
+    # members is not an effect (see _promote_skill_to_operator). 0.5 with the
+    # usual 2 members means "drop only effects that held on no member at all".
+    _EFFECT_GROUNDING_MIN = 0.5
 
     def __init__(self, browser_factory, llm, embedder, out_dir: str,
                  allow_pattern: str, deny_pattern: str | None = None, max_depth: int = 6,
@@ -325,8 +329,8 @@ class WebArenaExplorer:
         logs stay honest). Infeasible attempts are terminal -- retrying a
         task the model just declared impossible wastes budget. Returns
         (episode_id, steps, final_obs, success, infeasible, attempts,
-        urls_seen) for the LAST attempt, with urls_seen accumulated across
-        all attempts so the frontier keeps every reached URL.
+        urls_seen, stop_reason) for the LAST attempt, with urls_seen accumulated
+        across all attempts so the frontier keeps every reached URL.
         """
         attempts = 0
         urls_seen: set[str] = set()
@@ -347,7 +351,7 @@ class WebArenaExplorer:
                            error=str(e), error_type=type(e).__name__)
                 print(f"    [{tag.lower()}] browser reset failed (attempt {attempts}): {e}")
                 if attempts > self.task_retries:
-                    return None, [], {}, False, False, attempts, urls_seen
+                    return None, [], {}, False, False, attempts, urls_seen, ""
                 continue
             episode_id = f"ep_{self.episode:04d}"
             (steps, obs_texts, obs_screenshots, final_obs, success,
@@ -369,7 +373,31 @@ class WebArenaExplorer:
             urls_seen.update(st.url for st in steps)
             urls_seen.add(final_obs.get("url", ""))
             if success or infeasible or attempts > self.task_retries:
-                return episode_id, steps, final_obs, success, infeasible, attempts, urls_seen
+                return (episode_id, steps, final_obs, success, infeasible, attempts,
+                        urls_seen, stop_reason)
+
+    def _score_capability(self, capability: str, success: bool, infeasible: bool,
+                          stop_reason: str):
+        """Record one seed-capability outcome against the retirement counter.
+
+        A success resets it. A self-declared infeasible (`stop_reason` empty)
+        retires the capability outright: the agent looked at the page and
+        concluded the feature isn't there, and that verdict doesn't get truer on
+        a third page -- "view-advanced-reports" (a Magento SaaS feature the
+        instance lacks) was declared infeasible at step 3 and still offered twice
+        more. A wrap-up infeasible (`stop_reason` set) is only the solver running
+        out of steps, so it counts as one ordinary failure.
+        """
+        if success:
+            self._capability_failures[capability] = 0
+        elif infeasible and not stop_reason:
+            self._capability_failures[capability] = self._CAPABILITY_MAX_FAILS
+            self._log("capability_retired", capability=capability,
+                       reason="declared_infeasible")
+            print(f"    [goal] retiring capability {capability!r}: "
+                  "the agent declared it infeasible")
+        else:
+            self._capability_failures[capability] += 1
 
     def _verify_episode(self, goal, steps, final_obs) -> tuple[bool, str]:
         """LLM re-check of a self-declared GOAL success against its final page.
@@ -426,6 +454,42 @@ class WebArenaExplorer:
                        reason=reason, preconditions=sorted(pre),
                        effects_dropped=effects_dropped)
             return
+        # Grounding check: unlike induce_operator's 2-member sample, this uses
+        # every member of the skill to score whether each induced predicate
+        # actually holds. It gates EFFECTS: an effect confirmed on no member is
+        # not an effect, and planning over it yields plans that cannot work
+        # (shopping_admin induced `enter_new_description` with effect accuracy
+        # 0.0 and it still entered the graph). Preconditions are only scored, not
+        # dropped -- dropping a shaky one would make the operator applicable
+        # everywhere, which is worse than being over-conservative.
+        all_members = [self.library.subtrajs.get(mid) for mid in card.member_ids]
+        all_members = [m for m in all_members if m and m.steps]
+        all_boundary = [(m.steps[0].axtree, m.steps[-1].axtree) for m in all_members]
+        grounding = verify_operator_grounding(
+            self.operator_llm, induced["preconditions"], induced["effects"], all_boundary)
+        # several NL phrases can canonicalize to one id; keep the best score
+        pre_acc: dict[str, float] = {}
+        for p, acc in grounding["precondition_accuracy"].items():
+            cid = self.registry.canonical(p)
+            pre_acc[cid] = max(pre_acc.get(cid, 0.0), acc)
+        eff_acc: dict[str, float] = {}
+        for e, acc in grounding["effect_accuracy"].items():
+            cid = self.registry.canonical(e)
+            eff_acc[cid] = max(eff_acc.get(cid, 0.0), acc)
+        ungrounded: list[str] = []
+        if grounding["member_count"]:
+            # member_count 0 means there were no usable member steps to check
+            # against (see above) -- score nothing rather than reject everything.
+            ungrounded = sorted(e for e in eff
+                                if eff_acc.get(e, 0.0) < self._EFFECT_GROUNDING_MIN)
+            eff = eff - set(ungrounded)
+        if not eff:
+            print(f"    [operator] rejected {_slug(card.name)}: ungrounded")
+            self._log("operator_rejected", skill_id=skill_id, name=_slug(card.name),
+                       reason="ungrounded", preconditions=sorted(pre),
+                       effects_dropped=effects_dropped, effects_ungrounded=ungrounded,
+                       effect_accuracy=eff_acc)
+            return
         # terminal only when a real terminal goal is configured and a member reached it
         reached_terminal = bool(self.terminal_goal) and any(
             reached(self.terminal_goal, m.steps[-1].url, m.steps[-1].axtree) for m in members)
@@ -441,20 +505,8 @@ class WebArenaExplorer:
         print(f"    [operator] {op.name}  pre={pre_txt}  eff={eff_txt}  terminal={op.terminal}")
         self._log("operator_induced", name=op.name, skill_id=skill_id,
                    preconditions=sorted(op.preconditions), effects=sorted(op.effects),
-                   effects_dropped=effects_dropped, terminal=op.terminal)
-
-        # Grounding check: unlike induce_operator's 2-member sample, this uses
-        # every member of the skill to score whether each induced predicate
-        # actually holds -- observation-only, never gates admission/planning.
-        all_members = [self.library.subtrajs.get(mid) for mid in card.member_ids]
-        all_members = [m for m in all_members if m and m.steps]
-        all_boundary = [(m.steps[0].axtree, m.steps[-1].axtree) for m in all_members]
-        grounding = verify_operator_grounding(
-            self.operator_llm, induced["preconditions"], induced["effects"], all_boundary)
-        pre_acc = {self.registry.canonical(p): acc
-                   for p, acc in grounding["precondition_accuracy"].items()}
-        eff_acc = {self.registry.canonical(e): acc
-                   for e, acc in grounding["effect_accuracy"].items()}
+                   effects_dropped=effects_dropped, effects_ungrounded=ungrounded,
+                   terminal=op.terminal)
         self.operator_grounding[op.name] = {
             "precondition_accuracy": pre_acc,
             "effect_accuracy": eff_acc,
@@ -462,7 +514,8 @@ class WebArenaExplorer:
         }
         self._log("operator_grounding_check", name=op.name, skill_id=skill_id,
                    member_count=grounding["member_count"],
-                   precondition_accuracy=pre_acc, effect_accuracy=eff_acc)
+                   precondition_accuracy=pre_acc, effect_accuracy=eff_acc,
+                   effects_ungrounded=ungrounded)
 
     def _goal_task(self, node_url: str = "") -> list[dict]:
         """Goal tasks for the current node, 0..N.
@@ -847,7 +900,7 @@ class WebArenaExplorer:
                 for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64,
                                                   site_seed=self.site_seed):
                     (episode_id, steps, final_obs, success, infeasible, attempts,
-                     urls_seen) = self._solve_with_retries(browser, task, difficulty=1, tag="LOCAL")
+                     urls_seen, stop_reason) = self._solve_with_retries(browser, task, difficulty=1, tag="LOCAL")
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["LOCAL"][bucket] += 1
                     node_rec["tasks"].append({"episode": episode_id, "tag": "LOCAL", "task": task,
@@ -884,19 +937,16 @@ class WebArenaExplorer:
                         self._log("goal_subgoals_planned", node_index=node_index,
                                    goal=gt["goal"][:80], n=len(subgoals))
                     (episode_id, steps, final_obs, success, infeasible, attempts,
-                     urls_seen) = self._solve_with_retries(
+                     urls_seen, stop_reason) = self._solve_with_retries(
                         browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
                         goal_predicate=gt["goal_predicate"], max_steps=self.goal_max_steps,
                         verify_fn=self._verify_episode if self.verify_goals else None,
                         subgoals=subgoals, solver=self.goal_solver)
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1
-                    capability = gt.get("capability")
-                    if capability:
-                        if success:
-                            self._capability_failures[capability] = 0
-                        else:
-                            self._capability_failures[capability] += 1
+                    if gt.get("capability"):
+                        self._score_capability(gt["capability"], success, infeasible,
+                                                stop_reason)
                     node_rec["tasks"].append({"episode": episode_id, "tag": "GOAL", "task": gt["goal"],
                                                "success": success, "infeasible": infeasible,
                                                "attempts": attempts, "steps": len(steps)})

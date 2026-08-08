@@ -100,6 +100,8 @@ class _DryLLM(MockLLM):
             return {"thought": "advance", "action": "click('1')"}
         if "PLANNING OPERATOR" in system:                       # operator induction
             return self._induce(prompt)
+        if "PLANNING PREDICATES" in system:                     # operator grounding gate
+            return self._ground_predicates(prompt)
         return super().complete_json(system, prompt)            # segment / abstract
 
     @staticmethod
@@ -116,6 +118,19 @@ class _DryLLM(MockLLM):
         if "result" in after:
             return {"preconditions": [], "effects": ["search results are shown"], "terminal": False}
         return {"preconditions": [], "effects": ["a page action completed"], "terminal": False}
+
+    @staticmethod
+    def _ground_predicates(prompt: str) -> dict:
+        """Confirm every induced predicate on every occurrence. `_induce` reads
+        the effect straight off the page it is scored against, so they really do
+        hold here; without this the effect-grounding gate would reject every
+        dry-run operator and the run would stop exercising the planning path."""
+        p = MockLLM._payload(prompt)
+        holds = [True] * len(p.get("occurrences", []))
+        return {"results": [{"predicate": pred, "type": kind, "member_holds": holds}
+                            for kind, key in (("precondition", "preconditions"),
+                                              ("effect", "effects"))
+                            for pred in p.get(key, [])]}
 
 
 class _FakeBrowser:

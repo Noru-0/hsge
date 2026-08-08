@@ -50,7 +50,7 @@ def test_fail_then_success_retries_and_records_every_attempt():
     ex.solver = _ScriptedSolver([(False, False), (True, False)])
 
     (episode_id, steps, final_obs, success, infeasible, attempts,
-     urls_seen) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
+     urls_seen, _) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
 
     assert success is True and infeasible is False
     assert attempts == 2
@@ -66,7 +66,7 @@ def test_infeasible_is_never_retried():
     ex.solver = _ScriptedSolver([(False, True), (True, False)])
 
     (episode_id, steps, final_obs, success, infeasible, attempts,
-     urls_seen) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
+     urls_seen, _) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
 
     assert infeasible is True and success is False
     assert attempts == 1
@@ -78,7 +78,7 @@ def test_zero_retries_is_single_attempt():
     ex.solver = _ScriptedSolver([(False, False), (True, False)])
 
     (episode_id, steps, final_obs, success, infeasible, attempts,
-     urls_seen) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
+     urls_seen, _) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
 
     assert success is False
     assert attempts == 1
@@ -89,7 +89,7 @@ def test_retries_exhausted_reports_last_failure():
     ex.solver = _ScriptedSolver([(False, False)])
 
     (episode_id, steps, final_obs, success, infeasible, attempts,
-     urls_seen) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
+     urls_seen, _) = ex._solve_with_retries(_Browser(), "task", difficulty=1, tag="LOCAL")
 
     assert success is False and infeasible is False
     assert attempts == 3                    # 1 + task_retries
@@ -122,7 +122,7 @@ def test_reset_failure_does_not_crash_and_is_bounded_by_retries():
     ex.solver = _ScriptedSolver([(True, False)])  # would succeed if ever reached
 
     (episode_id, steps, final_obs, success, infeasible, attempts,
-     urls_seen) = ex._solve_with_retries(_FlakyResetBrowser(), "task", difficulty=1, tag="LOCAL")
+     urls_seen, _) = ex._solve_with_retries(_FlakyResetBrowser(), "task", difficulty=1, tag="LOCAL")
 
     assert success is False and infeasible is False
     assert attempts == 3                    # 1 + task_retries, all consumed by reset failures
@@ -138,7 +138,7 @@ def test_reset_recovers_within_retry_budget():
     browser = _RecoversAfterOneResetBrowser()
 
     (episode_id, steps, final_obs, success, infeasible, attempts,
-     urls_seen) = ex._solve_with_retries(browser, "task", difficulty=1, tag="LOCAL")
+     urls_seen, _) = ex._solve_with_retries(browser, "task", difficulty=1, tag="LOCAL")
 
     assert success is True
     assert ex.solver.calls == 1             # solved normally once the browser recovered

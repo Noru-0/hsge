@@ -81,6 +81,27 @@ Entry format:
   gets a private predicate vocabulary and nothing chains. The mechanism itself
   is implemented and passes the deterministic mock tests
   (`test_operators.py`, `test_goal_task.py`).
+- **Fix (2026-08-08 17:17, three more attacks after the shopping_admin audit)**:
+  the run showed the cascade's stage 2 and 3 both still live -- 3 of 6 skills
+  rejected `tautological`, `skill_to_skill: {}`, and the 3 surviving operators
+  all ungrounded (effect accuracy 0.5 / 0.0 / 0.5).
+  (a) The anti-tautology gate and the page-state vocabulary pull against each
+  other for a *page-local* skill (entry state == exit state), so
+  `operator_induction._SYS` now requires the exit state to differ by naming the
+  same page QUALIFIED by what the skill established ("on the product edit page"
+  -> "...with a save confirmation"), forbidding both a bare repetition and an
+  element-level fallback. NOTE: the initially proposed fix -- "forbid
+  location-shaped predicates as effects" -- was wrong and would have removed the
+  chaining mechanism itself.
+  (b) `verify_operator_grounding` is now a GATE on effects
+  (`_EFFECT_GROUNDING_MIN` 0.5), not a log line; an operator with no grounded
+  effect is rejected `ungrounded`. Preconditions are scored but never dropped.
+  (c) A self-declared infeasible retires a seed capability immediately
+  (`_score_capability`), so a genuinely absent feature stops consuming GOAL
+  budget. Tests: `hsge/tests/test_grounding_gate_and_capability_retire.py`.
+  **Still open**: none of this is confirmed on a live run yet -- the same
+  standard as the 2026-07-22 fix below, which was unit-tested and did not move
+  the symptom.
 - **Fix**: LLM adjudication in the borderline band (2026-07-22, unit-tested;
   see changelog). `PredicateRegistry` now takes an optional `llm` +
   `adjudication_band` (default 0.15): cosine decides the confident tails

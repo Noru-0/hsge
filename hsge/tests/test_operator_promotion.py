@@ -15,12 +15,17 @@ from hsge.webarena.runtime import WebArenaExplorer
 
 
 class _ScriptedInducerLLM:
-    """Answers induce_operator with a scripted result and grounding with
-    empty results; captures the induction payload for assertions."""
+    """Answers induce_operator with a scripted result and, by default, a
+    grounding check that confirms every predicate on every member -- these
+    tests are about the anti-tautology gate, not the grounding gate, so the
+    latter must not be what rejects the operator. Pass grounded=False to make
+    the grounding check confirm nothing instead.
+    Captures the induction payload for assertions."""
 
-    def __init__(self, preconditions, effects, terminal=False):
+    def __init__(self, preconditions, effects, terminal=False, grounded=True):
         self._induced = {"preconditions": preconditions, "effects": effects,
                          "terminal": terminal}
+        self._grounded = grounded
         self.induce_payload = None
 
     def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
@@ -28,7 +33,14 @@ class _ScriptedInducerLLM:
             self.induce_payload = json.loads(
                 prompt.split("<payload>", 1)[1].rsplit("</payload>", 1)[0])
             return dict(self._induced)
-        return {"results": []}     # grounding check: nothing confirmed
+        if not self._grounded:
+            return {"results": []}
+        payload = json.loads(prompt.split("<payload>", 1)[1].rsplit("</payload>", 1)[0])
+        holds = [True] * len(payload["occurrences"])
+        return {"results": [{"predicate": p, "type": kind, "member_holds": holds}
+                            for kind, key in (("precondition", "preconditions"),
+                                              ("effect", "effects"))
+                            for p in payload[key]]}
 
 
 def _explorer(llm, terminal_goal=None):
