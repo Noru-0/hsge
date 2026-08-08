@@ -32,7 +32,7 @@ from ..operator_induction import induce_operator, verify_operator_grounding
 from ..operators import Operator, OperatorGraph, plan
 from ..predicate_registry import PredicateRegistry
 from ..segmentation import segment_trajectory
-from .agents import GoalPlanner, PageExplorer, SiteSeeder, Solver
+from .agents import GoalPlanner, PageExplorer, SiteSeeder, Solver, terminal_message
 from .verify import JUDGE_SYS, judge_prompt
 from .predicates import reached
 
@@ -276,8 +276,12 @@ class WebArenaExplorer:
                 infeasible: bool = False, judge_verified=None, judge_reason=None):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
+        # `response` = the message the episode ended on (an INFO task's answer, or
+        # the stated reason for report_infeasible). Derived here rather than
+        # threaded through Solver.solve's return tuple so every call site gets it.
+        response = terminal_message(steps[-1].action) if steps else ""
         outcome = {"success": bool(success), "reward": 1.0 if success else 0.0,
-                   "response": "", "infeasible": bool(infeasible)}
+                   "response": response, "infeasible": bool(infeasible)}
         if judge_verified is not None:
             # inline GOAL verifier result -- lets build_sft_dataset --require-judge
             # treat this episode as already-judged (same field judge_episodes writes)

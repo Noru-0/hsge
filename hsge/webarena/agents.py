@@ -7,6 +7,7 @@ for dry runs). The Solver returns a list of `Step`, which feeds HSGE Discovery.
 """
 from __future__ import annotations
 
+import ast
 import json
 import re
 
@@ -168,6 +169,26 @@ def step_outcome(pre_url: str, pre_axtree: str, url: str, axtree: str) -> str:
     if axtree != pre_axtree:
         return "page changed"
     return "no change"
+
+
+def terminal_message(action: str) -> str:
+    """The message argument of a terminal `send_msg_to_user(...)` /
+    `report_infeasible(...)` action, or "" for any other action.
+
+    An INFO task's whole answer lives in this argument ("done: Lifetime Sales
+    value is $194.40"); without extracting it, `outcome.response` stayed empty
+    for every episode and nothing downstream could score the answer.
+    """
+    a = (action or "").strip()
+    for name in ("send_msg_to_user", "report_infeasible"):
+        if a.startswith(name + "(") and a.endswith(")"):
+            inner = a[len(name) + 1:-1].strip().rstrip(",").strip()
+            try:
+                val = ast.literal_eval(inner)
+            except (ValueError, SyntaxError):
+                return inner.strip("'\"")
+            return val if isinstance(val, str) else str(val)
+    return ""
 
 
 class SiteSeeder:
@@ -554,7 +575,11 @@ class Solver:
                 sg_idx += 1
                 sg_steps = 0
                 continue
-            steps.append(Step(action=action, url=obs["url"], obs_summary=thought[:100],
+            # Full thought, not thought[:100]: obs_summary is persisted verbatim as
+            # the SFT target's reasoning (runtime.py), and a real shopping_admin run
+            # had 41% of steps cut off mid-word at the old ceiling. Prompt-side
+            # consumers truncate at their own call site (segmentation.py).
+            steps.append(Step(action=action, url=obs["url"], obs_summary=thought,
                               axtree=obs["axtree"]))
             obs_texts.append(obs["axtree"])
             obs_screenshots.append(screenshot_b64)
@@ -621,7 +646,7 @@ class Solver:
             action = (out.get("action") or "").strip()
             if action.startswith("send_msg_to_user") or action.startswith("report_infeasible"):
                 steps.append(Step(action=action, url=obs["url"],
-                                  obs_summary=str(out.get("thought", ""))[:100],
+                                  obs_summary=str(out.get("thought", "")),
                                   axtree=obs["axtree"]))
                 obs_texts.append(obs["axtree"])
                 obs_screenshots.append(None)

@@ -13,6 +13,18 @@ import os
 import re
 
 
+class ActionError(RuntimeError):
+    """A high-level action that failed inside the browser.
+
+    BrowserGym itself never raises: `BrowserEnv.step` catches the action's
+    exception and returns it as the `last_action_error` observation key. Nothing
+    in HSGE read that key, so a failed action looked identical to a successful
+    one -- `Solver`'s error-recovery prompt was dead code and
+    `build_sft_dataset.py` exported failed actions as correct SFT targets.
+    `WebArenaBrowser.act` now re-raises it as this.
+    """
+
+
 class WebArenaBrowser:
     def __init__(self, start_url: str, headless: bool = True, timeout_ms: int = 10000,
                  storage_state: str | None = None):
@@ -107,9 +119,17 @@ class WebArenaBrowser:
         return base64.b64encode(data).decode("ascii") if data else None
 
     def act(self, action: str) -> dict:
-        """action is a BrowserGym call string, e.g. click('a51') or fill('b3','x')."""
+        """action is a BrowserGym call string, e.g. click('a51') or fill('b3','x').
+
+        Raises ActionError if the action failed in the page (see that class).
+        `_last_obs`/`terminated` are still updated first, so a caller that
+        catches the error keeps a consistent view of the browser.
+        """
         self._last_obs, _, term, trunc, _ = self.env.step(action)
         self.terminated = bool(term or trunc)
+        err = (self._last_obs or {}).get("last_action_error") or ""
+        if err:
+            raise ActionError(err)
         return self.observation()
 
     def links(self) -> list[str]:

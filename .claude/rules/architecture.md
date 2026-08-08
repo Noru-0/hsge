@@ -55,6 +55,12 @@ Standalone real-browser runtime, separate from the mock pipeline:
   `flatten_axtree_to_str` is not viewport-scoped (a `scroll` action would not
   change what it returns, which is why HSGE doesn't expose one).
   Surfaces `self.terminated` (env `term`/`trunc`) so the Solver can stop cleanly.
+  `act()` raises `ActionError` when the action failed in the page: BrowserGym
+  itself never raises — `BrowserEnv.step` catches the exception and returns it as
+  the `last_action_error` observation key — so a failed action used to be
+  indistinguishable from a successful one (`Solver`'s error-recovery prompt was
+  dead code and `build_sft_dataset.py` exported failed actions as correct SFT
+  targets). `_last_obs`/`terminated` are updated before the raise.
   `screenshot_b64(som=...)` JPEG-encodes the screenshot BrowserGym already computes
   on every observation, optionally overlaying bid-tagged bounding boxes via
   BrowserGym's own `overlay_som` (Set-of-Marks). `storage_state=` (from `auth.py`)

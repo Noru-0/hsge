@@ -96,7 +96,9 @@ def segment_trajectory(
     cand_spans = _spans_from_cuts(cand_cuts, n)
     hints = subgoal_hints or [f"segment {i}" for i in range(len(cand_spans))]
     payload = {
-        "steps": [{"i": k, "action": st.action, "obs": st.obs_summary}
+        # obs_summary carries the step's full thought now; cap it here so this
+        # prompt stays the size it was before that change.
+        "steps": [{"i": k, "action": st.action, "obs": st.obs_summary[:100]}
                   for k, st in enumerate(steps)],
         "segments": [
             {"span": [a, b], "subgoal": hints[i] if i < len(hints) else f"segment {i}"}
