@@ -205,7 +205,7 @@ is a per-*request* flag, not a server flag — set it on every chat completion:
 ```
 
 The repo's `hsge.backends.OpenAILLM` doesn't know about this vLLM-specific
-extension by default; `training/eval_webarena_gitlab.py` subclasses it to
+extension by default; `training/eval_webarena.py` subclasses it to
 inject `extra_body={"chat_template_kwargs": {"enable_thinking": False}}` into
 every request (see `NoThinkOpenAILLM` in that file). If you roll your own
 client, do the same — forgetting this flag produces responses wrapped in
@@ -223,13 +223,18 @@ the *exact* prompt your pipeline sends, not an approximation.
 
 ## 7. Evaluate on the official WebArena GitLab subset
 
+> The script has since been generalized to any single site: `--site reddit
+> --site-url <url>` and so on (`--gitlab-url` is kept as an alias, so the
+> commands in this section still work verbatim). This walkthrough narrates the
+> original GitLab run; `training/README.md` is the current command reference.
+
 ```bash
 ssh -p <PORT> root@<HOST> 'cd /workspace/hsge && /workspace/venvs/eval/bin/python \
-    training/eval_webarena_gitlab.py --gitlab-url https://<your-tunnel> \
+    training/eval_webarena.py --gitlab-url https://<your-tunnel> \
     --out /workspace/eval/finetuned'
 ```
 
-[`training/eval_webarena_gitlab.py`](../training/eval_webarena_gitlab.py)
+[`training/eval_webarena.py`](../training/eval_webarena.py)
 does three things worth understanding:
 
 1. **Pulls the official task set** (`test.raw.json` from the WebArena repo)
@@ -261,7 +266,7 @@ config typos (wrong `--gitlab-url`, wrong port) for the cost of a minute
 instead of hours:
 
 ```bash
-... training/eval_webarena_gitlab.py --gitlab-url https://<tunnel> --out /tmp/smoke --limit 2
+... training/eval_webarena.py --gitlab-url https://<tunnel> --out /tmp/smoke --limit 2
 ```
 
 The run is **resumable**: re-running the same command skips task ids already
@@ -339,7 +344,7 @@ WRITE_PHRASES = [
     r'\bupdate\b', r'\bchange\b', r'\bset\b', r'\binvite\b', r'\badd\b',
     r'\bupload\b', r'\bpush\b', r'\bmake the license\b',
     r'\bopen an? (new )?(issue|merge)\b',
-    # ... see training/eval_webarena_gitlab.py's design doc for the full list
+    # ... see training/eval_webarena.py's design doc for the full list
 ]
 write_re = re.compile('|'.join(WRITE_PHRASES), re.I)
 
@@ -374,7 +379,7 @@ Then run the same eval script against the curated subset:
 
 ```bash
 ssh -p <PORT_B> root@<HOST_B> 'cd /workspace/hsge && /workspace/venvs/eval/bin/python \
-    training/eval_webarena_gitlab.py --gitlab-url https://<tunnel> \
+    training/eval_webarena.py --gitlab-url https://<tunnel> \
     --out /workspace/eval/finetuned_readsafe --tasks 44,45,46,...'
 ```
 

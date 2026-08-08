@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Evaluate an OpenAI-compatible endpoint on the official WebArena GitLab subset.
+"""Evaluate an OpenAI-compatible endpoint on one official WebArena site subset.
 
-Runs the WebArena tasks whose `sites == ["gitlab"]` (~180 of the 812 test
-tasks) through BrowserGym, so success is scored by the official evaluators —
-comparable to published numbers. The agent is the repo's own `Solver`
+Runs the WebArena tasks whose `sites == ["<site>"]` (single-site tasks only —
+gitlab ~180, shopping ~187, reddit ~106 of the 812 test tasks) through
+BrowserGym, so success is scored by the official evaluators — comparable to
+published numbers. The agent is the repo's own `Solver`
 (unchanged: same system prompt, axtree cap, history format the model was
 fine-tuned on), driven through a thin `WebArenaBrowser` subclass that swaps
 the open-ended exploration env for the scored `browsergym/webarena.<id>` task
@@ -15,8 +16,8 @@ action into the env afterwards, because WebArena's string-match evaluators
 read the answer from the chat.
 
 Usage (on the vast.ai box, with vLLM already serving on localhost:8000):
-    /workspace/venvs/eval/bin/python training/eval_webarena_gitlab.py \
-        --gitlab-url https://<your-tunnel> --out /workspace/eval/finetuned
+    /workspace/venvs/eval/bin/python training/eval_webarena.py --site reddit \
+        --site-url https://<your-tunnel> --out /workspace/eval/reddit/finetuned
     # quick smoke test:            ... --limit 3
     # explicit tasks:              ... --tasks 156,258
     # base model with thinking on: ... --keep-thinking   (not recommended)
@@ -37,8 +38,9 @@ TEST_RAW_URL = ("https://raw.githubusercontent.com/web-arena-x/webarena/"
                 "main/config_files/test.raw.json")
 
 # WebArenaInstance requires all seven WA_* vars even for a single-site run;
-# unused sites get unreachable dummies.
+# every site other than the one under test gets an unreachable dummy.
 DUMMY_SITES = {
+    "WA_GITLAB": "http://dummy.localhost:8023",
     "WA_SHOPPING": "http://dummy.localhost:7770",
     "WA_SHOPPING_ADMIN": "http://dummy.localhost:7780/admin",
     "WA_REDDIT": "http://dummy.localhost:9999",
@@ -46,17 +48,19 @@ DUMMY_SITES = {
     "WA_MAP": "http://dummy.localhost:3000",
     "WA_HOMEPAGE": "http://dummy.localhost:4399",
 }
+SITES = ("gitlab", "shopping", "shopping_admin", "reddit", "wikipedia", "map")
 
 
-def set_wa_env(gitlab_url: str) -> None:
+def set_wa_env(site: str, site_url: str) -> None:
     """Must run before importing browsergym.webarena."""
-    os.environ["WA_GITLAB"] = gitlab_url.rstrip("/")
+    os.environ[f"WA_{site.upper()}"] = site_url.rstrip("/")
     for key, val in DUMMY_SITES.items():
         os.environ.setdefault(key, val)
     os.environ.setdefault("WA_FULL_RESET", "")
 
 
-def gitlab_task_ids(cache: Path) -> list[int]:
+def site_task_ids(site: str, cache: Path) -> list[int]:
+    """Task ids whose only site is `site` (multi-site tasks are skipped)."""
     if not cache.exists():
         import requests
         resp = requests.get(TEST_RAW_URL, timeout=60)
@@ -64,7 +68,7 @@ def gitlab_task_ids(cache: Path) -> list[int]:
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text(resp.text)
     configs = json.loads(cache.read_text())
-    return sorted(c["task_id"] for c in configs if c.get("sites") == ["gitlab"])
+    return sorted(c["task_id"] for c in configs if c.get("sites") == [site])
 
 
 class NoThinkOpenAILLM:
@@ -175,14 +179,19 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--gitlab-url", default=os.environ.get("WA_GITLAB"),
-                    help="GitLab base URL (or set WA_GITLAB)")
+    ap.add_argument("--site", default="gitlab", choices=SITES,
+                    help="WebArena site to evaluate on (default: gitlab)")
+    ap.add_argument("--site-url", default=None,
+                    help="base URL of the site under test "
+                         "(default: the site's own WA_* env var)")
+    ap.add_argument("--gitlab-url", default=None,
+                    help=argparse.SUPPRESS)  # back-compat alias for --site-url
     ap.add_argument("--base-url", default="http://127.0.0.1:8000/v1")
     ap.add_argument("--model", default="qwen35-9b")
     ap.add_argument("--api-key", default=os.environ.get("OPENAI_API_KEY", "EMPTY"))
     ap.add_argument("--out", required=True, help="output dir for results.jsonl")
     ap.add_argument("--tasks", default=None,
-                    help="comma-separated task ids (default: all gitlab tasks)")
+                    help="comma-separated task ids (default: all tasks of --site)")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--max-steps", type=int, default=15)
     ap.add_argument("--temperature", type=float, default=0.0)
@@ -194,9 +203,11 @@ def main() -> None:
                     help="re-run tasks already present in results.jsonl")
     args = ap.parse_args()
 
-    if not args.gitlab_url:
-        ap.error("--gitlab-url (or WA_GITLAB) is required")
-    set_wa_env(args.gitlab_url)
+    site_url = (args.site_url or args.gitlab_url
+                or os.environ.get(f"WA_{args.site.upper()}"))
+    if not site_url:
+        ap.error(f"--site-url (or WA_{args.site.upper()}) is required")
+    set_wa_env(args.site, site_url)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -205,7 +216,7 @@ def main() -> None:
     if args.tasks:
         task_ids = [int(t) for t in args.tasks.split(",")]
     else:
-        task_ids = gitlab_task_ids(out_dir.parent / "test.raw.json")
+        task_ids = site_task_ids(args.site, out_dir.parent / "test.raw.json")
     if args.limit:
         task_ids = task_ids[:args.limit]
 
@@ -217,7 +228,7 @@ def main() -> None:
             except Exception:
                 pass
     todo = [t for t in task_ids if t not in done]
-    print(f"gitlab tasks: {len(task_ids)} selected, {len(done)} already done, "
+    print(f"{args.site} tasks: {len(task_ids)} selected, {len(done)} already done, "
           f"{len(todo)} to run -> {results_path}")
 
     llm = NoThinkOpenAILLM(disable_thinking=not args.keep_thinking,
@@ -240,7 +251,7 @@ def main() -> None:
               + (f" error={result['error'][:120]}" if result.get("error") else ""))
 
     total = len(done) + len(todo)
-    summary = {"model": args.model, "base_url": args.base_url,
+    summary = {"site": args.site, "model": args.model, "base_url": args.base_url,
                "n_tasks": total, "n_success": n_success,
                "success_rate": round(n_success / total, 4) if total else 0.0}
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")

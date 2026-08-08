@@ -5,8 +5,14 @@ Splits by trajectory (a trajectory's steps never straddle the split), writes
 `train.jsonl` / `val.jsonl` containing only the `messages` field, and a
 `dataset_info.json` registering both under the names the training yaml uses.
 
+The registered names are `hsge_<name>_train` / `hsge_<name>_val`; `--name`
+must match the `dataset:` / `eval_dataset:` keys in the training yaml, so two
+sites can be prepared side by side into separate `--out-dir`s.
+
 Usage:
     python training/prepare_dataset.py [training/train_12.jsonl] [--out-dir training/data]
+    python training/prepare_dataset.py train_reddit.jsonl --name reddit \
+        --out-dir training/data/reddit
 """
 from __future__ import annotations
 
@@ -21,6 +27,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("src", nargs="?", default="training/train_12.jsonl")
     ap.add_argument("--out-dir", default="training/data")
+    ap.add_argument("--name", default="gitlab",
+                    help="dataset key suffix: registers hsge_<name>_{train,val}")
     ap.add_argument("--val-fraction", type=float, default=0.05,
                     help="target fraction of *examples* (not trajectories) held out")
     ap.add_argument("--seed", type=int, default=13)
@@ -56,10 +64,10 @@ def main() -> None:
     tags = {"role_tag": "role", "content_tag": "content",
             "user_tag": "user", "assistant_tag": "assistant", "system_tag": "system"}
     info = {
-        "hsge_gitlab_train": {"file_name": "train.jsonl", "formatting": "sharegpt",
-                              "columns": {"messages": "messages"}, "tags": tags},
-        "hsge_gitlab_val": {"file_name": "val.jsonl", "formatting": "sharegpt",
-                            "columns": {"messages": "messages"}, "tags": tags},
+        f"hsge_{args.name}_train": {"file_name": "train.jsonl", "formatting": "sharegpt",
+                                    "columns": {"messages": "messages"}, "tags": tags},
+        f"hsge_{args.name}_val": {"file_name": "val.jsonl", "formatting": "sharegpt",
+                                  "columns": {"messages": "messages"}, "tags": tags},
     }
     (out / "dataset_info.json").write_text(json.dumps(info, indent=2) + "\n")
 

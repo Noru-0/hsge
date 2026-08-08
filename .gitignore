@@ -15,6 +15,10 @@ outputs/
 # individual files exceed GitHub's hard 100 MB per-file limit.
 training/artifacts/
 
+# Per-site train/val splits: ~42 MB of pure duplication, regenerated from the
+# committed train_<site>.jsonl by training/prepare_dataset.py.
+training/data/*/
+
 # OS / editor / Python junk
 .DS_Store
 **/.DS_Store

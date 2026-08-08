@@ -1,4 +1,4 @@
-# Fine-tune Qwen3.5-9B on the HSGE solver dataset + eval on WebArena GitLab
+# Fine-tune Qwen3.5-9B on the HSGE solver datasets + eval on WebArena
 
 Design: `docs/superpowers/specs/2026-07-15-qwen35-9b-sft-gitlab-eval-design.md`.
 For a narrated walkthrough (why each step is shaped this way, gotchas hit
@@ -7,22 +7,39 @@ along the way, and a two-machine parallel-eval technique) see
 reference for the same pipeline.
 
 Everything below runs on a vast.ai GPU instance (tested: 1× A100-SXM4-80GB,
-200 GB disk). The only external dependency is a WebArena **GitLab** instance
-reachable *from the vast.ai box* (e.g. via a Cloudflare tunnel); resets between
-eval runs are manual and happen on the GitLab host.
+200 GB disk). The only external dependency is the WebArena site under test
+being reachable *from the vast.ai box* (e.g. via a Cloudflare tunnel); resets
+between eval runs are manual and happen on the WebArena host.
+
+**Current configuration: two per-site models.** One LoRA on reddit, one on
+shopping, each evaluated in-domain against its own site. The original GitLab
+config (`qwen35_9b_lora.yaml`, `merge_lora.yaml`, `training/train_12.jsonl`) is
+kept unchanged for reference.
+
+| | reddit | shopping |
+|---|---|---|
+| dataset | `train_reddit.jsonl` | `train_shopping.jsonl` |
+| examples / trajectories | 2,829 / 540 | 4,034 / 614 |
+| train / val split | 2,673 / 156 | 3,827 / 207 |
+| adapter | `/workspace/saves/qwen35-9b-lora-reddit` | `.../-shopping` |
+| merged model | `/workspace/models/Qwen3.5-9B-reddit` | `.../-shopping` |
+| eval subset | ~106 `sites == ["reddit"]` tasks | ~187 `sites == ["shopping"]` tasks |
+
+Both datasets were built with `--require-judge`, so every declared-success
+episode was re-checked by an LLM judge; `report_infeasible` episodes are kept.
 
 ## Layout on the box
 
 ```
 /workspace/
-  hsge/                 # this repo (rsync'd)
-  LLaMA-Factory/        # cloned by vast_setup.sh
+  hsge/                      # this repo (rsync'd)
+  LLaMA-Factory/             # cloned by vast_setup.sh
   venvs/{train,serve,eval}   # isolated: vLLM pins transformers, training needs
                              # transformers@main, eval needs neither
-  models/Qwen3.5-9B          # base weights
-  models/Qwen3.5-9B-hsge     # merged LoRA (created in step 4)
-  saves/qwen35-9b-lora-hsge  # adapter checkpoints
-  eval/{base,finetuned}/     # results.jsonl + summary.json per run
+  models/Qwen3.5-9B                    # base weights
+  models/Qwen3.5-9B-{reddit,shopping}  # merged LoRAs (step 4)
+  saves/qwen35-9b-lora-{reddit,shopping}   # adapter checkpoints
+  eval/<site>/{base,finetuned}/            # results.jsonl + summary.json
 ```
 
 ## 1. One-time setup
@@ -34,40 +51,53 @@ ssh -p <port> root@<host> 'cd /workspace && nohup bash vast_setup.sh > setup.log
 #   ls /workspace/.setup_markers  -> train_venv serve_venv eval_venv model_download
 ```
 
-Sync the repo (from the local repo root):
+Sync the repo (from the local repo root). `train_reddit.jsonl` /
+`train_shopping.jsonl` live at the repo root and come along with this rsync:
 
 ```bash
 rsync -az -e "ssh -p <port>" --exclude .git --exclude outputs --exclude __pycache__ \
     ./ root@<host>:/workspace/hsge/
 ```
 
-## 2. Prepare the dataset
+## 2. Prepare the datasets
+
+Split by trajectory (a trajectory's steps never straddle the split) into a
+per-site directory. `--name` must match the `dataset:` key in the training yaml.
 
 ```bash
 cd /workspace/hsge
-/workspace/venvs/train/bin/python training/prepare_dataset.py training/train_12.jsonl
-# -> training/data/{train.jsonl,val.jsonl,dataset_info.json}  (352 train / 18 val,
-#    split by trajectory so episodes never straddle the split)
+/workspace/venvs/train/bin/python training/prepare_dataset.py \
+    train_reddit.jsonl --name reddit --out-dir training/data/reddit
+/workspace/venvs/train/bin/python training/prepare_dataset.py \
+    train_shopping.jsonl --name shopping --out-dir training/data/shopping
 ```
 
-## 3. Train LoRA
+Each writes `{train,val}.jsonl` + `dataset_info.json` registering
+`hsge_<site>_{train,val}`.
 
-The dataset's assistant turns are bare `{"thought","action"}` JSON, so training
-uses the `qwen3_5_nothink` template (no `<think>` blocks); serving disables
-thinking to match (step 5).
+## 3. Train the LoRAs
+
+The assistant turns are bare `{"thought","action"}` JSON, so training uses the
+`qwen3_5_nothink` template (no `<think>` blocks); serving disables thinking to
+match (step 5). `cutoff_len` is 6144 here rather than the GitLab config's 4096 —
+the longest reddit example is ~4.0k tokens and truncation would silently drop
+the assistant target.
 
 ```bash
 cd /workspace/hsge
-/workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora.yaml
+/workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_reddit.yaml
+/workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_shopping.yaml
 ```
 
-~66 optimizer steps (352 examples × 3 epochs / batch 16); minutes on an A100.
+~500 steps (reddit) and ~720 steps (shopping) at effective batch 16 × 3 epochs;
+roughly 1–2 h each on an A100 at `cutoff_len: 6144`.
 
-## 4. Merge the adapter
+## 4. Merge the adapters
 
 ```bash
-/workspace/venvs/train/bin/llamafactory-cli export training/merge_lora.yaml
-# -> /workspace/models/Qwen3.5-9B-hsge
+/workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_reddit.yaml
+/workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_shopping.yaml
+# -> /workspace/models/Qwen3.5-9B-{reddit,shopping}
 ```
 
 ## 5. Serve with vLLM
@@ -76,45 +106,59 @@ One model at a time (the A100 hosts one server); the served name is always
 `qwen35-9b` so eval commands don't change between runs:
 
 ```bash
-nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B > /workspace/vllm.log 2>&1 &   # baseline
-# ... run baseline eval, then kill and restart with the merged model:
-nohup bash training/serve_vllm.sh > /workspace/vllm.log 2>&1 &                                 # finetuned
+nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B > /workspace/vllm.log 2>&1 &          # baseline
+nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B-reddit > /workspace/vllm.log 2>&1 &   # reddit
+nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B-shopping > /workspace/vllm.log 2>&1 & # shopping
 ```
 
 Ready when `curl -s localhost:8000/v1/models` answers. The eval client sends
 `chat_template_kwargs: {"enable_thinking": false}` on every request (Qwen3.5
 thinks by default; the training data has no think blocks).
 
-## 6. Evaluate on the official GitLab subset
+## 6. Evaluate on the official per-site subsets
 
-~180 tasks (`sites == ["gitlab"]` in WebArena's `test.raw.json`), scored by the
-official BrowserGym/WebArena evaluators. The agent is the repo's `Solver`
-unchanged — same prompt the model was trained on.
+`eval_webarena.py --site <site>` runs the WebArena tasks whose `sites` is
+exactly `[<site>]`, scored by the official BrowserGym/WebArena evaluators.
+Multi-site tasks are skipped. The agent is the repo's `Solver` unchanged — same
+prompt the model was trained on. Every site other than `--site` is pointed at
+an unreachable dummy URL (WebArenaInstance demands all seven `WA_*` vars).
 
 ```bash
 cd /workspace/hsge
 # smoke test first:
-/workspace/venvs/eval/bin/python training/eval_webarena_gitlab.py \
-    --gitlab-url https://<your-tunnel> --out /workspace/eval/base --limit 3
+/workspace/venvs/eval/bin/python training/eval_webarena.py --site reddit \
+    --site-url https://<reddit-tunnel> --out /workspace/eval/reddit/base --limit 3
 # full runs (hours; resumable — re-running skips finished tasks):
-/workspace/venvs/eval/bin/python training/eval_webarena_gitlab.py \
-    --gitlab-url https://<your-tunnel> --out /workspace/eval/base
-# swap the served model (step 5), then:
-/workspace/venvs/eval/bin/python training/eval_webarena_gitlab.py \
-    --gitlab-url https://<your-tunnel> --out /workspace/eval/finetuned
+/workspace/venvs/eval/bin/python training/eval_webarena.py --site reddit \
+    --site-url https://<reddit-tunnel> --out /workspace/eval/reddit/base
 ```
 
+Four full runs make the comparison (serve the matching model first, step 5):
+
+| server model | command |
+|---|---|
+| base | `--site reddit --out /workspace/eval/reddit/base` |
+| base | `--site shopping --out /workspace/eval/shopping/base` |
+| `-reddit` | `--site reddit --out /workspace/eval/reddit/finetuned` |
+| `-shopping` | `--site shopping --out /workspace/eval/shopping/finetuned` |
+
+Serve the base model once and do *both* base runs before swapping, so the model
+is loaded twice, not four times.
+
 Outputs per run: `results.jsonl` (task id, goal, reward, steps, last action)
-and `summary.json` (success rate). Compare `eval/base` vs `eval/finetuned`.
+and `summary.json` (site, model, success rate). Compare `base` vs `finetuned`
+within each site.
 
 Notes:
-- Reset GitLab between the two full runs — some tasks mutate state.
-- MOD-type tasks write to the GitLab instance; use a scratch instance, not one
-  you care about.
+- **Reset the site between the base and finetuned runs** — many tasks mutate
+  state, and shopping especially. Use a scratch instance, not one you care
+  about.
 - `--tasks 156,258` runs explicit ids; `--keep-thinking` leaves Qwen3.5's
   thinking mode on (mismatch with training — for ablation only).
-- The six non-GitLab `WA_*` vars are set to dummies automatically; GitLab login
-  uses WebArena's standard `byteblaze` benchmark account inside BrowserGym.
+- The other six `WA_*` vars are set to dummies automatically; site login uses
+  WebArena's standard benchmark accounts inside BrowserGym.
+- `--site gitlab` reproduces the original GitLab eval; `--gitlab-url` is still
+  accepted as an alias for `--site-url`.
 
 ## Troubleshooting
 
@@ -123,5 +167,8 @@ Notes:
   fallback plan is Unsloth's official Qwen3.5 guide.
 - **vLLM OOM**: lower `--gpu-memory-utilization` in `serve_vllm.sh` or
   `--max-model-len 6144`.
+- **Training OOM at `cutoff_len: 6144`**: drop
+  `per_device_train_batch_size` to 1 and raise `gradient_accumulation_steps`
+  to 16 (same effective batch).
 - **Eval env fails at task setup**: check the tunnel URL is reachable from the
-  box (`curl -I $WA_GITLAB`) and that GitLab is fully up (not 502).
+  box (`curl -I $WA_REDDIT`) and that the site is fully up (not 502).

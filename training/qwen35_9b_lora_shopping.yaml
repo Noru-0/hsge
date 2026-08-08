@@ -1,0 +1,55 @@
+# LLaMA-Factory LoRA SFT config for Qwen3.5-9B on the HSGE **shopping** dataset.
+# Run from the repo root on the vast.ai box:
+#   /workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_shopping.yaml
+#
+# Dataset: train_shopping.jsonl (4034 examples / 614 trajectories), built with
+# `--require-judge` so every declared success was re-checked by an LLM judge.
+# The assistant turns are bare {"thought","action"} JSON (no <think>), so we
+# train with the nothink template and serve with thinking disabled.
+
+### model
+model_name_or_path: /workspace/models/Qwen3.5-9B
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+### dataset
+dataset: hsge_shopping_train
+eval_dataset: hsge_shopping_val
+dataset_dir: training/data/shopping
+# verified against the installed LLaMA-Factory (data/template.py): qwen3_5_nothink
+# 6144 (not the gitlab config's 4096): the longest reddit example is ~4.0k tokens,
+# and a truncated example would silently drop the assistant target.
+template: qwen3_5_nothink
+cutoff_len: 6144
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+### output
+output_dir: /workspace/saves/qwen35-9b-lora-shopping
+logging_steps: 10
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+report_to: none
+
+### train  (effective batch = 2 * 8 = 16 -> ~240 steps/epoch on ~3835 examples)
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 8
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+gradient_checkpointing: true
+
+### eval
+per_device_eval_batch_size: 2
+eval_strategy: epoch
