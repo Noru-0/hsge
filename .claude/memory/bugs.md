@@ -235,6 +235,60 @@ Entry format:
 
 ## Fixed
 
+### The SFT pipeline distills the collection solver's *failures*: `--require-judge` selects for what gpt-4o-mini could finish, and admits its unverified give-ups
+- **Status**: fixed at the curation layer (2026-08-10 03:40); the collection
+  layer (F3) is **not** fixed — see "Still open" below.
+- **Found**: 2026-08-10, root-causing the cross-domain LoRA's **0/57 reddit**
+  score on the live WebArena benchmark.
+- **Where**: `build_sft_dataset.py::_include_episode` (the infeasible
+  short-circuit) and `episode_to_examples`; upstream cause in the
+  `page_explorer`/`solver` model split in `config.yaml`.
+- **Symptom**: the fine-tuned model reports infeasible on **22/57 (39%)** of
+  reddit eval tasks, 15 self-decided, on tasks verified to be feasible (three
+  "change my bio" tasks; the edit link is present at bid 155). 10/57 end in an
+  off-site `goto('https://www.reddit.com/...')`, which BrowserGym terminates at
+  reward 0. 9/57 hit the stuck guard repeating a dead action.
+- **Cause — a four-stage funnel, measured on the four collection runs**:
+  1. `EXPLORER_SYS` is **not** at fault: it demands COMPOSITE tasks first and
+     they are 1218/3241 (38%) of episodes, median **15 steps**.
+  2. The collection solver (gpt-4o-mini) cannot execute them: COMPOSITE is 79%
+     fail+infeasible and only **9.5%** judge-passes, versus **58%** for INFO
+     (median 1 step).
+  3. `--require-judge` is individually correct but, as a filter, keeps exactly
+     the subset the teacher could finish — so the dataset became 42% one-step
+     trajectories, median length 2, and COMPOSITE's median fell 15 → 5.
+  4. The infeasible branch short-circuited **above** the judge check, and
+     `judge_episodes.py` never judges infeasible episodes, so 136 unverified
+     give-ups (868 examples, **23%** of the dataset) entered — concentrated on
+     the hard class: **75 of 191 COMPOSITE trajectories (39%)**, matching the
+     model's 39% eval give-up rate. Their reasons are collection-time
+     artifacts, not impossibility ("Too many failed login attempts",
+     "askscience forum not found" on a site that has one).
+  Also found: `episode_to_examples` never emitted the live Solver's
+  `LAST ACTION ERROR:` block (agents.py:562), so the step *after* a failed
+  action was trained without the evidence that motivated it — an unexplained
+  action change instead of error recovery.
+- **Fix (curation layer)**: (a) `--require-judge` now holds infeasible episodes
+  to the same bar it documents for successes ("never judged is dropped, not
+  silently trusted"); without the flag the old permissive behavior stands.
+  (b) a `goto` to a host other than the current page's is excluded as a target
+  (kept in history — it did execute). (c) the `LAST ACTION ERROR:` block is
+  reconstructed from the errored step's `[action error: ...]` thought and
+  placed where the live Solver puts it. Tests in
+  `hsge/tests/test_build_sft_dataset.py` (7 new; suite 249 → 266).
+- **Measured effect of the rebuild** (`--require-judge --min-actions 1`,
+  3751 → 2399 examples): 1-step trajectories **42% → 1%**, `report_infeasible`
+  terminals **11% → 0%**, median trajectory length 2 → 3, p90 8 → 10, `click`
+  share 51% → 66%, off-origin `goto` targets 5 → 0, recovery examples carrying
+  the error block 0 → 154.
+- **Still open (F3, the actual root cause)**: curation cannot manufacture
+  successful long trajectories — COMPOSITE's share still *fell* (29% → 26%) in
+  the rebuild, because removing the give-ups removed long episodes. Until the
+  collection solver can finish multi-step tasks (a stronger model on
+  COMPOSITE/MOD, or subgoal-guided solving), the training distribution stays
+  systematically easier than the benchmark. Retraining on V2 measures how much
+  of the 0% is curation vs. teacher competence; it is not expected to close it.
+
 ### `eval_webarena.py` unpacks 6 values from `Solver.solve()`, which returns 7 — every eval episode errors out
 - **Status**: fixed (2026-08-10 01:35)
 - **Found**: 2026-08-10, first-ever run of the WebArena eval on a live site

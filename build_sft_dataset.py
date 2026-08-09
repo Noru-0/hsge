@@ -25,6 +25,7 @@ import argparse
 import glob
 import json
 import os
+from urllib.parse import urlparse
 
 from hsge.webarena.agents import PageExplorer, SOLVER_SYS, step_outcome, _cap_axtree
 
@@ -64,6 +65,35 @@ def _strip_tag(goal: str) -> str:
     return _TAG_RE.sub("", goal or "").strip()
 
 
+def _last_action_error(thought: str) -> str:
+    """The error text Solver.solve appended to a failed step's thought as
+    ` [action error: <msg>]` (agents.py:607). The live Solver puts that message
+    in the NEXT prompt's `LAST ACTION ERROR:` block, so the offline builder has
+    to recover it to reproduce the prompt the recovery action was chosen from."""
+    marker = "[action error:"
+    i = (thought or "").find(marker)
+    if i < 0:
+        return ""
+    return thought[i + len(marker):].rstrip().rstrip("]").strip()
+
+
+def _is_off_origin_goto(action: str, url: str) -> bool:
+    """A `goto` whose host differs from the page the agent is on.
+
+    WebArena is a set of self-hosted clones; navigating to the public site the
+    clone imitates ends the episode immediately with reward 0. Collection let
+    one such action through -- goto('https://www.reddit.com/r/AskReddit/') on a
+    Postmill instance -- and the fine-tuned model reproduced the pattern in 10
+    of 57 reddit eval episodes. A same-host goto is legitimate (deep-linking a
+    known URL) and stays."""
+    a = (action or "").strip()
+    if not a.startswith("goto("):
+        return False
+    target = a[len("goto("):-1].strip().strip("'\"")
+    host = urlparse(target).netloc
+    return bool(host) and host != urlparse(url or "").netloc
+
+
 def _is_error_step(thought: str) -> bool:
     """A step whose recorded thought carries the '[action error: ...]' suffix
     Solver.solve appends when browser.act() raised (see agents.py::Solver.solve)
@@ -87,9 +117,25 @@ def _include_episode(success: bool, infeasible: bool, judge_verified: bool | Non
     self-decided, since nothing can distinguish them retroactively.
     A plain success is eligible unless --require-judge is set, in which case it
     needs judge_verified is True -- an episode never judged (judge_verified is
-    None) is dropped, not silently trusted, so --require-judge fails safe."""
+    None) is dropped, not silently trusted, so --require-judge fails safe.
+
+    --require-judge holds infeasible episodes to that SAME bar. It used not to:
+    the infeasible branch short-circuited above the judge check, and since
+    judge_episodes.py only ever judges declared-SUCCESS episodes, every kept
+    infeasible episode was unverified by construction -- exactly the silent
+    trust the flag promises not to extend. Measured on the four collection runs
+    behind train_all.jsonl, that admitted 136 give-ups (868 examples, 23% of the
+    dataset), concentrated on the hard task class: 75 of 191 COMPOSITE
+    trajectories (39%) ended in report_infeasible, over reasons that were
+    collection-time artifacts rather than impossibility ("Too many failed login
+    attempts", "askscience forum not found" on a site that has one). The model
+    trained on it reported infeasible on 22 of 57 reddit eval tasks (39%,
+    matching that rate), 15 of them self-decided, including three separate
+    "change my bio" tasks whose edit link was verified present."""
     if infeasible:
-        return not stop_reason
+        if stop_reason:
+            return False
+        return judge_verified is True if require_judge else True
     if not success:
         return False
     if require_judge:
@@ -107,17 +153,31 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
 
     history: list[str] = []   # outcome-annotated "- action -> outcome" lines
     examples = []
+    last_error = ""           # mirrors Solver.solve's `last_error` across steps
     for k, step in enumerate(steps):
         target_action = step.get("parsed_action") or ""
         if not target_action:
             continue
         thought = thoughts[k]
         if _is_error_step(step.get("thought", "")):
+            # Not a target (it's the mistake), but the error it produced is what
+            # the live Solver showed the NEXT call -- carry it forward.
+            last_error = _last_action_error(step.get("thought", ""))
+            continue
+        err_block = f"\n\nLAST ACTION ERROR: {last_error}" if last_error else ""
+        last_error = ""
+        if _is_off_origin_goto(target_action, urls[k]):
+            # Leaves the site and ends the episode at reward 0; never imitate it.
+            # It stays in `history` below, because it really did execute.
+            history.append(f"- {target_action} -> "
+                          + step_outcome(urls[k], axtrees[k],
+                                        urls[k + 1] if k + 1 < len(steps) else urls[k],
+                                        axtrees[k + 1] if k + 1 < len(steps) else axtrees[k]))
             continue
         assistant = json.dumps({"thought": thought, "action": target_action})
         hist_block = "\n".join(history[-_HISTORY_WINDOW:]) or "(none)"
         obs_block = _cap_axtree(axtrees[k]) if axtrees[k] else "[accessibility tree omitted]"
-        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist_block}\n\n"
+        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist_block}{err_block}\n\n"
                 f"URL: {urls[k]}\n\nPAGE:\n{obs_block}")
         examples.append({
             "messages": [

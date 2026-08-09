@@ -120,6 +120,108 @@ def test_error_step_excluded_from_targets_and_from_later_history():
     assert "click('999')" not in step1_prompt
 
 
+def test_step_after_action_error_carries_last_action_error_block():
+    """Prompt parity: when the previous action errored, the live Solver's next
+    prompt contains a `LAST ACTION ERROR: ...` block (agents.py:562). The SFT
+    prompt omitted it entirely, so the recovery step was trained without the
+    evidence that motivated it -- the model learned an unexplained action change
+    instead of error recovery, and at eval time repeated one dead action until
+    the stuck guard fired (9/57 reddit episodes)."""
+    ep_dir = tempfile.mkdtemp()
+    steps = [
+        _step(ep_dir, 0, "http://x/", "ax0",
+             "clicking the submit button [action error: bid 999 not found]",
+             "click('999')"),
+        _step(ep_dir, 1, "http://x/", "ax0", "that bid is invalid, using the real one",
+             "click('1')"),
+    ]
+
+    examples = episode_to_examples("goal", steps, ep_dir, difficulty=1,
+                                    trajectory_id="ep_0000")
+
+    step1_prompt = next(e for e in examples if e["step_index"] == 1)["messages"][1]["content"]
+    assert "LAST ACTION ERROR: bid 999 not found" in step1_prompt
+    # ... and it sits where the live Solver puts it: after history, before URL.
+    assert step1_prompt.index("LAST ACTION ERROR") < step1_prompt.index("URL:")
+
+
+def test_last_action_error_block_absent_when_previous_step_was_clean():
+    ep_dir = tempfile.mkdtemp()
+    steps = [
+        _step(ep_dir, 0, "http://x/", "ax0", "open it", "click('24')"),
+        _step(ep_dir, 1, "http://x/2", "ax1", "done", "send_msg_to_user('done')"),
+    ]
+
+    examples = episode_to_examples("goal", steps, ep_dir, difficulty=1,
+                                    trajectory_id="ep_0000")
+
+    assert "LAST ACTION ERROR" not in examples[1]["messages"][1]["content"]
+
+
+def test_off_origin_goto_is_not_a_training_target():
+    """A `goto` to a host other than the site being explored is an instant
+    reward-0 termination in WebArena (BrowserGym ends the episode). One such
+    target survived collection -- goto('https://www.reddit.com/r/AskReddit/')
+    against a self-hosted Postmill -- and the fine-tuned model reproduced it in
+    10 of 57 reddit eval episodes. The step stays in later history (it really
+    did execute, and the live Solver saw it) but must never be imitated."""
+    ep_dir = tempfile.mkdtemp()
+    steps = [
+        _step(ep_dir, 0, "http://192.168.1.31:8080/f/pics", "ax0", "open the forum",
+             "click('24')"),
+        _step(ep_dir, 1, "http://192.168.1.31:8080/f/pics", "ax1", "go to reddit",
+             "goto('https://www.reddit.com/r/AskReddit/')"),
+        _step(ep_dir, 2, "http://192.168.1.31:8080/f/AskReddit", "ax2", "done",
+             "send_msg_to_user('done')"),
+    ]
+
+    examples = episode_to_examples("goal", steps, ep_dir, difficulty=1,
+                                    trajectory_id="ep_0000")
+
+    assert 1 not in [e["step_index"] for e in examples]
+    assert [0, 2] == [e["step_index"] for e in examples]
+    last_prompt = examples[-1]["messages"][1]["content"]
+    assert "goto('https://www.reddit.com/r/AskReddit/')" in last_prompt   # kept in history
+
+
+def test_same_origin_goto_is_kept_as_a_target():
+    ep_dir = tempfile.mkdtemp()
+    steps = [
+        _step(ep_dir, 0, "http://192.168.1.31:8080/f/pics", "ax0", "jump to the forum",
+             "goto('http://192.168.1.31:8080/f/AskReddit')"),
+        _step(ep_dir, 1, "http://192.168.1.31:8080/f/AskReddit", "ax1", "done",
+             "send_msg_to_user('done')"),
+    ]
+
+    examples = episode_to_examples("goal", steps, ep_dir, difficulty=1,
+                                    trajectory_id="ep_0000")
+
+    assert [0, 1] == [e["step_index"] for e in examples]
+
+
+def test_require_judge_drops_infeasible_episodes():
+    """`--require-judge` documents itself as fail-safe: an episode that was
+    never judged is dropped, not silently trusted. Infeasible episodes short-
+    circuited before that check, and judge_episodes.py never judges them, so
+    136 unverified give-ups (23% of the examples) entered the dataset -- 75 of
+    them on COMPOSITE tasks, whose reasons were rate limits and misread pages,
+    not real impossibility ('askscience forum not found' on a site that has
+    it). The fine-tuned model then reported infeasible on 39% of reddit eval
+    tasks, matching the 39% give-up rate among COMPOSITE training trajectories."""
+    assert _include_episode(success=False, infeasible=True, judge_verified=None,
+                            require_judge=True, stop_reason="") is False
+
+
+def test_infeasible_still_kept_without_require_judge():
+    assert _include_episode(success=False, infeasible=True, judge_verified=None,
+                            require_judge=False, stop_reason="") is True
+
+
+def test_require_judge_keeps_judge_confirmed_infeasible():
+    assert _include_episode(success=False, infeasible=True, judge_verified=True,
+                            require_judge=True, stop_reason="") is True
+
+
 def test_history_window_capped_at_six_matching_solver():
     ep_dir = tempfile.mkdtemp()
     steps = [_step(ep_dir, i, f"http://x/{i}", f"ax{i}", f"t{i}", f"click('{i}')")
@@ -189,9 +291,13 @@ def test_include_episode_success_without_require_judge():
                             require_judge=False) is True
 
 
-def test_include_episode_infeasible_always_included_regardless_of_judge():
+def test_include_episode_infeasible_included_when_judging_is_not_required():
+    """Superseded contract: an unjudged infeasible episode used to be admitted
+    even under --require-judge. See test_require_judge_drops_infeasible_episodes
+    for why that was the dataset's single largest defect. Without the flag the
+    old permissive behavior still stands."""
     assert _include_episode(success=False, infeasible=True, judge_verified=None,
-                            require_judge=True) is True
+                            require_judge=False) is True
 
 
 def test_include_episode_require_judge_drops_unjudged_success():
