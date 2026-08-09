@@ -58,6 +58,53 @@ Entry format:
   is still unfixed** — this entry stays as the record of what to expect if a
   future box lands there, but it no longer blocks anything.
 
+### WebArena eval needs `OPENAI_API_KEY`, and its hardcoded judge model no longer exists
+- **Status**: worked around on the box (2026-08-10 02:05); no repo fix yet
+- **Found**: 2026-08-10, user asked whether WebArena eval needs an OpenAI key —
+  it does, and nothing in `training/README.md` or `eval_webarena.py` says so.
+- **Where**: `webarena/evaluation_harness/helper_functions.py:162` (`llm_fuzzy_match`)
+  and `:197` (`llm_ureader_eval`), reached from BrowserGym's `task.validate()`.
+- **Symptom**: without `OPENAI_API_KEY`, `generate_from_openai_chat_completion`
+  raises `ValueError`. BrowserGym's `validate()` catches only `AssertionError`,
+  so it propagates to `run_task`'s broad `except` and the task is recorded as
+  errored — a silent, guaranteed 0. **70 of the 655 single-site tasks** use
+  `fuzzy_match`: reddit 2, gitlab 8, **shopping 34 (18%)**, **shopping_admin 26
+  (14%)**. So a keyless run understates shopping/shopping_admin badly while
+  barely touching reddit/gitlab.
+- **Second failure, only visible once a key is set**: the judge model is
+  hardcoded to `gpt-4-1106-preview`, which is deprecated —
+  `404 model_not_found` on a current project key. Having a key is not enough.
+- **Worked around**: `gpt-4-turbo` (the direct successor of that preview model,
+  and available on the user's key) substituted at both call sites on the box.
+  Verified directly: correct answer → 1.0, wrong answer → 0.0. **This is a
+  deliberate deviation from the official evaluator and must be disclosed
+  whenever these numbers are reported.**
+- **Cost note**: `validate()` runs on *every step*, not once per episode, so a
+  fuzzy task costs one judge call per step (~400-500 GPT-4-turbo calls for the
+  70 tasks).
+- **Repo fix not applied**: `eval_webarena.py` should fail fast when
+  `OPENAI_API_KEY` is unset and the selected site has fuzzy_match tasks, rather
+  than letting 10.7% of the benchmark silently error out.
+
+### `eval_webarena.py`'s resume treats an errored task as done, so infrastructure blips become permanent zeros
+- **Status**: worked around (2026-08-10 02:10); no repo fix yet
+- **Found**: 2026-08-10, after restarting vLLM mid-sweep — 4 reddit tasks
+  recorded `APIConnectionError` and would have been skipped forever.
+- **Where**: `training/eval_webarena.py`, the `done` set built from
+  `results.jsonl` (only `--no-resume` bypasses it, which redoes everything).
+- **Symptom**: any task whose row carries an `error` field is treated as
+  complete on the next run, permanently scoring 0 for a reason unrelated to the
+  model.
+- **Worked around**: a helper that drops errored rows (keeping a `.bak`) before
+  restarting, run with the sweep stopped.
+- **Fix**: not applied. Resume should skip only rows without an `error`.
+- **Operational trap found alongside it**: `supervisorctl restart` kills the
+  shell but not its already-running python child, so two eval processes end up
+  appending to one `results.jsonl`. Fixed with `stopasgroup=true` /
+  `killasgroup=true`. Also note `pkill -f "vllm serve"` / `pgrep -f
+  "eval_webarena.py"` issued over ssh **matches the ssh command's own string and
+  kills the session**; use a bracketed regex (`eval_webarena[.]py`).
+
 ### The model emits invalid JSON escapes, so the step is silently dropped
 - **Status**: open
 - **Found**: 2026-08-10, WebArena eval smoke run on shopping task 23.
