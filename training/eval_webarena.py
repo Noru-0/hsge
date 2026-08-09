@@ -132,8 +132,29 @@ def make_task_browser(task_id: int, headless: bool, timeout_ms: int):
     return TaskBrowser()
 
 
+def write_trace(out_dir: Path, task_id: int, goal: str, steps, reward: float,
+                stop_reason: str) -> None:
+    """Persist what the model actually did, step by step.
+
+    results.jsonl only records the aggregate plus a truncated last_action, which
+    is not enough to tell a model that never found the right page from one that
+    found it and misread it. The axtree is deliberately left out -- it is ~6 kB
+    per step and reproducible by replaying the task.
+    """
+    trace_dir = out_dir / "traces"
+    trace_dir.mkdir(parents=True, exist_ok=True)
+    (trace_dir / f"{task_id}.json").write_text(json.dumps({
+        "task_id": task_id,
+        "goal": goal,
+        "reward": reward,
+        "stop_reason": stop_reason,
+        "steps": [{"i": i, "thought": s.obs_summary, "action": s.action, "url": s.url}
+                  for i, s in enumerate(steps)],
+    }, ensure_ascii=False, indent=1) + "\n")
+
+
 def run_task(task_id: int, llm, max_steps: int, headless: bool,
-             timeout_ms: int) -> dict:
+             timeout_ms: int, out_dir: Path | None = None) -> dict:
     from hsge.webarena.agents import Solver
 
     browser = make_task_browser(task_id, headless, timeout_ms)
@@ -151,6 +172,9 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
                 browser.act(last_action)
             except Exception as e:  # answer delivery must never lose the episode
                 print(f"    [eval] terminal action failed: {e}", file=sys.stderr)
+        if out_dir is not None:
+            write_trace(out_dir, task_id, browser.goal, steps, browser.reward,
+                        stop_reason)
         return {
             "task_id": task_id,
             "goal": browser.goal,
@@ -242,7 +266,8 @@ def main() -> None:
     for i, task_id in enumerate(todo, 1):
         print(f"[{i}/{len(todo)}] webarena.{task_id} ...", flush=True)
         result = run_task(task_id, llm, args.max_steps,
-                          headless=not args.headed, timeout_ms=args.timeout_ms)
+                          headless=not args.headed, timeout_ms=args.timeout_ms,
+                          out_dir=out_dir)
         n_success += bool(result.get("success"))
         with open(results_path, "a") as f:
             f.write(json.dumps(result, ensure_ascii=False) + "\n")
