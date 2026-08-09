@@ -372,7 +372,12 @@ class WebArenaExplorer:
                          stop_reason=stop_reason)
             urls_seen.update(st.url for st in steps)
             urls_seen.add(final_obs.get("url", ""))
-            if success or infeasible or attempts > self.task_retries:
+            # Only a SELF-DECIDED infeasible (stop_reason "") is terminal. When a
+            # guard stopped the episode, the wrap-up call was told so and merely
+            # rationalized a give-up -- retry from a reset page instead of
+            # writing the task off (build_sft_dataset refuses the same episodes
+            # as training targets; this is the collection half of that rule).
+            if success or (infeasible and not stop_reason) or attempts > self.task_retries:
                 return (episode_id, steps, final_obs, success, infeasible, attempts,
                         urls_seen, stop_reason)
 

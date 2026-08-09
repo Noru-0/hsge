@@ -6,6 +6,16 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **04:25** — `hsge/webarena/runtime.py`, `hsge/tests/test_task_retries.py` —
+  `_solve_with_retries` now treats only a SELF-DECIDED infeasible
+  (`stop_reason == ""`) as terminal. A guard-stopped episode whose wrap-up call
+  rationalized a give-up gets another attempt from a reset page instead of
+  writing the task off — the collection-side half of the rule
+  `build_sft_dataset._include_episode` already enforces on the data side (504
+  of the episodes behind train_all.jsonl ended this way). Needs
+  `--task-retries >= 1` to have any effect; default 0 is unchanged.
+  Suite 280 -> 282.
+
 - **04:10** — `hsge/webarena/urls.py` (new), `hsge/webarena/agents.py`,
   `hsge/webarena/browser.py`, `build_sft_dataset.py`,
   `hsge/tests/test_url_sanitizer.py` (new) — Host-independent URLs + one shared

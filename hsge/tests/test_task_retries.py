@@ -73,6 +73,54 @@ def test_infeasible_is_never_retried():
     assert ex.solver.calls == 1
 
 
+class _ScriptedSolverWithStopReason(_ScriptedSolver):
+    """Same script, plus a stop_reason per attempt: "" = the model decided on
+    its own, else the guard that stopped it (budget/stuck/novelty)."""
+
+    def __init__(self, outcomes, stop_reasons):
+        super().__init__(outcomes)
+        self.stop_reasons = list(stop_reasons)
+
+    def solve(self, browser, task, goal_predicate=None, max_steps=None, subgoals=None):
+        i = min(self.calls, len(self.stop_reasons) - 1)
+        out = list(super().solve(browser, task, goal_predicate, max_steps, subgoals))
+        out[-1] = self.stop_reasons[i]
+        return tuple(out)
+
+
+def test_wrapup_infeasible_is_retried_from_a_fresh_page_not_accepted():
+    """A guard (stuck/budget) stopped the episode and the wrap-up call was TOLD
+    it had stopped -- whatever it then declares is a rationalization, not a
+    conclusion, so it must not end the task the way a self-decided infeasible
+    does. build_sft_dataset already refuses these as training targets; this is
+    the collection half, so the task gets another attempt from a reset page
+    instead of being written off. 504 of the episodes behind train_all.jsonl
+    ended this way."""
+    ex = _explorer(retries=1)
+    ex.solver = _ScriptedSolverWithStopReason([(False, True), (True, False)],
+                                              ["stuck", ""])
+
+    (episode_id, steps, final_obs, success, infeasible, attempts,
+     urls_seen, stop_reason) = ex._solve_with_retries(_Browser(), "task",
+                                                       difficulty=1, tag="LOCAL")
+
+    assert attempts == 2
+    assert success is True and infeasible is False
+    assert ex.episode == 2       # the give-up attempt is still recorded, honestly
+
+
+def test_self_decided_infeasible_is_still_terminal():
+    """Unchanged contract: when the model concludes mid-solve that the task is
+    impossible (no guard involved), retrying it wastes budget."""
+    ex = _explorer(retries=2)
+    ex.solver = _ScriptedSolverWithStopReason([(False, True), (True, False)], ["", ""])
+
+    (_, _, _, success, infeasible, attempts, _, _) = ex._solve_with_retries(
+        _Browser(), "task", difficulty=1, tag="LOCAL")
+
+    assert infeasible is True and attempts == 1
+
+
 def test_zero_retries_is_single_attempt():
     ex = _explorer(retries=0)
     ex.solver = _ScriptedSolver([(False, False), (True, False)])
