@@ -111,8 +111,18 @@ cd /workspace/hsge
 /workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_all.yaml
 ```
 
-~223 steps/epoch on 3,561 training examples at effective batch 16 × 3 epochs;
-roughly 2–3 h on an A100 at `cutoff_len: 6144`.
+~223 steps/epoch on 3,561 training examples at effective batch 16 × 3 epochs.
+Measured on an H100-80GB: **~26–29 s/step, so ~5 h** for the 669 steps. That is
+what this model gives, not a misconfiguration — Qwen3.5's Gated DeltaNet layers
+are memory-bound rather than matmul-bound, and at batch 2 with gradient
+checkpointing the run already holds 61/80 GB, so there is no room to raise the
+batch or drop recompute. Three things were measured and ruled out before
+accepting it: the flash-linear-attention backend is irrelevant (tilelang and
+triton 3.7.1 give the same step time and the same loss), padding waste is only
+1.18× so `group_by_length` would buy ~15% at most, and `packing` is unsafe here
+— GDN layers carry recurrent state along the sequence and ignore
+`neat_packing`'s block-diagonal mask, so packed examples would leak state into
+each other.
 
 ## 4. Merge the adapter
 
