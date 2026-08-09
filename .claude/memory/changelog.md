@@ -6,6 +6,34 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **04:22** — `hsge/webarena/runtime.py`, `run_webarena.py`, `config.yaml`,
+  `.claude/rules/architecture.md`, `hsge/tests/test_episode_verifier.py`
+  (renamed from `test_goal_verifier.py`), `hsge/tests/test_dry_run_seed.py` —
+  **No episode is a success on the agent's own word any more.** The inline
+  verifier was GOAL-only (`run.verify_goals`); everything else was accepted on
+  a `send_msg_to_user`. Running `judge_episodes.py` over
+  `outputs/wa_eval_shopping_1` after the fact shows what that cost: **198 of
+  465 declared successes (43%) were false**, and the worst class was exactly
+  the unchecked one — 149 of 313 LOCAL/INFO successes failed the judge (
+  COMPOSITE 34/60, MOD 10/41, NAV 4/46). An offline verdict is one the RUN
+  never acts on: those episodes still fed Discovery, still counted in
+  summary.json, and (since P1) would still have seeded the unprefixed pass.
+  Now `run.verify_episodes` re-judges EVERY self-declared success — LOCAL,
+  UNPREFIXED and GOAL alike — and a FAIL is demoted before anything downstream
+  sees it (`judge_demoted` event, `outcome.judge_verified` written live, so
+  `--require-judge` needs no offline pass). A deterministic `reached()` success
+  is still never re-judged. The decision moved INSIDE `_solve_with_retries`
+  (the `verify_fn` parameter is gone) so no call site can forget it — which is
+  exactly the bug `_unprefixed_pass` shipped with two commits ago.
+  `run_webarena.py` still honours the old `verify_goals` config key so an
+  edited config can't silently turn verification off. `_DryLLM`'s grader now
+  PASSes the local tasks the scripted solver really performs and FAILs only the
+  checkout GOAL, so the dry run exercises both sides (verified success ->
+  skill/operator promotion, false positive -> demotion) instead of vetoing
+  everything. Also refreshed two stale architecture-doc claims from the 04:03
+  commit (`ACTIONS_DOC` action list, "HSGE doesn't expose scroll"). Suite
+  295 -> 300.
+
 - **04:10** — `hsge/webarena/runtime.py`, `run_webarena.py`, `config.yaml`,
   `.claude/rules/architecture.md`, `.claude/rules/commands.md`,
   `hsge/tests/test_unprefixed_sampling.py` (new) — **P1: unprefixed sampling

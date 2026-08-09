@@ -28,9 +28,14 @@ run:
                              # and one extra browser per node; uses goal_max_steps
   goal_max_steps: 25         # step budget for GOAL/composite tasks (null -> max_steps);
                              # multi-step GOALs need more room than LOCAL lookups
-  verify_goals: true         # re-check every self-graded GOAL success with the
-                             # episode_judge model; a FAIL demotes it to fail (stops
-                             # the solver grading its own homework). false = old behavior
+  verify_episodes: true      # re-check EVERY self-declared success (LOCAL, UNPREFIXED
+                             # and GOAL) with the episode_judge model; a FAIL demotes it
+                             # to fail, so no episode is a success on the agent's own
+                             # word. A deterministic reached() success is never
+                             # re-judged. Costs one judge call per declared success --
+                             # worth it: judging outputs/wa_eval_shopping_1 after the
+                             # fact found 198 of 465 declared successes (43%) were
+                             # false, 149 of them LOCAL/INFO. false = old behavior
   plan_subgoals: true        # decompose each GOAL into ordered subgoals (goal_planner)
                              # the solver pursues one at a time -- for multi-step,
                              # state-changing goals the plain loop churns on. false = off

@@ -52,8 +52,9 @@ Standalone real-browser runtime, separate from the mock pipeline:
   `observation()` flattens the axtree with `filter_visible_only=True` (hidden
   elements dropped before the text ever reaches a prompt), reducing how often the
   6000-char cap below is hit — it does not bound the length outright, since
-  `flatten_axtree_to_str` is not viewport-scoped (a `scroll` action would not
-  change what it returns, which is why HSGE doesn't expose one).
+  `flatten_axtree_to_str` is not viewport-scoped (`scroll` does not change what
+  it returns; it is exposed only so the model can make an off-screen element
+  actionable, not to reveal more of the page).
   Surfaces `self.terminated` (env `term`/`trunc`) so the Solver can stop cleanly.
   `act()` raises `ActionError` when the action failed in the page: BrowserGym
   itself never raises — `BrowserEnv.step` catches the exception and returns it as
@@ -84,9 +85,14 @@ Standalone real-browser runtime, separate from the mock pipeline:
   docs, CoT examples, and last-action-error feedback so it can recover instead of
   aborting the episode). Both accept `vision`/`som`/`image_detail` (see below) and,
   when a vision-attached call returns empty (refusal/content-filter), retry once
-  text-only before giving up. `ACTIONS_DOC` documents all 10 actions the executor
+  text-only before giving up. `ACTIONS_DOC` documents the actions the executor
   accepts: `click`/`fill`/`select_option`/`press`/`goto`/`go_back`/`new_tab`/
-  `tab_focus`/`tab_close`/`send_msg_to_user`/`report_infeasible`. `_cap_axtree()`
+  `tab_focus`/`tab_close`/`scroll`/`hover`/`noop`/`send_msg_to_user`/
+  `report_infeasible`. `scroll`/`hover`/`noop` were executable all along
+  (browsergym's `bid` subset) but undocumented, so the model never used them:
+  3305 of the 4115 action errors in `outputs/wa_eval_shopping_1` were 500 ms
+  Playwright actionability timeouts on elements the axtree did show, and the
+  model's only recourse was to click again. `_cap_axtree()`
   truncates the axtree shown in any prompt at 6000 chars, appending an explicit
   `[TRUNCATED: N more characters not shown]` marker rather than silently chopping
   it — used by both `PageExplorer.propose()` and every `Solver.solve()` prompt, and
@@ -229,8 +235,8 @@ composed GOAL task with an instruction generated from the chained skills'
 descriptions plus the first operator's recorded init URL (`_op_meta`). Each
 distinct chain is attempted once per run, at most `run.goal_chains_per_node`
 (default 3, CLI `--goal-chains-per-node`) new chains per node. Verification is
-self-graded (send_msg_to_user + offline judge) unless the chain's last operator
-is terminal AND `terminal_goal` is configured -- then `reached()` verifies
+by the inline episode verifier below unless the chain's last operator is
+terminal AND `terminal_goal` is configured -- then `reached()` verifies
 deterministically. `terminal_goal` is the backup: when the graph is too shallow
 to chain but a terminal predicate is plannable, the legacy terminal task
 (original wording, every node, `reached()` verify) still fires.
@@ -277,6 +283,24 @@ recur enough to reach `maturity` and become an operator. Uses `goal_max_steps`
 solved task and one extra browser per node; a root browser that fails to load is
 logged as `unprefixed_error` and skips the pass, never the run.
 
+**No episode is a success on the agent's own word.** With
+`run.verify_episodes` (default false in code, **on** in `config.yaml`), every
+self-declared success — `send_msg_to_user` on a task with no `goal_predicate`,
+whatever its tag (LOCAL / UNPREFIXED / GOAL) — is re-judged by the
+`episode_judge` model against its own final page (`_verify_episode`, sharing
+`hsge/webarena/verify.py`'s grader prompt with the offline
+`judge_episodes.py`), and a FAIL is demoted to `success=False` (`judge_demoted`
+event) before anything downstream sees it: the episode is recorded as a fail,
+never feeds Discovery, and never seeds the unprefixed pass. A deterministic
+`reached()` success is never re-judged. The verdict is written to
+`outcome.judge_verified`/`judge_reason`, the same fields `--require-judge`
+reads, so a verified run needs no offline judging pass. The decision lives
+inside `_solve_with_retries`, not at its call sites, so a new call site cannot
+forget it. Scope used to be GOAL-only; judging `outputs/wa_eval_shopping_1`
+after the fact found **198 of 465 declared successes (43%) were false**, 149 of
+them LOCAL/INFO tasks that no live check ever looked at. Costs one judge call
+per declared success.
+
 **`--read-only`** makes `PageExplorer` propose only INFO/NAV tasks (drops MOD and
 anything it can't classify), for smoke-testing a shared, stateful site without
 writing to it (no posting, voting, cart/checkout actions).
@@ -292,7 +316,9 @@ for `page_explorer` (`gpt-4o`) and `solver` (`gpt-4o-mini`).
 
 **SFT dataset assembly is a three-stage offline pipeline**, run after
 `run_webarena.py` finishes collecting `episodes/`:
-`judge_episodes.py` (optional) re-checks every declared-success episode
+`judge_episodes.py` (optional; unnecessary when the run had
+`verify_episodes` on, which writes the same fields live) re-checks every
+declared-success episode
 against its own final state with a strong LLM and appends
 `outcome.judge_verified`/`outcome.judge_reason` to `episode_meta.json` in
 place (additive; `outcome.success` is left untouched) — catches the agent

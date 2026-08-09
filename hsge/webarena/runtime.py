@@ -69,7 +69,7 @@ class WebArenaExplorer:
                  use_site_seed: bool = False, seed_capability_repeats: int = 3,
                  goal_max_steps: int | None = None,
                  unprefixed_sampling: bool = False,
-                 verify_goals: bool = False,
+                 verify_episodes: bool = False,
                  plan_subgoals: bool = False,
                  agent_llms: dict[str, object] | None = None,
                  agent_vision: dict[str, dict] | None = None):
@@ -154,10 +154,18 @@ class WebArenaExplorer:
         # all 3 times, all 3 infeasible. Consecutive failures retire a capability
         # early; a success resets the count (a one-off failure means little).
         self._capability_failures: Counter = Counter()
-        # Inline GOAL verifier (B1): re-check every self-graded GOAL success with a
-        # strong judge; a FAIL demotes it to fail so the solver can't grade its own
-        # homework. Reuses judge_episodes' grader prompt live. Off by default.
-        self.verify_goals = verify_goals
+        # Inline episode verifier: re-check EVERY self-graded success (LOCAL,
+        # UNPREFIXED and GOAL alike) with a strong judge; a FAIL demotes it to
+        # fail so the agent never grades its own homework. Reuses
+        # judge_episodes' grader prompt live. Scope used to be GOAL-only, which
+        # left the bulk of the data unchecked: running judge_episodes.py over
+        # outputs/wa_eval_shopping_1 afterwards found 198 of 465 declared
+        # successes (43%) were false, 149 of them LOCAL/INFO tasks. An offline
+        # verdict is one the RUN never acts on -- those episodes still fed
+        # Discovery, still seeded the unprefixed pass, still counted in
+        # summary.json. Costs one judge call per declared success.
+        # Off by default.
+        self.verify_episodes = verify_episodes
         self.judge_llm = role("episode_judge")
         # Subgoal-guided GOAL solving (C2): decompose a GOAL into ordered subgoals
         # the Solver pursues one at a time. Off by default.
@@ -333,7 +341,7 @@ class WebArenaExplorer:
 
     # ---- one task, up to 1 + task_retries attempts --------------------------
     def _solve_with_retries(self, browser, task, difficulty, tag, goal_predicate=None,
-                            max_steps=None, verify_fn=None, subgoals=None, solver=None):
+                            max_steps=None, subgoals=None, solver=None):
         """Run the Solver on one task, retrying failures up to task_retries
         times. Every attempt is recorded as its own episode (SFT data and
         logs stay honest). Infeasible attempts are terminal -- retrying a
@@ -370,12 +378,16 @@ class WebArenaExplorer:
                 max_steps=max_steps, subgoals=subgoals)
             # Inline verifier: only a SELF-GRADED success (goal_predicate is None) is
             # re-checked -- a deterministic reached() result is already trustworthy.
+            # Decided here rather than by the caller so no call site can forget it.
             judge_verified = judge_reason = None
-            if verify_fn is not None and success and goal_predicate is None and steps:
-                verified, judge_reason = verify_fn(task, steps, final_obs)
-                judge_verified = verified
-                if not verified:
+            if self.verify_episodes and success and goal_predicate is None and steps:
+                judge_verified, judge_reason = self._verify_episode(task, steps, final_obs)
+                if not judge_verified:
                     success = False
+                    self._log("judge_demoted", tag=tag, task=task, attempt=attempts,
+                               reason=judge_reason)
+                    print(f"    [judge] '{task[:40]}' declared done but FAILED "
+                          f"verification: {judge_reason}")
             self._record(task, steps, obs_texts, obs_screenshots, success,
                          difficulty=difficulty, tag=tag, infeasible=infeasible,
                          judge_verified=judge_verified, judge_reason=judge_reason,
@@ -1018,7 +1030,6 @@ class WebArenaExplorer:
                      urls_seen, stop_reason) = self._solve_with_retries(
                         browser, gt["goal"], difficulty=gt["difficulty"], tag="GOAL",
                         goal_predicate=gt["goal_predicate"], max_steps=self.goal_max_steps,
-                        verify_fn=self._verify_episode if self.verify_goals else None,
                         subgoals=subgoals, solver=self.goal_solver)
                     bucket = "success" if success else ("infeasible" if infeasible else "fail")
                     task_stats["GOAL"][bucket] += 1

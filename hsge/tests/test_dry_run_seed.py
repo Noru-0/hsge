@@ -41,8 +41,10 @@ def test_dry_run_plans_subgoals_for_goal(tmp_path):
 
 
 def test_dry_run_verifier_demotes_false_positive_goal(tmp_path):
-    """--dry-run enables verify_goals; the scripted solver self-declares done but
-    the grader FAILs it, so the GOAL success is demoted to fail end-to-end."""
+    """--dry-run enables verify_episodes; the scripted solver self-declares the
+    checkout GOAL done without ever reaching the success page, so the grader
+    FAILs it and the success is demoted to fail end-to-end. The LOCAL tasks it
+    really does perform are PASSed, so the promotion path stays exercised."""
     out = str(tmp_path / "wa_dry")
     subprocess.run([sys.executable, "run_webarena.py", "--dry-run",
                     "--out", out, "--max-nodes", "2"], check=True, cwd=REPO)
@@ -50,3 +52,7 @@ def test_dry_run_verifier_demotes_false_positive_goal(tmp_path):
     goal = summary["tasks"]["GOAL"]
     assert goal["fail"] >= 1        # the inline verifier caught the false positive
     assert goal["success"] == 0     # nothing survived the grader in the dry run
+    # ...and a verified LOCAL success is still admitted, so the judge is not
+    # simply vetoing everything
+    assert summary["tasks"]["LOCAL"]["success"] >= 1
+    assert summary["skills_discovered"] >= 1
