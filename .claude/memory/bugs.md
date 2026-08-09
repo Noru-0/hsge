@@ -15,6 +15,41 @@ Entry format:
 
 ## Open
 
+### vLLM dies on the first request: the Qwen3.5 GDN prefill kernel is JIT-compiled at runtime and the compile fails
+- **Status**: open
+- **Found**: 2026-08-09, serving the merged cross-domain model on the vast.ai
+  H100 box (driver 560.35.03 / CUDA 12.6, `vllm==0.18.0`).
+- **Where**: not repo code — the box's serving environment. Surfaces in
+  `/workspace/vllm.log`, `vllm/model_executor/models/qwen3_next.py:767`.
+- **Symptom**: the server reaches `READY` and answers `/v1/models`, then exits
+  cleanly (`INFO: Shutting down`) the moment the first completion request
+  arrives. Reproduced 3×. This blocks step 6 (eval) entirely; training and merge
+  are unaffected.
+- **Cause**: `flashinfer` JIT-compiles `gdn_prefill_sm90` (the Gated DeltaNet
+  prefill kernel for Hopper) on demand, and every variant fails to compile with
+  `fatal error: cuda/ptx: No such file or directory` — the image has no CCCL
+  headers under `/usr/local/cuda/include/cccl`. vLLM logs the warmup failure as
+  a WARNING ("First inference may OOM due to autotuner") and starts anyway, so
+  the failure only becomes fatal at request time.
+- **Ruled out**: not an ssh-lifetime problem. The first two deaths coincided
+  with the launching ssh session closing, which looked like SIGHUP; running vLLM
+  under the image's own supervisor (`/etc/supervisor/conf.d/vllm.conf`, which
+  the instance guide says is the right way to run long-lived services here)
+  produced exactly the same death, which is what isolated it to the request.
+  Also not a real OOM — the 72 "OOM" matches in the log are all the warning's
+  own text.
+- **Made it worse**: symlinking the pip `nvidia-cuda-cccl-cu12` headers into
+  `/usr/local/cuda/include/cccl` mixes two CCCL versions against the toolkit's
+  own libcu++ and turns one missing-header error into a wall of macro errors
+  (`_LIBCUDACXX_BEGIN_NAMESPACE_CUDA_PTX is undefined`, ...). Reverted. Do not
+  retry this shortcut.
+- **Fix**: not yet applied. Untried options, cheapest first: (1) find the vLLM
+  0.18 switch that forces the plain-torch GDN path instead of flashinfer;
+  (2) install the CCCL version that actually matches `/usr/local/cuda`, not the
+  newest pip one; (3) move to a CUDA-13 box and use current vLLM as
+  `training/README.md` assumes; (4) drop vLLM and serve through transformers
+  behind an OpenAI-compatible shim.
+
 ### `goal_task_selected` logs an empty `goal`
 - **Status**: open
 - **Found**: 2026-08-08, same audit — all 16 `goal_task_selected` events in
