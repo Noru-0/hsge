@@ -105,6 +105,21 @@ def _is_error_step(thought: str) -> bool:
     return "[action error:" in (thought or "")
 
 
+def _all_steps_reannotated(steps: list[dict]) -> bool:
+    """Whether every step of this episode carries a `thought_v2`.
+
+    `reannotate_thoughts.py` is optional, so a run directory can hold a mix of
+    raw one-line collection thoughts and structured `State: ... Reflection: ...
+    Subgoal: ...` ones -- and it writes thought_v2 onto every step of an episode
+    it processes, so "some steps have it" means the pass was interrupted
+    (`--limit`) rather than that this episode is legitimately half-annotated.
+    Training on both formats from the same prompt teaches two different
+    reasoning styles; --require-thought-v2 is how a dataset commits to one.
+    """
+    targets = [s for s in steps if (s.get("parsed_action") or "").strip()]
+    return bool(targets) and all((s.get("thought_v2") or "").strip() for s in targets)
+
+
 def _include_episode(success: bool, infeasible: bool, judge_verified: bool | None,
                      require_judge: bool, stop_reason: str = "") -> bool:
     """Whether one episode's steps should be turned into SFT examples.
@@ -261,6 +276,11 @@ def main():
                          "outcome.judge_verified is true (run judge_episodes.py "
                          "first); never-judged success episodes are dropped, "
                          "not silently trusted")
+    ap.add_argument("--require-thought-v2", action="store_true",
+                    help="only keep episodes whose every step was re-annotated by "
+                         "reannotate_thoughts.py, so the dataset does not mix raw "
+                         "one-line thoughts with structured State/Reflection/"
+                         "Subgoal ones (run reannotate_thoughts.py first)")
     ap.add_argument("--min-actions", type=int, default=0, metavar="N",
                     help="drop episodes with fewer than N steps that actually act on "
                          "the page (send_msg_to_user/report_infeasible do not count). "
@@ -271,7 +291,7 @@ def main():
     args = ap.parse_args()
 
     all_examples, n_ep, n_kept, n_infeasible_kept, n_unjudged_dropped = [], 0, 0, 0, 0
-    n_too_few_actions = n_wrapup_infeasible_dropped = 0
+    n_too_few_actions = n_wrapup_infeasible_dropped = n_not_reannotated = 0
     for (goal, steps, ep_dir, trajectory_id, diff, success, infeasible,
         judge_verified, stop_reason) in load_episodes(args.src):
         n_ep += 1
@@ -285,6 +305,9 @@ def main():
         if (args.min_actions and not infeasible
                 and _n_browser_actions(steps) < args.min_actions):
             n_too_few_actions += 1
+            continue
+        if args.require_thought_v2 and not _all_steps_reannotated(steps):
+            n_not_reannotated += 1
             continue
         n_kept += 1
         n_infeasible_kept += int(infeasible)
@@ -312,6 +335,9 @@ def main():
     if args.require_judge:
         print(f"unjudged success episodes dropped: {n_unjudged_dropped} "
               f"(run judge_episodes.py first to include them)")
+    if args.require_thought_v2:
+        print(f"dropped, not re-annotated: {n_not_reannotated} "
+              f"(run reannotate_thoughts.py to include them)")
     if args.min_actions:
         print(f"dropped, < {args.min_actions} real action(s): {n_too_few_actions} "
               f"(answer-only episodes, no page interaction)")

@@ -106,3 +106,19 @@ if __name__ == "__main__":
         fn()
         print(f"PASS  {fn.__name__}")
     print(f"\n{len(fns)} tests passed.")
+
+
+def test_composed_pieces_end_in_exactly_one_period():
+    """The judge returns whole sentences; appending '.' unconditionally wrote
+    `...'wireless mouse'..` into every target of a real trial run."""
+    from reannotate_thoughts import _compose_thought
+
+    out = _compose_thought(
+        original="Open the item.",
+        state="The search box is filled with 'wireless mouse'.",
+        reflection="Clicking Search had no effect.",
+        subgoal=None, is_segment_final=False, completion_check="")
+
+    assert ".." not in out
+    assert out.startswith("State: The search box is filled with 'wireless mouse'. ")
+    assert "Reflection: Clicking Search had no effect." in out

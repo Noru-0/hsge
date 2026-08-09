@@ -70,6 +70,14 @@ def _reannotate_prompt(goal: str, subgoal: str, is_final: bool,
     return f"<payload>{json.dumps(payload)}</payload>"
 
 
+def _sentence(text: str) -> str:
+    """One piece of a composed thought, terminated by exactly one period.
+    The judge returns whole sentences, so appending "." unconditionally wrote
+    `...filled with 'wireless mouse'..` into every target it produced."""
+    t = (text or "").strip().rstrip(".").strip()
+    return f"{t}." if t else ""
+
+
 def _compose_thought(original: str, state: str, reflection: str,
                      subgoal: str | None, is_segment_final: bool,
                      completion_check: str) -> str:
@@ -78,13 +86,13 @@ def _compose_thought(original: str, state: str, reflection: str,
     field, not a nested structure. completion_check takes priority over
     subgoal (a step is either mid-subgoal or making the final call, never
     both)."""
-    parts = [f"State: {state}."]
+    parts = [f"State: {_sentence(state)}"]
     if reflection:
-        parts.append(f"Reflection: {reflection}.")
+        parts.append(f"Reflection: {_sentence(reflection)}")
     if completion_check:
-        parts.append(f"Completion check: {completion_check}.")
+        parts.append(f"Completion check: {_sentence(completion_check)}")
     elif subgoal:
-        parts.append(f"Subgoal: {subgoal}.")
+        parts.append(f"Subgoal: {_sentence(subgoal)}")
         if is_segment_final:
             parts.append("Subgoal complete.")
     parts.append(original.strip())

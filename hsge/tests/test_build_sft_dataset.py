@@ -341,3 +341,79 @@ if __name__ == "__main__":
         fn()
         print(f"PASS  {fn.__name__}")
     print(f"\n{len(fns)} tests passed.")
+
+
+# ---- --require-thought-v2 --------------------------------------------------
+
+def _run_main(src, out, *flags):
+    """Invoke build_sft_dataset.main() with argv, return (examples, stdout)."""
+    import contextlib
+    import io
+    import sys
+
+    import build_sft_dataset
+    argv = sys.argv
+    sys.argv = ["build_sft_dataset.py", src, out, *flags]
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            build_sft_dataset.main()
+    finally:
+        sys.argv = argv
+    return [json.loads(l) for l in open(out)], buf.getvalue()
+
+
+def _v2(step, text):
+    step["thought_v2"] = text
+    return step
+
+
+def test_require_thought_v2_keeps_only_fully_reannotated_episodes():
+    """reannotate_thoughts.py is optional, so a run dir can hold a mix of raw
+    one-line thoughts and structured `State: ... Subgoal: ...` ones. Training on
+    both teaches two different reasoning formats from the same prompt; this flag
+    is how a dataset commits to one."""
+    run = tempfile.mkdtemp()
+    ok_dir = os.path.join(run, "episodes", "ep_0000")
+    os.makedirs(ok_dir, exist_ok=True)
+    _write_episode_dir(run, "ep_0000", "goal a", True, False, [
+        _v2(_step(ok_dir, 0, "http://x/", "ax", "clicked", "click('1')"),
+            "State: the page lists items. Subgoal: open the item."),
+        _v2(_step(ok_dir, 1, "http://x/i", "ax", "answered",
+                  "send_msg_to_user('done: $19')"),
+            "State: the item page shows $19. Completion check: the price is shown."),
+    ])
+    raw_dir = os.path.join(run, "episodes", "ep_0001")
+    os.makedirs(raw_dir, exist_ok=True)
+    _write_episode_dir(run, "ep_0001", "goal b", True, False, [
+        _step(raw_dir, 0, "http://y/", "ax", "answered", "send_msg_to_user('done')")])
+
+    out = os.path.join(run, "train.jsonl")
+    examples, log = _run_main(os.path.join(run, "episodes"), out,
+                              "--require-thought-v2")
+
+    assert {e["trajectory_id"] for e in examples} == {"ep_0000"}
+    assert all("State:" in json.loads(e["messages"][2]["content"])["thought"]
+               for e in examples)
+    assert "not re-annotated" in log
+
+    # without the flag both are kept (default behaviour is unchanged)
+    examples, _ = _run_main(os.path.join(run, "episodes"), out)
+    assert {e["trajectory_id"] for e in examples} == {"ep_0000", "ep_0001"}
+
+
+def test_require_thought_v2_drops_a_partially_reannotated_episode():
+    """`reannotate_thoughts.py --limit` can stop mid-run; half an episode is
+    still a mixed target."""
+    run = tempfile.mkdtemp()
+    ep_dir = os.path.join(run, "episodes", "ep_0000")
+    os.makedirs(ep_dir, exist_ok=True)
+    _write_episode_dir(run, "ep_0000", "goal", True, False, [
+        _v2(_step(ep_dir, 0, "http://x/", "ax", "clicked", "click('1')"),
+            "State: the page lists items. Subgoal: open the item."),
+        _step(ep_dir, 1, "http://x/i", "ax", "answered", "send_msg_to_user('done')"),
+    ])
+
+    out = os.path.join(run, "train.jsonl")
+    examples, _ = _run_main(os.path.join(run, "episodes"), out, "--require-thought-v2")
+    assert examples == []

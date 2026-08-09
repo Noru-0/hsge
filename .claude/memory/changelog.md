@@ -6,6 +6,39 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **04:47** — `hsge/webarena/agents.py`, `build_sft_dataset.py`,
+  `reannotate_thoughts.py`, `.claude/rules/commands.md`,
+  `hsge/tests/{test_failed_action_guards,test_build_sft_dataset,test_reannotate_thoughts}.py`
+  — **Two prompt/data-quality changes from the prompt-review discussion.**
+  (1) `SOLVER_SYS` gains one CoT example showing recovery from an
+  actionability TIMEOUT (`scroll(0, 400)` before re-clicking) -- the existing
+  recovery example covered only a nonexistent bid (571 of 4115 errors) while
+  the 500 ms timeout is 3305 of them, and after the 04:03 commit `scroll` is
+  documented but was never demonstrated. One example, not three: the system
+  prompt is byte-identical across every SFT example, so it costs tokens
+  everywhere and mainly shapes the collection-time teacher (the student learns
+  recovery from the 333 failure-in-history targets instead).
+  (2) `build_sft_dataset.py --require-thought-v2` keeps only episodes
+  `reannotate_thoughts.py` fully re-annotated, so a dataset cannot mix raw
+  one-line collection thoughts with structured `State: / Reflection: /
+  Subgoal:` ones -- two reasoning formats behind the same prompt. Measured:
+  **`reannotate_thoughts.py` had never been run on any collection run**
+  (0 of 2876 episodes across 5 run dirs carry `thought_v2`), so every dataset
+  trained so far used the raw gpt-4o-mini one-liner and the whole re-annotation
+  feature was dead code. A 4-episode trial (`deepseek-v4-pro`) confirms the
+  output is good -- grounded state, real reflections ("Clicking the Search
+  button had no effect; likely the button is..."), and a completion check that
+  caught a false success the episode judge had PASSed -- and surfaced two
+  practical facts: `_compose_thought` appended a period to sentences that
+  already ended in one (`...'wireless mouse'..` in EVERY target it wrote;
+  fixed via `_sentence()`), and the pass runs ~6.7 s/step serially, i.e. ~17 h
+  for a 9 000-step run. **Rejected** a third proposal (a `NAV_EXPLORE` task
+  type): Go-Browse's NavExplorer is an agent with an `add_tasks_to_dataset`
+  action that emits CONCRETE nav tasks, not a vague task type; such a task
+  cannot be graded, so `verify_episodes` would demote it every time; and
+  `page_hrefs` already mines hidden dropdown/submenu links (`a[href]` on the
+  DOM, no visibility filter), which was the premise. Suite 300 -> 304.
+
 - **04:22** — `hsge/webarena/runtime.py`, `run_webarena.py`, `config.yaml`,
   `.claude/rules/architecture.md`, `hsge/tests/test_episode_verifier.py`
   (renamed from `test_goal_verifier.py`), `hsge/tests/test_dry_run_seed.py` —

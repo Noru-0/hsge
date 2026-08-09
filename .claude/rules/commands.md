@@ -91,8 +91,16 @@ Each resolves its own model via `config.yaml`'s `llm.agents.episode_judge` /
 unset, same precedence as every other role). Then:
 
 ```bash
-python build_sft_dataset.py outputs/wa_run_09/episodes train.jsonl --require-judge
+python build_sft_dataset.py outputs/wa_run_09/episodes train.jsonl --require-judge --require-thought-v2
 ```
+
+`--require-thought-v2` drops any episode `reannotate_thoughts.py` did not
+fully re-annotate, so the dataset does not mix raw one-line collection
+thoughts with structured `State: ... Reflection: ... Subgoal: ...` ones —
+two reasoning formats behind the same prompt. **Budget the pass**: it is one
+LLM call per step, serial, measured at ~6.7 s/step, so a 9 000-step run is
+~17 hours; use `--limit` (and the flag above, which then keeps only what was
+actually annotated) or run it overnight.
 
 `--require-judge` keeps `infeasible` episodes unconditionally (judging
 doesn't apply to them) but drops any declared-success episode that was

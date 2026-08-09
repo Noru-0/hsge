@@ -20,7 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from hsge.webarena.agents import ACTIONS_DOC, Solver, failed_outcome
+from hsge.webarena.agents import ACTIONS_DOC, SOLVER_SYS, Solver, failed_outcome
 from hsge.webarena.browser import ActionError
 
 
@@ -140,6 +140,16 @@ def test_actions_doc_documents_scroll_hover_and_noop():
     way to make a non-actionable element actionable and just re-clicked it."""
     for action in ("scroll(", "hover(", "noop("):
         assert action in ACTIONS_DOC
+
+
+def test_solver_sys_demonstrates_recovering_from_a_timeout():
+    """Documenting scroll/hover is not enough on its own: the dominant error in
+    outputs/wa_eval_shopping_1 was the 500ms actionability timeout (3305 of 4115),
+    so the CoT examples have to show what to DO about one. This mainly shapes the
+    collection-time teacher -- the fine-tuned student learns recovery from the
+    targets, since the system prompt is identical across every example."""
+    assert "timed out" in SOLVER_SYS
+    assert "scroll(0, 400)" in SOLVER_SYS
 
 
 def test_offline_history_matches_the_live_prompt_for_an_error_step(tmp_path):
