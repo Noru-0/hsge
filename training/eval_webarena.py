@@ -141,7 +141,7 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
     try:
         browser.reset()
         solver = Solver(llm, max_steps=max_steps, vision=False)
-        steps, _, _, _, _, infeasible = solver.solve(browser, browser.goal)
+        steps, _, _, _, _, infeasible, stop_reason = solver.solve(browser, browser.goal)
         # Deliver the terminal chat action to the env so the official
         # evaluator can score the answer.
         last_action = steps[-1].action if steps else ""
@@ -157,6 +157,7 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
             "reward": browser.reward,
             "success": browser.reward > 0,
             "infeasible_reported": infeasible,
+            "stop_reason": stop_reason,
             "n_steps": len(steps),
             "last_action": last_action[:300],
             "elapsed_s": round(time.time() - t0, 1),

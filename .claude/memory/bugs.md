@@ -49,6 +49,35 @@ Entry format:
   newest pip one; (3) move to a CUDA-13 box and use current vLLM as
   `training/README.md` assumes; (4) drop vLLM and serve through transformers
   behind an OpenAI-compatible shim.
+- **Resolved by avoidance (2026-08-10)**: option (3) was taken and works —
+  A100-80GB, driver 595.71.05 / CUDA 13.2, plain unpinned `uv pip install vllm`.
+  The server survived its first request and a full smoke run. Two independent
+  reasons it cannot recur there: the wheel is CUDA-13 so nothing JIT-compiles
+  against a mismatched toolkit, and the GPU is SM80, so the `gdn_prefill_sm90`
+  Hopper kernel is not the code path at all. **The CUDA-12 + Hopper combination
+  is still unfixed** — this entry stays as the record of what to expect if a
+  future box lands there, but it no longer blocks anything.
+
+### The model emits invalid JSON escapes, so the step is silently dropped
+- **Status**: open
+- **Found**: 2026-08-10, WebArena eval smoke run on shopping task 23.
+- **Where**: model output; surfaces in `hsge/backends.py:142`
+  (`OpenAILLM.complete_json`).
+- **Symptom**: `[OpenAILLM] non-dict JSON response, returning {}` on output that
+  *looks* well-formed:
+  `{"thought": "...", "action": "click('12\xa0 Reviews')"}`. `complete_json`
+  returns `{}`, the Solver gets no action, and the episode ends at that step
+  (task 23 ended at 1 step). Observed in 1 of 12 smoke episodes (~8%), so it is
+  not rare enough to ignore when reading success rates.
+- **Cause**: the model copies a non-breaking space out of the axtree and escapes
+  it Python-style as `\xa0`. JSON has no `\x` escape — only `\uXXXX` — so
+  `json.loads` rejects the string, and the `\{.*\}` salvage regex re-parses the
+  same invalid text. The log line is also misleading: it says "non-dict" for
+  what is really "unparseable" (`parsed` is `None` on this path, not a list).
+- **Fix**: not applied, deliberately. Making the parser lenient (e.g. escaping
+  stray `\x` before `json.loads`) mid-eval would change the quantity being
+  measured and break comparability with the existing gitlab base numbers. Do it
+  before the *next* collection run, not between two runs being compared.
 
 ### `goal_task_selected` logs an empty `goal`
 - **Status**: open
@@ -158,6 +187,56 @@ Entry format:
   succeeds or those three are reworded. See `Thesis_report/memory/07-dan-y-chi-tiet.md`.
 
 ## Fixed
+
+### `eval_webarena.py` unpacks 6 values from `Solver.solve()`, which returns 7 — every eval episode errors out
+- **Status**: fixed (2026-08-10 01:35)
+- **Found**: 2026-08-10, first-ever run of the WebArena eval on a live site
+  (reddit smoke, 3 tasks): all 3 came back
+  `ERR ... ValueError: too many values to unpack (expected 6)`.
+- **Where**: `training/eval_webarena.py:144`.
+- **Symptom**: every episode reported `reward=0.0`, `steps=-`, `success=false`.
+  Silently catastrophic rather than loud: the exception is raised *after* the
+  Solver has done all its work, and `run_task`'s broad `except` turns it into an
+  ordinary failed-task record, so an unattended full sweep would have produced a
+  plausible-looking `summary.json` reading **0.0% on every site**.
+- **Cause**: the 2026-08-08 03:08 change added `stop_reason` as `solve()`'s 7th
+  return value and updated `runtime.py` plus all 30-odd test call sites, but
+  `training/eval_webarena.py` is the only non-test caller outside `hsge/` and was
+  missed. The eval had not been run since, so nothing caught it.
+- **Fix**: unpack 7 values, and persist `stop_reason` into `results.jsonl`
+  (it is exactly the diagnostic you want when reading a failed eval episode:
+  `""` = the model chose to stop, else `budget`/`stuck`/`novelty`). Verified by
+  re-running the same 3 reddit tasks: episodes now complete and score, with
+  `stop_reason` populated (`stuck`, `budget`, `stuck`).
+
+### LoRA merge with `AutoModelForCausalLM` silently strips Qwen3.5's vision tower, and vLLM then refuses the checkpoint
+- **Status**: fixed (2026-08-10 01:05)
+- **Found**: 2026-08-10, merging the cross-domain adapter with peft on the new
+  eval box instead of `llamafactory-cli export` (this box has no LLaMA-Factory
+  install — it only evaluates).
+- **Where**: the merge script, not repo code at the time. Surfaces at vLLM
+  startup in `vllm/multimodal/processing/context.py`.
+- **Symptom**: `TypeError: Invalid type of HuggingFace config. Expected type:
+  Qwen3_5Config, but found type: Qwen3_5TextConfig`. The merge itself reported
+  success.
+- **Cause**: Qwen3.5-9B is `Qwen3_5ForConditionalGeneration` (text tower +
+  vision tower). `AutoModelForCausalLM.from_pretrained` loads only the text
+  tower, and saving that back out writes a `Qwen3_5TextConfig` with the 348
+  vision tensors dropped — 775 → 427 tensors, with no warning.
+- **Fix**: load with `AutoModelForImageTextToText` instead. Two assertions were
+  added so this fails at merge time rather than 10 minutes into a vLLM startup:
+  the output config must be `Qwen3_5ForConditionalGeneration` with both
+  `text_config` and `vision_config`, and the tensor count must match the base.
+  **The tensor-count assert has one legitimate exception**: the 15 `mtp.*`
+  tensors (the multi-token-prediction speculative-decoding head) are always
+  dropped, because `transformers` does not model them — harmless unless MTP
+  speculative decoding is enabled, which `serve_vllm.sh` does not do.
+- **Related trap worth keeping**: `adapter_config.json`'s `target_modules` are
+  bare suffixes (`q_proj`, `o_proj`, ...), which could also match same-named
+  modules in the vision tower — those have no saved weights and peft would
+  randomly initialize them without complaint. The merge script now asserts every
+  attached LoRA site is backed by a tensor in `adapter_model.safetensors`
+  (248 sites, all backed, for this adapter).
 
 ### `vast_setup.sh` builds venvs that cannot see the GPU (and a training path that aborts on Hopper)
 - **Status**: fixed (2026-08-09 19:15)

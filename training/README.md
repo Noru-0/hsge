@@ -142,6 +142,36 @@ hourly rate — buy it for latency, not cost.
 # -> /workspace/models/Qwen3.5-9B-all
 ```
 
+On a box that only serves and evaluates, use `training/merge_lora_peft.py`
+instead — same result with peft alone, so the box needs no train venv (by far
+the slowest and most fragile part of `vast_setup.sh`). Upload the adapter
+checkpoint you want (~195 MB) rather than the merged model (~18 GB):
+
+```bash
+rsync -az -e "ssh -p <port>" training/artifacts/qwen35-9b-lora-all/checkpoint-446/ \
+    root@<host>:/workspace/saves/qwen35-9b-lora-all/
+/workspace/venvs/serve/bin/python training/merge_lora_peft.py \
+    /workspace/models/Qwen3.5-9B /workspace/saves/qwen35-9b-lora-all \
+    /workspace/models/Qwen3.5-9B-all
+```
+
+It must load the base with `AutoModelForImageTextToText`: Qwen3.5-9B is
+`Qwen3_5ForConditionalGeneration`, and `AutoModelForCausalLM` would keep only
+the text tower, writing a `Qwen3_5TextConfig` with the 348 vision tensors
+dropped — which vLLM refuses at startup. The script asserts the output config
+and tensor count, and that every attached LoRA site is backed by a saved weight
+(`target_modules` are bare suffixes that could also match vision-tower modules).
+The 15 `mtp.*` speculative-decoding tensors are always dropped and are the one
+allowed difference.
+
+### On a CUDA-13 box
+
+`vast_setup.sh`'s `torch`/`vllm` pins exist only for a CUDA-12 driver. On a
+CUDA-13 box (e.g. driver 595.71.05 / CUDA 13.2), install `vllm` unpinned — the
+newest wheel is the right one, and it avoids the JIT-compile failure documented
+in `bugs.md` outright. An eval-only box needs just the `serve` and `eval` venvs
+(plus `peft` for the merge above); skip `train` entirely.
+
 ## 5. Serve with vLLM
 
 The served name is always `qwen35-9b` so eval commands don't change between
