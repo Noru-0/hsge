@@ -100,7 +100,7 @@ def test_trajectory_and_step_metadata_present():
     assert all(e["difficulty"] == 3 for e in examples)
 
 
-def test_error_step_excluded_from_targets_and_from_later_history():
+def test_error_step_excluded_from_targets_but_kept_in_history_as_a_failure():
     ep_dir = tempfile.mkdtemp()
     steps = [
         _step(ep_dir, 0, "http://x/", "ax0",
@@ -117,7 +117,10 @@ def test_error_step_excluded_from_targets_and_from_later_history():
     assert 0 not in targets
     assert 1 in targets
     step1_prompt = next(e for e in examples if e["step_index"] == 1)["messages"][1]["content"]
-    assert "click('999')" not in step1_prompt
+    # It stays out of the TARGETS (it is the mistake) but it IS in the history,
+    # marked as a failure -- that is what the live Solver now shows the next
+    # call, and the prompts must match (see test_failed_action_guards.py).
+    assert "- click('999') -> action failed: element not found" in step1_prompt
 
 
 def test_step_after_action_error_carries_last_action_error_block():

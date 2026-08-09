@@ -23,6 +23,12 @@ ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
                "goto('/f/books'); never a full http(s):// URL and never another "
                "website, "
                "go_back(), new_tab(), tab_focus(index), tab_close(), "
+               "scroll(0, 400) -- scroll the page down (negative to go up), "
+               "hover('bid'), noop(500) -- wait 500ms for the page to settle. "
+               "If an action failed with a Timeout, the element exists but was "
+               "not clickable yet (off-screen, covered, or still loading): "
+               "scroll(0, 400) or hover it first, or use a different element -- "
+               "repeating the same click will time out again. "
                "send_msg_to_user('done message'), "
                "report_infeasible('reason') -- report_infeasible ONLY when the "
                "task is genuinely impossible on this site, NOT when you are "
@@ -164,9 +170,10 @@ def _cap_axtree(axtree: str) -> str:
     """Truncate axtree text to _AXTREE_CAP chars, appending an explicit
     marker when content was cut. Silently chopping the tree would let the
     model mistake a truncated view for the complete page; the marker at
-    least tells it more content exists. Note: there is no scroll action
-    that would change what flatten_axtree_to_str returns here -- BrowserGym's
-    axtree is not viewport-scoped, so scrolling wouldn't fix truncation
+    least tells it more content exists. Note: `scroll` (exposed so the model
+    can make an off-screen element actionable) does NOT change what
+    flatten_axtree_to_str returns here -- BrowserGym's axtree is not
+    viewport-scoped, so scrolling never fixes truncation
     (see WebArenaBrowser.observation() for the filter_visible_only change
     that reduces how often this cap is even hit)."""
     text = axtree or ""
@@ -214,6 +221,23 @@ def step_outcome(pre_url: str, pre_axtree: str, url: str, axtree: str) -> str:
     if axtree != pre_axtree:
         return "page changed"
     return "no change"
+
+
+_FAILED_OUTCOME_CAP = 80
+
+
+def failed_outcome(error: str) -> str:
+    """`step_outcome`'s counterpart for an action browser.act() rejected.
+
+    A failed action produces no observation to compare, but it still happened
+    and the agent must remember it: the history line is what stops the model
+    re-deriving the same doomed action from an apparently untouched page.
+    Shared by the live Solver and build_sft_dataset.py so both describe a
+    failure identically. Collapsed to one capped line -- a Playwright timeout
+    carries a multi-line "Call log:" tail that would swamp the history block.
+    """
+    msg = " ".join((error or "").split())[:_FAILED_OUTCOME_CAP]
+    return f"action failed: {msg}" if msg else "action failed"
 
 
 # Task tags whose goal is to change the site's state, so "I declared done" is not
@@ -648,6 +672,17 @@ class Solver:
                 # feed the error back so the agent can recover, instead of aborting
                 last_error = str(e)[:200]
                 steps[-1].obs_summary += f" [action error: {last_error}]"
+                # A failed action is still an action: record it like any other,
+                # with no progress. It used to `continue` here, leaving
+                # history/outcomes/progressed/novelty untouched, which made BOTH
+                # anti-loop guards blind to a repeated failure -- only the budget
+                # guard could end such an episode, and 118 episodes of a real
+                # shopping run spent all 15 steps re-issuing one click whose
+                # element was never actionable (500ms Playwright timeout).
+                history.append(action)
+                outcomes.append(failed_outcome(last_error))
+                progressed.append(False)
+                novelty_streak += 1
                 continue
             history.append(action)
             outcomes.append(step_outcome(pre_url, pre_axtree, obs["url"], obs["axtree"]))

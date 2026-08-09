@@ -15,6 +15,21 @@ Entry format:
 
 ## Open
 
+### `goto` accepts hallucinated placeholder targets
+- **Status**: open
+- **Found**: 2026-08-10, same run analysis.
+- **Where**: `hsge/webarena/browser.py::act` / `hsge/webarena/urls.py`.
+- **Symptom**: 26 of 72 `goto` actions in the run targeted a placeholder rather
+  than a URL (`goto('url_of_compare_products_page')` x14,
+  `goto('order_history_url')` x11). They navigate somewhere meaningless and
+  cost the episode.
+- **Cause**: `absolutize_goto` prepends the origin to anything, so a
+  non-path string becomes a plausible-looking URL instead of an error the
+  Solver could recover from. (The related absolute-host problem — 46 `goto`s
+  with a hardcoded `http://192.168.1.31:8081/` — was fixed on 2026-08-10 by
+  `5652977`, which post-dates this run.)
+- **Fix**: not yet applied. Validate the target and raise `ActionError`.
+
 ### vLLM dies on the first request: the Qwen3.5 GDN prefill kernel is JIT-compiled at runtime and the compile fails
 - **Status**: open
 - **Found**: 2026-08-09, serving the merged cross-domain model on the vast.ai
@@ -234,6 +249,49 @@ Entry format:
   succeeds or those three are reworded. See `Thesis_report/memory/07-dan-y-chi-tiet.md`.
 
 ## Fixed
+
+### The Solver's three anti-loop guards are blind to FAILED actions, so a dead element eats the whole step budget
+- **Status**: fixed (2026-08-10 04:03)
+- **Found**: 2026-08-10, analysing `outputs/wa_eval_shopping_1` (shopping,
+  179 nodes, 1069 episodes, 9065 steps).
+- **Where**: `hsge/webarena/agents.py` — `Solver.solve()`, the
+  `except Exception` branch around `browser.act(action)`.
+- **Symptom**: 4115 of 9065 steps (45.4%) ended in an action error, 3305 of
+  them a Playwright `Timeout 500ms exceeded` on click/select_option. 118
+  episodes spent ALL 15 steps issuing the *same* failing action against the
+  *same* bid (e.g. `click('229')` on `link 'My Wish List'`, 15x). Those
+  episodes then hit the budget guard and the wrap-up call rationalised a
+  `report_infeasible('action budget exhausted, ...')` — 199 of the run's 222
+  infeasible episodes have a non-empty `stop_reason`. Failure/infeasible
+  episodes hold 85% of all steps in the run.
+- **Cause**: on `ActionError` the code appends the error to the step's thought
+  and `continue`s *before* `history.append(action)`, so the failed action never
+  enters `history` / `outcomes` / `progressed` / `seen_obs`. `_stuck_streak`
+  (same-target, no-progress) and the C3 novelty guard both read exactly those
+  lists, so neither can ever see a repeated *failing* action. Only the budget
+  guard can stop such an episode, and it does so after burning the full budget.
+- **Fix**: the `except` branch now appends the action to `history`, a
+  `failed_outcome(err)` line to `outcomes`, `False` to `progressed` and bumps
+  `novelty_streak`, so `stuck` fires after 4 repeats and `novelty` after 8.
+  `build_sft_dataset.py` reproduces the same history line (shared helper) so
+  the offline prompt still matches the live one. Regression tests:
+  `hsge/tests/test_failed_action_guards.py`.
+
+### `scroll` / `hover` are executable but undocumented, so the model never uses them
+- **Status**: fixed (2026-08-10 04:03)
+- **Found**: 2026-08-10, same run analysis.
+- **Where**: `hsge/webarena/agents.py::ACTIONS_DOC`; subsets are enabled in
+  `hsge/webarena/browser.py` (`HighLevelActionSet(subsets=[..., "bid", ...])`).
+- **Symptom**: 2828 `Locator.click: Timeout 500ms exceeded` errors — the
+  element is in the (visible-filtered) axtree but not actionable within
+  BrowserGym's hardcoded 500 ms element timeout.
+- **Cause**: browsergym's `bid` subset already contains `scroll`, `hover`,
+  `noop`, so the executor accepts them, but `ACTIONS_DOC` lists only 10 actions
+  and omits all three, so the LLM never emits them and has no way to make an
+  element actionable. Go-Browse's action space (Table 6) includes all three.
+- **Fix**: `ACTIONS_DOC` documents `scroll(0, 400)`, `hover('bid')` and
+  `noop(500)`, plus explicit guidance that a Timeout means the element is not
+  clickable *yet* and re-clicking it will time out again.
 
 ### The SFT pipeline distills the collection solver's *failures*: `--require-judge` selects for what gpt-4o-mini could finish, and admits its unverified give-ups
 - **Status**: fixed at the curation layer (2026-08-10 03:40); the collection

@@ -6,6 +6,34 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **04:03** — `hsge/webarena/agents.py`, `build_sft_dataset.py`,
+  `hsge/tests/test_failed_action_guards.py` (new),
+  `hsge/tests/test_build_sft_dataset.py` — **P0 from the
+  `outputs/wa_eval_shopping_1` audit: the anti-loop guards can now see FAILED
+  actions, and the model has actions to recover with.** (a) `Solver.solve`'s
+  `except` branch used to `continue` *before* `history`/`outcomes`/`progressed`
+  were updated, so a failed action was invisible to both the same-target stuck
+  guard and the C3 novelty guard -- only the budget guard could end such an
+  episode. Measured on that run: 4115/9065 steps (45.4%) errored, and **118
+  episodes spent all 15 steps re-issuing one failing click on one bid**
+  (`click('229')` on `link 'My Wish List'`, Playwright 500ms timeout), then had
+  the wrap-up call rationalise `report_infeasible('action budget exhausted')` --
+  199 of the run's 222 infeasible episodes carry a non-empty `stop_reason`, and
+  fail+infeasible episodes hold **85% of all steps in the run**. The failed
+  action is now recorded with `progressed=False`, a `failed_outcome()` history
+  line and `novelty_streak += 1`, so `stuck` fires at 4 repeats and `novelty` at
+  8. (b) `ACTIONS_DOC` now documents `scroll`/`hover`/`noop`: browsergym's `bid`
+  subset (which `browser.py` enables) has always executed them, only the prompt
+  hid them, so the model had no way to make a non-actionable element actionable
+  and just re-clicked it -- 3305 of the 4115 errors are 500ms actionability
+  timeouts, not bid hallucinations (571). Go-Browse's action space (Table 6)
+  includes all three. (c) `build_sft_dataset.py` mirrors the new history line
+  via the same `failed_outcome()` helper, so the offline prompt still matches
+  the live one byte-for-byte; the failed action remains excluded as a *target*.
+  Rebuild of wa_eval_shopping_1: 994 examples, **333 (33%) now carry a failure
+  in their history** vs 126 that previously had any error evidence at all.
+  Suite 282 -> 289.
+
 - **04:25** — `hsge/webarena/runtime.py`, `hsge/tests/test_task_retries.py` —
   `_solve_with_retries` now treats only a SELF-DECIDED infeasible
   (`stop_reason == ""`) as terminal. A guard-stopped episode whose wrap-up call

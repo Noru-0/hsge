@@ -28,7 +28,7 @@ import os
 from urllib.parse import urlparse
 
 from hsge.webarena.agents import (PageExplorer, SOLVER_SYS, build_solver_prompt,
-                                  step_outcome)
+                                  failed_outcome, step_outcome)
 from hsge.webarena.urls import relativize_goto
 
 SYSTEM = SOLVER_SYS
@@ -162,8 +162,13 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
         thought = thoughts[k]
         if _is_error_step(step.get("thought", "")):
             # Not a target (it's the mistake), but the error it produced is what
-            # the live Solver showed the NEXT call -- carry it forward.
+            # the live Solver showed the NEXT call -- carry it forward, in both
+            # places the live Solver puts it: the error section (next step only)
+            # and the history block (durably, so the recovery step trains on the
+            # same prompt the model would see at inference time).
             last_error = _last_action_error(step.get("thought", ""))
+            history.append(f"- {relativize_goto(target_action, urls[k])} -> "
+                          + failed_outcome(last_error))
             continue
         step_error, last_error = last_error, ""
         if _is_off_origin_goto(target_action, urls[k]):
