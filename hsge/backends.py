@@ -30,9 +30,14 @@ class OpenAILLM(LLM):
     _REQUEST_TIMEOUT_S = 180.0
 
     def __init__(self, model: str | None = None, base_url: str | None = None,
-                 api_key: str | None = None, temperature: float = 0.2):
+                 api_key: str | None = None, temperature: float = 0.2,
+                 provider: str | None = None):
         from openai import OpenAI                       # lazy
         self.model = model or os.environ.get("HSGE_MODEL", "gpt-4o-mini")
+        # Purely informational -- not used for any routing decision here, just
+        # so callers (e.g. WebArenaExplorer._record) can stamp which provider
+        # produced an episode without re-deriving it from config.yaml.
+        self.provider = provider
         self.client = OpenAI(
             api_key=api_key or os.environ.get("OPENAI_API_KEY"),
             base_url=base_url or os.environ.get("OPENAI_BASE_URL"),

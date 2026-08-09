@@ -273,7 +273,7 @@ def _resolve_llm(cli, llm_cfg, role: str | None = None):
           f"base_url={cfg['base_url'] or '(default)'} temp={cfg['temperature']}")
     return OpenAILLM(
         model=cfg["model"], base_url=cfg["base_url"], api_key=cfg["api_key"],
-        temperature=cfg["temperature"],
+        temperature=cfg["temperature"], provider=cfg["provider"],
     )
 
 

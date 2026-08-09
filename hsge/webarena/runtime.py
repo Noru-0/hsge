@@ -296,7 +296,8 @@ class WebArenaExplorer:
     # ---- persistence in a build_sft_dataset-compatible run-dir layout --------
     def _record(self, goal, steps, obs_texts, obs_screenshots, success, difficulty, tag,
                 infeasible: bool = False, judge_verified=None, judge_reason=None,
-                stop_reason: str = ""):
+                stop_reason: str = "", model_name: str | None = None,
+                provider_name: str | None = None):
         ep = os.path.join(self.out_dir, "episodes", f"ep_{self.episode:04d}")
         os.makedirs(os.path.join(ep, "page_state"), exist_ok=True)
         # `response` = the message the episode ended on (an INFO task's answer, or
@@ -318,8 +319,18 @@ class WebArenaExplorer:
             # treat this episode as already-judged (same field judge_episodes writes)
             outcome["judge_verified"] = bool(judge_verified)
             outcome["judge_reason"] = judge_reason or ""
+        # thesis/analysis metadata: wall-clock timestamp of recording (not of
+        # solving -- close enough for a per-episode timeline) and the solver
+        # model that produced the trajectory, since a run can route LOCAL vs
+        # GOAL to different models (solver_goal) and this would otherwise only
+        # be recoverable from the outer config.yaml, which can change between
+        # runs.
         meta = {"kind": "low_level_trajectory", "goal": goal, "outcome": outcome,
-                "metadata": {"difficulty": difficulty, "tags": [tag]}, "step_count": len(steps)}
+                "metadata": {"difficulty": difficulty, "tags": [tag],
+                             "recorded_at_epoch": time.time(),
+                             "recorded_at_iso": datetime.now().isoformat(),
+                             "model": model_name, "provider": provider_name},
+                "step_count": len(steps)}
         json.dump(meta, open(os.path.join(ep, "episode_meta.json"), "w", encoding="utf-8"), indent=2)
         with open(os.path.join(ep, "episode.jsonl"), "w", encoding="utf-8") as f:
             for k, st in enumerate(steps):
@@ -372,8 +383,9 @@ class WebArenaExplorer:
                     return None, [], {}, False, False, attempts, urls_seen, ""
                 continue
             episode_id = f"ep_{self.episode:04d}"
+            used_solver = solver or self.solver
             (steps, obs_texts, obs_screenshots, final_obs, success,
-             infeasible, stop_reason) = (solver or self.solver).solve(
+             infeasible, stop_reason) = used_solver.solve(
                 browser, task, goal_predicate=goal_predicate,
                 max_steps=max_steps, subgoals=subgoals)
             # Inline verifier: only a SELF-GRADED success (goal_predicate is None) is
@@ -391,7 +403,9 @@ class WebArenaExplorer:
             self._record(task, steps, obs_texts, obs_screenshots, success,
                          difficulty=difficulty, tag=tag, infeasible=infeasible,
                          judge_verified=judge_verified, judge_reason=judge_reason,
-                         stop_reason=stop_reason)
+                         stop_reason=stop_reason,
+                         model_name=getattr(getattr(used_solver, "llm", None), "model", None),
+                         provider_name=getattr(getattr(used_solver, "llm", None), "provider", None))
             urls_seen.update(st.url for st in steps)
             urls_seen.add(final_obs.get("url", ""))
             # Only a SELF-DECIDED infeasible (stop_reason "") is terminal. When a
@@ -779,6 +793,14 @@ class WebArenaExplorer:
             "tasks": task_stats,
             "skills_discovered": len(skills),
             "operators_induced": len(operators),
+            # distinct depth-based operator chains (>= 2 operators, see
+            # _goal_task) turned into a composed GOAL task this run, and
+            # distinct (capability, page-template) seed-GOAL tasks attempted
+            # -- the two sources of task_stats["GOAL"], reported separately
+            # since only the chain count is "semantic task generation via
+            # operator chaining" (thesis Ch.3.5/4.2).
+            "goal_chains_attempted": len(self._attempted_chains),
+            "goal_seed_capabilities_attempted": len(self._attempted_capabilities),
             "status": status,
             "started_at_epoch": self.run_started_epoch,
             "started_at_iso": self.run_started_iso,

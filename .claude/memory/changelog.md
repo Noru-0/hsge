@@ -6,6 +6,32 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **05:51** — `hsge/webarena/runtime.py`, `hsge/backends.py`, `run_webarena.py`
+  — **Thesis-report logging additions**, requested ahead of the 4-domain ×
+  500-success shopping/shopping_admin/reddit/gitlab exploration run (Chapter
+  4.2/4.4 data-collection tables need these per Thesis_report/memory/
+  07-dan-y-chi-tiet.md). (1) `episode_meta.json.metadata` gains
+  `recorded_at_epoch`/`recorded_at_iso` (wall-clock timestamp of the record
+  call) and `model`/`provider` (the Solver LLM that produced the trajectory —
+  matters because GOAL can route to a different model via `solver_goal`).
+  `OpenAILLM` gains a `provider` attribute (informational only, not used for
+  routing) so `run_webarena.py::_resolve_llm` can stamp it through;
+  `WebArenaExplorer._record`/`_solve_with_retries` read it via
+  `getattr(getattr(used_solver, "llm", None), "model"/"provider", None)` --
+  double-`getattr` because `hsge/tests/test_task_retries.py` and
+  `test_unprefixed_sampling.py`'s `_ScriptedSolver` test doubles have no
+  `.llm` attribute at all (13 tests failed on a bare `used_solver.llm.model`
+  before this fix). (2) `summary.json` gains `goal_chains_attempted` (=
+  `len(self._attempted_chains)`, distinct depth-based operator chains turned
+  into a composed GOAL task -- the "semantic task generation via operator
+  chaining" the thesis's Ch.3.5 centers on) and
+  `goal_seed_capabilities_attempted` (= `len(self._attempted_capabilities)`,
+  the other GOAL source), reported separately since only the former is what
+  4.2's table means by "chains". Verified: full suite 304 passed;
+  `--dry-run` confirms both new summary fields populate and `model`/
+  `provider` are `null` under `MockLLM` (expected, no `.model` attr) while
+  the codepath is exercised end-to-end.
+
 - **04:47** — `hsge/webarena/agents.py`, `build_sft_dataset.py`,
   `reannotate_thoughts.py`, `.claude/rules/commands.md`,
   `hsge/tests/{test_failed_action_guards,test_build_sft_dataset,test_reannotate_thoughts}.py`
