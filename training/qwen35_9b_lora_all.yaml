@@ -50,9 +50,18 @@ plot_loss: true
 overwrite_output_dir: true
 report_to: none
 
-### train  (effective batch = 2 * 8 = 16 -> ~223 steps/epoch on ~3561 examples)
-per_device_train_batch_size: 2
-gradient_accumulation_steps: 8
+### train  (effective batch = 4 * 4 = 16 -> ~223 steps/epoch on ~3561 examples)
+# The 4/4 split is measured, not arbitrary: on an H100-80GB, 2/8 runs at 26-29
+# s/step with the GPU at 0-46% util and ~150 W -- starved. 4/4 runs the same
+# effective batch at 11-13 s/step, 100% util, 380 W (~2.4x faster, ~2.2 h
+# instead of ~5 h). 8/2 OOMs, and where it OOMs says why: cross_entropy asks for
+# 22 GiB in one allocation, because Qwen3.5's ~151k vocab makes the logits
+# tensor (batch x seq x vocab x 4 B) the largest single thing in the step. Raise
+# the batch past 4 only together with `enable_liger_kernel: true`, whose fused
+# linear cross-entropy avoids materializing those logits at all (liger does
+# support qwen3_5 -- untested here).
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 4
 learning_rate: 1.0e-4
 num_train_epochs: 3.0
 lr_scheduler_type: cosine

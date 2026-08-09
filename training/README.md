@@ -112,17 +112,28 @@ cd /workspace/hsge
 ```
 
 ~223 steps/epoch on 3,561 training examples at effective batch 16 × 3 epochs.
-Measured on an H100-80GB: **~26–29 s/step, so ~5 h** for the 669 steps. That is
-what this model gives, not a misconfiguration — Qwen3.5's Gated DeltaNet layers
-are memory-bound rather than matmul-bound, and at batch 2 with gradient
-checkpointing the run already holds 61/80 GB, so there is no room to raise the
-batch or drop recompute. Three things were measured and ruled out before
-accepting it: the flash-linear-attention backend is irrelevant (tilelang and
-triton 3.7.1 give the same step time and the same loss), padding waste is only
-1.18× so `group_by_length` would buy ~15% at most, and `packing` is unsafe here
-— GDN layers carry recurrent state along the sequence and ignore
-`neat_packing`'s block-diagonal mask, so packed examples would leak state into
-each other.
+Measured on an H100-80GB at the config's 4×4 split: **~11–13 s/step, so ~2.2 h**
+for the 669 steps.
+
+The micro-batch split matters far more than it looks. At 2×8 — same effective
+batch — the same run takes **~5 h** at 0–46% GPU util and ~150 W: the GPU is
+starved, not saturated. 8×2 OOMs, and *where* it OOMs is the useful part:
+`cross_entropy` requests 22 GiB in a single allocation, because Qwen3.5's ~151k
+vocab makes the logits tensor (batch × seq × vocab × 4 B) the biggest object in
+the step — bigger than the activations. To go past batch 4, turn on
+`enable_liger_kernel: true`: its fused linear cross-entropy never materializes
+those logits (liger does implement `qwen3_5`; not tested in this repo yet).
+
+Three other levers were measured and rejected: the flash-linear-attention
+backend is irrelevant (tilelang and triton 3.7.1 give the same step time and the
+same loss), padding waste is only 1.18× so `group_by_length` would buy ~15% at
+most, and `packing` is unsafe here — GDN layers carry recurrent state along the
+sequence and ignore `neat_packing`'s block-diagonal mask, so packed examples
+would leak state into each other.
+
+Multi-GPU is the remaining lever if wall-clock matters: LoRA DDP scales close to
+linearly, but total GPU-hours barely move, so a 4× box is ~4× faster at ~4× the
+hourly rate — buy it for latency, not cost.
 
 ## 4. Merge the adapter
 
