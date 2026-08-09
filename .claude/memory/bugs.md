@@ -124,6 +124,49 @@ Entry format:
 
 ## Fixed
 
+### `vast_setup.sh` builds venvs that cannot see the GPU (and a training path that aborts on Hopper)
+- **Status**: fixed (2026-08-09 19:15)
+- **Found**: 2026-08-09, first real use of `training/vast_setup.sh` on a rented
+  vast.ai H100-80GB box (driver 560.35.03 = CUDA 12.6). Stage `train_venv`
+  failed outright; the other three stages "succeeded" but were also broken.
+- **Where**: `training/vast_setup.sh` — `setup_train()` and `setup_serve()`.
+- **Symptom**: four separate failures, each masking the next:
+  1. `assert torch.cuda.is_available()` fails — `no CUDA`.
+  2. After pinning torch, `llamafactory-cli` dies at import:
+     `OSError: Could not load this library: .../torchaudio/lib/_torchaudio.abi3.so`.
+  3. After that, `llamafactory-cli` dies on
+     `ImportError: transformers>=4.55.0,<=5.8.0 ... but found transformers==5.15.0.dev0`.
+  4. Training then aborts at step 0 with `RuntimeError: Triton >= 3.4.0 and
+     < 3.7.1 on Hopper GPUs produces incorrect results for gated chunk_bwd_dqkwg`.
+  5. vLLM (step 5 of the README) would have failed too: the serve venv held
+     `nvidia-cuda-runtime==13.0.96`.
+- **Cause**: the script never pins a CUDA build. `uv` resolves the newest PyPI
+  wheels, which are now CUDA 13: torch 2.13.0+cu130 needs a CUDA 13 driver, so a
+  12.x box reports no GPU at all. The follow-on failures are the same root cause
+  in different disguises — pinning only `torch` leaves `torchaudio` on its cu130
+  wheel (ABI mismatch at load time), and downgrading torch to 2.11 drags triton
+  down to 3.6.0, which flash-linear-attention refuses to use on Hopper rather
+  than emit silently-wrong Gated DeltaNet gradients (fla issue #640). Separately,
+  the `transformers @ main` line was stale: it predates Qwen3.5 landing in a
+  released transformers (5.8.0 has `models/qwen3_5`), and main (5.15.0.dev0) now
+  violates LLaMA-Factory's own `transformers<=5.8.0` gate. For vLLM, swapping
+  torch is not enough — vLLM ships its own compiled kernels, so the wheel's CUDA
+  major is what matters.
+- **Fix**: `setup_train()` pins `torch==2.11.0` + `torchvision` +
+  `torchaudio==2.11.0+cu128` from the cu128 index (cu12.8 runs on both 12.x
+  drivers via minor-version compatibility and 13.x drivers via backward
+  compatibility), drops the `transformers @ main` install, and adds `tilelang`.
+  `setup_serve()` pins `vllm==0.18.0` and asserts both `torch.cuda.is_available()`
+  and `Qwen3_5ForConditionalGeneration in ModelRegistry.get_supported_archs()`.
+  The usable vLLM window on a CUDA-12 box is narrow and was measured, not
+  guessed: 0.14.0 is cu12 but knows only `Qwen3Next`; **0.18.0 is cu12 (torch
+  2.10.0+cu128) and does register Qwen3.5**; 0.20.0+ moved to CUDA 13. On a
+  CUDA-13 box plain `-U vllm` is fine.
+- **Note**: triton 3.7.1 was installed on the box as an alternative to tilelang
+  and measured at the same step time (~26-29 s/it either way), so the fla backend
+  is not what makes this model slow — see the changelog entry for the throughput
+  analysis.
+
 ### `infeasible` conflates "impossible" with "out of steps", and a state-changing task can succeed without changing anything
 - **Status**: fixed (2026-08-08 17:09)
 - **Found**: 2026-08-08, auditing `outputs/wa_eval_shopping_admin` (222 episodes).

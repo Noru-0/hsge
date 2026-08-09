@@ -55,21 +55,54 @@ setup_train() {
             || return 1
     fi
     uv pip install --python "$VENVS/train/bin/python" -e "$BASE/LLaMA-Factory[torch,metrics]" || return 1
-    # Qwen3.5 model card requires transformers main; override LLaMA-Factory's pin.
+    # Pin the torch CUDA build. Left to resolve freely, uv installs the newest
+    # PyPI wheel (torch 2.13.0+cu130), which needs a CUDA 13 driver; a box with a
+    # 12.x driver (e.g. 560.35.03 / CUDA 12.6) then reports no CUDA at all.
+    # cu128 is the newest CUDA-12 build and runs on both 12.x (minor-version
+    # compatibility) and 13.x (drivers are backward compatible) drivers.
+    # All three must be pinned together: leaving torchaudio on its cu130 wheel
+    # makes `import torchaudio` fail to load _torchaudio.abi3.so, which breaks
+    # llamafactory-cli itself.
     uv pip install --python "$VENVS/train/bin/python" \
-        "transformers @ git+https://github.com/huggingface/transformers.git@main" || return 1
+        --reinstall-package torchaudio \
+        torch==2.11.0 torchvision torchaudio==2.11.0+cu128 \
+        --index-url https://download.pytorch.org/whl/cu128 || return 1
+    # transformers is left at whatever LLaMA-Factory resolves (5.8.0 at the time
+    # of writing). This used to install transformers@main because Qwen3.5 was
+    # only on the main branch; it is in released transformers now
+    # (models/qwen3_5), and main (5.15.0.dev0) violates LLaMA-Factory's own
+    # `transformers<=5.8.0` check, which aborts llamafactory-cli at import time.
     # Triton kernels for the Gated DeltaNet layers (much faster than the eager
     # fallback); best-effort — training still works without it.
     uv pip install --python "$VENVS/train/bin/python" flash-linear-attention \
         || log "WARN flash-linear-attention install failed; GDN layers will use the slow eager path"
+    # tilelang supplies the GDN backward kernels. Required on Hopper (H100):
+    # the triton 3.6.0 that ships with torch 2.11 computes gated chunk_bwd_dqkwg
+    # incorrectly there, and flash-linear-attention hard-aborts training rather
+    # than emit wrong gradients (fla issue #640) unless tilelang is present.
+    uv pip install --python "$VENVS/train/bin/python" tilelang \
+        || log "WARN tilelang install failed; fla will abort on Hopper with triton < 3.7.1"
     "$VENVS/train/bin/python" -c "import torch; assert torch.cuda.is_available(), 'no CUDA'; print('torch', torch.__version__)"
 }
 
 # --- serve venv: vLLM -------------------------------------------------------
 setup_serve() {
     make_venv serve
-    uv pip install --python "$VENVS/serve/bin/python" -U vllm "huggingface_hub[cli]" || return 1
-    "$VENVS/serve/bin/python" -c "import vllm; print('vllm', vllm.__version__)"
+    # vllm is pinned rather than -U for the same driver reason as torch above,
+    # but here swapping torch is not enough: vLLM ships its own compiled kernels,
+    # so the wheel's CUDA major is what matters. 0.18.0 is the newest release
+    # still built against CUDA 12 (torch 2.10.0+cu128); 0.20.0+ moved to CUDA 13
+    # and cannot run on a 12.x driver at all. 0.18.0 is also the oldest release
+    # that registers Qwen3_5ForConditionalGeneration -- 0.14.0 knows only
+    # Qwen3Next -- so the usable window for this model on a CUDA-12 box is
+    # narrow. On a CUDA-13 box, plain `-U vllm` is fine.
+    uv pip install --python "$VENVS/serve/bin/python" "vllm==0.18.0" "huggingface_hub[cli]" || return 1
+    "$VENVS/serve/bin/python" -c "
+import torch, vllm
+from vllm.model_executor.models.registry import ModelRegistry
+assert torch.cuda.is_available(), 'no CUDA'
+assert 'Qwen3_5ForConditionalGeneration' in ModelRegistry.get_supported_archs(), 'vllm lacks Qwen3.5'
+print('vllm', vllm.__version__, 'torch', torch.__version__)"
 }
 
 # --- eval venv: BrowserGym WebArena + Playwright ----------------------------
