@@ -1,0 +1,11 @@
+# Merge the cross-domain LoRA adapter into a standalone checkpoint for vLLM
+# serving. This is the single model evaluated against all four domains.
+#   /workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_all.yaml
+model_name_or_path: /workspace/models/Qwen3.5-9B
+adapter_name_or_path: /workspace/saves/qwen35-9b-lora-all
+template: qwen3_5_nothink
+trust_remote_code: true
+export_dir: /workspace/models/Qwen3.5-9B-all
+export_size: 5
+export_device: auto
+export_legacy_format: false

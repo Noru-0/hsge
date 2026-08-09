@@ -1,0 +1,65 @@
+# LLaMA-Factory LoRA SFT config for Qwen3.5-9B on the HSGE **cross-domain**
+# dataset (reddit + shopping + shopping_admin + gitlab combined into one model,
+# evaluated per-site afterward -- as opposed to the per-site qwen35_9b_lora_
+# {reddit,shopping}.yaml configs, which train one adapter per domain).
+# Run from the repo root on the vast.ai box:
+#   /workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_all.yaml
+#
+# Dataset: train_all.jsonl (3751 examples / 1183 trajectories), built by
+# training/merge_datasets.py from the four train_<domain>.jsonl files (each
+# built with `--require-judge`, so every declared success was re-checked by an
+# LLM judge). Domain mix: reddit 44.6%, shopping 20.6%, shopping_admin 6.4%,
+# gitlab 28.4% -- shopping_admin is under-represented (fewer collected
+# episodes); if that matters, resample/upweight before training rather than
+# changing this config.
+# The assistant turns are bare {"thought","action"} JSON (no <think>), so we
+# train with the nothink template and serve with thinking disabled.
+
+### model
+model_name_or_path: /workspace/models/Qwen3.5-9B
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+### dataset
+dataset: hsge_all_train
+eval_dataset: hsge_all_val
+dataset_dir: training/data/all
+# verified against the installed LLaMA-Factory (data/template.py): qwen3_5_nothink
+# 6144, matching the reddit/shopping configs: prepare_dataset.py's rough
+# chars/3 estimate says ~2943 tokens max across all four domains, but that
+# estimate is approximate -- keep the same safety margin already validated for
+# this repo rather than cutting it to the estimate.
+template: qwen3_5_nothink
+cutoff_len: 6144
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+### output
+output_dir: /workspace/saves/qwen35-9b-lora-all
+logging_steps: 10
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+report_to: none
+
+### train  (effective batch = 2 * 8 = 16 -> ~223 steps/epoch on ~3561 examples)
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 8
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+gradient_checkpointing: true
+
+### eval
+per_device_eval_batch_size: 2
+eval_strategy: epoch

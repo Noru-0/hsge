@@ -11,22 +11,36 @@ Everything below runs on a vast.ai GPU instance (tested: 1× A100-SXM4-80GB,
 being reachable *from the vast.ai box* (e.g. via a Cloudflare tunnel); resets
 between eval runs are manual and happen on the WebArena host.
 
-**Current configuration: two per-site models.** One LoRA on reddit, one on
-shopping, each evaluated in-domain against its own site. The original GitLab
-config (`qwen35_9b_lora.yaml`, `merge_lora.yaml`, `training/train_12.jsonl`) is
-kept unchanged for reference.
+**Current configuration: one cross-domain model.** A single LoRA trained on
+reddit + shopping + shopping_admin + gitlab combined
+(`train_all.jsonl` via `training/merge_datasets.py`), then evaluated
+separately against each of the four sites' own task subset. Per-site LoRAs
+(`qwen35_9b_lora_{reddit,shopping}.yaml`) are kept for comparison/ablation —
+see "Alternative: per-site models" below. The original GitLab-only config
+(`qwen35_9b_lora.yaml`, `merge_lora.yaml`, `training/train_12.jsonl`) is kept
+unchanged for reference; it predates `--require-judge` and `train_gitlab.jsonl`
+and should not be used for new runs.
 
-| | reddit | shopping |
-|---|---|---|
-| dataset | `train_reddit.jsonl` | `train_shopping.jsonl` |
-| examples / trajectories | 2,829 / 540 | 4,034 / 614 |
-| train / val split | 2,673 / 156 | 3,827 / 207 |
-| adapter | `/workspace/saves/qwen35-9b-lora-reddit` | `.../-shopping` |
-| merged model | `/workspace/models/Qwen3.5-9B-reddit` | `.../-shopping` |
-| eval subset | ~106 `sites == ["reddit"]` tasks | ~187 `sites == ["shopping"]` tasks |
+| domain | dataset | examples / trajectories | share of train_all.jsonl |
+|---|---|---|---|
+| reddit | `train_reddit.jsonl` | 1,672 / 465 | 44.6% |
+| shopping | `train_shopping.jsonl` | 773 / 290 | 20.6% |
+| shopping_admin | `train_shopping_admin.jsonl` | 241 / 89 | 6.4% |
+| gitlab | `train_gitlab.jsonl` | 1,065 / 339 | 28.4% |
+| **all (merged)** | `train_all.jsonl` | **3,751 / 1,183** | — |
 
-Both datasets were built with `--require-judge`, so every declared-success
-episode was re-checked by an LLM judge; `report_infeasible` episodes are kept.
+All four were built with `--require-judge`, so every declared-success episode
+was re-checked by an LLM judge; `report_infeasible` episodes are kept.
+shopping_admin is under-represented (fewer collected episodes) — if that
+matters for training, resample/upweight before running `merge_datasets.py`
+rather than changing `qwen35_9b_lora_all.yaml`'s effective batch math.
+
+`training/merge_datasets.py` prefixes each source file's `trajectory_id` with
+its domain name before concatenating: HSGE numbers episodes `ep_0000`,
+`ep_0001`, ... independently per run, so e.g. reddit's `ep_0005` and
+shopping's `ep_0005` are unrelated trajectories that happen to share an id —
+concatenating the raw files would make `prepare_dataset.py`'s trajectory
+grouping silently merge them across domains.
 
 ## Layout on the box
 
@@ -36,10 +50,10 @@ episode was re-checked by an LLM judge; `report_infeasible` episodes are kept.
   LLaMA-Factory/             # cloned by vast_setup.sh
   venvs/{train,serve,eval}   # isolated: vLLM pins transformers, training needs
                              # transformers@main, eval needs neither
-  models/Qwen3.5-9B                    # base weights
-  models/Qwen3.5-9B-{reddit,shopping}  # merged LoRAs (step 4)
-  saves/qwen35-9b-lora-{reddit,shopping}   # adapter checkpoints
-  eval/<site>/{base,finetuned}/            # results.jsonl + summary.json
+  models/Qwen3.5-9B          # base weights
+  models/Qwen3.5-9B-all      # merged LoRA (step 4)
+  saves/qwen35-9b-lora-all   # adapter checkpoint
+  eval/<site>/{base,finetuned}/  # results.jsonl + summary.json, one <site> per domain
 ```
 
 ## 1. One-time setup
@@ -51,77 +65,86 @@ ssh -p <port> root@<host> 'cd /workspace && nohup bash vast_setup.sh > setup.log
 #   ls /workspace/.setup_markers  -> train_venv serve_venv eval_venv model_download
 ```
 
-Sync the repo (from the local repo root). `train_reddit.jsonl` /
-`train_shopping.jsonl` live at the repo root and come along with this rsync:
+Sync the repo (from the local repo root). `train_all.jsonl` (and the four
+per-domain `train_<domain>.jsonl` it was built from) live at the repo root and
+come along with this rsync:
 
 ```bash
 rsync -az -e "ssh -p <port>" --exclude .git --exclude outputs --exclude __pycache__ \
     ./ root@<host>:/workspace/hsge/
 ```
 
-## 2. Prepare the datasets
+If `train_all.jsonl` doesn't exist yet, build it locally first (pure Python,
+no GPU needed) from the four per-domain datasets:
 
-Split by trajectory (a trajectory's steps never straddle the split) into a
-per-site directory. `--name` must match the `dataset:` key in the training yaml.
+```bash
+python training/merge_datasets.py \
+    train_reddit.jsonl train_shopping.jsonl train_shopping_admin.jsonl train_gitlab.jsonl \
+    -o train_all.jsonl
+```
+
+## 2. Prepare the dataset
+
+Split by trajectory (a trajectory's steps never straddle the split). `--name`
+must match the `dataset:` key in the training yaml.
 
 ```bash
 cd /workspace/hsge
 /workspace/venvs/train/bin/python training/prepare_dataset.py \
-    train_reddit.jsonl --name reddit --out-dir training/data/reddit
-/workspace/venvs/train/bin/python training/prepare_dataset.py \
-    train_shopping.jsonl --name shopping --out-dir training/data/shopping
+    train_all.jsonl --name all --out-dir training/data/all
 ```
 
-Each writes `{train,val}.jsonl` + `dataset_info.json` registering
-`hsge_<site>_{train,val}`.
+Writes `{train,val}.jsonl` + `dataset_info.json` registering
+`hsge_all_{train,val}`.
 
-## 3. Train the LoRAs
+## 3. Train the LoRA
 
 The assistant turns are bare `{"thought","action"}` JSON, so training uses the
 `qwen3_5_nothink` template (no `<think>` blocks); serving disables thinking to
-match (step 5). `cutoff_len` is 6144 here rather than the GitLab config's 4096 —
-the longest reddit example is ~4.0k tokens and truncation would silently drop
-the assistant target.
+match (step 5). `cutoff_len` is 6144 — the longest example across all four
+domains is ~2.9k tokens, but truncation would silently drop the assistant
+target, so this keeps the same safety margin as the per-site configs rather
+than cutting it to the measured max.
 
 ```bash
 cd /workspace/hsge
-/workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_reddit.yaml
-/workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_shopping.yaml
+/workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_all.yaml
 ```
 
-~500 steps (reddit) and ~720 steps (shopping) at effective batch 16 × 3 epochs;
-roughly 1–2 h each on an A100 at `cutoff_len: 6144`.
+~223 steps/epoch on 3,561 training examples at effective batch 16 × 3 epochs;
+roughly 2–3 h on an A100 at `cutoff_len: 6144`.
 
-## 4. Merge the adapters
+## 4. Merge the adapter
 
 ```bash
-/workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_reddit.yaml
-/workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_shopping.yaml
-# -> /workspace/models/Qwen3.5-9B-{reddit,shopping}
+/workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_all.yaml
+# -> /workspace/models/Qwen3.5-9B-all
 ```
 
 ## 5. Serve with vLLM
 
-One model at a time (the A100 hosts one server); the served name is always
-`qwen35-9b` so eval commands don't change between runs:
+The served name is always `qwen35-9b` so eval commands don't change between
+base and finetuned runs:
 
 ```bash
-nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B > /workspace/vllm.log 2>&1 &          # baseline
-nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B-reddit > /workspace/vllm.log 2>&1 &   # reddit
-nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B-shopping > /workspace/vllm.log 2>&1 & # shopping
+nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B > /workspace/vllm.log 2>&1 &      # baseline
+nohup bash training/serve_vllm.sh /workspace/models/Qwen3.5-9B-all > /workspace/vllm.log 2>&1 &  # finetuned
 ```
 
 Ready when `curl -s localhost:8000/v1/models` answers. The eval client sends
 `chat_template_kwargs: {"enable_thinking": false}` on every request (Qwen3.5
 thinks by default; the training data has no think blocks).
 
-## 6. Evaluate on the official per-site subsets
+## 6. Evaluate the one model on each of the four domains
 
 `eval_webarena.py --site <site>` runs the WebArena tasks whose `sites` is
 exactly `[<site>]`, scored by the official BrowserGym/WebArena evaluators.
 Multi-site tasks are skipped. The agent is the repo's `Solver` unchanged — same
 prompt the model was trained on. Every site other than `--site` is pointed at
-an unreachable dummy URL (WebArenaInstance demands all seven `WA_*` vars).
+an unreachable dummy URL (WebArenaInstance demands all seven `WA_*` vars). The
+same served model (base, then finetuned) is evaluated against all four sites
+in turn — this is one model generalizing across domains, not four separate
+per-site models.
 
 ```bash
 cd /workspace/hsge
@@ -133,32 +156,49 @@ cd /workspace/hsge
     --site-url https://<reddit-tunnel> --out /workspace/eval/reddit/base
 ```
 
-Four full runs make the comparison (serve the matching model first, step 5):
+Eight full runs make the comparison (serve the matching model first, step 5;
+`--site-url` points at that domain's own WebArena tunnel):
 
 | server model | command |
 |---|---|
 | base | `--site reddit --out /workspace/eval/reddit/base` |
 | base | `--site shopping --out /workspace/eval/shopping/base` |
-| `-reddit` | `--site reddit --out /workspace/eval/reddit/finetuned` |
-| `-shopping` | `--site shopping --out /workspace/eval/shopping/finetuned` |
+| base | `--site shopping_admin --out /workspace/eval/shopping_admin/base` |
+| base | `--site gitlab --out /workspace/eval/gitlab/base` |
+| `-all` | `--site reddit --out /workspace/eval/reddit/finetuned` |
+| `-all` | `--site shopping --out /workspace/eval/shopping/finetuned` |
+| `-all` | `--site shopping_admin --out /workspace/eval/shopping_admin/finetuned` |
+| `-all` | `--site gitlab --out /workspace/eval/gitlab/finetuned` |
 
-Serve the base model once and do *both* base runs before swapping, so the model
-is loaded twice, not four times.
+Serve each model once and run all four `--site` evals against it before
+swapping, so each model is loaded twice total (not eight times).
 
 Outputs per run: `results.jsonl` (task id, goal, reward, steps, last action)
 and `summary.json` (site, model, success rate). Compare `base` vs `finetuned`
-within each site.
+within each site, then compare the finetuned success rate across sites to see
+how the single cross-domain model generalizes.
 
 Notes:
-- **Reset the site between the base and finetuned runs** — many tasks mutate
-  state, and shopping especially. Use a scratch instance, not one you care
-  about.
+- **Reset each site between its base and finetuned runs** — many tasks mutate
+  state, shopping and shopping_admin especially (and they share one Magento
+  DB — never run their evals concurrently). Use scratch instances, not ones
+  you care about.
 - `--tasks 156,258` runs explicit ids; `--keep-thinking` leaves Qwen3.5's
   thinking mode on (mismatch with training — for ablation only).
 - The other six `WA_*` vars are set to dummies automatically; site login uses
   WebArena's standard benchmark accounts inside BrowserGym.
-- `--site gitlab` reproduces the original GitLab eval; `--gitlab-url` is still
-  accepted as an alias for `--site-url`.
+- `--gitlab-url` is still accepted as an alias for `--site-url` (historical).
+
+### Alternative: per-site models
+
+`qwen35_9b_lora_{reddit,shopping}.yaml` / `merge_lora_{reddit,shopping}.yaml`
+train one LoRA per domain instead of the combined model above (steps 2–4
+become one `prepare_dataset.py` + train + export per site, each into its own
+`training/data/<site>` / `saves/qwen35-9b-lora-<site>` /
+`models/Qwen3.5-9B-<site>`). Useful for an ablation against the cross-domain
+model, or if in-domain performance matters more than a single deployable
+model. shopping_admin and gitlab don't have per-site configs yet — copy the
+reddit/shopping ones and swap the dataset/paths if needed.
 
 ## Troubleshooting
 
