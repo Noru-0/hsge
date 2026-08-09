@@ -57,7 +57,7 @@ def test_goal_tag_is_stripped_but_rest_of_text_preserved():
                                     steps, ep_dir, difficulty=1, trajectory_id="ep_0000")
 
     assert examples[0]["messages"][1]["content"].startswith(
-        "GOAL: Edit the page by clicking 'Edit page'")
+        "# Goal\nEdit the page by clicking 'Edit page'")
 
 
 def test_history_carries_outcome_annotation_matching_solver_format():
@@ -71,7 +71,7 @@ def test_history_carries_outcome_annotation_matching_solver_format():
     examples = episode_to_examples("go to the wiki page", steps, ep_dir,
                                     difficulty=1, trajectory_id="ep_0000")
 
-    assert "- click('24') -> now at http://x/wiki" in examples[1]["messages"][1]["content"]
+    assert "- click('24') -> now at /wiki" in examples[1]["messages"][1]["content"]
 
 
 def test_current_page_prompt_includes_url():
@@ -81,7 +81,7 @@ def test_current_page_prompt_includes_url():
 
     examples = episode_to_examples("goal", steps, ep_dir, difficulty=1, trajectory_id="ep_0000")
 
-    assert "URL: http://x/wiki" in examples[0]["messages"][1]["content"]
+    assert "URL: /wiki" in examples[0]["messages"][1]["content"]
 
 
 def test_trajectory_and_step_metadata_present():
@@ -140,9 +140,7 @@ def test_step_after_action_error_carries_last_action_error_block():
                                     trajectory_id="ep_0000")
 
     step1_prompt = next(e for e in examples if e["step_index"] == 1)["messages"][1]["content"]
-    assert "LAST ACTION ERROR: bid 999 not found" in step1_prompt
-    # ... and it sits where the live Solver puts it: after history, before URL.
-    assert step1_prompt.index("LAST ACTION ERROR") < step1_prompt.index("URL:")
+    assert "# Error Message from Last Action\nbid 999 not found" in step1_prompt
 
 
 def test_last_action_error_block_absent_when_previous_step_was_clean():
@@ -155,7 +153,7 @@ def test_last_action_error_block_absent_when_previous_step_was_clean():
     examples = episode_to_examples("goal", steps, ep_dir, difficulty=1,
                                     trajectory_id="ep_0000")
 
-    assert "LAST ACTION ERROR" not in examples[1]["messages"][1]["content"]
+    assert "# Error Message from Last Action\n(none)" in examples[1]["messages"][1]["content"]
 
 
 def test_off_origin_goto_is_not_a_training_target():

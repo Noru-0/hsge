@@ -12,6 +12,8 @@ import json
 import os
 import re
 
+from .urls import absolutize_goto
+
 
 class ActionError(RuntimeError):
     """A high-level action that failed inside the browser.
@@ -125,6 +127,9 @@ class WebArenaBrowser:
         `_last_obs`/`terminated` are still updated first, so a caller that
         catches the error keeps a consistent view of the browser.
         """
+        # The agent is trained on site-relative goto targets (see urls.py), but
+        # Playwright needs an absolute URL -- put the current origin back.
+        action = absolutize_goto(action, (self._last_obs or {}).get("url", ""))
         self._last_obs, _, term, trunc, _ = self.env.step(action)
         self.terminated = bool(term or trunc)
         err = (self._last_obs or {}).get("last_action_error") or ""

@@ -54,7 +54,7 @@ class _BadBidThenGoodLLM:
 
     def complete_json(self, system, prompt, image_b64=None, image_detail="low"):
         self.prompts.append(prompt)
-        if "LAST ACTION ERROR" in prompt:
+        if "Could not find element with bid" in prompt:
             return {"thought": "that bid was a label, use the real bid",
                     "action": "send_msg_to_user('done')"}
         return {"thought": "fill the price", "action": "fill('[global] Price * $','19.99')"}
@@ -70,7 +70,8 @@ def test_failed_action_is_marked_and_fed_back_to_the_solver():
     # the failed step carries the marker build_sft_dataset.py filters on
     assert "[action error:" in steps[0].obs_summary
     # ...and the error reached the next prompt, so the model could recover
-    assert any("LAST ACTION ERROR" in p for p in llm.prompts)
+    assert any("# Error Message from Last Action\nValueError: Could not find "
+               "element with bid" in p for p in llm.prompts)
     assert success is True
 
 

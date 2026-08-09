@@ -27,11 +27,12 @@ import json
 import os
 from urllib.parse import urlparse
 
-from hsge.webarena.agents import PageExplorer, SOLVER_SYS, step_outcome, _cap_axtree
+from hsge.webarena.agents import (PageExplorer, SOLVER_SYS, build_solver_prompt,
+                                  step_outcome)
+from hsge.webarena.urls import relativize_goto
 
 SYSTEM = SOLVER_SYS
 
-_HISTORY_WINDOW = 6  # matches Solver.solve's history[-6:] window exactly
 _TAG_RE = PageExplorer._TAG_RE  # reuse the same "[INFO]/[NAV]/[MOD] " stripper
 
 
@@ -164,21 +165,19 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
             # the live Solver showed the NEXT call -- carry it forward.
             last_error = _last_action_error(step.get("thought", ""))
             continue
-        err_block = f"\n\nLAST ACTION ERROR: {last_error}" if last_error else ""
-        last_error = ""
+        step_error, last_error = last_error, ""
         if _is_off_origin_goto(target_action, urls[k]):
             # Leaves the site and ends the episode at reward 0; never imitate it.
             # It stays in `history` below, because it really did execute.
-            history.append(f"- {target_action} -> "
+            history.append(f"- {relativize_goto(target_action, urls[k])} -> "
                           + step_outcome(urls[k], axtrees[k],
                                         urls[k + 1] if k + 1 < len(steps) else urls[k],
                                         axtrees[k + 1] if k + 1 < len(steps) else axtrees[k]))
             continue
-        assistant = json.dumps({"thought": thought, "action": target_action})
-        hist_block = "\n".join(history[-_HISTORY_WINDOW:]) or "(none)"
-        obs_block = _cap_axtree(axtrees[k]) if axtrees[k] else "[accessibility tree omitted]"
-        user = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n{hist_block}{err_block}\n\n"
-                f"URL: {urls[k]}\n\nPAGE:\n{obs_block}")
+        assistant = json.dumps({"thought": thought,
+                                "action": relativize_goto(target_action, urls[k])})
+        user = build_solver_prompt(goal, history, step_error, urls[k],
+                                    axtrees[k] or "[accessibility tree omitted]")
         examples.append({
             "messages": [
                 {"role": "system", "content": SYSTEM},
@@ -195,7 +194,7 @@ def episode_to_examples(goal: str, steps: list[dict], episode_dir: str,
                       or target_action.startswith("report_infeasible"))
         if not is_terminal and k + 1 < len(steps):
             outcome = step_outcome(urls[k], axtrees[k], urls[k + 1], axtrees[k + 1])
-            history.append(f"- {target_action} -> {outcome}")
+            history.append(f"- {relativize_goto(target_action, urls[k])} -> {outcome}")
     return examples
 
 

@@ -207,7 +207,7 @@ def test_history_lines_carry_outcome_annotations():
     solver.solve(_NavOnceBrowser(), "[NAV] Go to the Wiki page")
 
     # the 2nd action-loop prompt must show the first click actually navigated
-    assert any("click('24') -> now at http://x/wiki" in p for p in llm.prompts)
+    assert any("click('24') -> now at /wiki" in p for p in llm.prompts)
     # and later repeats must be visibly inert
     assert any("click('24') -> no change" in p for p in llm.prompts)
 

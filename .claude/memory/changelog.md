@@ -6,6 +6,26 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **04:10** — `hsge/webarena/urls.py` (new), `hsge/webarena/agents.py`,
+  `hsge/webarena/browser.py`, `build_sft_dataset.py`,
+  `hsge/tests/test_url_sanitizer.py` (new) — Host-independent URLs + one shared
+  prompt builder, following Go-Browse Appendix A.2. (a) `site_relative` /
+  `relativize_goto` strip the origin wherever a URL is shown or imitated (prompt
+  `URL:` field, `goto` targets, `step_outcome`'s "now at" lines);
+  `absolutize_goto` restores the current origin in `WebArenaBrowser.act` since
+  Playwright needs an absolute URL. A goto learned on one instance now runs on
+  another. (b) New `build_solver_prompt()` is used by BOTH the live Solver and
+  the SFT exporter, which had already drifted apart; prompt is sectioned
+  (`# Goal` / `# Current Page` / `# Error Message from Last Action` /
+  `# History of Past Actions` / `# Next Action`) with the error section always
+  present ("(none)" when clean) so it is a fixed field the model learns to
+  consult. (c) `ACTIONS_DOC` documents relative-only goto and narrows
+  report_infeasible to genuine impossibility; `SOLVER_SYS` gains an
+  error-recovery CoT example. Rebuild (train_all_v3.jsonl, 2399 examples): goto
+  targets 0 absolute / 13 relative, 154 prompts carry a real error message, and
+  the only remaining host strings are page content the axtree genuinely renders.
+  Suite 266 -> 280.
+
 - **03:40** — `build_sft_dataset.py`, `hsge/tests/test_build_sft_dataset.py`,
   `.claude/memory/bugs.md` — Root-caused the cross-domain LoRA's 0/57 reddit
   eval and fixed the curation layer. The chain: `EXPLORER_SYS` correctly

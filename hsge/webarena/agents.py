@@ -13,15 +13,21 @@ import re
 
 from ..schema import Step
 from .predicates import reached
+from .urls import site_relative
 
 ACTIONS_DOC = ("Allowed actions (return exactly one): click('bid'), "
                "fill('bid','text'), select_option('bid','opt'), "
                "press('bid','key_comb') -- e.g. press('12','Enter') to submit a "
                "search box or form when there is no separate submit button, "
-               "goto('url'), go_back(), new_tab(), tab_focus(index), tab_close(), "
+               "goto('/path') -- a SITE-RELATIVE path on the current site, e.g. "
+               "goto('/f/books'); never a full http(s):// URL and never another "
+               "website, "
+               "go_back(), new_tab(), tab_focus(index), tab_close(), "
                "send_msg_to_user('done message'), "
                "report_infeasible('reason') -- report_infeasible ONLY when the "
-               "task cannot be done on this site/page.")
+               "task is genuinely impossible on this site, NOT when you are "
+               "stuck, out of ideas, or cannot find something yet. If an element "
+               "is not visible, navigate or look elsewhere first.")
 
 EXPLORER_SYS = (
     "PROPOSE concrete, feasible tasks a typical user could do on THIS page. "
@@ -130,8 +136,16 @@ SOLVER_SYS = (
     " Think step by step; reflect on your past actions and any error from your last "
     "action before deciding. Output ONE action as JSON "
     "{\"thought\": \"...\", \"action\": \"<one action>\"}. "
-    "Examples: {\"thought\": \"Open the product\", \"action\": \"click('12')\"} ; "
-    "{\"thought\": \"Goal met\", \"action\": \"send_msg_to_user('done: price is $19')\"}. "
+    "Examples: {\"thought\": \"I need to open the product to read its price. It is "
+    "the link with bid 12.\", \"action\": \"click('12')\"} ; "
+    "{\"thought\": \"My last action failed because bid 41 does not exist on this "
+    "page. Looking at the tree again, the search box is bid 57, so I will type "
+    "there instead.\", \"action\": \"fill('57','wireless mouse')\"} ; "
+    "{\"thought\": \"I found the information requested, I will send it to the "
+    "user.\", \"action\": \"send_msg_to_user('done: price is $19')\"}. "
+    "When the `# Error Message from Last Action` section is not (none), your "
+    "thought MUST say what went wrong and what you are doing differently -- "
+    "never repeat the action that just failed. "
     "Call send_msg_to_user ONLY when the goal is fully achieved."
     " For 'go to page X' goals: once the URL/page has changed to the requested "
     "destination the goal is DONE -- call send_msg_to_user immediately; do NOT "
@@ -143,6 +157,7 @@ READONLY_NOTE = ("\nREAD-ONLY MODE: propose ONLY tasks with type INFO or NAV. Do
                  "commenting, voting, adding to cart, or checkout).")
 
 _AXTREE_CAP = 6000
+_HISTORY_WINDOW = 6      # how many past actions the prompt shows
 
 
 def _cap_axtree(axtree: str) -> str:
@@ -160,12 +175,42 @@ def _cap_axtree(axtree: str) -> str:
     return text[:_AXTREE_CAP] + f"\n... [TRUNCATED: {len(text) - _AXTREE_CAP} more characters not shown]"
 
 
+_NEXT_ACTION_INSTRUCTION = (
+    "Think step by step and produce your next best action. Reflect on your past "
+    "actions, any resulting error message, and the current state of the page "
+    "before deciding. All reasoning goes in the \"thought\" key; exactly one "
+    "action goes in the \"action\" key.")
+
+
+def build_solver_prompt(goal: str, history_lines: list[str], last_error: str,
+                        url: str, axtree: str, guidance: str = "") -> str:
+    """The Solver's user message, sectioned after Go-Browse's Appendix A.2.
+
+    ONE builder for both the live Solver (agents.py) and the offline SFT
+    exporter (build_sft_dataset.py) -- they used to assemble the same prompt by
+    hand in two places and had already drifted: the live prompt carried a
+    `LAST ACTION ERROR` block that the exporter dropped entirely, so every
+    recovery step was trained without the evidence that motivated it.
+
+    `# Error Message from Last Action` is always present, "(none)" when clean,
+    so the section is a fixed part of the format the model learns to consult
+    rather than a block that only materializes on the rare error step. The URL
+    is site-relative (see urls.py) so no instance's host is memorized.
+    """
+    hist = "\n".join(history_lines[-_HISTORY_WINDOW:]) or "(none)"
+    return (f"# Goal\n{goal}\n\n"
+            f"# Current Page\nURL: {site_relative(url)}\n\n{_cap_axtree(axtree)}\n\n"
+            f"# Error Message from Last Action\n{last_error or '(none)'}\n\n"
+            f"# History of Past Actions\n{hist}\n\n"
+            f"# Next Action\n{guidance}{_NEXT_ACTION_INSTRUCTION}")
+
+
 def step_outcome(pre_url: str, pre_axtree: str, url: str, axtree: str) -> str:
     """Human-readable result of one action: shared by the live Solver prompt
     and the offline SFT dataset builder / thought re-annotator so all three
     describe trajectory history identically."""
     if url != pre_url:
-        return f"now at {url}"
+        return f"now at {site_relative(url)}"
     if axtree != pre_axtree:
         return "page changed"
     return "no change"
@@ -556,14 +601,12 @@ class Solver:
                     "Work ONLY on the current subgoal right now. When THIS subgoal "
                     'is done, output {"subgoal_done": true, ...} to advance. Call '
                     "send_msg_to_user ONLY after the LAST subgoal is complete.")
-            recent = [f"- {h} -> {o}" for h, o in zip(history[-6:], outcomes[-6:])]
-            prompt = (f"GOAL: {goal}\n\nRECENT ACTIONS:\n"
-                      + ("\n".join(recent) or "(none)")
-                      + (f"\n\nLAST ACTION ERROR: {last_error}" if last_error else "")
-                      + repeat_warning
-                      + novelty_warning
-                      + subgoal_block
-                      + f"\n\nURL: {obs['url']}\n\nPAGE:\n{_cap_axtree(obs['axtree'])}")
+            recent = [f"- {h} -> {o}" for h, o in
+                      zip(history[-_HISTORY_WINDOW:], outcomes[-_HISTORY_WINDOW:])]
+            guidance = "".join(b.strip("\n") + "\n\n"
+                              for b in (repeat_warning, novelty_warning, subgoal_block) if b)
+            prompt = build_solver_prompt(goal, recent, last_error, obs["url"],
+                                          obs["axtree"], guidance=guidance)
             screenshot_b64 = browser.screenshot_b64(som=self.som) if self.vision else None
             out = self.llm.complete_json(SOLVER_SYS, prompt,
                                           image_b64=screenshot_b64, image_detail=self.image_detail)
