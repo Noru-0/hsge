@@ -260,6 +260,23 @@ Priority key `(tier, novelty, depth, seq, url)`: tier 0 before tier 1; within ti
 lower visited-count-of-template first (unseen templates lead); shallower depth next
 (BFS breadth); `seq` for FIFO tiebreak.
 
+**Unprefixed sampling** (`run.unprefixed_sampling` / `--unprefixed`, Go-Browse
+Alg.3 l.24-26) re-solves every task that **succeeded** at a node a second time,
+starting from the **site root** (`_unprefixed_pass`), so the trajectory contains
+the navigation to the page as well as the task itself. Every other episode HSGE
+records is *prefixed* — `_solve_with_retries` resets to the node, i.e. the agent
+starts already standing on the right page — which is why 287 of the 465
+successes in `outputs/wa_eval_shopping_1` were exactly **one** step. Failed
+tasks are never re-run (a task the agent could not do on the right page will not
+get easier from the root). Episodes are tagged `UNPREFIXED`, recorded at
+`difficulty=2` so `build_sft_dataset.py`'s curriculum sorts them after LOCAL,
+counted in their own `task_stats` bucket, and fed to Discovery like any other
+success — solving one task from two starting points is also what makes a cluster
+recur enough to reach `maturity` and become an operator. Uses `goal_max_steps`
+(an unprefixed task is a LOCAL task plus navigation). Costs +1 episode per
+solved task and one extra browser per node; a root browser that fails to load is
+logged as `unprefixed_error` and skips the pass, never the run.
+
 **`--read-only`** makes `PageExplorer` propose only INFO/NAV tasks (drops MOD and
 anything it can't classify), for smoke-testing a shared, stateful site without
 writing to it (no posting, voting, cart/checkout actions).

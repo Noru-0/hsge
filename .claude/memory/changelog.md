@@ -6,6 +6,31 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **04:10** — `hsge/webarena/runtime.py`, `run_webarena.py`, `config.yaml`,
+  `.claude/rules/architecture.md`, `.claude/rules/commands.md`,
+  `hsge/tests/test_unprefixed_sampling.py` (new) — **P1: unprefixed sampling
+  (Go-Browse Alg.3 l.24-26).** Every episode HSGE collected was *prefixed* --
+  `_solve_with_retries` resets to the node the task was proposed on, so the
+  agent starts already standing on the right page. Measured on
+  `outputs/wa_eval_shopping_1`: **287 of 465 successes are ONE step**, 281 of
+  those a `send_msg_to_user` on the first LLM call, so the dataset teaches the
+  model to answer at step 1 and it stalls at step 3-4 on real eval tasks. New
+  `_unprefixed_pass` re-solves every task that SUCCEEDED at a node a second
+  time from the **site root**, with the `goal_max_steps` budget, tagged
+  `UNPREFIXED` at `difficulty=2` (curriculum sorts them after LOCAL) and in
+  its own `task_stats` bucket. Failed tasks are never re-run -- paying twice
+  for what the agent could not do on the right page is how the shopping run
+  spent 85% of its steps on episodes that produced nothing. Successes feed
+  Discovery like any other, which is the second half of the point: with
+  1-step successes no sub-trajectory can recur, so no cluster reaches
+  `maturity` and the operator graph stays empty (7 skills / 2 operators / **1**
+  chain over 179 nodes -> GOAL was 15 of 1070 tasks). Extracted
+  `_ingest_trajectory` so both passes nourish the library identically. A root
+  browser that fails to load logs `unprefixed_error` and skips the pass, never
+  the run (same fail-soft contract as `node_error`). Off by default
+  (`run.unprefixed_sampling`, `--unprefixed`/`--no-unprefixed`); `config.yaml`
+  turns it on. Suite 289 -> 295.
+
 - **04:03** — `hsge/webarena/agents.py`, `build_sft_dataset.py`,
   `hsge/tests/test_failed_action_guards.py` (new),
   `hsge/tests/test_build_sft_dataset.py` — **P0 from the

@@ -68,6 +68,7 @@ class WebArenaExplorer:
                  goal_chains_per_node: int = 3,
                  use_site_seed: bool = False, seed_capability_repeats: int = 3,
                  goal_max_steps: int | None = None,
+                 unprefixed_sampling: bool = False,
                  verify_goals: bool = False,
                  plan_subgoals: bool = False,
                  agent_llms: dict[str, object] | None = None,
@@ -123,6 +124,15 @@ class WebArenaExplorer:
         # GOAL/composite tasks are multi-step and need more room than LOCAL lookups;
         # None -> same budget as LOCAL (max_steps), so default behavior is unchanged.
         self.goal_max_steps = goal_max_steps if goal_max_steps is not None else max_steps
+        # Unprefixed sampling (Go-Browse Alg.3 l.24-26): re-solve every task that
+        # SUCCEEDED at this node a second time, starting from the site root, so the
+        # agent has to find the page before doing the task. Every episode HSGE
+        # collects is otherwise prefixed (reset to the node), which is why 287 of
+        # 465 successes in the shopping run were one step long. Reuses
+        # goal_max_steps -- an unprefixed task is a LOCAL task plus navigation, so
+        # the LOCAL budget is the wrong size for it. Off by default: it adds one
+        # episode per successful task, and a browser per node.
+        self.unprefixed_sampling = unprefixed_sampling
         # Site seed (InfiniteWeb idea): a one-shot {description, capabilities[]}
         # profile derived from the first node, used to condition proposals and to
         # emit top-down GOAL tasks. Off by default so the mock pipeline is untouched.
@@ -380,6 +390,67 @@ class WebArenaExplorer:
             if success or (infeasible and not stop_reason) or attempts > self.task_retries:
                 return (episode_id, steps, final_obs, success, infeasible, attempts,
                         urls_seen, stop_reason)
+
+    # ---- feed one successful trajectory to Discovery -------------------------
+    def _ingest_trajectory(self, steps, site: str, task: str) -> None:
+        """Segment + cluster one successful trajectory, promoting any skill that
+        became mature. Shared by the prefixed and unprefixed passes so both
+        nourish the library identically."""
+        for sid in self.discovery.on_trajectory(steps, site=site, task=task):
+            card = self._card_by_id(sid)
+            if card:
+                print(f"    [skill] admitted {card.skill_id} '{card.name}' "
+                      f"(members={len(card.member_ids)})")
+                self._log("skill_admitted", skill_id=card.skill_id, name=card.name,
+                           members=len(card.member_ids))
+            self._promote_skill_to_operator(sid)
+
+    # ---- unprefixed pass: re-solve solved tasks from the site root -----------
+    def _unprefixed_pass(self, root_url: str, tasks: list[str], node_index: int,
+                         node_rec: dict, task_stats: dict) -> set[str]:
+        """Go-Browse Alg.3 l.24-26. Returns the URLs these episodes reached.
+
+        Only tasks that already succeeded at this node are re-run: a task the
+        agent could not do standing on the right page will not get easier from
+        the root, and paying for it twice is how the shopping run spent 85% of
+        its steps on episodes that produced nothing.
+        """
+        urls: set[str] = set()
+        try:
+            browser = self.browser_factory(root_url)
+            browser.reset()
+        except Exception as e:
+            # Same fail-soft contract as a node that won't load: costs this pass,
+            # never the run.
+            self._log("unprefixed_error", node_index=node_index, url=root_url,
+                       error=str(e), error_type=type(e).__name__)
+            print(f"    [unprefixed] root browser failed to load, skipping: {e}")
+            return urls
+        try:
+            for task in tasks:
+                (episode_id, steps, final_obs, success, infeasible, attempts,
+                 urls_seen, stop_reason) = self._solve_with_retries(
+                    browser, task, difficulty=2, tag="UNPREFIXED",
+                    max_steps=self.goal_max_steps)
+                bucket = "success" if success else ("infeasible" if infeasible else "fail")
+                task_stats["UNPREFIXED"][bucket] += 1
+                node_rec["tasks"].append({"episode": episode_id, "tag": "UNPREFIXED",
+                                           "task": task, "success": success,
+                                           "infeasible": infeasible, "attempts": attempts,
+                                           "steps": len(steps)})
+                self._log("task_result", node_index=node_index, episode=episode_id,
+                           tag="UNPREFIXED", task=task, success=success,
+                           infeasible=infeasible, attempts=attempts, steps=len(steps))
+                if success:
+                    self._ingest_trajectory(steps, root_url, task)
+                urls |= urls_seen
+                print(f"    unprefixed: {task[:50]!r} success={success} steps={len(steps)}")
+        finally:
+            try:
+                browser.close()
+            except Exception:
+                pass
+        return urls
 
     def _score_capability(self, capability: str, success: bool, infeasible: bool,
                           stop_reason: str):
@@ -728,6 +799,8 @@ class WebArenaExplorer:
             duplicate_nodes = resume["duplicate_nodes"]
             node_errors = resume["node_errors"]
             task_stats = resume["task_stats"]
+            # a checkpoint written before unprefixed sampling existed has no bucket
+            task_stats.setdefault("UNPREFIXED", {"success": 0, "fail": 0, "infeasible": 0})
             nodes_log = resume["nodes_log"]
             self._log("run_resume", started_at_epoch=self.run_started_epoch,
                        started_at_iso=self.run_started_iso, resumed_from_nodes=len(visited),
@@ -748,6 +821,7 @@ class WebArenaExplorer:
             duplicate_nodes = 0
             node_errors = 0
             task_stats = {"LOCAL": {"success": 0, "fail": 0, "infeasible": 0},
+                          "UNPREFIXED": {"success": 0, "fail": 0, "infeasible": 0},
                           "GOAL": {"success": 0, "fail": 0, "infeasible": 0}}
             nodes_log = []                # per-node record (-> nodes.json)
             heapq.heappush(frontier, (0, 0, 0, seq_box[0], root_url))
@@ -902,6 +976,7 @@ class WebArenaExplorer:
                 seen_urls = set()
 
                 # 1) local exploration
+                solved_here: list[str] = []     # feeds the unprefixed pass below
                 for task in self.explorer.propose(obs, screenshot_b64=node_screenshot_b64,
                                                   site_seed=self.site_seed):
                     (episode_id, steps, final_obs, success, infeasible, attempts,
@@ -916,20 +991,18 @@ class WebArenaExplorer:
                                attempts=attempts, steps=len(steps))
                     if success:
                         # only skills that recur enough to be admitted become operators
-                        admitted = self.discovery.on_trajectory(steps, site=root_url, task=task)
-                        for sid in admitted:
-                            card = self._card_by_id(sid)
-                            if card:
-                                print(f"    [skill] admitted {card.skill_id} '{card.name}' "
-                                      f"(members={len(card.member_ids)})")
-                                self._log("skill_admitted", skill_id=card.skill_id, name=card.name,
-                                           members=len(card.member_ids))
-                            self._promote_skill_to_operator(sid)
+                        self._ingest_trajectory(steps, root_url, task)
+                        solved_here.append(task)
                     seen_urls |= urls_seen
                     print(f"    local: {task[:50]!r} success={success}"
                           + (" infeasible" if infeasible else "")
                           + (f" attempts={attempts}" if attempts > 1 else "")
                           + f" steps={len(steps)}")
+
+                # 1b) unprefixed pass: the same solved tasks, from the site root
+                if self.unprefixed_sampling and solved_here:
+                    seen_urls |= self._unprefixed_pass(root_url, solved_here, node_index,
+                                                        node_rec, task_stats)
 
                 # 2) goal-conditioned composed tasks (depth chains; terminal backup)
                 for gt in self._goal_task(url):
@@ -1022,6 +1095,9 @@ class WebArenaExplorer:
         print(f"  tasks: LOCAL success={task_stats['LOCAL']['success']} "
               f"fail={task_stats['LOCAL']['fail']} "
               f"infeasible={task_stats['LOCAL']['infeasible']}  "
+              f"UNPREFIXED success={task_stats['UNPREFIXED']['success']} "
+              f"fail={task_stats['UNPREFIXED']['fail']} "
+              f"infeasible={task_stats['UNPREFIXED']['infeasible']}  "
               f"GOAL success={task_stats['GOAL']['success']} "
               f"fail={task_stats['GOAL']['fail']} "
               f"infeasible={task_stats['GOAL']['infeasible']}")

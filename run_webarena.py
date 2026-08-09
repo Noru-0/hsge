@@ -32,6 +32,7 @@ DEFAULTS = {
             "goal_chains_per_node": 3,
             "use_site_seed": False, "seed_capability_repeats": 3,
             "goal_max_steps": None,
+            "unprefixed_sampling": False,
             "verify_goals": False,
             "plan_subgoals": False,
             "predicate_sim": 0.6, "seg_axtree_sim": 0.6, "headed": False, "success_url_re": None,
@@ -305,6 +306,13 @@ def main():
     ap.add_argument("--goal-max-steps", type=int, default=None,
                     help="step budget for GOAL/composite tasks (default: same as "
                          "--max-steps); multi-step goals need more room than LOCAL")
+    ap.add_argument("--unprefixed", dest="unprefixed_sampling", action="store_const",
+                    const=True, default=None,
+                    help="also re-solve every SOLVED task from the site root "
+                         "(Go-Browse unprefixed sampling): +1 episode per solved "
+                         "task, but the trajectories include the navigation")
+    ap.add_argument("--no-unprefixed", dest="unprefixed_sampling", action="store_const",
+                    const=False, help="disable unprefixed sampling")
     ap.add_argument("--seg-axtree-sim", type=float, default=None,
                     help="axtree-similarity threshold for segmentation boundary "
                          "candidates (default 0.6; lower = fewer candidate cuts)")
@@ -353,6 +361,7 @@ def main():
     task_retries = _pick(args.task_retries, run["task_retries"])
     goal_chains_per_node = _pick(args.goal_chains_per_node, run["goal_chains_per_node"])
     goal_max_steps = _pick(args.goal_max_steps, run["goal_max_steps"])
+    unprefixed_sampling = _pick(args.unprefixed_sampling, run["unprefixed_sampling"])
     denylist = _pick(args.denylist, run["denylist"])
     headed = _pick(args.headed, run["headed"])
     predicate_sim = run["predicate_sim"]
@@ -430,6 +439,7 @@ def main():
         max_hrefs_per_page=max_hrefs_per_page, task_retries=task_retries,
         goal_chains_per_node=goal_chains_per_node,
         use_site_seed=use_site_seed, goal_max_steps=goal_max_steps,
+        unprefixed_sampling=unprefixed_sampling,
         verify_goals=verify_goals, plan_subgoals=plan_subgoals,
         agent_llms=agent_llms, agent_vision=agent_vision,
     )

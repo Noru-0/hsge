@@ -18,6 +18,14 @@ run:
   task_retries: 0            # retry a failed task up to N more times (0 = off;
                              # tasks the model reports infeasible are never retried).
                              # NOTE: multiplies worst-case LLM cost per task by 1+N
+  unprefixed_sampling: true  # after solving a task ON its node (prefixed), solve it
+                             # AGAIN from the site root, so the trajectory contains
+                             # the navigation too (Go-Browse Alg.3 l.24-26). Every
+                             # episode is otherwise prefixed, which is why 287 of 465
+                             # successes in outputs/wa_eval_shopping_1 were ONE step:
+                             # the model was already standing on the right page. Costs
+                             # +1 episode per SOLVED task (failed ones are not re-run)
+                             # and one extra browser per node; uses goal_max_steps
   goal_max_steps: 25         # step budget for GOAL/composite tasks (null -> max_steps);
                              # multi-step GOALs need more room than LOCAL lookups
   verify_goals: true         # re-check every self-graded GOAL success with the

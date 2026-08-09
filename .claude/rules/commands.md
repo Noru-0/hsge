@@ -47,6 +47,9 @@ python run_webarena.py                              # everything from config.yam
 python run_webarena.py --site shopping --max-nodes 5 --headed
 python run_webarena.py --provider deepseek --model deepseek-chat
 python run_webarena.py --max-tasks 8                 # more tasks proposed per node
+python run_webarena.py --unprefixed                  # also re-solve every solved task
+                                                     # from the site root (longer
+                                                     # trajectories; +1 episode each)
 python run_webarena.py --read-only --max-nodes 2 --max-steps 4   # smoke-test a shared
                                                                    # site without writes
 ```
