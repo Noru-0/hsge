@@ -4,6 +4,42 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-11
+
+- **03:11** — `.claude/memory/bugs.md` — audited `training_data/*.jsonl` (built
+  from the 4 `wa_run_20_*` runs) against the old `train_all.jsonl` and the
+  limitations recorded in `.claude/handoff/`. Confirmed fixed: relative URLs
+  (0 of 4635 prompts leak `http://192.168.*` vs 93% before), no absolute/offsite
+  `goto` targets, multi-step semantic coverage (COMPOSITE = 242 trajectories /
+  1940 examples, mean 7.3 steps, vs GOAL ~0.3% before), 1-step trajectories
+  42%→26%, site balance 45/29/21/6% → 28/26/25/21%. Two new Open bugs filed
+  (goal-level val leakage 52%; 40% zero-effective-action trajectories incl.
+  NAV 30% / MOD 17% false successes).
+- **03:25** — `.claude/memory/bugs.md` — **corrected the duplicate-goal entry**:
+  its 62-68%-distinct-goals symptom counted the intentional
+  `unprefixed_sampling` LOCAL/UNPREFIXED pairing as duplication (125 of reddit's
+  130 repeated goals are exactly such a pair, and the unprefixed twin averages
+  6.0 vs 3.4 steps). Genuine duplicates are GOAL-tagged only: 4 goals on reddit,
+  3 on shopping_admin. Entry downgraded to minor. This also identifies the real
+  mechanism behind the val-leakage bug filed above.
+- **03:32** — `training/prepare_dataset.py`, `training/README.md`,
+  `hsge/tests/test_prepare_dataset_split.py` (new),
+  `training_data/{train,val}.jsonl`, `training/data/all/{train,val}.jsonl` —
+  **the split now holds out whole tasks, and redundant repeats are dropped.**
+  `task_key()` groups trajectories by `(site, goal)` with the goal read back out
+  of the prompt's `# Goal` block (no `episodes/` needed), falling back to
+  `trajectory_id` on the pre-2026-08 `GOAL: ...` prompt format so legacy exports
+  don't collapse into one group. `drop_redundant()` removes same-goal
+  same-difficulty trajectories (keeping the longest, ties broken by id) while
+  never touching a LOCAL/UNPREFIXED pair; `--keep-repeats` opts out and
+  `--keep-all-fields` writes the full-column audit copy. The script asserts the
+  no-leak invariant before writing. Regenerated: 4884 → 4828 examples (13
+  trajectories dropped, all difficulty-2 GOAL-branch repeats), val 243 examples
+  / 52 trajectories / 31 tasks with **0 goals shared with train** (was 29 of 56)
+  and all 4 sites present. Verified idempotent (re-split reproduces byte-identical
+  files) and non-regressive on `train_all.jsonl` + `training/train_12.jsonl`.
+  Suite 310 → 314 pass. Old pair kept as `training_data/*.jsonl.bak`.
+
 ## 2026-08-10
 
 - **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,

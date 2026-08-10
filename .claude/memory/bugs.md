@@ -15,6 +15,62 @@ Entry format:
 
 ## Open
 
+### Zero-effective-action successes: 40% of kept trajectories never click/fill/goto anything
+- **Status**: open
+- **Found**: 2026-08-11, same audit.
+- **Where**: dataset-level symptom; originates in the MOD/COMPOSITE
+  page-change gate in `hsge/webarena/agents.py` and in `[NAV]` success scoring.
+- **Symptom**: 432 of 1077 train trajectories (40%) contain no action from
+  {click, fill, select_option, press, goto, go_back, tab_*} at all — only
+  scroll/noop/hover then `send_msg_to_user`. By tag: INFO 323/455 (71%, largely
+  legitimate), **NAV 47/156 (30%)** and **MOD 33/193 (17%)**, which should be
+  impossible: a NAV task that navigated nowhere and a MOD task that modified
+  nothing are false successes the judge still passed. The MOD gate demands a
+  url/axtree change, and a late-loading page after `noop()` apparently satisfies
+  it without any real action.
+- **Fix**: not yet applied. Tighten the gate to require an action from the
+  effective set (not merely an observation delta) for MOD/NAV, and consider
+  dropping zero-effective MOD/NAV episodes at dataset build time.
+
+### Seed-capability GOAL tasks are re-proposed at every node, so ~35% of kept episodes are duplicate goals
+- **Status**: open
+- **Found**: 2026-08-10, comparing episode quality of `wa_run_20_*` (4 domains)
+  against `wa_eval_*_1`.
+- **Where**: the seed-capability GOAL generator in `hsge/webarena/runtime.py`
+  (`goal_seed_capabilities_attempted` path).
+- **Symptom**: among kept (success/infeasible) episodes, distinct goal texts are
+  only 62-68% of episodes in run 20 (reddit 67/108, shopping_admin 47/75) versus
+  ~99% in the `wa_eval_*_1` runs. Top offenders repeat x3, e.g. reddit's
+  "[GOAL] Submit a new post to the 'allentown' forum ...". Duplicated SFT
+  examples inflate the dataset without adding behaviour.
+- **Cause**: not task retries (`run.task_retries: 0`, every duplicate has
+  `attempts: 1`) — the same seed capability is instantiated again at each new
+  node, and even twice at the same URL when node dedup admits it. `PageExplorer`
+  keeps a run-wide memory of already-proposed task texts; the seed-capability
+  path has no equivalent.
+- **Fix**: not yet applied. Give the seed-capability generator the same run-wide
+  proposed-text dedup `PageExplorer` already has, or dedup at dataset build time
+  keeping the best attempt.
+- **Largely mis-measured — corrected 2026-08-11.** The 62-68%-distinct figure
+  above counts the **intentional `unprefixed_sampling` pairing** as duplication.
+  Re-measured on the same runs by episode `metadata.tags`: of reddit's 130
+  repeated kept goals, **125 are exactly one `LOCAL` + one `UNPREFIXED`
+  episode** (shopping_admin: 82 of 85), i.e. the same task solved from its node
+  and again from the site root — by design, and the unprefixed twin is
+  substantially longer (mean 6.0 vs 3.4 steps), so it is not redundant. The
+  genuine duplicates are **`GOAL`-tagged only and few**: 4 goals on reddit, 3 on
+  shopping_admin. Same picture in `training_data/train.jsonl`: 365 of 367
+  repeated-goal groups are a difficulty-1/difficulty-2 pair; only 8 groups are
+  two same-difficulty episodes and 2 groups have three. **Downgrade this entry
+  to minor**; the fix, if applied, should target the `GOAL`/seed-capability path
+  only and must not dedup LOCAL/UNPREFIXED pairs.
+- **Mitigated at dataset level (2026-08-11 03:32)**: `prepare_dataset.py` drops
+  same-goal same-difficulty repeats (keeping the longest trajectory) and leaves
+  LOCAL/UNPREFIXED pairs alone — 13 trajectories / 56 examples on the four
+  `wa_run_20_*` domains, all difficulty-2 GOAL-branch repeats. The generator
+  itself is unchanged, so the wasted collection cost (one extra live episode per
+  repeat) is still there; this only keeps it out of training.
+
 ### `goto` accepts hallucinated placeholder targets
 - **Status**: open
 - **Found**: 2026-08-10, same run analysis.
@@ -249,6 +305,34 @@ Entry format:
   succeeds or those three are reworded. See `Thesis_report/memory/07-dan-y-chi-tiet.md`.
 
 ## Fixed
+
+### The train/val split is trajectory-level, so 52% of val trajectories share a goal with train
+- **Status**: fixed (2026-08-11 03:32)
+- **Found**: 2026-08-11, auditing `training_data/{train,val}.jsonl` (built from
+  `outputs/wa_run_20_*`).
+- **Where**: `training/prepare_dataset.py` (group-by-`trajectory_id` split).
+- **Symptom**: 29 of 56 val trajectories (124 of 249 val examples, 50%) carry a
+  goal string that also appears verbatim in `train.jsonl`. `eval_loss` is
+  therefore optimistic, and it is the number the last run used to pick
+  `checkout-446` (epoch 2) over epoch 3 — that choice rests on a leaky signal.
+- **Cause**: the split groups by `trajectory_id` so the *same trajectory* never
+  straddles the split, which is correct but insufficient: `unprefixed_sampling`
+  gives most solved tasks **two** trajectories with the same goal (one `LOCAL`,
+  one `UNPREFIXED`), and the random trajectory-level split puts one in train and
+  the other in val. 357 of the 367 repeated-goal groups in the pool are exactly
+  such a pair, so this is the dominant mechanism, not incidental duplication.
+- **Fix**: `training/prepare_dataset.py` now groups trajectories by
+  `(site, goal)` — the goal read back out of the prompt's `# Goal` block, so no
+  `episodes/` dir is needed — and holds out whole task groups. It asserts no val
+  goal appears in train before writing, so a regression fails loudly. Legacy
+  exports whose prompt uses the old `GOAL: ...` format fall back to
+  `trajectory_id` (verified on `train_all.jsonl` and `training/train_12.jsonl`)
+  instead of collapsing into one group. `training_data/{train,val}.jsonl` and
+  `training/data/all/` regenerated: 4585 train / 243 val, 52 val trajectories /
+  31 tasks, **0 goals shared** (was 29 of 56), all 4 sites still present in val.
+  Re-running reproduces the split byte-identically.
+  New test: `hsge/tests/test_prepare_dataset_split.py`.
+
 
 ### The Solver's three anti-loop guards are blind to FAILED actions, so a dead element eats the whole step budget
 - **Status**: fixed (2026-08-10 04:03)

@@ -85,8 +85,23 @@ python training/merge_datasets.py \
 
 ## 2. Prepare the dataset
 
-Split by trajectory (a trajectory's steps never straddle the split). `--name`
-must match the `dataset:` key in the training yaml.
+Split by **task** — `(site, goal)`, read back out of each prompt's `# Goal`
+block — not by trajectory. `run.unprefixed_sampling` records every solved task
+twice (LOCAL from its node, UNPREFIXED from the site root), so one goal owns
+two trajectories; splitting per trajectory puts one in train and its twin in
+val. That leaked 29 of 56 val trajectories (50% of val examples) in the first
+cross-domain dataset, which is what `eval_loss` — and the epoch-2-vs-3
+checkpoint choice — was read off. The script asserts no val goal appears in
+train, so a regression fails loudly instead of quietly inflating the number.
+
+Same-goal **same-difficulty** repeats (the seed-capability GOAL generator
+re-proposing a goal at another node) are dropped, keeping the longest; the
+LOCAL/UNPREFIXED pair is never touched. `--keep-repeats` disables it. On the
+four `wa_run_20_*` domains this drops 13 of 1133 trajectories (56 examples).
+
+`--name` must match the `dataset:` key in the training yaml. `--keep-all-fields`
+writes every column instead of just `messages`, for an auditable intermediate
+copy (this is the shape `training_data/{train,val}.jsonl` is kept in).
 
 ```bash
 cd /workspace/hsge
