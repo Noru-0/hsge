@@ -130,16 +130,30 @@ def main() -> None:
     tasks: dict[tuple[str, str], list[str]] = defaultdict(list)
     for tid, tr in trajs.items():
         tasks[task_key(tr)].append(tid)
-    keys = sorted(tasks)
-    random.Random(args.seed).shuffle(keys)
-    target = round(len(rows) * args.val_fraction)
+
+    # Hold out `--val-fraction` of each site's examples separately. One shuffled
+    # pass over all tasks lets whichever site owns the longest trajectories fill
+    # the quota: on the four wa_run_20_* domains that gave a val set of shopping
+    # 117 / reddit 83 / gitlab 28 / shopping_admin 16 examples off a train set
+    # that is balanced within 10 points, so eval_loss mostly tracked shopping.
+    by_site: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    n_ex_site: dict[str, int] = defaultdict(int)
+    for k, tids in tasks.items():
+        by_site[k[0]].append(k)
+        n_ex_site[k[0]] += sum(len(trajs[t]) for t in tids)
+
+    rng = random.Random(args.seed)
     val_ids: set[str] = set()
-    n_val = 0
-    for k in keys:
-        if n_val >= target:
-            break
-        val_ids.update(tasks[k])
-        n_val += sum(len(trajs[t]) for t in tasks[k])
+    for site in sorted(by_site):
+        keys = sorted(by_site[site])
+        rng.shuffle(keys)
+        target = round(n_ex_site[site] * args.val_fraction)
+        n_val = 0
+        for k in keys:
+            if n_val >= target:
+                break
+            val_ids.update(tasks[k])
+            n_val += sum(len(trajs[t]) for t in tasks[k])
 
     train = [r for r in rows if r["trajectory_id"] not in val_ids]
     val = [r for r in rows if r["trajectory_id"] in val_ids]

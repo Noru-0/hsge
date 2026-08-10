@@ -417,3 +417,71 @@ def test_require_thought_v2_drops_a_partially_reannotated_episode():
     out = os.path.join(run, "train.jsonl")
     examples, _ = _run_main(os.path.join(run, "episodes"), out, "--require-thought-v2")
     assert examples == []
+
+
+def test_non_info_episode_with_no_effective_action_is_dropped():
+    """A [MOD]/[NAV]/[COMPOSITE] episode that only scrolled/hovered/waited
+    before declaring done modified nothing and navigated nowhere -- 104 such
+    trajectories were kept in the first cross-domain dataset, and all of them
+    passed the episode judge, which only inspects the (unchanged) final page.
+    [INFO] is exempt: answering off the page the agent was reset onto is what an
+    INFO task looks like."""
+    run = tempfile.mkdtemp()
+    cases = {
+        "ep_0000": "[MOD] Star the a11yproject.com project.",
+        "ep_0001": "[NAV] Go to the 'Video Games' category.",
+        "ep_0002": "[COMPOSITE] Add the kit to my wish list and view the list.",
+        "ep_0003": "[INFO] What is the price of the makeup brushes?",
+    }
+    for ep, goal in cases.items():
+        ep_dir = os.path.join(run, "episodes", ep)
+        os.makedirs(ep_dir, exist_ok=True)
+        _write_episode_dir(run, ep, goal, True, False, [
+            _step(ep_dir, 0, "http://x/", "ax", "settling", "noop(500)"),
+            _step(ep_dir, 1, "http://x/", "ax", "looking", "scroll(0, 400)"),
+            _step(ep_dir, 2, "http://x/", "ax", "done", "send_msg_to_user('done')"),
+        ])
+
+    out = os.path.join(run, "train.jsonl")
+    examples, log = _run_main(os.path.join(run, "episodes"), out)
+    assert {e["trajectory_id"] for e in examples} == {"ep_0003"}
+    assert "no effective action: 3" in log
+
+    examples, _ = _run_main(os.path.join(run, "episodes"), out, "--keep-ineffective")
+    assert {e["trajectory_id"] for e in examples} == set(cases)
+
+
+def test_an_effective_action_that_errored_does_not_save_the_episode():
+    """`episode_to_examples` drops steps whose action errored, so counting the
+    raw episode's actions would keep an episode whose exported trajectory has no
+    effective action in it. This was the common case, not an edge case: "[MOD]
+    Star the public a11yproject.com project" tried one click, the click errored,
+    and what got exported was noop() then send_msg_to_user('already starred')."""
+    run = tempfile.mkdtemp()
+    ep_dir = os.path.join(run, "episodes", "ep_0000")
+    os.makedirs(ep_dir, exist_ok=True)
+    _write_episode_dir(run, "ep_0000", "[MOD] Star the project.", True, False, [
+        _step(ep_dir, 0, "http://x/", "ax",
+              "clicking the star [action error: Timeout 500ms exceeded]", "click('394')"),
+        _step(ep_dir, 1, "http://x/", "ax", "settling", "noop(500)"),
+        _step(ep_dir, 2, "http://x/", "ax", "done",
+              "send_msg_to_user('done: already starred')"),
+    ])
+
+    out = os.path.join(run, "train.jsonl")
+    examples, log = _run_main(os.path.join(run, "episodes"), out)
+    assert examples == []
+    assert "no effective action: 1" in log
+
+
+def test_an_untagged_goal_is_gated_only_above_difficulty_1():
+    """An untagged goal at difficulty > 1 is an operator-chain GOAL task (its
+    instruction is composed from skill descriptions, so it carries no bracket).
+    An untagged goal at difficulty 1 is a pre-2026-08 run from before proposals
+    were tagged -- gating it would drop that run's legitimate INFO episodes."""
+    from build_sft_dataset import _needs_effective_action
+
+    assert _needs_effective_action("Open the forum then post a comment.", 2)
+    assert not _needs_effective_action("Open the forum then post a comment.", 1)
+    assert not _needs_effective_action("[INFO] What is the price?", 2)
+    assert _needs_effective_action("[MOD] Star the project.", 1)

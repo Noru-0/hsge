@@ -234,6 +234,63 @@ def _n_browser_actions(steps: list[dict]) -> int:
                and not (s.get("parsed_action") or "").strip().startswith(_TERMINAL_PREFIXES))
 
 
+# Actions that can actually change what page the agent is on or what state the
+# site is in. scroll/hover/noop are deliberately absent: they were added to
+# ACTIONS_DOC to give the model a way out of Playwright actionability timeouts,
+# which worked, but they move nothing.
+_EFFECTIVE_PREFIXES = ("click", "fill", "select_option", "press", "goto",
+                       "go_back", "new_tab", "tab_focus", "tab_close")
+
+
+def _n_effective_actions(steps: list[dict]) -> int:
+    """How many steps could have changed the page or the site's state, counted
+    over exactly the steps that become training examples.
+
+    Stricter than `_n_browser_actions` in two ways. That one counts anything
+    which is not send_msg_to_user/report_infeasible, so scroll, hover and noop
+    all count -- which is why `--min-actions 1` let these episodes through. It
+    also counts steps whose action ERRORED, and `episode_to_examples` drops
+    those (see `_is_error_step`), so the exported trajectory can contain no
+    effective action at all while the raw episode appears to. That is the common
+    case here, not an edge case: "[MOD] Star the public a11yproject.com project"
+    tried one `click('394')`, the click errored, and what got exported was
+    `noop(500)` then `send_msg_to_user('...is already starred')`.
+    """
+    return sum(1 for s in steps
+               if (s.get("parsed_action") or "").strip().startswith(_EFFECTIVE_PREFIXES)
+               and not _is_error_step(s.get("thought")))
+
+
+def _needs_effective_action(goal: str, difficulty: int) -> bool:
+    """Whether this task class is a false success when nothing was ever acted on.
+
+    [MOD] must modify, [NAV] must navigate, [COMPOSITE] is multi-step by
+    construction -- an episode of scroll/noop/hover then send_msg_to_user did
+    none of those. [INFO] is exempt: reading the answer off the page the agent
+    was reset onto is what an INFO task legitimately looks like.
+
+    An untagged goal at difficulty > 1 is an operator-chain GOAL task, whose
+    instruction is composed from the chained skills' descriptions and so carries
+    no bracket; it is gated too. An untagged goal at difficulty 1 is a
+    pre-2026-08 run from before PageExplorer tagged proposals, and is exempt --
+    there is no way to tell its INFO tasks from its MOD ones, and guessing
+    "gate it" would drop that run's legitimate answer-only episodes.
+
+    Measured on the four `wa_run_20_*` runs: 113 kept trajectories (317 examples,
+    6.6%) had zero effective actions on a non-INFO goal -- e.g. "[MOD] Star the
+    public a11yproject.com project" solved as `noop(); send_msg_to_user()`, and
+    "[NAV] Go to the 'Video Games' category" as `scroll(); send_msg_to_user()`
+    from the site root. All 113 passed the episode judge, which only inspects the
+    final page and so sees a plausible one -- nothing had happened to it. This is
+    the behaviour the first fine-tuned model reproduced at eval: declare done
+    without acting.
+    """
+    m = _TAG_RE.match(goal or "")
+    if m:
+        return m.group(1).upper() != "INFO"
+    return difficulty > 1
+
+
 def load_episodes(path: str):
     """Yield (goal, steps, episode_dir, trajectory_id, difficulty, success,
     infeasible, judge_verified, stop_reason) tuples. judge_verified is None if
@@ -288,10 +345,17 @@ def main():
                          "answer-only INFO episodes, which were 44%% of the "
                          "successes in a real reddit run. report_infeasible "
                          "episodes are exempt -- refusing IS their target.")
+    ap.add_argument("--keep-ineffective", action="store_true",
+                    help="keep [MOD]/[NAV]/[COMPOSITE]/GOAL episodes that never "
+                         "clicked, filled, pressed or navigated -- scroll/hover/noop "
+                         "then send_msg_to_user. They are dropped by default: a MOD "
+                         "that modified nothing is a false success, not a short one. "
+                         "report_infeasible episodes are exempt, as with --min-actions.")
     args = ap.parse_args()
 
     all_examples, n_ep, n_kept, n_infeasible_kept, n_unjudged_dropped = [], 0, 0, 0, 0
     n_too_few_actions = n_wrapup_infeasible_dropped = n_not_reannotated = 0
+    n_ineffective_dropped = 0
     for (goal, steps, ep_dir, trajectory_id, diff, success, infeasible,
         judge_verified, stop_reason) in load_episodes(args.src):
         n_ep += 1
@@ -305,6 +369,11 @@ def main():
         if (args.min_actions and not infeasible
                 and _n_browser_actions(steps) < args.min_actions):
             n_too_few_actions += 1
+            continue
+        if (not args.keep_ineffective and not infeasible
+                and _needs_effective_action(goal, diff)
+                and _n_effective_actions(steps) == 0):
+            n_ineffective_dropped += 1
             continue
         if args.require_thought_v2 and not _all_steps_reannotated(steps):
             n_not_reannotated += 1
@@ -341,6 +410,10 @@ def main():
     if args.min_actions:
         print(f"dropped, < {args.min_actions} real action(s): {n_too_few_actions} "
               f"(answer-only episodes, no page interaction)")
+    if n_ineffective_dropped:
+        print(f"dropped, no effective action: {n_ineffective_dropped} "
+              f"(MOD/NAV/COMPOSITE/GOAL episodes that only scrolled/hovered/waited "
+              f"before declaring done; --keep-ineffective to keep them)")
     print(f"SFT examples written : {len(all_examples)} -> {args.out}")
     print(f"examples by difficulty: {dict(sorted(by_diff.items()))}")
     print(f"with real AXTree text : {loaded}/{len(all_examples)} "

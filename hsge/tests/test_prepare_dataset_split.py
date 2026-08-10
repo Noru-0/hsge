@@ -107,6 +107,35 @@ def test_split_holds_out_whole_tasks_so_no_val_goal_appears_in_train():
         assert twin in val_ids, f"{tid} held out without its twin {twin}"
 
 
+def test_val_fraction_is_held_out_per_site():
+    """One shuffled pass over all tasks lets whichever site owns the longest
+    trajectories fill the quota: on the four wa_run_20_* domains that produced a
+    val set of shopping 117 / reddit 83 / gitlab 28 / shopping_admin 16 examples
+    off a train set balanced within 10 points, so eval_loss mostly tracked
+    shopping."""
+    rows = []
+    for site, n_tasks, steps in (("reddit", 30, 2), ("shopping", 30, 8)):
+        for i in range(n_tasks):
+            rows += _traj(site, f"{site} task {i}.", 1, f"{site}__ep_{i:04d}", steps)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        src = os.path.join(tmp, "pool.jsonl")
+        with open(src, "w") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+        out = os.path.join(tmp, "data")
+        subprocess.run([sys.executable, "training/prepare_dataset.py", src,
+                        "--out-dir", out, "--keep-all-fields", "--val-fraction", "0.2"],
+                       cwd=_REPO, check=True, capture_output=True)
+        val = [json.loads(l) for l in open(os.path.join(out, "val.jsonl"))]
+
+    per_site = {}
+    for r in val:
+        per_site[r["site"]] = per_site.get(r["site"], 0) + 1
+    # reddit owns 60 examples, shopping 240; 20% of each
+    assert per_site == {"reddit": 12, "shopping": 48}, per_site
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

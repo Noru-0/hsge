@@ -16,7 +16,8 @@ Entry format:
 ## Open
 
 ### Zero-effective-action successes: 40% of kept trajectories never click/fill/goto anything
-- **Status**: open
+- **Status**: partially fixed (2026-08-11 03:43) — non-INFO episodes are now kept
+  out of the dataset, but the runtime still produces them
 - **Found**: 2026-08-11, same audit.
 - **Where**: dataset-level symptom; originates in the MOD/COMPOSITE
   page-change gate in `hsge/webarena/agents.py` and in `[NAV]` success scoring.
@@ -28,9 +29,22 @@ Entry format:
   nothing are false successes the judge still passed. The MOD gate demands a
   url/axtree change, and a late-loading page after `noop()` apparently satisfies
   it without any real action.
-- **Fix**: not yet applied. Tighten the gate to require an action from the
-  effective set (not merely an observation delta) for MOD/NAV, and consider
-  dropping zero-effective MOD/NAV episodes at dataset build time.
+- **Fixed at dataset level (2026-08-11 03:43)**: `build_sft_dataset.py` now
+  drops a non-INFO episode whose *exported* steps contain no click/fill/
+  select_option/press/goto/go_back/tab_* action (`_n_effective_actions` +
+  `_needs_effective_action`, `--keep-ineffective` opts out). Counting the raw
+  episode would not have worked: the usual shape is one click that ERRORED --
+  and `episode_to_examples` drops error steps -- so the trajectory that reaches
+  training is noop/scroll then send_msg_to_user while the episode file looks
+  like it acted. Dropped 104 trajectories / 279 examples across the four
+  `wa_run_20_*` domains (NAV 49, MOD 31, COMPOSITE 20, untagged GOAL 4). The
+  11 non-INFO zero-effective episodes that remain are all `report_infeasible`,
+  exempt on the same grounds as `--min-actions` exempts them.
+- **Still open at the collection layer**: the MOD/COMPOSITE gate in
+  `hsge/webarena/agents.py` accepts a url/axtree delta, which a late-loading
+  page after `noop()` supplies, and the episode judge passes these because the
+  final page it inspects is a plausible unchanged one. So the runtime keeps
+  producing them (and spending an episode each); only training is protected.
 
 ### Seed-capability GOAL tasks are re-proposed at every node, so ~35% of kept episodes are duplicate goals
 - **Status**: open

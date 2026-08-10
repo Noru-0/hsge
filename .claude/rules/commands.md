@@ -106,3 +106,15 @@ actually annotated) or run it overnight.
 doesn't apply to them) but drops any declared-success episode that was
 never judged or that the judge marked `FAIL` — without the flag, a plain
 success is kept regardless of whether it was ever judged.
+
+**By default `build_sft_dataset.py` drops a `[MOD]`/`[NAV]`/`[COMPOSITE]`/GOAL
+episode whose exported steps contain no `click`/`fill`/`select_option`/`press`/
+`goto`/`go_back`/`tab_*` action** — only `scroll`/`hover`/`noop` then
+`send_msg_to_user`. A MOD that modified nothing is a false success, not a short
+one, and the episode judge passes them because it only inspects the (unchanged)
+final page. 104 of 1029 trajectories on the four `wa_run_20_*` domains were
+this. `[INFO]` is exempt (answering off the reset page is what INFO looks like)
+and so is `report_infeasible`, as with `--min-actions`. `--keep-ineffective`
+restores the old behavior. Note this counts only steps that survive export:
+`--min-actions` misses these episodes because it counts `scroll`/`noop` and
+counts errored actions, which `episode_to_examples` drops.

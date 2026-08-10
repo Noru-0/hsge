@@ -40,6 +40,30 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   files) and non-regressive on `train_all.jsonl` + `training/train_12.jsonl`.
   Suite 310 → 314 pass. Old pair kept as `training_data/*.jsonl.bak`.
 
+- **03:43** — `build_sft_dataset.py`, `.claude/rules/commands.md`,
+  `training/prepare_dataset.py`, `hsge/tests/test_build_sft_dataset.py`,
+  `hsge/tests/test_prepare_dataset_split.py`, `training_data/*.jsonl`,
+  `training/data/all/` — **non-INFO episodes that never acted on the page are
+  dropped from the dataset.** `_n_effective_actions()` counts only click/fill/
+  select_option/press/goto/go_back/tab_* over the steps that survive export;
+  `_needs_effective_action()` exempts `[INFO]` (answering off the reset page is
+  legitimate) and gates `[MOD]`/`[NAV]`/`[COMPOSITE]` plus untagged goals above
+  difficulty 1 (operator-chain GOALs, whose composed instruction carries no
+  bracket). Default on, `--keep-ineffective` opts out. Counting the RAW episode
+  would have caught almost nothing (3 instead of 104): the usual shape is one
+  click that errored, and `episode_to_examples` drops error steps, so the raw
+  file looks like it acted while the exported trajectory is noop/scroll then
+  send_msg_to_user. Dropped 104 trajectories / 279 examples (NAV 49, MOD 31,
+  COMPOSITE 20, untagged GOAL 4); the 11 that remain are all report_infeasible,
+  exempt as with `--min-actions`. Also made `prepare_dataset.py` hold out
+  `--val-fraction` **per site** — one shuffled pass over all tasks had given a
+  val set of shopping 117 / reddit 83 / gitlab 28 / shopping_admin 16 off a
+  balanced train set, so eval_loss mostly tracked shopping. Rebuilt end to end
+  (4 domains -> merge -> split): 4884 -> 4554 examples, train 4288 / val 266,
+  56 val trajectories / 34 tasks, 0 goals shared, val sites 87/71/56/52.
+  Suite 314 -> 318 pass. Baseline verified first: rebuilding with
+  `--keep-ineffective` reproduces the previous 4884 exactly.
+
 ## 2026-08-10
 
 - **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,
