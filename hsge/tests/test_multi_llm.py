@@ -36,6 +36,27 @@ def test_role_config_inherits_shared_values(monkeypatch):
     assert explorer["temperature"] == 0.2
 
 
+def test_reasoning_effort_is_role_scoped_and_off_by_default():
+    """GPT-5.x-only knob: a role that doesn't set it must not send it at all,
+    since a non-reasoning model (gpt-4o, deepseek) 400s on the param."""
+    cli = SimpleNamespace(provider=None, model=None, base_url=None)
+    cfg = {"agents": {"solver": {"reasoning_effort": "none"},
+                      "site_seeder": {"reasoning_effort": "low"}}}
+
+    assert _effective_llm_config(cli, cfg, "solver")["reasoning_effort"] == "none"
+    assert _effective_llm_config(cli, cfg, "site_seeder")["reasoning_effort"] == "low"
+    assert _effective_llm_config(cli, cfg, "episode_judge")["reasoning_effort"] is None
+
+
+def test_reasoning_effort_inherits_from_shared_block():
+    cli = SimpleNamespace(provider=None, model=None, base_url=None)
+    cfg = {"reasoning_effort": "medium",
+           "agents": {"solver": {"reasoning_effort": "none"}}}
+
+    assert _effective_llm_config(cli, cfg, "solver")["reasoning_effort"] == "none"
+    assert _effective_llm_config(cli, cfg, "page_explorer")["reasoning_effort"] == "medium"
+
+
 def test_global_cli_model_overrides_every_role():
     cli = SimpleNamespace(provider=None, model="cli-model", base_url=None)
     cfg = {"agents": {role: {"model": f"{role}-model"} for role in AGENT_ROLES}}

@@ -6,6 +6,46 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-10
 
+- **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,
+  `reannotate_thoughts.py`, `config.yaml`,
+  `hsge/tests/test_backends_reasoning_effort.py` (new),
+  `hsge/tests/test_backends_temperature.py`, `hsge/tests/test_multi_llm.py` —
+  **API-cost pass: OpenAI roles moved off gpt-4o onto gpt-5.6-luna**, plus the
+  two GPT-5-only request params that move needs. Trigger: an audit of what
+  actually spends OpenAI money found the `solver` role (1 LLM call per step,
+  ~1200 calls/run — 85-95% of the bill) had been switched from `gpt-4o-mini`
+  to `gpt-4o` in an uncommitted config edit, ~16x the input price, alongside
+  `max_tasks` 9 -> 15 (+67% episodes). Both reverted; `solver`/`page_explorer`/
+  `site_seeder` now run gpt-5.6-luna ($0.20/$1.20 per 1M vs gpt-4o's
+  $2.50/$10, and far above it on general benchmarks). Everything else
+  (segmenter/abstractor/verifier/inducer/**episode_judge**/reannotator/
+  goal_planner) was already on deepseek and is untouched — the LLM-as-judge
+  was never a cost factor. `OpenAILLM` gains `reasoning_effort` and
+  `verbosity` kwargs: both default to None and are then **never sent**, which
+  is what gpt-4o/deepseek need, and a 400 naming either one drops just that
+  param and retries (generalizing the existing temperature recovery via
+  `_is_unsupported_param`; `_omit_reasoning_effort` became a
+  `_dropped_params` set so dropping one param can't disable the other).
+  Resolved per role in `config.yaml` (`role > shared llm.* > unset`), so the
+  offline scripts see them too. Request stays `format=text` with no
+  `response_format` — `complete_json` parses prompt-instructed JSON out of a
+  plain-text answer — and `reasoning.mode` is left at its `standard` default
+  (no flat chat-completions equivalent). GPT-5.x also rejects any temperature
+  but 1, so the luna roles set `temperature: 1` explicitly rather than eating
+  a 400 per role at startup.
+  **Measured on three live 2-node/8-step shopping runs** (`outputs/wa_luna_smoke`
+  = effort `none`, `wa_luna_low` = `low`, `wa_luna_medium` = `medium`/verbosity
+  `medium`, the configured setting): LOCAL success 1/7 -> 2/8 -> 3/8,
+  UNPREFIXED 1 -> 1 -> 2, GOAL 2/3 -> 1/3 -> 2/3, wall-clock 637s -> 796s ->
+  1069s, zero param rejections in all three. At `none` the solver consistently
+  stopped 2-5 steps in and self-declared done without finishing (clicked "Add
+  to Wish List" but never opened the wish list; scrolled once and claimed to
+  have identified products without naming any) — reasoning effort on the hot
+  path buys solver competence and costs wall-clock. n is small (7-8 LOCAL
+  tasks/run, different proposed tasks each run): NOT comparable to
+  `wa_run_20_shopping`'s 52% LOCAL, which was gpt-4o-mini over 120 tasks. A
+  matched gpt-4o control run is still outstanding.
+
 - **05:51** — `hsge/webarena/runtime.py`, `hsge/backends.py`, `run_webarena.py`
   — **Thesis-report logging additions**, requested ahead of the 4-domain ×
   500-success shopping/shopping_admin/reddit/gitlab exploration run (Chapter

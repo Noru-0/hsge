@@ -60,7 +60,9 @@ def main():
     from hsge.backends import OpenAILLM
     print(f"[llm:episode_judge] provider={cfg['provider']} model={cfg['model']}")
     llm = OpenAILLM(model=cfg["model"], base_url=cfg["base_url"],
-                    api_key=cfg["api_key"], temperature=cfg["temperature"])
+                    api_key=cfg["api_key"], temperature=cfg["temperature"],
+                    reasoning_effort=cfg["reasoning_effort"],
+                    verbosity=cfg["verbosity"])
 
     episodes_dir = os.path.join(args.run_dir, "episodes")
     checked, verified = 0, 0

@@ -79,23 +79,48 @@ llm:
   temperature: 0.2
 
   agents:
+    # NOTE on GPT-5.6 (Sol/Terra/Luna): they only accept the DEFAULT temperature
+    # (1) -- any other value 400s -- and they bill reasoning tokens at the output
+    # rate, so `reasoning_effort` is a real cost/latency knob, not just a quality
+    # one. Prices as of 2026-07-30: Luna $0.20/$1.20 per 1M in/out, Terra $2/$12,
+    # legacy gpt-4o $2.50/$10. Luna is ~12x cheaper than gpt-4o on input while
+    # scoring far above it on general benchmarks, and it takes image input, which
+    # is what `vision`/`som` below need.
+    # The settings below mirror the playground config: effort=medium,
+    # verbosity=medium. The two other playground controls need no param -- text
+    # format IS what we send (no response_format: complete_json parses
+    # prompt-instructed JSON out of a plain-text answer) and reasoning mode
+    # `standard` is the default (`pro` has no flat chat-completions equivalent).
     site_seeder:             # once per run: summarizes the landing page into a
       provider: openai       # {description, capabilities[]} seed that drives GOAL tasks
-      model: gpt-4o          # -- one call, and seed quality decides GOAL quality
+      model: gpt-5.6-luna    # -- one call, and seed quality decides GOAL quality
+      reasoning_effort: medium
+      verbosity: medium
+      temperature: 1
     page_explorer:           # proposes concrete INFO/NAV/MOD tasks for each page
       provider: openai
-      model: gpt-4o          # called once per node -- worth the stronger model
+      model: gpt-5.6-luna    # called once per node -- amortized over ~9 episodes
+      reasoning_effort: medium
+      verbosity: medium
       vision: true           # attach a screenshot alongside the axtree
       som: true              # bid-tagged bounding boxes overlaid on the screenshot
       image_detail: low      # low | high | auto (OpenAI vision cost/quality knob)
-      temperature: 0.7         # override the shared default for this agent
+      temperature: 1         # GPT-5.x: only the default (1) is accepted
     solver:                  # chooses the next BrowserGym action toward a LOCAL task
       provider: openai
-      model: gpt-4o-mini     # called up to max_steps times per episode -- keep cheap
+      model: gpt-5.6-luna    # called up to max_steps times per episode
+      reasoning_effort: medium  # THE hot path (~1 LLM call per step, ~1200/run):
+                             # reasoning tokens bill as output AND the loop is
+                             # serial, so effort here costs both money and
+                             # wall-clock. `none` was measured first and the
+                             # solver stopped 2-5 steps in and self-declared done
+                             # (1 LOCAL success / 7); medium is the deliberate
+                             # trade of run cost for solver competence
+      verbosity: medium
       vision: true
       som: true
       image_detail: low
-      temperature: 0.0         # override the shared default for this agent
+      temperature: 1
     solver_goal:             # C5: stronger model for GOAL/composite tasks (optional).
       provider: openai       # GOAL solving is multi-step + reasoning-bound, so it gets
       model: gpt-5.6-terra   # a stronger model than the LOCAL solver (gpt-4o-mini).

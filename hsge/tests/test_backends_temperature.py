@@ -45,6 +45,9 @@ def _llm():
     llm.model = "gpt-5.6-terra"
     llm.temperature = 0.0
     llm._omit_temperature = False
+    llm.reasoning_effort = None
+    llm.verbosity = None
+    llm._dropped_params = set()
     llm.client = _FakeClient()
     return llm
 

@@ -247,6 +247,13 @@ def _effective_llm_config(cli, llm_cfg, role: str | None = None) -> dict:
         "temperature": float(_first_not_none(
             role_cfg.get("temperature"), llm_cfg.get("temperature"), 0.2,
         )),
+        # GPT-5-only params; None -> never sent (what gpt-4o / deepseek need).
+        "reasoning_effort": _first_not_none(
+            role_cfg.get("reasoning_effort"), llm_cfg.get("reasoning_effort"),
+        ),
+        "verbosity": _first_not_none(
+            role_cfg.get("verbosity"), llm_cfg.get("verbosity"),
+        ),
     }
 
 
@@ -269,11 +276,13 @@ def _resolve_llm(cli, llm_cfg, role: str | None = None):
     cfg = _effective_llm_config(cli, llm_cfg, role)
     from hsge.backends import OpenAILLM
     label = f":{role}" if role else ""
+    extra = "".join(f" {p}={cfg[p]}" for p in ("reasoning_effort", "verbosity") if cfg[p])
     print(f"[llm{label}] provider={cfg['provider']} model={cfg['model']} "
-          f"base_url={cfg['base_url'] or '(default)'} temp={cfg['temperature']}")
+          f"base_url={cfg['base_url'] or '(default)'} temp={cfg['temperature']}{extra}")
     return OpenAILLM(
         model=cfg["model"], base_url=cfg["base_url"], api_key=cfg["api_key"],
         temperature=cfg["temperature"], provider=cfg["provider"],
+        reasoning_effort=cfg["reasoning_effort"], verbosity=cfg["verbosity"],
     )
 
 

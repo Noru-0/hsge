@@ -31,7 +31,8 @@ class OpenAILLM(LLM):
 
     def __init__(self, model: str | None = None, base_url: str | None = None,
                  api_key: str | None = None, temperature: float = 0.2,
-                 provider: str | None = None):
+                 provider: str | None = None, reasoning_effort: str | None = None,
+                 verbosity: str | None = None):
         from openai import OpenAI                       # lazy
         self.model = model or os.environ.get("HSGE_MODEL", "gpt-4o-mini")
         # Purely informational -- not used for any routing decision here, just
@@ -49,21 +50,42 @@ class OpenAILLM(LLM):
             max_retries=0,
         )
         self.temperature = temperature
+        # GPT-5.x reasoning effort ("none"/"low"/"medium"/"high"/...). None ->
+        # don't send the param at all, which is what every non-reasoning model
+        # (gpt-4o, deepseek) needs. Sending it matters on cost, not just speed:
+        # reasoning tokens bill at the OUTPUT rate, and the Solver makes one
+        # call per step, so an unconstrained default effort multiplies both the
+        # bill and the wall-clock of a serial exploration run.
+        self.reasoning_effort = reasoning_effort
+        # GPT-5.x answer length ("low"/"medium"/"high"). Same None-means-omit rule.
+        # Not `reasoning.mode`, which has no flat chat-completions equivalent and
+        # whose default ("standard") is what we want anyway, and not the response
+        # format either: complete_json below parses prompt-instructed JSON out of a
+        # plain-text response, so the request must stay format=text.
+        self.verbosity = verbosity
         # Set once a model rejects a custom temperature (GPT-5.x / o-series only
         # accept the default), so later calls omit the param instead of re-hitting
-        # the 400 every time.
+        # the 400 every time. Same idea for the GPT-5-only params in reverse: a
+        # model that has no such param 400s on it once, then we stop sending it.
         self._omit_temperature = False
+        self._dropped_params: set[str] = set()
+
+    @staticmethod
+    def _is_unsupported_param(e, param: str) -> bool:
+        """True if a 400 is specifically about `param` being unsupported."""
+        body = getattr(e, "body", None)
+        if isinstance(body, dict) and (body.get("error") or {}).get("param") == param:
+            return True
+        msg = str(e).lower()
+        return param in msg and ("does not support" in msg or "unsupported" in msg
+                                 or "unrecognized" in msg)
 
     @staticmethod
     def _is_unsupported_temperature(e) -> bool:
         """True if a 400 is specifically about a temperature the model won't accept
         (e.g. 'temperature does not support 0.0 ... Only the default (1) value is
         supported')."""
-        body = getattr(e, "body", None)
-        if isinstance(body, dict) and (body.get("error") or {}).get("param") == "temperature":
-            return True
-        msg = str(e).lower()
-        return "temperature" in msg and ("does not support" in msg or "unsupported" in msg)
+        return OpenAILLM._is_unsupported_param(e, "temperature")
 
     def _create_with_retry(self, **kwargs):
         """chat.completions.create with retry/backoff on transient errors only.
@@ -71,8 +93,9 @@ class OpenAILLM(LLM):
         Rate limits, connection blips, and 5xx are retried (up to 3 times,
         exponential backoff + jitter); auth/bad-request errors are not --
         those are never going to succeed on retry, so failing fast is better.
-        The one exception: a 400 that rejects a custom temperature (GPT-5.x /
-        o-series) is recovered by dropping the param and retrying once.
+        Two exceptions: a 400 that rejects a custom temperature (GPT-5.x /
+        o-series) or one that rejects a GPT-5-only param (`reasoning_effort`,
+        `verbosity`) is recovered by dropping that param and retrying once.
         """
         import openai
         retryable = (openai.RateLimitError, openai.APIConnectionError,
@@ -87,6 +110,15 @@ class OpenAILLM(LLM):
                           "temperature; retrying without it", file=sys.stderr)
                     self._omit_temperature = True
                     kwargs.pop("temperature", None)
+                    continue
+                rejected = next((p for p in ("reasoning_effort", "verbosity")
+                                 if p in kwargs and self._is_unsupported_param(e, p)),
+                                None)
+                if rejected:
+                    print(f"[OpenAILLM] model {self.model!r} rejects {rejected}; "
+                          "retrying without it", file=sys.stderr)
+                    self._dropped_params.add(rejected)
+                    kwargs.pop(rejected, None)
                     continue
                 raise
             except retryable as e:
@@ -117,6 +149,10 @@ class OpenAILLM(LLM):
         )
         if not self._omit_temperature:
             kwargs["temperature"] = self.temperature
+        for param, value in (("reasoning_effort", self.reasoning_effort),
+                             ("verbosity", self.verbosity)):
+            if value and param not in self._dropped_params:
+                kwargs[param] = value
         msg = self._create_with_retry(**kwargs)
         choice = msg.choices[0]
         content = choice.message.content

@@ -170,10 +170,14 @@ def main():
 
     r_cfg = _effective_llm_config(ns, llm_cfg, "thought_reannotator")
     reannotate_llm = OpenAILLM(model=r_cfg["model"], base_url=r_cfg["base_url"],
-                               api_key=r_cfg["api_key"], temperature=r_cfg["temperature"])
+                               api_key=r_cfg["api_key"], temperature=r_cfg["temperature"],
+                               reasoning_effort=r_cfg["reasoning_effort"],
+                               verbosity=r_cfg["verbosity"])
     s_cfg = _effective_llm_config(ns, llm_cfg, "trajectory_segmenter")
     segment_llm = OpenAILLM(model=s_cfg["model"], base_url=s_cfg["base_url"],
-                            api_key=s_cfg["api_key"], temperature=s_cfg["temperature"])
+                            api_key=s_cfg["api_key"], temperature=s_cfg["temperature"],
+                            reasoning_effort=s_cfg["reasoning_effort"],
+                            verbosity=s_cfg["verbosity"])
     print(f"[llm:thought_reannotator] model={r_cfg['model']}  "
           f"[llm:trajectory_segmenter] model={s_cfg['model']}")
 
