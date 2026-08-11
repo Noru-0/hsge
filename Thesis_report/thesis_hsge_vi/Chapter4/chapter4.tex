@@ -145,16 +145,21 @@ kết quả này cần được đo lại theo trình tự tuần tự.
 Bảng~\ref{tab:runs} tổng hợp kết quả của bốn đợt khám phá. Cả bốn đợt đều
 được dừng chủ động sau khoảng 21 giờ, khi lượng dữ liệu thu được đã đủ cho
 vòng huấn luyện. Do đó, số node đã duyệt là một cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
+Trong bảng, tỷ lệ thành công của mỗi nhóm task được tính trên tổng số task
+của nhóm đó tại website tương ứng, tức đã bao gồm cả các task bị báo là bất
+khả thi; tỷ lệ bị hạ cấp được tính trên tổng số lần tác nhân tự tuyên bố
+hoàn thành.
 
 \begin{table}[htbp]
 \centering
 \caption[Thống kê bốn đợt khám phá]{Thống kê bốn đợt khám phá, nhóm theo
 quy mô khám phá, kết quả của ba nhóm task và tri thức thu được; dòng cuối
-cùng là số episode bị cổng kiểm chứng hạ cấp từ thành công xuống thất bại. LOCAL là task giải ngay trên node;
+cùng là số episode bị cổng kiểm chứng hạ cấp từ thành công xuống thất bại.
+Các dòng in nghiêng là tỷ lệ dẫn xuất từ các dòng đếm phía trên. LOCAL là task giải ngay trên node;
 UNPREFIXED là chính task đó giải lại từ trang chủ; GOAL là task ngữ nghĩa
 nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của website.}
 \label{tab:runs}
-\small
+\footnotesize
 \begin{tabular}{@{}L{4.9cm} R{1.7cm} R{1.5cm} R{1.5cm} R{1.9cm} R{1.6cm}@{}}
 \toprule
 \textbf{Chỉ số} & \textbf{Shop.} & \textbf{Reddit} & \textbf{GitLab} &
@@ -169,16 +174,22 @@ nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của we
 \quad Thành công & 192 & 208 & 160 & 139 & \textbf{699} \\
 \quad Thất bại & 268 & 152 & 147 & 116 & \textbf{683} \\
 \quad Bất khả thi & 73 & 46 & 101 & 62 & \textbf{282} \\
+\quad \textit{Tỷ lệ thành công} & \textit{36,0\%} & \textit{51,2\%} &
+\textit{39,2\%} & \textit{43,8\%} & \textbf{42,0\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task UNPREFIXED}} \\
 \quad Thành công & 109 & 105 & 66 & 63 & \textbf{343} \\
 \quad Thất bại & 57 & 76 & 58 & 40 & \textbf{231} \\
 \quad Bất khả thi & 13 & 20 & 33 & 19 & \textbf{85} \\
+\quad \textit{Tỷ lệ thành công} & \textit{60,9\%} & \textit{52,2\%} &
+\textit{42,0\%} & \textit{51,6\%} & \textbf{52,0\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task GOAL}} \\
 \quad Thành công & 10 & 9 & 3 & 3 & \textbf{25} \\
 \quad Thất bại & 6 & 8 & 6 & 5 & \textbf{25} \\
 \quad Bất khả thi & 3 & 1 & 5 & 7 & \textbf{16} \\
+\quad \textit{Tỷ lệ thành công} & \textit{52,6\%} & \textit{50,0\%} &
+\textit{21,4\%} & \textit{20,0\%} & \textbf{37,9\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Tri thức thu được}} \\
 \quad Skill được thu nhận & 14 & 16 & 16 & 12 & \textbf{58} \\
@@ -187,6 +198,8 @@ nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của we
 \quad Năng lực seed đã thử & 14 & 18 & 13 & 12 & \textbf{57} \\
 \midrule
 Episode bị hạ cấp & 127 & 159 & 119 & 92 & \textbf{497} \\
+\textit{Tỷ lệ bị hạ cấp} & \textit{29,0\%} & \textit{33,1\%} &
+\textit{34,2\%} & \textit{30,9\%} & \textbf{31,8\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -262,20 +275,13 @@ mặc nhiên coi là hợp lệ.
 (\texttt{click}\slash\texttt{fill}\slash\texttt{select\_option}\slash
 \texttt{press}\slash\texttt{goto}\slash\texttt{go\_back}\slash\texttt{tab\_*})
 sẽ bị loại bỏ, bởi một task ``sửa đổi'' mà không sửa đổi gì là một thành
-công giả chứ không phải một thành công ngắn. Cổng này loại 104 quỹ đạo,
-tương ứng 279 mẫu. Điểm đáng lưu ý là bộ chấm LLM \emph{không} phát hiện
-được nhóm trường hợp này, vì nó chỉ xét trạng thái trang cuối, mà trạng thái
+công giả. Cổng này loại 104 quỹ đạo, tương ứng 279 mẫu. Điểm đáng lưu ý là bộ chấm LLM \emph{không} phát hiện được nhóm trường hợp này, vì nó chỉ xét trạng thái trang cuối, mà trạng thái
 đó thì không hề thay đổi.
 \end{itemize}
 
-Việc chia tập huấn luyện và tập kiểm định được thực hiện theo đơn vị
-\emph{task}, không phải theo đơn vị quỹ đạo: hai quỹ đạo của cùng một mục
-tiêu, gồm bản LOCAL và bản UNPREFIXED, luôn nằm cùng một phía. Nếu chia theo
-quỹ đạo, hai bản của cùng một mục tiêu có thể rơi về hai phía khác nhau,
-khiến giá trị \texttt{eval\_loss} phản ánh khả năng ghi nhớ nhiều hơn khả
-năng khái quát hóa. Tập kiểm định thu được có \textbf{0} mục tiêu trùng với
-tập huấn luyện và được lấy theo tỷ lệ \emph{trên từng website}, nhằm tránh
-để một website chi phối toàn bộ chỉ số kiểm định.
+Quá trình phân chia tập dữ liệu huấn luyện (training set) và tập kiểm định (validation set) được thực hiện nghiêm ngặt ở cấp độ \emph{tác vụ (task)}, thay vì cấp độ quỹ đạo (trajectory). Cụ thể, mọi quỹ đạo phục vụ cho cùng một mục tiêu --- bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED} --- bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng quỹ đạo đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Điều này sẽ dẫn đến hiện tượng rò rỉ dữ liệu (data leakage), khiến chỉ số tổn thất kiểm định (\texttt{eval\_loss}) bị sai lệch do chỉ phản ánh khả năng ghi nhớ (memorization) của mô hình thay vì năng lực khái quát hóa (generalization) thực tế.
+
+Nhờ chiến lược chia tách này, tập kiểm định đạt được mức độ cách ly tuyệt đối với \textbf{0} mục tiêu trùng lặp so với tập huấn luyện. Thêm vào đó, dữ liệu kiểm định được lấy mẫu phân tầng (stratified) \emph{theo từng website cụ thể}. Cơ chế này duy trì tỷ lệ phân bổ cân đối, ngăn chặn triệt để tình trạng một website có lượng dữ liệu lớn làm sai lệch và chi phối toàn bộ các chỉ số đánh giá tổng thể.
 
 \section{Kết quả fine-tuning}
 \label{sec:exp-sft}
