@@ -6,6 +6,28 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **18:37** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **Table 4.4
+  gained a valid-episode row and four derived percentage rows.** `Episode hợp
+  lệ` = the episodes counted as successes after the judge gate re-scored them
+  (311/322/229/205, total 1067), which is exactly the sum of the three
+  `Thành công` rows, so the table stays internally checkable; `Tỷ lệ hợp lệ`
+  is that over episodes recorded (49,0% overall). Also a `Tỷ lệ thành công`
+  row per task group (LOCAL 42,0%, UNPREFIXED 52,0%, GOAL 37,9%) and a
+  `Tỷ lệ bị hạ cấp` row (31,8%), all computed per site. **The definition was
+  confirmed with the user rather than guessed** — two other readings were
+  live and gave very different numbers: success+fail excluding infeasible
+  (2006) and trajectories surviving both dataset gates (1029). The second
+  would also have mixed denominators, since task_stats counts 2389 tasks
+  while only 2178 episodes were persisted (a failed task can end without a
+  recorded episode). Table set in `\footnotesize` with the ratio definitions
+  moved from the caption into the preceding paragraph so all 27 rows still
+  fit one page. Clean rebuild: 154 pages, 0 undefined refs/cites, 6 overfull
+  hboxes.
+  **Build note:** the user's editor auto-builds the same directory, so a
+  `pdfinfo`/`.lot` read straight after a build can report a half-written file
+  (saw 144 and 150 pages transiently). Copy `main.pdf` aside and read
+  `main.log`'s own "Output written on" line instead.
+
 - **18:29** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **redesigned
   Table 4.4 (four exploration runs) for readability.** The old version packed
   each task group into one cell as a `192/268/73` triple, which forced the

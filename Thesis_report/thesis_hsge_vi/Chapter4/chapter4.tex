@@ -145,10 +145,12 @@ kết quả này cần được đo lại theo trình tự tuần tự.
 Bảng~\ref{tab:runs} tổng hợp kết quả của bốn đợt khám phá. Cả bốn đợt đều
 được dừng chủ động sau khoảng 21 giờ, khi lượng dữ liệu thu được đã đủ cho
 vòng huấn luyện. Do đó, số node đã duyệt là một cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
-Trong bảng, tỷ lệ thành công của mỗi nhóm task được tính trên tổng số task
-của nhóm đó tại website tương ứng, tức đã bao gồm cả các task bị báo là bất
-khả thi; tỷ lệ bị hạ cấp được tính trên tổng số lần tác nhân tự tuyên bố
-hoàn thành.
+Trong bảng, \emph{episode hợp lệ} là những episode được tính là thành công
+sau khi cổng kiểm chứng đã chấm lại, tức tổng ba dòng ``Thành công'' của ba
+nhóm task; tỷ lệ hợp lệ được tính trên số episode ghi nhận. Tỷ lệ thành công
+của mỗi nhóm task được tính trên tổng số task của nhóm đó tại website tương
+ứng, tức đã bao gồm cả các task bị báo là bất khả thi. Tỷ lệ bị hạ cấp được
+tính trên tổng số lần tác nhân tự tuyên bố hoàn thành.
 
 \begin{table}[htbp]
 \centering
@@ -169,6 +171,9 @@ nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của we
 \quad Node đã duyệt & 79 & 68 & 63 & 48 & \textbf{258} \\
 \quad Node trùng nội dung & 3 & 9 & 6 & 13 & \textbf{31} \\
 \quad Episode ghi nhận & 565 & 617 & 563 & 433 & \textbf{2178} \\
+\quad Episode hợp lệ & 311 & 322 & 229 & 205 & \textbf{1067} \\
+\quad \textit{Tỷ lệ hợp lệ} & \textit{55,0\%} & \textit{52,2\%} &
+\textit{40,7\%} & \textit{47,3\%} & \textbf{49,0\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task LOCAL}} \\
 \quad Thành công & 192 & 208 & 160 & 139 & \textbf{699} \\
@@ -279,7 +284,7 @@ công giả. Cổng này loại 104 quỹ đạo, tương ứng 279 mẫu. Đi�
 đó thì không hề thay đổi.
 \end{itemize}
 
-Quá trình phân chia tập dữ liệu huấn luyện (training set) và tập kiểm định (validation set) được thực hiện nghiêm ngặt ở cấp độ \emph{tác vụ (task)}, thay vì cấp độ quỹ đạo (trajectory). Cụ thể, mọi quỹ đạo phục vụ cho cùng một mục tiêu --- bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED} --- bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng quỹ đạo đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Điều này sẽ dẫn đến hiện tượng rò rỉ dữ liệu (data leakage), khiến chỉ số tổn thất kiểm định (\texttt{eval\_loss}) bị sai lệch do chỉ phản ánh khả năng ghi nhớ (memorization) của mô hình thay vì năng lực khái quát hóa (generalization) thực tế.
+Quá trình phân chia tập dữ liệu huấn luyện (training set) và tập kiểm định (validation set) được thực hiện nghiêm ngặt ở cấp độ \emph{tác vụ (task)}, thay vì cấp độ quỹ đạo (trajectory). Cụ thể, mọi quỹ đạo phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng quỹ đạo đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Điều này sẽ dẫn đến hiện tượng rò rỉ dữ liệu (data leakage), khiến chỉ số tổn thất kiểm định (\texttt{eval\_loss}) bị sai lệch do chỉ phản ánh khả năng ghi nhớ (memorization) của mô hình thay vì năng lực khái quát hóa (generalization) thực tế.
 
 Nhờ chiến lược chia tách này, tập kiểm định đạt được mức độ cách ly tuyệt đối với \textbf{0} mục tiêu trùng lặp so với tập huấn luyện. Thêm vào đó, dữ liệu kiểm định được lấy mẫu phân tầng (stratified) \emph{theo từng website cụ thể}. Cơ chế này duy trì tỷ lệ phân bổ cân đối, ngăn chặn triệt để tình trạng một website có lượng dữ liệu lớn làm sai lệch và chi phối toàn bộ các chỉ số đánh giá tổng thể.
 
@@ -314,7 +319,7 @@ Checkpoint được chọn & \texttt{checkpoint-536} (epoch 2) \\
 
 Có hai điểm cần được làm rõ khi diễn giải bảng này.
 
-\textbf{Mô hình bắt đầu quá khớp từ epoch thứ ba.} Giá trị
+\textbf{Mô hình bắt đầu overfit từ epoch thứ ba.} Giá trị
 \texttt{eval\_loss} giảm ở epoch 2 rồi tăng trở lại ở epoch 3, do đó
 checkpoint của epoch 2 được chọn để merge trọng số và triển khai phục vụ.
 Đây cũng là lý do khóa luận sử dụng chiến lược lưu checkpoint theo từng
