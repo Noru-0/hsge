@@ -6,6 +6,22 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **18:00** — `Thesis_report/thesis_hsge_vi/Chapter{4,5}/*.tex` — **the
+  base-model comparison is now a table with three rows left blank on
+  purpose.** §4.4.2 gained `tab:baseline` (Website / mô hình nền / sau
+  fine-tune / chênh lệch): GitLab filled in (10/180 = 5,6% -> 33/180 = 18,3%,
+  +12,7 đpt, z = 3,74), the other three domains and the total marked
+  \emph{chưa đo} for the user to fill in when those sweeps finish. The prose
+  was rewritten around GitLab alone: what the controlled pair shows, the
+  55-errored-rows caveat with the alternative 10/125 = 8,0% reading and its
+  z = 2,55, and an explicit statement that until the three blank rows are
+  filled, the data-vs-base-model split is undetermined for three quarters of
+  `tab:main`. The related-work table's base-model row and §4.5's second
+  to-do now point at `tab:baseline` instead of restating "chỉ GitLab", and
+  Chapter 5 §5.1 cross-references it. Clean rebuild: 153 pages, 0 undefined
+  refs, 7 overfull hboxes. Note the `\emph{chưa đo}` cells are deliberate
+  placeholders — they must not survive into a submitted draft.
+
 - **17:54** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **revision
   pass on Chapter 4 per three requests.** (1) The infrastructure table gained a
   cost column against the measured hourly rates (H100-80GB 2,146 USD/h,

@@ -1,23 +1,16 @@
 \chapter{Thảo luận}
 \label{ch:discussion}
 
-Chương này (1) diễn giải các kết quả thực nghiệm của
-Chương~\ref{ch:experiments}, sau đó chưng cất kinh nghiệm kỹ thuật thu được
-khi xây dựng và vận hành pipeline thành các bài học về (2) khám phá website
-thật, (3) dựng chốt chặn cấu trúc cho LLM agent thay vì chỉ nhắc nhở qua
-prompt, (4) induction các operator chất lượng cao, và (5) huấn luyện và
-serving mô hình ngôn ngữ nhỏ, trước khi (6) tổng hợp thành các best
-practice và (7) bàn về các nguy cơ đối với tính hợp lệ. Mỗi bài học theo
-cùng một khuôn: một vấn đề gặp thật trong các run của chúng tôi, chẩn đoán,
-cách khắc phục, và nguyên tắc tổng quát rút ra. Chi tiết đầy đủ các sự cố
-được tập hợp ở Phụ lục~\ref{app:runs}.
+Chương này (1) phân tích và lý giải các kết quả thực nghiệm từ Chương~\ref{ch:experiments}, sau đó đúc kết những kinh nghiệm kỹ thuật thu được trong quá trình xây dựng và vận hành chuỗi xử lý (pipeline) thành các bài học thực tiễn. Cụ thể, các bài học này tập trung vào: (2) quá trình khám phá trên các website thực tế; (3) việc thiết lập các cơ chế chốt chặn cấu trúc cho tác nhân LLM thay vì chỉ phụ thuộc vào câu lệnh (prompt); (4) quá trình quy nạp (induction) các toán tử chất lượng cao; và (5) quy trình huấn luyện và triển khai (serving) mô hình ngôn ngữ nhỏ. Cuối cùng, chương sẽ (6) tổng hợp các kinh nghiệm này thành những thực hành tối ưu (best practices) và (7) thảo luận về các mối đe dọa đối với tính hợp lệ (threats to validity) của nghiên cứu.
+
+Mỗi bài học được trình bày theo một cấu trúc nhất quán bao gồm: mô tả một vấn đề thực tế phát sinh trong các lượt chạy (run), chẩn đoán nguyên nhân, đề xuất hướng khắc phục, và rút ra các nguyên tắc tổng quát. Báo cáo chi tiết về toàn bộ các sự cố được tập hợp tại Phụ lục~\ref{app:runs}.
 
 \section{Diễn giải kết quả}
 \label{sec:disc-results}
 
 \subsection{Con số nói được gì}
 
-Kết quả chính --- 136 trên 655 task chính thức của bốn website WebArena,
+Kết quả chính 136 trên 655 task chính thức của bốn website WebArena,
 tức 20{,}8\% --- cần được đọc theo đúng cái nó chứng minh, không hơn.
 Điều nó chứng minh là: một mô hình dưới 10B, fine-tune trên 4288 mẫu do
 chính pipeline này thu thập tự động từ các website \emph{không có nhãn
@@ -29,13 +22,13 @@ hay kém hơn các hệ thống đó: mô hình nền khác nhau, quy mô dữ l
 khoảng một bậc độ lớn, và ngân sách bước lẫn mô hình chấm mờ đều khác.
 
 Bằng chứng tách bạch được đóng góp của pipeline khỏi đóng góp của mô hình
-nền chỉ có một: trên GitLab, cùng mô hình Qwen3.5-9B đi từ 5{,}6\% lên
+nền hiện chỉ có một: trên GitLab, cùng mô hình Qwen3.5-9B đi từ 5{,}6\% lên
 18{,}3\% sau khi fine-tune (8{,}0\% nếu chỉ tính các task chạy sạch của
-đợt nền). Đây là mức tăng gấp hơn hai lần và có ý nghĩa thống kê dưới cả
+đợt nền; Bảng~\ref{tab:baseline}). Đây là mức tăng gấp hơn hai lần và có ý nghĩa thống kê dưới cả
 hai cách tính, nhưng nó chỉ tồn tại trên \emph{một} website và
 \emph{một} lần chạy. Ba website còn lại chưa có đối chứng mô hình nền, nên
 với ba phần tư kết quả, phần nào thuộc về dữ liệu và phần nào thuộc về mô
-hình nền vẫn là câu hỏi mở. Đó là lý do các lần chạy lặp và đối chứng ở
+hình nền vẫn là câu hỏi đang chờ được trả lời. Đó là lý do các lần chạy lặp và đối chứng ở
 Mục~\ref{sec:exp-stats} được xếp là ưu tiên thực nghiệm số một chứ không
 phải một việc dọn dẹp cuối cùng.
 
@@ -246,7 +239,7 @@ trông cậy prompt cấm được các câu trả lời thoái hóa.
 precondition của operator kia, nhưng các operator induction độc lập diễn
 đạt cùng một điều kiện theo những cách khác nhau.
 \textbf{Chẩn đoán.} Chúng tôi đo độ tương đồng embedding của các cặp mệnh
-đề trong cùng run: một cặp diễn đạt tương đương thật chấm 0{,}570, 
+đề trong cùng run: một cặp diễn đạt tương đương thật chấm 0{,}570,
 \emph{dưới} ngưỡng chuẩn hóa 0{,}6, trong khi một cặp khác nghĩa chấm
 0{,}606, trên ngưỡng. Không ngưỡng nào tách được hai trường hợp; chuẩn hóa
 thuần hình học không thể khôi phục một bộ từ vựng chung sau khi sự đã rồi.

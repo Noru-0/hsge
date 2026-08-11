@@ -87,6 +87,10 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
   đúng 4 website (Go-Browse-7B 22,6%, NNetNav-7B 19,1%, GPT-4o-mini 20,0%,
   Qwen-2.5-7B nền 8,3%) — KHÔNG so trực tiếp với con số 812-task của họ.
   Build sạch 142 trang.
+  ⚠️ **Bảng 4.8 (`tab:baseline`) có 3 dòng bỏ trống có chủ đích** — ô ghi
+  `\emph{chưa đo}` cho Shopping / Reddit / Shopping Admin và dòng Tổng; user
+  sẽ điền khi chạy xong đối chứng mô hình nền. **Không được để các ô này sót
+  lại trong bản nộp.** GitLab đã đầy đủ: 10/180 = 5,6% → 33/180 = 18,3%.
   ✅ **Chương 5 và 6 đã cập nhật đồng bộ (2026-08-11)**: §5.1 viết lại thành 3
   tiểu mục (con số chứng minh gì / cái gì đang chặn — bảng liên-website bác bỏ
   "thêm dữ liệu cho site nào thì site đó khá lên", và bảng lỗi chỉ vào lớp thực

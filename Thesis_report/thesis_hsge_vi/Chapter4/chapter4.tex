@@ -369,22 +369,58 @@ Shopping Admin & 182 & 28 & 15{,}4\% ($\pm$ 5{,}2) \\
 \end{table}
 
 \subsection{So với mô hình nền chưa fine-tune}
+\label{sec:exp-baseline}
 
-Khóa luận có một cặp đối chứng trực tiếp giữa mô hình nền và mô hình sau
-fine-tune, thực hiện trên website GitLab: mô hình Qwen3.5-9B \emph{chưa}
-fine-tune đạt 10/180 $=$ 5{,}6\%, trong khi mô hình sau fine-tune đạt
-33/180 $=$ 18{,}3\%.
+Để tách bạch đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền,
+cần đo cùng một bộ task trên mô hình Qwen3.5-9B \emph{chưa} fine-tune, với
+đúng prompt, ngân sách bước và bộ chấm như ở mục~\ref{sec:exp-protocol}.
+Bảng~\ref{tab:baseline} tổng hợp phép đối chứng này. Tại thời điểm viết,
+phép đo mới hoàn tất trên GitLab; ba website còn lại đang được tiến hành và
+sẽ được bổ sung.
 
-Phép so sánh này có một khiếm khuyết cần nêu rõ. Trong đợt đo mô hình nền,
+\begin{table}[H]
+\centering
+\caption[Đối chứng mô hình nền và mô hình sau fine-tune]{Đối chứng giữa mô
+hình nền Qwen3.5-9B và mô hình sau fine-tune, đo trên cùng bộ task chính
+thức với cùng cấu hình đánh giá. Các ô ghi \emph{chưa đo} là những phép đo
+đang được tiến hành.}
+\label{tab:baseline}
+\small
+\begin{tabular}{@{}L{2.9cm} R{2.9cm} R{3.5cm} R{2.7cm}@{}}
+\toprule
+\textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
+\textbf{Chênh lệch} \\
+\midrule
+GitLab & 10/180 $=$ 5{,}6\% & 33/180 $=$ 18{,}3\% & $+$12{,}7 đpt \\
+Shopping & \emph{chưa đo} & 53/187 $=$ 28{,}3\% & \emph{chưa đo} \\
+Reddit & \emph{chưa đo} & 22/106 $=$ 20{,}8\% & \emph{chưa đo} \\
+Shopping Admin & \emph{chưa đo} & 28/182 $=$ 15{,}4\% & \emph{chưa đo} \\
+\midrule
+\textbf{Tổng} & \emph{chưa đo} & \textbf{136/655 $=$ 20{,}8\%} &
+\emph{chưa đo} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Trên GitLab, mô hình sau fine-tune đạt 18{,}3\% so với 5{,}6\% của mô hình
+nền, tức cải thiện 12{,}7 điểm phần trăm, tương đương hơn ba lần về giá trị
+tương đối. Kiểm định tỷ lệ hai mẫu cho $z = 3{,}74$ ($p < 0{,}001$), nghĩa là
+chênh lệch này khó có thể quy cho ngẫu nhiên lấy mẫu task.
+
+Phép so sánh trên có một khiếm khuyết cần nêu rõ. Trong đợt đo mô hình nền,
 55 trên 180 task phát sinh lỗi môi trường ở bước đăng nhập (hết thời gian
-chờ) và bị tính là thất bại; nếu chỉ xét 125 task chạy sạch thì tỷ lệ của mô
-hình nền là 10/125 $=$ 8{,}0\%. Kiểm định tỷ lệ hai mẫu cho $z = 3{,}74$
-($p < 0{,}001$) theo cách tính thứ nhất và $z = 2{,}55$ ($p = 0{,}011$) theo
-cách tính thứ hai. Như vậy mức cải thiện đạt ý nghĩa thống kê theo cả hai
-cách tính, song cần lưu ý rằng kết luận này chỉ dựa trên \emph{một} website
-và \emph{một} lần chạy. Ba website còn lại hiện chưa có đối chứng mô hình
-nền; đây là hạng mục thực nghiệm còn thiếu quan trọng nhất, được trình bày
-ở mục~\ref{sec:exp-stats}.
+chờ) và bị tính là thất bại, trong khi đợt đo mô hình sau fine-tune không có
+task nào phát sinh lỗi. Nếu chỉ xét 125 task chạy sạch thì tỷ lệ của mô hình
+nền là 10/125 $=$ 8{,}0\%, và kiểm định tương ứng cho $z = 2{,}55$
+($p = 0{,}011$). Như vậy mức cải thiện vẫn đạt ý nghĩa thống kê theo cả hai
+cách tính, song biên độ thì phụ thuộc vào cách xử lý các task lỗi.
+
+Cần nhấn mạnh phạm vi của kết luận này: nó dựa trên \emph{một} website và
+\emph{một} lần chạy. Chừng nào ba dòng còn lại của Bảng~\ref{tab:baseline}
+chưa được điền, phần đóng góp của pipeline dữ liệu so với phần đóng góp của
+mô hình nền vẫn chưa xác định được trên ba phần tư kết quả ở
+Bảng~\ref{tab:main}. Đây là hạng mục thực nghiệm còn thiếu quan trọng nhất
+và được trình bày ở mục~\ref{sec:exp-stats}.
 
 \subsection{So với các công trình liên quan}
 
@@ -402,7 +438,9 @@ mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
 được đánh giá. Cột ``Tổng (4 site)'' được tính lại theo trung bình có trọng
 số của các tỷ lệ theo từng website, với trọng số là số task chính thức
 (Shopping 187, Sh.\ Admin 182, GitLab 180, Reddit 106). Số liệu các dòng
-tham chiếu lấy từ Bảng 3 của Go-Browse~\cite{gandhi2026gobrowse}.}
+tham chiếu lấy từ Bảng 3 của Go-Browse~\cite{gandhi2026gobrowse}. Dòng cuối
+là mô hình nền của khóa luận, hiện mới có số đo trên GitLab
+(Bảng~\ref{tab:baseline}).}
 \label{tab:related}
 \small
 \begin{tabular}{@{}L{4.0cm} R{1.9cm} R{1.5cm} R{1.7cm} R{1.4cm} R{1.6cm}@{}}
@@ -420,7 +458,7 @@ NNetNav-7B~\cite{murty2024nnetnav} & 19{,}1\% & 20{,}3 & 14{,}3 & 23{,}7 & 19{,}
 Go-Browse-7B~\cite{gandhi2026gobrowse} & \textbf{22{,}6\%} & 22{,}4 & \textbf{25{,}3} & \textbf{30{,}7} & 15{,}3 \\
 \midrule
 \textbf{HSGE-9B (khóa luận)} & \textbf{20{,}8\%} & \textbf{28{,}3} & 15{,}4 & 20{,}8 & \textbf{18{,}3} \\
-Qwen3.5-9B (nền, chỉ GitLab) & --- & --- & --- & --- & 5{,}6 \\
+Qwen3.5-9B (nền) & \emph{chưa đo} & \emph{--} & \emph{--} & \emph{--} & 5{,}6 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -433,8 +471,9 @@ Bảng này cần được diễn giải một cách thận trọng, vì \emph{b
 và lớn hơn so với Qwen-2.5-7B mà NNetNav và Go-Browse sử dụng. Một phần
 khoảng cách so với đường cơ sở 8{,}3\% chắc chắn thuộc về năng lực của mô
 hình nền chứ không thuộc về pipeline dữ liệu. Cặp đối chứng trên GitLab
-(5{,}6\% $\rightarrow$ 18{,}3\%) là bằng chứng duy nhất tách được hai phần
-đóng góp này, và nó chỉ tồn tại trên một website.
+(5{,}6\% $\rightarrow$ 18{,}3\%, Bảng~\ref{tab:baseline}) là bằng chứng duy
+nhất tách được hai phần đóng góp này, và nó hiện chỉ tồn tại trên một
+website.
 \item \textbf{Quy mô dữ liệu chênh lệch lớn.} Go-Browse huấn luyện trên
 khoảng 40 nghìn bước tương tác và NNetNav trên khoảng 45 nghìn, trong khi
 tập dữ liệu của khóa luận chỉ có 4288 mẫu huấn luyện, nhỏ hơn khoảng một bậc
@@ -478,8 +517,9 @@ tương tự khác thì tỷ lệ dao động bao nhiêu'', chứ không trả l
 
 Để có được kết luận thống kê vững chắc, cần bổ sung ba hạng mục: (i) lặp lại
 tối thiểu ba lần cho cả mô hình nền và mô hình sau fine-tune, báo cáo trung
-bình kèm độ lệch chuẩn và kiểm định phi tham số theo cặp task; (ii) bổ sung
-đối chứng mô hình nền trên ba website còn lại thay vì chỉ GitLab; và (iii)
+bình kèm độ lệch chuẩn và kiểm định phi tham số theo cặp task; (ii) hoàn tất
+đối chứng mô hình nền trên ba website còn trống ở Bảng~\ref{tab:baseline};
+và (iii)
 đo lại Shopping cùng Shopping Admin theo trình tự \emph{tuần tự} nhằm loại
 trừ khả năng nhiễu chéo đã nêu ở mục~\ref{sec:exp-protocol}. Đây là nhóm
 công việc được xếp ưu tiên cao nhất trong phần thực nghiệm còn lại.
@@ -656,5 +696,6 @@ so với mô hình nền trên website duy nhất có đối chứng. Hai giới
 nhắc lại một cách rõ ràng: kết quả chỉ đến từ một lần chạy cho mỗi website
 (mục~\ref{sec:exp-stats}), và các ablation tách bạch đóng góp của từng thành
 phần trong pipeline vẫn chưa được thực hiện (mục~\ref{sec:exp-ablation}).
+
 Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những
 bài học kỹ thuật rút ra trong quá trình thực hiện.
