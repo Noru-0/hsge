@@ -55,18 +55,55 @@ setup_train() {
             || return 1
     fi
     uv pip install --python "$VENVS/train/bin/python" -e "$BASE/LLaMA-Factory[torch,metrics]" || return 1
-    # Pin the torch CUDA build. Left to resolve freely, uv installs the newest
-    # PyPI wheel (torch 2.13.0+cu130), which needs a CUDA 13 driver; a box with a
-    # 12.x driver (e.g. 560.35.03 / CUDA 12.6) then reports no CUDA at all.
-    # cu128 is the newest CUDA-12 build and runs on both 12.x (minor-version
-    # compatibility) and 13.x (drivers are backward compatible) drivers.
-    # All three must be pinned together: leaving torchaudio on its cu130 wheel
-    # makes `import torchaudio` fail to load _torchaudio.abi3.so, which breaks
-    # llamafactory-cli itself.
-    uv pip install --python "$VENVS/train/bin/python" \
-        --reinstall-package torchaudio \
-        torch==2.11.0 torchvision torchaudio==2.11.0+cu128 \
-        --index-url https://download.pytorch.org/whl/cu128 || return 1
+    # Pin the torch CUDA build to match the box's nvcc, and pin all three of
+    # torch/torchvision/torchaudio to the SAME release family.
+    #
+    # Why match nvcc and not just the driver: `causal-conv1d` has no prebuilt
+    # wheel and must compile, and torch's cpp_extension refuses to build when
+    # torch.version.cuda differs from the nvcc it finds. Without causal-conv1d,
+    # transformers' `is_fast_path_available` for Qwen3.5 is False -- it requires
+    # ALL of causal_conv1d_fn/_update + chunk_gated_delta_rule +
+    # fused_recurrent_gated_delta_rule -- so *every* Gated DeltaNet layer falls
+    # back to plain torch. Measured on an H100: 30-33 s/step with the GPU
+    # oscillating 0-100% at 130-200 W, versus 13 s/step at a steady 100% / 630 W
+    # once the fast path is on. 2.3x, for one missing package.
+    #
+    # Why the family pin: torchaudio's newest release is 2.11.0, so asking for
+    # plain `torch` on the cu130 index resolves torch to 2.13.0 and leaves
+    # torchaudio at 2.11.0 -- an ABI mismatch that breaks `import torchaudio`,
+    # which breaks llamafactory-cli itself. torch 2.11.0 exists on BOTH the
+    # cu128 and cu130 indexes, so the same known-good version works either way.
+    local CUDA_MAJOR TORCH_IDX TV_VER
+    CUDA_MAJOR=$(nvcc --version 2>/dev/null | grep -oE 'release [0-9]+' | grep -oE '[0-9]+' | head -1)
+    if [ "${CUDA_MAJOR:-12}" -ge 13 ]; then
+        TORCH_IDX=cu130; TV_VER=0.26.0+cu130
+        log "nvcc reports CUDA $CUDA_MAJOR -> installing torch 2.11.0+cu130"
+        uv pip install --python "$VENVS/train/bin/python" \
+            --reinstall-package torch --reinstall-package torchvision \
+            --reinstall-package torchaudio \
+            "torch==2.11.0+cu130" "torchvision==$TV_VER" "torchaudio==2.11.0+cu130" \
+            --index-url https://download.pytorch.org/whl/cu130 || return 1
+    else
+        log "nvcc reports CUDA ${CUDA_MAJOR:-unknown} -> installing torch 2.11.0+cu128"
+        uv pip install --python "$VENVS/train/bin/python" \
+            --reinstall-package torch --reinstall-package torchvision \
+            --reinstall-package torchaudio \
+            torch==2.11.0 torchvision torchaudio==2.11.0+cu128 \
+            --index-url https://download.pytorch.org/whl/cu128 || return 1
+    fi
+    # NEVER uninstall the nvidia-*-cu12 packages to "clean up" after switching
+    # index: several of them install to the same paths as their cu13 twins at the
+    # same version (nvidia-nvshmem 3.4.5 is one), so uninstalling the cu12 one
+    # deletes the shared .so files and leaves the cu13 package's metadata
+    # pointing at nothing -- torch then dies with
+    # `ImportError: libnvshmem_host.so.3: cannot open shared object file`.
+    # A --reinstall-package of the torch trio, as above, replaces the nvidia deps
+    # correctly on its own; leftover cu12 wheels are inert.
+    "$VENVS/train/bin/python" -c "
+import torch, torchaudio, torchvision
+assert torch.cuda.is_available(), 'no CUDA'
+print('torch', torch.__version__, 'cuda', torch.version.cuda,
+      '| torchaudio', torchaudio.__version__, '| torchvision', torchvision.__version__)" || return 1
     # transformers is left at whatever LLaMA-Factory resolves (5.8.0 at the time
     # of writing). This used to install transformers@main because Qwen3.5 was
     # only on the main branch; it is in released transformers now
@@ -82,6 +119,29 @@ setup_train() {
     # than emit wrong gradients (fla issue #640) unless tilelang is present.
     uv pip install --python "$VENVS/train/bin/python" tilelang \
         || log "WARN tilelang install failed; fla will abort on Hopper with triton < 3.7.1"
+    # causal-conv1d is the last piece of Qwen3.5's fast path (see the torch pin
+    # above for why it is worth 2.3x). It ships no wheel, so it compiles here --
+    # ~7 min for the one arch below. Do NOT leave TORCH_CUDA_ARCH_LIST unset:
+    # the default builds 9 architectures (sm_75 through sm_121), 9x the work for
+    # a box that has exactly one GPU model. Detect it instead.
+    local SM
+    SM=$("$VENVS/train/bin/python" -c "import torch;print('%d.%d'%torch.cuda.get_device_capability(0))" 2>/dev/null)
+    if [ -n "$SM" ]; then
+        log "building causal-conv1d for sm_${SM/./} only"
+        TORCH_CUDA_ARCH_LIST="$SM" MAX_JOBS="$(nproc)" \
+            uv pip install --python "$VENVS/train/bin/python" causal-conv1d --no-build-isolation \
+            || log "WARN causal-conv1d install failed; Qwen3.5 GDN layers fall back to plain torch (~2.3x slower)"
+    else
+        log "WARN could not detect GPU arch; skipping causal-conv1d"
+    fi
+    # Report the fast path explicitly -- it is the difference between a 3 h and a
+    # 7 h run, and the only in-band signal is a single warning line buried in the
+    # training log ("The fast path is not available because one of the required
+    # library is not installed").
+    "$VENVS/train/bin/python" -c "
+from transformers.models.qwen3_5.modeling_qwen3_5 import is_fast_path_available
+print('Qwen3.5 GDN fast path:', 'ON' if is_fast_path_available else 'OFF (expect ~2.3x slower training)')" \
+        || log "WARN could not query is_fast_path_available"
     "$VENVS/train/bin/python" -c "import torch; assert torch.cuda.is_available(), 'no CUDA'; print('torch', torch.__version__)"
 }
 

@@ -64,6 +64,33 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   Suite 314 -> 318 pass. Baseline verified first: rebuilding with
   `--keep-ineffective` reproduces the previous 4884 exactly.
 
+- **09:02** — `training/vast_setup.sh`, `training/qwen35_9b_lora_all.yaml`,
+  `.claude/memory/bugs.md`, `training/artifacts/qwen35-9b-lora-all-v2/` (gitignored)
+  — **trained the cross-domain LoRA on the corrected dataset, and fixed the three
+  environment traps found doing it.** Result on a fresh H100-80GB box
+  (`103.170.207.42:25639`, driver 595.71.05 / CUDA 13.2, no volume):
+  3 h 05 m for 804 steps, `train_loss` 0.3886, `eval_loss` by epoch
+  **0.4711 -> 0.4343 -> 0.4535**, so **`checkpoint-536` (epoch 2) is the one to
+  merge** — same epoch-3-overfits shape as the previous run. The absolute loss is
+  much higher than the previous run's 0.21 and that is expected, not a
+  regression: the old val set shared 52% of its goals with train, and the 104
+  dropped zero-effective-action trajectories were the trivially predictable ones.
+  Speed work (user asked explicitly not to waste the GPU): measured and
+  **rejected** liger-kernel at batch 16 (17 s/step steady vs the 4x4 baseline's
+  11-13 s at the same effective batch, plus TileLang recompiles on shape changes);
+  found `gradient_checkpointing: false` in the yaml is a no-op because
+  LLaMA-Factory reads `disable_gradient_checkpointing`; then found and fixed the
+  real problem — Qwen3.5's GDN fast path was off for want of `causal-conv1d`,
+  worth **2.3x** (30-33 s/step at 130-200 W -> 13 s/step at 100% util / 630 W).
+  Getting there meant matching torch's CUDA to the box's nvcc (torch
+  2.11.0+cu130, family-pinned with torchvision/torchaudio) and untangling two
+  self-inflicted breakages; all of it is now automated and documented in
+  `vast_setup.sh`, with the fast-path state printed at the end of setup so a
+  future run cannot silently pay the 2.3x again. Artifacts pulled to
+  `training/artifacts/qwen35-9b-lora-all-v2/` and **verified byte-exact**
+  (the first rsync raced the trainer's final eval write — `eval_results.json` was
+  missing and `all_results.json` stale — worth re-checking after any such copy).
+
 ## 2026-08-10
 
 - **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,

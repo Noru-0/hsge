@@ -15,6 +15,88 @@ Entry format:
 
 ## Open
 
+### Qwen3.5's `is_fast_path_available` needs FOUR packages, so one missing wheel costs 2.3x training speed
+- **Status**: fixed (2026-08-11 09:02) in `training/vast_setup.sh`; the trap itself
+  is upstream behaviour and will recur on any box set up by hand.
+- **Found**: 2026-08-11, first training run on the new 4-domain dataset was
+  running at 30-33 s/step against a `training/README.md` baseline of 11-13 s/step
+  for the same effective batch.
+- **Where**: `transformers/models/qwen3_5/modeling_qwen3_5.py:205`.
+- **Symptom**: 2.3x slower training, and the GPU is *starved* rather than busy —
+  utilization oscillating 0-100% at 130-200 W instead of a steady 100% / 630 W.
+  The only in-band signal is one line, logged once, buried in the model-loading
+  spew: "The fast path is not available because one of the required library is
+  not installed."
+- **Cause**: `is_fast_path_available = all((causal_conv1d_fn,
+  causal_conv1d_update, chunk_gated_delta_rule,
+  fused_recurrent_gated_delta_rule))`. `vast_setup.sh` installed
+  flash-linear-attention and tilelang (which supply the last two) but never
+  `causal-conv1d`, so the `all()` was False and **every** Gated DeltaNet layer —
+  not just the conv — fell back to plain torch. Misleading in two ways: the
+  warning names two projects, so it reads as "fla is missing" when fla was fine;
+  and nothing scales with the missing kernel, so the slowdown looks like a data
+  or batch problem.
+- **Ruled out**: not the new dataset being longer (measured with the real
+  tokenizer: median 2706 vs the old dataset's 2314, max 4040 vs 3794 — ~17%, not
+  150%); not a memory leak (VRAM flat at 78.3 GB across steps); not tilelang
+  recompiling (0 "TileLang begins to compile" lines in that run's log).
+- **Fix**: `vast_setup.sh` now builds `causal-conv1d` and prints the fast-path
+  state explicitly at the end of setup. Confirmed on the H100: 13 s/step, 100%
+  util, 630-658 W, and the warning gone from the log.
+
+### Building `causal-conv1d` needs torch's CUDA to match nvcc, and the fix has two sharp edges
+- **Status**: fixed (2026-08-11 09:02) in `training/vast_setup.sh`
+- **Found**: 2026-08-11, installing causal-conv1d for the entry above.
+- **Where**: `training/vast_setup.sh` (torch pin), box environment.
+- **Symptom 1 — cannot build at all**: `RuntimeError: The detected CUDA version
+  (13.2) mismatches the version that was used to compile PyTorch (12.8)`.
+  causal-conv1d has no prebuilt wheel, so it must compile, and torch's
+  `cpp_extension._check_cuda_version` refuses to. The box had only CUDA 13.2
+  under `/usr/local/cuda`, so the toolkit could not be downgraded to match.
+- **Symptom 2 — `undefined symbol: ncclCommResume`** after switching torch to
+  the cu130 index. Two causes stacked: (a) `uv pip install --reinstall-package
+  torch ...` replaces only the packages named, leaving every `nvidia-*-cu12`
+  dependency in place for a cu130 torch to link against; (b) asking for plain
+  `torch` on that index resolves **2.13.0**, while torchaudio's newest release is
+  only **2.11.0**, so the trio silently desynchronizes — and a broken
+  `import torchaudio` takes `llamafactory-cli` down with it.
+- **Symptom 3 — `ImportError: libnvshmem_host.so.3: cannot open shared object
+  file`** after "cleaning up" by uninstalling the `nvidia-*-cu12` packages.
+  `nvidia-nvshmem-cu12` and `nvidia-nvshmem-cu13` were both version 3.4.5 and
+  install to the same paths, so removing the cu12 one deleted the shared `.so`
+  files and left the cu13 package's metadata pointing at nothing. Diagnosed by
+  walking each `nvidia-*`/`cuda-*` dist-info `RECORD` and checking whether its
+  `.so` entries still exist on disk — exactly one package was affected (12/12
+  `.so` missing), so a targeted reinstall fixed it without touching the rest.
+- **Fix**: `vast_setup.sh` reads the CUDA major from `nvcc`, picks the cu128 or
+  cu130 index accordingly, and pins **all three** of
+  torch/torchvision/torchaudio to the 2.11.0 family (2.11.0 exists on both
+  indexes, so the same known-good version works either way). It also documents,
+  in-line, never to uninstall the cu12 packages — leftover wheels are inert, and
+  removing them is what breaks nvshmem.
+- **Also**: the default `causal-conv1d` build compiles **9** architectures
+  (sm_75 through sm_121). `vast_setup.sh` now detects the GPU's own capability
+  and sets `TORCH_CUDA_ARCH_LIST` to just that one (~7 min instead of ~1 h).
+
+### `cutoff_len` carried over from an older dataset OOMs the H100
+- **Status**: fixed (2026-08-11) in `training/qwen35_9b_lora_all.yaml`
+- **Found**: 2026-08-11, first run on the new dataset died at step 9/804.
+- **Where**: `training/qwen35_9b_lora_all.yaml`, `cutoff_len`.
+- **Symptom**: `torch.OutOfMemoryError: Tried to allocate 15.01 GiB` with
+  66.6 of 79.2 GiB already in use, at `per_device_train_batch_size: 4` — a
+  configuration the README records as working.
+- **Cause**: `cutoff_len: 6144` was inherited from `train_all.jsonl`'s rough
+  chars/3 length estimate. Measured with the real Qwen3.5 tokenizer, the new
+  dataset's max is **4040** tokens (p99 3672, zero examples over 4096), so 6144
+  bought ~2100 tokens of padding headroom that only enlarged the worst-case
+  activation footprint, and the varying padded lengths across micro-batches
+  fragmented the allocator (the OOM message's own "12.93 GiB reserved but
+  unallocated" note).
+- **Fix**: `cutoff_len: 4096` (zero truncation risk against the measured max)
+  plus `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. Peak settled at
+  78.3/81.5 GiB and the run completed all 804 steps. **Re-measure rather than
+  copying this number** to the next dataset.
+
 ### Zero-effective-action successes: 40% of kept trajectories never click/fill/goto anything
 - **Status**: partially fixed (2026-08-11 03:43) — non-INFO episodes are now kept
   out of the dataset, but the runtime still produces them

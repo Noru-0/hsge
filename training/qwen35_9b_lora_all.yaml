@@ -33,12 +33,19 @@ dataset: hsge_all_train
 eval_dataset: hsge_all_val
 dataset_dir: training/data/all
 # verified against the installed LLaMA-Factory (data/template.py): qwen3_5_nothink
-# 6144, matching the reddit/shopping configs: prepare_dataset.py's rough
-# chars/3 estimate says ~2943 tokens max across all four domains, but that
-# estimate is approximate -- keep the same safety margin already validated for
-# this repo rather than cutting it to the estimate.
+# Measured with the real Qwen3.5-9B tokenizer on training/data/all/{train,val}
+# (2026-08-10 dataset, post gate+task-split fix): max 4040 tokens, p99 3672, 0
+# examples over 4096. 6144 was carried over from the earlier (train_all.jsonl)
+# dataset's rough chars/3 estimate; on THIS dataset it OOM'd at step 9/804 with
+# per_device_train_batch_size 4 (66.6/79.2 GiB used, allocator fragmentation
+# from varying padded lengths across micro-batches, per the OOM message's own
+# "reserved but unallocated" note) -- keeping ~2100 tokens of unneeded padding
+# headroom was buying nothing but a bigger worst-case activation footprint.
+# 4096 has zero truncation risk against the measured max and removes that
+# headroom; if a future dataset's real max exceeds this, re-measure and raise
+# it rather than restoring 6144 blind.
 template: qwen3_5_nothink
-cutoff_len: 6144
+cutoff_len: 4096
 overwrite_cache: true
 preprocessing_num_workers: 8
 
