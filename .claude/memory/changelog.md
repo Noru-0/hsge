@@ -6,6 +6,19 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **19:01** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **reverted
+  the six-task-group Table 4.9 back to the four-website version** at the
+  user's request; done by reverse-applying commit 9844845's patch, so the
+  file is byte-identical to its ebb28d2 state and no adjacent edit had to be
+  hand-reconstructed. **Side effect worth knowing:** that commit had also
+  carried four of the user's own `mô hình nền` -> `mô hình gốc` renames inside
+  §4.4.3, and reversing it undid them. The document is now uniformly
+  `mô hình nền` again (10 in Ch4, 6 in Ch5, 6 in Ch6), which is at least
+  self-consistent — the partial rename was not. Flagged to the user rather
+  than silently re-applied, since which term to standardise on is theirs to
+  pick. Rebuild verified in the isolated scratchpad copy: 154 pages, 0
+  undefined refs/cites, 6 overfull hboxes.
+
 - **18:58** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **Table 4.9
   (related work) now covers all six WebArena task groups, transposed.**
   Task groups became rows (Shopping 187 / Shopping Admin 182 / GitLab 180 /
