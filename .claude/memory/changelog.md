@@ -6,6 +6,14 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **11:24** — `training/stall_watchdog.sh` (new), `.claude/memory/bugs.md` —
+  supervisor-side watchdog that restarts `evalsweep` when `results.jsonl` goes
+  20 min without a new row. Written during the live 4-box eval after reddit hung
+  ~20 min inside Playwright (idle Chrome, no sockets, main thread in `ep_poll`)
+  with `supervisorctl` still reporting `RUNNING` — a failure mode neither the
+  exit-3 consecutive-error guard nor BrowserGym's action timeout can see.
+  Deployed to all four boxes and verified `RUNNING`; the hung sweep was
+  restarted by hand and immediately completed the task it had been stuck on.
 - **03:11** — `.claude/memory/bugs.md` — audited `training_data/*.jsonl` (built
   from the 4 `wa_run_20_*` runs) against the old `train_all.jsonl` and the
   limitations recorded in `.claude/handoff/`. Confirmed fixed: relative URLs

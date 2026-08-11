@@ -15,6 +15,40 @@ Entry format:
 
 ## Open
 
+### A sweep can hang forever inside Playwright, and nothing detects it
+- **Status**: mitigated (2026-08-11 11:24) by `training/stall_watchdog.sh`; the
+  underlying Playwright hang is **not** fixed and its trigger is unknown.
+- **Found**: 2026-08-11, during the 4-box parallel eval. reddit sat at 1/106 for
+  ~20 minutes while the other three boxes advanced normally.
+- **Where**: `training/eval_webarena.py` `run_task()`, inside BrowserGym env
+  setup/step; no bounding timeout on that path.
+- **Symptom**: the sweep process stays alive and `supervisorctl status` reports
+  `RUNNING`, but no row is ever appended. Evidence from the live box: Chrome had
+  been up 19 minutes with **zero network sockets** and ~2s total CPU; the main
+  Python thread was in `ep_poll` on the Playwright driver pipe with 15 threads in
+  `futex_wait`; vLLM had logged no request for 16 minutes.
+- **Cause**: not root-caused. It is **transient, not task-specific** — the same
+  task (webarena.28) had completed during the smoke run minutes earlier, and
+  completed again immediately after a restart. Note the misleading signal: the
+  process holds a `CLOSE-WAIT` socket to vLLM, which looks like a stuck HTTP
+  read but is just an idle keep-alive connection the server reaped. `OpenAILLM`
+  already sets a 180s timeout with `max_retries=0`, so the LLM path is bounded;
+  the browser path is not.
+- **Why nothing caught it**: BrowserGym's `10000 => 30000` override bounds
+  *actions*, not env setup. `eval_webarena.py`'s exit-3 guard counts consecutive
+  **errors**, and a hang produces no error. `eval_status.py` does report `STALE`,
+  but only if a human is looking.
+- **Fix (mitigation)**: `training/stall_watchdog.sh`, run as a supervisor program
+  beside `evalsweep`, restarts the sweep when `results.jsonl` has not been
+  appended to for 20 min. Safe because a hung task has no row yet, so resume
+  re-runs it whole — nothing partial is ever recorded. Threshold is 20 min
+  against a worst legitimate task of ~9 min (16 steps x 30s action timeout +
+  LLM + per-step `validate()`), and the watchdog sleeps a full interval after
+  restarting so a slow first task cannot livelock it.
+- **Not done**: a real per-task wall-clock timeout inside `run_task()` would be
+  the proper fix, recording the task as errored (and therefore requeueable via
+  `prune_errored()`) instead of relying on an external process.
+
 ### `serve_vllm.sh`'s default model path pointed at a directory nothing creates
 - **Status**: fixed (2026-08-11 10:08)
 - **Found**: 2026-08-11, preparing the 4-box parallel eval.
