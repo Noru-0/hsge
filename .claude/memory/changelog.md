@@ -6,6 +6,16 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **19:17** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **Table 4.9
+  headers now sit on one line each.** Column widths rebalanced
+  (4,4/2,5/1,3/1,8/1,5/1,5 cm) to give the two long headers room, and every
+  header cell wrapped in `\mbox` so the property is structural rather than a
+  by-product of the current widths — a later width tweak cannot silently
+  reintroduce the wrap. Note `\mbox` also blocks hyphenation, which is what
+  had split `Sh. Ad-min` after the first widening fixed only the space break.
+  The user concurrently shortened two header labels (`Sh. Admin` -> `Admin`,
+  `Shop.` -> `Shop`), which is preserved. 154 pages, 6 overfull hboxes.
+
 - **19:01** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **reverted
   the six-task-group Table 4.9 back to the four-website version** at the
   user's request; done by reverse-applying commit 9844845's patch, so the

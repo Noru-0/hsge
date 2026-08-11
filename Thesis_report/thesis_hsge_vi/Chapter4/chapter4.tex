@@ -448,26 +448,26 @@ mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
 số của các tỷ lệ theo từng website, với trọng số là số task chính thức
 (Shopping 187, Sh.\ Admin 182, GitLab 180, Reddit 106). Số liệu các dòng
 tham chiếu lấy từ Bảng 3 của Go-Browse~\cite{gandhi2026gobrowse}. Dòng cuối
-là mô hình nền của khóa luận, hiện mới có số đo trên GitLab
+là mô hình baseline của khóa luận, hiện mới có số đo trên GitLab
 (Bảng~\ref{tab:baseline}).}
 \label{tab:related}
 \small
-\begin{tabular}{@{}L{4.0cm} R{1.9cm} R{1.5cm} R{1.7cm} R{1.4cm} R{1.6cm}@{}}
+\begin{tabular}{@{}L{4.4cm} R{2.5cm} R{1.3cm} R{1.8cm} R{1.5cm} R{1.5cm}@{}}
 \toprule
-\textbf{Mô hình} & \textbf{Tổng (4 site)} & \textbf{Shop.} &
-\textbf{Sh.\ Admin} & \textbf{Reddit} & \textbf{GitLab} \\
+\textbf{Mô hình} & \mbox{\textbf{Tổng (4 site)}} & \mbox{\textbf{Shop}} &
+\mbox{\textbf{Admin}} & \mbox{\textbf{Reddit}} & \mbox{\textbf{GitLab}} \\
 \midrule
 \multicolumn{6}{@{}l}{\textit{Mô hình đóng}} \\
 GPT-4o-mini & 20{,}0\% & 19{,}3 & 19{,}2 & 21{,}1 & 20{,}9 \\
 GPT-4o & 37{,}5\% & 32{,}3 & 35{,}7 & 50{,}9 & 36{,}7 \\
 \midrule
 \multicolumn{6}{@{}l}{\textit{Mô hình mở, cỡ nhỏ}} \\
-Qwen-2.5-7B-Instruct (nền) & 8{,}3\% & 9{,}4 & 7{,}1 & 7{,}9 & 8{,}7 \\
+Qwen-2.5-7B-Instruct & 8{,}3\% & 9{,}4 & 7{,}1 & 7{,}9 & 8{,}7 \\
 NNetNav-7B~\cite{murty2024nnetnav} & 19{,}1\% & 20{,}3 & 14{,}3 & 23{,}7 & 19{,}9 \\
 Go-Browse-7B~\cite{gandhi2026gobrowse} & \textbf{22{,}6\%} & 22{,}4 & \textbf{25{,}3} & \textbf{30{,}7} & 15{,}3 \\
 \midrule
 \textbf{HSGE-9B (khóa luận)} & \textbf{20{,}8\%} & \textbf{28{,}3} & 15{,}4 & 20{,}8 & \textbf{18{,}3} \\
-Qwen3.5-9B (nền) & \emph{chưa đo} & \emph{--} & \emph{--} & \emph{--} & 5{,}6 \\
+Qwen3.5-9B (baseline) & \emph{chưa đo} & \emph{--} & \emph{--} & \emph{--} & 5{,}6 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -492,14 +492,9 @@ tập dữ liệu của khóa luận chỉ có 4288 mẫu huấn luyện, nhỏ 
 nêu ở mục~\ref{sec:exp-protocol}.
 \end{enumerate}
 
-Với những dè dặt đó, kết luận mà Bảng~\ref{tab:related} \emph{cho phép} rút
-ra là: một mô hình dưới 10B được huấn luyện trên 4288 mẫu do chính pipeline
-này sinh ra đạt mức tương đương các hệ thống tốt nhất cùng phân khúc. Cụ
-thể, mô hình cao hơn NNetNav-7B (20{,}8\% so với 19{,}1\%), tương đương
-GPT-4o-mini (20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) một khoảng
-1{,}8 điểm phần trăm, tức nằm trong khoảng tin cậy của phép đo. Ngược lại, bảng này
-\emph{không} cho phép kết luận HSGE tốt hơn hay kém hơn Go-Browse; muốn kết
-luận như vậy thì mô hình nền và quy mô dữ liệu phải được đồng nhất.
+Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 4288 mẫu dữ liệu do chính chuỗi xử lý (pipeline) này tổng hợp, có khả năng đạt hiệu năng tương đương với các hệ thống tiên tiến nhất trong cùng phân khúc. Cụ thể, mô hình đề xuất đạt kết quả cao hơn NNetNav-7B (20{,}8\% so với 19{,}1\%), tiệm cận với mức hiệu năng của GPT-4o-mini (20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) khoảng 1{,}8 điểm phần trăm, một mức chênh lệch vẫn nằm trong khoảng tin cậy thống kê (confidence interval) của phép đo.
+
+Tuy nhiên, các số liệu này \emph{chưa đủ cơ sở} để khẳng định phương pháp HSGE ưu việt hay kém hiệu quả hơn so với Go-Browse. Để có một phép so sánh công bằng và chính xác nhất, mô hình cơ sở (foundation model) cũng như quy mô tập dữ liệu huấn luyện của cả hai hệ thống cần phải được thiết lập đồng nhất.
 
 Phân bố kết quả theo từng website mang nhiều thông tin hơn con số tổng. Điểm
 mạnh và điểm yếu của khóa luận gần như trái ngược với Go-Browse: khóa luận
@@ -584,7 +579,7 @@ thông qua phân bố các kiểu lỗi.
 Mỗi episode đánh giá đều để lại một trace gồm ba loại bản ghi được lưu tách
 biệt: các bước của solver, nội dung thô của từng lời gọi LLM, và kết quả
 trình duyệt trả về sau mỗi hành động. Ba loại bản ghi này không tương ứng
-một--một với nhau nên được giữ riêng thay vì gộp chung. Dựa trên đó, mỗi
+một-một với nhau nên được giữ riêng thay vì gộp chung. Dựa trên đó, mỗi
 episode thất bại được gán \emph{đúng một} nguyên nhân chính theo thứ tự ưu
 tiên từ cụ thể đến tổng quát, nhờ vậy tổng các dòng trong
 Bảng~\ref{tab:failures} bằng đúng số episode thất bại.
@@ -640,47 +635,20 @@ Tự báo bất khả thi & 26\% & 33\% & 31\% & 31\% \\
 
 \subsection{Nhận xét từ kết quả phân loại lỗi}
 
-\textbf{Lỗi hành động là điểm nghẽn phổ biến nhất, không phải lỗi suy luận.}
-Từ 83\% đến 95\% số episode thất bại có ít nhất một hành động bị trình duyệt
-từ chối, với tổng cộng 2285 lỗi hành động trên 655 episode. Phần lớn trong
-số này là lỗi hết thời gian chờ khả năng thao tác của Playwright, xảy ra
-trên chính những phần tử mà accessibility tree \emph{có} hiển thị. Nói cách
-khác, mô hình đã xác định đúng phần tử cần tương tác, nhưng phần tử chưa ở
-trạng thái sẵn sàng nhận thao tác. Đây là hạn chế của lớp thực thi hơn là
-hạn chế về năng lực của mô hình, và do đó là hướng cải thiện có tỷ suất cao
-nhất (Chương~\ref{ch:discussion}, mục~\ref{sec:disc-guardrails}).
+\textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất, thay vì lỗi suy luận.}
+Từ 83\% đến 95\% số phiên (episode) thất bại ghi nhận ít nhất một hành động bị trình duyệt từ chối, với tổng số 2285 lỗi thực thi trên 655 phiên. Nguyên nhân chủ yếu xuất phát từ lỗi vượt quá thời gian chờ khả năng thao tác (timeout) của Playwright, diễn ra ngay trên các phần tử mà accessibility tree \emph{thực sự} có hiển thị. Điều này đồng nghĩa với việc mô hình đã xác định chính xác đối tượng mục tiêu, nhưng phần tử đó chưa ở trạng thái sẵn sàng tiếp nhận tương tác. Đây thực chất là điểm yếu của tầng thực thi (execution layer) chứ không phản ánh sự thiếu hụt năng lực của mô hình; do đó, việc tập trung khắc phục vấn đề này sẽ là hướng tối ưu mang lại hiệu quả cải thiện cao nhất (Chương~\ref{ch:discussion}, Mục~\ref{sec:disc-guardrails}).
 
-\textbf{Hiện tượng kẹt vòng lặp giải thích khoảng cách trên Reddit.} Reddit
-là website duy nhất mà kẹt vòng lặp (56\%) vượt lỗi hành động (25\%) để trở
-thành nguyên nhân chính, với tỷ lệ cao gấp khoảng 1{,}7 lần ba website còn
-lại. Đây cũng chính là website mà khoảng cách so với Go-Browse lớn nhất
-(20{,}8\% so với 30{,}7\%). Như vậy, hạn chế trên Reddit không nằm ở việc mô
-hình không xác định được cần làm gì, mà ở việc nó lặp lại một thao tác không
-hiệu quả cho tới khi cạn ngân sách bước.
+\textbf{Hiện tượng mắc kẹt trong vòng lặp (stuck-loop) lý giải khoảng cách hiệu năng trên Reddit.}
+Reddit là môi trường duy nhất mà lỗi vòng lặp lặp lại (56\%) vượt qua lỗi thực thi (25\%) để trở thành nguyên nhân thất bại chủ đạo, với tỷ lệ cao gấp khoảng 1{,}7 lần so với ba website còn lại. Đây đồng thời là website chứng kiến khoảng cách hiệu năng lớn nhất so với hệ thống Go-Browse (20{,}8\% so với 30{,}7\%). Từ đó có thể thấy, rào cản trên Reddit không xuất phát từ việc mô hình mất phương hướng, mà do hệ thống liên tục lặp lại một thao tác vô tác dụng cho đến khi tiêu hao toàn bộ ngân sách bước.
 
-\textbf{Việc cạn ngân sách 15 bước ảnh hưởng nặng nhất tới GitLab} (45\%),
-phù hợp với đặc điểm các task GitLab thường đòi hỏi chuỗi điều hướng dài.
-Đồng thời, \emph{không có} episode nào thuộc nhóm ``chạm mục tiêu rồi rời
-đi'', tức nhóm mà một bước trung gian đã được tính điểm nhưng episode vẫn
-kết thúc với điểm bằng không. Chi tiết này có ý nghĩa quan trọng đối với
-tính hợp lệ của phép đo: nó cho thấy ngân sách 15 bước đang \emph{đo} năng
-lực của mô hình chứ không \emph{trừng phạt} mô hình, vì không task nào bị
-mất điểm chỉ vì bị cắt ngang sau khi đã thực hiện đúng.
+\textbf{Tình trạng cạn kiệt ngân sách 15 bước tác động tiêu cực nhất đến GitLab} (45\%),
+điều này hoàn toàn nhất quán với đặc thù của các tác vụ trên GitLab vốn đòi hỏi những chuỗi điều hướng phức tạp và kéo dài. Đáng chú ý, hệ thống \emph{không ghi nhận} bất kỳ phiên nào rơi vào tình trạng ``chạm mục tiêu rồi rời đi'', tức là hiện tượng một bước trung gian đã đạt điểm, nhưng phiên tương tác lại kết thúc với điểm số không. Điểm mù này mang ý nghĩa quyết định đối với tính hợp lệ (validity) của phương pháp đo lường: nó chứng minh rằng giới hạn 15 bước thực sự đang đóng vai trò \emph{thước đo} năng lực của mô hình thay vì \emph{trừng phạt} nó, bởi không có bất kỳ tác vụ nào bị tước điểm do hệ thống ngắt quãng sau khi đã hoàn thành đúng mục tiêu.
 
-\textbf{Hiện tượng ``tuyên bố hoàn thành mà không thao tác'' hầu như không
-còn xuất hiện.} Chỉ 3 trên 519 episode thất bại (0{,}6\%) thuộc dạng chỉ có
-một bước gọi \texttt{send\_msg\_to\_user} mà không tác động gì lên trang.
-Đây chính là nhóm hành vi mà cổng lọc hành động hữu hiệu ở
-mục~\ref{sec:exp-data} nhắm tới khi loại bỏ 104 quỹ đạo khỏi tập huấn
-luyện. Tỷ lệ 0{,}6\% do đó là bằng chứng nối trực tiếp giữa công việc làm
-sạch dữ liệu và kết quả đánh giá: cổng lọc đã loại bỏ đúng loại hành vi mà
-nó được thiết kế để loại bỏ.
+\textbf{Hiện tượng ``báo cáo hoàn thành ảo'' (tuyên bố hoàn thành mà không thực hiện thao tác) gần như được triệt tiêu.}
+Chỉ có 3 trên tổng số 519 phiên thất bại (0{,}6\%) rơi vào trường hợp gọi hàm \texttt{send\_msg\_to\_user} ngay tại bước đầu tiên mà không tạo ra bất kỳ tương tác nào với trang. Đây chính xác là nhóm hành vi mà cơ chế lọc hành động hiệu quả tại Mục~\ref{sec:exp-data} đã khoanh vùng và xử lý, dẫn đến việc loại bỏ 104 quỹ đạo lỗi khỏi tập dữ liệu huấn luyện. Tỷ lệ rủi ro giảm xuống mức 0{,}6\% là minh chứng trực tiếp cho mối tương quan chặt chẽ giữa quy trình làm sạch dữ liệu và kết quả đánh giá cuối cùng: cổng kiểm duyệt đã hoàn thành đúng mục tiêu loại trừ triệt để nhóm hành vi sai lệch này.
 
-\textbf{Đầu ra không phân tích được không còn là một nguồn lỗi đáng kể.}
-Chỉ 2 trên 655 episode (0{,}3\%) kết thúc vì phản hồi của mô hình không phân
-tích được thành JSON hợp lệ. Việc ghi lại nội dung thô của từng lời gọi LLM
-trong trace là điều cho phép tách bạch nhóm lỗi này khỏi trường hợp mô hình
-chủ động dừng, thay vì gộp cả hai thành một kết cục thất bại chung.
+\textbf{Đầu ra không thể phân giải (unparseable output) không còn là nguồn gây lỗi đáng kể.}
+Chỉ ghi nhận 2 trên 655 phiên (0{,}3\%) buộc phải kết thúc do phản hồi của mô hình không thể phân giải thành định dạng JSON hợp lệ. Quyết định lưu trữ dữ liệu thô (raw payload) từ từng lời gọi LLM trong vết theo dõi (trace) đã giúp phân tách rạch ròi nhóm lỗi này khỏi các trường hợp mô hình chủ động dừng lại, tránh việc gộp chung tất cả vào một kết quả thất bại tổng quát.
 
 \subsection{Độ dài quỹ đạo}
 
@@ -695,15 +663,9 @@ chứ không vào việc tiến tới mục tiêu.
 
 \subsection{Tổng kết chương}
 
-Chu trình đầu--cuối đã được vận hành trọn vẹn trên bốn website thật: giai
-đoạn khám phá thu được 2178 episode và 1029 quỹ đạo đạt chuẩn; giai đoạn
-fine-tuning cho ra một mô hình 9B với chi phí GPU 6{,}6\,USD; và giai đoạn
-đánh giá trên toàn bộ 655 task chính thức đạt tỷ lệ thành công 20{,}8\%,
-tương đương các hệ thống tốt nhất cùng phân khúc dưới 10B và cao hơn ba lần
-so với mô hình nền trên website duy nhất có đối chứng. Hai giới hạn cần được
-nhắc lại một cách rõ ràng: kết quả chỉ đến từ một lần chạy cho mỗi website
-(mục~\ref{sec:exp-stats}), và các ablation tách bạch đóng góp của từng thành
-phần trong pipeline vẫn chưa được thực hiện (mục~\ref{sec:exp-ablation}).
+Quy trình đầu cuối (end-to-end pipeline) đã được triển khai hoàn chỉnh trên bốn website thực tế. Cụ thể, giai đoạn khám phá đã thu thập thành công 2178 episode và tinh lọc được 1029 quỹ đạo đạt chuẩn; quá trình tinh chỉnh (fine-tuning) đã huấn luyện thành công một mô hình 9B tham số với chi phí điện toán GPU đặc biệt tối ưu, chỉ ở mức 6{,}6\,USD. Trong giai đoạn đánh giá toàn diện trên 655 tác vụ chuẩn thức, hệ thống đạt tỷ lệ thành công 20{,}8\%. Thành tích này tiệm cận với các hệ thống tiên tiến nhất trong cùng phân khúc dưới 10B tham số, đồng thời cao gấp ba lần so với mô hình cơ sở (foundation model) trên website đối chứng duy nhất.
+
+Tuy nhiên, cần nhìn nhận một cách khách quan hai giới hạn cốt lõi của nghiên cứu: thứ nhất, các kết quả đánh giá hiện tại chỉ được ghi nhận từ một lượt chạy (run) duy nhất cho mỗi website (Mục~\ref{sec:exp-stats}); thứ hai, các nghiên cứu cắt bỏ (ablation study) nhằm phân tách và định lượng mức độ đóng góp của từng thành phần trong chuỗi xử lý vẫn chưa được tiến hành (Mục~\ref{sec:exp-ablation}).
 
 Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những
 bài học kỹ thuật rút ra trong quá trình thực hiện.
