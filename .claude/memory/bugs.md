@@ -37,6 +37,9 @@ Entry format:
   `136/655 = 20.8%` finetuned figure ran *first* on that instance and so is less
   exposed, but its own starting state is **unverified** — do not pair it with
   the clean 2026-08-12 base run until that is confirmed.
+- **Resolved for the 2026-08-12 run**: the user confirmed the instance was
+  cleaned before it, so that base sweep's numbers stand. The finding remains
+  open as a *procedural* one — nothing in the tooling enforces or checks it.
 - **Fix**: reset the WebArena Docker stack between sweeps. Worth adding as gate
   0 in `bootstrap_eval_box.sh` (assert a known seed value, e.g. that the reddit
   user's bio is at its default) so a contaminated instance fails fast instead of
