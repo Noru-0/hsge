@@ -6,6 +6,28 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **20:49** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **added
+  §4.1.3 on the cost of the exploration phase**, which Table 4.1 had been
+  reporting as a dash. Since that phase buys tokens rather than GPU-hours, the
+  section reports the **LLM call budget**, counted from the artefacts rather
+  than estimated: solver 17 785 (from recorded action steps), episode_judge
+  1 564 (= successes + demotions), trajectory_segmenter 1 067 (one per
+  successful trajectory fed to Discovery), page_explorer 263, goal_planner 66,
+  operator_inducer 59, site_seeder 4 — **20 808 calls, of which 85,5% are the
+  solver**, which is the point: every cost decision about exploration is a
+  decision about that one role. The solver figure is stated as a lower bound
+  in the caption, since terminal and retry calls leave no step record.
+  **No dollar figure was invented.** `hsge/backends.py` records no token
+  usage, so per-run API spend cannot be reconstructed from the artefacts;
+  Table 4.4 carries the provider breakdown with `chưa tổng hợp` cells for the
+  user to fill from the provider dashboards, and the text names the missing
+  instrumentation as a defect worth fixing (token counts at the API-call layer
+  would attribute cost per site, per role and per task).
+  Measured cleanly in the isolated copy: 154 -> 156 pages, +2 for the new
+  subsection, 0 undefined refs/cites, 6 overfull hboxes. A `[H]` -> `[htbp]`
+  experiment on `tab:runparams` was tried to close a half-blank page and
+  **reverted** once measurement showed it changed nothing.
+
 - **19:17** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **Table 4.9
   headers now sit on one line each.** Column widths rebalanced
   (4,4/2,5/1,3/1,8/1,5/1,5 cm) to give the two long headers room, and every

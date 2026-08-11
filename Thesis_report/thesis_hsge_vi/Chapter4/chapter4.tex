@@ -32,7 +32,7 @@ theo giờ thuê máy.}
 \midrule
 Khám phá & Máy cá nhân điều khiển Chromium; LLM truy cập qua API &
 $\approx$ 21 giờ mỗi website, bốn website chạy song song &
---- \\
+(mục~\ref{sec:exp-cost-explore}) \\
 \addlinespace
 Fine-tuning & 1 $\times$ H100-80GB &
 3 giờ 05 phút &
@@ -77,6 +77,81 @@ tế của các đợt khám phá.
 \texttt{episode\_judge} & DeepSeek-chat & 1 call cho mỗi lần tự nhận thành công \\
 \texttt{trajectory\_segmenter}, \texttt{skill\_abstractor}, \texttt{skill\_verifier},
 \texttt{operator\_inducer} & DeepSeek-chat & pipeline phát hiện skill \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Chi phí của giai đoạn khám phá}
+\label{sec:exp-cost-explore}
+
+Khác với hai giai đoạn còn lại, giai đoạn khám phá không thuê GPU mà trả
+tiền theo số token gửi tới API của các mô hình đóng, nên chi phí của nó tỷ
+lệ với \emph{số lời gọi LLM} chứ không với thời gian chạy. Bảng~\ref{tab:calls}
+thống kê ngân sách lời gọi thực tế của cả bốn đợt khám phá, đếm trực tiếp
+từ các tạo phẩm mà hệ thống ghi lại.
+
+\begin{table}[H]
+\centering
+\caption[Ngân sách lời gọi LLM của giai đoạn khám phá]{Ngân sách lời gọi LLM
+của cả bốn đợt khám phá, đếm từ nhật ký sự kiện và các tệp episode. Số lời
+gọi của solver được lấy bằng số bước hành động đã ghi, nên là một cận dưới:
+nó chưa tính các lời gọi kết thúc episode và các lần gọi lại khi phản hồi
+không phân tích được.}
+\label{tab:calls}
+\small
+\begin{tabular}{@{}L{5.0cm} L{3.4cm} R{2.2cm} R{2.2cm}@{}}
+\toprule
+\textbf{Vai trò} & \textbf{Mô hình} & \mbox{\textbf{Số lời gọi}} &
+\mbox{\textbf{Tỷ trọng}} \\
+\midrule
+\texttt{solver} & GPT-5.6-luna / GPT-4o & 17\,785 & 85{,}5\% \\
+\texttt{episode\_judge} & DeepSeek-chat & 1\,564 & 7{,}5\% \\
+\texttt{trajectory\_segmenter} & DeepSeek-chat & 1\,067 & 5{,}1\% \\
+\texttt{page\_explorer} & GPT-5.6-luna & 263 & 1{,}3\% \\
+\texttt{goal\_planner} & GPT-5.6-luna & 66 & 0{,}3\% \\
+\texttt{operator\_inducer} & DeepSeek-chat & 59 & 0{,}3\% \\
+\texttt{site\_seeder} & GPT-5.6-luna & 4 & $<0{,}1\%$ \\
+\midrule
+\textbf{Tổng} & & \textbf{20\,808} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Phân bố này cho thấy rõ một điều: \textbf{85{,}5\% số lời gọi thuộc về
+solver}, vì đây là vai trò duy nhất nằm trong vòng lặp theo từng bước hành
+động, trong khi mọi vai trò còn lại chỉ được gọi một lần cho mỗi node, mỗi
+quỹ đạo hoặc mỗi lần đề xuất operator. Do đó, mọi quyết định về chi phí của
+giai đoạn khám phá thực chất là quyết định về vai trò solver: chọn mô hình
+nào, đặt ngân sách bao nhiêu bước, và có bật suy luận sâu hay không. Đây
+cũng là lý do vai trò này được chuyển từ GPT-4o sang GPT-5.6-luna giữa chừng
+các đợt chạy, khi một đợt rà soát cho thấy đơn giá token đầu vào của GPT-4o
+cao hơn khoảng mười hai lần.
+
+Hệ thống không được trang bị cơ chế ghi lại số token của từng lời gọi, nên
+chi phí API thực tế của giai đoạn này không thể tái dựng từ tạo phẩm mà phải
+đối chiếu với hóa đơn của nhà cung cấp; con số đó được ghi ở
+Bảng~\ref{tab:apicost}. Đây là một thiếu sót về công cụ đo cần khắc phục:
+nếu số token được ghi ngay tại lớp gọi API, chi phí sẽ quy được về từng
+website, từng vai trò và từng task, qua đó cho phép so sánh hiệu quả chi phí
+giữa các cấu hình khám phá thay vì chỉ so tổng.
+
+\begin{table}[H]
+\centering
+\caption[Chi phí API của giai đoạn khám phá]{Chi phí API thực tế của giai
+đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp. Ô ghi \emph{chưa tổng
+hợp} là số liệu sẽ được bổ sung.}
+\label{tab:apicost}
+\small
+\begin{tabular}{@{}L{5.4cm} L{4.0cm} R{3.4cm}@{}}
+\toprule
+\textbf{Nhà cung cấp} & \textbf{Vai trò sử dụng} & \textbf{Chi phí} \\
+\midrule
+OpenAI & \texttt{solver}, \texttt{page\_explorer},
+\texttt{goal\_planner}, \texttt{site\_seeder} & \emph{chưa tổng hợp} \\
+DeepSeek & \texttt{episode\_judge}, pipeline phát hiện skill &
+\emph{chưa tổng hợp} \\
+\midrule
+\textbf{Tổng} & & \emph{chưa tổng hợp} \\
 \bottomrule
 \end{tabular}
 \end{table}
