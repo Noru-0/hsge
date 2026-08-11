@@ -6,6 +6,24 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **16:41** — `.claude/memory/bugs.md`, `outputs/eval/` (untracked, gitignored) —
+  **4-domain parallel eval of `checkpoint-536` finished: 136/655 = 20.8%**
+  (shopping 53/187 28.3%, reddit 22/106 20.8%, gitlab 33/180 18.3%,
+  shopping_admin 28/182 15.4%). Every domain `complete: true`, full denominator,
+  **0 errored tasks**, 2 unparseable responses in 655 episodes. All 655 traces
+  collected and verified byte-exact before the boxes were destroyed.
+  **`declared_done_without_acting` = 4/655 (0.6%)** — the number that ties the
+  dataset fixes (42% single-step trajectories, 104 zero-effective-action
+  trajectories dropped) to eval behaviour; 0 on shopping/reddit, 2 each on
+  gitlab/shopping_admin. `reached_goal_then_left` = **0/655**, so the 16-step
+  budget never cost a scored episode and raising `--max-steps` would buy
+  nothing. Dominant remaining failure is rejected actions retried to the budget
+  ceiling (`action_errors` present in 85-95% of failures; successes finish in
+  4-6 steps, failures grind to 16). Two disclosures attach to these numbers:
+  the `gpt-4-turbo` judge substitution, and that shopping/shopping_admin ran
+  concurrently without confirming they don't share one Magento DB.
+  Also revised the Playwright-hang bug entry: it recurs on some boxes rather
+  than being a one-off, and the watchdog threshold was retuned 1200s -> 600s.
 - **11:24** — `training/stall_watchdog.sh` (new), `.claude/memory/bugs.md` —
   supervisor-side watchdog that restarts `evalsweep` when `results.jsonl` goes
   20 min without a new row. Written during the live 4-box eval after reddit hung

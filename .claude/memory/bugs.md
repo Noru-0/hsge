@@ -27,8 +27,19 @@ Entry format:
   been up 19 minutes with **zero network sockets** and ~2s total CPU; the main
   Python thread was in `ep_poll` on the Playwright driver pipe with 15 threads in
   `futex_wait`; vLLM had logged no request for 16 minutes.
-- **Cause**: not root-caused. It is **transient, not task-specific** — the same
-  task (webarena.28) had completed during the smoke run minutes earlier, and
+- **Frequency (revised at end of run — it is NOT a one-off)**: reddit hung once.
+  **shopping_admin hung repeatedly** — the watchdog logged a 1201s stall and
+  restarted the sweep, which ran 9 more tasks and hung again 18 min later, and
+  I restarted it by hand a third time. Exact totals are unrecoverable: the boxes
+  were destroyed and `stallwatch.log` went with them. So on some boxes this
+  costs one restart, and on others it recurs every ~20 tasks. Budget for it.
+- **Threshold tuning**: 1200s was cut to **600s** mid-run for the two surviving
+  boxes, sized off real data — shopping_admin's longest legitimate task was
+  304s (p95 170s, median 75s), so 600s keeps ~2x headroom. It did not misfire:
+  shopping_admin's best interval of the whole run (13 tasks / 20 min) came
+  immediately after the change.
+- **Cause**: not root-caused. Not task-specific — the same task (webarena.28)
+  had completed during the smoke run minutes earlier, and
   completed again immediately after a restart. Note the misleading signal: the
   process holds a `CLOSE-WAIT` socket to vLLM, which looks like a stuck HTTP
   read but is just an idle keep-alive connection the server reaped. `OpenAILLM`
