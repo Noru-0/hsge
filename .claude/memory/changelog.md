@@ -4,6 +4,45 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-12
+
+- **02:22** — `training/eval_webarena.py`,
+  `hsge/tests/test_eval_webarena_resume_and_trace.py` — **`--task-timeout-s`
+  (default 900s): a hung task can no longer livelock a sweep.** A task that
+  hangs inside Playwright writes no `results.jsonl` row, so resume puts it back
+  at the head of the queue — and `stall_watchdog.sh` restarting the sweep just
+  starts the same task again. reddit lost ~35 min and 3 attempts to
+  `webarena.724` this way and finished 105/106. Now a SIGALRM handler raises
+  `TaskTimeout` inside `run_task()` (SIGALRM, not a watchdog thread: the hang is
+  a *blocking* one in `ep_poll` on the driver pipe, which a thread could observe
+  but not interrupt). `prune_errored()` keeps `timed_out` rows instead of
+  requeueing them, since requeueing assumes a retry might score — the thing a
+  deterministic hang disproves. The row stays an `error`, so the task is
+  **unscored rather than 0**; scoring it would turn an infrastructure hang into
+  a model failure, which is what makes a baseline untrustworthy. 4 new tests,
+  **334 pass**. Commit `7aec94f`.
+- **01:05** — `outputs/eval/reddit/base_instance1` — **first base sweep's reddit
+  result collected and verified byte-exact: 23/106 = 21.7%** (105 scored, 0
+  errored, 22 unparsed). Its `summary.json` had to be regenerated against the
+  full 106-task denominator (the catch-up run used `--tasks`, leaving
+  `n_site_tasks: 11`, `success_rate: 2.09`), and `UNEVALUATED.md` records
+  `webarena.724` as never-evaluated rather than scoring it 0.
+  **Finetuning is a wash on reddit's score but not on its behaviour**: base
+  21.7% vs finetuned 20.8%, yet base loses 27% of episodes to unparseable JSON
+  (finetuned: 1%) and solves at a median of **1** step, while finetuned solves
+  at a median of **6** and instead loses 56% of episodes to stuck loops. The
+  headroom on reddit is the loop, not the format.
+- **02:10** — `outputs/eval/*/base` → `base_instance1/`, `.env` — **first base
+  sweep abandoned and restarted from scratch** on 4 fresh boxes after the
+  WebArena tunnels were rotated. Three of its four domains never finished
+  (gitlab 167/180, shopping 186/187, shopping_admin 127/182) and those boxes
+  were released uncollected, so only reddit survives; `BASE_INSTANCE1_NOTE.md`
+  records that it is not comparable to `finetuned/`. One rented box
+  (`194.228.55.129:33871`) was rejected before use on **47 volatile / 3893
+  aggregate uncorrectable ECC DRAM errors** — the same fault that killed a box
+  mid-run the day before, caught this time by checking `nvidia-smi` ECC counters
+  before spending six hours.
+
 ## 2026-08-11
 
 - **20:49** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **added

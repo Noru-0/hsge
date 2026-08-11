@@ -56,9 +56,24 @@ Entry format:
   against a worst legitimate task of ~9 min (16 steps x 30s action timeout +
   LLM + per-step `validate()`), and the watchdog sleeps a full interval after
   restarting so a slow first task cannot livelock it.
-- **Not done**: a real per-task wall-clock timeout inside `run_task()` would be
-  the proper fix, recording the task as errored (and therefore requeueable via
-  `prune_errored()`) instead of relying on an external process.
+- **Watchdog limitation found later (2026-08-12)**: it rescues a *transient*
+  hang, but a *deterministic* one becomes an infinite loop -- a hung task writes
+  no row, so resume puts it straight back at the head of the queue and the
+  restart re-runs the same task. reddit was stuck at 94/106 for ~35 minutes on
+  `webarena.724`, which hung on all three attempts and had to be excluded by
+  hand; that domain's first baseline is still 105/106.
+- **Real fix (2026-08-12 02:22, commit `7aec94f`)**: `--task-timeout-s`
+  (default 900s, ~3x the longest legitimate task at 304s) raises `TaskTimeout`
+  from a SIGALRM handler inside `run_task()`. SIGALRM rather than a watchdog
+  thread because the hang is a *blocking* one (main thread parked in `ep_poll`
+  on the driver pipe), which a thread can observe but not interrupt; under
+  PEP 475 the interrupted syscall runs Python-level handlers before retrying.
+  The row is kept and **never requeued** -- `prune_errored()` skips `timed_out`
+  rows -- because requeueing assumes the retry might score, which is exactly
+  what a deterministic hang violates. It stays an `error` row, so the task is
+  **unscored, not 0**: scoring it would convert an infrastructure hang into a
+  model failure. Note this makes the sweep self-healing but does **not**
+  root-cause the Playwright hang, which is still unknown.
 
 ### `serve_vllm.sh`'s default model path pointed at a directory nothing creates
 - **Status**: fixed (2026-08-11 10:08)
