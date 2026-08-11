@@ -6,6 +6,31 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **16:51** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **wrote
+  Chapter 4 (Thực nghiệm) in full** from the completed 4-domain eval
+  (136/655 = 20,8%: shopping 53/187, reddit 22/106, gitlab 33/180,
+  shopping_admin 28/182; 0 errored, complete=true). Seven sections: 4.1 setup
+  (infra, per-role LLM table, run params, protocol + the two deviations that
+  must travel with the numbers — gpt-4-turbo judge substitution and the
+  concurrent shopping/shopping_admin sweep); 4.2 data collection (the four
+  `wa_run_20_*` runs, 2178 episodes, 58 skills, 26 operators, 497 judge
+  demotions ≈ 32% of self-declared successes, dataset 4605 → 4554 examples);
+  4.3 fine-tuning (804 steps / 3 h 05 m, train 0,3886, eval 0,4711/0,4343/0,4535
+  → checkpoint-536, and why the absolute loss is higher than the previous run);
+  4.4 main eval + a **recomputed** related-work table (Go-Browse's per-domain
+  numbers reweighted onto the same 4 domains: Go-Browse-7B 22,6%, NNetNav-7B
+  19,1%, GPT-4o-mini 20,0%, Qwen-2.5-7B base 8,3% vs HSGE-9B 20,8%), with the
+  three confounds stated; 4.5/4.6 kept as explicit not-done (single run per
+  site; ablations unrun) plus the one cross-site observation the data does
+  support (data share does not predict per-domain score); 4.7 failure taxonomy
+  from `analyze_eval_traces.py` over all 655 traces. Numbers were recomputed
+  from the artifacts, not carried over: an earlier draft had GOAL vs LOCAL
+  success backwards and the seed/chain GOAL split wrong. VI edition builds
+  clean, 142 pages, 0 undefined refs, 7 overfull hboxes (all < 7 pt).
+  **Not updated (flagged to user):** Chapter 5 §5.1, Chapter 6 and
+  `Appendix/decuongchitiet.tex` still cite the old 352-example / 5,56% → 6,67%
+  single-site result, and the EN edition `thesis_hsge/Chapter4` is untouched.
+
 - **16:41** — `.claude/memory/bugs.md`, `outputs/eval/` (untracked, gitignored) —
   **4-domain parallel eval of `checkpoint-536` finished: 136/655 = 20.8%**
   (shopping 53/187 28.3%, reddit 22/106 20.8%, gitlab 33/180 18.3%,

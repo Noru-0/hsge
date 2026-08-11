@@ -78,7 +78,25 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
   position paper cho SLM). Một số entry trong references.bib còn note
   `VERIFY` (author list đầy đủ / venue cuối) — agent verify đang chạy,
   vá xong thì xóa note.
-- ⬜ Chapter 4: skeleton, điền số khi thực nghiệm bổ sung xong.
+- ✅ **Chapter 4 (Thực nghiệm) — đã viết trọn bản VI (2026-08-11)**, dựa trên
+  đợt đánh giá 4 domain hoàn tất: **136/655 = 20,8%** (shopping 53/187 = 28,3%,
+  reddit 22/106 = 20,8%, gitlab 33/180 = 18,3%, shopping_admin 28/182 = 15,4%;
+  0 task lỗi, mẫu số đầy đủ). 7 mục theo đúng dàn ý bên dưới; 4.5 (lặp thống kê)
+  và 4.6 (ablation) **giữ nguyên trạng thái chưa làm**, viết rõ thiếu gì thay vì
+  bỏ trống. Bảng so sánh 4.8 **tính lại** số của Go-Browse/NNetNav theo trọng số
+  đúng 4 website (Go-Browse-7B 22,6%, NNetNav-7B 19,1%, GPT-4o-mini 20,0%,
+  Qwen-2.5-7B nền 8,3%) — KHÔNG so trực tiếp với con số 812-task của họ.
+  Build sạch 142 trang.
+  ⚠️ **Ba chỗ còn số cũ, chưa sửa (chờ user quyết)**: `Chapter5/chapter5.tex`
+  §5.1 (352 mẫu / một website), `Chapter6/chapter6.tex` dòng 56 + 130
+  (5,56% → 6,67%), `Appendix/decuongchitiet.tex` mục 2.3.3 (370 mẫu, 10/180 vs
+  12/180, "0 semantic task"). Riêng đề cương có HAI bản phải sửa đồng bộ.
+  ⚠️ **Bản EN `thesis_hsge/Chapter4` chưa được viết lại** — vẫn là skeleton.
+  ⚠️ **Về O2**: run mới ĐÃ sinh được task GOAL thật (66 task, 25 thành công) —
+  nhưng 57/63 lượt là từ **seed năng lực website**, chỉ 6 lượt từ **chuỗi
+  operator**, và 2/4 website không hình thành được chuỗi nào. Nên câu "operator
+  chaining đã chạy đầu–cuối" ở §5.1 vẫn nói quá; phải sửa thành "cơ chế sinh
+  task ngữ nghĩa đã chạy thật, chủ yếu qua seed; ghép chuỗi operator vẫn thưa".
 - ✅ **Đề cương chi tiết (2026-07-20)**: checklist nộp cuốn của Khoa
   (`KLTN/Quy trình nộp đề tài tốt nghiệp từ năm 2025.docx`) bắt buộc có mục
   này **giữa Lời cảm ơn và Mục lục** — báo cáo trước đó thiếu hẳn. Nay ở
