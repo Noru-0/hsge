@@ -6,6 +6,21 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **18:05** — `Thesis_report/thesis_hsge_vi/Chapter{4,5,6}/*.tex` — **removed the
+  em-dash parenthetical construction throughout Chapters 4-6** at the user's
+  request (`X --- giải thích --- Y` reads badly in Vietnamese academic prose).
+  29 occurrences rewritten: 10 in Ch4, 16 in Ch5, 3 in Ch6. Each was recast
+  with whatever fitted the sentence rather than a mechanical substitution:
+  fronting the aside as an adverbial clause, splitting into two sentences,
+  a colon or semicolon, `tức`/`bao gồm`/`cụ thể là`/`nghĩa là`, or turning a
+  list into an enumeration. The one remaining `---` is the "not applicable"
+  cell in the infrastructure table, which is a symbol rather than a
+  construction. Two prior-run references that survived in Ch5 were dropped in
+  the same pass, for consistency with the Ch4 rule the user set earlier: the
+  "0 GOAL tasks across 12 earlier runs" comparison and the "các bản trước của
+  khóa luận đã nói quá" aside, which points at drafts the reader never saw.
+  Clean rebuild: 153 pages, 0 undefined refs, 7 overfull hboxes.
+
 - **18:00** — `Thesis_report/thesis_hsge_vi/Chapter{4,5}/*.tex` — **the
   base-model comparison is now a table with three rows left blank on
   purpose.** §4.4.2 gained `tab:baseline` (Website / mô hình nền / sau

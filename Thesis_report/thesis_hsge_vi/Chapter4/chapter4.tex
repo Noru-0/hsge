@@ -48,8 +48,8 @@ task đo được là 16{,}0 giờ &
 \end{tabular}
 \end{table}
 
-Như vậy, tổng chi phí GPU của toàn bộ chu trình --- tính từ thời điểm bắt
-đầu fine-tune cho tới khi hoàn tất đánh giá trên 655 task --- là 25{,}9\,USD.
+Như vậy, tính từ thời điểm bắt đầu fine-tune cho tới khi hoàn tất đánh giá
+trên 655 task, tổng chi phí GPU của toàn bộ chu trình là 25{,}9\,USD.
 Con số này cho thấy rào cản tính toán của việc chuyên hóa một mô hình ngôn
 ngữ nhỏ cho một nhóm website không nằm ở khâu huấn luyện hay đánh giá, mà
 nằm ở khâu thu thập dữ liệu, vốn tiêu tốn thời gian điều khiển trình duyệt
@@ -208,7 +208,7 @@ phân tích ở mục~\ref{sec:disc-operators}.
 \textbf{Thứ hai, task GOAL có tỷ lệ thành công thấp hơn task cục bộ.} Tỷ lệ
 này là 25/66 $=$ 37{,}9\%, so với 42{,}0\% của nhóm LOCAL và 52{,}0\% của
 nhóm UNPREFIXED. Số task GOAL bị tác nhân báo là bất khả thi cũng cao rõ rệt
-trên GitLab và Shopping Admin --- hai website mà một mục tiêu ngữ nghĩa
+trên GitLab và Shopping Admin. Đây là hai website mà một mục tiêu ngữ nghĩa
 thường đòi hỏi chuỗi thao tác thay đổi trạng thái tương đối dài.
 
 \textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 497 trường hợp tác nhân tự đánh
@@ -225,8 +225,8 @@ thành trong khi thực tế chưa hoàn thành.
 Bảng~\ref{tab:dataset} trình bày tập dữ liệu thu được sau khi các quỹ đạo
 được xuất thành mẫu huấn luyện dạng hội thoại. Mỗi mẫu tương ứng với một
 bước hành động, trong đó đầu vào là prompt \emph{trùng khớp hoàn toàn} với
-prompt mà solver sử dụng lúc chạy thật --- bao gồm cả cách cắt ngắn
-accessibility tree ở ngưỡng 6000 ký tự --- còn đầu ra là cặp
+prompt mà solver sử dụng lúc chạy thật, bao gồm cả cách cắt ngắn
+accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp
 \texttt{\{thought, action\}}.
 
 \begin{table}[H]
@@ -266,8 +266,8 @@ mặc nhiên coi là hợp lệ.
 sẽ bị loại bỏ, bởi một task ``sửa đổi'' mà không sửa đổi gì là một thành
 công giả chứ không phải một thành công ngắn. Cổng này loại 104 quỹ đạo,
 tương ứng 279 mẫu. Điểm đáng lưu ý là bộ chấm LLM \emph{không} phát hiện
-được nhóm trường hợp này, vì nó chỉ xét trạng thái trang cuối --- vốn không
-hề thay đổi.
+được nhóm trường hợp này, vì nó chỉ xét trạng thái trang cuối, mà trạng thái
+đó thì không hề thay đổi.
 \end{itemize}
 
 Việc chia tập huấn luyện và tập kiểm định được thực hiện theo đơn vị
@@ -319,8 +319,8 @@ epoch thay vì chỉ giữ lại trạng thái cuối cùng.
 \textbf{Giá trị \texttt{eval\_loss} tuyệt đối cần được đọc cùng với cách
 xây dựng tập kiểm định.} Tập kiểm định ở đây được tách theo đơn vị task và
 không chia sẻ mục tiêu nào với tập huấn luyện
-(mục~\ref{sec:exp-data}); đồng thời, các quỹ đạo dễ dự đoán nhất --- những
-quỹ đạo chỉ gồm một bước tuyên bố hoàn thành mà không tác động lên trang ---
+(mục~\ref{sec:exp-data}); đồng thời, những quỹ đạo dễ dự đoán nhất, tức các
+quỹ đạo chỉ gồm một bước tuyên bố hoàn thành mà không tác động lên trang,
 đã bị loại khỏi dữ liệu. Cả hai yếu tố này đều làm bài toán dự đoán khó hơn
 và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ
 mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở
@@ -485,10 +485,10 @@ nêu ở mục~\ref{sec:exp-protocol}.
 
 Với những dè dặt đó, kết luận mà Bảng~\ref{tab:related} \emph{cho phép} rút
 ra là: một mô hình dưới 10B được huấn luyện trên 4288 mẫu do chính pipeline
-này sinh ra đạt mức tương đương các hệ thống tốt nhất cùng phân khúc --- cao
-hơn NNetNav-7B (20{,}8\% so với 19{,}1\%), tương đương GPT-4o-mini
-(20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) một khoảng 1{,}8 điểm phần
-trăm, nằm trong khoảng tin cậy của phép đo. Ngược lại, bảng này
+này sinh ra đạt mức tương đương các hệ thống tốt nhất cùng phân khúc. Cụ
+thể, mô hình cao hơn NNetNav-7B (20{,}8\% so với 19{,}1\%), tương đương
+GPT-4o-mini (20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) một khoảng
+1{,}8 điểm phần trăm, tức nằm trong khoảng tin cậy của phép đo. Ngược lại, bảng này
 \emph{không} cho phép kết luận HSGE tốt hơn hay kém hơn Go-Browse; muốn kết
 luận như vậy thì mô hình nền và quy mô dữ liệu phải được đồng nhất.
 
@@ -530,9 +530,9 @@ công việc được xếp ưu tiên cao nhất trong phần thực nghiệm c�
 \textbf{Các ablation có kiểm soát chưa được thực hiện.} Ba ablation đã được
 thiết kế nhưng chưa được chạy, mỗi ablation nhằm cô lập đóng góp của một
 thành phần trong pipeline: (a) so sánh dữ liệu khám phá theo đồ thị với dữ
-liệu khám phá phẳng ở \emph{cùng ngân sách} episode và lời gọi LLM --- đây
-là ablation quan trọng nhất, vì nó là phép đo duy nhất chứng minh trực tiếp
-giá trị của cấu trúc đồ thị; (b) so sánh có và không có cổng chấm lại
+liệu khám phá phẳng ở \emph{cùng ngân sách} episode và lời gọi LLM. Đây là
+ablation quan trọng nhất, vì nó là phép đo duy nhất chứng minh trực tiếp giá
+trị của cấu trúc đồ thị. Hai ablation còn lại gồm: (b) so sánh có và không có cổng chấm lại
 episode; (c) so sánh có và không có bước viết lại chuỗi suy nghĩ.
 
 Điều \emph{có thể} rút ra từ dữ liệu hiện có là một quan sát liên-website,
@@ -562,11 +562,10 @@ Website có lượng dữ liệu nhiều thứ nhì (Shopping Admin) lại cho k
 thấp nhất, trong khi website có kết quả cao nhất (Shopping) chỉ đứng thứ ba
 về lượng dữ liệu. Với $n = 4$, đây chưa phải một tương quan có ý nghĩa thống
 kê, nhưng đủ để bác bỏ cách giải thích rằng cứ tăng lượng dữ liệu cho một
-website thì kết quả trên website đó sẽ tăng theo. Độ khó nội tại của từng
-website --- số bước cần thiết để hoàn thành một task, mật độ biểu mẫu, số
-phần tử tương tác trên một trang --- có sức giải thích lớn hơn;
-mục~\ref{sec:exp-analysis} củng cố nhận định này thông qua phân bố các kiểu
-lỗi.
+website thì kết quả trên website đó sẽ tăng theo. Yếu tố có sức giải thích lớn hơn là độ khó nội tại của từng website, bao
+gồm số bước cần thiết để hoàn thành một task, mật độ biểu mẫu và số phần tử
+tương tác trên một trang. Mục~\ref{sec:exp-analysis} củng cố nhận định này
+thông qua phân bố các kiểu lỗi.
 
 \section{Phân tích}
 \label{sec:exp-analysis}
@@ -605,10 +604,10 @@ Tuyên bố xong mà không làm gì & 0 & 0 & 2 (1\%) & 1 (1\%) \\
 \end{tabular}
 \end{table}
 
-Do các nguyên nhân có thể chồng lấn lên nhau --- chẳng hạn hiện tượng kẹt
-vòng lặp thường đi kèm một chuỗi lỗi hành động --- Bảng~\ref{tab:signals}
-báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu hiệu} tại bất kỳ vị trí
-nào trong một episode thất bại.
+Các nguyên nhân trên có thể chồng lấn lên nhau; chẳng hạn hiện tượng kẹt
+vòng lặp thường đi kèm một chuỗi lỗi hành động. Vì vậy,
+Bảng~\ref{tab:signals} báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu
+hiệu} tại bất kỳ vị trí nào trong một episode thất bại.
 
 \begin{table}[H]
 \centering
@@ -636,8 +635,8 @@ Tự báo bất khả thi & 26\% & 33\% & 31\% & 31\% \\
 Từ 83\% đến 95\% số episode thất bại có ít nhất một hành động bị trình duyệt
 từ chối, với tổng cộng 2285 lỗi hành động trên 655 episode. Phần lớn trong
 số này là lỗi hết thời gian chờ khả năng thao tác của Playwright, xảy ra
-trên chính những phần tử mà accessibility tree \emph{có} hiển thị --- nghĩa
-là mô hình đã xác định đúng phần tử cần tương tác, nhưng phần tử chưa ở
+trên chính những phần tử mà accessibility tree \emph{có} hiển thị. Nói cách
+khác, mô hình đã xác định đúng phần tử cần tương tác, nhưng phần tử chưa ở
 trạng thái sẵn sàng nhận thao tác. Đây là hạn chế của lớp thực thi hơn là
 hạn chế về năng lực của mô hình, và do đó là hướng cải thiện có tỷ suất cao
 nhất (Chương~\ref{ch:discussion}, mục~\ref{sec:disc-guardrails}).

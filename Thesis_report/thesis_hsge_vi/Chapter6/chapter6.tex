@@ -60,8 +60,8 @@ fine-tune đạt \textbf{136 trên 655 task} của bốn website, tức 20{,}8\%
 15{,}4\%), với toàn bộ mẫu số đầy đủ và không task nào bị lỗi. Khi tính lại
 kết quả của các công trình liên quan trên đúng bốn website này, con số đó
 nằm giữa NNetNav-7B (19{,}1\%) và Go-Browse-7B (22{,}6\%), và ngang
-GPT-4o-mini (20{,}0\%). Trên GitLab --- website duy nhất có đối chứng ---
-mô hình nền cùng loại chỉ đạt 5{,}6\%. Do mỗi task chỉ được đánh giá một
+GPT-4o-mini (20{,}0\%). Trên GitLab, website duy nhất hiện có đối chứng, mô
+hình nền cùng loại chỉ đạt 5{,}6\%. Do mỗi task chỉ được đánh giá một
 lần và ba website còn lại chưa có đối chứng mô hình nền, kết quả này được
 xem là một tín hiệu mạnh về hiệu quả của phương pháp chứ chưa phải một kết
 luận có ý nghĩa thống kê đầy đủ (Mục~\ref{sec:disc-results}).
@@ -218,9 +218,10 @@ lại mỗi phép đo ít nhất ba lần cho cả mô hình nền và mô hình
 để báo cáo trung bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất, đồng
 thời bổ sung đối chứng mô hình nền cho ba website chưa có và chạy lại
 Shopping cùng Shopping Admin một cách tuần tự. Thứ hai, thực hiện ablation
-so sánh dữ liệu khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách ---
-đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu trúc đồ
-thị, và cũng là thứ hiện còn thiếu để tuyên bố mạnh hơn về phương pháp.
+so sánh dữ liệu khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách.
+Đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu trúc đồ
+thị, đồng thời cũng là phần còn thiếu để có thể phát biểu mạnh hơn về
+phương pháp.
 Thứ ba, mở rộng sang các benchmark web agent khác và các thước đo chi tiết
 hơn tỷ lệ thành công nhị phân, chẳng hạn mức độ tiến bộ từng phần.
 
@@ -230,10 +231,10 @@ Khóa luận đã đề xuất HSGE, một pipeline tự động thu thập dữ
 cho web agent từ các website không có nhãn thông qua quá trình khám phá có
 cấu trúc. Kết quả thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ để đưa
 một mô hình 9B lên 20{,}8\% trên 655 task chính thức của bốn website
-WebArena --- ngang mức các hệ thống tốt nhất cùng phân khúc dưới 10B, và
-gấp hơn ba lần mô hình nền trên website duy nhất có đối chứng --- trong khi
-chỉ dùng 4288 mẫu huấn luyện, nhỏ hơn khoảng một bậc độ lớn so với các
-công trình cùng hướng. Mặc dù vẫn còn nhiều hướng cần tiếp tục nghiên cứu
+WebArena, tức ngang mức các hệ thống tốt nhất cùng phân khúc dưới 10B và
+gấp hơn ba lần mô hình nền trên website duy nhất có đối chứng. Kết quả này
+đạt được trong khi chỉ sử dụng 4288 mẫu huấn luyện, nhỏ hơn khoảng một bậc
+độ lớn so với các công trình cùng hướng. Mặc dù vẫn còn nhiều hướng cần tiếp tục nghiên cứu
 và đánh giá ở quy mô lớn hơn, phương pháp này cho thấy việc đầu tư vào
 chất lượng và cấu trúc của dữ liệu huấn luyện là một hướng tiếp cận khả thi
 để nâng cao năng lực của các web agent sử dụng mô hình ngôn ngữ nhỏ.
