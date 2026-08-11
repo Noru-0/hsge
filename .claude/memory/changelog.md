@@ -6,6 +6,29 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **17:54** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **revision
+  pass on Chapter 4 per three requests.** (1) The infrastructure table gained a
+  cost column against the measured hourly rates (H100-80GB 2,146 USD/h,
+  A100-40GB 0,803 USD/h): fine-tune 6,6 USD, eval 19,3 USD over 4 boxes x ~6 h
+  (task-solving time itself measured at 16,0 GPU-h from the per-task
+  `elapsed_s`), total 25,9 USD, with API spend excluded and said to be
+  excluded. (2) **Every comparison against an earlier experimental run was
+  removed** — the reader has no context for them: the "12 previous runs /
+  0-of-1745 GOAL episodes" framing, the retrospective 198/465 judge check, the
+  29/56 leaked-goal figure from an older split, the 0,43-vs-0,21 loss
+  comparison and the 52%-shared-val-goals explanation behind it, the "42% of
+  the pre-fix dataset was single-step" line, and the "~8% unparseable in an
+  earlier eval" line. Each claim that mattered was rewritten to stand on this
+  run's own numbers (e.g. the loss paragraph now argues from how the val set
+  was built, not from a previous run's loss). (3) Wording pass across all seven
+  sections toward a more formal register, plus internal artefact names
+  (`bootstrap_eval_box.sh`, `results.jsonl`, `--require-judge`,
+  `verify_episodes` prose) replaced with descriptions of what they do. Builds
+  clean: 152 pages, 0 undefined refs, 7 overfull hboxes (unchanged).
+  Note: the user's own edits to §4.1 in this session were preserved, including
+  their removal of the mixed-teacher-model disclosure — Chapter 5 §5.7 still
+  discusses that confound, so the two now differ in what they disclose.
+
 - **17:02** — `Thesis_report/thesis_hsge_vi/Chapter{3,5,6}/*.tex` — **brought
   Chapters 5 and 6 in line with the rewritten Chapter 4**, plus one Chapter 3
   gap the rewrite exposed. Ch5 §5.1 rewritten into three subsections (what the

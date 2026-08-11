@@ -6,48 +6,54 @@ cáo kết quả thu thập dữ liệu, (3) báo cáo kết quả fine-tuning, 
 bày đánh giá chính trên bộ task chính thức của bốn website WebArena, và
 (5) phân tích kết quả.
 
-Toàn bộ số liệu trong chương được lấy từ một chu trình đầu--cuối duy nhất
-chạy trong hai ngày 10--11/08/2026: bốn đợt khám phá song song (một đợt cho
-mỗi website), một lần fine-tuning trên tập dữ liệu hợp nhất, và bốn đợt
-đánh giá song song trên bộ task chính thức của WebArena. Các mốc thực
-nghiệm chưa hoàn tất được ghi rõ ở mục~\ref{sec:exp-stats}
-và~\ref{sec:exp-ablation} thay vì bỏ trống.
-
 \section{Môi trường thực nghiệm}
 \label{sec:exp-setup}
 
 \subsection{Website và hạ tầng}
 
-Bốn website WebArena --- Shopping (Magento storefront), Shopping Admin
-(Magento CMS), GitLab và Reddit (Postmill) --- được tự triển khai bằng các
-container chính thức của WebArena trên một máy chủ nội bộ, và được công bố
-ra ngoài qua Cloudflare quick tunnel để các máy thuê trên vast.ai truy cập
-được. Các website này là \emph{trạng thái dùng chung và có thể bị thay
-đổi}: mọi đợt khám phá và đánh giá đều chạy đơn luồng trên từng website, và
-cơ sở dữ liệu được đưa về trạng thái gốc trước mỗi đợt đánh giá.
+Bốn website thuộc nền tảng WebArena bao gồm: Shopping (Magento), Shopping Admin (Magento CMS), GitLab và Reddit (Postmill) được triển khai cục bộ (self-hosted) thông qua các container chính thức của WebArena trên một máy chủ nội bộ. Để hỗ trợ khả năng truy cập từ xa, hệ thống được mở cổng kết nối thông qua dịch vụ Cloudflare quick tunnel. Đặc tính thiết yếu của các môi trường này là chúng mang \emph{trạng thái dùng chung và có thể bị thay đổi (mutable shared state)}. Do đó, mọi tiến trình khám phá và đánh giá đều phải được thực thi theo cơ chế đơn luồng (single-threaded) trên từng website; đồng thời, cơ sở dữ liệu luôn được khôi phục về trạng thái nguyên bản trước khi bắt đầu mỗi đợt đánh giá mới.
 
-Về phần cứng, khóa luận thuê GPU theo giờ trên vast.ai (Bảng~\ref{tab:infra}).
-Việc khám phá không cần GPU --- toàn bộ tác nhân khám phá gọi API của mô
-hình đóng --- nên chỉ chạy trên máy cá nhân điều khiển trình duyệt Chromium
-qua Playwright/BrowserGym.
+Về hạ tầng phần cứng, nghiên cứu sử dụng dịch vụ GPU cho thuê theo giờ trên nền tảng vast.ai (Bảng~\ref{tab:infra}). Riêng quá trình khám phá không yêu cầu tài nguyên GPU cục bộ, do các tác nhân khám phá (exploration agents) hoàn toàn giao tiếp với API của các mô hình ngôn ngữ đóng (proprietary models). Vì vậy, quy trình này được vận hành trực tiếp trên máy tính cá nhân, thực hiện nhiệm vụ điều khiển trình duyệt Chromium thông qua bộ thư viện Playwright và BrowserGym.
 
 \begin{table}[H]
 \centering
-\caption[Hạ tầng tính toán]{Hạ tầng tính toán cho từng giai đoạn.}
+\caption[Hạ tầng tính toán và chi phí]{Hạ tầng tính toán, thời gian và chi
+phí GPU của từng giai đoạn. Đơn giá thuê tại thời điểm thực nghiệm là
+2{,}146\,USD mỗi giờ đối với H100-80GB và 0{,}803\,USD mỗi giờ đối với
+A100-40GB. Chi phí gọi API của các mô hình đóng trong giai đoạn khám phá
+không được tính trong bảng này, do được thanh toán theo số token thay vì
+theo giờ thuê máy.}
 \label{tab:infra}
 \small
-\begin{tabular}{@{}L{3.4cm} L{4.6cm} L{5.2cm}@{}}
+\begin{tabular}{@{}L{2.4cm} L{3.7cm} L{4.5cm} R{2.4cm}@{}}
 \toprule
-\textbf{Giai đoạn} & \textbf{Phần cứng} & \textbf{Thời gian} \\
+\textbf{Giai đoạn} & \textbf{Phần cứng} & \textbf{Thời gian} &
+\textbf{Chi phí GPU} \\
 \midrule
-Khám phá (4 website) & Máy cá nhân + Chromium; LLM qua API &
-$\approx$ 21 giờ/website, chạy song song 4 website \\
-Fine-tuning & 1 $\times$ H100-80GB (vast.ai) & 3 giờ 05 phút \\
-Đánh giá & 4 $\times$ A100-40GB (vast.ai), mỗi máy phục vụ một website &
-$\approx$ 6 giờ (song song) \\
+Khám phá & Máy cá nhân điều khiển Chromium; LLM truy cập qua API &
+$\approx$ 21 giờ mỗi website, bốn website chạy song song &
+--- \\
+\addlinespace
+Fine-tuning & 1 $\times$ H100-80GB &
+3 giờ 05 phút &
+6{,}6\,USD \\
+\addlinespace
+Đánh giá & 4 $\times$ A100-40GB, mỗi máy phụ trách một website &
+$\approx$ 6 giờ mỗi máy, tương đương 24 giờ GPU thuê; riêng thời gian giải
+task đo được là 16{,}0 giờ &
+19{,}3\,USD \\
+\midrule
+\textbf{Tổng} & & & \textbf{25{,}9\,USD} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Như vậy, tổng chi phí GPU của toàn bộ chu trình --- tính từ thời điểm bắt
+đầu fine-tune cho tới khi hoàn tất đánh giá trên 655 task --- là 25{,}9\,USD.
+Con số này cho thấy rào cản tính toán của việc chuyên hóa một mô hình ngôn
+ngữ nhỏ cho một nhóm website không nằm ở khâu huấn luyện hay đánh giá, mà
+nằm ở khâu thu thập dữ liệu, vốn tiêu tốn thời gian điều khiển trình duyệt
+và số lượng lời gọi API chứ không tiêu tốn tài nguyên GPU.
 
 \subsection{Cấu hình mô hình theo vai trò}
 
@@ -57,41 +63,29 @@ tế của các đợt khám phá.
 
 \begin{table}[H]
 \centering
-\caption[Cấu hình LLM theo vai trò]{Cấu hình LLM theo vai trò trong các đợt
-khám phá. Vai trò solver nằm trên đường đi nóng (một lời gọi cho mỗi bước
-hành động, khoảng 1200 lời gọi cho mỗi đợt) nên quyết định phần lớn chi phí.}
+\caption[Cấu hình LLM theo vai trò]{Cấu hình LLM theo từng vai trò trong các đợt khám phá. Do tác nhân giải quyết (solver) nằm trên luồng xử lý có tần suất gọi cao nhất (đòi hỏi một lời gọi API cho mỗi bước hành động, ước tính khoảng 1200 lời gọi cho mỗi đợt chạy), thành phần này quyết định phần lớn tổng chi phí vận hành.}
 \label{tab:llm-roles}
 \small
 \begin{tabular}{@{}L{4.2cm} L{4.0cm} L{4.8cm}@{}}
 \toprule
 \textbf{Vai trò} & \textbf{Mô hình} & \textbf{Ghi chú} \\
 \midrule
-\texttt{site\_seeder} & GPT-5.6-luna & 1 lời gọi/đợt \\
-\texttt{page\_explorer} & GPT-5.6-luna & 1 lời gọi/node; bật vision + Set-of-Marks \\
-\texttt{solver} & GPT-5.6-luna & tối đa 15 lời gọi/episode; bật vision \\
+\texttt{site\_seeder} & GPT-5.6-luna & 1 call/domain \\
+\texttt{page\_explorer} & GPT-5.6-luna & 1 call/node; bật vision + Set-of-Marks \\
+\texttt{solver} & GPT-5.6-luna & tối đa 15 call/episode; bật vision \\
 \texttt{solver\_goal} & GPT-5.6-terra & chỉ cho task GOAL nhiều bước \\
-\texttt{episode\_judge} & DeepSeek-chat & 1 lời gọi cho mỗi lần tự nhận thành công \\
+\texttt{episode\_judge} & DeepSeek-chat & 1 call cho mỗi lần tự nhận thành công \\
 \texttt{trajectory\_segmenter}, \texttt{skill\_abstractor}, \texttt{skill\_verifier},
 \texttt{operator\_inducer} & DeepSeek-chat & pipeline phát hiện skill \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Một sai lệch cần công bố.} Bốn đợt khám phá bắt đầu khi
-vai trò \texttt{solver} còn dùng GPT-4o và được chuyển sang GPT-5.6-luna
-\emph{trong lúc đang chạy} (sau khi một đợt rà soát chi phí cho thấy
-GPT-4o đắt hơn khoảng 12 lần trên token đầu vào). Vì vậy tập dữ liệu là
-hỗn hợp: trong 2184 episode có ghi nhận mô hình sinh, 1554 (71\%) do
-GPT-5.6-luna sinh, 566 (26\%) do GPT-4o và 64 (3\%) do GPT-5.6-terra. Đây là một biến
-gây nhiễu không kiểm soát được nữa; nó không làm hỏng kết quả đánh giá
-(mô hình được đánh giá là mô hình đã fine-tune, không phải mô hình dạy) nhưng
-khiến chất lượng tập dữ liệu không thể quy hoàn toàn cho một mô hình dạy nào.
-
 \subsection{Tham số chạy}
 
-Bảng~\ref{tab:runparams} liệt kê các tham số của vòng lặp khám phá. Đây là
-cấu hình đã được cố định sau chuỗi thực nghiệm sửa lỗi mô tả ở
-Chương~\ref{ch:discussion}; đầy đủ chi tiết nằm ở Phụ lục~\ref{app:design-params}.
+Bảng~\ref{tab:runparams} liệt kê các tham số điều khiển vòng lặp khám phá.
+Cả bốn đợt khám phá đều sử dụng chung một cấu hình; danh sách tham số đầy đủ
+được trình bày ở Phụ lục~\ref{app:design-params}.
 
 \begin{table}[H]
 \centering
@@ -120,39 +114,44 @@ trên cả bốn website).}
 \subsection{Quy trình đánh giá}
 \label{sec:exp-protocol}
 
-Việc đánh giá dùng \emph{bộ task và bộ chấm chính thức của WebArena}, không
-dùng cơ chế xác minh nội bộ của hệ thống. Cụ thể: mỗi task được nạp qua
-BrowserGym ở chế độ có chấm điểm (\texttt{scored environment}); solver chạy
-tối đa 15 bước với \texttt{temperature} $=0$; hàm thưởng của WebArena
-(so khớp URL, so khớp chương trình, so khớp mờ bằng LLM) quyết định
-thành/bại. Mô hình đã fine-tune được merge LoRA rồi phục vụ bằng vLLM ngay
-trên máy đánh giá, ở chế độ tắt chuỗi suy nghĩ (\texttt{nothink}) đúng như
-lúc huấn luyện.
+Quá trình đánh giá sử dụng \emph{bộ task và bộ chấm chính thức của
+WebArena}, không sử dụng cơ chế xác minh nội bộ của hệ thống. Cụ thể, mỗi
+task được nạp qua BrowserGym ở chế độ có chấm điểm (\emph{scored
+environment}); solver được cấp ngân sách tối đa 15 bước và chạy ở
+\texttt{temperature} $=0$; kết quả thành hay bại do hàm thưởng của WebArena
+quyết định, bao gồm ba dạng kiểm tra là so khớp URL, so khớp bằng chương
+trình và so khớp mờ bằng LLM. Mô hình sau fine-tune được merge trọng số LoRA
+rồi phục vụ bằng vLLM ngay trên máy đánh giá, ở chế độ tắt chuỗi suy nghĩ
+(\emph{nothink}) đúng như cấu hình lúc huấn luyện.
 
-Một cơ chế kiểm tra trước khi chạy (\texttt{bootstrap\_eval\_box.sh}) bắt
-buộc chín điều kiện phải đạt trước khi một đợt sáu tiếng được khởi động ---
-trong đó có điểm phục vụ mô hình thực sự sinh được văn bản, website thực sự
-tới được \emph{từ chính máy đó}, và một đợt thử ba task ghi được ít nhất một
-điểm mà không lỗi. Kết quả được ghi từng dòng vào \texttt{results.jsonl},
-kèm một \emph{trace} đầy đủ cho mỗi episode (các bước solver, các lời gọi LLM
-thô, và kết quả trình duyệt của từng hành động) --- chính các trace này là
-nguồn của phân tích lỗi ở mục~\ref{sec:exp-analysis}.
+Trước mỗi đợt đánh giá, một quy trình kiểm tra tự động yêu cầu chín điều
+kiện phải đồng thời thỏa mãn thì đợt chạy mới được khởi động, trong đó có
+ba điều kiện quan trọng nhất: điểm phục vụ mô hình phải thực sự sinh được
+văn bản, website phải thực sự truy cập được \emph{từ chính máy đánh giá đó},
+và một đợt thử nghiệm ba task phải ghi được ít nhất một điểm mà không phát
+sinh lỗi. Kết quả của từng task được ghi thành một bản ghi riêng, kèm theo
+một \emph{trace} đầy đủ cho mỗi episode gồm các bước của solver, nội dung
+thô của từng lời gọi LLM và kết quả trình duyệt trả về sau mỗi hành động.
+Các trace này là dữ liệu đầu vào cho phân tích lỗi ở
+mục~\ref{sec:exp-analysis}.
 
-\textbf{Hai sai lệch cần công bố cùng mọi con số ở mục~\ref{sec:exp-main}:}
+\textbf{Hai sai lệch cần được công bố kèm theo mọi số liệu ở
+mục~\ref{sec:exp-main}:}
 
 \begin{enumerate}
-\item \textbf{Thay mô hình chấm.} Bộ chấm chính thức của WebArena gọi cứng
-\texttt{gpt-4-1106-preview} cho các task so khớp mờ; mô hình này đã bị ngừng
-phục vụ. Khóa luận vá bằng \texttt{gpt-4-turbo} trên cả bốn máy (đồng nhất, có
-ghi lại trong \texttt{summary.json}). Việc này ảnh hưởng tới 40 task
-(shopping 15, shopping\_admin 20, gitlab 5); các task còn lại được chấm hoàn
-toàn tất định.
-\item \textbf{Shopping và Shopping Admin chạy đồng thời.} Hai website này
-trong cấu hình WebArena chuẩn được phục vụ từ cùng một container Magento.
-Khóa luận đã chạy hai đợt đánh giá này song song mà không xác nhận trước
-chúng có dùng chung cơ sở dữ liệu hay không. Nếu có dùng chung, các task
-làm thay đổi dữ liệu ở một bên có thể nhiễu sang bên kia; hai con số đó cần
-được chạy lại tuần tự để chắc chắn.
+\item \textbf{Thay thế mô hình chấm.} Bộ chấm chính thức của WebArena gọi
+cố định mô hình \texttt{gpt-4-1106-preview} cho các task so khớp mờ, nhưng
+mô hình này đã ngừng được cung cấp. Khóa luận thay thế bằng
+\texttt{gpt-4-turbo}, áp dụng đồng nhất trên cả bốn máy đánh giá và được ghi
+lại cùng kết quả. Sai lệch này ảnh hưởng tới 40 trong 655 task (Shopping 15,
+Shopping Admin 20, GitLab 5); toàn bộ các task còn lại được chấm hoàn toàn
+tất định nên không chịu ảnh hưởng.
+\item \textbf{Shopping và Shopping Admin được đánh giá đồng thời.} Trong
+cấu hình WebArena chuẩn, hai website này được phục vụ từ cùng một container
+Magento. Khóa luận đã chạy hai đợt đánh giá song song mà chưa xác nhận trước
+liệu chúng có dùng chung cơ sở dữ liệu hay không. Nếu có, các task làm thay
+đổi dữ liệu ở một website có thể gây nhiễu sang website còn lại; khi đó hai
+kết quả này cần được đo lại theo trình tự tuần tự.
 \end{enumerate}
 
 \section{Kết quả thu thập dữ liệu}
@@ -160,14 +159,14 @@ làm thay đổi dữ liệu ở một bên có thể nhiễu sang bên kia; hai
 
 \subsection{Bốn đợt khám phá}
 
-Bảng~\ref{tab:runs} tổng hợp bốn đợt khám phá. Cả bốn đều bị dừng chủ động
-sau khoảng 21 giờ (không phải do lỗi) khi lượng dữ liệu đã đủ cho vòng huấn
-luyện; vì vậy các con số node là cận dưới, không phải điểm hội tụ.
+Bảng~\ref{tab:runs} tổng hợp kết quả của bốn đợt khám phá. Cả bốn đợt đều
+được dừng chủ động sau khoảng 21 giờ, khi lượng dữ liệu thu được đã đủ cho
+vòng huấn luyện, chứ không phải dừng vì lỗi. Do đó, số node đã duyệt là một
+cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
 
 \begin{table}[H]
 \centering
-\caption[Thống kê bốn đợt khám phá]{Thống kê bốn đợt khám phá
-(\texttt{wa\_run\_20\_*}, 10--11/08/2026). LOCAL là task giải ngay trên node;
+\caption[Thống kê bốn đợt khám phá]{Thống kê bốn đợt khám phá. LOCAL là task giải ngay trên node;
 UNPREFIXED là chính task đó giải lại từ trang gốc; GOAL là task ngữ nghĩa
 nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của website.}
 \label{tab:runs}
@@ -180,7 +179,7 @@ Node đã duyệt & 79 & 68 & 63 & 48 \\
 Node trùng nội dung (bỏ) & 3 & 9 & 6 & 13 \\
 Episode ghi nhận & 565 & 617 & 563 & 433 \\
 \midrule
-LOCAL (thành/bại/bất khả thi) & 192/268/73 & 208/152/46 & 160/147/101 & 139/116/62 \\
+LOCAL (success/fail/invalid) & 192/268/73 & 208/152/46 & 160/147/101 & 139/116/62 \\
 UNPREFIXED & 109/57/13 & 105/76/20 & 66/58/33 & 63/40/19 \\
 GOAL & 10/6/3 & 9/8/1 & 3/6/5 & 3/5/7 \\
 \midrule
@@ -189,45 +188,46 @@ Operator được quy nạp & 8 & 4 & 8 & 6 \\
 Chuỗi operator thử & 5 & 0 & 1 & 0 \\
 Năng lực seed thử & 14 & 18 & 13 & 12 \\
 \midrule
-Bị bộ chấm hạ cấp & 127 & 159 & 119 & 92 \\
+Episode fail khi chấm lại & 127 & 159 & 119 & 92 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Ba quan sát đáng chú ý:
+Từ bảng này có thể rút ra ba nhận xét.
 
-\textbf{Thứ nhất, task ngữ nghĩa đã thực sự chạy được.} Đây là khác biệt lớn
-nhất so với 12 đợt khám phá trước đó, khi đồ thị operator gần như không có
-cạnh nên \emph{không một task GOAL nào} được sinh ra
-(0/1745 episode; xem mục~\ref{sec:disc-operators}). Cơ chế seed năng lực của
-website --- sinh task GOAL từ trên xuống, không phụ thuộc đồ thị operator ---
-là thứ mở khóa được bế tắc này: trên cả bốn đợt có 57 lượt thử năng lực
-seed nhưng chỉ 6 lượt thử chuỗi operator. Nói cách khác, \emph{cơ chế ghép chuỗi
-operator vẫn là mắt xích yếu}: chỉ 6 chuỗi được thử trên cả bốn website, và hai
-website (Reddit, Shopping Admin) không hình thành được chuỗi nào.
+\textbf{Thứ nhất, hai nguồn sinh task ngữ nghĩa đóng góp rất không đồng
+đều.} Tổng cộng 66 task GOAL đã được thực thi trên bốn website, trong đó 57
+lượt bắt nguồn từ seed năng lực của website (mục~\ref{sec:method-seed}) và
+chỉ 6 lượt bắt nguồn từ việc ghép chuỗi operator; hai website là Reddit và
+Shopping Admin không hình thành được chuỗi operator nào. Nói cách khác, cơ
+chế sinh mục tiêu từ trên xuống là nguồn task ngữ nghĩa chủ yếu trong thực
+tế, còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết kế nhưng chỉ
+kích hoạt được ở mức thưa thớt. Nguyên nhân kỹ thuật của hiện tượng này được
+phân tích ở mục~\ref{sec:disc-operators}.
 
-\textbf{Thứ hai, tỷ lệ thành công của task GOAL thấp hơn hẳn task cục bộ}
-(25/66 $=$ 37{,}9\% so với 42{,}0\% của LOCAL và 52{,}0\% của
-UNPREFIXED), và số task
-GOAL bị báo là bất khả thi cao bất thường ở GitLab và Shopping Admin --- hai
-website mà một mục tiêu ngữ nghĩa thường đòi hỏi chuỗi thao tác thay đổi
-trạng thái dài.
+\textbf{Thứ hai, task GOAL có tỷ lệ thành công thấp hơn task cục bộ.} Tỷ lệ
+này là 25/66 $=$ 37{,}9\%, so với 42{,}0\% của nhóm LOCAL và 52{,}0\% của
+nhóm UNPREFIXED. Số task GOAL bị tác nhân báo là bất khả thi cũng cao rõ rệt
+trên GitLab và Shopping Admin --- hai website mà một mục tiêu ngữ nghĩa
+thường đòi hỏi chuỗi thao tác thay đổi trạng thái tương đối dài.
 
-\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 497 lần ``tự chấm điểm cho
-mình''.} Với \texttt{verify\_episodes} bật, mỗi episode mà tác nhân tự tuyên
-bố hoàn thành đều bị một LLM chấm lại trên chính trang cuối của nó; 497
-trường hợp bị hạ xuống thất bại, tương đương khoảng 32\% số lần tác nhân tự
-tuyên bố hoàn thành. Con số này khớp với đợt kiểm chứng hồi tố trước đó trên
-\texttt{wa\_eval\_shopping\_1} (198/465 $=$ 43\% lời tuyên bố thành công là
-sai). Nếu không có cổng chấm này, khoảng một phần tư dữ liệu huấn luyện sẽ
-là quỹ đạo dạy mô hình cách tuyên bố hoàn thành mà không hoàn thành.
+\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 497 trường hợp tác nhân tự đánh
+giá sai kết quả của chính mình.} Khi tham số \texttt{verify\_episodes} được
+bật, mọi episode mà tác nhân tự tuyên bố hoàn thành đều được một LLM độc lập
+chấm lại dựa trên chính trạng thái trang cuối cùng của episode đó; 497
+trường hợp bị hạ xuống thất bại, tương đương khoảng 32\% tổng số lần tự
+tuyên bố hoàn thành. Nếu không có cổng kiểm chứng này, xấp xỉ một phần tư
+tập dữ liệu huấn luyện sẽ là những quỹ đạo dạy mô hình cách tuyên bố đã hoàn
+thành trong khi thực tế chưa hoàn thành.
 
 \subsection{Tập dữ liệu huấn luyện}
 
-Bảng~\ref{tab:dataset} là tập dữ liệu sau khi các quỹ đạo được xuất thành
-mẫu huấn luyện dạng hội thoại. Mỗi mẫu tương ứng một bước hành động: đầu vào
-là prompt \emph{y hệt} prompt của solver lúc chạy thật (cùng cách cắt ngắn
-accessibility tree ở 6000 ký tự), đầu ra là cặp \texttt{\{thought, action\}}.
+Bảng~\ref{tab:dataset} trình bày tập dữ liệu thu được sau khi các quỹ đạo
+được xuất thành mẫu huấn luyện dạng hội thoại. Mỗi mẫu tương ứng với một
+bước hành động, trong đó đầu vào là prompt \emph{trùng khớp hoàn toàn} với
+prompt mà solver sử dụng lúc chạy thật --- bao gồm cả cách cắt ngắn
+accessibility tree ở ngưỡng 6000 ký tự --- còn đầu ra là cặp
+\texttt{\{thought, action\}}.
 
 \begin{table}[H]
 \centering
@@ -252,42 +252,44 @@ Sau hợp nhất và chia tập & 1029 & 4554 & train 4288 / val 266 \\
 \end{tabular}
 \end{table}
 
-Hai cổng lọc quyết định con số cuối cùng, và cả hai đều xuất phát từ một đợt
-kiểm định chất lượng dữ liệu chứ không phải từ thiết kế ban đầu:
+Con số cuối cùng được quyết định bởi hai cổng lọc chất lượng:
 
 \begin{itemize}
-\item \textbf{Cổng chấm} (\texttt{--require-judge}): chỉ giữ episode mà bộ
-chấm đã xác nhận; episode chưa từng được chấm bị loại chứ không được mặc
-định tin.
-\item \textbf{Cổng hành động hữu hiệu}: một episode gắn nhãn
-\texttt{[MOD]}\slash\texttt{[NAV]}\slash\texttt{[COMPOSITE]} mà các bước xuất
-ra không
-chứa một hành động nào thực sự tác động lên trang
+\item \textbf{Cổng chấm lại episode}: chỉ giữ những episode đã được bộ chấm
+độc lập xác nhận. Một episode chưa từng được chấm sẽ bị loại chứ không được
+mặc nhiên coi là hợp lệ.
+\item \textbf{Cổng hành động hữu hiệu}: một episode được gắn nhãn
+\texttt{[MOD]}\slash\texttt{[NAV]}\slash\texttt{[COMPOSITE]} nhưng các bước
+được xuất ra lại không chứa bất kỳ hành động nào thực sự tác động lên trang
 (\texttt{click}\slash\texttt{fill}\slash\texttt{select\_option}\slash
 \texttt{press}\slash\texttt{goto}\slash\texttt{go\_back}\slash\texttt{tab\_*})
-bị loại: một task
-``sửa đổi'' mà không sửa gì là một thành công giả, không phải một thành công
-ngắn. Cổng này loại 104 quỹ đạo (279 mẫu). Đáng chú ý, bộ chấm LLM
-\emph{không} bắt được các trường hợp này vì nó chỉ nhìn trang cuối --- vốn
-không thay đổi.
+sẽ bị loại bỏ, bởi một task ``sửa đổi'' mà không sửa đổi gì là một thành
+công giả chứ không phải một thành công ngắn. Cổng này loại 104 quỹ đạo,
+tương ứng 279 mẫu. Điểm đáng lưu ý là bộ chấm LLM \emph{không} phát hiện
+được nhóm trường hợp này, vì nó chỉ xét trạng thái trang cuối --- vốn không
+hề thay đổi.
 \end{itemize}
 
-Việc chia train/val giữ nguyên \emph{cả task}, không phải cả quỹ đạo: hai
-quỹ đạo của cùng một mục tiêu (bản LOCAL và bản UNPREFIXED) luôn nằm cùng
-một phía. Kiểm chứng trên tập chia trước đó cho thấy nếu chỉ chia theo quỹ
-đạo thì 29/56 mục tiêu trong tập val cũng xuất hiện trong tập train --- tức
-\texttt{eval\_loss} đo phần lớn là khả năng ghi nhớ. Tập val hiện tại có
-\textbf{0} mục tiêu trùng với tập train, và được lấy theo tỷ lệ \emph{trên
-từng website} để không bị một website chi phối.
+Việc chia tập huấn luyện và tập kiểm định được thực hiện theo đơn vị
+\emph{task}, không phải theo đơn vị quỹ đạo: hai quỹ đạo của cùng một mục
+tiêu, gồm bản LOCAL và bản UNPREFIXED, luôn nằm cùng một phía. Nếu chia theo
+quỹ đạo, hai bản của cùng một mục tiêu có thể rơi về hai phía khác nhau,
+khiến giá trị \texttt{eval\_loss} phản ánh khả năng ghi nhớ nhiều hơn khả
+năng khái quát hóa. Tập kiểm định thu được có \textbf{0} mục tiêu trùng với
+tập huấn luyện và được lấy theo tỷ lệ \emph{trên từng website}, nhằm tránh
+để một website chi phối toàn bộ chỉ số kiểm định.
 
 \section{Kết quả fine-tuning}
 \label{sec:exp-sft}
 
-Mô hình nền là Qwen3.5-9B, fine-tune bằng LoRA (rank 16, $\alpha$ 32,
-dropout 0.05, áp lên toàn bộ các lớp tuyến tính) với LLaMA-Factory. Kích
-thước batch hiệu dụng 16, learning rate $1{,}0 \times 10^{-4}$, lịch cosine,
-warmup 10\%, 3 epoch $=$ 804 bước, độ dài ngữ cảnh 4096 token
-(đo trên tokenizer thật: tối đa 4040 token, p99 3672, 0 mẫu bị cắt).
+Mô hình nền là Qwen3.5-9B, được fine-tune bằng LoRA với thư viện
+LLaMA-Factory. Cấu hình LoRA gồm rank 16, $\alpha$ 32, dropout 0{,}05, áp
+lên toàn bộ các lớp tuyến tính. Quá trình huấn luyện sử dụng kích thước
+batch hiệu dụng 16, learning rate $1{,}0 \times 10^{-4}$, lịch điều chỉnh
+cosine với warmup 10\%, chạy 3 epoch tương ứng 804 bước. Độ dài ngữ cảnh
+được đặt ở 4096 token; giá trị này được xác định bằng cách đo trực tiếp trên
+tokenizer của mô hình (độ dài lớn nhất 4040 token, phân vị 99 là 3672 token,
+không mẫu nào bị cắt).
 
 \begin{table}[H]
 \centering
@@ -306,34 +308,42 @@ Checkpoint được chọn & \texttt{checkpoint-536} (epoch 2) \\
 \end{tabular}
 \end{table}
 
-Hai điểm cần nói rõ:
+Có hai điểm cần được làm rõ khi diễn giải bảng này.
 
-\textbf{Epoch 3 bắt đầu overfit.} \texttt{eval\_loss} giảm rồi tăng trở lại,
-nên checkpoint epoch 2 được chọn để merge và phục vụ. Đây là hình dạng giống
-hệt đợt huấn luyện trước đó trên tập dữ liệu cũ.
+\textbf{Mô hình bắt đầu quá khớp từ epoch thứ ba.} Giá trị
+\texttt{eval\_loss} giảm ở epoch 2 rồi tăng trở lại ở epoch 3, do đó
+checkpoint của epoch 2 được chọn để merge trọng số và triển khai phục vụ.
+Đây cũng là lý do khóa luận sử dụng chiến lược lưu checkpoint theo từng
+epoch thay vì chỉ giữ lại trạng thái cuối cùng.
 
-\textbf{Giá trị loss tuyệt đối cao hơn đợt trước (0{,}43 so với 0{,}21) và
-đó là điều đúng, không phải suy giảm.} Tập val cũ chia sẻ 52\% mục tiêu với
-tập train, và 104 quỹ đạo ``không hành động hữu hiệu'' bị loại chính là
-những quỹ đạo dễ đoán nhất (một bước, tuyên bố hoàn thành). Nói cách khác,
-loss cũ thấp một phần vì bài kiểm tra dễ hơn. Đây là một ví dụ cụ thể cho
-luận điểm ở mục~\ref{sec:disc-slm}: một chỉ số huấn luyện chỉ có ý nghĩa
-khi tập kiểm tra của nó sạch.
+\textbf{Giá trị \texttt{eval\_loss} tuyệt đối cần được đọc cùng với cách
+xây dựng tập kiểm định.} Tập kiểm định ở đây được tách theo đơn vị task và
+không chia sẻ mục tiêu nào với tập huấn luyện
+(mục~\ref{sec:exp-data}); đồng thời, các quỹ đạo dễ dự đoán nhất --- những
+quỹ đạo chỉ gồm một bước tuyên bố hoàn thành mà không tác động lên trang ---
+đã bị loại khỏi dữ liệu. Cả hai yếu tố này đều làm bài toán dự đoán khó hơn
+và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ
+mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở
+mục~\ref{sec:disc-slm}.
 
-Về hiệu suất phần cứng, một chi tiết môi trường đáng ghi lại: đường đi
-nhanh GDN của Qwen3.5 bị tắt âm thầm khi thiếu \texttt{causal-conv1d},
-khiến tốc độ huấn luyện chậm 2{,}3 lần (30--33 s/bước ở 130--200 W thay vì
-13 s/bước ở 630 W). Script cài đặt hiện in ra trạng thái đường đi nhanh này
-ở cuối để lần sau không trả giá đó một cách vô hình.
+Về mặt hiệu suất phần cứng, có một chi tiết môi trường đáng ghi nhận: đường
+đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa một cách âm thầm
+khi thiếu thư viện \texttt{causal-conv1d}, làm tốc độ huấn luyện chậm đi
+2{,}3 lần (30--33 giây mỗi bước ở mức tiêu thụ 130--200\,W, thay vì 13 giây
+mỗi bước ở mức 630\,W). Vì trạng thái này không phát sinh cảnh báo nào, quy
+trình cài đặt được bổ sung một bước in ra trạng thái của đường đi nhanh sau
+khi cài đặt xong, để sai lệch cấu hình được phát hiện trước khi bắt đầu huấn
+luyện.
 
 \section{Đánh giá chính trên WebArena}
 \label{sec:exp-main}
 
 \subsection{Kết quả tổng hợp}
 
-Bảng~\ref{tab:main} là kết quả trên toàn bộ 655 task chính thức của bốn
-website. Mọi task đều được chấm (\texttt{complete} $=$ \texttt{true},
-0 task bị lỗi, mẫu số đầy đủ); không task nào bị âm thầm bỏ qua.
+Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 task chính thức của
+bốn website. Toàn bộ 655 task đều được chấm điểm, không task nào phát sinh
+lỗi môi trường và không task nào bị bỏ qua, nên mẫu số của mọi tỷ lệ trong
+bảng đều là số task đầy đủ của website tương ứng.
 
 \begin{table}[H]
 \centering
@@ -360,27 +370,31 @@ Shopping Admin & 182 & 28 & 15{,}4\% ($\pm$ 5{,}2) \\
 
 \subsection{So với mô hình nền chưa fine-tune}
 
-Khóa luận chỉ có một cặp đối chứng trực tiếp: trên GitLab, cùng mô hình nền
-Qwen3.5-9B \emph{chưa} fine-tune đạt 10/180 $=$ 5{,}6\%, so với 33/180 $=$
-18{,}3\% sau khi fine-tune. Cần nói rõ một khiếm khuyết của phép so sánh
-này: 55 trong 180 dòng của đợt chạy nền mang lỗi môi trường (hết thời gian
-chờ ở bước đăng nhập) và bị tính là thất bại; nếu chỉ tính 125 task chạy
-sạch thì mô hình nền đạt 10/125 $=$ 8{,}0\%. Kiểm định tỷ lệ hai mẫu cho
-$z = 3{,}74$ ($p < 0{,}001$) theo cách tính thứ nhất và $z = 2{,}55$
-($p = 0{,}011$) theo cách tính thứ hai --- tức mức cải thiện vẫn có ý nghĩa
-thống kê dưới cả hai cách tính, nhưng đây là \emph{một} website và \emph{một}
-lần chạy, và đợt chạy nền không sạch bằng đợt chạy sau. Ba website còn lại
-chưa có đối chứng mô hình nền; đây là hạng mục thực nghiệm còn thiếu quan
-trọng nhất, được ghi ở mục~\ref{sec:exp-stats}.
+Khóa luận có một cặp đối chứng trực tiếp giữa mô hình nền và mô hình sau
+fine-tune, thực hiện trên website GitLab: mô hình Qwen3.5-9B \emph{chưa}
+fine-tune đạt 10/180 $=$ 5{,}6\%, trong khi mô hình sau fine-tune đạt
+33/180 $=$ 18{,}3\%.
+
+Phép so sánh này có một khiếm khuyết cần nêu rõ. Trong đợt đo mô hình nền,
+55 trên 180 task phát sinh lỗi môi trường ở bước đăng nhập (hết thời gian
+chờ) và bị tính là thất bại; nếu chỉ xét 125 task chạy sạch thì tỷ lệ của mô
+hình nền là 10/125 $=$ 8{,}0\%. Kiểm định tỷ lệ hai mẫu cho $z = 3{,}74$
+($p < 0{,}001$) theo cách tính thứ nhất và $z = 2{,}55$ ($p = 0{,}011$) theo
+cách tính thứ hai. Như vậy mức cải thiện đạt ý nghĩa thống kê theo cả hai
+cách tính, song cần lưu ý rằng kết luận này chỉ dựa trên \emph{một} website
+và \emph{một} lần chạy. Ba website còn lại hiện chưa có đối chứng mô hình
+nền; đây là hạng mục thực nghiệm còn thiếu quan trọng nhất, được trình bày
+ở mục~\ref{sec:exp-stats}.
 
 \subsection{So với các công trình liên quan}
 
-So sánh trực tiếp con số tổng của các công trình khác là không hợp lệ: các
-công trình đó báo cáo trên toàn bộ 812 task của WebArena (gồm cả Map và các
-task đa-website), còn khóa luận đánh giá trên 655 task của bốn website.
-Bảng~\ref{tab:related} vì vậy \emph{tính lại} kết quả của các công trình đó
-theo trung bình có trọng số trên đúng bốn website này, từ bảng kết quả theo
-từng website mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
+Việc so sánh trực tiếp con số tổng của các công trình liên quan là không
+hợp lệ, bởi các công trình đó báo cáo trên toàn bộ 812 task của WebArena
+(bao gồm cả website Map và các task đa-website), trong khi khóa luận đánh
+giá trên 655 task thuộc bốn website. Vì vậy, Bảng~\ref{tab:related}
+\emph{tính lại} kết quả của các công trình đó theo trung bình có trọng số
+trên đúng bốn website này, dựa trên bảng kết quả chi tiết theo từng website
+mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
 
 \begin{table}[H]
 \centering
@@ -411,74 +425,80 @@ Qwen3.5-9B (nền, chỉ GitLab) & --- & --- & --- & --- & 5{,}6 \\
 \end{tabular}
 \end{table}
 
-Cần đọc bảng này một cách dè dặt, vì \emph{ba} khác biệt về điều
-kiện đo khiến nó không phải một phép so sánh có kiểm soát:
+Bảng này cần được diễn giải một cách thận trọng, vì \emph{ba} khác biệt về
+điều kiện đo khiến nó không phải là một phép so sánh có kiểm soát:
 
 \begin{enumerate}
-\item \textbf{Mô hình nền khác nhau.} HSGE dùng Qwen3.5-9B, mới hơn và lớn
-hơn Qwen-2.5-7B mà NNetNav và Go-Browse dùng. Một phần khoảng cách so với
-đường cơ sở 8{,}3\% chắc chắn thuộc về mô hình nền chứ không thuộc về
-pipeline dữ liệu. Cặp đối chứng GitLab (5{,}6\% $\rightarrow$ 18{,}3\%) là
-bằng chứng duy nhất tách được hai phần này, và nó chỉ có trên một website.
-\item \textbf{Quy mô dữ liệu khác hẳn.} Go-Browse huấn luyện trên khoảng
-40 nghìn bước tương tác, NNetNav trên 45 nghìn; tập dữ liệu của khóa luận có
-4288 mẫu huấn luyện --- nhỏ hơn khoảng một bậc độ lớn.
-\item \textbf{Ngân sách bước và bộ chấm.} Khóa luận giới hạn 15 bước cho mỗi
-task khi đánh giá, và thay mô hình chấm mờ như đã nêu ở
-mục~\ref{sec:exp-protocol}.
+\item \textbf{Mô hình nền khác nhau.} Khóa luận sử dụng Qwen3.5-9B, mới hơn
+và lớn hơn so với Qwen-2.5-7B mà NNetNav và Go-Browse sử dụng. Một phần
+khoảng cách so với đường cơ sở 8{,}3\% chắc chắn thuộc về năng lực của mô
+hình nền chứ không thuộc về pipeline dữ liệu. Cặp đối chứng trên GitLab
+(5{,}6\% $\rightarrow$ 18{,}3\%) là bằng chứng duy nhất tách được hai phần
+đóng góp này, và nó chỉ tồn tại trên một website.
+\item \textbf{Quy mô dữ liệu chênh lệch lớn.} Go-Browse huấn luyện trên
+khoảng 40 nghìn bước tương tác và NNetNav trên khoảng 45 nghìn, trong khi
+tập dữ liệu của khóa luận chỉ có 4288 mẫu huấn luyện, nhỏ hơn khoảng một bậc
+độ lớn.
+\item \textbf{Ngân sách bước và mô hình chấm khác nhau.} Khóa luận giới hạn
+15 bước cho mỗi task khi đánh giá và sử dụng mô hình chấm mờ thay thế như đã
+nêu ở mục~\ref{sec:exp-protocol}.
 \end{enumerate}
 
-Với các dè dặt đó, điều bảng~\ref{tab:related} \emph{cho phép} nói là: một
-mô hình dưới 10B được huấn luyện trên 4288 mẫu do chính pipeline này sinh ra
-đạt mức ngang các hệ thống tốt nhất cùng phân khúc --- cao hơn NNetNav-7B
-(20{,}8\% so với 19{,}1\%), ngang GPT-4o-mini (20{,}0\%), và thấp hơn
-Go-Browse-7B (22{,}6\%) một khoảng 1{,}8 điểm phần trăm nằm gọn trong khoảng
-tin cậy của phép đo. Điều bảng này \emph{không} cho phép nói là HSGE tốt hơn
-hay tệ hơn Go-Browse; để kết luận được như vậy cần đồng nhất mô hình nền và
-quy mô dữ liệu.
+Với những dè dặt đó, kết luận mà Bảng~\ref{tab:related} \emph{cho phép} rút
+ra là: một mô hình dưới 10B được huấn luyện trên 4288 mẫu do chính pipeline
+này sinh ra đạt mức tương đương các hệ thống tốt nhất cùng phân khúc --- cao
+hơn NNetNav-7B (20{,}8\% so với 19{,}1\%), tương đương GPT-4o-mini
+(20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) một khoảng 1{,}8 điểm phần
+trăm, nằm trong khoảng tin cậy của phép đo. Ngược lại, bảng này
+\emph{không} cho phép kết luận HSGE tốt hơn hay kém hơn Go-Browse; muốn kết
+luận như vậy thì mô hình nền và quy mô dữ liệu phải được đồng nhất.
 
-Phân bố theo website thì đáng chú ý hơn con số tổng. Điểm mạnh và điểm yếu
-của khóa luận gần như \emph{ngược} với Go-Browse: HSGE đạt cao nhất trên
-Shopping (28{,}3\% so với 22{,}4\%) và cao hơn trên GitLab (18{,}3\% so với
-15{,}3\%), nhưng thấp hơn hẳn trên Shopping Admin (15{,}4\% so với 25{,}3\%)
-và Reddit (20{,}8\% so với 30{,}7\%). Mục~\ref{sec:exp-analysis} cho thấy
-nguyên nhân nằm ở kiểu lỗi chiếm ưu thế của từng website chứ không ở lượng
-dữ liệu thu được cho website đó.
+Phân bố kết quả theo từng website mang nhiều thông tin hơn con số tổng. Điểm
+mạnh và điểm yếu của khóa luận gần như trái ngược với Go-Browse: khóa luận
+đạt kết quả cao nhất trên Shopping (28{,}3\% so với 22{,}4\%) và cao hơn
+trên GitLab (18{,}3\% so với 15{,}3\%), nhưng thấp hơn đáng kể trên Shopping
+Admin (15{,}4\% so với 25{,}3\%) và Reddit (20{,}8\% so với 30{,}7\%).
+Mục~\ref{sec:exp-analysis} cho thấy nguyên nhân của chênh lệch này nằm ở
+kiểu lỗi chiếm ưu thế trên từng website, chứ không nằm ở lượng dữ liệu thu
+được cho website đó.
 
 \section{Lặp lại thống kê}
 \label{sec:exp-stats}
 
-\textbf{Hạng mục này chưa hoàn tất và được ghi lại đúng như hiện trạng.}
-Mọi con số ở mục~\ref{sec:exp-main} đến từ \emph{một} lần chạy cho mỗi
-website, mỗi task giải đúng một lần. Việc đặt \texttt{temperature} $=0$ loại
-bỏ ngẫu nhiên trong sinh văn bản, nhưng không loại bỏ được ngẫu nhiên của
-môi trường (thời gian tải trang, tính sẵn sàng của phần tử, tình trạng
-đường hầm mạng). Các khoảng tin cậy trong bảng~\ref{tab:main} là khoảng nhị
-thức trên tập task --- chúng trả lời câu hỏi ``nếu lấy một bộ 655 task khác
-tương tự thì tỷ lệ dao động bao nhiêu'', chứ không trả lời câu hỏi ``chạy
-lại đúng bộ task này thì dao động bao nhiêu''.
+\textbf{Hạng mục này chưa được hoàn tất và được ghi lại đúng theo hiện
+trạng.} Toàn bộ số liệu ở mục~\ref{sec:exp-main} đến từ \emph{một} lần chạy
+cho mỗi website, trong đó mỗi task được giải đúng một lần. Việc đặt
+\texttt{temperature} $=0$ loại bỏ tính ngẫu nhiên trong quá trình sinh văn
+bản, nhưng không loại bỏ được tính ngẫu nhiên của môi trường như thời gian
+tải trang, mức độ sẵn sàng của phần tử giao diện hay tình trạng đường truyền
+mạng. Các khoảng tin cậy trong Bảng~\ref{tab:main} là khoảng tin cậy nhị
+thức tính trên tập task, tức chúng trả lời câu hỏi ``nếu lấy một bộ 655 task
+tương tự khác thì tỷ lệ dao động bao nhiêu'', chứ không trả lời câu hỏi
+``nếu chạy lại đúng bộ task này thì tỷ lệ dao động bao nhiêu''.
 
-Để kết luận có sức nặng, cần bổ sung: (i) tối thiểu ba lần chạy lại cho cả
-mô hình nền và mô hình đã fine-tune, báo cáo trung bình $\pm$ độ lệch chuẩn
-và kiểm định phi tham số theo cặp task; (ii) đối chứng mô hình nền trên cả
-ba website còn lại, không chỉ GitLab; (iii) chạy lại Shopping và
-Shopping Admin \emph{tuần tự} để loại bỏ khả năng nhiễu chéo nêu ở
-mục~\ref{sec:exp-protocol}. Đây là ưu tiên số một của phần thực nghiệm còn
-lại.
+Để có được kết luận thống kê vững chắc, cần bổ sung ba hạng mục: (i) lặp lại
+tối thiểu ba lần cho cả mô hình nền và mô hình sau fine-tune, báo cáo trung
+bình kèm độ lệch chuẩn và kiểm định phi tham số theo cặp task; (ii) bổ sung
+đối chứng mô hình nền trên ba website còn lại thay vì chỉ GitLab; và (iii)
+đo lại Shopping cùng Shopping Admin theo trình tự \emph{tuần tự} nhằm loại
+trừ khả năng nhiễu chéo đã nêu ở mục~\ref{sec:exp-protocol}. Đây là nhóm
+công việc được xếp ưu tiên cao nhất trong phần thực nghiệm còn lại.
 
 \section{Nghiên cứu ablation}
 \label{sec:exp-ablation}
 
-\textbf{Các ablation có kiểm soát chưa được thực hiện.} Ba ablation được
-thiết kế nhưng chưa chạy, mỗi cái nhằm tách một thành phần của pipeline:
-(a) dữ liệu khám phá theo đồ thị so với khám phá phẳng \emph{cùng ngân sách}
-episode và lời gọi LLM --- đây là ablation quan trọng nhất vì nó là thứ duy
-nhất chứng minh trực tiếp giá trị của cấu trúc đồ thị; (b) có và không có
-cổng chấm lại episode; (c) có và không có bước viết lại chuỗi suy nghĩ.
+\textbf{Các ablation có kiểm soát chưa được thực hiện.} Ba ablation đã được
+thiết kế nhưng chưa được chạy, mỗi ablation nhằm cô lập đóng góp của một
+thành phần trong pipeline: (a) so sánh dữ liệu khám phá theo đồ thị với dữ
+liệu khám phá phẳng ở \emph{cùng ngân sách} episode và lời gọi LLM --- đây
+là ablation quan trọng nhất, vì nó là phép đo duy nhất chứng minh trực tiếp
+giá trị của cấu trúc đồ thị; (b) so sánh có và không có cổng chấm lại
+episode; (c) so sánh có và không có bước viết lại chuỗi suy nghĩ.
 
 Điều \emph{có thể} rút ra từ dữ liệu hiện có là một quan sát liên-website,
-và nó phủ định một giả thuyết đơn giản. Bảng~\ref{tab:crosssite} đối chiếu
-tỷ lệ dữ liệu huấn luyện của mỗi website với điểm số trên chính website đó.
+và quan sát này phủ định một giả thuyết tưởng chừng hiển nhiên.
+Bảng~\ref{tab:crosssite} đối chiếu tỷ lệ dữ liệu huấn luyện của mỗi website
+với kết quả đánh giá trên chính website đó.
 
 \begin{table}[H]
 \centering
@@ -498,24 +518,28 @@ GitLab & 20{,}2\% & 4 & 18{,}3\% \\
 \end{tabular}
 \end{table}
 
-Website có nhiều dữ liệu thứ nhì (Shopping Admin) lại có điểm thấp nhất,
-còn website có điểm cao nhất (Shopping) chỉ đứng thứ ba về lượng dữ liệu.
-Với $n = 4$ thì đây không phải một tương quan có ý nghĩa thống kê, nhưng nó
-đủ để bác bỏ cách giải thích ``cứ thêm dữ liệu cho một website là điểm
-website đó tăng''. Độ khó nội tại của website --- số bước cần thiết, mật độ
-biểu mẫu, số phần tử tương tác trên một trang --- có sức giải thích lớn hơn;
-mục~\ref{sec:exp-analysis} củng cố điều này bằng phân bố kiểu lỗi.
+Website có lượng dữ liệu nhiều thứ nhì (Shopping Admin) lại cho kết quả
+thấp nhất, trong khi website có kết quả cao nhất (Shopping) chỉ đứng thứ ba
+về lượng dữ liệu. Với $n = 4$, đây chưa phải một tương quan có ý nghĩa thống
+kê, nhưng đủ để bác bỏ cách giải thích rằng cứ tăng lượng dữ liệu cho một
+website thì kết quả trên website đó sẽ tăng theo. Độ khó nội tại của từng
+website --- số bước cần thiết để hoàn thành một task, mật độ biểu mẫu, số
+phần tử tương tác trên một trang --- có sức giải thích lớn hơn;
+mục~\ref{sec:exp-analysis} củng cố nhận định này thông qua phân bố các kiểu
+lỗi.
 
 \section{Phân tích}
 \label{sec:exp-analysis}
 
 \subsection{Phân loại nguyên nhân thất bại}
 
-Mỗi episode đánh giá đều để lại một trace gồm ba loại bản ghi không gộp
-chung (các bước solver, các lời gọi LLM thô, kết quả trình duyệt của từng
-hành động). Từ đó, mỗi episode thất bại được gán \emph{đúng một} nguyên nhân
-chính theo thứ tự ưu tiên từ cụ thể tới chung, nên bảng~\ref{tab:failures}
-cộng đúng bằng số episode thất bại.
+Mỗi episode đánh giá đều để lại một trace gồm ba loại bản ghi được lưu tách
+biệt: các bước của solver, nội dung thô của từng lời gọi LLM, và kết quả
+trình duyệt trả về sau mỗi hành động. Ba loại bản ghi này không tương ứng
+một--một với nhau nên được giữ riêng thay vì gộp chung. Dựa trên đó, mỗi
+episode thất bại được gán \emph{đúng một} nguyên nhân chính theo thứ tự ưu
+tiên từ cụ thể đến tổng quát, nhờ vậy tổng các dòng trong
+Bảng~\ref{tab:failures} bằng đúng số episode thất bại.
 
 \begin{table}[H]
 \centering
@@ -541,9 +565,10 @@ Tuyên bố xong mà không làm gì & 0 & 0 & 2 (1\%) & 1 (1\%) \\
 \end{tabular}
 \end{table}
 
-Vì các nguyên nhân chồng lấn nhau (kẹt vòng lặp thường kèm một chuỗi lỗi
-hành động), bảng~\ref{tab:signals} báo cáo thêm tần suất mỗi \emph{dấu hiệu}
-xuất hiện ở bất kỳ đâu trong một episode thất bại.
+Do các nguyên nhân có thể chồng lấn lên nhau --- chẳng hạn hiện tượng kẹt
+vòng lặp thường đi kèm một chuỗi lỗi hành động --- Bảng~\ref{tab:signals}
+báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu hiệu} tại bất kỳ vị trí
+nào trong một episode thất bại.
 
 \begin{table}[H]
 \centering
@@ -565,64 +590,71 @@ Tự báo bất khả thi & 26\% & 33\% & 31\% & 31\% \\
 \end{tabular}
 \end{table}
 
-\subsection{Đọc kết quả từ bảng lỗi}
+\subsection{Nhận xét từ kết quả phân loại lỗi}
 
-\textbf{Lỗi hành động là nút thắt phổ biến nhất, không phải lỗi suy luận.}
-Từ 83\% đến 95\% episode thất bại có ít nhất một hành động bị trình duyệt
-từ chối. Tổng cộng có 2285 lỗi hành động trên 655 episode. Phần lớn là hết
-thời gian chờ tính khả thao tác của Playwright trên những phần tử mà
-accessibility tree \emph{có} hiển thị --- tức mô hình nhìn thấy đúng phần tử
-nhưng phần tử chưa sẵn sàng nhận thao tác. Đây là một vấn đề kỹ thuật của
-lớp thực thi nhiều hơn là một vấn đề năng lực của mô hình, và là hướng cải
-thiện có tỷ suất cao nhất (Chương~\ref{ch:discussion}, mục~\ref{sec:disc-guardrails}).
+\textbf{Lỗi hành động là điểm nghẽn phổ biến nhất, không phải lỗi suy luận.}
+Từ 83\% đến 95\% số episode thất bại có ít nhất một hành động bị trình duyệt
+từ chối, với tổng cộng 2285 lỗi hành động trên 655 episode. Phần lớn trong
+số này là lỗi hết thời gian chờ khả năng thao tác của Playwright, xảy ra
+trên chính những phần tử mà accessibility tree \emph{có} hiển thị --- nghĩa
+là mô hình đã xác định đúng phần tử cần tương tác, nhưng phần tử chưa ở
+trạng thái sẵn sàng nhận thao tác. Đây là hạn chế của lớp thực thi hơn là
+hạn chế về năng lực của mô hình, và do đó là hướng cải thiện có tỷ suất cao
+nhất (Chương~\ref{ch:discussion}, mục~\ref{sec:disc-guardrails}).
 
-\textbf{Kẹt vòng lặp giải thích khoảng cách trên Reddit.} Reddit là website
-duy nhất mà kẹt vòng lặp (56\%) vượt lỗi hành động (25\%) để trở thành
-nguyên nhân chính --- gấp khoảng 1{,}7 lần ba website còn lại. Đây cũng
-chính là website mà khoảng cách so với Go-Browse lớn nhất (20{,}8\% so với
-30{,}7\%). Nói cách khác, điểm yếu trên Reddit không phải là ``không biết
-phải làm gì'' mà là ``lặp lại một thao tác vô hiệu cho tới hết ngân sách''.
+\textbf{Hiện tượng kẹt vòng lặp giải thích khoảng cách trên Reddit.} Reddit
+là website duy nhất mà kẹt vòng lặp (56\%) vượt lỗi hành động (25\%) để trở
+thành nguyên nhân chính, với tỷ lệ cao gấp khoảng 1{,}7 lần ba website còn
+lại. Đây cũng chính là website mà khoảng cách so với Go-Browse lớn nhất
+(20{,}8\% so với 30{,}7\%). Như vậy, hạn chế trên Reddit không nằm ở việc mô
+hình không xác định được cần làm gì, mà ở việc nó lặp lại một thao tác không
+hiệu quả cho tới khi cạn ngân sách bước.
 
-\textbf{Cạn ngân sách 15 bước ảnh hưởng nặng nhất tới GitLab} (45\%), phù
-hợp với việc các task GitLab thường đòi chuỗi điều hướng dài. Đồng thời,
-\emph{không có} episode nào thuộc loại ``chạm mục tiêu rồi rời đi'' (một
-bước đã được tính điểm nhưng episode kết thúc ở 0). Điều này quan trọng:
-nó chứng minh ngân sách 15 bước đang \emph{đo} mô hình chứ không \emph{phạt}
-mô hình --- không có task nào bị mất điểm chỉ vì bị cắt sau khi đã làm đúng.
+\textbf{Việc cạn ngân sách 15 bước ảnh hưởng nặng nhất tới GitLab} (45\%),
+phù hợp với đặc điểm các task GitLab thường đòi hỏi chuỗi điều hướng dài.
+Đồng thời, \emph{không có} episode nào thuộc nhóm ``chạm mục tiêu rồi rời
+đi'', tức nhóm mà một bước trung gian đã được tính điểm nhưng episode vẫn
+kết thúc với điểm bằng không. Chi tiết này có ý nghĩa quan trọng đối với
+tính hợp lệ của phép đo: nó cho thấy ngân sách 15 bước đang \emph{đo} năng
+lực của mô hình chứ không \emph{trừng phạt} mô hình, vì không task nào bị
+mất điểm chỉ vì bị cắt ngang sau khi đã thực hiện đúng.
 
-\textbf{Bệnh ``tuyên bố xong mà không làm gì'' đã gần như biến mất.} Chỉ 3
-trên 519 episode thất bại (0{,}6\%) rơi vào dạng một bước, gọi
-\texttt{send\_msg\_to\_user}, không chạm vào trang. Đây là kiểu quỹ đạo mà
-tập dữ liệu \emph{trước khi sửa} đầy rẫy: 42\% quỹ đạo chỉ có một bước, và
-104 quỹ đạo không hành động hữu hiệu đã bị cổng lọc ở
-mục~\ref{sec:exp-data} loại bỏ. Con số 0{,}6\% chính là chỗ nối trực tiếp
-giữa công việc làm sạch dữ liệu và kết quả đánh giá: cổng lọc đã loại được
-đúng hành vi mà nó nhắm tới.
+\textbf{Hiện tượng ``tuyên bố hoàn thành mà không thao tác'' hầu như không
+còn xuất hiện.} Chỉ 3 trên 519 episode thất bại (0{,}6\%) thuộc dạng chỉ có
+một bước gọi \texttt{send\_msg\_to\_user} mà không tác động gì lên trang.
+Đây chính là nhóm hành vi mà cổng lọc hành động hữu hiệu ở
+mục~\ref{sec:exp-data} nhắm tới khi loại bỏ 104 quỹ đạo khỏi tập huấn
+luyện. Tỷ lệ 0{,}6\% do đó là bằng chứng nối trực tiếp giữa công việc làm
+sạch dữ liệu và kết quả đánh giá: cổng lọc đã loại bỏ đúng loại hành vi mà
+nó được thiết kế để loại bỏ.
 
-\textbf{Đầu ra không phân tích được không còn là vấn đề.} Chỉ 2 trên 655
-episode (0{,}3\%) kết thúc vì phản hồi của mô hình không phân tích được
-thành JSON, so với khoảng 8\% ở một đợt đánh giá trước đó khi lỗi này còn
-chưa được ghi nhận và chỉ hiện ra trên luồng lỗi chuẩn.
+\textbf{Đầu ra không phân tích được không còn là một nguồn lỗi đáng kể.}
+Chỉ 2 trên 655 episode (0{,}3\%) kết thúc vì phản hồi của mô hình không phân
+tích được thành JSON hợp lệ. Việc ghi lại nội dung thô của từng lời gọi LLM
+trong trace là điều cho phép tách bạch nhóm lỗi này khỏi trường hợp mô hình
+chủ động dừng, thay vì gộp cả hai thành một kết cục thất bại chung.
 
 \subsection{Độ dài quỹ đạo}
 
-Episode thành công ngắn hơn hẳn episode thất bại: trung vị 5 bước
-(trung bình 6{,}3) so với trung vị 12 bước (trung bình 11{,}0). Hình dạng
-này nhất quán với bảng lỗi --- một episode thất bại điển hình không phải là
-episode dừng sớm vì bó tay, mà là episode dùng gần hết ngân sách để lặp lại
-những thao tác không đưa được trạng thái trang tiến lên. Nó cũng cho thấy
-việc nới ngân sách bước sẽ không phải là cách cải thiện hiệu quả, vì thời
-gian bị tiêu vào việc lặp chứ không vào việc tiến.
+Episode thành công ngắn hơn đáng kể so với episode thất bại: trung vị 5 bước
+(trung bình 6{,}3) so với trung vị 12 bước (trung bình 11{,}0). Phân bố này
+nhất quán với kết quả phân loại lỗi ở trên: một episode thất bại điển hình
+không phải là episode dừng sớm vì mô hình bế tắc, mà là episode dùng gần hết
+ngân sách để lặp lại những thao tác không làm trạng thái trang tiến triển.
+Quan sát này cũng hàm ý rằng việc nới rộng ngân sách bước không phải là
+hướng cải thiện hiệu quả, bởi thời gian đang bị tiêu hao vào việc lặp lại
+chứ không vào việc tiến tới mục tiêu.
 
 \subsection{Tổng kết chương}
 
-Chu trình đầu--cuối đã chạy trọn vẹn trên bốn website thật: khám phá thu
-được 2178 episode và 1029 quỹ đạo đạt chuẩn, fine-tuning cho ra một mô hình
-9B, và đánh giá trên toàn bộ 655 task chính thức đạt 20{,}8\% --- ngang mức
-các hệ thống tốt nhất cùng phân khúc dưới 10B, và cao gấp ba lần mô hình nền
-trên website duy nhất có đối chứng. Hai giới hạn cần nhắc lại một cách rõ
-ràng: kết quả đến từ một lần chạy cho mỗi website (mục~\ref{sec:exp-stats}),
-và các ablation tách bạch đóng góp của từng thành phần trong pipeline vẫn
-chưa được thực hiện (mục~\ref{sec:exp-ablation}). Chương~\ref{ch:discussion}
-diễn giải các kết quả này và trình bày các bài học kỹ thuật rút ra từ quá
-trình.
+Chu trình đầu--cuối đã được vận hành trọn vẹn trên bốn website thật: giai
+đoạn khám phá thu được 2178 episode và 1029 quỹ đạo đạt chuẩn; giai đoạn
+fine-tuning cho ra một mô hình 9B với chi phí GPU 6{,}6\,USD; và giai đoạn
+đánh giá trên toàn bộ 655 task chính thức đạt tỷ lệ thành công 20{,}8\%,
+tương đương các hệ thống tốt nhất cùng phân khúc dưới 10B và cao hơn ba lần
+so với mô hình nền trên website duy nhất có đối chứng. Hai giới hạn cần được
+nhắc lại một cách rõ ràng: kết quả chỉ đến từ một lần chạy cho mỗi website
+(mục~\ref{sec:exp-stats}), và các ablation tách bạch đóng góp của từng thành
+phần trong pipeline vẫn chưa được thực hiện (mục~\ref{sec:exp-ablation}).
+Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những
+bài học kỹ thuật rút ra trong quá trình thực hiện.
