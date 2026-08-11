@@ -15,6 +15,35 @@ Entry format:
 
 ## Open
 
+### An unreset WebArena instance scores the second sweep on the first sweep's work
+- **Status**: open (methodology, not code) — found 2026-08-12 02:xx, confirmed by
+  the user the same session.
+- **Found**: comparing the restarted base sweep against the abandoned one. reddit
+  was 1/21 where the earlier run had been 7/21, while shopping (13 vs 14) and
+  gitlab (12 vs 11) agreed within one.
+- **Where**: run procedure, not a file. `training/bootstrap_eval_box.sh` gates
+  nine things and instance freshness is not one of them.
+- **Symptom**: a sweep run against an instance a previous sweep already mutated
+  is scored **too high**, silently. No error, no log line, and the run looks
+  complete and healthy.
+- **Cause**: WebArena evaluators check only the site's **final state**, never
+  that this agent caused it. The finetuned sweep ran first and completed the
+  stateful `[MOD]` tasks (`Upvote the newest post in <forum>`, `Change my reddit
+  bio to ...`); the base sweep that followed inherited that work and was scored
+  success for wandering through. Concentrated in reddit because its early task
+  block is dense with such tasks — which is exactly why only reddit moved.
+- **Consequence**: `outputs/eval/*/base_instance1/` is void, and the anomaly it
+  produced (base 21.7% "beating" finetuned 20.8% on reddit) was an artefact. The
+  `136/655 = 20.8%` finetuned figure ran *first* on that instance and so is less
+  exposed, but its own starting state is **unverified** — do not pair it with
+  the clean 2026-08-12 base run until that is confirmed.
+- **Fix**: reset the WebArena Docker stack between sweeps. Worth adding as gate
+  0 in `bootstrap_eval_box.sh` (assert a known seed value, e.g. that the reddit
+  user's bio is at its default) so a contaminated instance fails fast instead of
+  producing a plausible number. Detection method meanwhile: compare two runs
+  **task-id by task-id** — a uniform shift is the model, a single-domain shift
+  concentrated in MOD tasks is contamination.
+
 ### A sweep can hang forever inside Playwright, and nothing detects it
 - **Status**: mitigated (2026-08-11 11:24) by `training/stall_watchdog.sh`; the
   underlying Playwright hang is **not** fixed and its trigger is unknown.
