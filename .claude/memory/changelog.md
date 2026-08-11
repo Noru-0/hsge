@@ -181,6 +181,18 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   hits; 171 s over all rows is pessimistic now that a blip is retried rather than
   repeated) with ~120 s named as the planning figure.
 
+- **10:31** — `training/check_eval_boxes.sh` (new) — preflight all eval boxes in
+  one command: GPU, driver, CUDA toolkit version, compute capability, free disk,
+  and **which torch/vLLM wheels `vast_setup.sh` will therefore choose** on each.
+  Exists because a CUDA mismatch on this pipeline never announces itself, it just
+  costs hours: a cu13 torch on a 12.x driver reports `no CUDA`, a cu128 torch
+  against a 13.2 nvcc cannot compile causal-conv1d (and without it Qwen3.5's GDN
+  fast path is silently off, 2.3x slower), and vLLM's own wheel CUDA major decides
+  whether the server survives its first request. Also reports free disk against
+  the real ~45 GB need (19 GB base + 19 GB merged + ~6 GB venvs) and flags the one
+  known-bad combination, CUDA 12 + Hopper. `--site-url` additionally tests tunnel
+  reachability *from each box*, which is the only reachability that matters.
+
 ## 2026-08-10
 
 - **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,
