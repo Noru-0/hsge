@@ -6,6 +6,24 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **18:29** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **redesigned
+  Table 4.4 (four exploration runs) for readability.** The old version packed
+  each task group into one cell as a `192/268/73` triple, which forced the
+  reader to remember the field order and made cross-site comparison of any
+  single outcome impossible. Now one row per outcome under italic group
+  headers (Quy mô khám phá / Task LOCAL / Task UNPREFIXED / Task GOAL / Tri
+  thức thu được), 21 rows, plus a bold **Tổng** column that did not exist
+  before (258 node, 2178 episode, 699/683/282 LOCAL, 343/231/85 UNPREFIXED,
+  25/25/16 GOAL, 58 skill, 26 operator, 6 chuỗi, 57 seed, 497 hạ cấp) — the
+  totals the surrounding prose already cites, previously left for the reader
+  to add up. Float changed `[H]` -> `[htbp]`: at 21 rows the table no longer
+  fits in the space left on its page and `[H]` left most of a page blank; it
+  now sits at the top of the next page with the text flowing on. Clean
+  rebuild: 154 pages, 0 undefined refs, 6 overfull hboxes (down from 7).
+  Note: the user was editing the same file concurrently during this pass
+  (eval hours 6->5, GPU cost 25,9 -> 22,7 USD, and a shortened row label);
+  those edits were preserved, not overwritten.
+
 - **18:05** — `Thesis_report/thesis_hsge_vi/Chapter{4,5,6}/*.tex` — **removed the
   em-dash parenthetical construction throughout Chapters 4-6** at the user's
   request (`X --- giải thích --- Y` reads badly in Vietnamese academic prose).

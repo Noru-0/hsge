@@ -39,17 +39,17 @@ Fine-tuning & 1 $\times$ H100-80GB &
 6{,}6\,USD \\
 \addlinespace
 Đánh giá & 4 $\times$ A100-40GB, mỗi máy phụ trách một website &
-$\approx$ 6 giờ mỗi máy, tương đương 24 giờ GPU thuê; riêng thời gian giải
+$\approx$ 5 giờ mỗi máy, tương đương 20 giờ GPU thuê; riêng thời gian giải
 task đo được là 16{,}0 giờ &
-19{,}3\,USD \\
+16{,}1\,USD \\
 \midrule
-\textbf{Tổng} & & & \textbf{25{,}9\,USD} \\
+\textbf{Tổng} & & & \textbf{22{,}7\,USD} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Như vậy, tính từ thời điểm bắt đầu fine-tune cho tới khi hoàn tất đánh giá
-trên 655 task, tổng chi phí GPU của toàn bộ chu trình là 25{,}9\,USD.
+trên 655 task, tổng chi phí GPU của toàn bộ chu trình là 22{,}7\,USD.
 Con số này cho thấy rào cản tính toán của việc chuyên hóa một mô hình ngôn
 ngữ nhỏ cho một nhóm website không nằm ở khâu huấn luyện hay đánh giá, mà
 nằm ở khâu thu thập dữ liệu, vốn tiêu tốn thời gian điều khiển trình duyệt
@@ -114,26 +114,9 @@ trên cả bốn website).}
 \subsection{Quy trình đánh giá}
 \label{sec:exp-protocol}
 
-Quá trình đánh giá sử dụng \emph{bộ task và bộ chấm chính thức của
-WebArena}, không sử dụng cơ chế xác minh nội bộ của hệ thống. Cụ thể, mỗi
-task được nạp qua BrowserGym ở chế độ có chấm điểm (\emph{scored
-environment}); solver được cấp ngân sách tối đa 15 bước và chạy ở
-\texttt{temperature} $=0$; kết quả thành hay bại do hàm thưởng của WebArena
-quyết định, bao gồm ba dạng kiểm tra là so khớp URL, so khớp bằng chương
-trình và so khớp mờ bằng LLM. Mô hình sau fine-tune được merge trọng số LoRA
-rồi phục vụ bằng vLLM ngay trên máy đánh giá, ở chế độ tắt chuỗi suy nghĩ
-(\emph{nothink}) đúng như cấu hình lúc huấn luyện.
+Quá trình đánh giá được thực hiện dựa trên \emph{tập tác vụ và bộ đánh giá chuẩn thức của WebArena}, hoàn toàn độc lập với cơ chế xác minh nội bộ của hệ thống đề xuất. Cụ thể, mỗi tác vụ được khởi tạo thông qua môi trường BrowserGym ở chế độ có tính điểm. Tác nhân giải quyết (solver) được giới hạn ở mức ngân sách tối đa là 15 bước hành động, với tham số \texttt{temperature} $= 0$. Kết quả thành công hay thất bại của tác vụ được phân xử bởi hàm phần thưởng (reward function) của WebArena, thông qua ba cơ chế kiểm tra: so khớp URL (URL matching), so khớp bằng chương trình (programmatic matching), và so khớp mờ dựa trên LLM (LLM-based fuzzy matching). Mô hình sau quá trình tinh chỉnh (fine-tuning) sẽ được hợp nhất (merge) trọng số LoRA và được triển khai suy luận (serving) bằng vLLM trực tiếp trên máy chủ đánh giá. Đặc biệt, cấu hình triển khai được thiết lập ở chế độ vô hiệu hóa chuỗi suy luận (\emph{nothink}), nhằm đảm bảo tính nhất quán tuyệt đối (prompt parity) với thiết lập trong giai đoạn huấn luyện.
 
-Trước mỗi đợt đánh giá, một quy trình kiểm tra tự động yêu cầu chín điều
-kiện phải đồng thời thỏa mãn thì đợt chạy mới được khởi động, trong đó có
-ba điều kiện quan trọng nhất: điểm phục vụ mô hình phải thực sự sinh được
-văn bản, website phải thực sự truy cập được \emph{từ chính máy đánh giá đó},
-và một đợt thử nghiệm ba task phải ghi được ít nhất một điểm mà không phát
-sinh lỗi. Kết quả của từng task được ghi thành một bản ghi riêng, kèm theo
-một \emph{trace} đầy đủ cho mỗi episode gồm các bước của solver, nội dung
-thô của từng lời gọi LLM và kết quả trình duyệt trả về sau mỗi hành động.
-Các trace này là dữ liệu đầu vào cho phân tích lỗi ở
-mục~\ref{sec:exp-analysis}.
+Trước mỗi đợt đánh giá, hệ thống thực thi một quy trình kiểm tra tự động (sanity check) bao gồm chín điều kiện tiên quyết. Đợt chạy chỉ được khởi động khi toàn bộ các điều kiện này được thỏa mãn đồng thời, trong đó bao gồm ba tiêu chí cốt lõi: (1) điểm cuối (endpoint) phục vụ mô hình phải phản hồi văn bản hợp lệ; (2) website mục tiêu phải truy cập thành công \emph{trực tiếp từ máy chủ đánh giá}; và (3) đợt chạy thử nghiệm (smoke test) trên ba tác vụ ngẫu nhiên phải ghi nhận ít nhất một trường hợp thành công mà không phát sinh lỗi hệ thống. Kết quả của từng tác vụ được lưu trữ thành các bản ghi riêng biệt, đính kèm một \emph{vết theo dõi (trace)} toàn diện cho mỗi phiên tương tác (episode). Dữ liệu vết này bao gồm tiến trình các bước của solver, dữ liệu thô từ từng lời gọi LLM, và phản hồi tương ứng của trình duyệt sau mỗi thao tác. Hệ thống dữ liệu này đóng vai trò là nguồn thông tin đầu vào cốt lõi cho quá trình phân tích lỗi được trình bày tại Mục~\ref{sec:exp-analysis}.
 
 \textbf{Hai sai lệch cần được công bố kèm theo mọi số liệu ở
 mục~\ref{sec:exp-main}:}
@@ -143,7 +126,7 @@ mục~\ref{sec:exp-main}:}
 cố định mô hình \texttt{gpt-4-1106-preview} cho các task so khớp mờ, nhưng
 mô hình này đã ngừng được cung cấp. Khóa luận thay thế bằng
 \texttt{gpt-4-turbo}, áp dụng đồng nhất trên cả bốn máy đánh giá và được ghi
-lại cùng kết quả. Sai lệch này ảnh hưởng tới 40 trong 655 task (Shopping 15,
+lại cùng kết quả. Sai lệch này có thể ảnh hưởng tới 40 trong 655 task (Shopping 15,
 Shopping Admin 20, GitLab 5); toàn bộ các task còn lại được chấm hoàn toàn
 tất định nên không chịu ảnh hưởng.
 \item \textbf{Shopping và Shopping Admin được đánh giá đồng thời.} Trong
@@ -157,38 +140,53 @@ kết quả này cần được đo lại theo trình tự tuần tự.
 \section{Kết quả thu thập dữ liệu}
 \label{sec:exp-data}
 
-\subsection{Bốn đợt khám phá}
+\subsection{Kết quả khám phá}
 
 Bảng~\ref{tab:runs} tổng hợp kết quả của bốn đợt khám phá. Cả bốn đợt đều
 được dừng chủ động sau khoảng 21 giờ, khi lượng dữ liệu thu được đã đủ cho
-vòng huấn luyện, chứ không phải dừng vì lỗi. Do đó, số node đã duyệt là một
-cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
+vòng huấn luyện. Do đó, số node đã duyệt là một cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
-\caption[Thống kê bốn đợt khám phá]{Thống kê bốn đợt khám phá. LOCAL là task giải ngay trên node;
-UNPREFIXED là chính task đó giải lại từ trang gốc; GOAL là task ngữ nghĩa
+\caption[Thống kê bốn đợt khám phá]{Thống kê bốn đợt khám phá, nhóm theo
+quy mô khám phá, kết quả của ba nhóm task và tri thức thu được; dòng cuối
+cùng là số episode bị cổng kiểm chứng hạ cấp từ thành công xuống thất bại. LOCAL là task giải ngay trên node;
+UNPREFIXED là chính task đó giải lại từ trang chủ; GOAL là task ngữ nghĩa
 nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của website.}
 \label{tab:runs}
 \small
-\begin{tabular}{@{}L{3.7cm} R{2.0cm} R{2.0cm} R{2.0cm} R{2.4cm}@{}}
+\begin{tabular}{@{}L{4.9cm} R{1.7cm} R{1.5cm} R{1.5cm} R{1.9cm} R{1.6cm}@{}}
 \toprule
-& \textbf{Shopping} & \textbf{Reddit} & \textbf{GitLab} & \textbf{Sh.\ Admin} \\
+\textbf{Chỉ số} & \textbf{Shop.} & \textbf{Reddit} & \textbf{GitLab} &
+\textbf{Sh.\ Admin} & \textbf{Tổng} \\
 \midrule
-Node đã duyệt & 79 & 68 & 63 & 48 \\
-Node trùng nội dung (bỏ) & 3 & 9 & 6 & 13 \\
-Episode ghi nhận & 565 & 617 & 563 & 433 \\
+\multicolumn{6}{@{}l}{\textit{Quy mô khám phá}} \\
+\quad Node đã duyệt & 79 & 68 & 63 & 48 & \textbf{258} \\
+\quad Node trùng nội dung & 3 & 9 & 6 & 13 & \textbf{31} \\
+\quad Episode ghi nhận & 565 & 617 & 563 & 433 & \textbf{2178} \\
+\addlinespace
+\multicolumn{6}{@{}l}{\textit{Task LOCAL}} \\
+\quad Thành công & 192 & 208 & 160 & 139 & \textbf{699} \\
+\quad Thất bại & 268 & 152 & 147 & 116 & \textbf{683} \\
+\quad Bất khả thi & 73 & 46 & 101 & 62 & \textbf{282} \\
+\addlinespace
+\multicolumn{6}{@{}l}{\textit{Task UNPREFIXED}} \\
+\quad Thành công & 109 & 105 & 66 & 63 & \textbf{343} \\
+\quad Thất bại & 57 & 76 & 58 & 40 & \textbf{231} \\
+\quad Bất khả thi & 13 & 20 & 33 & 19 & \textbf{85} \\
+\addlinespace
+\multicolumn{6}{@{}l}{\textit{Task GOAL}} \\
+\quad Thành công & 10 & 9 & 3 & 3 & \textbf{25} \\
+\quad Thất bại & 6 & 8 & 6 & 5 & \textbf{25} \\
+\quad Bất khả thi & 3 & 1 & 5 & 7 & \textbf{16} \\
+\addlinespace
+\multicolumn{6}{@{}l}{\textit{Tri thức thu được}} \\
+\quad Skill được thu nhận & 14 & 16 & 16 & 12 & \textbf{58} \\
+\quad Operator được quy nạp & 8 & 4 & 8 & 6 & \textbf{26} \\
+\quad Chuỗi operator đã thử & 5 & 0 & 1 & 0 & \textbf{6} \\
+\quad Năng lực seed đã thử & 14 & 18 & 13 & 12 & \textbf{57} \\
 \midrule
-LOCAL (success/fail/invalid) & 192/268/73 & 208/152/46 & 160/147/101 & 139/116/62 \\
-UNPREFIXED & 109/57/13 & 105/76/20 & 66/58/33 & 63/40/19 \\
-GOAL & 10/6/3 & 9/8/1 & 3/6/5 & 3/5/7 \\
-\midrule
-Skill được nhận & 14 & 16 & 16 & 12 \\
-Operator được quy nạp & 8 & 4 & 8 & 6 \\
-Chuỗi operator thử & 5 & 0 & 1 & 0 \\
-Năng lực seed thử & 14 & 18 & 13 & 12 \\
-\midrule
-Episode fail khi chấm lại & 127 & 159 & 119 & 92 \\
+Episode bị hạ cấp & 127 & 159 & 119 & 92 & \textbf{497} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -215,7 +213,7 @@ thường đòi hỏi chuỗi thao tác thay đổi trạng thái tương đối
 giá sai kết quả của chính mình.} Khi tham số \texttt{verify\_episodes} được
 bật, mọi episode mà tác nhân tự tuyên bố hoàn thành đều được một LLM độc lập
 chấm lại dựa trên chính trạng thái trang cuối cùng của episode đó; 497
-trường hợp bị hạ xuống thất bại, tương đương khoảng 32\% tổng số lần tự
+trường hợp đánh dấu thất bại, tương đương khoảng 32\% tổng số lần tự
 tuyên bố hoàn thành. Nếu không có cổng kiểm chứng này, xấp xỉ một phần tư
 tập dữ liệu huấn luyện sẽ là những quỹ đạo dạy mô hình cách tuyên bố đã hoàn
 thành trong khi thực tế chưa hoàn thành.
@@ -223,7 +221,7 @@ thành trong khi thực tế chưa hoàn thành.
 \subsection{Tập dữ liệu huấn luyện}
 
 Bảng~\ref{tab:dataset} trình bày tập dữ liệu thu được sau khi các quỹ đạo
-được xuất thành mẫu huấn luyện dạng hội thoại. Mỗi mẫu tương ứng với một
+được xuất thành mẫu huấn luyện. Mỗi mẫu tương ứng với một
 bước hành động, trong đó đầu vào là prompt \emph{trùng khớp hoàn toàn} với
 prompt mà solver sử dụng lúc chạy thật, bao gồm cả cách cắt ngắn
 accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp
