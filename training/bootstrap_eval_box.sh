@@ -5,6 +5,17 @@
 #   bash training/bootstrap_eval_box.sh --site shopping \
 #       --site-url https://<tunnel> --adapter /workspace/saves/qwen35-9b-lora-all
 #
+# Baseline (untouched base model, no adapter, no merge):
+#
+#   bash training/bootstrap_eval_box.sh --site shopping \
+#       --site-url https://<tunnel> --base
+#
+# --base writes to eval/<site>/base and stamps summary.json with
+# variant="base". Both matter: serve_vllm.sh serves every model under the same
+# name ("qwen35-9b"), so without them a baseline's summary.json is
+# indistinguishable from a finetuned one, and the comparison the baseline exists
+# to support silently compares a run against itself.
+#
 # Order matters, and every step gates the next: the expensive thing here is a
 # six-hour sweep, and each of these has produced a silently wrong or wasted run
 # before.
@@ -28,6 +39,7 @@ MERGED=/workspace/models/Qwen3.5-9B-all
 JUDGE_MODEL=gpt-4-turbo
 SMOKE=3
 NO_FULL=0
+BASE_ONLY=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -37,14 +49,24 @@ while [ $# -gt 0 ]; do
         --judge-model) JUDGE_MODEL=$2; shift 2 ;;
         --smoke)       SMOKE=$2; shift 2 ;;
         --no-full)     NO_FULL=1; shift ;;
+        # Baseline run: serve the untouched base model, skip the merge entirely,
+        # and write to eval/<site>/base so a baseline can never overwrite (or be
+        # mistaken for) the finetuned numbers it exists to be compared against.
+        --base)        BASE_ONLY=1; shift ;;
         *) echo "unknown arg: $1" >&2; exit 2 ;;
     esac
 done
 
+if [ "$BASE_ONLY" = 1 ]; then
+    VARIANT=base; SERVE_MODEL=$BASE_MODEL
+else
+    VARIANT=finetuned; SERVE_MODEL=$MERGED
+fi
+
 REPO=/workspace/hsge
 EVAL_PY=/workspace/venvs/eval/bin/python
 SERVE_PY=/workspace/venvs/serve/bin/python
-OUT=/workspace/eval/$SITE/finetuned
+OUT=/workspace/eval/$SITE/$VARIANT
 ENV_FILE=/workspace/.eval_env
 
 die() { echo "FAIL [$1] $2" >&2; exit 1; }
@@ -59,7 +81,11 @@ step "1/9 inputs"
     "OPENAI_API_KEY unset. 40 of the 655 tasks are scored by WebArena's LLM judge
     (shopping 15, shopping_admin 20, gitlab 5, reddit 0); without a key they error
     out and score 0 with no other symptom."
-echo "site=$SITE url=$SITE_URL adapter=$ADAPTER judge=$JUDGE_MODEL"
+if [ "$BASE_ONLY" = 1 ]; then
+    echo "site=$SITE url=$SITE_URL variant=BASE (no adapter) judge=$JUDGE_MODEL"
+else
+    echo "site=$SITE url=$SITE_URL variant=finetuned adapter=$ADAPTER judge=$JUDGE_MODEL"
+fi
 
 # --- 2. venvs + base model -------------------------------------------------
 step "2/9 environment (eval mode: no train venv)"
@@ -76,7 +102,11 @@ echo "venvs + base model ready"
 
 # --- 3. merge adapter ------------------------------------------------------
 step "3/9 merge adapter"
-if [ -f "$MERGED/config.json" ]; then
+if [ "$BASE_ONLY" = 1 ]; then
+    [ -f "$BASE_MODEL/config.json" ] \
+        || die merge "no base model at $BASE_MODEL"
+    echo "baseline run -- skipping merge, serving $BASE_MODEL untouched"
+elif [ -f "$MERGED/config.json" ]; then
     echo "already merged: $MERGED"
 else
     [ -f "$ADAPTER/adapter_model.safetensors" ] \
@@ -89,7 +119,7 @@ fi
 step "4/9 serve under supervisor"
 cat > /etc/supervisor/conf.d/vllm.conf <<EOF
 [program:vllm]
-command=bash $REPO/training/serve_vllm.sh $MERGED
+command=bash $REPO/training/serve_vllm.sh $SERVE_MODEL
 autostart=true
 autorestart=true
 ; supervisorctl restart kills the shell but NOT its python child, which leaves two
@@ -146,10 +176,10 @@ esac
 # --- 8. smoke --------------------------------------------------------------
 step "8/9 smoke test ($SMOKE tasks)"
 mkdir -p "$OUT"
-SMOKE_OUT=/workspace/eval/$SITE/smoke
+SMOKE_OUT=/workspace/eval/$SITE/smoke_$VARIANT
 cd "$REPO"
 "$EVAL_PY" -u training/eval_webarena.py --site "$SITE" --site-url "$SITE_URL" \
-    --out "$SMOKE_OUT" --limit "$SMOKE" --trace-axtree 2>&1 | tail -25
+    --out "$SMOKE_OUT" --limit "$SMOKE" --variant "$VARIANT" --trace-axtree 2>&1 | tail -25
 SMOKE_OK=$("$EVAL_PY" - "$SMOKE_OUT/results.jsonl" <<'PY'
 import json, sys
 try:
@@ -179,7 +209,7 @@ cd $REPO
 # -u so the log is not buffered: a buffered log once ran 31 minutes behind and
 # triggered a false alarm that the sweep had hung.
 exec $EVAL_PY -u training/eval_webarena.py --site $SITE --site-url $SITE_URL \\
-    --out $OUT --trace-axtree
+    --out $OUT --variant $VARIANT --trace-axtree
 EOF
 chmod +x /workspace/run_eval.sh
 cat > /etc/supervisor/conf.d/evalsweep.conf <<EOF
@@ -194,7 +224,7 @@ exitcodes=0,3
 startsecs=30
 stopasgroup=true
 killasgroup=true
-stdout_logfile=/workspace/eval_$SITE.log
+stdout_logfile=/workspace/eval_${SITE}_$VARIANT.log
 redirect_stderr=true
 EOF
 supervisorctl reread >/dev/null 2>&1
@@ -207,5 +237,5 @@ fi
 echo "evalsweep: $(supervisorctl status evalsweep 2>&1)"
 echo
 echo "READY. Watch it with:"
-echo "  tail -f /workspace/eval_$SITE.log"
+echo "  tail -f /workspace/eval_${SITE}_$VARIANT.log"
 echo "  $EVAL_PY $REPO/training/eval_status.py $OUT"

@@ -18,23 +18,26 @@
 #      two sides match; only comparing digests is.
 set -uo pipefail
 
-HOST="" PORT="" SITE="" DEST=outputs/eval FORCE=0
+HOST="" PORT="" SITE="" DEST=outputs/eval FORCE=0 VARIANT=finetuned
 while [ $# -gt 0 ]; do
     case "$1" in
         --host)  HOST=$2; shift 2 ;;
         --port)  PORT=$2; shift 2 ;;
         --site)  SITE=$2; shift 2 ;;
+        # "finetuned" (default) or "base" -- a baseline sweep writes to
+        # eval/<site>/base and must not be pulled into the finetuned dir.
+        --variant) VARIANT=$2; shift 2 ;;
         --dest)  DEST=$2; shift 2 ;;
         --force) FORCE=1; shift ;;      # copy even if the sweep is still running
         *) echo "unknown arg: $1" >&2; exit 2 ;;
     esac
 done
 [ -n "$HOST" ] && [ -n "$PORT" ] && [ -n "$SITE" ] \
-    || { echo "usage: $0 --host H --port P --site SITE [--dest DIR] [--force]" >&2; exit 2; }
+    || { echo "usage: $0 --host H --port P --site SITE [--variant finetuned|base] [--dest DIR] [--force]" >&2; exit 2; }
 
 SSH="ssh -p $PORT -o BatchMode=yes -o ConnectTimeout=15 root@$HOST"
-REMOTE=/workspace/eval/$SITE/finetuned
-LOCAL=$DEST/$SITE/finetuned
+REMOTE=/workspace/eval/$SITE/$VARIANT
+LOCAL=$DEST/$SITE/$VARIANT
 
 echo "=== 1/4 is the sweep finished? ==="
 STATUS=$($SSH 'supervisorctl status evalsweep 2>&1 | head -1' 2>&1 | tr -d '\r')
@@ -64,8 +67,8 @@ rsync -az -e "ssh -p $PORT -o BatchMode=yes" \
 # The sweep log lives outside the results dir; it is the only place the abort
 # message and the per-task stderr survive.
 rsync -az -e "ssh -p $PORT -o BatchMode=yes" \
-    "root@$HOST:/workspace/eval_$SITE.log" "$DEST/$SITE/" 2>/dev/null \
-    || echo "  (no /workspace/eval_$SITE.log)"
+    "root@$HOST:/workspace/eval_${SITE}_$VARIANT.log" "$DEST/$SITE/" 2>/dev/null \
+    || echo "  (no /workspace/eval_${SITE}_$VARIANT.log)"
 du -sh "$LOCAL"
 
 echo "=== 4/4 verify byte-exact ==="
@@ -75,7 +78,7 @@ LOCAL_SUM=$(cd "$LOCAL" && find . -type f | sort | xargs md5sum | md5sum | grep 
 echo "  remote: ${REMOTE_SUM:-?}"
 echo "  local : ${LOCAL_SUM:-?}"
 if [ -n "$REMOTE_SUM" ] && [ "$REMOTE_SUM" = "$LOCAL_SUM" ]; then
-    echo "  MATCH -- $SITE is safe to destroy"
+    echo "  MATCH -- $SITE ($VARIANT) is safe to destroy"
 else
     echo "  MISMATCH -- do NOT destroy the box; re-run this script" >&2
     exit 1

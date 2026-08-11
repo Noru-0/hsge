@@ -279,6 +279,12 @@ def write_summary(out_dir: Path, results_path: Path, args, task_ids: list[int],
     n_site_tasks = len(task_ids)
     summary = {
         "site": args.site, "model": args.model, "base_url": args.base_url,
+        # serve_vllm.sh deliberately serves every model under the same name
+        # ("qwen35-9b") so eval commands don't change between runs -- which means
+        # `model` above cannot tell a baseline apart from a finetuned run. Only
+        # the output directory could, and that does not survive being copied or
+        # quoted. Record it explicitly.
+        "variant": args.variant,
         "n_site_tasks": n_site_tasks,
         "n_scored": n_scored,
         "n_errored": n_errored,
@@ -475,6 +481,9 @@ def main() -> None:
                     help=argparse.SUPPRESS)  # back-compat alias for --site-url
     ap.add_argument("--base-url", default="http://127.0.0.1:8000/v1")
     ap.add_argument("--model", default="qwen35-9b")
+    ap.add_argument("--variant", default="",
+                    help="which model this run measures: 'base' or 'finetuned'. "
+                         "Recorded in summary.json; does not affect the run.")
     ap.add_argument("--api-key", default=os.environ.get("OPENAI_API_KEY", "EMPTY"))
     ap.add_argument("--out", required=True, help="output dir for results.jsonl")
     ap.add_argument("--tasks", default=None,

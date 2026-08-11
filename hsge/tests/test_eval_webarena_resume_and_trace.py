@@ -158,6 +158,7 @@ class _Args:
     site = "shopping"
     model = "qwen35-9b"
     base_url = "http://127.0.0.1:8000/v1"
+    variant = "finetuned"
 
 
 def test_summary_reports_the_full_site_denominator_not_the_attempted_one():
@@ -222,3 +223,19 @@ if __name__ == "__main__":
             fn()
             print(f"ok  {name}")
     print("all passed")
+
+
+def test_summary_records_which_model_variant_produced_it():
+    """serve_vllm.sh serves base and finetuned under the same name ('qwen35-9b'),
+    so summary.json's `model` cannot distinguish them. Without `variant`, a
+    baseline sweep and the run it is meant to be compared against are
+    indistinguishable once the directory is copied or the number is quoted."""
+    class _Base(_Args):
+        variant = "base"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        p = out / "results.jsonl"
+        _write(p, [{"task_id": 1, "success": True}])
+        assert write_summary(out, p, _Base(), task_ids=[1])["variant"] == "base"
+        assert write_summary(out, p, _Args(), task_ids=[1])["variant"] == "finetuned"
