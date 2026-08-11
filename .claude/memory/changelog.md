@@ -91,6 +91,41 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   (the first rsync raced the trainer's final eval write — `eval_results.json` was
   missing and `all_results.json` stale — worth re-checking after any such copy).
 
+- **09:37** — `training/eval_webarena.py`, `training/patch_webarena_judge.py` (new),
+  `training/vast_setup.sh`, `hsge/tests/test_eval_webarena_resume_and_trace.py` (new)
+  — **eval pre-flight for the 4-box parallel sweep: closed four silent-failure
+  paths and made the traces explain a failure without re-running it.**
+  (1) `prune_errored()` requeues rows carrying `error` instead of counting them
+  as done — 55 of 180 rows in the archived gitlab baseline carry one — and
+  rewrites `results.jsonl` to exactly one row per task, which is what stops the
+  obvious version of that fix from corrupting the denominator via duplicate rows.
+  (2) `summary.json` now reports `n_site_tasks`/`n_scored`/`n_errored` and both
+  `success_rate` (over the site's full official set) and
+  `success_rate_attempted`, plus `complete`; the old rate divided by the
+  attempted count, flattering any interrupted sweep. (3) A missing
+  `OPENAI_API_KEY` is now fatal when the selected tasks include ones the LLM
+  judge scores — counted per site from the official configs, and correctly
+  ignoring the `fuzzy_match: "N/A"` special case, so 40 tasks need a key
+  (shopping 15, shopping_admin 20, gitlab 5) while a keyless reddit sweep stays
+  valid. (4) `patch_webarena_judge.py` configures the judge identically on every
+  box: the current build reads `WEBARENA_EVAL_MODEL` and needs no source patch
+  (its default `gpt-4.1-mini` is not the closest successor, so leaving it unset
+  still changes the measurement quietly), while an older hardcoded build is
+  patched in place with a `.orig` kept; both paths write a marker and print
+  `WA_JUDGE_MODEL_OVERRIDE`, which `summary.json` records so the deviation
+  travels with the numbers. **Tracing**: each episode's trace now keeps three
+  deliberately unzipped records — Solver steps, raw LLM calls
+  (`raw`/`parsed_ok`/`finish_reason`/latency), and per-act browser results
+  (per-step reward, `last_action_error`, URL either side) — because they are not
+  1:1 and aligning them would invent a correspondence. This is what makes an
+  unparseable response (the `\xa0` failure, ~8% of episodes) distinguishable
+  from a deliberate stop; previously the raw text existed only on stderr. Traces
+  are also written for errored tasks, and `--trace-axtree` adds what the model
+  saw. `vast_setup.sh` installs Chromium's deps under their Ubuntu-24.04 names
+  (`libasound2t64` etc. — `--with-deps` fails on noble) and then actually
+  launches Chromium, so a missing library surfaces at setup rather than six hours
+  into a sweep. Suite 318 -> 325.
+
 ## 2026-08-10
 
 - **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,

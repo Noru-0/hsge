@@ -170,8 +170,32 @@ setup_eval() {
     make_venv eval
     uv pip install --python "$VENVS/eval/bin/python" \
         browsergym-webarena playwright openai requests python-dotenv numpy pyyaml || return 1
-    "$VENVS/eval/bin/python" -m playwright install --with-deps chromium || return 1
-    "$VENVS/eval/bin/python" -c "import browsergym.webarena; print('browsergym-webarena ok')"
+    # `playwright install --with-deps` fails on Ubuntu 24.04 (noble): it asks apt
+    # for `libasound2`, which noble renamed to `libasound2t64` as part of the
+    # 64-bit time_t transition, and apt reports "Package 'libasound2' has no
+    # installation candidate" -> exit 100 -> the whole eval venv stage fails.
+    # Install the deps explicitly with the noble names, then fetch the browser
+    # itself without --with-deps. `|| true` on apt because a box may already have
+    # them (or be a distro where a name differs again) and Chromium's own launch
+    # check below is the real gate.
+    apt-get install -y --no-install-recommends \
+        libnspr4 libnss3 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 \
+        libatspi2.0-0t64 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+        libgbm1 libxkbcommon0 libpango-1.0-0 libcairo2 libasound2t64 \
+        >/dev/null 2>&1 || log "WARN apt deps for chromium incomplete; launch check will tell"
+    "$VENVS/eval/bin/python" -m playwright install chromium || return 1
+    "$VENVS/eval/bin/python" -c "import browsergym.webarena; print('browsergym-webarena ok')" || return 1
+    # Actually launch it: a missing shared library only surfaces on launch, and
+    # discovering that six hours into a sweep is the expensive way to find out.
+    "$VENVS/eval/bin/python" - <<'PY' || return 1
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b = p.chromium.launch()
+    page = b.new_page(); page.set_content("<h1>ok</h1>")
+    assert page.title() is not None
+    b.close()
+print("chromium launches ok")
+PY
 }
 
 # --- model download ----------------------------------------------------------

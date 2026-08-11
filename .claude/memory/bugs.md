@@ -15,6 +15,36 @@ Entry format:
 
 ## Open
 
+### A retried eval task appends a second row, corrupting the success denominator
+- **Status**: fixed (2026-08-11 09:37)
+- **Found**: 2026-08-11, while fixing the resume-skips-errored bug below — the
+  obvious fix (skip rows carrying `error` when building the resume set) would
+  have introduced this one.
+- **Where**: `training/eval_webarena.py`, `results.jsonl` handling.
+- **Symptom**: `results.jsonl` is append-only and both `total` and the success
+  count are computed over its rows, so re-running a task leaves the old row AND
+  the new one and every retry quietly shifts the denominator.
+- **Fix**: `prune_errored()` rewrites the file on resume, keeping exactly one row
+  per `task_id` (last clean row wins; a later `error` clears an earlier success,
+  since the last attempt is the one that did not score) and preserving a `.bak`.
+  This also absorbs what the previous session's throwaway `requeue_errored.py`
+  did by hand, and removes its "only run while the sweep is stopped" caveat.
+
+### `summary.json`'s success_rate used the attempted count as its denominator
+- **Status**: fixed (2026-08-11 09:37)
+- **Found**: 2026-08-11, same review.
+- **Where**: `training/eval_webarena.py`, summary block.
+- **Symptom**: `total = len(done) + len(todo)`, i.e. what this invocation
+  attempted — so an interrupted sweep reports a rate over a smaller denominator
+  and looks better than it is. With four 6-hour sweeps behind ephemeral quick
+  tunnels, interruption is the expected case, not the exception.
+- **Fix**: `summary.json` now carries `n_site_tasks` (the site's full official
+  set), `n_scored`, `n_errored`, `n_success`, both `success_rate` (over
+  `n_site_tasks`, the figure comparable to published numbers) and
+  `success_rate_attempted`, plus `complete` and `judge_model_override`. The
+  script prints an explicit INCOMPLETE line when the sweep is not finished.
+
+
 ### Qwen3.5's `is_fast_path_available` needs FOUR packages, so one missing wheel costs 2.3x training speed
 - **Status**: fixed (2026-08-11 09:02) in `training/vast_setup.sh`; the trap itself
   is upstream behaviour and will recur on any box set up by hand.
@@ -226,7 +256,9 @@ Entry format:
   future box lands there, but it no longer blocks anything.
 
 ### WebArena eval needs `OPENAI_API_KEY`, and its hardcoded judge model no longer exists
-- **Status**: worked around on the box (2026-08-10 02:05); no repo fix yet
+- **Status**: fixed in repo (2026-08-11 09:37) — `eval_webarena.py` fails fast on a
+  missing key, and `training/patch_webarena_judge.py` configures the judge on
+  every box identically
 - **Found**: 2026-08-10, user asked whether WebArena eval needs an OpenAI key —
   it does, and nothing in `training/README.md` or `eval_webarena.py` says so.
 - **Where**: `webarena/evaluation_harness/helper_functions.py:162` (`llm_fuzzy_match`)
@@ -254,7 +286,7 @@ Entry format:
   than letting 10.7% of the benchmark silently error out.
 
 ### `eval_webarena.py`'s resume treats an errored task as done, so infrastructure blips become permanent zeros
-- **Status**: worked around (2026-08-10 02:10); no repo fix yet
+- **Status**: fixed (2026-08-11 09:37) in `prune_errored()`
 - **Found**: 2026-08-10, after restarting vLLM mid-sweep — 4 reddit tasks
   recorded `APIConnectionError` and would have been skipped forever.
 - **Where**: `training/eval_webarena.py`, the `done` set built from
