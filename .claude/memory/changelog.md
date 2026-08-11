@@ -156,6 +156,31 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   whole class of environment breakage that stage carries) since an eval box
   merges with `merge_lora_peft.py` + peft. Suite 325 -> 329.
 
+- **10:26** — `training/analyze_eval_traces.py` (new),
+  `training/collect_eval_results.sh` (new), `training/README.md`,
+  `docs/superpowers/specs/2026-08-11-parallel-4domain-eval-design.md` (new) —
+  **the part that explains the result, plus safe collection.**
+  `analyze_eval_traces.py` gives each failed episode one primary cause (so the
+  per-domain table sums) and every signal it shows (so overlaps stay visible),
+  each mapped to a concrete trace field rather than a guess: unparseable output,
+  off-site goto, placeholder goto, action errors, stuck loop, reported
+  infeasible, budget exhausted, and the two new ones —
+  `declared_done_without_acting` (one step, send_msg_to_user, nothing touched:
+  the shape the pre-fix training set was full of, so its rate is what connects
+  the dataset work to the eval outcome) and `reached_goal_then_left` (a step
+  scored but the episode ended at 0, only measurable now that the per-step reward
+  is recorded; if non-trivial, --max-steps is penalising the model rather than
+  measuring it). Exercised against synthetic traces covering all nine categories.
+  `collect_eval_results.sh` refuses to certify a copy while the sweep is still
+  writing and compares digests afterwards, since `rsync` exit 0 proves rsync ran,
+  not that the two sides match — the same failure that made the morning's
+  training-artifact copy incomplete. Design doc written and self-reviewed, which
+  caught an internal inconsistency worth recording: the spec quoted the 101 s
+  non-errored mean as its input but 6.2 h as its output, which implies 120 s. Both
+  bounds are now stated explicitly (101 s excludes the timeouts a live sweep
+  hits; 171 s over all rows is pessimistic now that a blip is retried rather than
+  repeated) with ~120 s named as the planning figure.
+
 ## 2026-08-10
 
 - **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,

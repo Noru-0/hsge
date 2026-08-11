@@ -257,6 +257,61 @@ If a sweep aborts (exit 3, five consecutive errors — usually a dropped tunnel)
 fix the site and re-run the identical command: errored tasks are requeued
 automatically and finished ones are skipped.
 
+## 6c. Collect, then explain the results
+
+Pull each box down and prove the copy matches before destroying anything — a box
+with no host volume loses its traces permanently, and six hours cannot be
+regenerated:
+
+```bash
+for s in reddit shopping shopping_admin gitlab; do
+  bash training/collect_eval_results.sh --host <host_$s> --port <port_$s> --site $s
+done
+```
+
+The script refuses to certify a copy while the sweep is still writing (the
+training-artifact rsync raced a final write and only a checksum caught it) and
+compares digests afterwards — `rsync` exit 0 proves rsync ran, not that the two
+sides match. It prints `MATCH -- <site> is safe to destroy`, or fails.
+
+Then classify the failures:
+
+```bash
+python training/eval_status.py outputs/eval/*/finetuned
+python training/analyze_eval_traces.py outputs/eval/*/finetuned --examples 3
+```
+
+`analyze_eval_traces.py` assigns every failed episode one primary cause (so the
+table sums) plus every signal it shows (so overlaps are visible), each mapped to
+a concrete field in the trace rather than a guess: `unparseable_output`
+(`llm_calls[].parsed_ok`), `offsite_goto` / `placeholder_goto` (the goto target),
+`action_errors` (`act_trace[].action_error`), `stuck_loop`, `reported_infeasible`,
+`budget_exhausted`, and the two that matter most:
+
+- **`declared_done_without_acting`** — one step, `send_msg_to_user`, nothing
+  touched. This is the shape the pre-fix training set was full of (42% of its
+  trajectories were single-step; 104 zero-effective-action ones were dropped from
+  the current set), so its rate here is the number that connects the dataset work
+  to the eval outcome.
+- **`reached_goal_then_left`** — a step scored a reward but the episode ended at
+  0. Only measurable because the per-step reward is now recorded; if it is
+  non-trivial, `--max-steps` is penalising the model rather than measuring it.
+
+### Reporting obligations
+
+Three caveats must travel with any number from this pipeline:
+
+1. **Judge model substituted.** WebArena's own `gpt-4-1106-preview` is retired
+   and cannot be called; `gpt-4-turbo` (its direct successor) is used instead.
+   Every `summary.json` records this as `judge_model_override`, and
+   `eval_status.py` warns if two domains disagree — that would make the four
+   numbers incomparable.
+2. **Which denominator.** Quote `success_rate` (over the site's full official
+   task count), not `success_rate_attempted`. Check `complete: true`; an
+   interrupted sweep must be reported as partial.
+3. **`--max-steps 15` is our budget, not the benchmark's.** Episodes labelled
+   `budget_exhausted` were cut off by that choice.
+
 ## 6b. Evaluate the one model on each of the four domains
 
 `eval_webarena.py --site <site>` runs the WebArena tasks whose `sites` is
