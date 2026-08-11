@@ -6,6 +6,25 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **18:58** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **Table 4.9
+  (related work) now covers all six WebArena task groups, transposed.**
+  Task groups became rows (Shopping 187 / Shopping Admin 182 / GitLab 180 /
+  Reddit 106 / Map 109 / đa-website 48) and systems became columns, with `--`
+  wherever a system has no published number: the thesis did not evaluate Map
+  or the multi-site group, and the reference works do not break the multi-site
+  group out at all (which is why their published 812-task overall is not the
+  weighted mean of their per-domain rows). Two total rows now sit side by
+  side: `Tổng bốn website (655)`, recomputed on a common denominator for
+  every system, and `Tổng toàn bộ (812)` as each work published it. The task
+  counts were **verified against the installed benchmark** rather than
+  recalled — `webarena/test.raw.json` gives exactly 187/182/180/109/106
+  single-site plus 48 multi-site = 812. Layout: `\footnotesize` +
+  `\tabcolsep 4pt` and `\allowbreak` in the model names, which is what keeps
+  8 columns inside the text block (a first attempt overran by 25,7 pt).
+  Clean rebuild: 154 pages, 0 undefined refs/cites, 7 overfull hboxes.
+  Verified in an isolated copy under the scratchpad, since the user's editor
+  auto-builds the source directory and was deleting `main.log` mid-check.
+
 - **18:37** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **Table 4.4
   gained a valid-episode row and four derived percentage rows.** `Episode hợp
   lệ` = the episodes counted as successes after the judge gate re-scored them

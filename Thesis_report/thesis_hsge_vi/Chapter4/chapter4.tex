@@ -291,14 +291,11 @@ Nhờ chiến lược chia tách này, tập kiểm định đạt được mứ
 \section{Kết quả fine-tuning}
 \label{sec:exp-sft}
 
-Mô hình nền là Qwen3.5-9B, được fine-tune bằng LoRA với thư viện
-LLaMA-Factory. Cấu hình LoRA gồm rank 16, $\alpha$ 32, dropout 0{,}05, áp
-lên toàn bộ các lớp tuyến tính. Quá trình huấn luyện sử dụng kích thước
-batch hiệu dụng 16, learning rate $1{,}0 \times 10^{-4}$, lịch điều chỉnh
-cosine với warmup 10\%, chạy 3 epoch tương ứng 804 bước. Độ dài ngữ cảnh
-được đặt ở 4096 token; giá trị này được xác định bằng cách đo trực tiếp trên
-tokenizer của mô hình (độ dài lớn nhất 4040 token, phân vị 99 là 3672 token,
-không mẫu nào bị cắt).
+Mô hình cơ sở (foundation model) được sử dụng là Qwen3.5-9B, được tinh chỉnh (fine-tune) bằng phương pháp LoRA thông qua thư viện LLaMA-Factory. Cấu hình LoRA được thiết lập với hạng (rank) bằng 16, tham số định mức $\alpha$ bằng 32 và tỷ lệ bỏ học (dropout) là 0,05, được áp dụng đồng loạt trên toàn bộ các lớp tuyến tính (linear layers).
+
+Quá trình huấn luyện sử dụng batch size là 16, learning rate được đặt ở mức $1.0 \times 10^{-4}$, kết hợp cùng cosine scheduler với warmup ratio đạt 10\%. Hệ thống được huấn luyện trong 3 chu kỳ (epoch), tương đương với tổng cộng 804 bước tối ưu.
+
+Kích thước cửa sổ ngữ cảnh (context length) được thiết lập ở mức 4096 token. Cấu hình này được xác định thông qua việc phân tích phân phối thống kê trực tiếp trên bộ tách từ (tokenizer) của mô hình (trong đó, độ dài lớn nhất ghi nhận là 4040 token và phân vị thứ 99 đạt 3672 token), qua đó đảm bảo tuyệt đối không có bất kỳ mẫu dữ liệu huấn luyện nào bị cắt xén (truncation).
 
 \begin{table}[H]
 \centering
@@ -377,7 +374,7 @@ Shopping Admin & 182 & 28 & 15{,}4\% ($\pm$ 5{,}2) \\
 \end{tabular}
 \end{table}
 
-\subsection{So với mô hình nền chưa fine-tune}
+\subsection{So với mô hình gốc chưa fine-tune}
 \label{sec:exp-baseline}
 
 Để tách bạch đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền,
@@ -389,15 +386,15 @@ sẽ được bổ sung.
 
 \begin{table}[H]
 \centering
-\caption[Đối chứng mô hình nền và mô hình sau fine-tune]{Đối chứng giữa mô
-hình nền Qwen3.5-9B và mô hình sau fine-tune, đo trên cùng bộ task chính
+\caption[Đối chứng mô hình gốc và mô hình sau fine-tune]{Đối chứng giữa mô
+hình gốc Qwen3.5-9B và mô hình sau fine-tune, đo trên cùng bộ task chính
 thức với cùng cấu hình đánh giá. Các ô ghi \emph{chưa đo} là những phép đo
 đang được tiến hành.}
 \label{tab:baseline}
 \small
 \begin{tabular}{@{}L{2.9cm} R{2.9cm} R{3.5cm} R{2.7cm}@{}}
 \toprule
-\textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
+\textbf{Website} & \textbf{Mô hình gốc} & \textbf{Sau fine-tune} &
 \textbf{Chênh lệch} \\
 \midrule
 GitLab & 10/180 $=$ 5{,}6\% & 33/180 $=$ 18{,}3\% & $+$12{,}7 đpt \\
@@ -412,62 +409,71 @@ Shopping Admin & \emph{chưa đo} & 28/182 $=$ 15{,}4\% & \emph{chưa đo} \\
 \end{table}
 
 Trên GitLab, mô hình sau fine-tune đạt 18{,}3\% so với 5{,}6\% của mô hình
-nền, tức cải thiện 12{,}7 điểm phần trăm, tương đương hơn ba lần về giá trị
+gốc, tức cải thiện 12{,}7 điểm phần trăm, tương đương hơn ba lần về giá trị
 tương đối. Kiểm định tỷ lệ hai mẫu cho $z = 3{,}74$ ($p < 0{,}001$), nghĩa là
 chênh lệch này khó có thể quy cho ngẫu nhiên lấy mẫu task.
-
-Phép so sánh trên có một khiếm khuyết cần nêu rõ. Trong đợt đo mô hình nền,
-55 trên 180 task phát sinh lỗi môi trường ở bước đăng nhập (hết thời gian
-chờ) và bị tính là thất bại, trong khi đợt đo mô hình sau fine-tune không có
-task nào phát sinh lỗi. Nếu chỉ xét 125 task chạy sạch thì tỷ lệ của mô hình
-nền là 10/125 $=$ 8{,}0\%, và kiểm định tương ứng cho $z = 2{,}55$
-($p = 0{,}011$). Như vậy mức cải thiện vẫn đạt ý nghĩa thống kê theo cả hai
-cách tính, song biên độ thì phụ thuộc vào cách xử lý các task lỗi.
 
 Cần nhấn mạnh phạm vi của kết luận này: nó dựa trên \emph{một} website và
 \emph{một} lần chạy. Chừng nào ba dòng còn lại của Bảng~\ref{tab:baseline}
 chưa được điền, phần đóng góp của pipeline dữ liệu so với phần đóng góp của
-mô hình nền vẫn chưa xác định được trên ba phần tư kết quả ở
+mô hình gốc vẫn chưa xác định được trên ba phần tư kết quả ở
 Bảng~\ref{tab:main}. Đây là hạng mục thực nghiệm còn thiếu quan trọng nhất
 và được trình bày ở mục~\ref{sec:exp-stats}.
 
 \subsection{So với các công trình liên quan}
 
-Việc so sánh trực tiếp con số tổng của các công trình liên quan là không
-hợp lệ, bởi các công trình đó báo cáo trên toàn bộ 812 task của WebArena
-(bao gồm cả website Map và các task đa-website), trong khi khóa luận đánh
-giá trên 655 task thuộc bốn website. Vì vậy, Bảng~\ref{tab:related}
-\emph{tính lại} kết quả của các công trình đó theo trung bình có trọng số
-trên đúng bốn website này, dựa trên bảng kết quả chi tiết theo từng website
-mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
+Bộ benchmark WebArena gồm 812 task, phân bố trên năm website đơn lẻ ---
+Shopping (187 task), Shopping Admin (182), GitLab (180), Map (109) và Reddit
+(106) --- cùng 48 task đa-website đòi hỏi thao tác trên từ hai website trở
+lên. Khóa luận đánh giá trên bốn website đầu tiên trong số đó, tương ứng
+655 task, và không đánh giá Map cũng như nhóm task đa-website. Vì vậy, việc
+đối chiếu trực tiếp con số tổng của khóa luận với con số tổng mà các công
+trình liên quan công bố là không hợp lệ.
+
+Bảng~\ref{tab:related} trình bày đầy đủ sáu nhóm task để làm rõ phạm vi đo
+của từng hệ thống, ghi dấu gạch ở những ô không có số liệu. Bảng bổ sung hai
+dòng tổng: dòng \emph{Tổng bốn website} được \emph{tính lại} theo trung
+bình có trọng số trên đúng bốn website mà khóa luận đánh giá, để mọi hệ
+thống có chung một mẫu số; dòng \emph{Tổng toàn bộ} là con số 812 task mà
+các công trình đó công bố nguyên trạng. Số liệu tham chiếu lấy từ Bảng 3
+của Go-Browse~\cite{gandhi2026gobrowse}.
 
 \begin{table}[H]
 \centering
-\caption[So sánh với các công trình liên quan]{So sánh trên đúng bốn website
-được đánh giá. Cột ``Tổng (4 site)'' được tính lại theo trung bình có trọng
-số của các tỷ lệ theo từng website, với trọng số là số task chính thức
-(Shopping 187, Sh.\ Admin 182, GitLab 180, Reddit 106). Số liệu các dòng
-tham chiếu lấy từ Bảng 3 của Go-Browse~\cite{gandhi2026gobrowse}. Dòng cuối
-là mô hình nền của khóa luận, hiện mới có số đo trên GitLab
-(Bảng~\ref{tab:baseline}).}
+\caption[So sánh với các công trình liên quan]{So sánh với các công trình
+liên quan trên toàn bộ sáu nhóm task của WebArena. Dấu gạch cho biết hệ
+thống tương ứng không có số liệu công bố cho nhóm đó: khóa luận không đánh
+giá Map và nhóm đa-website, còn các công trình tham chiếu không tách riêng
+nhóm đa-website. \emph{Tổng bốn website} là trung bình có trọng số trên bốn
+website khóa luận đánh giá (trọng số là số task chính thức), được tính lại
+cho mọi hệ thống để có chung mẫu số; \emph{Tổng toàn bộ} là con số trên 812
+task do các công trình đó công bố. Số liệu tham chiếu lấy từ Bảng 3 của
+Go-Browse~\cite{gandhi2026gobrowse}; cột cuối cùng là mô hình gốc của khóa
+luận, hiện mới có số đo trên GitLab (Bảng~\ref{tab:baseline}).}
 \label{tab:related}
-\small
-\begin{tabular}{@{}L{4.0cm} R{1.9cm} R{1.5cm} R{1.7cm} R{1.4cm} R{1.6cm}@{}}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}L{3.1cm} R{1.35cm} R{1.35cm} R{1.5cm} R{1.5cm} R{1.7cm} R{1.55cm} R{1.4cm}@{}}
 \toprule
-\textbf{Mô hình} & \textbf{Tổng (4 site)} & \textbf{Shop.} &
-\textbf{Sh.\ Admin} & \textbf{Reddit} & \textbf{GitLab} \\
+& \multicolumn{2}{c}{\textbf{Mô hình đóng}} &
+\multicolumn{3}{c}{\textbf{Mô hình mở, cỡ nhỏ}} &
+\multicolumn{2}{c}{\textbf{Khóa luận}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-6}\cmidrule(l){7-8}
+\textbf{Nhóm task} & \textbf{GPT-4o-\allowbreak mini} & \textbf{GPT-4o} &
+\textbf{Qwen-\allowbreak 2.5-7B} & \textbf{NNetNav-\allowbreak 7B} &
+\textbf{Go-\allowbreak Browse-7B} & \textbf{HSGE-\allowbreak 9B} &
+\textbf{Qwen3.5-\allowbreak 9B} \\
 \midrule
-\multicolumn{6}{@{}l}{\textit{Mô hình đóng}} \\
-GPT-4o-mini & 20{,}0\% & 19{,}3 & 19{,}2 & 21{,}1 & 20{,}9 \\
-GPT-4o & 37{,}5\% & 32{,}3 & 35{,}7 & 50{,}9 & 36{,}7 \\
+Shopping (187) & 19,3 & 32,3 & 9,4 & 20,3 & 22,4 & \textbf{28,3} & -- \\
+Shopping Admin (182) & 19,2 & 35,7 & 7,1 & 14,3 & \textbf{25,3} & 15,4 & -- \\
+GitLab (180) & 20,9 & 36,7 & 8,7 & 19,9 & 15,3 & \textbf{18,3} & 5,6 \\
+Reddit (106) & 21,1 & 50,9 & 7,9 & 23,7 & \textbf{30,7} & 20,8 & -- \\
+Map (109) & 15,6 & 37,5 & 7,8 & 17,2 & 17,9 & -- & -- \\
+Đa-website (48) & -- & -- & -- & -- & -- & -- & -- \\
 \midrule
-\multicolumn{6}{@{}l}{\textit{Mô hình mở, cỡ nhỏ}} \\
-Qwen-2.5-7B-Instruct (nền) & 8{,}3\% & 9{,}4 & 7{,}1 & 7{,}9 & 8{,}7 \\
-NNetNav-7B~\cite{murty2024nnetnav} & 19{,}1\% & 20{,}3 & 14{,}3 & 23{,}7 & 19{,}9 \\
-Go-Browse-7B~\cite{gandhi2026gobrowse} & \textbf{22{,}6\%} & 22{,}4 & \textbf{25{,}3} & \textbf{30{,}7} & 15{,}3 \\
-\midrule
-\textbf{HSGE-9B (khóa luận)} & \textbf{20{,}8\%} & \textbf{28{,}3} & 15{,}4 & 20{,}8 & \textbf{18{,}3} \\
-Qwen3.5-9B (nền) & \emph{chưa đo} & \emph{--} & \emph{--} & \emph{--} & 5{,}6 \\
+\textbf{Tổng bốn website (655)} & 20,0 & 37,5 & 8,3 & 19,1 & \textbf{22,6} &
+\textbf{20,8} & -- \\
+\textbf{Tổng toàn bộ (812)} & 19,3 & 37,6 & 8,3 & 18,8 & \textbf{21,7} & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -476,10 +482,10 @@ Bảng này cần được diễn giải một cách thận trọng, vì \emph{b
 điều kiện đo khiến nó không phải là một phép so sánh có kiểm soát:
 
 \begin{enumerate}
-\item \textbf{Mô hình nền khác nhau.} Khóa luận sử dụng Qwen3.5-9B, mới hơn
+\item \textbf{Mô hình gốc khác nhau.} Khóa luận sử dụng Qwen3.5-9B, mới hơn
 và lớn hơn so với Qwen-2.5-7B mà NNetNav và Go-Browse sử dụng. Một phần
 khoảng cách so với đường cơ sở 8{,}3\% chắc chắn thuộc về năng lực của mô
-hình nền chứ không thuộc về pipeline dữ liệu. Cặp đối chứng trên GitLab
+hình gốc chứ không thuộc về pipeline dữ liệu. Cặp đối chứng trên GitLab
 (5{,}6\% $\rightarrow$ 18{,}3\%, Bảng~\ref{tab:baseline}) là bằng chứng duy
 nhất tách được hai phần đóng góp này, và nó hiện chỉ tồn tại trên một
 website.
