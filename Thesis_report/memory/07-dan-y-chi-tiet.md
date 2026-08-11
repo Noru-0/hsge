@@ -87,16 +87,25 @@ Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
   đúng 4 website (Go-Browse-7B 22,6%, NNetNav-7B 19,1%, GPT-4o-mini 20,0%,
   Qwen-2.5-7B nền 8,3%) — KHÔNG so trực tiếp với con số 812-task của họ.
   Build sạch 142 trang.
-  ⚠️ **Ba chỗ còn số cũ, chưa sửa (chờ user quyết)**: `Chapter5/chapter5.tex`
-  §5.1 (352 mẫu / một website), `Chapter6/chapter6.tex` dòng 56 + 130
-  (5,56% → 6,67%), `Appendix/decuongchitiet.tex` mục 2.3.3 (370 mẫu, 10/180 vs
-  12/180, "0 semantic task"). Riêng đề cương có HAI bản phải sửa đồng bộ.
+  ✅ **Chương 5 và 6 đã cập nhật đồng bộ (2026-08-11)**: §5.1 viết lại thành 3
+  tiểu mục (con số chứng minh gì / cái gì đang chặn — bảng liên-website bác bỏ
+  "thêm dữ liệu cho site nào thì site đó khá lên", và bảng lỗi chỉ vào lớp thực
+  thi / rút lại câu "operator chaining đã chạy đầu–cuối"); thêm §5.4.3 (hai cổng
+  operator là cần nhưng chưa đủ) và một tiểu mục §5.5 về lỗi mà judge về mặt cấu
+  trúc không thể thấy; §5.5 mục đánh giá song song viết lại theo cách chia 4 máy
+  thật; §5.7 thêm 3 sai lệch + biến gây nhiễu mô hình dạy; bảng best practice
+  +3 dòng. C6: số liệu, O1/O2/O4, bảng mục tiêu chuyển thành `longtable`,
+  hướng phát triển xếp lại ưu tiên.
+  ➕ **Phát sinh: đã bổ sung §3.5 tiểu mục "Seed năng lực website"** — cơ chế này
+  TRƯỚC ĐÓ KHÔNG ĐƯỢC MÔ TẢ Ở ĐÂU trong quyển, dù C4/C5 quy 57/63 lượt goal task
+  cho nó; đồng thời sửa 2 chỗ nói judge chấm "ngoại tuyến" thành chấm inline.
+  ⚠️ **Còn lại chưa sửa**: `Appendix/decuongchitiet.tex` mục 2.3.3 (370 mẫu,
+  10/180 vs 12/180, "0 semantic task") — đề cương có HAI bản phải sửa đồng bộ,
+  và nó là **bản đã nộp Khoa**, nên cần user quyết có sửa hay không.
   ⚠️ **Bản EN `thesis_hsge/Chapter4` chưa được viết lại** — vẫn là skeleton.
   ⚠️ **Về O2**: run mới ĐÃ sinh được task GOAL thật (66 task, 25 thành công) —
   nhưng 57/63 lượt là từ **seed năng lực website**, chỉ 6 lượt từ **chuỗi
-  operator**, và 2/4 website không hình thành được chuỗi nào. Nên câu "operator
-  chaining đã chạy đầu–cuối" ở §5.1 vẫn nói quá; phải sửa thành "cơ chế sinh
-  task ngữ nghĩa đã chạy thật, chủ yếu qua seed; ghép chuỗi operator vẫn thưa".
+  operator**, và 2/4 website không hình thành được chuỗi nào.
 - ✅ **Đề cương chi tiết (2026-07-20)**: checklist nộp cuốn của Khoa
   (`KLTN/Quy trình nộp đề tài tốt nghiệp từ năm 2025.docx`) bắt buộc có mục
   này **giữa Lời cảm ơn và Mục lục** — báo cáo trước đó thiếu hẳn. Nay ở

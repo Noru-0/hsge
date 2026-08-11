@@ -42,7 +42,10 @@ kiểm thử và website thực thông qua trình duyệt.
 Khóa luận xây dựng đầy đủ pipeline hậu xử lý dữ liệu gồm judge đánh giá độc
 lập các episode, bước viết lại suy luận và trình dựng dataset theo nguyên
 tắc prompt parity. Từ đó thu được tập dữ liệu fine-tuning được xây dựng hoàn
-toàn tự động trên các website WebArena tự triển khai.
+toàn tự động trên bốn website WebArena tự triển khai: 1029 quỹ đạo và 4554
+mẫu huấn luyện, sau khi các cổng chất lượng đã loại 497 lần tự tuyên bố
+thành công sai và 104 quỹ đạo không có hành động hữu hiệu nào
+(Mục~\ref{sec:exp-data}).
 
 \item \textbf{Mô hình web agent đã fine-tune.}
 Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập và
@@ -51,12 +54,17 @@ quá trình huấn luyện, bảo đảm sự nhất quán giữa huấn luyện
 
 \item \textbf{Đánh giá trên benchmark WebArena.}
 Khóa luận xây dựng pipeline đánh giá sử dụng cùng prompt với agent triển khai
-thực tế để so sánh mô hình gốc và mô hình sau fine-tune. Trên website
-GitLab, mô hình sau fine-tune đạt tỷ lệ thành công
-6{,}67\% so với 5{,}56\% của mô hình gốc khi chỉ sử dụng 352 mẫu huấn luyện.
-Do mỗi task mới được đánh giá một lần, kết quả này được xem như một tín hiệu
-ban đầu về hiệu quả của phương pháp thay vì một kết luận có ý nghĩa thống kê
-(Mục~\ref{sec:disc-results}).
+thực tế, chấm bằng bộ task và bộ chấm chính thức của WebArena. Mô hình sau
+fine-tune đạt \textbf{136 trên 655 task} của bốn website, tức 20{,}8\%
+(Shopping 28{,}3\%, Reddit 20{,}8\%, GitLab 18{,}3\%, Shopping Admin
+15{,}4\%), với toàn bộ mẫu số đầy đủ và không task nào bị lỗi. Khi tính lại
+kết quả của các công trình liên quan trên đúng bốn website này, con số đó
+nằm giữa NNetNav-7B (19{,}1\%) và Go-Browse-7B (22{,}6\%), và ngang
+GPT-4o-mini (20{,}0\%). Trên GitLab --- website duy nhất có đối chứng ---
+mô hình nền cùng loại chỉ đạt 5{,}6\%. Do mỗi task chỉ được đánh giá một
+lần và ba website còn lại chưa có đối chứng mô hình nền, kết quả này được
+xem là một tín hiệu mạnh về hiệu quả của phương pháp chứ chưa phải một kết
+luận có ý nghĩa thống kê đầy đủ (Mục~\ref{sec:disc-results}).
 
 \item \textbf{Báo cáo kinh nghiệm triển khai.}
 Trong quá trình xây dựng hệ thống, khóa luận tổng hợp các kinh nghiệm và
@@ -82,34 +90,42 @@ trải nghiệm.
 Bảng~\ref{tab:objectives} đối chiếu các mục tiêu đã đề ra trong
 Mục~\ref{sec:intro-contrib} với những kết quả đạt được của khóa luận.
 
-\begin{table}[H]
-\centering
+\small
+\begin{longtable}{@{}L{1.0cm} L{5.6cm} L{6.4cm}@{}}
 \caption[Mục tiêu của khóa luận và kết quả đạt được]{Đối chiếu các mục tiêu
 đặt ra trong Mục~\ref{sec:intro-contrib} với kết quả đạt được.}
-\label{tab:objectives}
-\small
-\begin{tabular}{@{}L{1.0cm} L{5.6cm} L{6.4cm}@{}}
+\label{tab:objectives}\\
 \toprule
  & \textbf{Mục tiêu} & \textbf{Kết quả} \\
 \midrule
+\endfirsthead
+\toprule
+ & \textbf{Mục tiêu} & \textbf{Kết quả} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
 
 O1 &
 Thu thập trajectory tự động, bền vững và an toàn từ website không nhãn &
 Hoàn thành. Hệ thống hiện thực cơ chế frontier hai tầng kết hợp giới hạn
-template, chiến lược duyệt web fail-soft và chế độ an toàn fail-closed,
-cho phép pipeline vận hành ổn định trong thời gian dài trên các website
-thực (Mục~\ref{sec:method-exploration},
-\ref{sec:exp-data}). \\
+template, chiến lược duyệt web fail-soft và chế độ an toàn fail-closed;
+bốn đợt khám phá chạy liên tục khoảng 21 giờ mỗi đợt trên website thật,
+thu 2178 episode mà không lần nào phải can thiệp tay
+(Mục~\ref{sec:method-exploration}, \ref{sec:exp-data}). \\
 
 \addlinespace
 
 O2 &
 Sinh semantic task nhiều bước từ đồ thị các skill đã kiểm chứng &
-Hoàn thành. Khóa luận xây dựng quy trình phát hiện và kiểm chứng skill,
-trừu tượng hóa thành operator có precondition và effect, sau đó sinh
-semantic task bằng cách ghép chuỗi các operator tương thích. Việc kiểm
-chứng được thực hiện bằng điều kiện tất định hoặc thông qua judge khi cần
-thiết (Mục~\ref{sec:method-semantic}). \\
+Hoàn thành một phần. Quy trình phát hiện, kiểm chứng skill và quy nạp
+operator có precondition/effect đã chạy thật (58 skill, 26 operator), và
+lần đầu tiên sinh được semantic task trên website sống: 66 task, 25 thành
+công, so với 0 task ở toàn bộ các đợt trước. Tuy nhiên, phần lớn task này
+đến từ seed năng lực website (57 lượt) chứ không từ việc ghép chuỗi
+operator (6 lượt, hai website không hình thành được chuỗi nào), nên cơ chế
+ghép chuỗi mới được chứng minh là khả thi chứ chưa đủ dày để làm nguồn dữ
+liệu chính (Mục~\ref{sec:method-semantic}, \ref{sec:disc-operators}). \\
 
 \addlinespace
 
@@ -125,11 +141,12 @@ curriculum trước khi fine-tune
 
 O4 &
 Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chính thức &
-Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên website
-GitLab của WebArena, đạt tỷ lệ thành công tăng từ
-5{,}56\% lên 6{,}67\% với 352 mẫu huấn luyện. Tuy nhiên, việc đánh giá trên
-các website còn lại và các phép lặp thống kê vẫn đang được tiếp tục
-(Mục~\ref{sec:exp-main}--\ref{sec:exp-stats}). \\
+Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
+655 task chính thức của cả bốn website, đạt 20{,}8\%; riêng GitLab tăng từ
+5{,}6\% lên 18{,}3\% so với mô hình nền. Phần còn thiếu là các phép lặp
+thống kê, đối chứng mô hình nền trên ba website còn lại, và các ablation
+tách bạch đóng góp của từng thành phần
+(Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
 
 \addlinespace
 
@@ -139,10 +156,8 @@ Hoàn thành. Khóa luận tổng hợp các kinh nghiệm và best practice thu
 trong quá trình phát triển hệ thống, bao gồm khám phá website, điều khiển
 agent, induction operator, xây dựng dữ liệu và huấn luyện mô hình
 (Chương~\ref{ch:discussion}). \\
-
-\bottomrule
-\end{tabular}
-\end{table}
+\end{longtable}
+\normalsize
 
 \section{Hướng phát triển}
 \label{sec:conc-future}
@@ -152,13 +167,26 @@ còn nhiều hướng có thể tiếp tục mở rộng nhằm cải thiện c�
 hiệu quả của mô hình.
 
 \textbf{Mở rộng quy mô thu thập dữ liệu.}
-Kết quả thực nghiệm cho thấy quy mô và độ phủ của dữ liệu vẫn là yếu tố có
-ảnh hưởng đáng kể đến chất lượng của mô hình sau fine-tuning. Pipeline HSGE
-không phụ thuộc vào một website cụ thể và đã hỗ trợ cơ chế chuyển giao skill
-giữa các website có cấu trúc tương đồng. Việc mở rộng quá trình thu thập sang
-nhiều website hơn, đồng thời khai thác khả năng tái sử dụng các skill đã học,
-có thể tạo ra tập dữ liệu đa dạng và phong phú hơn mà không cần xây dựng lại
-toàn bộ quá trình khám phá từ đầu.
+Tập dữ liệu hiện tại (4288 mẫu huấn luyện) vẫn nhỏ hơn khoảng một bậc độ
+lớn so với các công trình cùng hướng, vốn dùng 40--45 nghìn bước tương tác.
+Pipeline HSGE không phụ thuộc vào một website cụ thể và đã hỗ trợ cơ chế
+chuyển giao skill giữa các website có cấu trúc tương đồng. Việc mở rộng quá
+trình thu thập sang nhiều website hơn, đồng thời khai thác khả năng tái sử
+dụng các skill đã học, có thể tạo ra tập dữ liệu đa dạng và phong phú hơn mà
+không cần xây dựng lại toàn bộ quá trình khám phá từ đầu. Tuy vậy, kết quả
+liên-website ở Mục~\ref{sec:exp-ablation} cho thấy lượng dữ liệu thu được
+cho một website không dự đoán được điểm số trên chính website đó, nên việc
+mở rộng quy mô nên đi kèm với việc tăng \emph{độ phủ} và \emph{độ khó} của
+task chứ không chỉ tăng số lượng mẫu.
+
+\textbf{Giảm tỷ lệ hành động thất bại ở lớp thực thi.}
+Phân tích nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) cho thấy từ
+83\% đến 95\% episode thất bại có ít nhất một hành động bị trình duyệt từ
+chối, và episode thất bại điển hình dài gấp hơn hai lần episode thành công
+vì bị kẹt lặp lại. Đây là hai hướng cải thiện có tỷ suất cao và độc lập với
+quy mô dữ liệu: bổ sung các quỹ đạo \emph{phục hồi sau lỗi} vào tập huấn
+luyện để mô hình học cách đổi chiến lược thay vì thử lại, và làm cho lớp
+thực thi ít sinh ra lỗi khả thao tác giả hơn.
 
 \textbf{Khai thác tín hiệu kiểm chứng để huấn luyện.}
 Bên cạnh tập dữ liệu dùng cho supervised fine-tuning, pipeline còn tạo ra
@@ -184,20 +212,28 @@ luyện. Tuy nhiên, cùng một biểu diễn này cũng có thể được kha
 cảnh cho mô hình. Điều này mở ra khả năng kết hợp giữa dữ liệu đã học và tri
 thức có cấu trúc trong cùng một hệ thống web agent.
 
-\textbf{Mở rộng đánh giá thực nghiệm.}
-Một hướng phát triển khác là hoàn thiện đánh giá trên toàn bộ các website của
-WebArena với nhiều lần lặp để tăng độ tin cậy thống kê. Ngoài ra, phương pháp
-cũng có thể được đánh giá trên các benchmark web agent khác và với các thước
-đo chi tiết hơn ngoài tỷ lệ thành công nhị phân nhằm đánh giá đầy đủ hơn khả
-năng tổng quát hóa của hệ thống.
+\textbf{Hoàn thiện phần thực nghiệm còn thiếu.}
+Ba hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất, lặp
+lại mỗi phép đo ít nhất ba lần cho cả mô hình nền và mô hình sau fine-tune
+để báo cáo trung bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất, đồng
+thời bổ sung đối chứng mô hình nền cho ba website chưa có và chạy lại
+Shopping cùng Shopping Admin một cách tuần tự. Thứ hai, thực hiện ablation
+so sánh dữ liệu khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách ---
+đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu trúc đồ
+thị, và cũng là thứ hiện còn thiếu để tuyên bố mạnh hơn về phương pháp.
+Thứ ba, mở rộng sang các benchmark web agent khác và các thước đo chi tiết
+hơn tỷ lệ thành công nhị phân, chẳng hạn mức độ tiến bộ từng phần.
 
 \vspace{1em}
 \noindent
 Khóa luận đã đề xuất HSGE, một pipeline tự động thu thập dữ liệu huấn luyện
 cho web agent từ các website không có nhãn thông qua quá trình khám phá có
-cấu trúc. Kết quả thực nghiệm ban đầu cho thấy dữ liệu được tạo ra từ
-pipeline có thể được sử dụng để cải thiện hiệu quả của một mô hình ngôn ngữ
-nhỏ trên benchmark WebArena. Mặc dù vẫn còn nhiều hướng cần tiếp tục nghiên
-cứu và đánh giá ở quy mô lớn hơn, phương pháp này cho thấy việc đầu tư vào
+cấu trúc. Kết quả thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ để đưa
+một mô hình 9B lên 20{,}8\% trên 655 task chính thức của bốn website
+WebArena --- ngang mức các hệ thống tốt nhất cùng phân khúc dưới 10B, và
+gấp hơn ba lần mô hình nền trên website duy nhất có đối chứng --- trong khi
+chỉ dùng 4288 mẫu huấn luyện, nhỏ hơn khoảng một bậc độ lớn so với các
+công trình cùng hướng. Mặc dù vẫn còn nhiều hướng cần tiếp tục nghiên cứu
+và đánh giá ở quy mô lớn hơn, phương pháp này cho thấy việc đầu tư vào
 chất lượng và cấu trúc của dữ liệu huấn luyện là một hướng tiếp cận khả thi
 để nâng cao năng lực của các web agent sử dụng mô hình ngôn ngữ nhỏ.

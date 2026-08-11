@@ -353,7 +353,7 @@ mục tiêu kết thúc $g_T$ (có thể không được cấu hình, ký hiệu
   \If{$p_{|p|}$ được đánh dấu terminal \textbf{và} $g_T \neq \bot$}
     \State $\mathit{verify} \gets \textsc{Reached}(g_T)$ \Comment{kiểm chứng tất định}
   \Else
-    \State $\mathit{verify} \gets$ kết luận của solver, judge kiểm tra lại ngoại tuyến
+    \State $\mathit{verify} \gets$ kết luận của solver, judge kiểm tra lại ngay trong vòng lặp
   \EndIf
   \State $T \gets T \cup \{(\mathit{instr}, \mathit{verify}, |p|)\}$ \Comment{$|p|$ là độ khó}
 \EndFor
@@ -384,12 +384,43 @@ cuối cùng là \emph{terminal} và website cung cấp điều kiện kết th�
 kiểm tra bằng chương trình (chẳng hạn URL xác nhận đơn hàng), trạng thái
 thành công sẽ được xác minh trực tiếp. Trong các trường hợp còn lại, episode
 được đánh giá qua kết luận của solver và tiếp tục được một judge độc lập kiểm
-tra lại trong giai đoạn tinh lọc dữ liệu (Mục~\ref{sec:method-data}).
+tra lại \emph{ngay trong vòng lặp khám phá}: một phán quyết \textsc{Fail} sẽ
+hạ episode xuống thất bại trước khi nó kịp đi vào bất kỳ khâu nào phía sau,
+nên không episode nào được ghi nhận thành công chỉ dựa trên lời tự tuyên bố
+của tác nhân (Mục~\ref{sec:method-data}, \ref{sec:disc-slm}).
 
 Ở giai đoạn đầu khi đồ thị toán tử còn thưa và chưa hình thành được các chuỗi
 hợp lệ, hệ thống tạm thời lập kế hoạch trực tiếp tới các trạng thái kết thúc
 đã biết nếu có. Cơ chế này cho phép quá trình thu thập dữ liệu tiếp tục diễn
 ra ngay cả trước khi đồ thị đủ phong phú để sinh semantic task.
+
+\subsection{Seed năng lực website: nguồn mục tiêu từ trên xuống}
+\label{sec:method-seed}
+
+Cơ chế ghép chuỗi ở trên là một cơ chế \emph{từ dưới lên}: nó chỉ sinh được
+task khi đồ thị toán tử đã có cạnh, mà cạnh lại chỉ hình thành khi hai
+operator độc lập tình cờ phát biểu trùng một mệnh đề. Trong thực tế, điều
+kiện này thưa hơn dự kiến rất nhiều (Mục~\ref{sec:disc-operators}), khiến
+việc thu thập dữ liệu dài hạn bị treo vào tài sản khó xây dựng nhất của hệ
+thống.
+
+Vì vậy, hệ thống bổ sung một nguồn mục tiêu thứ hai, hoạt động \emph{từ trên
+xuống} và không phụ thuộc đồ thị. Ở node đầu tiên của mỗi lượt khám phá,
+thành phần \emph{site seeder} tóm tắt trang chủ thành một \emph{seed} gồm mô
+tả website và một danh sách năng lực mà website đó cho phép người dùng thực
+hiện (chẳng hạn ``đặt hàng'', ``theo dõi trạng thái đơn hàng'', ``quản lý sổ
+địa chỉ''). Mỗi năng lực trong seed trở thành một goal task nhiều bước, được
+phát ra dần trong suốt lượt chạy và mỗi năng lực được thử lại từ một loại
+trang khác nhau để tránh dồn toàn bộ ngân sách vào vài node đầu. Seed đồng
+thời được đưa vào prompt của explorer làm ngữ cảnh, giúp các task bậc thấp
+bám sát mục đích thật của website thay vì chỉ mô tả những gì trang hiện tại
+hiển thị.
+
+Hai nguồn này bổ trợ nhau và dùng chung ngân sách goal task của mỗi node:
+ghép chuỗi cho ra các mục tiêu \emph{đã được kiểm chứng là khả thi} vì mọi
+mắt xích đều là skill đã thu nhận, còn seed cho ra các mục tiêu \emph{đúng
+mục đích của website} kể cả khi đồ thị còn trống. Tỷ trọng thực tế giữa hai
+nguồn trong các lượt chạy thật được báo cáo ở Mục~\ref{sec:exp-data}.
 
 So với các task được đề xuất độc lập trên từng trang, semantic task mang lại
 hai lợi ích chính. Thứ nhất, chúng tạo ra các trajectory dài hơn, bao phủ

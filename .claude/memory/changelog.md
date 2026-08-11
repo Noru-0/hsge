@@ -6,6 +6,34 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-11
 
+- **17:02** — `Thesis_report/thesis_hsge_vi/Chapter{3,5,6}/*.tex` — **brought
+  Chapters 5 and 6 in line with the rewritten Chapter 4**, plus one Chapter 3
+  gap the rewrite exposed. Ch5 §5.1 rewritten into three subsections (what the
+  20,8% does and does not prove; what is actually blocking it — the cross-site
+  table refutes "more data per site raises that site", and the failure taxonomy
+  points at the execution layer, 83–95% of failed episodes carry an action
+  error; and an explicit retraction of the old "operator chaining ran
+  end-to-end" claim). New §5.4.3 on why the two operator gates were necessary
+  but insufficient (clean graph, still edgeless — 6 chains over four sites,
+  two sites zero) and why the site seed is what actually unblocked long-horizon
+  data. New §5.5 subsection on the failure the LLM judge structurally cannot
+  see (zero-effective-action episodes: the judge only inspects the unchanged
+  final page), with its measured payoff — 0,6% of failed eval episodes vs 42%
+  single-step trajectories pre-fix. §5.5's shared-site subsection rewritten
+  around the 4-box split actually used, including the Magento-container caveat.
+  §5.7 validity gained the three named deviations and the mixed-teacher-model
+  confound; 3 rows added to the best-practices table. Ch6: dataset/eval numbers
+  updated (4554 examples, 136/655, GitLab 5,6 → 18,3), O1/O2/O4 rows rewritten
+  (O2 downgraded from "Hoàn thành" to "Hoàn thành một phần" — the chaining
+  mechanism is feasible, not load-bearing), objectives table converted to
+  `longtable` because the honest O2/O4 text overran the page, future-work
+  section reprioritised. **Ch3 §3.5 gained a subsection on the site-seed
+  mechanism** — it was never documented anywhere, yet Ch4/Ch5 now attribute
+  57 of 63 goal-task attempts to it — and §3.5's two "judge kiểm tra ngoại
+  tuyến" mentions were corrected to the inline verifier that actually runs.
+  VI edition builds clean, 150 pages, 0 undefined refs, 7 overfull hboxes
+  (all < 7 pt, unchanged from before). EN edition still untouched.
+
 - **16:51** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — **wrote
   Chapter 4 (Thực nghiệm) in full** from the completed 4-domain eval
   (136/655 = 20,8%: shopping 53/187, reddit 22/106, gitlab 33/180,

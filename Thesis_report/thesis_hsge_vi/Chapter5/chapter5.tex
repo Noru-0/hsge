@@ -15,38 +15,83 @@ cách khắc phục, và nguyên tắc tổng quát rút ra. Chi tiết đầy �
 \section{Diễn giải kết quả}
 \label{sec:disc-results}
 
-% TODO: làm mới mục này khi có kết quả ba website còn lại và các lần lặp
-% thống kê (Mục 4.5-4.6).
+\subsection{Con số nói được gì}
 
-Con số nổi bật nhất đến nay, cải thiện từ 5{,}56\% lên 6{,}67\% tỷ lệ
-hoàn thành trên bộ task GitLab chính thức, cần được đọc thận trọng thay
-vì đắc thắng. Về tuyệt đối, mức tăng là nhỏ, và với mỗi task chỉ chạy một
-lần, nó phải được coi là tín hiệu định hướng cho tới khi các lần chạy lặp
-của Mục~\ref{sec:exp-stats} hoàn tất. Điều khiến tín hiệu này đáng chú ý là
-hồ sơ chi phí của nó: nó thu được từ vỏn vẹn 352 mẫu huấn luyện, thu thập
-tự động từ một website không có nhãn, và bản thân việc fine-tune mất chưa
-đầy nửa giờ trên một GPU. Nói cách khác, pipeline đã dịch chuyển một mô
-hình nhỏ đúng hướng với lượng dữ liệu nhỏ đáng kinh ngạc; câu hỏi mở là xu
-hướng này kéo dài tới đâu khi thu thập dữ liệu mở rộng quy mô, điều mà
-kết quả liên-website ở Mục~\ref{sec:exp-main} sẽ bắt đầu trả lời.
+Kết quả chính --- 136 trên 655 task chính thức của bốn website WebArena,
+tức 20{,}8\% --- cần được đọc theo đúng cái nó chứng minh, không hơn.
+Điều nó chứng minh là: một mô hình dưới 10B, fine-tune trên 4288 mẫu do
+chính pipeline này thu thập tự động từ các website \emph{không có nhãn
+task nào}, đạt mức ngang các hệ thống tốt nhất cùng phân khúc --- cao hơn
+NNetNav-7B (19{,}1\%), ngang GPT-4o-mini (20{,}0\%), và thấp hơn
+Go-Browse-7B (22{,}6\%) một khoảng nằm gọn trong sai số của phép đo
+(Bảng~\ref{tab:related}). Điều nó \emph{không} chứng minh là HSGE tốt hơn
+hay kém hơn các hệ thống đó: mô hình nền khác nhau, quy mô dữ liệu chênh
+khoảng một bậc độ lớn, và ngân sách bước lẫn mô hình chấm mờ đều khác.
 
-Ba yếu tố nhiều khả năng đang chặn mức tăng hiện tại. Thứ nhất, cỡ dữ
-liệu: 352 mẫu thấp hơn các kho fine-tune agent điển hình hai đến ba bậc,
-nên mô hình chỉ thấy mỗi khuôn tương tác vài lần. Thứ hai, độ phủ: dữ liệu
-huấn luyện thu từ một phần website, trong khi benchmark rút task từ toàn
-site. Thứ ba, chính mô hình gốc: một mô hình 9B tham số fine-tune thuần
-giám sát không thể được kỳ vọng khôi phục các năng lực (lập kế hoạch dài
-hạn, tự sửa lỗi) mà trajectory chỉ minh họa thưa thớt. Không yếu tố nào
-trong ba điều trên quy lỗi cho thiết kế pipeline; cả ba đều chỉ về khối
-lượng và độ phủ dữ liệu như ràng buộc trói buộc, đúng ràng buộc mà
-pipeline được sinh ra để nới lỏng.
+Bằng chứng tách bạch được đóng góp của pipeline khỏi đóng góp của mô hình
+nền chỉ có một: trên GitLab, cùng mô hình Qwen3.5-9B đi từ 5{,}6\% lên
+18{,}3\% sau khi fine-tune (8{,}0\% nếu chỉ tính các task chạy sạch của
+đợt nền). Đây là mức tăng gấp hơn hai lần và có ý nghĩa thống kê dưới cả
+hai cách tính, nhưng nó chỉ tồn tại trên \emph{một} website và
+\emph{một} lần chạy. Ba website còn lại chưa có đối chứng mô hình nền, nên
+với ba phần tư kết quả, phần nào thuộc về dữ liệu và phần nào thuộc về mô
+hình nền vẫn là câu hỏi mở. Đó là lý do các lần chạy lặp và đối chứng ở
+Mục~\ref{sec:exp-stats} được xếp là ưu tiên thực nghiệm số một chứ không
+phải một việc dọn dẹp cuối cùng.
 
-Quan trọng không kém là những gì lần chạy đầu--cuối đã \emph{chứng minh}:
-mọi công đoạn (khám phá, phát hiện, ghép chuỗi operator, tinh lọc, huấn
-luyện, serving, đánh giá chính thức) đều chạy trên website thật không
-cần can thiệp tay, và các cổng chất lượng đã chặn được những dữ liệu lẽ ra
-sẽ làm bẩn huấn luyện (Mục~\ref{sec:disc-slm}). Phần còn lại của chương kể
-lại cái giá để câu vừa rồi đúng.
+\subsection{Điều gì đang chặn mức tăng}
+
+Trước khi có kết quả bốn website, giả thuyết mặc định là khối lượng dữ
+liệu: thêm dữ liệu thì điểm sẽ lên. Dữ liệu mới \emph{không} ủng hộ giả
+thuyết đó ở dạng đơn giản như vậy. Website có nhiều dữ liệu thứ nhì
+(Shopping Admin, 27{,}5\% tập huấn luyện) lại có điểm thấp nhất
+(15{,}4\%), còn website có điểm cao nhất (Shopping, 28{,}3\%) chỉ đứng thứ
+ba về lượng dữ liệu (Bảng~\ref{tab:crosssite}). Với bốn điểm dữ liệu thì
+đây không phải một kết luận thống kê, nhưng nó đủ để bác bỏ cách nghĩ
+``đổ thêm dữ liệu vào website nào thì website đó khá lên''.
+
+Phân loại nguyên nhân thất bại ở Mục~\ref{sec:exp-analysis} chỉ vào một
+chỗ nghẽn cụ thể hơn: từ 83\% đến 95\% episode thất bại có ít nhất một
+hành động bị trình duyệt từ chối, tổng cộng 2285 lỗi hành động trên 655
+episode. Phần lớn là hết thời gian chờ tính khả thao tác trên những phần
+tử mà accessibility tree \emph{có} hiển thị --- tức mô hình nhìn đúng chỗ
+nhưng thao tác không đi tới nơi. Đây là một giới hạn của \emph{lớp thực
+thi}, không phải của việc mô hình thiếu ví dụ. Đi kèm với nó là hành vi
+kẹt vòng lặp: episode thất bại điển hình dài 12 bước (trung vị) so với 5
+bước của episode thành công, tức thời gian bị tiêu vào việc lặp lại chứ
+không vào việc tiến. Hai quan sát này cùng nói một điều: \emph{nới ngân
+sách bước hay nhân đôi dữ liệu đều không phải đòn bẩy tốt nhất kế tiếp};
+dạy mô hình phục hồi sau một hành động hỏng --- và làm cho lớp thực thi ít
+sinh ra hành động hỏng hơn --- mới là.
+
+Ba yếu tố còn lại vẫn giữ nguyên hiệu lực. Thứ nhất, cỡ dữ liệu: 4288 mẫu
+vẫn nhỏ hơn khoảng một bậc so với 40--45 nghìn bước tương tác mà Go-Browse
+và NNetNav dùng. Thứ hai, độ phủ: dữ liệu huấn luyện thu từ 48--79 node
+của mỗi website, trong khi benchmark rút task từ toàn site. Thứ ba, chính
+mô hình nền: một mô hình 9B fine-tune thuần giám sát khó khôi phục các
+năng lực (lập kế hoạch dài hạn, tự sửa lỗi) mà trajectory chỉ minh họa
+thưa thớt --- và chính năng lực tự sửa lỗi là thứ bảng lỗi cho thấy đang
+thiếu.
+
+\subsection{Điều lần chạy đầu--cuối đã chứng minh, và điều nó chưa}
+
+Toàn bộ chu trình --- khám phá, phát hiện skill, quy nạp operator, tinh
+lọc, huấn luyện, serving, đánh giá chính thức --- đã chạy trên bốn website
+thật mà không cần can thiệp tay, và các cổng chất lượng đã chặn được đúng
+loại dữ liệu lẽ ra sẽ làm bẩn huấn luyện (Mục~\ref{sec:disc-slm}).
+
+Một điểm phải nói cho chính xác, vì các bản trước của khóa luận đã nói
+quá: \emph{khâu ghép chuỗi operator vẫn là mắt xích yếu}. Cơ chế sinh task
+ngữ nghĩa đã thực sự chạy được trên website thật --- 66 task GOAL, 25
+thành công, so với \emph{0} task GOAL trong toàn bộ 12 đợt khám phá trước
+đó --- nhưng thứ mở khóa được bế tắc là seed năng lực website (57 lượt
+thử), chứ không phải đồ thị toán tử (6 lượt thử, và hai trong bốn website
+không hình thành được chuỗi nào). Nói cách khác, giả thuyết ``ghép chuỗi
+các skill đã kiểm chứng để sinh mục tiêu dài hạn'' mới được chứng minh là
+\emph{khả thi}, chưa được chứng minh là \emph{đủ dày} để làm nguồn dữ liệu
+chính; nguyên nhân kỹ thuật của độ thưa đó được phân tích ở
+Mục~\ref{sec:disc-operators}. Phần còn lại của chương kể lại cái giá để
+những câu trên đây đúng.
 
 \section{Bài học khi khám phá website thật}
 \label{sec:disc-exploration}
@@ -214,6 +259,33 @@ chữ.
 sẻ bộ từ vựng ngay lúc sinh; đừng ủy thác việc thống nhất ngữ nghĩa cho một
 thước đo tương đồng.
 
+\subsection{Hai cách sửa là cần, nhưng chưa đủ}
+
+Cả hai cổng chặn trên đều hoạt động đúng như thiết kế: đồ thị toán tử của
+bốn đợt khám phá cuối không còn node chết, và 26 operator được quy nạp từ
+58 skill đã kiểm chứng. Nhưng chúng \emph{không} làm đồ thị dày lên. Trên
+cả bốn website chỉ có 6 chuỗi operator được thử, và hai website không hình
+thành được chuỗi nào --- đúng biểu hiện đã dẫn tới 0 semantic task trong
+các đợt trước, chỉ nhẹ hơn.
+
+Chẩn đoán trung thực nhất là hai lực kéo ngược nhau. Cổng chặn tautology
+đòi effect phải khác precondition; nhưng với một skill \emph{cục bộ trong
+một trang} thì trạng thái vào và ra đúng là cùng một trang, nên effect dễ
+bị bỏ và operator bị loại (ba trong sáu skill của Shopping Admin chết theo
+đúng đường này). Cách hòa giải hiện tại --- buộc mô tả trạng thái ra phải
+là cùng trang đó \emph{có kèm điều kiện} skill vừa tạo ra (``trang sửa sản
+phẩm \emph{đã có xác nhận lưu}'') --- giữ được operator, nhưng một mệnh đề
+đặc thù như vậy thì hiếm khi trùng với precondition mà một skill khác phát
+biểu, nên cạnh vẫn không hình thành.
+
+\textbf{Bài học.} Khi tính hợp lệ của từng phần tử được thi hành cục bộ mà
+tính \emph{kết nối} giữa chúng thì không, hệ quả là một đồ thị sạch nhưng
+rời rạc. Cơ chế thực sự mở khóa được dữ liệu dài hạn trong khóa luận này
+là seed năng lực website --- một nguồn mục tiêu \emph{từ trên xuống}, không
+phụ thuộc đồ thị. Rút ra tổng quát: một cơ chế tổ hợp từ dưới lên cần
+được cấp cùng lúc một nguồn mục tiêu độc lập, nếu không toàn bộ khâu sinh
+dữ liệu sẽ bị treo vào tài sản khó nhất --- một đồ thị đủ dày cạnh.
+
 \section{Cạm bẫy khi huấn luyện và serving SLM}
 \label{sec:disc-slm}
 
@@ -254,22 +326,78 @@ xung đột phiên bản vô phương thành một bước cài đặt thường
 
 Bước judge được đưa vào vì thành công do solver tự tuyên bố không thể được xem là bằng chứng đáng tin cậy về việc hoàn thành tác vụ. Khi solver trả lời rằng tác vụ đã “hoàn tất”, nó đồng thời tự đánh giá kết quả của chính mình. Vì vậy, các episode được tuyên bố thành công cần được đánh giá lại dựa trên trạng thái cuối thực tế.
 
+Quy mô của vấn đề không hề nhỏ. Một lần chấm lại hồi tố trên một đợt đánh
+giá cũ cho thấy 198 trong 465 lời tuyên bố thành công (43\%) là sai, và
+149 trong số đó thuộc các task tra cứu mà không một phép kiểm nào từng
+nhìn tới. Khi cổng chấm được đưa vào chạy \emph{trực tuyến} ở bốn đợt khám
+phá của Chương~\ref{ch:experiments}, nó hạ cấp 497 episode --- khoảng một
+phần ba số lần tác nhân tự tuyên bố hoàn thành. Nếu không có cổng này,
+xấp xỉ một phần tư tập dữ liệu huấn luyện sẽ là những quỹ đạo dạy mô hình
+đúng một điều: cách tuyên bố đã xong mà không xong.
+
 Cơ chế này giúp phát hiện những trường hợp solver tự kết luận sai rằng tác vụ đã thành công trước khi các trajectory tương ứng được đưa vào tập dữ liệu huấn luyện. Trong chế độ nghiêm ngặt, trình dựng dataset mặc định loại bỏ mọi trajectory được tuyên bố thành công nhưng chưa qua judge, thay vì mặc nhiên chấp nhận chúng.
 
 Theo nguyên tắc P1, \emph{dữ liệu chưa được kiểm chứng không phải là dữ liệu trung tính; đó là một khoản nợ chất lượng có thể bị khuếch đại trong quá trình huấn luyện}.
 
+\subsection{Judge không thấy được cái mà mã nguồn thấy}
+
+\textbf{Vấn đề.} Cổng judge ở trên vẫn để lọt một lớp thành công giả:
+104 quỹ đạo gắn nhãn thay đổi trạng thái hoặc điều hướng mà \emph{không
+hành động nào} thực sự tác động lên trang --- chỉ cuộn hoặc không làm gì,
+rồi tuyên bố hoàn thành.
+\textbf{Chẩn đoán.} Judge chỉ nhìn trang cuối để phán xét, mà trang cuối
+của một task ``sửa đổi'' không sửa gì thì trông y hệt trang ban đầu, hoàn
+toàn hợp lệ. Nói cách khác, thứ chứng minh episode này sai không nằm trong
+trạng thái cuối, nó nằm trong \emph{lịch sử hành động}. Một chi tiết củng
+cố điều đó: nếu đếm trên episode thô thì chỉ bắt được 3 trường hợp, vì
+khuôn dạng thường gặp là một cú click bị lỗi --- và bước lỗi bị loại khi
+xuất dataset, nên bản thô trông như đã có hành động còn bản xuất ra thì
+không.
+\textbf{Khắc phục.} Một cổng thuần mã nguồn: đếm số hành động thực sự tác
+động lên trang \emph{trên các bước sống sót sau khi xuất}, và loại các
+episode thay đổi trạng thái không có hành động nào như vậy (task tra cứu
+được miễn trừ --- trả lời ngay trên trang đích chính là hình dạng đúng của
+nó).
+\textbf{Bài học và bằng chứng.} \emph{Đừng dùng một bộ chấm ngữ nghĩa để
+bắt một lỗi cơ học}; khi tính hợp lệ có thể phát biểu thành một vị từ trên
+dấu vết thực thi, hãy viết vị từ đó bằng mã. Hiệu quả của cổng này đo được
+ở đầu ra: trong 519 episode thất bại của đợt đánh giá cuối, chỉ 3
+(0{,}6\%) rơi vào đúng khuôn ``tuyên bố xong mà không làm gì'', so với
+tập dữ liệu trước khi sửa vốn có 42\% quỹ đạo chỉ dài một bước.
+
 \subsection{Đánh giá an toàn trên website sống dùng chung}
 
-Chạy hai lượt đánh giá (gốc và fine-tune) trên một instance website sống
-bình thường sẽ phải xếp hàng trọn một ngày làm việc. Phân loại task
-benchmark theo ý định thành hai tập read-only và read-write cho phép máy thứ hai
-đánh giá tập read-only song song với lượt quét không hạn chế của máy thứ
-nhất. Bản thân việc phân loại chứa hai cái bẫy đáng ghi lại: va chạm cụm
+Chạy tuần tự bốn website trên một instance sống sẽ mất khoảng 22 giờ. Cách
+song song hóa \emph{an toàn} là chia theo website: bốn máy, mỗi máy một
+website, nên hai máy bất kỳ không bao giờ chạm vào cùng một cơ sở dữ liệu
+--- thời gian rút xuống khoảng 6 giờ, bị chặn bởi website nhiều task nhất.
+Kỹ thuật này có một giới hạn mà chúng tôi đã vấp phải và ghi lại nguyên
+trạng ở Mục~\ref{sec:exp-protocol}: Shopping và Shopping Admin trong cấu
+hình WebArena chuẩn được phục vụ từ \emph{cùng một} container Magento, nên
+``một máy một website'' không đảm bảo ``một máy một cơ sở dữ liệu''. Bài
+học: đơn vị cách ly phải là \emph{tài nguyên trạng thái}, không phải cái
+tên website, và phải được xác nhận trên hạ tầng thật trước khi khởi động
+chứ không suy ra từ sơ đồ.
+
+Một biến thể trước đó của kỹ thuật này chia theo \emph{ý định của task}
+(read-only so với read-write) để hai máy quét cùng một website đồng thời.
+Bản thân việc phân loại chứa hai cái bẫy đáng ghi lại: va chạm cụm
 danh từ (``merge request'' chứa động từ chỉ về mặt cú pháp; ``report bugs''
 không gọi tên hành động báo cáo mà regex chờ đợi) và việc chèn từ đánh bại
 các mẫu so cụm ngây thơ (``open \emph{a new} issue''). Chi phí truyền tải
 cũng đáng kể: chuyển adapter LoRA 1{,}7\,GB rồi gộp lại tại chỗ thắng việc
 chuyển checkpoint đã gộp 18\,GB.
+
+Điều đáng giá hơn cả về mặt vận hành là những gì phải kiểm \emph{trước}
+khi bấm nút. Một đợt quét sáu tiếng có quá nhiều cách hỏng lặng lẽ:
+điểm phục vụ mô hình báo sẵn sàng rồi chết ở request thật đầu tiên, mô
+hình nền bị phục vụ dưới nhãn ``đã fine-tune'' vì thiếu một tham số đường
+dẫn, website không tới được \emph{từ máy đó} dù tới được từ máy khác, hay
+một phiên bản CUDA lệch khiến engine chọn sai wheel. Cách xử lý là biến
+mọi điều kiện đó thành các chặng có cổng, idempotent, kết thúc bằng một
+đợt thử ba task phải ghi được ít nhất một điểm --- rồi mới cho chạy đợt
+đầy đủ. \emph{Trên hạ tầng thuê theo giờ, chi phí của một lần kiểm tra
+trước là vài phút; chi phí của việc bỏ qua nó là cả đợt chạy.}
 
 \section{Best practice}
 \label{sec:disc-practices}
@@ -307,6 +435,12 @@ Ghim template cùng mô hình & Chat template và cờ giải mã là một ph�
 sản phẩm, cho cả huấn luyện lẫn serving (\ref{sec:disc-slm}) \\
 Ghi mọi thứ thành sự kiện & Nhật ký sự kiện từng run là thứ khiến phân
 tích hậu kỳ (phần lớn chương này) khả thi (\ref{sec:disc-exploration}) \\
+Vị từ cơ học thì viết bằng mã & Bộ chấm ngữ nghĩa chỉ thấy trạng thái
+cuối; lỗi nằm trong lịch sử hành động phải bắt bằng mã (\ref{sec:disc-slm}) \\
+Cách ly theo tài nguyên trạng thái & Song song hóa theo cái tên website là
+chưa đủ; phải xác nhận trên hạ tầng thật (\ref{sec:disc-slm}) \\
+Kiểm tra trước, có cổng chặn & Một đợt chạy dài chỉ được khởi động sau khi
+mọi điều kiện hỏng-lặng-lẽ đã được thử thật (\ref{sec:disc-slm}) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -314,22 +448,40 @@ tích hậu kỳ (phần lớn chương này) khả thi (\ref{sec:disc-explorati
 \section{Nguy cơ đối với tính hợp lệ}
 \label{sec:disc-validity}
 
-\textbf{Hợp lệ nội tại.} Đánh giá đến nay chạy mỗi task benchmark một lần
-mỗi mô hình; kết cục từng task trên website sống có nhiễu, nên khoảng cách
-đo được có thể dịch chuyển khi lặp lại. Các lần chạy lặp dự kiến
-(Mục~\ref{sec:exp-stats}) xử lý trực diện điều này. Vài cổng chất lượng
-(judge, bộ viết lại suy nghĩ) bản thân là LLM và thừa kế thiên kiến LLM;
-chúng tôi giảm thiểu nhưng không loại trừ bằng cách đối chiếu phán quyết
-với trạng thái cuối cụ thể thay vì chỉ với bản ghi hội thoại.
+\textbf{Hợp lệ nội tại.} Đánh giá chạy mỗi task benchmark một lần cho mỗi
+mô hình; kết cục từng task trên website sống có nhiễu, nên khoảng cách đo
+được có thể dịch chuyển khi lặp lại. Các lần chạy lặp dự kiến
+(Mục~\ref{sec:exp-stats}) xử lý trực diện điều này. Ba nguy cơ cụ thể khác
+đã được nêu nguyên trạng ở Chương~\ref{ch:experiments} và cần nhắc lại ở
+đây: (i) đối chứng mô hình nền chỉ có trên GitLab, nên với ba website còn
+lại không tách được đóng góp của dữ liệu khỏi đóng góp của mô hình nền;
+(ii) mô hình chấm mờ của bộ đánh giá chính thức đã ngừng phục vụ và được
+thay bằng một mô hình khác, ảnh hưởng 40 trong 655 task; (iii) hai đợt
+Shopping và Shopping Admin chạy đồng thời trên hạ tầng có thể dùng chung
+cơ sở dữ liệu. Ngoài ra, vài cổng chất lượng (judge, bộ viết lại suy nghĩ)
+bản thân là LLM và thừa kế thiên kiến LLM; chúng tôi giảm thiểu nhưng
+không loại trừ bằng cách đối chiếu phán quyết với trạng thái cuối cụ thể
+thay vì chỉ với bản ghi hội thoại --- và như Mục~\ref{sec:disc-slm} cho
+thấy, chính cách giảm thiểu đó cũng có điểm mù riêng của nó.
+
+Một nguy cơ nữa thuộc về phía dữ liệu: mô hình dạy sinh ra các trajectory
+huấn luyện đã bị thay đổi \emph{trong lúc} các đợt khám phá đang chạy, nên
+tập dữ liệu là hỗn hợp của ba mô hình dạy khác nhau. Điều này không ảnh
+hưởng tới phép đo trên mô hình đã fine-tune, nhưng khiến chất lượng dữ
+liệu không quy được cho một mô hình dạy nào, và khiến một ablation về mô
+hình dạy không thể thực hiện hồi tố trên đợt chạy này.
 
 \textbf{Hợp lệ ngoại vi.} Toàn bộ dữ liệu và đánh giá đến từ các website
 WebArena tự triển khai: thực tế, nhưng là bốn website của một họ
 benchmark, và từ một mô hình 9B duy nhất. Các tuyên bố được giới hạn
 tương ứng: chúng tôi báo cáo pipeline cải thiện \emph{mô hình này} trên
 \emph{các website này}, và coi khái quát hóa rộng hơn là việc tương lai
-thay vì một hệ quả ngầm định.
+thay vì một hệ quả ngầm định. So sánh với các công trình liên quan
+(Bảng~\ref{tab:related}) cũng chịu giới hạn này: nó được tính lại trên
+đúng bốn website để mẫu số khớp nhau, nhưng mô hình nền và quy mô dữ liệu
+thì không đồng nhất được hồi tố.
 
-\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành tác vụ theo bộ chấm chính thức là thước đo tiêu chuẩn trong lĩnh vực, nhưng đây là một chỉ số nhị phân và chỉ phản ánh trạng thái cuối cùng. Do đó, chỉ số này không ghi nhận mức độ tiến bộ từng phần trong quá trình thực hiện. Bên cạnh đó, các semantic task được xác nhận thông qua tự báo cáo của solver kết hợp với judge ngoại tuyến có mức độ tin cậy thấp hơn so với các tác vụ được kiểm chứng trực tiếp bằng chương trình. Vì vậy, chúng tôi lưu tách biệt hai chế độ kiểm chứng trong dữ liệu, qua đó cho phép thực hiện các phân tích nghiêm ngặt hơn về sau.
+\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành tác vụ theo bộ chấm chính thức là thước đo tiêu chuẩn trong lĩnh vực, nhưng đây là một chỉ số nhị phân và chỉ phản ánh trạng thái cuối cùng. Do đó, chỉ số này không ghi nhận mức độ tiến bộ từng phần trong quá trình thực hiện. Bên cạnh đó, trong giai đoạn thu thập dữ liệu, các semantic task được xác nhận bằng tự báo cáo của solver rồi được một judge chấm lại ngay trong vòng lặp; mức độ tin cậy của cách này vẫn thấp hơn các tác vụ được kiểm chứng trực tiếp bằng chương trình, vì judge chỉ xét trạng thái cuối. Vì vậy, chúng tôi lưu tách biệt hai chế độ kiểm chứng trong dữ liệu, qua đó cho phép thực hiện các phân tích nghiêm ngặt hơn về sau. Lưu ý rằng giới hạn này chỉ áp dụng cho dữ liệu huấn luyện: các con số ở Mục~\ref{sec:exp-main} do bộ chấm chính thức của WebArena quyết định, không do cơ chế kiểm chứng nội bộ của hệ thống.
 
 \vspace{1em}
 \noindent
