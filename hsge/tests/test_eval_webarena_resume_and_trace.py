@@ -16,10 +16,13 @@ import json
 import os
 import sys
 import tempfile
+
+import pytest
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from training.eval_webarena import (n_llm_judged_tasks, prune_errored,  # noqa: E402
+from training.eval_webarena import (TaskTimeout, _wall_clock_budget,  # noqa: E402
+                                   n_llm_judged_tasks, prune_errored,
                                    write_summary, write_trace)
 
 
@@ -239,3 +242,73 @@ def test_summary_records_which_model_variant_produced_it():
         _write(p, [{"task_id": 1, "success": True}])
         assert write_summary(out, p, _Base(), task_ids=[1])["variant"] == "base"
         assert write_summary(out, p, _Args(), task_ids=[1])["variant"] == "finetuned"
+
+
+def test_a_timed_out_task_is_not_requeued():
+    """A wall-clock timeout is the one error that must NOT be retried.
+
+    Requeueing an error assumes the next attempt might score. A task that hangs
+    deterministically breaks that assumption: it writes no row, so resume puts
+    it back at the head of the queue and the sweep livelocks on it. reddit sat
+    on webarena.724 for three attempts and ~35 minutes before it was excluded by
+    hand. Keeping the timeout row costs one unscored task and lets the sweep
+    finish; the row records why, so it can be re-run deliberately with --tasks.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Path(tmp) / "results.jsonl"
+        _write(p, [
+            {"task_id": 1, "success": True, "reward": 1.0},
+            {"task_id": 724, "error": "TaskTimeout: 900s", "timed_out": True},
+            {"task_id": 3, "error": "APIConnectionError: boom"},
+        ])
+        done, n_requeued = prune_errored(p)
+
+        assert 724 in done, "a hung task must not be handed back to the queue"
+        assert 3 not in done, "an ordinary error is still retried"
+        assert n_requeued == 1
+        kept = {r["task_id"] for r in
+                (json.loads(l) for l in p.read_text().splitlines())}
+        assert kept == {1, 724}
+
+
+def test_a_timed_out_task_still_counts_as_unscored():
+    """It is kept, but it is not a 0 -- scoring it would turn an infrastructure
+    hang into a model failure, which is what makes a baseline untrustworthy."""
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        p = out / "results.jsonl"
+        _write(p, [
+            {"task_id": 1, "success": True, "reward": 1.0},
+            {"task_id": 724, "error": "TaskTimeout: 900s", "timed_out": True},
+        ])
+
+        class A:
+            site = "reddit"; model = "m"; base_url = "u"; variant = "base"
+        s = write_summary(out, p, A(), [1, 724])
+
+        assert s["n_scored"] == 1 and s["n_errored"] == 1
+        assert s["n_site_tasks"] == 2 and s["complete"] is False
+        assert s["success_rate"] == 0.5 and s["success_rate_attempted"] == 1.0
+
+
+def test_the_wall_clock_budget_interrupts_a_blocking_call():
+    """The hang it exists for is a BLOCKING one -- the main thread parked in
+    `ep_poll` on Playwright's driver pipe. `time.sleep` stands in for that: a
+    watchdog thread could observe it but not interrupt it, which is why this
+    uses SIGALRM."""
+    import time as _t
+    t0 = _t.time()
+    with pytest.raises(TaskTimeout):
+        with _wall_clock_budget(1):
+            _t.sleep(30)
+    assert _t.time() - t0 < 5, "it must interrupt the sleep, not wait it out"
+
+
+def test_the_budget_is_disarmed_afterwards():
+    """A leaked alarm would fire in the middle of the NEXT task."""
+    import signal as _s, time as _t
+    with _wall_clock_budget(2):
+        pass
+    assert _s.alarm(0) == 0, "the alarm outlived its context manager"
+    with _wall_clock_budget(0):          # 0 disables
+        _t.sleep(0.01)

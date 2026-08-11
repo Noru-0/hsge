@@ -25,8 +25,10 @@ Usage (on the vast.ai box, with vLLM already serving on localhost:8000):
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
+import signal
 import sys
 import time
 from pathlib import Path
@@ -356,6 +358,15 @@ def prune_errored(results_path: Path) -> tuple[set[int], int]:
     long, run through quick tunnels, that is not hypothetical: 55 of 180 rows in
     `training/artifacts/eval_results/base/results.jsonl` carry `error`.
 
+    The exception is `timed_out`, which is kept and never retried. Requeueing
+    assumes the next attempt might score; a task that hangs *deterministically*
+    breaks that assumption and livelocks the sweep instead, since a hang writes
+    no row and resume therefore puts it straight back at the head of the queue.
+    reddit burned ~35 minutes and three attempts on webarena.724 that way before
+    it was excluded by hand. The row is still `error`, so the task counts as
+    unscored rather than as a 0 -- and it can be re-run deliberately with
+    `--tasks` once whatever hangs is understood.
+
     Rewriting rather than merely skipping matters because results.jsonl is
     append-only: leaving the errored row in place and re-running the task would
     append a SECOND row for the same task_id, and both `total` and the success
@@ -372,7 +383,7 @@ def prune_errored(results_path: Path) -> tuple[set[int], int]:
             task_id = row["task_id"]
         except Exception:
             continue                      # unparseable line: drop, nothing to keep
-        if row.get("error"):
+        if row.get("error") and not row.get("timed_out"):
             n_errored += 1
             rows.pop(task_id, None)       # a later clean row wins; a later error clears
             continue
@@ -385,9 +396,41 @@ def prune_errored(results_path: Path) -> tuple[set[int], int]:
     return set(rows), n_errored
 
 
+class TaskTimeout(Exception):
+    """One task exceeded its wall-clock budget (see `--task-timeout-s`)."""
+
+
+@contextlib.contextmanager
+def _wall_clock_budget(seconds: int):
+    """Raise `TaskTimeout` in this thread after `seconds`; 0 disables.
+
+    SIGALRM rather than a watchdog thread because the hang being bounded is a
+    *blocking* one -- the main thread parked in `ep_poll` on Playwright's driver
+    pipe, with an idle browser and no CPU. A thread could observe that but not
+    interrupt it. Under PEP 475 the interrupted syscall runs Python-level signal
+    handlers before retrying, so raising here propagates out of the blocked call.
+
+    Main-thread only, which is where the sweep's task loop runs.
+    """
+    if not seconds:
+        yield
+        return
+
+    def _fire(signum, frame):
+        raise TaskTimeout(f"no progress for {seconds}s")
+
+    prev = signal.signal(signal.SIGALRM, _fire)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, prev)
+
+
 def run_task(task_id: int, llm, max_steps: int, headless: bool,
              timeout_ms: int, out_dir: Path | None = None,
-             with_axtree: bool = False) -> dict:
+             with_axtree: bool = False, task_timeout_s: int = 0) -> dict:
     from hsge.webarena.agents import Solver
 
     browser = make_task_browser(task_id, headless, timeout_ms)
@@ -397,23 +440,28 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
     steps: list = []
     terminal_delivery = ""
     try:
-        browser.reset()
-        solver = Solver(llm, max_steps=max_steps, vision=False)
-        steps, _, _, _, _, infeasible, stop_reason = solver.solve(browser, browser.goal)
-        # Deliver the terminal chat action to the env so the official
-        # evaluator can score the answer.
-        last_action = steps[-1].action if steps else ""
-        if not browser.terminated and (last_action.startswith("send_msg_to_user")
-                                       or last_action.startswith("report_infeasible")):
-            try:
-                browser.act(last_action)
-                terminal_delivery = "delivered"
-            except Exception as e:  # answer delivery must never lose the episode
-                terminal_delivery = f"failed: {type(e).__name__}: {e}"[:300]
-                print(f"    [eval] terminal action failed: {e}", file=sys.stderr)
-        else:
-            terminal_delivery = ("already_terminated" if browser.terminated
-                                 else "not_a_terminal_action")
+        # The budget covers everything that touches the browser -- env setup
+        # included, which is where the observed hang was and which BrowserGym's
+        # own 30s action timeout does not bound. Tracing and the return value
+        # are built after the alarm is cleared.
+        with _wall_clock_budget(task_timeout_s):
+            browser.reset()
+            solver = Solver(llm, max_steps=max_steps, vision=False)
+            steps, _, _, _, _, infeasible, stop_reason = solver.solve(browser, browser.goal)
+            # Deliver the terminal chat action to the env so the official
+            # evaluator can score the answer.
+            last_action = steps[-1].action if steps else ""
+            if not browser.terminated and (last_action.startswith("send_msg_to_user")
+                                           or last_action.startswith("report_infeasible")):
+                try:
+                    browser.act(last_action)
+                    terminal_delivery = "delivered"
+                except Exception as e:  # answer delivery must never lose the episode
+                    terminal_delivery = f"failed: {type(e).__name__}: {e}"[:300]
+                    print(f"    [eval] terminal action failed: {e}", file=sys.stderr)
+            else:
+                terminal_delivery = ("already_terminated" if browser.terminated
+                                     else "not_a_terminal_action")
         if out_dir is not None:
             write_trace(out_dir, task_id, browser.goal, steps, browser.reward,
                         stop_reason, llm_calls=getattr(llm, "calls", None),
@@ -460,6 +508,9 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
             "reward": 0.0,
             "success": False,
             "error": f"{type(e).__name__}: {e}"[:500],
+            # Distinguishes "retry this" from "this hangs" -- prune_errored()
+            # requeues the first and keeps the second.
+            "timed_out": isinstance(e, TaskTimeout),
             "n_steps": len(steps),
             "elapsed_s": round(time.time() - t0, 1),
         }
@@ -492,6 +543,14 @@ def main() -> None:
     ap.add_argument("--max-steps", type=int, default=15)
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--timeout-ms", type=int, default=30000)
+    ap.add_argument("--task-timeout-s", type=int, default=900, metavar="S",
+                    help="abandon a task after S seconds of wall clock and record "
+                         "it as timed out (0 disables). Bounds a hang that no "
+                         "other guard catches: --timeout-ms bounds one ACTION and "
+                         "--max-consecutive-errors counts errors, but a task "
+                         "parked in Playwright produces neither. Default 900s is "
+                         "~3x the longest legitimate task measured (304s, p95 170s). "
+                         "A timed-out task is never retried -- see prune_errored()")
     ap.add_argument("--headed", action="store_true")
     ap.add_argument("--keep-thinking", action="store_true",
                     help="do not disable Qwen3.5's thinking mode")
@@ -565,7 +624,8 @@ def main() -> None:
         print(f"[{i}/{len(todo)}] webarena.{task_id} ...", flush=True)
         result = run_task(task_id, llm, args.max_steps,
                           headless=not args.headed, timeout_ms=args.timeout_ms,
-                          out_dir=out_dir, with_axtree=args.trace_axtree)
+                          out_dir=out_dir, with_axtree=args.trace_axtree,
+                          task_timeout_s=args.task_timeout_s)
         n_success += bool(result.get("success"))
         with open(results_path, "a") as f:
             f.write(json.dumps(result, ensure_ascii=False) + "\n")
