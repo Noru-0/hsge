@@ -126,6 +126,36 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   launches Chromium, so a missing library surfaces at setup rather than six hours
   into a sweep. Suite 318 -> 325.
 
+- **10:08** — `training/bootstrap_eval_box.sh` (new), `training/eval_status.py`
+  (new), `training/eval_webarena.py`, `training/serve_vllm.sh`,
+  `training/vast_setup.sh`, `training/README.md`,
+  `hsge/tests/test_eval_webarena_resume_and_trace.py` — **machinery for running
+  the four domains in parallel, one box each** (~6.2 h wall-clock, bounded by
+  shopping's 187 tasks, versus ~22 h sequential). `bootstrap_eval_box.sh` is one
+  idempotent command per box with nine gated stages — inputs, venvs, merge,
+  serve, endpoint *generates* (vLLM has reached READY and then died on its first
+  real request before), judge configured, **site reachable from that box**, smoke
+  3 tasks, then the full sweep only if the smoke test scored at least one task
+  without error — so a six-hour run is never started on a broken box. Sweeps run
+  under supervisor with `stopasgroup`/`killasgroup` (a plain restart orphans the
+  python child, leaving two writers on one `results.jsonl`) and
+  `autorestart=unexpected exitcodes=0,3`, so the new consecutive-error abort
+  (exit 3, default 5 in a row) is not retried in a loop against a dead tunnel.
+  `eval_status.py` prints one line per sweep from `results.jsonl` — never the log,
+  which a buffered `grep` once put 31 minutes behind — with progress against the
+  official per-site count, throughput, ETA, unparseable-response count, and exit
+  codes 3/2/0 for aborted/stale/healthy so it can drive a cron check; it warns
+  when two boxes used different judge models, which would silently make the four
+  numbers incomparable. Verified against the archived gitlab results: it
+  reproduces that run's recorded 5.6%, and marks the denominator `?` because
+  those legacy dirs predate the `site` field. Two more silent-failure fixes:
+  `serve_vllm.sh`'s default model path pointed at a directory nothing creates
+  (one omitted argument would have served the base model under a finetuned
+  label), and `vast_setup.sh` pinned a CUDA-12 vLLM regardless of the box's CUDA.
+  `vast_setup.sh eval` now skips the train venv entirely (~13 min/box, and the
+  whole class of environment breakage that stage carries) since an eval box
+  merges with `merge_lora_peft.py` + peft. Suite 325 -> 329.
+
 ## 2026-08-10
 
 - **18:30** — `hsge/backends.py`, `run_webarena.py`, `judge_episodes.py`,

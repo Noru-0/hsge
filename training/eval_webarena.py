@@ -253,6 +253,62 @@ def write_trace(out_dir: Path, task_id: int, goal: str, steps, reward: float,
         json.dumps(payload, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
+def write_summary(out_dir: Path, results_path: Path, args, task_ids: list[int],
+                  aborted: bool = False) -> dict:
+    """Recompute summary.json from results.jsonl and report it.
+
+    Recomputed from the file rather than from an in-loop counter because the file
+    is the one source that survives an interrupted sweep, and `prune_errored()`
+    has already guaranteed one row per task_id. Called on the abort path too, so
+    a sweep stopped by the consecutive-error guard still leaves a readable
+    summary instead of a stale one from the previous invocation.
+
+    Two denominators, both reported, because they answer different questions:
+    `success_rate` is over the site's FULL official task set -- the figure
+    comparable to published WebArena numbers -- while `success_rate_attempted` is
+    over what actually got scored. They diverge whenever a sweep is incomplete,
+    which is the expected case for four 6-hour sweeps behind ephemeral tunnels,
+    and quoting only the attempted rate would flatter an unfinished run.
+    """
+    rows = [json.loads(line) for line in
+            results_path.read_text(encoding="utf-8").splitlines() if line.strip()] \
+        if results_path.exists() else []
+    n_scored = sum(1 for r in rows if not r.get("error"))
+    n_errored = sum(1 for r in rows if r.get("error"))
+    n_success = sum(1 for r in rows if r.get("success"))
+    n_site_tasks = len(task_ids)
+    summary = {
+        "site": args.site, "model": args.model, "base_url": args.base_url,
+        "n_site_tasks": n_site_tasks,
+        "n_scored": n_scored,
+        "n_errored": n_errored,
+        "n_success": n_success,
+        "success_rate": round(n_success / n_site_tasks, 4) if n_site_tasks else 0.0,
+        "success_rate_attempted": round(n_success / n_scored, 4) if n_scored else 0.0,
+        "complete": n_scored == n_site_tasks and n_errored == 0,
+        "aborted_on_consecutive_errors": aborted,
+        "judge_model_override": os.environ.get("WA_JUDGE_MODEL_OVERRIDE", ""),
+        "n_unparsed_llm": sum(r.get("n_unparsed_llm", 0) or 0 for r in rows),
+        "n_action_errors": sum(r.get("n_action_errors", 0) or 0 for r in rows),
+    }
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n",
+                                          encoding="utf-8")
+    print(f"\nsuccess rate: {n_success}/{n_site_tasks} = {summary['success_rate']:.1%}"
+          f"  (scored {n_scored}, errored {n_errored})")
+    if summary["n_unparsed_llm"]:
+        # A rising count means the endpoint or chat template regressed, not that
+        # the model got worse -- worth seeing without opening a single trace.
+        print(f"unparseable model responses: {summary['n_unparsed_llm']} "
+              f"(see traces/*.json -> llm_calls[].raw)")
+    if not summary["complete"]:
+        print("INCOMPLETE: re-run the same command to finish; errored tasks are "
+              "requeued automatically.")
+    if summary["judge_model_override"]:
+        print(f"NOTE: WebArena's LLM judge was overridden to "
+              f"{summary['judge_model_override']!r} -- disclose this when reporting.")
+    return summary
+
+
 def n_llm_judged_tasks(site: str, cache: Path, task_ids: list[int]) -> int:
     """How many of `task_ids` are scored by WebArena's LLM judge.
 
@@ -439,6 +495,11 @@ def main() -> None:
                     help="also store each step's accessibility tree in the trace "
                          "(~6 kB/step; needed to tell 'never found the page' from "
                          "'found it and misread it')")
+    ap.add_argument("--max-consecutive-errors", type=int, default=5, metavar="N",
+                    help="stop with exit code 3 after N tasks in a row error out "
+                         "(0 disables). Distinguishes dead infrastructure from a "
+                         "weak model: a dropped tunnel would otherwise burn the "
+                         "whole sweep producing error rows")
     args = ap.parse_args()
 
     site_url = (args.site_url or args.gitlab_url
@@ -490,6 +551,7 @@ def main() -> None:
     n_success = sum(1 for line in (results_path.read_text().splitlines()
                                    if results_path.exists() else [])
                     if json.loads(line).get("success"))
+    n_consecutive_errors = 0
     for i, task_id in enumerate(todo, 1):
         print(f"[{i}/{len(todo)}] webarena.{task_id} ...", flush=True)
         result = run_task(task_id, llm, args.max_steps,
@@ -506,41 +568,21 @@ def main() -> None:
               f"| {n_success}/{len(done) + i} so far"
               + (f" error={result['error'][:120]}" if result.get("error") else ""))
 
-    # Recount from the file rather than trusting the in-loop counter: it is the
-    # one source that survives an interrupted sweep, and prune_errored() has
-    # already guaranteed one row per task_id.
-    rows = [json.loads(line) for line in
-            results_path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    n_scored = sum(1 for r in rows if not r.get("error"))
-    n_errored = sum(1 for r in rows if r.get("error"))
-    n_success = sum(1 for r in rows if r.get("success"))
-    # Two denominators, both reported, because they answer different questions:
-    # success_rate is over the site's FULL official task set (the number that is
-    # comparable to published WebArena results), while success_rate_attempted is
-    # over what this sweep actually scored. They differ whenever a sweep is
-    # interrupted -- likely here, with four 6-hour sweeps behind quick tunnels --
-    # and quoting the attempted-only rate would flatter an unfinished run.
-    n_site_tasks = len(task_ids)
-    summary = {
-        "site": args.site, "model": args.model, "base_url": args.base_url,
-        "n_site_tasks": n_site_tasks,
-        "n_scored": n_scored,
-        "n_errored": n_errored,
-        "n_success": n_success,
-        "success_rate": round(n_success / n_site_tasks, 4) if n_site_tasks else 0.0,
-        "success_rate_attempted": round(n_success / n_scored, 4) if n_scored else 0.0,
-        "complete": n_scored == n_site_tasks and n_errored == 0,
-        "judge_model_override": os.environ.get("WA_JUDGE_MODEL_OVERRIDE", ""),
-    }
-    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-    print(f"\nsuccess rate: {n_success}/{n_site_tasks} = {summary['success_rate']:.1%}"
-          f"  (scored {n_scored}, errored {n_errored})")
-    if not summary["complete"]:
-        print("INCOMPLETE: re-run the same command to finish; errored tasks are "
-              "requeued automatically.")
-    if summary["judge_model_override"]:
-        print(f"NOTE: WebArena's LLM judge was overridden to "
-              f"{summary['judge_model_override']!r} -- disclose this when reporting.")
+        # A run of errors means the site, the tunnel or the endpoint is gone --
+        # tasks then fail in seconds and the sweep would chew through the whole
+        # list writing error rows. They would all be requeued on the next run, so
+        # nothing is lost, but hours are. Exit 3 so the supervisor and the status
+        # script can tell "infrastructure down" from "model scored badly".
+        n_consecutive_errors = n_consecutive_errors + 1 if result.get("error") else 0
+        if args.max_consecutive_errors and n_consecutive_errors >= args.max_consecutive_errors:
+            print(f"\nABORT: {n_consecutive_errors} tasks in a row errored -- treating "
+                  f"this as infrastructure failure, not a model result. Last error: "
+                  f"{result.get('error')}\nCheck the site/tunnel and re-run the same "
+                  f"command; errored tasks are requeued automatically.", file=sys.stderr)
+            write_summary(out_dir, results_path, args, task_ids, aborted=True)
+            raise SystemExit(3)
+
+    write_summary(out_dir, results_path, args, task_ids)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,33 @@ Entry format:
 
 ## Open
 
+### `serve_vllm.sh`'s default model path pointed at a directory nothing creates
+- **Status**: fixed (2026-08-11 10:08)
+- **Found**: 2026-08-11, preparing the 4-box parallel eval.
+- **Where**: `training/serve_vllm.sh`, `MODEL=${1:-...}` default.
+- **Symptom**: the default was `/workspace/models/Qwen3.5-9B-hsge`, a path the
+  current merge step never produces (it writes `Qwen3.5-9B-all`). Invoking the
+  script with no argument therefore served nothing useful -- and on a box where
+  someone had pulled the base model to a similarly named path it would serve the
+  BASE model while every downstream artifact was labelled finetuned. Across four
+  boxes, one omitted argument is enough.
+- **Fix**: default corrected to the merged path, and the script now refuses to
+  start unless the directory exists and contains `config.json`.
+
+### `vast_setup.sh` pinned vLLM to a CUDA-12 build regardless of the box
+- **Status**: fixed (2026-08-11 10:08)
+- **Found**: 2026-08-11, same preparation.
+- **Where**: `training/vast_setup.sh`, `setup_serve()`.
+- **Symptom**: `vllm==0.18.0` is the newest cu12 release that knows Qwen3.5, and
+  was pinned unconditionally after the CUDA-12 Hopper episode. On a CUDA-13 box
+  that pin installs the wrong wheel; the measured working configuration there is
+  plain unpinned `vllm`.
+- **Fix**: reads the CUDA major from `nvcc` and selects the pin or the unpinned
+  release accordingly, mirroring what the torch pin already does. `peft` is also
+  installed into the serve venv so an eval box can merge the adapter without
+  building the train venv at all.
+
+
 ### A retried eval task appends a second row, corrupting the success denominator
 - **Status**: fixed (2026-08-11 09:37)
 - **Found**: 2026-08-11, while fixing the resume-skips-errored bug below — the

@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from training.eval_webarena import (n_llm_judged_tasks, prune_errored,  # noqa: E402
-                                   write_trace)
+                                   write_summary, write_trace)
 
 
 def _write(path, rows):
@@ -149,6 +149,71 @@ def test_trace_stores_the_axtree_when_asked():
         write_trace(Path(tmp), 1, "g", [_Step()], 0.0, "", with_axtree=True)
         tr = json.loads((Path(tmp) / "traces" / "1.json").read_text())
     assert tr["steps"][0]["axtree"] == "RootWebArea 'x'"
+
+
+
+
+class _Args:
+    """Minimal stand-in for argparse.Namespace in write_summary()."""
+    site = "shopping"
+    model = "qwen35-9b"
+    base_url = "http://127.0.0.1:8000/v1"
+
+
+def test_summary_reports_the_full_site_denominator_not_the_attempted_one():
+    """An interrupted sweep must not look better than a finished one."""
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        p = out / "results.jsonl"
+        _write(p, [
+            {"task_id": 1, "success": True},
+            {"task_id": 2, "success": False},
+            {"task_id": 3, "error": "Timeout"},
+        ])
+        # the site has 10 tasks; this sweep touched 3, one of which errored
+        s = write_summary(out, p, _Args(), task_ids=list(range(1, 11)))
+
+        assert s["n_site_tasks"] == 10
+        assert (s["n_scored"], s["n_errored"], s["n_success"]) == (2, 1, 1)
+        assert s["success_rate"] == 0.1            # 1/10, the comparable figure
+        assert s["success_rate_attempted"] == 0.5  # 1/2, flattering, labelled as such
+        assert s["complete"] is False
+        # and it is persisted, not just returned
+        assert json.loads((out / "summary.json").read_text())["n_site_tasks"] == 10
+
+
+def test_summary_marks_a_finished_sweep_complete():
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        p = out / "results.jsonl"
+        _write(p, [{"task_id": 1, "success": True}, {"task_id": 2, "success": False}])
+        s = write_summary(out, p, _Args(), task_ids=[1, 2])
+    assert s["complete"] is True and s["success_rate"] == 0.5
+
+
+def test_summary_aggregates_the_unparsed_and_action_error_counters():
+    """Sweep-wide health signals: a rising unparsed count means the endpoint or
+    chat template regressed, not that the model got worse."""
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        p = out / "results.jsonl"
+        _write(p, [
+            {"task_id": 1, "success": False, "n_unparsed_llm": 2, "n_action_errors": 3},
+            {"task_id": 2, "success": True, "n_unparsed_llm": 0, "n_action_errors": 1},
+            {"task_id": 3, "error": "boom"},                      # no counters at all
+        ])
+        s = write_summary(out, p, _Args(), task_ids=[1, 2, 3])
+    assert s["n_unparsed_llm"] == 2 and s["n_action_errors"] == 4
+
+
+def test_summary_is_written_on_the_abort_path():
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        p = out / "results.jsonl"
+        _write(p, [{"task_id": 1, "error": "tunnel gone"}])
+        s = write_summary(out, p, _Args(), task_ids=[1, 2, 3], aborted=True)
+    assert s["aborted_on_consecutive_errors"] is True
+    assert s["complete"] is False
 
 
 if __name__ == "__main__":

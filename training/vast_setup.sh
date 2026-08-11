@@ -156,13 +156,31 @@ setup_serve() {
     # that registers Qwen3_5ForConditionalGeneration -- 0.14.0 knows only
     # Qwen3Next -- so the usable window for this model on a CUDA-12 box is
     # narrow. On a CUDA-13 box, plain `-U vllm` is fine.
-    uv pip install --python "$VENVS/serve/bin/python" "vllm==0.18.0" "huggingface_hub[cli]" || return 1
+    # Pick by the box's CUDA major, the same way the torch pin above does: a
+    # CUDA-12 box needs the pin (0.18.0 is the only release that is both cu12 and
+    # aware of Qwen3.5), while pinning it on a CUDA-13 box installs the WRONG
+    # wheel -- measured: unpinned vllm on CUDA 13.2 serves this model fine,
+    # whereas the cu12 build on Hopper + CUDA 12 dies on its first request when
+    # flashinfer JIT-compiles gdn_prefill_sm90 against a mismatched toolkit.
+    local CUDA_MAJOR
+    CUDA_MAJOR=$(nvcc --version 2>/dev/null | grep -oE 'release [0-9]+' | grep -oE '[0-9]+' | head -1)
+    if [ "${CUDA_MAJOR:-12}" -ge 13 ]; then
+        log "nvcc reports CUDA $CUDA_MAJOR -> installing unpinned vllm (cu13)"
+        uv pip install --python "$VENVS/serve/bin/python" vllm "huggingface_hub[cli]" || return 1
+    else
+        log "nvcc reports CUDA ${CUDA_MAJOR:-unknown} -> pinning vllm==0.18.0 (cu12)"
+        uv pip install --python "$VENVS/serve/bin/python" "vllm==0.18.0" "huggingface_hub[cli]" || return 1
+    fi
+    # peft is what lets an eval-only box merge the adapter (merge_lora_peft.py)
+    # without building the train venv at all -- by far the slowest and most
+    # fragile stage, and useless on a box that never trains.
+    uv pip install --python "$VENVS/serve/bin/python" peft || return 1
     "$VENVS/serve/bin/python" -c "
-import torch, vllm
+import torch, vllm, peft
 from vllm.model_executor.models.registry import ModelRegistry
 assert torch.cuda.is_available(), 'no CUDA'
 assert 'Qwen3_5ForConditionalGeneration' in ModelRegistry.get_supported_archs(), 'vllm lacks Qwen3.5'
-print('vllm', vllm.__version__, 'torch', torch.__version__)"
+print('vllm', vllm.__version__, 'torch', torch.__version__, 'peft', peft.__version__)"
 }
 
 # --- eval venv: BrowserGym WebArena + Playwright ----------------------------
@@ -204,9 +222,30 @@ download_model() {
     ls -lh "$BASE/models/Qwen3.5-9B" | head
 }
 
-stage train_venv setup_train
-stage serve_venv setup_serve
-stage eval_venv  setup_eval
-stage model_download download_model
+# Mode selects which stages run. An eval-only box (serve + score a model trained
+# elsewhere) does not need the train venv: it merges the adapter with
+# training/merge_lora_peft.py, which needs only peft from the serve venv. Skipping
+# it saves ~13 min per box and, more importantly, skips the entire class of
+# environment breakage that stage carries (the torch/CUDA pin, flash-linear-
+# attention, tilelang, and the causal-conv1d compile).
+MODE=${1:-all}
+case "$MODE" in
+    all)
+        stage train_venv setup_train
+        stage serve_venv setup_serve
+        stage eval_venv  setup_eval
+        stage model_download download_model
+        ;;
+    eval)
+        log "MODE=eval -> skipping the train venv (merge via merge_lora_peft.py)"
+        stage serve_venv setup_serve
+        stage eval_venv  setup_eval
+        stage model_download download_model
+        ;;
+    *)
+        echo "usage: bash vast_setup.sh [all|eval]" >&2
+        exit 2
+        ;;
+esac
 
 log "SETUP COMPLETE"

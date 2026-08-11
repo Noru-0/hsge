@@ -201,7 +201,63 @@ Ready when `curl -s localhost:8000/v1/models` answers. The eval client sends
 `chat_template_kwargs: {"enable_thinking": false}` on every request (Qwen3.5
 thinks by default; the training data has no think blocks).
 
-## 6. Evaluate the one model on each of the four domains
+## 6a. Four domains in parallel, one box each (the fast path)
+
+One box per domain, one command per box. Wall-clock is the slowest domain
+(~6.2 h for shopping's 187 tasks at the measured ~101 s/task) instead of ~22 h
+for all 655 in sequence. reddit is only 106 tasks, so that box finishes ~2.5 h
+early and can be destroyed early.
+
+Safe to parallelize because the four domains are four separate services and, on
+a single box, tasks run one at a time. Confirm once that shopping and
+shopping_admin are separate deployments (WebArena ships them as two docker
+images, each with its own MySQL) before running those two concurrently:
+
+```bash
+docker ps --format 'table {{.Names}}\t{{.Ports}}\t{{.Image}}'   # on the WebArena host
+```
+
+Per box — the repo, the adapter, and a judge key are the only inputs:
+
+```bash
+rsync -az -e "ssh -p <port>" --exclude .git --exclude outputs --exclude __pycache__ \
+    ./ root@<host>:/workspace/hsge/
+rsync -az -e "ssh -p <port>" training/artifacts/for-eval-checkpoint-536/ \
+    root@<host>:/workspace/saves/qwen35-9b-lora-all/
+scp -P <port> training/vast_setup.sh root@<host>:/workspace/
+
+ssh -p <port> root@<host> 'OPENAI_API_KEY=sk-... bash /workspace/hsge/training/bootstrap_eval_box.sh \
+    --site shopping --site-url https://<shopping-tunnel>'
+```
+
+`bootstrap_eval_box.sh` runs nine gated stages: inputs → venvs (`vast_setup.sh
+eval`, which skips the train venv — an eval box merges with
+`merge_lora_peft.py`, needing only peft) → merge → serve under supervisor →
+endpoint generates → judge configured → **site reachable from that box** → smoke
+3 tasks → full sweep, started only if the smoke test scored at least one task
+without error. Each gate exists because skipping it has produced a wasted or
+silently wrong run before.
+
+Watch all four from anywhere:
+
+```bash
+python training/eval_status.py outputs/eval/*/finetuned    # after pulling dirs down
+# or per box:
+ssh -p <port> root@<host> '/workspace/venvs/eval/bin/python \
+    /workspace/hsge/training/eval_status.py /workspace/eval/<site>/finetuned'
+```
+
+It reads `results.jsonl`, never the log (a buffered `grep` once put a log 31
+minutes behind and raised a false hang alarm), and exits 3 on an
+infrastructure abort, 2 on a stale sweep, 0 otherwise — so it can drive a cron
+check. It also warns if two boxes used different judge models, which would make
+the four numbers incomparable.
+
+If a sweep aborts (exit 3, five consecutive errors — usually a dropped tunnel),
+fix the site and re-run the identical command: errored tasks are requeued
+automatically and finished ones are skipped.
+
+## 6b. Evaluate the one model on each of the four domains
 
 `eval_webarena.py --site <site>` runs the WebArena tasks whose `sites` is
 exactly `[<site>]`, scored by the official BrowserGym/WebArena evaluators.
