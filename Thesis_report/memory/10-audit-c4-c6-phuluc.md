@@ -91,3 +91,47 @@ predicate registry, COMPOSITE, lấy mẫu không tiền tố, grounding. Sau đ
 C3 cần thêm bản tiếng Việt đã chốt để C4–C6 dùng lại: **tác vụ mục tiêu**
 (goal task), **sổ đăng ký mệnh đề** (predicate registry), **quy nạp
 operator** (operator induction).
+
+---
+
+## Đã xử lý (2026-08-12, cùng ngày rà)
+
+| Hạng mục | Trạng thái |
+|---|---|
+| P0 phụ lục lệch bộ run | **Xong** — tách "Bốn đợt thu thập chính thức" / "Mười hai run phát triển", nói rõ số liệu hai bộ không cộng gộp |
+| P0 mâu thuẫn goal task ghép | **Xong** — viết lại `app:runs-goal` theo run 20: 7 chuỗi đã thử, 4 đạt, bảng liệt kê cả bảy |
+| P1 số học GOAL 63 ≠ 66 | **Xong, và không phải lỗi cộng**: 4 ô cột Shopping Admin trong `tab:runs` là số cũ (skill 12→13, op 6→5, chuỗi 0→1, seed 12→14). Sau khi sửa: 7 + 59 = 66 khớp cả bốn website |
+| P1 lời hứa §3.4.2 gãy (nợ #2) | **Xong** — §5.4.1 `sec:disc-verify`; §3.4.2 nay trỏ thẳng vào mục đó |
+| P2 mục phụ lục để trống | **Xong** — bảng đối chiếu cặp 655 tác vụ + mã số 28 tác vụ bị tinh chỉnh làm hỏng |
+| P2 bảng thuật ngữ (nợ #6) | **Xong** — 32 → 40 mục |
+| P2 văn phong C4–C6 | **Xong** — agent/task/trajectory/fine-tune/phiên: 0 chỗ lẫn ở C4, C5, C6; C5 câu ≥ 40 âm tiết 32 → 18 |
+| P1 §3.2.1 trỏ §4.6 lệch nguồn số | **Chưa** — vẫn thuộc nợ #1 (số của run phát triển không có chỗ trú) |
+
+**Sự thật quan trọng phát hiện khi đối chiếu log** (không có trong bất kỳ ghi
+chú nào trước đó): bốn đợt `wa_run_20_*` **đều bị ngắt** sau khoảng hai giờ
+rưỡi vì tài khoản OpenAI hết hạn mức (HTTP 429), rồi được **nối lại từ
+checkpoint** — 5 lần nối tổng cộng, Shopping Admin 2 lần — và chạy tiếp tới
+08-11 02:57, tổng ≈ 21 giờ. Con số "21 giờ" của C4 vì vậy **đúng**; nhưng hai
+câu "không lần nào phải can thiệp tay" ở C5/C6 thì sai và đã sửa. Đây cũng là
+lần duy nhất cơ chế khôi phục ở §3.8 được dùng thật ngoài phép thử, nên nó
+được ghi vào C4 như bằng chứng.
+
+**Bẫy đọc dữ liệu, ghi lại để khỏi vấp lại**: `run_log.jsonl` chứa `run_error`
+ở *giữa* file rồi mới tới `run_resume` và phần còn lại. Đếm sự kiện theo loại
+rồi kết luận "run kết thúc lúc X" là sai — phải xét **thứ tự dòng** và đếm cả
+`run_resume`. Tôi đã suýt báo cáo nhầm rằng C4 phóng đại thời lượng 21 giờ.
+
+## Còn lại (chưa làm)
+
+1. **Nợ #1** — sáu số của run phát triển vẫn mồ côi trong C3 (58/158 node,
+   49% INFO, 118 episode kẹt, 287/465, 10/57, 29/56) và §3.2.1 trỏ sang §4.6
+   là số của lượt đánh giá chứ không phải số đã thúc đẩy sửa lỗi. Cách rẻ
+   nhất vẫn là một bảng "số liệu chẩn đoán từ run phát triển" trong
+   Mục~`app:runs-dev`.
+2. **Nợ #3** — C3 chưa tự phát biểu điểm mới so với nền vay mượn.
+3. **Nợ #5** — C3 còn 42/392 câu ≥ 40 âm tiết; C4 còn 40/243 (16%), cao nhất
+   trong các chương đã rà.
+4. **C1 và C2 chưa rà**: C2 còn "agent" 22 lần / "tác nhân" 0, C1 còn
+   "fine-tune" 10 lần — nay lệch với C3–C6 đã thống nhất. User mới chỉ yêu
+   cầu "từ chương 3", nên chưa tự ý sửa.
+5. `Figures/fig_pipeline.pdf` vẫn còn nhãn sai bên trong ảnh (nợ #7).

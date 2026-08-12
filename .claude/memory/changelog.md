@@ -6,6 +6,30 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-12
 
+- **14:47** — `Thesis_report/thesis_hsge_vi/{Chapter4,Chapter5,Chapter6,Appendix}`
+  — **đồng bộ quyển với run 20, hoàn thiện C5, đóng ba khoản nợ.** (a) *P0*:
+  phụ lục còn báo cáo 12 run phát triển (Reddit/GitLab) và gọi đó là "mọi run
+  đứng sau dữ liệu đã thu", trong khi C4 dùng 4 đợt `wa_run_20_*`. Tách thành
+  hai mục rõ ràng, thêm bảng số liệu vận hành của 4 đợt chính thức (node lỗi
+  tải 42, reset hỏng 212, 5 lần nối lại, operator bị loại 14 lặp thừa + 20 vô
+  căn), viết lại mục "Goal task được ghép" — khẳng định cũ "không chuỗi nào
+  được thử" và "trajectory fine-tune hoàn toàn từ task mức thấp" đều **sai**
+  với run 20 (7 chuỗi đã thử, 4 đạt, có một chuỗi 3 mắt). (b) **Sửa 4 ô sai
+  trong `tab:runs`**: cột Shopping Admin của khối "Tri thức thu được" lấy từ
+  ảnh chụp trung gian (skill 12→13, operator 6→5, chuỗi 0→1, seed 12→14);
+  sau khi sửa, 7 chuỗi + 59 seed = 66 episode GOAL khớp tuyệt đối trên cả bốn
+  website (trước hụt 3). Ripple sang C5, C6. (c) Ghi nhận cả bốn đợt bị ngắt
+  vì hết hạn mức API và nối lại từ checkpoint — sửa hai câu sai "không lần nào
+  phải can thiệp tay" ở C5/C6. (d) **Nợ #2 đóng**: thêm §5.4.1 "Cổng kiểm
+  chứng nào thực sự chạy trên website thật" (verify_k=0 xác minh trong code;
+  cổng grounding loại 20 hiệu ứng, **cả 20 đều có độ chính xác 0,0**, tức
+  ngưỡng 0,5 chưa bao giờ ràng buộc). (e) Điền mục phụ lục còn để trống bằng
+  bảng đối chiếu cặp 655 tác vụ + mã số 28 tác vụ mà tinh chỉnh làm hỏng, lấy
+  từ `outputs/eval/*/results.jsonl`. (f) Bảng thuật ngữ 32→40 mục. (g) Rà văn
+  phong C5 (câu ≥40 âm tiết 32→18) và thống nhất thuật ngữ C4–C6 về 0 chỗ lẫn.
+  Build sạch: 161 trang, 0 error, 0 undefined, 7 overfull. Commit `6a59058`,
+  `bcf7856`, `eb0ef76`.
+
 - **12:15** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex` — **rà văn
   phong toàn Chương 3** theo phản hồi của user ("từ chương 3 từ ngữ còn AI và
   dịch sát tiếng Anh"). Sửa từng mục §3.1→§3.8, chỉ đụng câu chữ: giữ nguyên
