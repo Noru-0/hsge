@@ -543,14 +543,19 @@ def main() -> None:
     ap.add_argument("--max-steps", type=int, default=15)
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--timeout-ms", type=int, default=30000)
-    ap.add_argument("--task-timeout-s", type=int, default=900, metavar="S",
+    ap.add_argument("--task-timeout-s", type=int, default=1500, metavar="S",
                     help="abandon a task after S seconds of wall clock and record "
                          "it as timed out (0 disables). Bounds a hang that no "
                          "other guard catches: --timeout-ms bounds one ACTION and "
                          "--max-consecutive-errors counts errors, but a task "
-                         "parked in Playwright produces neither. Default 900s is "
-                         "~3x the longest legitimate task measured (304s, p95 170s). "
-                         "A timed-out task is never retried -- see prune_errored()")
+                         "parked in Playwright produces neither. Default 1500s is "
+                         "~2x the slowest legitimate task measured (reddit's "
+                         "webarena.721 at 718s, against a median of 90s) -- the "
+                         "tail is fat, so sizing this off a median or p95 aborts "
+                         "real work. Keep stall_watchdog.sh's threshold ABOVE "
+                         "this, or it kills the task first and nothing is ever "
+                         "recorded. A timed-out task is never retried -- see "
+                         "prune_errored()")
     ap.add_argument("--headed", action="store_true")
     ap.add_argument("--keep-thinking", action="store_true",
                     help="do not disable Qwen3.5's thinking mode")

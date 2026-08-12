@@ -15,6 +15,34 @@ Entry format:
 
 ## Open
 
+### The stall watchdog killed a slow-but-legitimate task 8 times in a row
+- **Status**: fixed (2026-08-12 07:05). Thresholds corrected; the underlying
+  design flaw (two guards with inverted thresholds) is what to remember.
+- **Found**: 2026-08-12, during the clean base sweep. reddit sat at 91/106 for
+  82 minutes, restarting every ~691s.
+- **Where**: `training/stall_watchdog.sh` `STALL_S`, vs `eval_webarena.py`
+  `--task-timeout-s`.
+- **Symptom**: looked exactly like the deterministic Playwright hang below --
+  same task retried forever, no row ever appended -- and was misdiagnosed as
+  one. It was not a hang at all.
+- **Cause**: **`webarena.721` legitimately takes 718s** (15 steps, no error).
+  The watchdog's 600s threshold had been sized off shopping_admin's worst case
+  (304s, p95 170s), but reddit's distribution has a much fatter tail: median
+  90s, p95 227s, max 718s. So the watchdog killed the task at 600s, resume put
+  it back at the head of the queue, and the cycle repeated 8 times.
+  Compounding it: the in-process `--task-timeout-s` (900s) that was supposed to
+  break exactly this loop could **never fire**, because the watchdog killed the
+  process first every time. Two guards, and the weaker one won.
+- **Fix**: watchdog default 1200s -> **2400s**, `--task-timeout-s` 900s ->
+  **1500s**, with the invariant written into both files: the watchdog threshold
+  must stay ABOVE the in-process timeout, so the timeout is what fires and the
+  task gets recorded. Applied live at 1800s to the running boxes, which
+  unblocked reddit immediately -- 721 then completed normally in 718s.
+- **Lesson**: do not size a kill-threshold off a median or p95 when the metric
+  has a fat tail, and never let a coarse external guard preempt a precise
+  in-process one. Also: a task being retried forever is NOT sufficient evidence
+  of a hang -- check the task's own elapsed time first.
+
 ### An unreset WebArena instance scores the second sweep on the first sweep's work
 - **Status**: open (methodology, not code) — found 2026-08-12 02:xx, confirmed by
   the user the same session.

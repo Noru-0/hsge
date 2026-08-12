@@ -11,8 +11,19 @@
 # re-runs it from scratch. Nothing partial is ever recorded.
 set -uo pipefail
 RESULTS=$1
-STALL_S=${2:-1200}          # 20 min. Worst legitimate task ~9 min (16 steps x
-                            # 30s action timeout + LLM + per-step validate()).
+STALL_S=${2:-2400}          # 40 min. MUST stay above eval_webarena.py's
+                            # --task-timeout-s (default 1500s), or this script
+                            # kills the task before that timeout can record it
+                            # and the sweep livelocks -- see below.
+                            #
+                            # Do NOT tune this down off a median. reddit's
+                            # webarena.721 legitimately takes 718s against a
+                            # median of 90s and a p95 of 227s; a 600s threshold
+                            # (sized off shopping_admin's 304s worst case)
+                            # killed it 8 times in a row and cost 82 minutes.
+                            # The distribution has a fat tail, so the only safe
+                            # threshold is one well past the worst case, not one
+                            # snug against the typical case.
 CHECK_S=60
 
 while true; do
