@@ -6,6 +6,31 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-12
 
+- **09:45** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex`,
+  `Appendix/appendix1.tex`, `main.tex` — **đồng bộ Chương 3 với code hiện tại.**
+  Chương 3 trước đó mô tả một phiên bản pipeline cũ. Các sai lệch đã sửa, theo
+  thứ tự mức độ nghiêm trọng: (1) **thiếu hẳn lấy mẫu không tiền tố** —
+  thêm §3.3.4 `sec:method-unprefixed` (C4 vốn đã báo cáo nhóm UNPREFIXED nhưng
+  C3 không hề định nghĩa); (2) **chia train/val ghi sai là theo trajectory**,
+  thực tế `training/prepare_dataset.py` chia theo (site, goal) + drop repeat +
+  phân tầng theo site — mâu thuẫn trực tiếp với C4 §4.2.2; (3) **thiếu cổng
+  grounding của effect** (`_EFFECT_GROUNDING_MIN=0.5`, loại effect + từ chối
+  operator, precondition chỉ chấm không loại); (4) tier-0 của frontier ghi là
+  "không có trần", thực tế `reached_template_cap=8`; (5) thiếu loại task
+  **COMPOSITE** (thứ 4) + trần NAV=1/INFO=2 vô điều kiện + thứ tự ưu tiên khi
+  tràn; (6) solver thiếu **chốt novelty** (warn 4 / stop 8), chế độ bám subgoal,
+  cổng "MOD/COMPOSITE phải làm trang đổi", và việc hành động lỗi vẫn vào history;
+  (7) judge ghi là ngoại tuyến, thực tế chạy **inline** trong vòng lặp
+  (`verify_episodes`); (8) thiếu cổng hành động hữu hiệu, loại
+  `report_infeasible` kiểu biện minh (theo `stop_reason`), loại `goto` khác
+  origin; (9) bảng action space thiếu `scroll`/`hover`/`noop` và `goto` phải là
+  đường dẫn tương đối (`webarena/urls.py`); (10) thiếu checkpoint/resume,
+  dedup 3 mức, seed capability repeats/retirement. Phụ lục: bảng tham số bổ
+  sung 8 dòng, 4 prompt cập nhật theo code, thêm prompt site\_seeder +
+  goal\_planner. `main.tex`: **tạm bỏ `Appendix/decuongchitiet`** khỏi bản build
+  (số liệu của đề cương đã nộp, không khớp C4). Build: 163 trang, 0 tham chiếu
+  hỏng (0 dấu `??` trong PDF), 8 overfull.
+
 - **09:15** — `Thesis_report/thesis_hsge_vi/Chapter{4,5,6}/*.tex` — **cập nhật
   báo cáo theo kết quả đối chứng mô hình nền trên cả 4 website.** Bảng 4.8 điền
   đủ (mô hình nền **87/655 = 13,3%** so với 136/655 = 20,8%, +7,5 đpt), dùng

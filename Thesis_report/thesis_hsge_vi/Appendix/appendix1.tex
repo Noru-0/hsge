@@ -238,13 +238,20 @@ tập tin cấu hình, rồi giá trị mặc định.
 \texttt{max\_nodes}     & 500 & Ngân sách node cho một run \\
 \texttt{max\_depth}     & 300 & Độ sâu frontier tối đa \\
 \texttt{max\_steps}     & 15  & Ngân sách hành động của solver mỗi episode \\
+\texttt{goal\_max\_steps} & 25 & Ngân sách bước cho task GOAL và task không tiền tố \\
 \texttt{max\_tasks}     & 9   & Số task đề xuất mỗi node \\
 \texttt{maturity}       & 2   & Số lần tái xuất hiện để một cụm thành skill \\
 \texttt{task\_retries}  & 0   & Số lần thử lại task thất bại (nhân chi phí) \\
-\texttt{goal\_chains\_per\_node} & 3 & Số chuỗi operator mới thử mỗi node \\
+\texttt{unprefixed\_sampling} & true & Giải lại mỗi task đã giải được từ trang chủ \\
+\texttt{verify\_episodes} & true & Judge chấm lại mọi lần tự tuyên bố thành công \\
+\texttt{plan\_subgoals} & true & Phân rã task GOAL thành chuỗi subgoal \\
+\texttt{use\_site\_seed} & true & Sinh task GOAL từ seed năng lực của website \\
+\texttt{seed\_capability\_repeats} & 3 & Số lần thử lại một năng lực seed trong một run \\
+\texttt{goal\_chains\_per\_node} & 3 & Số task GOAL mới thử mỗi node (chuỗi + seed) \\
 \texttt{predicate\_sim} & 0,6 & Ngưỡng cosine của predicate registry \\
 \texttt{mine\_hrefs}    & true & Khai thác liên kết \texttt{<a href>} vào frontier \\
-\texttt{per\_template\_cap} & 3 & Số node nhận vào cho mỗi template URL \\
+\texttt{per\_template\_cap} & 3 & Số node nhận vào cho mỗi template URL (tầng 1) \\
+\texttt{reached\_template\_cap} & 8 & Trần tương ứng cho tầng 0 (URL đã đi tới) \\
 \texttt{max\_hrefs\_per\_page} & 100 & Số liên kết khai thác mỗi trang \\
 \texttt{denylist} & - & Chặn URL đăng xuất, phân trang và sắp xếp \\
 \bottomrule
@@ -273,9 +280,18 @@ suy luận.
 Allowed actions (return exactly one): click('bid'), fill('bid','text'),
 select_option('bid','opt'), press('bid','key_comb') - e.g. press('12','Enter')
 to submit a search box or form when there is no separate submit button,
-goto('url'), go_back(), new_tab(), tab_focus(index), tab_close(),
-send_msg_to_user('done message'), report_infeasible('reason') -
-report_infeasible ONLY when the task cannot be done on this site/page.
+goto('/path') - a SITE-RELATIVE path on the current site, e.g. goto('/f/books');
+never a full http(s):// URL and never another website,
+go_back(), new_tab(), tab_focus(index), tab_close(),
+scroll(0, 400) - scroll the page down (negative to go up),
+hover('bid'), noop(500) - wait 500ms for the page to settle.
+If an action failed with a Timeout, the element exists but was not clickable yet
+(off-screen, covered, or still loading): scroll(0, 400) or hover it first, or use
+a different element - repeating the same click will time out again.
+send_msg_to_user('done message'),
+report_infeasible('reason') - report_infeasible ONLY when the task is genuinely
+impossible on this site, NOT when you are stuck, out of ideas, or cannot find
+something yet. If an element is not visible, navigate or look elsewhere first.
 \end{lstlisting}
 
 \section{Page explorer}
@@ -283,14 +299,30 @@ report_infeasible ONLY when the task cannot be done on this site/page.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 PROPOSE concrete, feasible tasks a typical user could do on THIS page.
-Return JSON {"tasks": [{"text": "...", "type": "INFO"|"NAV"|"MOD"}, ...]}.
+Return JSON {"tasks": [{"text": "...", "type":
+"INFO"|"NAV"|"MOD"|"COMPOSITE"}, ...]}.
+Phrase every task the way a real user would state their GOAL or intent - a
+natural request, NOT a click-by-click script. Say WHAT they want, not which
+buttons to press.
+  GOOD: 'How much did I spend on shopping in March?', 'Add a Samsung Galaxy
+  S21 to my wish list'.
+  BAD (too rigid / step-by-step): 'Click the March filter, then read the
+  total'.
 Rules:
 - Be SPECIFIC using names/values visible on the page (e.g. 'Add the Sony PS5
   to the cart', 'Open the post titled "Best budget GPU"'), NOT generic
   templates like 'add item to cart' or 'search for a product'.
-- "type" must be exactly one of: INFO (read/extract info), NAV (go to a
-  specific page), MOD (change content/state). List them INFO first, then NAV,
-  then MOD.
+- "type" must be exactly one of: INFO (find/extract a fact), NAV (reach a
+  specific page), MOD (change content/state - post, vote, add to cart, edit),
+  COMPOSITE (a goal that inherently needs SEVERAL actions to satisfy, stated
+  as ONE natural intent - e.g. 'Buy the cheapest in-stock wireless mouse' -
+  name the concrete targets from THIS page, but do NOT spell out the
+  individual steps). List COMPOSITE tasks FIRST, then MOD, then INFO. Include
+  at least 2-3 COMPOSITE tasks whenever the page affords a multi-step goal -
+  these are how reusable, chainable skills get discovered - and include a few
+  INFO fact-lookup tasks specific to this page. Propose AT MOST ONE NAV task
+  (list it LAST), and only to reach an important page that no COMPOSITE/MOD
+  task here would visit.
 - INFO tasks must name WHAT to find (e.g. 'Find the number of submissions for
   r/relationship_advice'), but must NEVER state the value/answer itself in the
   task text (NOT 'Find the number of submissions for r/relationship_advice
@@ -307,10 +339,17 @@ Rules:
   THIS page.
 - Prefer tasks that make progress or reveal new pages over pure
   search/sort/filter.
+- If THIS page has a form with MULTIPLE input fields (e.g. checkout, create a
+  listing/post, edit profile, contact/review form), do NOT propose a task that
+  fills just one field in isolation ('Enter an email in the email box').
+  Propose ONE task that completes the WHOLE form to accomplish its purpose.
+  Such a task is naturally COMPOSITE.
 - Focus on common things a real user of THIS site would do; skip niche tasks.
-- NEVER propose a task that would delete, deactivate, or close the user's
-  account (e.g. 'Delete your account', 'Deactivate your profile'). This
-  account is shared across exploration runs.
+- NEVER propose an account/authentication task - log in, log out, sign in,
+  sign up, register, create an account, change/reset/forgot password, edit
+  email/username, manage security settings, or delete/deactivate/close the
+  account. The session is already authenticated and the account is shared
+  across exploration runs, so these are useless and risk locking the run out.
 \end{lstlisting}
 
 \noindent
@@ -321,6 +360,64 @@ không phân loại được đều bị loại cùng với mọi task \texttt{M
 READ-ONLY MODE: propose ONLY tasks with type INFO or NAV. Do NOT propose any
 type MOD / content-modification tasks (no posting, commenting, voting, adding
 to cart, or checkout).
+\end{lstlisting}
+
+\section{Site seeder}
+\label{app:prompt-seeder}
+
+Được gọi đúng một lần cho mỗi lượt chạy, trên trang chủ. Ba ràng buộc
+``kiểm chứng được'', ``mọi giá trị đầu vào phải được nêu hoặc suy ra được'' và
+``chỉ dùng thứ trang thật sự có'' đều là phản ứng với các mục tiêu seed mà
+lượt chạy trước sinh ra rồi không ai chấm được (Mục~\ref{sec:method-seed}).
+
+\begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
+SUMMARIZE this website into a reusable profile for an exploration agent. You
+are shown the landing page (its URL and accessibility tree). Infer what KIND of
+site this is and the main GOALS a real user comes here to accomplish.
+Return JSON: {"description": "<one or two sentences: what this site is and who
+uses it>", "capabilities": [{"name": "<short slug, e.g. 'checkout'>", "goal":
+"<one natural user intent that exercises this capability>"}, ...]}.
+Rules:
+- List 4-8 capabilities, ordered from most central to most peripheral.
+- Each "goal" must be a concrete, self-contained user intent phrased the way a
+  real user would state it (WHAT they want), NOT a click-by-click script.
+- Each "goal" must inherently take SEVERAL actions to satisfy - a multi-step
+  flow, not a one-shot lookup.
+- Each "goal" must END in a CONCRETE, VERIFIABLE state that a checker (or a
+  person) could confirm from the resulting page. AVOID open-ended activities
+  whose completion is TRIVIAL TO CLAIM: never phrase a goal around 'explore',
+  'browse', 'look around', 'view the site/category', or 'find items of
+  interest'.
+- Every INPUT the goal needs must either be STATED in the goal itself or be
+  derivable from the page (e.g. 'the cheapest one', 'the most recent order').
+  NEVER leave a value for the agent to invent - it cannot know which one you
+  meant and will correctly refuse.
+- Ground every capability in what THIS site actually offers - use section/menu
+  names visible in the tree. Do NOT invent features you cannot see.
+- Prefer capabilities whose completion CHANGES site state or reaches a NEW page
+  over pure read-only lookups.
+- NEVER include an account/authentication goal.
+\end{lstlisting}
+
+\section{Bộ lập kế hoạch subgoal}
+\label{app:prompt-planner}
+
+Chỉ được gọi cho các task GOAL, khi \texttt{plan\_subgoals} được bật.
+
+\begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
+DECOMPOSE the user's GOAL into an ordered list of concrete subgoals a web agent
+will complete one at a time, in order, to achieve the GOAL on the current site.
+You are given the GOAL and the current page (URL + accessibility tree).
+Return JSON {"subgoals": ["<subgoal 1>", "<subgoal 2>", ...]}.
+Rules:
+- 2-5 subgoals. Each is a single, concrete, checkable step stated as an intent,
+  NOT a click-by-click script.
+- Order them so each subgoal leaves the page in the state the next needs.
+- The LAST subgoal must correspond to the GOAL's final end-state (what a grader
+  would check), so completing it means the whole GOAL is done.
+- Ground subgoals in what THIS page/site actually offers; do not invent steps
+  for features you cannot see.
+- If the GOAL is already a single concrete step, return it as one subgoal.
 \end{lstlisting}
 
 \section{Solver}
@@ -338,7 +435,16 @@ Think step by step; reflect on your past actions and any error from your last
 action before deciding. Output ONE action as JSON
 {"thought": "...", "action": "<one action>"}.
 Examples: {"thought": "Open the product", "action": "click('12')"} ;
+{"thought": "My last action failed because bid 41 does not exist on this page.
+Looking at the tree again, the search box is bid 57, so I will type there
+instead.", "action": "fill('57','wireless mouse')"} ;
+{"thought": "My click on bid 41 timed out, so the element is on the page but
+not clickable yet - it is probably below the fold. I will scroll down to bring
+it into view before clicking it again.", "action": "scroll(0, 400)"} ;
 {"thought": "Goal met", "action": "send_msg_to_user('done: price is $19')"}.
+When the `# Error Message from Last Action` section is not (none), your thought
+MUST say what went wrong and what you are doing differently - never repeat the
+action that just failed.
 Call send_msg_to_user ONLY when the goal is fully achieved.
 For 'go to page X' goals: once the URL/page has changed to the requested
 destination the goal is DONE - call send_msg_to_user immediately; do NOT
@@ -357,8 +463,22 @@ cấp sẵn bộ từ vựng hiện có và được yêu cầu dùng lại nguy
 You convert a reusable web skill into a PLANNING OPERATOR. Given the skill and
 the page state before/after it ran on a few sites, state the world conditions
 in short, site-agnostic natural language. Preconditions = what must already be
-true to apply the skill; effects = what becomes true after. Keep each predicate
-a terse phrase (e.g. 'search results are shown', 'an item is in the cart').
+true to apply the skill; effects = what becomes true after.
+State preconditions and effects as PAGE STATES - what page or screen the user
+is on and what is visible on it (e.g. 'on the product listing page', 'the cart
+page is shown') - NOT the mere presence of one element ('a cart link is
+present'). Include at least one precondition naming the ENTRY page-state and at
+least one effect naming the EXIT page-state, worded so a later skill starting
+from that exit state would phrase its own entry precondition identically.
+The EXIT page-state MUST DIFFER from the ENTRY page-state. If the skill stays
+on the same page, do not repeat the entry phrase - name the same page QUALIFIED
+by what the skill established on it, e.g. entry 'on the product edit page' ->
+exit 'on the product edit page with a save confirmation'. An effect that merely
+restates a precondition is discarded and the whole operator is thrown away, so
+a bare repetition wastes the skill. A qualified page-state is still a
+page-state: never fall back to an element-level effect ('the description field
+is filled') to make it differ - no other skill can phrase that as its entry
+precondition. Keep each predicate a terse phrase.
 Mark terminal=true only if an effect is a final/transactional state (order
 placed, purchase confirmed). A list of KNOWN predicates from previously induced
 operators may be provided. If a precondition or effect you want to state is
@@ -370,8 +490,11 @@ Return JSON {"preconditions": ["..."], "effects": ["..."], "terminal": bool}.
 
 \noindent
 Một bước kiểm tra grounding riêng sẽ kiểm lại từng predicate được induce trên
-chính các trạng thái trang mà nó được induce từ đó; nhờ vậy mới có được phần
-đánh giá chất lượng operator ở Chương~\ref{ch:discussion}:
+trạng thái trang của \emph{mọi} thành viên trong cụm. Kết quả của nó vừa là
+phần đánh giá chất lượng operator ở Chương~\ref{ch:discussion}, vừa là một
+cổng chặn thật: effect nào được xác nhận trên dưới một nửa số thành viên sẽ bị
+loại, và operator không còn effect nào thì bị từ chối
+(Mục~\ref{sec:method-semantic}).
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 You verify PLANNING PREDICATES against real page states. You are given a list
