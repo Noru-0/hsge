@@ -12,7 +12,7 @@ Chương~\ref{ch:experiments}.
 
 Bảng~\ref{tab:app-modules} liệt kê mọi module của phần cài đặt kèm vai trò của
 nó. Phần lõi của pipeline được giữ nhỏ một cách có chủ đích: toàn bộ đường đi
-từ một trajectory thô đến một skill được chấp nhận chưa tới 700 dòng, và chính
+từ một quỹ đạo thô đến một skill được chấp nhận chưa tới 700 dòng, và chính
 điều đó làm cho bộ test mock tất định trở nên khả thi.
 
 {\footnotesize
@@ -55,7 +55,7 @@ DFS có chặn \texttt{all\_chains} trên đồ thị toán tử \\
 skill card cùng các quan sát biên; kiểm tra grounding \\
 \texttt{predicate\_registry.py} &  66 & Chuẩn hóa predicate NL tự do thành id
 ổn định theo ngưỡng cosine \\
-\texttt{curriculum.py}  &  60 & Ghép skill thành chuỗi task dễ$\rightarrow$khó \\
+\texttt{curriculum.py}  &  60 & Ghép skill thành chuỗi tác vụ dễ$\rightarrow$khó \\
 \texttt{transfer.py}    &  53 & Truy hồi, ground lại và kiểm chứng một skill
 trên site mới \\
 \texttt{llm.py}         & 149 & Giao diện \texttt{LLM.complete\_json} và
@@ -68,8 +68,8 @@ tùy chọn vision) và \texttt{STEmbedder} \\
 \multicolumn{3}{@{}l}{\emph{Runtime WebArena (\texttt{hsge/webarena/})}} \\
 \midrule
 \texttt{runtime.py}     & 681 & \texttt{WebArenaExplorer}: vòng lặp frontier,
-thăng skill$\rightarrow$operator, goal task, lưu trữ \\
-\texttt{agents.py}      & 363 & \texttt{PageExplorer} (đề xuất task) và
+thăng skill$\rightarrow$operator, tác vụ mục tiêu, lưu trữ \\
+\texttt{agents.py}      & 363 & \texttt{PageExplorer} (đề xuất tác vụ) và
 \texttt{Solver} (vòng lặp hành động), prompt, phát hiện kẹt \\
 \texttt{browser.py}     & 143 & \texttt{WebArenaBrowser}: lớp bọc BrowserGym,
 quan sát, ảnh chụp màn hình, khai thác href \\
@@ -115,10 +115,10 @@ module là điều làm cho các artifact do LLM sinh ra có thể soi xét đư
  & \texttt{axtree}         & Axtree đầy đủ (chỉ có ở backend thật) \\
 \midrule
 \multirow{5}{*}{\texttt{SubTrajectory}}
- & \texttt{steps}        & Lát cắt liên tục của một trajectory \\
+ & \texttt{steps}        & Lát cắt liên tục của một quỹ đạo \\
  & \texttt{subgoal}      & Mô tả subgoal bằng ngôn ngữ tự nhiên \\
  & \texttt{source\_site} & Tên miền nơi lát cắt được thu \\
- & \texttt{source\_task} & Task sinh ra trajectory cha \\
+ & \texttt{source\_task} & Task sinh ra quỹ đạo cha \\
  & \texttt{success}      & Chỉ các lần thành công mới đủ điều kiện khám phá \\
 \midrule
 \multirow{4}{*}{\texttt{ParamSlot}}
@@ -162,7 +162,7 @@ Ba giao diện tách pipeline khỏi mọi thứ tốn tiền, cần GPU, hoặc
 
 \begin{itemize}
   \item \texttt{LLM.complete\_json(system, user)} dùng bởi segmentation,
-        abstraction, grounding, operator induction và cả hai agent.
+        abstraction, grounding, operator induction và cả hai tác nhân.
         \texttt{MockLLM} trả về đáp án kịch bản; \texttt{OpenAILLM} gọi bất kỳ
         endpoint tương thích OpenAI nào, thử lại tối đa ba lần với backoff mũ
         cho các lỗi tạm thời (rate limit, kết nối, timeout, 5xx - không bao
@@ -206,7 +206,7 @@ gọi'' là bậc độ lớn số lần gọi trên mỗi node, chính nó bi�
 \texttt{detail=low}, temperature 0,7 để đề xuất đa dạng \\
 \texttt{solver} & GPT-4o-mini & tối đa
 \texttt{max\_steps}/episode & Vision + Set-of-Marks, temperature 0,0 \\
-\texttt{trajectory\_segmenter} & DeepSeek & mỗi trajectory & Chỉ văn bản \\
+\texttt{trajectory\_segmenter} & DeepSeek & mỗi quỹ đạo & Chỉ văn bản \\
 \texttt{skill\_abstractor} & DeepSeek & mỗi cụm chín & Chỉ văn bản \\
 \texttt{skill\_verifier} & DeepSeek & mỗi skill ứng viên & Chỉ văn bản \\
 \texttt{operator\_inducer} & DeepSeek & mỗi skill được nhận & Chỉ văn bản \\
@@ -235,16 +235,16 @@ tập tin cấu hình, rồi giá trị mặc định.
 \texttt{max\_nodes}     & 500 & Ngân sách node cho một run \\
 \texttt{max\_depth}     & 300 & Độ sâu frontier tối đa \\
 \texttt{max\_steps}     & 15  & Ngân sách hành động của solver mỗi episode \\
-\texttt{goal\_max\_steps} & 25 & Ngân sách bước cho task GOAL và task không tiền tố \\
-\texttt{max\_tasks}     & 9   & Số task đề xuất mỗi node \\
+\texttt{goal\_max\_steps} & 25 & Ngân sách bước cho tác vụ GOAL và tác vụ không tiền tố \\
+\texttt{max\_tasks}     & 9   & Số tác vụ đề xuất mỗi node \\
 \texttt{maturity}       & 2   & Số lần tái xuất hiện để một cụm thành skill \\
-\texttt{task\_retries}  & 0   & Số lần thử lại task thất bại (nhân chi phí) \\
-\texttt{unprefixed\_sampling} & true & Giải lại mỗi task đã giải được từ trang chủ \\
+\texttt{task\_retries}  & 0   & Số lần thử lại tác vụ thất bại (nhân chi phí) \\
+\texttt{unprefixed\_sampling} & true & Giải lại mỗi tác vụ đã giải được từ trang chủ \\
 \texttt{verify\_episodes} & true & Judge chấm lại mọi lần tự tuyên bố thành công \\
-\texttt{plan\_subgoals} & true & Phân rã task GOAL thành chuỗi subgoal \\
-\texttt{use\_site\_seed} & true & Sinh task GOAL từ seed năng lực của website \\
+\texttt{plan\_subgoals} & true & Phân rã tác vụ GOAL thành chuỗi subgoal \\
+\texttt{use\_site\_seed} & true & Sinh tác vụ GOAL từ seed năng lực của website \\
 \texttt{seed\_capability\_repeats} & 3 & Số lần thử lại một năng lực seed trong một run \\
-\texttt{goal\_chains\_per\_node} & 3 & Số task GOAL mới thử mỗi node (chuỗi + seed) \\
+\texttt{goal\_chains\_per\_node} & 3 & Số tác vụ GOAL mới thử mỗi node (chuỗi + seed) \\
 \texttt{predicate\_sim} & 0,6 & Ngưỡng cosine của predicate registry \\
 \texttt{mine\_hrefs}    & true & Khai thác liên kết \texttt{<a href>} vào frontier \\
 \texttt{per\_template\_cap} & 3 & Số node nhận vào cho mỗi template URL (tầng 1) \\
@@ -262,7 +262,7 @@ Mọi prompt được chép lại nguyên văn, đúng dạng model thực sự 
 nguyên tiếng Anh vì đó chính là văn bản chạy thật. Chúng được đặt ở đây thay vì
 trong Chương~\ref{ch:method} vì cách diễn đạt chính xác của chúng là kết quả
 của những sửa chữa hành vi bàn ở Chương~\ref{ch:discussion}: việc phân loại
-task có cấu trúc, điều cấm lộ đáp án và điều cấm đề xuất trùng lặp ở
+tác vụ có cấu trúc, điều cấm lộ đáp án và điều cấm đề xuất trùng lặp ở
 Mục~\ref{app:prompt-explorer} mỗi thứ đều thay thế cho một cách diễn đạt đã bị
 một run thật chứng minh là hỏng.
 
@@ -350,8 +350,8 @@ Rules:
 \end{lstlisting}
 
 \noindent
-Ở chế độ read-only, đoạn ghi chú sau được nối thêm, và mọi task mà bộ phân tích
-không phân loại được đều bị loại cùng với mọi task \texttt{MOD}:
+Ở chế độ read-only, đoạn ghi chú sau được nối thêm, và mọi tác vụ mà bộ phân tích
+không phân loại được đều bị loại cùng với mọi tác vụ \texttt{MOD}:
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 READ-ONLY MODE: propose ONLY tasks with type INFO or NAV. Do NOT propose any
@@ -399,7 +399,7 @@ Rules:
 \section{Bộ lập kế hoạch subgoal}
 \label{app:prompt-planner}
 
-Chỉ được gọi cho các task GOAL, khi \texttt{plan\_subgoals} được bật.
+Chỉ được gọi cho các tác vụ GOAL, khi \texttt{plan\_subgoals} được bật.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 DECOMPOSE the user's GOAL into an ordered list of concrete subgoals a web agent
@@ -420,7 +420,7 @@ Rules:
 \section{Solver}
 \label{app:prompt-solver}
 
-Đây chính là prompt mà model fine-tune được huấn luyện theo; bộ dựng dataset
+Đây chính là prompt mà model tinh chỉnh được huấn luyện theo; bộ dựng dataset
 import trực tiếp hằng số này thay vì chép lại, và đó là điều bảo đảm prompt
 parity giữa huấn luyện và suy luận.
 
@@ -509,7 +509,7 @@ the order given.
 \label{app:prompt-judge}
 
 Judge được yêu cầu một cách có chủ đích là chấm trạng thái cuối chứ không chấm
-lời tự nhận của agent, đúng thất bại mà nó sinh ra để bắt.
+lời tự nhận của tác nhân, đúng thất bại mà nó sinh ra để bắt.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 You are a strict grader of a web agent's completed task. You are given the GOAL
@@ -554,7 +554,7 @@ bày: node bị bỏ vì lỗi, số lần khôi phục, và cơ cấu operator 
 \caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt
 thu thập chính thức. ``Node lỗi tải'' là node mà trình duyệt không mở được và
 cơ chế hỏng mềm đã bỏ qua; ``Reset lỗi'' là số lần đưa trình duyệt về trang
-của node trước một task bị thất bại. Hai cột cuối tách số operator bị từ chối
+của node trước một tác vụ bị thất bại. Hai cột cuối tách số operator bị từ chối
 theo lý do.}
 \label{tab:app-runs-final}
 \small
@@ -606,7 +606,7 @@ cuối cùng, nên chúng không được tính vào bất kỳ thống kê nào
 
 Bảng~\ref{tab:app-runs} báo cáo các run của giai đoạn phát triển. Run 1-9
 khám phá instance Reddit; run 10-12 khám phá GitLab. Run 4-6 là các lượt sinh
-task dùng lại đồ thị có sẵn nên không có số node riêng. Trạng thái \emph{bị
+tác vụ dùng lại đồ thị có sẵn nên không có số node riêng. Trạng thái \emph{bị
 ngắt} nghĩa là run được dừng thủ công, không phải là run hỏng; run~10 là run
 duy nhất kết thúc bằng lỗi (một timeout điều hướng của trình duyệt mà cơ chế
 xử lý lỗi ở mức node đã chuyển thành một node bị bỏ qua trước khi run được
@@ -615,7 +615,7 @@ dừng).
 \begin{table}[H]
 \centering
 \caption[Thống kê khám phá theo từng run]{Thống kê khám phá theo từng run. Cột
-``Task'' đếm mỗi task đúng một lần, theo kết cục cuối cùng.}
+``Task'' đếm mỗi tác vụ đúng một lần, theo kết cục cuối cùng.}
 \label{tab:app-runs}
 \small
 \begin{tabular}{@{}lrrrrrrrr@{}}
@@ -651,18 +651,18 @@ ra trùng với một node đã thăm, xác nhận rằng chuyện các URL khá
 cùng nội dung là có thật trên những site này, nhưng không phải là chi phí chi
 phối.
 
-\section{Các lượt sinh task của giai đoạn phát triển}
+\section{Các lượt sinh tác vụ của giai đoạn phát triển}
 \label{app:runs-gen}
 
 Run 4-6, vẫn thuộc bộ run phát triển, đo riêng khâu đề xuất và kiểm chứng
-task trên một đồ thị đã khám phá sẵn. Bảng~\ref{tab:app-gen} tách kết cục của chúng theo loại task. Quy luật
-nhất quán ở cả ba lượt: task \texttt{INFO} kiểm chứng đạt ổn định nhất, task
+tác vụ trên một đồ thị đã khám phá sẵn. Bảng~\ref{tab:app-gen} tách kết cục của chúng theo loại tác vụ. Quy luật
+nhất quán ở cả ba lượt: tác vụ \texttt{INFO} kiểm chứng đạt ổn định nhất, tác vụ
 \texttt{MOD} kém nhất, và khoảng một đề xuất trong mười bị bỏ vì đã cũ (trang
 mà nó nhắc tới đã thay đổi kể từ lúc đồ thị được ghi.
 
 \begin{table}[H]
 \centering
-\caption[Sinh và kiểm chứng task theo loại]{Sinh và kiểm chứng task theo loại,
+\caption[Sinh và kiểm chứng tác vụ theo loại]{Sinh và kiểm chứng tác vụ theo loại,
 run 4-6.}
 \label{tab:app-gen}
 \small
@@ -685,19 +685,19 @@ run 4-6.}
 \end{table}
 
 \noindent
-Gộp lại, task \texttt{INFO} kiểm chứng đạt 86\%, \texttt{NAV} đạt 72\% và
+Gộp lại, tác vụ \texttt{INFO} kiểm chứng đạt 86\%, \texttt{NAV} đạt 72\% và
 \texttt{MOD} đạt 73\%. Việc \texttt{NAV} không hề dễ hơn \texttt{MOD} mới là
-điều phản trực giác: task điều hướng thất bại không phải vì đích đến khó tới,
-mà vì agent thường không nhận ra là mình đã tới nơi, đúng hành vi mà mệnh đề
+điều phản trực giác: tác vụ điều hướng thất bại không phải vì đích đến khó tới,
+mà vì tác nhân thường không nhận ra là mình đã tới nơi, đúng hành vi mà mệnh đề
 ``một khi URL đã đổi thì mục tiêu ĐÃ XONG'' trong prompt của solver
 (Mục~\ref{app:prompt-solver}) được thêm vào để sửa.
 
-\section{Goal task được ghép}
+\section{Goal tác vụ được ghép}
 \label{app:runs-goal}
 
-Trong suốt \emph{mười hai run phát triển}, không một goal task ghép nào được
+Trong suốt \emph{mười hai run phát triển}, không một tác vụ mục tiêu ghép nào được
 thử: bộ đếm chuỗi của cả mười hai bản tóm tắt đều bằng không, và mọi episode
-đã ghi đều mang nhãn task mức thấp. Run~7, đồ thị lớn nhất của giai đoạn đó
+đã ghi đều mang nhãn tác vụ mức thấp. Run~7, đồ thị lớn nhất của giai đoạn đó
 với mười ba operator, chỉ chứa đúng một cạnh
 effect$\rightarrow$precondition, và cạnh ấy chỉ hình thành khi operator thứ
 mười ba, cũng là operator cuối cùng, được quy nạp -- thời điểm mà run đã bị
@@ -757,14 +757,61 @@ effect của operator này trùng precondition của operator kia, trong khi s�
 Mục~\ref{sec:disc-operators} cho thấy không tách nổi cặp đồng nghĩa thật khỏi
 cặp không liên quan ở bất kỳ ngưỡng đơn lẻ nào.
 
-\section{Kết quả đánh giá theo từng task}
+\section{Đối chiếu kết quả đánh giá theo từng tác vụ}
 \label{app:runs-eval}
 
-\textit{[Sẽ bổ sung khi các lượt đánh giá cho những site còn lại và các lần lặp
-thống kê ở Mục~\ref{sec:exp-stats} hoàn tất. Mục này sẽ liệt kê, cho từng task
-trong 180 task chính thức của mỗi site, kết cục của bản gốc và bản fine-tune,
-để tỉ lệ thành công tổng hợp ở Mục~\ref{sec:exp-main} có thể được soi lại theo
-từng task.]}
+Tỷ lệ hoàn thành tổng hợp ở Mục~\ref{sec:exp-main} che mất một điều mà chỉ
+phép đối chiếu theo từng tác vụ mới thấy: mô hình sau tinh chỉnh không chỉ
+giải thêm được tác vụ mới, nó còn \emph{đánh mất} một số tác vụ mà mô hình
+nền giải được. Bảng~\ref{tab:app-mcnemar} tách 655 tác vụ của bốn website
+theo cả hai kết cục.
+
+\begin{table}[H]
+\centering
+\caption[Đối chiếu theo cặp giữa mô hình nền và mô hình sau tinh chỉnh]{Đối
+chiếu theo cặp trên cùng một tập tác vụ, cùng prompt và cùng bộ chấm. Hai
+cột giữa là những ô mà phép kiểm định McNemar ở Mục~\ref{sec:exp-baseline}
+thực sự dùng tới.}
+\label{tab:app-mcnemar}
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Website} & \textbf{Tác vụ} & \textbf{Cả hai đạt} &
+\textbf{Chỉ tinh chỉnh} & \textbf{Chỉ mô hình nền} & \textbf{Cả hai hỏng} \\
+\midrule
+Shopping       & 187 & 27 & 26 & 10 & 124 \\
+Reddit         & 106 &  2 & 20 &  5 &  79 \\
+GitLab         & 180 & 15 & 18 &  5 & 142 \\
+Shopping Admin & 182 & 15 & 13 &  8 & 146 \\
+\midrule
+\textbf{Tổng} & \textbf{655} & \textbf{59} & \textbf{77} & \textbf{28} &
+\textbf{491} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Cột ``chỉ mô hình nền'' là phần đáng đọc nhất. 28 tác vụ trong cột đó là
+những trường hợp việc tinh chỉnh làm mô hình \emph{kém đi}, và chúng phân bố
+trên cả bốn website chứ không dồn vào một chỗ. Mã số của chúng theo bộ chuẩn
+WebArena được liệt kê nguyên vẹn dưới đây để có thể soi lại từng trường hợp:
+
+\begin{itemize}
+  \item \textbf{Shopping} (10): 150, 190, 234, 235, 299, 359, 518, 519, 794,
+  795.
+  \item \textbf{Shopping Admin} (8): 211, 344, 347, 470, 538, 680, 775, 776.
+  \item \textbf{Reddit} (5): 27, 602, 607, 642, 717.
+  \item \textbf{GitLab} (5): 134, 135, 662, 753, 785.
+\end{itemize}
+
+\noindent
+Cần nói rõ giới hạn của danh sách này: mỗi ô chỉ đến từ \emph{một} lần chạy
+cho mỗi mô hình, nên một phần trong 28 trường hợp trên có thể là nhiễu của
+website sống chứ không phải suy giảm thật. Đó cũng là lý do các lần chạy lặp
+ở Mục~\ref{sec:exp-stats} còn cần thiết. Bản ghi đầy đủ theo từng tác vụ,
+gồm mục tiêu, số bước, số lỗi hành động và hành động cuối của cả hai mô hình,
+nằm trong tạo phẩm đánh giá đi kèm khóa luận
+(Mục~\ref{app:repro-artifacts}).
 
 \chapter{Hướng dẫn tái lập}
 \label{app:repro}
@@ -794,7 +841,7 @@ Pipeline thật cần thêm \texttt{sentence-transformers}, \texttt{openai},
 \texttt{requests}, một instance WebArena tự dựng, cùng thông tin xác thực API
 đặt trong một tập tin môi trường không bao giờ được commit.
 
-\section{Thu thập trajectory}
+\section{Thu thập quỹ đạo}
 \label{app:repro-collect}
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
@@ -813,7 +860,7 @@ Việc đăng nhập cho bốn site có tài khoản chỉ diễn ra một lần
 dạng storage state của trình duyệt; bản cache này là một thông tin phiên còn
 sống nên bị loại khỏi quản lý phiên bản. Chỉ chạy một worker: các site WebArena
 là trạng thái chia sẻ có thể thay đổi, các run song song sẽ giẫm lên nhau.
-Artifact (skill, operator, đồ thị, predicate, kết cục task theo node và một
+Artifact (skill, operator, đồ thị, predicate, kết cục tác vụ theo node và một
 bản tóm tắt) được ghi sau mỗi node, nên một run bị ngắt vẫn để lại ảnh chụp
 nhất quán, và mọi sự kiện đều được ghi song song ra một log JSON lines.
 
@@ -830,15 +877,15 @@ python build_sft_dataset.py outputs/<run>/episodes train.jsonl --require-judge
 
 \noindent
 \texttt{--require-judge} loại mọi episode tự nhận thành công nhưng chưa từng
-được judge hoặc bị judge đánh trượt, đồng thời vẫn giữ những episode agent báo
+được judge hoặc bị judge đánh trượt, đồng thời vẫn giữ những episode tác nhân báo
 là bất khả thi; việc chấm không áp dụng cho chúng và chúng vẫn là mục tiêu
 huấn luyện hợp lệ.
 
 \section{Fine-tune, phục vụ và đánh giá}
 \label{app:repro-train}
 
-Việc fine-tune dùng LoRA trên model gốc, với phép chia tập được thực hiện theo
-trọn trajectory chứ không theo từng bước, để không trajectory nào góp bước cho
+Việc tinh chỉnh dùng LoRA trên model gốc, với phép chia tập được thực hiện theo
+trọn quỹ đạo chứ không theo từng bước, để không quỹ đạo nào góp bước cho
 cả hai phía. Chat template phải tắt chế độ thinking: dữ liệu thu được không
 chứa vết suy luận theo dạng template mong đợi, và để bật sẽ huấn luyện model
 sinh ra một phần mà nó chưa từng thấy mục tiêu nào. Sau khi trộn adapter,

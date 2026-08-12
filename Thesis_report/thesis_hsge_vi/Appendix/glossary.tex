@@ -27,6 +27,7 @@ best practice & Kinh nghiệm thực hành tốt đã được kiểm chứng, n
 lại trong các dự án tương tự. \\
 chat template & Khuôn dạng hội thoại mà một mô hình ngôn ngữ được huấn luyện
 để đọc (cách đánh dấu vai trò, lượt nói, chế độ suy nghĩ). \\
+COMPOSITE & Nhãn của một tác vụ phải qua nhiều thao tác và nhiều trạng thái trang mới xong (phân biệt với INFO/NAV/MOD); đây là nhóm sinh ra phần lớn skill. \\
 crawl / crawling & Duyệt và thu thập trang web tự động theo liên kết. \\
 curriculum & Trình tự huấn luyện sắp xếp dữ liệu từ dễ đến khó. \\
 episode & Một lượt agent thực hiện trọn vẹn một task, tính từ trạng thái
@@ -35,6 +36,8 @@ fine-tune / fine-tuning & Tinh chỉnh: huấn luyện tiếp một mô hình đ
 pretrain trên dữ liệu chuyên biệt để chuyên hóa nó cho một nhiệm vụ. \\
 frontier & Biên khám phá: hàng đợi các URL ứng viên chưa thăm, quyết định
 ``đi đâu tiếp theo'' trong quá trình khám phá website. \\
+goal task & Tác vụ mục tiêu: một tác vụ ngữ nghĩa nhiều bước, sinh từ chuỗi operator hoặc từ seed năng lực website. \\
+grounding & Đối chiếu một mệnh đề do LLM sinh với dữ liệu thật (trạng thái trang trước/sau của các thành viên trong cụm) để xem mệnh đề đó có đúng hay không. \\
 instance & Một bản triển khai cụ thể của website hoặc dịch vụ (ví dụ bản
 GitLab được dựng riêng cho benchmark). \\
 judge & Bộ chấm độc lập: một LLM thứ hai kiểm tra lại các episode mà agent
@@ -52,6 +55,7 @@ pipeline & Chuỗi xử lý: dãy các bước tự động nối tiếp nhau, �
 trước là đầu vào của bước sau. \\
 precondition / effect & Điều kiện tiên quyết / hiệu ứng của một operator,
 biểu diễn bằng các mệnh đề ngôn ngữ tự nhiên đã được chuẩn hóa. \\
+predicate registry & Sổ đăng ký mệnh đề: thành phần quy các mệnh đề ngôn ngữ tự nhiên tự do về những mã định danh ổn định, để effect và precondition so khớp được với nhau. \\
 prompt & Toàn bộ văn bản đầu vào đưa cho mô hình ngôn ngữ trong một lần
 gọi (bao gồm chỉ dẫn hệ thống, quan sát, lịch sử). \\
 prompt parity & Nguyên tắc ``đồng nhất prompt'': prompt trong dữ liệu huấn
@@ -59,15 +63,19 @@ luyện phải trùng khớp từng cấu trúc với prompt agent nhìn thấy 
 thật. \\
 runtime & Giai đoạn agent thực sự chạy trong môi trường (phân biệt với giai
 đoạn huấn luyện); cũng dùng để chỉ phần mã lo việc vận hành đó. \\
+seed / site seeder & Seed năng lực website: bản tóm tắt trang chủ thành mô tả website kèm bốn tới tám năng lực mà website cho phép người dùng thực hiện; mỗi năng lực trở thành một goal task. \\
 self-host / self-hosted & Tự triển khai trên hạ tầng của mình thay vì dùng
 dịch vụ bên thứ ba. \\
 semantic task & Task ngữ nghĩa: nhiệm vụ dài hạn được sinh ra từ operator
 đồ thị toán tử bằng cách ghép chuỗi. \\
 skill & Kỹ năng: một hành vi tái sử dụng được, có tham số, được phát hiện
 từ các trajectory lặp lại và kiểm chứng trước khi đưa vào thư viện. \\
+subgoal & Mục tiêu con: một chặng có thứ tự trong kế hoạch phân rã từ một tác vụ ngữ nghĩa; solver ở chế độ bám subgoal chỉ làm việc trên subgoal hiện tại. \\
 task & Nhiệm vụ giao cho agent, phát biểu bằng ngôn ngữ tự nhiên. \\
+tautology & Mệnh đề hiển nhiên đúng: ở đây là một effect của operator chỉ lặp lại chính precondition của nó, nên không diễn tả thay đổi trạng thái nào. \\
 trajectory & Quỹ đạo tương tác: chuỗi các cặp (quan sát, hành động) sinh ra
 khi agent thực hiện một task. \\
+unprefixed sampling & Lấy mẫu không tiền tố: giải lại một tác vụ đã thành công từ trang chủ thay vì từ trang gắn với nó, để quỹ đạo chứa cả phần tìm đường. \\
 web agent & Tác nhân web: agent thao tác website qua giao diện người dùng
 (đọc trang, click, gõ phím) như một người dùng thật. \\
 workflow & Chuỗi thao tác nghiệp vụ lặp lại theo một trình tự quen thuộc. \\
