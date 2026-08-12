@@ -6,6 +6,26 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-12
 
+- **12:15** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex` — **rà văn
+  phong toàn Chương 3** theo phản hồi của user ("từ chương 3 từ ngữ còn AI và
+  dịch sát tiếng Anh"). Sửa từng mục §3.1→§3.8, chỉ đụng câu chữ: giữ nguyên
+  mọi số liệu, `\ref`, `\cite`, mã giả và bảng. Bốn nhóm lỗi đã xử lý: (a)
+  danh từ hóa và calque tiếng Anh ("chịu trách nhiệm…", "đóng vai trò như…",
+  "Điều này dẫn đến…", "được biên dịch thành tập dữ liệu", "Cơ chế này đảm bảo
+  rằng…"); (b) "sẽ" dùng làm thì hiện tại khi mô tả cơ chế: **54 → 14** (14
+  chỗ còn lại là điều kiện/tương lai thật); (c) **thuật ngữ đôi**: agent 16 →
+  0 (dùng "tác nhân"), trajectory 16 → 0 (dùng "quỹ đạo"), "chuỗi xử lý
+  (pipeline)" chú lặp → chỉ "pipeline", "semantic task"/"goal task" → "tác vụ
+  ngữ nghĩa"/"tác vụ mục tiêu"; (d) từ đao to búa lớn ("kiến tạo nên", "thoái
+  hóa thành", "ồ ạt", "dừng một cách ồn ào"). **Chốt quy ước "episode"** (từ
+  khóa Bảng thuật ngữ, đang chiếm đa số ở C4 + phụ lục) thay cho "phiên" khi
+  nói về một lượt giải task — user chọn; "phiên làm việc" (session đăng nhập)
+  giữ nguyên. Đổi tiêu đề §3.5 "Sinh semantic task…" → "Sinh tác vụ ngữ
+  nghĩa…", §3.5.1 "Induction operator" → "Quy nạp operator", §3.7 "Fine-tune…"
+  → "Tinh chỉnh…". Tác dụng phụ: câu ≥ 40 âm tiết 62 → 46, quyển ngắn đi 3
+  trang (160 → 157). Build sạch: 0 error, 0 undefined ref/cite, 7 overfull
+  (bằng trước khi sửa). **Chưa đụng C4–C6** — user muốn đọc lại C3 trước.
+
 - **10:00** — `Thesis_report/thesis_hsge_vi/Chapter{1,3,4,5,6}`,
   `Appendix/appendix1.tex` — **rút gọn Chương 3 theo yêu cầu user + gom cơ chế
   chấm thành công.** (a) Thêm §3.3.5 `sec:method-success`: gom ba cơ chế quyết

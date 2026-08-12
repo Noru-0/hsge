@@ -258,3 +258,53 @@ claim không có dữ liệu đỡ. Đã gỡ ở C1 (danh sách đóng góp), C
 Tham số Ch3 ↔ `tab:app-params` khớp hoàn toàn (k=6 mặc định/9 đã dùng, c=3
 tầng 1, c=8 tầng 0, maturity 2, predicate\_sim 0,6, goal\_max\_steps cho lượt
 không tiền tố, +8 tham số mới bổ sung ngày 12-08).
+
+## Đợt rà văn phong Chương 3 (2026-08-12 12:15)
+
+User phản hồi: "từ chương 3 thì từ ngữ còn AI và kiểu dịch từ tiếng Anh sang
+tiếng Việt quá". Đã sửa từng mục §3.1→§3.8, **chỉ đụng câu chữ** — số liệu,
+`\ref`, `\cite`, mã giả, bảng giữ nguyên. Build sạch (157 trang, 0 error,
+0 undefined, 7 overfull — bằng trước khi sửa).
+
+**Bốn dấu hiệu "dịch máy" đã nhận diện và xử lý** (dùng lại làm checklist cho
+C4–C6):
+
+1. Danh từ hóa + calque: "chịu trách nhiệm phân cắt", "đóng vai trò như một
+   bản tuần tự hóa", "Điều này dẫn đến", "Cơ chế này đảm bảo rằng", "được biên
+   dịch thành tập dữ liệu", "Việc X là không khả thi do…".
+2. **"sẽ" làm thì hiện tại** khi mô tả cơ chế — dấu hiệu dịch thẳng thì tương
+   lai/simple present của tiếng Anh. C3: 54 → 14 (14 chỗ còn lại là điều kiện
+   hoặc tương lai thật).
+3. **Thuật ngữ đôi trong cùng một chương** — dấu hiệu rõ nhất của bản dịch
+   nửa vời. C3 trước khi sửa: agent 16 / tác nhân 14, task 36 / tác vụ 83,
+   trajectory 16 / quỹ đạo 39, pipeline 16 / chuỗi xử lý 3.
+4. Từ đao to búa lớn: "kiến tạo nên", "thoái hóa thành", "ồ ạt", "dừng một
+   cách ồn ào" (dịch literal của *noisily*).
+
+**Quy ước thuật ngữ đã chốt cho C3 (user duyệt 12-08)** — áp dụng tiếp khi
+sửa C4–C6:
+
+| Khái niệm | Từ dùng | Ghi chú |
+|---|---|---|
+| agent | **tác nhân** | "agent" chỉ còn trong Bảng thuật ngữ |
+| task | **tác vụ** | trừ tên nhãn `INFO/NAV/MOD/COMPOSITE/GOAL` |
+| trajectory | **quỹ đạo** | |
+| episode | **episode** | user chọn (đa số ở C4 + phụ lục, là từ khóa glossary); "phiên làm việc" = session đăng nhập, giữ nguyên |
+| pipeline | **pipeline** | bỏ chú "(chuỗi xử lý)" lặp — đã có trong glossary |
+| semantic task | **tác vụ ngữ nghĩa** | đổi cả tiêu đề §3.5 |
+| goal task | **tác vụ mục tiêu** | chú tiếng Anh một lần ở §3.5.3 |
+| induction | **quy nạp** | đổi tiêu đề §3.5.1 |
+| fine-tune | **tinh chỉnh** | đổi tiêu đề §3.7 |
+
+Nguyên tắc chung: thuật ngữ đã có trong `glossary.tex` thì **không chú thích
+lại** mỗi lần dùng (đúng quy ước user ở [05-bai-hoc-review](05-bai-hoc-review.md)).
+
+**Tác động lên các khoản nợ đang mở:** nợ #5 (văn phong) đỡ được một phần —
+câu ≥ 40 âm tiết 62 → 46 theo cách đếm tự động, nhưng đây là **tác dụng phụ**
+của việc gọn câu, chưa phải đợt tách câu có chủ đích, nên vẫn để nợ #5 mở.
+Chương ngắn đi 3 trang (36 → 33), nợ #4 (độ dài) nhích một chút. Các nợ #1,
+#2, #3, #6, #7 **chưa đụng tới**.
+
+**Chưa làm**: C4, C5, C6 vẫn còn nguyên lỗi cùng loại — C6 nặng nhất
+("agent" 12 lần / "tác nhân" 0, "task" 21 / "tác vụ" 0). User muốn đọc lại C3
+rồi mới quyết.
