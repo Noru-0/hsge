@@ -52,17 +52,34 @@ thành task dài hạn; đồng thời thu thập trajectory → xây dataset SF
 LLM nhỏ. Chạy được cả trên mock backend (deterministic, không cần API key) lẫn
 WebArena thật (BrowserGym).
 
-## Kết quả thực nghiệm đã có (tính đến 2026-07-15)
+## Kết quả thực nghiệm CHÍNH THỨC (chốt 2026-08-12) — dùng bộ số này
 
-- **Pipeline SFT 3 giai đoạn**: judge_episodes → reannotate_thoughts →
-  build_sft_dataset (train.jsonl, 370 examples / 352 train / 18 val,
-  `training/train_12.jsonl`).
-- **LoRA fine-tune Qwen3.5-9B** (LLaMA-Factory, template `qwen3_5_nothink`,
-  3 epochs, train_loss 0.32 / eval_loss 0.24) trên vast.ai A100-80GB.
-- **Eval chính thức WebArena GitLab 180 task** (BrowserGym, prompt của Solver
-  thật): **baseline 10/180 = 5.56% vs finetuned 12/180 = 6.67%** (+1.1pp,
-  ~20% relative). ⚠️ Sample nhỏ, n=1 mỗi task — báo cáo phải trình bày là tín
-  hiệu định hướng, không phải kết luận (xem 05-bai-hoc-review.md mục P0-1).
+Đợt 4 website, 655 task chính thức, mỗi task chạy 1 lần, cùng prompt/ngân sách
+15 bước/bộ chấm (`gpt-4-turbo` thay cho `gpt-4-1106-preview` đã ngừng).
+Nguồn: `outputs/eval/eval_{base,finetuned}/<site>/*/summary.json`.
+
+| site | nền | fine-tune | Δ | p (McNemar) |
+|---|---|---|---|---|
+| shopping | 37/187 = 19,8% | 53/187 = 28,3% | +8,6 | 0,012 |
+| reddit | 7/106 = 6,6% | 22/106 = 20,8% | +14,2 | 0,005 |
+| gitlab | 20/180 = 11,1% | 33/180 = 18,3% | +7,2 | 0,012 |
+| shopping_admin | 23/182 = 12,6% | 28/182 = 15,4% | +2,7 | **0,383 (ko ý nghĩa)** |
+| **tổng** | **87/655 = 13,3%** | **136/655 = 20,8%** | **+7,5** | **<0,001** |
+
+- Số nền của shopping/shopping_admin là **bản đã điều chỉnh của user** (thô
+  47 và 29 → 37 và 23; loại các thành công giả: fallback `report_infeasible`
+  trùng nhãn infeasible, form điền mà chưa submit, đoán bừa "0" trùng đáp án).
+  Thô toàn cục = 103/655 = 15,7%. Cả hai bản đều được ghi trong C4 §4.4.2.
+- **Phân tách quan trọng nhất**: nền chết vì đầu ra không phân giải được ở
+  **170/655 (26,0%)** phiên, finetuned 2/655. Trên đúng 170 task đó: nền 0,
+  finetuned 35. Trên 485 task nền chạy sạch: 87 vs 101 → **p = 0,120, chưa
+  đạt ý nghĩa**. Tức 35/49 task tăng thêm thuộc về tuân thủ định dạng.
+  → Không được phát biểu "pipeline dạy agent thao tác web giỏi hơn"; phát biểu
+  đúng là "dạy được tính kỷ luật của giao diện hành động, phần còn lại mới là
+  tín hiệu, cần ablation đồ thị vs phẳng".
+- Số cũ **"GitLab nền 5,6% (10/180)" đã chết** — thay bằng 11,1% của đợt sạch.
+- LoRA Qwen3.5-9B, LLaMA-Factory, template `qwen3_5_nothink`, 3 epoch/804
+  bước, chọn `checkpoint-536` (epoch 2, eval_loss 0,4343), 4288 mẫu train.
 - Kỹ thuật phụ đã làm và đáng đưa vào Chương 5 (kinh nghiệm/best practice):
   two-machine parallel eval trên site sống dùng phân loại task read-only/write;
   ba venv tách biệt (transformers@main vs vLLM pin); tìm chat template đúng
