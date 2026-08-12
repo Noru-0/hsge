@@ -135,3 +135,34 @@ rồi kết luận "run kết thúc lúc X" là sai — phải xét **thứ tự
    "fine-tune" 10 lần — nay lệch với C3–C6 đã thống nhất. User mới chỉ yêu
    cầu "từ chương 3", nên chưa tự ý sửa.
 5. `Figures/fig_pipeline.pdf` vẫn còn nhãn sai bên trong ảnh (nợ #7).
+
+## Cập nhật phụ lục C và D (2026-08-12, cùng ngày)
+
+**Phụ lục C** thêm §`app:runs-knowledge` — ba tạo phẩm tri thức của run 20 mà
+Chương 4 chỉ báo cáo *số lượng*: 26 năng lực seed (nguồn của 59/66 tác vụ
+GOAL), tên đầy đủ 59 skill, 4 mệnh đề mẫu của sổ đăng ký Reddit.
+
+Hai quan sát mới rút ra khi đọc dữ liệu, đều đã kiểm chứng và đưa vào bài:
+
+1. **Bốn trong 59 skill không phải năng lực thật** —
+   `ConfirmTaskCompletion`, `send_done_message`, `report_answer`,
+   `click_target_field` là khuôn dạng *câu trả lời* của tác vụ INFO bị gom cụm
+   nhầm thành skill. Kiểm log: **cả bốn đều bị cổng grounding loại** ở bước
+   nâng operator, cùng lý do "hiệu ứng không đúng ở bất kỳ thành viên nào".
+   Đây là bằng chứng cụ thể cho lập luận ở §5.4.1 (ngưỡng độ chín một mình
+   không đủ thay cổng thực thi lại).
+2. **Sổ đăng ký Reddit cho thấy trực tiếp vì sao đồ thị không có cạnh**: p1,
+   p2, p3 đều là p0 ("đang ở trang danh sách bài đăng") cộng một bổ ngữ đặc
+   thù. Đúng hình dạng prompt ép ra để tránh tautology, và đúng lý do không
+   skill nào khác lấy được chúng làm precondition.
+
+**Phụ lục D** trước đây vừa thiếu vừa sai: cờ CLI một gạch (`-dry-run`),
+không có `--resume` (thực tế phải dùng 5 lần), thiếu hẳn `merge_datasets.py`
+và `prepare_dataset.py`, và mục tinh chỉnh/đánh giá chỉ có văn xuôi không có
+lệnh nào. Nay có chuỗi lệnh thật cho cả năm giai đoạn, lấy từ
+`training/README.md`.
+
+⚠️ **Chỉ lấy LỆNH từ `training/README.md`, KHÔNG lấy số.** Bảng dataset trong
+README đã cũ (3 751 mẫu / 1 183 quỹ đạo = `datasets/train_all.jsonl`), trong
+khi số của khóa luận khớp `training_data/` (1366+1042+1268+929 = **4605** mẫu,
+4288 train + 266 val). Đã kiểm bằng `wc -l`. Khóa luận đúng, README lỗi thời.
