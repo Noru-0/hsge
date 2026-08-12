@@ -601,6 +601,161 @@ ghi ra (2178 episode). Trên đĩa có 2184 thư mục episode: sáu episode ch�
 lệch được ghi ở node đang xử lý dở khi đợt chạy bị dừng, sau lần ghi tóm tắt
 cuối cùng, nên chúng không được tính vào bất kỳ thống kê nào.
 
+\section{Seed năng lực, thư viện skill và sổ đăng ký mệnh đề}
+\label{app:runs-knowledge}
+
+Ba tạo phẩm tri thức mà bốn đợt thu thập để lại được trình bày ở đây, vì
+Chương~\ref{ch:experiments} chỉ báo cáo số lượng của chúng còn nội dung thì
+không xuất hiện ở đâu trong phần chính.
+
+\subsection*{Seed năng lực của website}
+
+Ở node đầu tiên của mỗi đợt, site seeder đọc trang chủ và trả về một mô tả
+website kèm danh sách năng lực (Mục~\ref{sec:method-seed}). Bốn đợt cho ra
+tổng cộng \textbf{26 năng lực}, và chính 26 năng lực này là nguồn của 59 trong
+66 tác vụ GOAL đã thực thi -- mỗi năng lực được thử lại tối đa ba lần, từ ba
+loại trang khác nhau.
+
+\begin{itemize}
+  \item \textbf{Shopping} -- ``sàn bán lẻ trực tuyến nhiều nhóm hàng, từ đồ
+  điện tử tới quần áo và đồ gia dụng'': tìm sản phẩm rồi mở trang kết quả đầu
+  tiên; mở nhóm hàng điện tử rồi thêm món còn hàng đầu tiên vào giỏ; mở danh
+  sách yêu thích rồi thêm món đầu tiên vào giỏ; vào nhóm hàng bếp và gia dụng
+  rồi mở sản phẩm đầu tiên; mở giỏ hàng rồi bỏ món đầu tiên; dùng tìm kiếm
+  nâng cao để lọc hàng dưới 50 đô trong nhóm mỹ phẩm.
+
+  \item \textbf{Reddit} -- ``nền tảng cộng đồng để đăng bài, thảo luận và
+  tương tác theo từng diễn đàn chủ đề'': đăng bài mới vào một diễn đàn và
+  kiểm tra bài xuất hiện ở đầu danh sách; bình luận vào một bài cụ thể rồi
+  xác nhận số bình luận tăng một; bình chọn tăng cho một bài rồi xác nhận số
+  phiếu tăng; tìm một từ khóa rồi mở kết quả đầu; lọc bài theo các diễn đàn đã
+  đăng ký; sắp xếp bài theo mức độ quan tâm; kiểm tra mục thông báo.
+
+  \item \textbf{GitLab} -- ``bảng điều khiển quản lý dự án phần mềm cho lập
+  trình viên và quản lý dự án'': tạo dự án mới và tới được trang tổng quan;
+  mở mục issue rồi tạo issue mới có tiêu đề và mô tả; tạo merge request từ
+  nhánh mới nhất; mở danh sách việc cần làm rồi đánh dấu hoàn thành mục đầu;
+  dùng mục khám phá để gắn sao dự án đầu tiên; tìm một từ khóa trong ô tìm
+  kiếm dự án rồi mở kết quả đầu.
+
+  \item \textbf{Shopping Admin} -- ``bảng quản trị Magento để quản lý đơn
+  hàng, sản phẩm, khách hàng, tiếp thị và báo cáo'': mở đơn hàng gần nhất rồi
+  đổi trạng thái của nó; mở sản phẩm đầu tiên trong danh mục rồi sửa giá và
+  lưu lại; vào báo cáo nâng cao rồi xuất một báo cáo khách hàng; thêm một
+  khách hàng mới rồi lưu; đổi đơn vị tiền tệ mặc định trong phần cấu hình cửa
+  hàng rồi lưu; đăng một bài viết mới trong phần nội dung; tạo một chiến dịch
+  khuyến mãi mới trong phần tiếp thị.
+\end{itemize}
+
+\noindent
+Ba ràng buộc của prompt seeder (Mục~\ref{sec:method-seed}) hiện rõ trong danh
+sách trên: mỗi mục tiêu kết thúc ở một trạng thái kiểm chứng được (``xác nhận
+số bình luận tăng một'', ``tới được trang tổng quan''), mọi giá trị đầu vào
+đều được nêu thẳng hoặc suy ra được từ trang (``món còn hàng đầu tiên'', ``đơn
+hàng gần nhất''), và không mục tiêu nào nhắc tới một tính năng mà trang chủ
+không cho thấy.
+
+\subsection*{Thư viện skill}
+
+Bảng~\ref{tab:app-skills} liệt kê tên của cả 59 skill đã thu nhận. Tên do
+bước trừu tượng hóa tự đặt; ba tên được bước này viết hoa có dấu cách đã được
+đưa về dạng gạch dưới cho thống nhất, đúng như nhật ký sự kiện vẫn ghi.
+
+\begin{table}[H]
+\centering
+\caption[Tên các skill đã thu nhận]{Tên của 59 skill đã thu nhận trong bốn
+đợt thu thập, do chính bước trừu tượng hóa đặt.}
+\label{tab:app-skills}
+\footnotesize
+\begin{tabular}{@{}L{2.6cm} L{11cm}@{}}
+\toprule
+\textbf{Website} & \textbf{Skill} \\
+\midrule
+Shopping (14) & \texttt{navigate\_to\_product\_page},
+\texttt{product\_search}, \texttt{navigate\_to\_product\_category},
+\texttt{search\_category}, \texttt{add\_variant\_to\_cart},
+\texttt{proceed\_to\_payment}, \texttt{sort\_results\_by\_price\_ascending},
+\texttt{set\_sorting\_descending}, \texttt{set\_descending\_direction},
+\texttt{clear\_filter\_via\_clear\_all\_link},
+\texttt{retrieve\_review\_count\_via\_advanced\_search},
+\texttt{verify\_wishlist\_status\_after\_wait},
+\texttt{open\_subscription\_settings}, \texttt{ConfirmTaskCompletion} \\
+\addlinespace
+Reddit (16) & \texttt{navigate\_to\_allentown\_forum},
+\texttt{navigate\_to\_rva\_submissions},
+\texttt{navigate\_to\_user\_profile\_via\_search},
+\texttt{navigate\_to\_recent\_changes}, \texttt{apply\_subscribed\_filter},
+\texttt{search\_exact\_phrase\_and\_broaden}, \texttt{open\_post\_editor},
+\texttt{open\_edit\_form}, \texttt{edit\_body}, \texttt{remove\_upvote},
+\texttt{view\_vote\_breakdown}, \texttt{report\_comment\_count},
+\texttt{confirm\_no\_new\_notifications},
+\texttt{identify\_wiki\_navigation\_options},
+\texttt{provide\_external\_domain},
+\texttt{provide\_studio\_union\_worker\_info} \\
+\addlinespace
+GitLab (16) & \texttt{search\_and\_open\_result},
+\texttt{navigate\_to\_commits\_page},
+\texttt{navigate\_to\_merge\_request\_list}, \texttt{navigate\_to\_fork\_form},
+\texttt{navigate\_to\_import\_page},
+\texttt{navigate\_to\_create\_token\_page}, \texttt{navigate\_to\_gitlab\_docs},
+\texttt{open\_documentation}, \texttt{open\_project\_documentation\_via\_search},
+\texttt{fill\_issue\_details}, \texttt{subscribe\_to\_project},
+\texttt{click\_direct\_link\_and\_scroll},
+\texttt{report\_starred\_projects\_count},
+\texttt{report\_default\_project\_name\_and\_slug},
+\texttt{retrieve\_tiers\_and\_offerings},
+\texttt{provide\_file\_creation\_in\_branch\_steps} \\
+\addlinespace
+Sh.\ Admin (13) & \texttt{navigate\_to\_customers\_section},
+\texttt{navigate\_to\_attribute\_set\_page},
+\texttt{search\_and\_navigate\_to\_product}, \texttt{enter\_product\_details},
+\texttt{save\_product}, \texttt{fill\_checkout\_form},
+\texttt{wait\_for\_checkout}, \texttt{click\_target\_field},
+\texttt{set\_enable\_charts\_option}, \texttt{change\_report\_scope},
+\texttt{switch\_export\_format}, \texttt{send\_done\_message},
+\texttt{report\_answer} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Danh sách này nói được một điều mà con số 59 che mất: \emph{không phải skill
+nào cũng là một năng lực thật}. Bốn cái tên -- \texttt{ConfirmTaskCompletion},
+\texttt{send\_done\_message}, \texttt{report\_answer} và
+\texttt{click\_target\_field} -- không mô tả một thao tác trên website mà mô
+tả chính hành vi kết thúc episode hoặc một cú nhấp không rõ đích. Chúng là sản
+phẩm của việc gom cụm những quỹ đạo \texttt{INFO} chỉ gồm một bước trả lời:
+các quỹ đạo đó giống nhau thật, tái xuất hiện đủ ngưỡng độ chín thật, nhưng
+cái được trừu tượng hóa ra lại là khuôn dạng của câu trả lời chứ không phải
+một hành vi tái sử dụng được. Đây là mặt trái của việc ngưỡng độ chín phải
+gánh thay cổng thực thi lại (Mục~\ref{sec:disc-verify}). Điểm đáng ghi nhận
+là cả bốn cái tên đó về sau \emph{đều} bị cổng grounding chặn lại ở bước nâng
+operator, cả bốn với cùng lý do: hiệu ứng mà chúng tự nhận không đúng ở bất kỳ
+thành viên nào của cụm.
+
+\subsection*{Sổ đăng ký mệnh đề}
+
+Bốn sổ đăng ký chứa lần lượt 14, 21, 17 và 15 mệnh đề chuẩn hóa. Bốn mệnh đề
+đầu tiên của Reddit cho thấy rất rõ hình dạng mà prompt quy nạp ép ra
+(Mục~\ref{sec:method-semantic}):
+
+\begin{itemize}
+  \item \texttt{p0}: ``đang ở trang danh sách bài đăng''
+  \item \texttt{p1}: ``đang ở trang danh sách bài đăng \emph{với bộ lọc đã mở}''
+  \item \texttt{p2}: ``đang ở trang danh sách bài đăng \emph{với thông báo đã
+  được xác nhận là không có}''
+  \item \texttt{p3}: ``đang ở trang danh sách bài đăng \emph{với số bình luận
+  đã được báo cáo}''
+\end{itemize}
+
+\noindent
+Cả ba hiệu ứng đều là \texttt{p0} cộng thêm một bổ ngữ, đúng như prompt yêu
+cầu để tránh mệnh đề hiển nhiên đúng. Nhưng đặt cạnh nhau thì chúng cũng giải
+thích trực quan vì sao đồ thị không có cạnh: một bổ ngữ đặc thù tới mức
+``với số bình luận đã được báo cáo'' thì không skill nào khác lấy làm điều
+kiện tiên quyết của mình được. Đây chính là thế giằng co mà
+Mục~\ref{sec:disc-operators} phân tích, quan sát được trực tiếp trên dữ liệu.
+
 \section{Mười hai run phát triển}
 \label{app:runs-dev}
 
@@ -651,7 +806,7 @@ ra trùng với một node đã thăm, xác nhận rằng chuyện các URL khá
 cùng nội dung là có thật trên những site này, nhưng không phải là chi phí chi
 phối.
 
-\section{Các lượt sinh tác vụ của giai đoạn phát triển}
+\section{Các lượt sinh tác vụ ở giai đoạn phát triển}
 \label{app:runs-gen}
 
 Run 4-6, vẫn thuộc bộ run phát triển, đo riêng khâu đề xuất và kiểm chứng
@@ -692,7 +847,7 @@ mà vì tác nhân thường không nhận ra là mình đã tới nơi, đúng 
 ``một khi URL đã đổi thì mục tiêu ĐÃ XONG'' trong prompt của solver
 (Mục~\ref{app:prompt-solver}) được thêm vào để sửa.
 
-\section{Goal tác vụ được ghép}
+\section{Các chuỗi operator đã ghép}
 \label{app:runs-goal}
 
 Trong suốt \emph{mười hai run phát triển}, không một tác vụ mục tiêu ghép nào được
@@ -846,62 +1001,183 @@ Pipeline thật cần thêm \texttt{sentence-transformers}, \texttt{openai},
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 # Kiem tra noi day: LLM kich ban va browser gia, khong ton phi, khong can site.
-python run_webarena.py -dry-run -out /tmp/wa_dry -max-nodes 2
+python run_webarena.py --dry-run --out /tmp/wa_dry --max-nodes 2
 
 # Smoke test tren instance dung chung ma khong ghi gi len no.
-python run_webarena.py -read-only -max-nodes 2 -max-steps 4
+python run_webarena.py --read-only --max-nodes 2 --max-steps 4
 
-# Run thu thap day du (moi tham so lay tu config.yaml).
-python run_webarena.py
+# Bon dot thu thap chinh thuc: moi site mot lenh, chay song song.
+python run_webarena.py --site shopping       --out outputs/wa_run_20_shopping
+python run_webarena.py --site reddit         --out outputs/wa_run_20_reddit
+python run_webarena.py --site gitlab         --out outputs/wa_run_20_gitlab
+python run_webarena.py --site shopping_admin --out outputs/wa_run_20_shopping_admin
+
+# Noi lai mot dot bi ngat, tiep tuc tu diem kiem tra cua node cuoi.
+python run_webarena.py --site shopping --out outputs/wa_run_20_shopping --resume
 \end{lstlisting}
 
 \noindent
-Việc đăng nhập cho bốn site có tài khoản chỉ diễn ra một lần và được cache dưới
-dạng storage state của trình duyệt; bản cache này là một thông tin phiên còn
-sống nên bị loại khỏi quản lý phiên bản. Chỉ chạy một worker: các site WebArena
-là trạng thái chia sẻ có thể thay đổi, các run song song sẽ giẫm lên nhau.
-Artifact (skill, operator, đồ thị, predicate, kết cục tác vụ theo node và một
-bản tóm tắt) được ghi sau mỗi node, nên một run bị ngắt vẫn để lại ảnh chụp
-nhất quán, và mọi sự kiện đều được ghi song song ra một log JSON lines.
+Mọi tham số khác lấy từ \texttt{config.yaml}; cờ dòng lệnh đè lên tập tin cấu
+hình, còn tập tin cấu hình đè lên mặc định trong mã. Bốn khóa quyết định hình
+dạng dữ liệu thu được, và cả bốn đều bật trong các đợt được báo cáo:
+\texttt{verify\_episodes} (judge chấm lại ngay trong vòng lặp),
+\texttt{unprefixed\_sampling} (giải lại mỗi tác vụ đã xong từ trang chủ),
+\texttt{use\_site\_seed} (sinh tác vụ mục tiêu từ seed năng lực) và
+\texttt{plan\_subgoals} (phân rã mục tiêu thành subgoal). Toàn bộ tham số cùng
+giá trị đã dùng nằm ở Mục~\ref{app:design-params}.
+
+Ba lưu ý vận hành, cả ba đều rút ra từ chính bốn đợt đã chạy. Thứ nhất,
+\textbf{song song theo website thì được, song song trên cùng một website thì
+không}: bốn lệnh trên chạy đồng thời vì mỗi lệnh làm việc với một cơ sở dữ
+liệu riêng, nhưng hai worker trên cùng một site sẽ giẫm lên trạng thái của
+nhau. Ngoại lệ phải kiểm trước khi chạy là Shopping và Shopping Admin, vốn có
+thể được phục vụ từ cùng một container Magento
+(Mục~\ref{sec:disc-slm}). Thứ hai, \textbf{\texttt{-{}-resume} là thứ sẽ cần
+tới}: cả bốn đợt đều bị ngắt vì tài khoản API hết hạn mức và đều được nối lại
+bằng cờ này. Thứ ba, việc đăng nhập cho bốn site có tài khoản chỉ diễn ra một
+lần rồi được lưu dưới dạng storage state của trình duyệt; đây là thông tin
+phiên còn sống nên bị loại khỏi quản lý phiên bản.
+
+Tạo phẩm (skill, operator, đồ thị, mệnh đề, kết cục tác vụ theo node và một
+bản tóm tắt) được ghi sau mỗi node, kèm một điểm kiểm tra nhị phân chứa trọn
+trạng thái vòng lặp, nên một đợt bị ngắt vẫn để lại ảnh chụp nhất quán và nối
+lại được; mọi sự kiện đồng thời được ghi ra một log JSON lines.
 
 \section{Tinh lọc dataset}
 \label{app:repro-curate}
 
-Cả hai lượt kiểm soát chất lượng đều sửa các episode đã ghi tại chỗ, theo kiểu
-bổ sung; hãy chạy chúng trên một bản sao nếu cần giữ nguyên artifact gốc.
+Vì \texttt{verify\_episodes} đã bật trong cả bốn đợt, judge đã chấm ngay trong
+vòng lặp và lượt chấm ngoại tuyến \texttt{judge\_episodes.py} là không cần
+thiết; nó chỉ dùng cho những đợt chạy cũ hơn, và khi dùng thì nó sửa các
+episode tại chỗ theo kiểu bổ sung, nên hãy chạy trên một bản sao nếu muốn giữ
+nguyên tạo phẩm gốc.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
-python judge_episodes.py outputs/<run>          # kiem lai cac lan tu nhan dat
-python build_sft_dataset.py outputs/<run>/episodes train.jsonl --require-judge
+# 1. Episode -> mau huan luyen, mot lan cho moi website.
+python build_sft_dataset.py outputs/wa_run_20_reddit/episodes \
+       training_data/train_reddit.jsonl --require-judge
+#    ... lam tuong tu cho shopping, gitlab, shopping_admin.
+
+# 2. Gop bon website (them tien to ten mien vao trajectory_id truoc khi noi).
+python training/merge_datasets.py training_data/train_reddit.jsonl \
+       training_data/train_shopping.jsonl training_data/train_gitlab.jsonl \
+       training_data/train_shopping_admin.jsonl -o training_data/train_all.jsonl
+
+# 3. Chia train/val theo TAC VU, khong theo quy dao.
+python training/prepare_dataset.py training_data/train_all.jsonl \
+       --name all --out-dir training/data/all
 \end{lstlisting}
 
 \noindent
-\texttt{--require-judge} loại mọi episode tự nhận thành công nhưng chưa từng
-được judge hoặc bị judge đánh trượt, đồng thời vẫn giữ những episode tác nhân báo
-là bất khả thi; việc chấm không áp dụng cho chúng và chúng vẫn là mục tiêu
-huấn luyện hợp lệ.
+Ba bước trên tương ứng ba cổng đã mô tả ở Mục~\ref{sec:method-data}.
+\texttt{-{}-require-judge} loại mọi episode tự nhận thành công nhưng chưa từng
+được judge hoặc bị judge đánh trượt, đồng thời vẫn giữ những episode tác nhân
+báo là bất khả thi; việc chấm không áp dụng cho chúng và chúng vẫn là mục tiêu
+huấn luyện hợp lệ. Bước gộp phải thêm tiền tố tên miền vào mã quỹ đạo trước
+khi nối tập tin, bởi mỗi đợt đánh số episode độc lập từ \texttt{ep\_0000}, nên
+\texttt{ep\_0005} của Reddit và của Shopping là hai quỹ đạo không liên quan mà
+lại trùng mã. Bước chia tách theo cặp \emph{(website, nội dung mục tiêu)} và
+tự khẳng định rằng không mục tiêu nào của tập kiểm định xuất hiện trong tập
+huấn luyện, nên một lần thoái lui sẽ làm hỏng bước chạy chứ không âm thầm thổi
+phồng \texttt{eval\_loss} (Mục~\ref{sec:method-sft}).
 
-\section{Fine-tune, phục vụ và đánh giá}
+\section{Tinh chỉnh, phục vụ và đánh giá}
 \label{app:repro-train}
 
-Việc tinh chỉnh dùng LoRA trên model gốc, với phép chia tập được thực hiện theo
-trọn quỹ đạo chứ không theo từng bước, để không quỹ đạo nào góp bước cho
-cả hai phía. Chat template phải tắt chế độ thinking: dữ liệu thu được không
-chứa vết suy luận theo dạng template mong đợi, và để bật sẽ huấn luyện model
-sinh ra một phần mà nó chưa từng thấy mục tiêu nào. Sau khi trộn adapter,
-model được phục vụ cục bộ và được đánh giá bằng bộ công cụ chính thức của
-benchmark chứ không phải một bản cài lại, nhờ vậy số liệu báo cáo mới so sánh
-được với các kết quả đã công bố.
+Ba giai đoạn này chạy trên GPU thuê theo giờ và dùng \emph{ba môi trường ảo
+tách rời} cho huấn luyện, phục vụ suy luận và đánh giá: engine phục vụ ghim
+phiên bản thư viện mô hình hóa, trong khi kiến trúc mới cần bản mới hơn, và
+việc tách môi trường biến một bài toán tương thích phiên bản thành ba lần cài
+đặt độc lập (Mục~\ref{sec:disc-slm}).
+
+\begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
+# 1. Huan luyen LoRA (template qwen3_5_nothink: du lieu khong co khoi <think>).
+llamafactory-cli train training/qwen35_9b_lora_all.yaml
+
+# 2. Tron adapter vao model goc.
+llamafactory-cli export training/merge_lora_all.yaml
+#    Tren may chi phuc vu + danh gia (khong co moi truong huan luyen):
+python training/merge_lora_peft.py <model_goc> <thu_muc_adapter> <model_da_tron>
+
+# 3. Phuc vu bang vLLM; ten phuc vu luon la qwen35-9b de lenh danh gia
+#    khong doi giua ban nen va ban da tinh chinh.
+bash training/serve_vllm.sh <model_goc>        # ban nen
+bash training/serve_vllm.sh <model_da_tron>    # ban da tinh chinh
+
+# 4. Danh gia bang bo cong cu chinh thuc cua WebArena, moi website mot may.
+bash training/bootstrap_eval_box.sh --site shopping --site-url <url_site>
+
+# 5. Theo doi, thu ket qua ve va phan loai nguyen nhan that bai.
+python training/eval_status.py outputs/eval/*/finetuned
+bash training/collect_eval_results.sh --host <host> --port <port> --site <site>
+python training/analyze_eval_traces.py outputs/eval/*/finetuned --examples 3
+\end{lstlisting}
+
+\noindent
+Bốn chi tiết trong chuỗi lệnh trên là bắt buộc chứ không phải tùy chọn. Thứ
+nhất, chat template phải tắt chế độ suy nghĩ tường minh ở \emph{cả} huấn luyện
+lẫn phục vụ: dữ liệu không chứa khối suy nghĩ nào, nên bật nó lên là huấn
+luyện mô hình sinh ra một phần mà nó chưa từng thấy mục tiêu. Thứ hai, bước
+trộn phải nạp model gốc bằng lớp mô hình đa phương thức đúng của nó; dùng lớp
+thuần văn bản sẽ lặng lẽ bỏ phần thị giác và engine phục vụ sẽ từ chối nạp.
+Thứ ba, \texttt{bootstrap\_eval\_box.sh} chạy chín chặng có cổng, kết thúc
+bằng một lượt thử ba tác vụ phải ghi được ít nhất một điểm; đợt quét đầy đủ
+chỉ khởi động khi chặng này đạt, và mỗi cổng đều ra đời từ một lần bỏ qua nó
+đã làm hỏng cả đợt chạy (Mục~\ref{sec:disc-slm}). Thứ tư, phải khôi phục cơ sở
+dữ liệu của website giữa lượt đo mô hình nền và lượt đo mô hình đã tinh chỉnh:
+bộ chấm chỉ nhìn trạng thái cuối, nên việc lượt trước để lại sẽ được tính điểm
+cho lượt sau.
+
+Đánh giá được chạy song song bốn máy, mỗi máy một website, nên thời gian thực
+tế bằng website nhiều tác vụ nhất thay vì tổng của cả bốn. Kết quả từng máy
+phải được thu về và đối chiếu mã băm \emph{trước khi} hủy máy: một máy không
+gắn ổ đĩa lưu trữ sẽ mất toàn bộ vết chạy vĩnh viễn, và mã thoát 0 của lệnh
+đồng bộ chỉ chứng minh lệnh đã chạy chứ không chứng minh hai bên khớp nhau.
 
 \section{Artifact được báo cáo}
 \label{app:repro-artifacts}
 
-Sau đây là các artifact cụ thể đứng sau Chương~\ref{ch:experiments}: bốn thư
-mục của các đợt thu thập chính thức (Mục~\ref{app:runs-final}) cùng mười hai
-thư mục của các run phát triển (Mục~\ref{app:runs-dev}), mỗi thư mục kèm
-skill, operator, đồ thị, sổ đăng ký mệnh đề, kết cục theo node, log sự kiện
-và điểm kiểm tra nhị phân; các episode đã ghi; tập dữ liệu SFT đã dựng;
-adapter LoRA cùng model đã trộn; và kết quả đánh giá của bộ công cụ chính
-thức. Mọi con số ở Chương~\ref{ch:experiments} đều lấy từ bốn thư mục đầu;
-mười hai thư mục còn lại chỉ được trích dẫn khi nói về các lỗi mà chúng phơi
+Bảng~\ref{tab:app-artifacts} liệt kê các tạo phẩm cụ thể đứng sau
+Chương~\ref{ch:experiments} kèm nơi đọc ra từng con số. Mọi số liệu của chương
+đó đều lấy từ bốn thư mục thu thập chính thức và hai thư mục đánh giá; mười
+hai thư mục run phát triển chỉ được trích dẫn khi nói về các lỗi mà chúng phơi
 ra.
+
+\begin{table}[H]
+\centering
+\caption[Tạo phẩm đứng sau Chương thực nghiệm]{Tạo phẩm đứng sau
+Chương~\ref{ch:experiments} và số liệu đọc ra từ mỗi nhóm.}
+\label{tab:app-artifacts}
+\small
+\begin{tabular}{@{}L{4.6cm} L{8.6cm}@{}}
+\toprule
+\textbf{Tạo phẩm} & \textbf{Số liệu đọc ra} \\
+\midrule
+Bốn thư mục thu thập chính thức, mỗi thư mục kèm skill, operator, đồ thị, sổ
+đăng ký mệnh đề, seed, kết cục theo node, log sự kiện và điểm kiểm tra &
+Quy mô khám phá, kết cục ba nhóm tác vụ, số episode bị hạ cấp
+(Bảng~\ref{tab:runs}); số liệu vận hành và cơ cấu operator bị loại
+(Bảng~\ref{tab:app-runs-final}); bảy chuỗi operator
+(Bảng~\ref{tab:app-chains}); seed, skill và mệnh đề
+(Mục~\ref{app:runs-knowledge}) \\
+\addlinespace
+Các episode đã ghi trong bốn thư mục đó & Nguồn của mọi mẫu huấn luyện; độ dài
+quỹ đạo và lý do dừng \\
+\addlinespace
+Tập dữ liệu SFT theo từng website, bản gộp và bản đã chia train/val &
+Bảng~\ref{tab:dataset}: 1029 quỹ đạo, 4605 mẫu, 4288 train / 266 val \\
+\addlinespace
+Adapter LoRA và model đã trộn & Chi phí và thời lượng huấn luyện
+(Mục~\ref{sec:exp-sft}) \\
+\addlinespace
+Hai thư mục kết quả đánh giá, một cho mô hình nền và một cho mô hình đã tinh
+chỉnh, mỗi thư mục một tập tin kết quả theo từng tác vụ và vết chạy &
+Tỷ lệ hoàn thành 87/655 và 136/655; đối chiếu theo cặp
+(Bảng~\ref{tab:app-mcnemar}); phân loại nguyên nhân thất bại
+(Bảng~\ref{tab:failures}) \\
+\addlinespace
+Mười hai thư mục run phát triển & Chỉ dùng cho Mục~\ref{app:runs-dev} và các
+bài học ở Chương~\ref{ch:discussion} \\
+\bottomrule
+\end{tabular}
+\end{table}
