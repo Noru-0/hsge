@@ -39,9 +39,9 @@ liệu huấn luyện. Pipeline có thể vận hành trên cả backend mô ph�
 kiểm thử và website thực thông qua trình duyệt.
 
 \item \textbf{Pipeline tinh lọc và tập dữ liệu huấn luyện.}
-Khóa luận xây dựng đầy đủ pipeline hậu xử lý dữ liệu gồm judge đánh giá độc
-lập các episode, bước viết lại suy luận và trình dựng dataset theo nguyên
-tắc prompt parity. Từ đó thu được tập dữ liệu fine-tuning được xây dựng hoàn
+Khóa luận xây dựng đầy đủ pipeline tinh lọc dữ liệu gồm các cổng chất lượng
+chấm lại từng episode ngay trong vòng lặp thu thập và trình dựng dataset theo
+nguyên tắc prompt parity. Từ đó thu được tập dữ liệu fine-tuning được xây dựng hoàn
 toàn tự động trên bốn website WebArena tự triển khai: 1029 quỹ đạo và 4554
 mẫu huấn luyện, sau khi các cổng chất lượng đã loại 497 lần tự tuyên bố
 thành công sai và 104 quỹ đạo không có hành động hữu hiệu nào
@@ -134,8 +134,8 @@ liệu chính (Mục~\ref{sec:method-semantic}, \ref{sec:disc-operators}). \\
 
 O3 &
 Xây dựng pipeline tinh lọc dữ liệu theo nguyên tắc prompt parity &
-Hoàn thành. Pipeline bao gồm bước judge đánh giá độc lập, viết lại chuỗi
-suy luận và dựng dataset với cùng cấu trúc prompt sử dụng trong quá trình
+Hoàn thành. Pipeline bao gồm bước judge đánh giá độc lập ngay trong vòng lặp
+thu thập và dựng dataset với cùng cấu trúc prompt sử dụng trong quá trình
 suy luận. Các bước thực thi lỗi được loại bỏ và dữ liệu được sắp xếp theo
 curriculum trước khi fine-tune
 (Mục~\ref{sec:method-data}). \\

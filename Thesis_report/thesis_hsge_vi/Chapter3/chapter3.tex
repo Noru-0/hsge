@@ -99,9 +99,9 @@ URL xuất hiện trong prompt cũng như mọi đích đến của \texttt{goto
 lược bỏ phần gốc (origin) trước khi hiển thị hoặc trước khi trở thành đích
 huấn luyện, và phần gốc của trang hiện tại chỉ được ghép trở lại ngay trước
 thời điểm hành động được thực thi. Phép biến đổi hai chiều này được áp dụng
-thống nhất ở cả ba nơi (solver lúc chạy thật, bộ dựng dataset và bộ viết lại
-suy nghĩ), nhờ đó một hành động \texttt{goto} học được trên một bản triển khai
-vẫn chạy đúng trên một bản triển khai khác.
+thống nhất ở cả hai nơi (solver lúc chạy thật và bộ dựng dataset), nhờ đó một
+hành động \texttt{goto} học được trên một bản triển khai vẫn chạy đúng trên
+một bản triển khai khác.
 
 \subsection{Tầng thấp: Trạng thái trang và cạnh quỹ đạo}
 
@@ -272,6 +272,57 @@ lượt không tiền tố có một tác dụng phụ đáng kể đối với 
 giải cùng một tác vụ từ hai điểm xuất phát khác nhau cũng chính là cách một
 cụm quỹ đạo tích đủ số lần tái xuất hiện để đạt độ chín và trở thành skill.
 
+\subsection{Một phiên được chấm thành công như thế nào}
+\label{sec:method-success}
+
+Vì kết quả của mỗi phiên quyết định cả việc nó có nuôi khâu phát hiện kỹ năng
+hay không lẫn việc nó có trở thành dữ liệu huấn luyện hay không, mục này gom
+lại toàn bộ các cơ chế xác định thành công đã được nhắc rải rác ở trên. Có ba
+cơ chế, xếp theo thứ tự đáng tin giảm dần, và mỗi phiên chỉ đi qua đúng một
+trong ba.
+
+\textbf{Kiểm tra tất định.} Khi tác vụ có kèm một vị từ mục tiêu kiểm tra được
+bằng chương trình, chẳng hạn URL xác nhận đơn hàng của luồng thanh toán, hàm
+\texttt{reached} đối chiếu trực tiếp URL và nội dung trang sau mỗi bước. Phiên
+thành công ngay khi vị từ đúng, không cần tới bất kỳ lời tự tuyên bố nào. Đây
+là cơ chế duy nhất không phụ thuộc phán đoán của mô hình, nhưng nó chỉ áp dụng
+được cho những mục tiêu mà website cho phép phát biểu thành một điều kiện như
+vậy, tức một phần nhỏ trong số tác vụ.
+
+\textbf{Tự tuyên bố kèm cổng kiểm tra bằng mã.} Với mọi tác vụ còn lại, phiên
+được coi là thành công khi tác nhân kết thúc bằng \texttt{send\_msg\_to\_user}.
+Riêng nhóm tác vụ thay đổi trạng thái (\texttt{MOD}, \texttt{COMPOSITE}), lời
+tuyên bố đó còn phải vượt qua một điều kiện kiểm tra được bằng mã: ít nhất một
+hành động đã thực sự làm trang thay đổi (Mục~\ref{sec:method-solver}). Ngược
+lại, phiên kết thúc bằng \texttt{report\_infeasible} không được tính là thành
+công mà được ghi vào một nhóm kết quả riêng.
+
+\textbf{Chấm lại bằng judge độc lập.} Mọi thành công thuộc nhóm tự tuyên bố ở
+trên đều được một LLM mạnh hơn chấm lại, theo cách tiếp cận dùng LLM làm bộ
+chấm đã được kiểm chứng trong các nghiên cứu trước~\cite{zheng2023judge}.
+Judge đối chiếu mục tiêu với trạng thái cuối của phiên, gồm URL và nội dung
+trang tại thời điểm kết thúc, rồi đưa ra phán quyết độc lập; một phán quyết
+\textsc{Fail} hạ phiên đó xuống thất bại. Các phiên đã được kiểm tra tất định
+không đi qua bước này vì kết quả của chúng vốn đã đáng tin.
+
+Điểm quan trọng là bước chấm này chạy \emph{ngay trong vòng lặp khám phá}, chứ
+không phải sau khi lượt chạy kết thúc. Một phán quyết \textsc{Fail} có hiệu
+lực \emph{trước khi} bất kỳ khâu nào phía sau nhìn thấy phiên đó: nó không
+được ghi là thành công, không đi vào khâu phát hiện kỹ năng, và không được
+chọn cho lượt lấy mẫu không tiền tố. Vị trí của bước chấm là một quyết định
+thiết kế có chủ đích: một phán quyết ngoại tuyến là phán quyết mà lượt chạy
+\emph{không bao giờ hành động theo}, nên nó sửa được tập dữ liệu nhưng không
+sửa được những gì lượt chạy đã làm dựa trên một kết luận sai. Lời gọi judge
+cũng được đặt bên trong hàm giải một tác vụ thay vì ở các nơi gọi hàm đó, để
+không một điểm gọi mới nào có thể vô tình bỏ sót. Phán quyết được lưu bổ sung
+bên cạnh kết luận ban đầu thay vì ghi đè lên nó, nhờ vậy khâu dựng tập dữ liệu
+về sau vẫn phân biệt được ba trạng thái: đã chấm và đạt, đã chấm và trượt, và
+chưa từng được chấm.
+
+Cần nói rõ giới hạn của cả ba cơ chế: chúng chỉ chi phối \emph{dữ liệu huấn
+luyện}. Các con số đánh giá ở Chương~\ref{ch:experiments} do bộ chấm chính
+thức của WebArena quyết định, hoàn toàn độc lập với ba cơ chế trên.
+
 \section{Phát hiện kỹ năng (Skill Discovery)}
 \label{sec:method-skills}
 
@@ -327,17 +378,13 @@ $\theta_{\mathrm{ax}}$, ngưỡng gom cụm $\theta_{\mathrm{sim}}$, độ chín
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Phân cắt quỹ đạo (Segmentation)}
+\subsection{Ba giai đoạn đầu: phân cắt, gom cụm, trừu tượng hóa}
 
-Một quỹ đạo tương tác thường là sự đan xen của nhiều hành vi khác nhau (như tìm kiếm, lọc, và mở kết quả). Bước phân cắt sẽ chia trajectory ban đầu thành các \emph{quỹ đạo con} (sub-trajectory) có tính liền mạch và đồng nhất về mặt ngữ nghĩa. Các điểm phân cắt tiềm năng (candidate cut points) được xác định dựa trên hai tín hiệu: sự thay đổi của URL và sự sụt giảm độ tương đồng giữa hai cây trợ năng (accessibility tree) liên tiếp. Tín hiệu thứ hai giúp hệ thống nắm bắt được các chuyển đổi trạng thái ngay bên trong một trang (ví dụ: một hộp thoại pop-up xuất hiện) mà không làm thay đổi URL. Sau đó, một LLM sẽ đóng vai trò phân xử các điểm cắt tiềm năng này để đưa ra quyết định gộp hoặc xác nhận phân cắt. Kết quả đầu ra sẽ được kiểm tra tính hợp lệ so với tập ứng viên ban đầu; đồng thời, các đoạn thao tác điều hướng đơn giản (chỉ gồm một bước) sẽ được gộp chung vào quỹ đạo con liền kề.
+\textbf{Phân cắt (segmentation).} Một quỹ đạo tương tác thường là sự đan xen của nhiều hành vi khác nhau (như tìm kiếm, lọc, và mở kết quả). Bước phân cắt sẽ chia trajectory ban đầu thành các \emph{quỹ đạo con} (sub-trajectory) có tính liền mạch và đồng nhất về mặt ngữ nghĩa. Các điểm phân cắt tiềm năng (candidate cut points) được xác định dựa trên hai tín hiệu: sự thay đổi của URL và sự sụt giảm độ tương đồng giữa hai cây trợ năng (accessibility tree) liên tiếp. Tín hiệu thứ hai giúp hệ thống nắm bắt được các chuyển đổi trạng thái ngay bên trong một trang (ví dụ: một hộp thoại pop-up xuất hiện) mà không làm thay đổi URL. Sau đó, một LLM sẽ đóng vai trò phân xử các điểm cắt tiềm năng này để đưa ra quyết định gộp hoặc xác nhận phân cắt. Kết quả đầu ra sẽ được kiểm tra tính hợp lệ so với tập ứng viên ban đầu; đồng thời, các đoạn thao tác điều hướng đơn giản (chỉ gồm một bước) sẽ được gộp chung vào quỹ đạo con liền kề.
 
-\subsection{Gom cụm trực tuyến (Streaming Clustering)}
+\textbf{Gom cụm trực tuyến (streaming clustering).} Mỗi quỹ đạo con sẽ được biểu diễn dưới dạng vector nhúng (bằng kỹ thuật sentence embedding~\cite{reimers2019sbert}) và được phân bổ vào một cụm thông qua thuật toán gom cụm phi tham số, hoạt động trực tuyến (streaming) thuộc họ DP-means~\cite{kulis2012dpmeans}. Cụ thể, một đoạn dữ liệu mới sẽ gia nhập cụm gần nhất nếu độ tương đồng cosine (cosine similarity) vượt qua một ngưỡng cho trước; ngược lại, hệ thống sẽ khởi tạo một cụm mới. Cơ chế này cho phép số lượng kỹ năng không cần được khai báo hay cố định từ trước. Ngoài ra, quá trình gom cụm có thể diễn ra song song với pha khám phá, thay vì phải tách thành một bước xử lý theo lô (batch processing) riêng.
 
-Mỗi quỹ đạo con sẽ được biểu diễn dưới dạng vector nhúng (bằng kỹ thuật sentence embedding~\cite{reimers2019sbert}) và được phân bổ vào một cụm thông qua thuật toán gom cụm phi tham số, hoạt động trực tuyến (streaming) thuộc họ DP-means~\cite{kulis2012dpmeans}. Cụ thể, một đoạn dữ liệu mới sẽ gia nhập cụm gần nhất nếu độ tương đồng cosine (cosine similarity) vượt qua một ngưỡng cho trước; ngược lại, hệ thống sẽ khởi tạo một cụm mới. Cơ chế này cho phép số lượng kỹ năng không cần được khai báo hay cố định từ trước. Ngoài ra, quá trình gom cụm có thể diễn ra song song với pha khám phá, thay vì phải tách thành một bước xử lý theo lô (batch processing) riêng.
-
-\subsection{Trừu tượng hóa (Abstraction)}
-
-Khi một cụm đạt đến ``độ chín'' — tức là xuất hiện lặp lại đủ số lần theo cấu hình thông qua các quỹ đạo độc lập, mặc định là hai lần (Phụ lục~\ref{app:design-params}) — một LLM sẽ tiến hành trừu tượng hóa cụm đó thành một thẻ kỹ năng (\emph{skill card}). Thẻ này bao gồm: tên kỹ năng, mô tả, và các tham số được định kiểu nhằm tổng quát hóa những giá trị cụ thể xuất hiện trong các quỹ đạo thành phần (ví dụ: một chuỗi văn bản tìm kiếm cụ thể). Các đoạn quỹ đạo thành phần vẫn được giữ lại để làm minh chứng.
+\textbf{Trừu tượng hóa (abstraction).} Khi một cụm đạt đến ``độ chín'', tức là xuất hiện lặp lại đủ số lần theo cấu hình thông qua các quỹ đạo độc lập, mặc định là hai lần (Phụ lục~\ref{app:design-params}), một LLM sẽ tiến hành trừu tượng hóa cụm đó thành một thẻ kỹ năng (\emph{skill card}). Thẻ này bao gồm: tên kỹ năng, mô tả, và các tham số được định kiểu nhằm tổng quát hóa những giá trị cụ thể xuất hiện trong các quỹ đạo thành phần (ví dụ: một chuỗi văn bản tìm kiếm cụ thể). Các đoạn quỹ đạo thành phần vẫn được giữ lại để làm minh chứng.
 
 \subsection{Kiểm chứng (Verification)}
 
@@ -478,57 +525,7 @@ từ quan hệ giữa các năng lực đã được kiểm chứng.
 
 Các semantic task được thực thi theo chiến lược bảo thủ nhằm hạn chế lặp lại.
 Trong mỗi lượt khám phá, mỗi chuỗi operator chỉ được thử tối đa một lần và
-mỗi node chỉ sinh thêm một số lượng hữu hạn chuỗi mới. Thuật
-toán~\ref{alg:semantic} mô tả toàn bộ quá trình này, từ việc liệt kê chuỗi
-trên đồ thị toán tử cho tới cách chọn cơ chế kiểm chứng cho từng task.
-
-\begin{algorithm}[H]
-\caption{Sinh semantic task bằng ghép chuỗi operator}
-\label{alg:semantic}
-\begin{algorithmic}[1]
-\Require đồ thị toán tử $G = (\Omega, E)$ với
-$E = \{(\omega_1, \omega_2) : \mathit{eff}(\omega_1) \cap \mathit{pre}(\omega_2) \neq \emptyset\}$;
-ngân sách $b$ chuỗi mới cho mỗi node; tập chuỗi đã thử trong lượt chạy $X$;
-mục tiêu kết thúc $g_T$ (có thể không được cấu hình, ký hiệu $\bot$)
-\Ensure danh sách semantic task kèm cơ chế kiểm chứng tương ứng
-\State $P \gets \emptyset$
-\For{mỗi $\omega \in \Omega$ theo thứ tự tất định}
-  \State $\textsc{Dfs}([\omega])$
-\EndFor
-\State $T \gets \emptyset$
-\For{mỗi chuỗi $p \in P$}
-  \If{$|T| \ge b$} \textbf{break} \EndIf
-  \If{$p \in X$} \textbf{continue} \Comment{mỗi chuỗi chỉ thử một lần trong một lượt chạy} \EndIf
-  \State $X \gets X \cup \{p\}$
-  \State $\mathit{instr} \gets$ URL khởi đầu ghi nhận của $p_1$, nối với mô tả các skill trong $p$ theo đúng thứ tự
-  \If{$p_{|p|}$ được đánh dấu terminal \textbf{và} $g_T \neq \bot$}
-    \State $\mathit{verify} \gets \textsc{Reached}(g_T)$ \Comment{kiểm chứng tất định}
-  \Else
-    \State $\mathit{verify} \gets$ kết luận của solver, judge kiểm tra lại ngay trong vòng lặp
-  \EndIf
-  \State $T \gets T \cup \{(\mathit{instr}, \mathit{verify}, |p|)\}$ \Comment{$|p|$ là độ khó}
-\EndFor
-\If{$T = \emptyset$ \textbf{và} $g_T \neq \bot$} \Comment{đồ thị còn quá thưa để ghép chuỗi}
-  \State $p \gets \textsc{Plan}(G, \emptyset, g_T)$ \Comment{BFS tiến trên precondition/effect}
-  \If{$p \neq \bot$}
-    \State $T \gets \{(\text{tác vụ đạt mục tiêu kết thúc}, \textsc{Reached}(g_T), |p|)\}$
-  \EndIf
-\EndIf
-\State \Return $T$
-\Statex
-\Function{Dfs}{$p$} \Comment{trả về \textbf{đúng} khi đã đủ số chuỗi cần liệt kê}
-  \If{$|p| \ge \mathit{min\_len}$}
-    \State $P \gets P \cup \{p\}$ \Comment{chuỗi con cũng là một task hợp lệ, ngắn hơn}
-    \If{$|P| \ge \mathit{max\_paths}$} \State \Return \textbf{đúng} \EndIf
-  \EndIf
-  \If{$|p| \ge \mathit{max\_len}$} \State \Return \textbf{sai} \EndIf
-  \For{mỗi $\omega'$ kế tiếp của $p_{|p|}$ theo thứ tự tất định, với $\omega' \notin p$}
-    \If{$\textsc{Dfs}(p \text{ nối thêm } \omega')$} \State \Return \textbf{đúng} \EndIf
-  \EndFor
-  \State \Return \textbf{sai}
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
+mỗi node chỉ sinh thêm một số lượng hữu hạn chuỗi mới.
 
 Việc đánh giá kết quả ưu tiên các tiêu chí tất định khi có thể. Nếu operator
 cuối cùng là \emph{terminal} và website cung cấp điều kiện kết thúc có thể
@@ -604,76 +601,15 @@ mô hình ngôn ngữ nhỏ.
 \section{Tinh lọc dữ liệu}
 \label{sec:method-data}
 
-Các episode thu được sau quá trình khám phá chưa thể sử dụng trực tiếp để
-huấn luyện mô hình. Chúng tiếp tục trải qua ba giai đoạn xử lý nhằm kiểm soát
-chất lượng và chuyển đổi thành tập dữ liệu fine-tuning, đồng thời duy trì
-nguyên tắc \emph{prompt parity} trong toàn bộ pipeline
-(Hình~\ref{fig:curation}).
+Các episode đã vượt qua các cổng chất lượng ở Mục~\ref{sec:method-success} vẫn
+chưa thể dùng trực tiếp để huấn luyện. Chúng còn phải được chuyển thành các mẫu
+huấn luyện theo nguyên tắc \emph{prompt parity}, và trên đường đi còn ba bộ lọc
+nữa ở mức episode mà chỉ khâu này mới thực hiện được, vì chúng dựa trên chính
+những bước \emph{sống sót sau khi xuất ra} chứ không dựa trên episode thô.
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.50\textwidth]{Figures/fig_curation.pdf}
-\caption[Pipeline tinh lọc dữ liệu]{Pipeline tinh lọc dữ liệu. Các episode
-được một judge độc lập đánh giá lại, phần suy luận được chuẩn hóa, sau đó
-được chuyển thành dữ liệu huấn luyện theo nguyên tắc prompt parity. Những
-episode tự tuyên bố thành công nhưng không được judge xác nhận sẽ bị loại
-khỏi tập dữ liệu.}
-\label{fig:curation}
-\end{figure}
-
-\subsection{Chấm độc lập các thành công tự tuyên bố}
-
-Một episode được solver kết luận là hoàn thành chưa đủ để xem là dữ liệu
-đúng. Vì vậy, bước \emph{judge} sử dụng một LLM mạnh hơn để đánh giá lại tất
-cả các episode tự tuyên bố thành công, theo cách tiếp cận dùng LLM làm bộ
-chấm đã được kiểm chứng trong các nghiên cứu trước~\cite{zheng2023judge}.
-Judge đối chiếu mục tiêu với trạng thái cuối của episode, bao gồm URL và nội
-dung trang tại thời điểm kết thúc, rồi đưa ra một phán quyết độc lập. Những
-phiên được xác minh bằng hàm kiểm tra tất định (\texttt{reached}) không đi qua
-bước này, vì kết quả của chúng vốn đã đáng tin.
-
-Điểm quan trọng là bước chấm này chạy \emph{ngay trong vòng lặp khám phá}, chứ
-không phải sau khi lượt chạy kết thúc. Một phán quyết \textsc{Fail} hạ ngay
-episode xuống thất bại \emph{trước khi} bất kỳ khâu nào phía sau nhìn thấy nó:
-episode đó không được ghi là thành công, không đi vào khâu phát hiện kỹ năng,
-và không được chọn cho lượt lấy mẫu không tiền tố. Vị trí của bước chấm là một
-quyết định thiết kế có chủ đích: một phán quyết ngoại tuyến là phán quyết mà
-lượt chạy \emph{không bao giờ hành động theo}, nên nó có thể sửa được tập dữ
-liệu nhưng không sửa được những gì lượt chạy đã làm dựa trên kết luận sai.
-Quyết định gọi judge cũng được đặt bên trong hàm giải một tác vụ thay vì ở các
-nơi gọi hàm đó, để không một điểm gọi mới nào có thể vô tình bỏ qua nó. Hệ
-thống vẫn giữ một kịch bản chấm ngoại tuyến độc lập, dùng chung prompt với bộ
-chấm trực tuyến, để chấm lại các lượt chạy cũ thu thập trước khi cơ chế này
-tồn tại.
-
-Kết quả đánh giá của judge được lưu bổ sung bên cạnh kết luận ban đầu thay vì
-ghi đè lên kết quả do solver tạo ra. Khi dựng dataset, hệ thống có thể lựa
-chọn chỉ giữ lại các episode đã được judge xác nhận thành công, đồng thời
-loại bỏ những episode chưa từng trải qua bước đánh giá này.
-
-\subsection{Viết lại suy nghĩ (thought re-annotation)}
-
-Chuỗi suy luận do solver sinh ra có chất lượng không đồng đều, trong khi đây
-lại là tín hiệu mà mô hình fine-tune sẽ học theo. Do đó, mỗi bước suy luận
-được viết lại theo một khuôn dạng thống nhất gồm bốn thành phần: (i) đánh giá
-ngắn gọn về trạng thái hiện tại, (ii) phản tư nếu hành động trước đó không
-đem lại tiến triển, (iii) \emph{subgoal} (mục tiêu con) của bước hiện tại và
-(iv) ở bước kết thúc, một phép kiểm tra tường minh xem mục tiêu của task đã
-được hoàn thành hay chưa.
-
-Thành phần \emph{subgoal} được khôi phục bằng cách áp dụng lại chính thuật
-toán phân đoạn trajectory sử dụng trong giai đoạn phát hiện skill. Quan trọng
-hơn, thông tin này chỉ xuất hiện trong phần phản hồi của assistant
-(\emph{assistant target}) và không được đưa vào prompt đầu vào. Thiết kế này
-đảm bảo dữ liệu huấn luyện phản ánh đúng điều kiện suy luận thực tế, nơi mô
-hình không được cung cấp trước subgoal của bước hiện tại.
-
-\subsection{Dựng dataset với prompt parity}
-
-Ở giai đoạn cuối, các episode được chuyển thành các mẫu instruction-tuning
-(tinh chỉnh theo chỉ dẫn) theo nguyên tắc \emph{prompt parity}: cấu trúc
-prompt sử dụng khi huấn luyện phải trùng khớp với prompt mà solver nhận được
-trong quá trình suy luận.
+Mỗi bước của một episode trở thành một mẫu instruction-tuning (tinh chỉnh theo
+chỉ dẫn), trong đó nguyên tắc \emph{prompt parity} đòi hỏi cấu trúc prompt lúc
+huấn luyện phải trùng khớp với prompt mà solver nhận được lúc suy luận.
 
 Để đảm bảo tính nhất quán, system prompt được sử dụng trực tiếp từ solver thay
 vì sao chép thủ công. Quan sát trang được cắt bằng đúng thủ tục tiền xử lý sử
@@ -782,8 +718,8 @@ HSGE được hiện thực bằng Python. Bảng~\ref{tab:modules} trình bày 
 
 Một đặc điểm của kiến trúc là mỗi vai trò sử dụng LLM (site seeder, explorer,
 solver, solver riêng cho tác vụ ngữ nghĩa, bộ lập kế hoạch subgoal, bộ cắt
-đoạn, bộ trừu tượng hóa, bộ kiểm chứng, inducer, judge và bộ viết lại suy
-luận) đều có thể cấu hình mô hình độc lập. Nhờ đó, các thành phần được gọi
+đoạn, bộ trừu tượng hóa, bộ kiểm chứng, inducer và judge) đều có thể cấu hình
+mô hình độc lập. Nhờ đó, các thành phần được gọi
 thường xuyên có thể sử dụng những mô hình chi phí thấp hơn, trong khi các mô
 hình mạnh hơn được dành cho những bước yêu cầu chất lượng cao như giải tác vụ
 ngữ nghĩa, operator induction và judge. Hai vai trò tương tác trực tiếp với
@@ -801,14 +737,6 @@ mọi tác vụ liên quan tới tài khoản đều bị cấm ở khâu đề 
 (Mục~\ref{sec:method-lowlevel}): tài khoản là tài nguyên dùng chung giữa các
 lượt chạy, và một thao tác đăng xuất hay đổi mật khẩu có thể khóa toàn bộ các
 lượt chạy sau ra ngoài.
-
-Toàn bộ pipeline cũng được thiết kế theo hướng tách biệt giữa thuật toán và
-backend (lớp thực thi bên dưới). Hệ thống hỗ trợ cả backend thật và các
-backend mô phỏng tất định (LLM theo kịch bản, embedding giả lập và website mô
-phỏng), trong đó backend thật chỉ là một hiện thực khác của cùng giao diện. Thiết kế này
-cho phép kiểm thử đơn vị các thành phần cốt lõi bằng các điều kiện kiểm tra
-xác định, đồng thời giảm sự phụ thuộc vào chi phí API cũng như trạng thái
-hoạt động của website trong quá trình phát triển.
 
 Để hỗ trợ khả năng khôi phục sau khi gián đoạn, các sản phẩm trung gian như
 skill, operator, đồ thị toán tử, kết quả khám phá của từng node và nhật ký sự
@@ -867,8 +795,7 @@ Chấm lại episode (trực tuyến và ngoại tuyến) &
 \texttt{webarena/verify},
 \texttt{judge\_episodes} \\
 
-Tinh lọc dữ liệu &
-\texttt{reannotate\_thoughts},
+Dựng tập dữ liệu &
 \texttt{build\_sft\_dataset} \\
 
 Chia train/val, gộp nhiều website &

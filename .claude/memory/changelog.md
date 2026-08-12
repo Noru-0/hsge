@@ -6,6 +6,26 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-12
 
+- **10:00** — `Thesis_report/thesis_hsge_vi/Chapter{1,3,4,5,6}`,
+  `Appendix/appendix1.tex` — **rút gọn Chương 3 theo yêu cầu user + gom cơ chế
+  chấm thành công.** (a) Thêm §3.3.5 `sec:method-success`: gom ba cơ chế quyết
+  định một phiên là thành công (reached tất định / tự tuyên bố + cổng mã cho
+  MOD-COMPOSITE / judge inline hạ cấp) vốn nằm rải rác ở 3 mục; §3.6.1 cũ
+  (judge) bị xoá vì nội dung đã chuyển vào đây. (b) **Xoá hẳn phần viết lại
+  suy nghĩ (thought re-annotation)** khỏi toàn quyển — kiểm chứng bằng dữ liệu:
+  `training_data/train.jsonl` có **0/4288** mẫu mang định dạng
+  `State:/Reflection:`, tức bước này **chưa từng được áp dụng** cho tập huấn
+  luyện thật, nên mô tả nó là một claim không có dữ liệu đỡ. Đã gỡ ở C1 (đóng
+  góp), C3 (§3.6.2, vai trò LLM, bảng module, đoạn urls), C4 (ablation (c) →
+  đổi thành cổng hành động hữu hiệu), C5 (threats), C6 (2 chỗ), phụ lục (bảng
+  script, bảng vai trò LLM, prompt, lệnh runbook). (c) Gộp §3.4.1–3.4.3 thành
+  một tiểu mục. (d) Xoá Thuật toán 3 (sinh semantic task) vì trùng văn xuôi.
+  (e) Xoá đoạn backend mô phỏng ở §3.8. (f) Xoá Hình `fig_curation` — hình này
+  vẽ cả bước viết lại lẫn nhãn "chia theo trajectory", cả hai đều sai.
+  **Lưu ý cho phiên sau**: `Figures/fig_pipeline.pdf` vẫn còn nhãn "Cổng chất
+  lượng (judge, viết lại)" bên trong ảnh, không có file nguồn để sửa.
+  Chương 3 còn 34 trang (từ 38). Build: 160 trang, 0 dấu `??`, 7 overfull.
+
 - **09:45** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex`,
   `Appendix/appendix1.tex`, `main.tex` — **đồng bộ Chương 3 với code hiện tại.**
   Chương 3 trước đó mô tả một phiên bản pipeline cũ. Các sai lệch đã sửa, theo

@@ -84,8 +84,6 @@ quan sát, ảnh chụp màn hình, khai thác href \\
 vai trò, điều phối run \\
 \texttt{build\_sft\_dataset.py} & 224 & Episode $\rightarrow$ \texttt{jsonl}
 SFT sắp theo curriculum, giữ prompt parity \\
-\texttt{reannotate\_thoughts.py} & 186 & Viết lại thought mỗi bước thành dạng
-state / reflection / completion-check \\
 \texttt{judge\_episodes.py} & 108 & LLM kiểm chứng lại các episode tự nhận
 thành công \\
 \texttt{replay\_segmentation.py} & 131 & Chạy lại segmentation ngoại tuyến trên
@@ -212,8 +210,7 @@ gọi'' là bậc độ lớn số lần gọi trên mỗi node, chính nó bi�
 \texttt{skill\_abstractor} & DeepSeek & mỗi cụm chín & Chỉ văn bản \\
 \texttt{skill\_verifier} & DeepSeek & mỗi skill ứng viên & Chỉ văn bản \\
 \texttt{operator\_inducer} & DeepSeek & mỗi skill được nhận & Chỉ văn bản \\
-\texttt{episode\_judge} & DeepSeek & ngoại tuyến, mỗi lần đạt & Chỉ văn bản \\
-\texttt{thought\_reannotator} & DeepSeek & ngoại tuyến, mỗi bước & Chỉ văn bản \\
+\texttt{episode\_judge} & DeepSeek & mỗi lần tự nhận đạt & Chỉ văn bản \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -525,29 +522,6 @@ actually shown on the final page; it navigated to the wrong page.
 Return JSON {"verdict": "PASS"|"FAIL", "reason": "<one sentence>"}.
 \end{lstlisting}
 
-\section{Bộ viết lại suy nghĩ}
-\label{app:prompt-reannotator}
-
-Subgoal đi vào prompt này nhưng không bao giờ đi vào prompt huấn luyện: lúc suy
-luận không có thành phần nào cung cấp ``subgoal hiện tại'', nên để nó vào đầu
-vào sẽ tạo ra đúng cái lệch train/serve mà khâu tinh lọc sinh ra để ngăn.
-
-\begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
-You REWRITE one step's internal reasoning for a web agent's training data. You
-are given the step's GOAL, its SUBGOAL (or, for the final step of a task, a
-note that a final decision is being made), the action PRIOR to this one and its
-outcome (if any), the current page, and the action this step took. Produce a
-terse one-sentence STATE assessment of what the page currently shows. If the
-PRIOR action's outcome shows no progress or an error, write a one-sentence
-REFLECTION on why (empty string if the prior action clearly succeeded, or this
-is the first step). If this step is the FINAL step of the task (marked below),
-also judge in COMPLETION_CHECK whether the goal is actually satisfied by the
-current page - not just whether the agent believes so (empty string
-otherwise).
-Return JSON {"state": "<one short sentence>", "reflection": "<sentence or empty
-string>", "completion_check": "<sentence or empty string>"}.
-\end{lstlisting}
-
 \chapter{Thống kê run chi tiết}
 \label{app:runs}
 
@@ -741,7 +715,6 @@ bổ sung; hãy chạy chúng trên một bản sao nếu cần giữ nguyên ar
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 python judge_episodes.py outputs/<run>          # kiem lai cac lan tu nhan dat
-python reannotate_thoughts.py outputs/<run>     # thought -> thought_v2
 python build_sft_dataset.py outputs/<run>/episodes train.jsonl --require-judge
 \end{lstlisting}
 
