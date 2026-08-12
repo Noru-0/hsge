@@ -14,7 +14,8 @@ viết report, rồi mở đúng file chủ đề cần dùng.
 | [06-de-tai-hsge.md](06-de-tai-hsge.md) | Ngữ cảnh đề tài HSGE: bài toán, kết quả đã có, nguồn tư liệu trong repo, mapping vào từng chương |
 | [07-dan-y-chi-tiet.md](07-dan-y-chi-tiet.md) | Dàn ý 6 chương: **C3 là bản ĐÃ GIAO** (cập nhật 12-08), các chương khác còn là dàn ý dự kiến; kèm trạng thái viết và rủi ro O2 (semantic task) đã giải quyết tới đâu |
 | [08-citation-audit-ch2.md](08-citation-audit-ch2.md) | Kết quả xác minh citation Chương 1–2: claim nào từng sai và đã sửa, số liệu nào đã đúng, các mục còn treo trước khi nộp |
-| [09-rubric-citation-audit-ch3.md](09-rubric-citation-audit-ch3.md) | Rà + **chấm điểm Chương 3** theo rubric Khoa (TC2 8,5 / TC3 7,5 / TC5 7,5 tính tới 12-08), audit citation, và danh sách 7 khoản nợ xếp theo rủi ro trước hội đồng |
+| [09-rubric-citation-audit-ch3.md](09-rubric-citation-audit-ch3.md) | Rà + **chấm điểm Chương 3** theo rubric Khoa (TC2 8,5 / TC3 7,5 / TC5 7,5 tính tới 12-08), audit citation, 7 khoản nợ xếp theo rủi ro, và **bảng quy ước thuật ngữ đã chốt** (đợt sửa văn phong 12-08) |
+| [10-audit-c4-c6-phuluc.md](10-audit-c4-c6-phuluc.md) | **Cần bổ sung gì ở C4–C6 + phụ lục**: phụ lục còn nói theo 12 run phát triển trong khi C4 dùng 4 đợt chính thức (P0), lời hứa nào của C3 chưa được trả, số học GOAL 63≠66, và thống kê văn phong từng chương |
 
 ## Nguồn gốc
 
