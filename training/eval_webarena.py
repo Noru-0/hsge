@@ -433,18 +433,21 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
              with_axtree: bool = False, task_timeout_s: int = 0) -> dict:
     from hsge.webarena.agents import Solver
 
-    browser = make_task_browser(task_id, headless, timeout_ms)
+    browser = None
     t0 = time.time()
     if hasattr(llm, "calls"):
         llm.calls.clear()                      # per-task, not per-sweep
     steps: list = []
     terminal_delivery = ""
     try:
-        # The budget covers everything that touches the browser -- env setup
-        # included, which is where the observed hang was and which BrowserGym's
-        # own 30s action timeout does not bound. Tracing and the return value
-        # are built after the alarm is cleared.
+        # The budget covers everything that touches the browser, and that must
+        # include make_task_browser(): shopping_admin's webarena.782 hung there
+        # for 24 minutes with the budget armed only around reset(), so the alarm
+        # was never running when it mattered. `gym.make` builds the WebArena task
+        # and can block on the network before a single action is taken.
+        # Tracing and the return value are built after the alarm is cleared.
         with _wall_clock_budget(task_timeout_s):
+            browser = make_task_browser(task_id, headless, timeout_ms)
             browser.reset()
             solver = Solver(llm, max_steps=max_steps, vision=False)
             steps, _, _, _, _, infeasible, stop_reason = solver.solve(browser, browser.goal)
@@ -516,7 +519,9 @@ def run_task(task_id: int, llm, max_steps: int, headless: bool,
         }
     finally:
         try:
-            browser.env.close()
+            # None when the budget expired inside make_task_browser() itself.
+            if browser is not None:
+                browser.env.close()
         except Exception:
             pass
 

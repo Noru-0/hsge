@@ -312,3 +312,30 @@ def test_the_budget_is_disarmed_afterwards():
     assert _s.alarm(0) == 0, "the alarm outlived its context manager"
     with _wall_clock_budget(0):          # 0 disables
         _t.sleep(0.01)
+
+
+def test_a_hang_in_browser_construction_is_bounded_too():
+    """The budget must cover make_task_browser(), not just reset().
+
+    shopping_admin's webarena.782 hung for 24 minutes inside `gym.make` with the
+    budget armed only around `reset()` -- the alarm was not running when it
+    mattered, so nothing was ever recorded and the sweep stalled. The row must
+    still come back as a timeout even though no browser was ever built.
+    """
+    import training.eval_webarena as E
+
+    def _hang(*a, **k):
+        import time as _t
+        _t.sleep(30)
+
+    orig = E.make_task_browser
+    E.make_task_browser = _hang
+    try:
+        r = E.run_task(782, llm=None, max_steps=5, headless=True,
+                       timeout_ms=1000, out_dir=None, task_timeout_s=1)
+    finally:
+        E.make_task_browser = orig
+
+    assert r["timed_out"] is True, "a hang in construction must be a timeout row"
+    assert r["success"] is False and r["task_id"] == 782
+    assert r["elapsed_s"] < 5, "it must interrupt construction, not wait it out"
