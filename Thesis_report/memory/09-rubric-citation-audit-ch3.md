@@ -308,3 +308,42 @@ Chương ngắn đi 3 trang (36 → 33), nợ #4 (độ dài) nhích một chút
 **Chưa làm**: C4, C5, C6 vẫn còn nguyên lỗi cùng loại — C6 nặng nhất
 ("agent" 12 lần / "tác nhân" 0, "task" 21 / "tác vụ" 0). User muốn đọc lại C3
 rồi mới quyết.
+
+
+## Nợ #3 và #5 đã đóng (2026-08-12 19:46)
+
+**Nợ #3 — điểm mới so với nền vay mượn.** Đã thêm §3.2 `sec:method-novelty`
+"Nền tảng kế thừa và điểm mới của HSGE", đặt ngay sau Tổng quan để người chấm
+thấy sớm. Gồm: bảng 5 nền tảng (options, STRIPS, ReAct, DP-means, sentence
+embedding) × 3 cột (nền / dùng ở đâu / HSGE thêm gì); hai thành phần không kế
+thừa từ khung nào (hai nguồn sinh tác vụ ngữ nghĩa chạy song song, bộ cổng
+chất lượng đặt trong vòng lặp); và một đoạn tự giới hạn — đây là đóng góp
+*thiết kế*, còn thực nghiệm chỉ đo được toàn pipeline, chỉ riêng tác động của
+tập dữ liệu là đo tách bạch được.
+
+Đoạn tự giới hạn đó là có chủ đích: rubric TC3 thưởng cho việc phát biểu đóng
+góp, nhưng bài học review #4 (thổi phồng đóng góp) phạt nặng hơn nếu phát biểu
+vượt quá bằng chứng. Viết cả hai vế cùng lúc là cách rẻ nhất để lấy điểm TC3
+mà không mở ra một câu hỏi phản biện.
+
+**Nợ #5 — câu dài.** Trọng tâm đã dời khỏi C3 sau các đợt trước, nên đợt này
+làm cả quyển. Kết quả (câu ≥ 40 âm tiết, bỏ bảng/mã giả):
+
+| | trước | sau |
+|---|---|---|
+| C1 | 20/91 = 21% | 13/103 = **12%** |
+| C2 | 31/134 = 23% | 21/150 = **14%** |
+| C3 | 42/395 = 10% | 37/418 = **8%** |
+| C4 | 37/248 = 14% | 25/268 = **9%** |
+| C5 | 18/307 = 5% | giữ nguyên |
+| C6 | 19/50 = **38%** | 3/65 = **4%** |
+| **toàn quyển** | 167/1225 = 13% | **117/1311 = 8%** |
+
+Không một phát biểu hay con số nào bị đổi; chỉ tách câu và bỏ danh từ hóa.
+117 câu còn lại phần lớn là liệt kê có cấu trúc (bốn nhãn task, ba chốt chặn,
+danh sách tham số) — đọc trôi, không nên tách thêm.
+
+**Còn lại**: nợ #1 (số run phát triển mồ côi), nợ #7 (ba hình có chữ sai bên
+trong: `fig_pipeline` còn nhãn "viết lại", `fig_roadmap` còn "graph"/
+"fine-tune", `fig_frontier` còn "tier" — nguồn YAML nằm ở
+`Thesis_report/.drawio-tmp/` cho 5 hình khác, ba hình này phải vẽ lại).

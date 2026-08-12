@@ -6,6 +6,18 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-12
 
+- **19:46** — `Thesis_report/thesis_hsge_vi/Chapter{1,2,3,4,6}` — **đóng nợ #3
+  và #5.** (a) Nợ #3: thêm §3.2 `sec:method-novelty` "Nền tảng kế thừa và điểm
+  mới của HSGE" — bảng 5 nền (options / STRIPS / ReAct / DP-means / sentence
+  embedding) kèm nơi dùng và phần khóa luận bổ sung, cộng hai thành phần không
+  kế thừa từ khung nào, cộng một đoạn tự giới hạn (đóng góp thiết kế, thực
+  nghiệm chỉ đo được toàn pipeline). Không trùng §2.6: mục đó định vị so với
+  *hệ thống*, mục mới định vị so với *khung lý thuyết* — đúng pattern GVHD #2.
+  (b) Nợ #5: tách câu dài, không đổi phát biểu hay số liệu nào. C1 21→12%,
+  C2 23→14%, C3 10→8%, C4 14→9%, C6 **38→4%**; toàn quyển 13% → **8%**
+  (167/1225 → 117/1311). Build sạch: 169 trang, 0 error, 0 undefined,
+  7 overfull. Commit `ae72123`.
+
 - **14:47** — `Thesis_report/thesis_hsge_vi/{Chapter4,Chapter5,Chapter6,Appendix}`
   — **đồng bộ quyển với run 20, hoàn thiện C5, đóng ba khoản nợ.** (a) *P0*:
   phụ lục còn báo cáo 12 run phát triển (Reddit/GitLab) và gọi đó là "mọi run
