@@ -1,54 +1,46 @@
 # Dàn ý chi tiết báo cáo (v1 — 2026-07-17, chưa gửi GVHD duyệt)
 
-## ⚠️ RỦI RO LỚN NHẤT CHƯA XỬ LÝ (phát hiện 2026-07-20)
+## ✅ RỦI RO LỚN NHẤT — ĐÃ GIẢI QUYẾT MỘT PHẦN (cập nhật 2026-08-12)
 
-**Semantic task chưa từng chạy thật lần nào.** Kiểm chứng trực tiếp trên
-`outputs/`:
-- **0 / 1745** episode có tag `GOAL` (toàn bộ 12 run).
-- `summary.json` mọi run: `GOAL: {success: 0, fail: 0}`; không có sự kiện
-  goal-task nào trong `run_log.jsonl`.
-- 370 example trong `training/train_12.jsonl` **100% từ low-level task**.
+**Bối cảnh (2026-07-20):** semantic task chưa từng chạy thật lần nào —
+0/1745 episode có tag `GOAL` trên toàn bộ 12 run, vì đồ thị toán tử gần như
+không có cạnh (run lớn nhất `wa_run_07`: 13 operator, đúng 1 cạnh
+effect→precondition, hình thành ở operator cuối lúc run đã ngắt). Nguyên
+nhân gốc là điểm yếu canonicalization predicate (synonym thật 0,570 < ngưỡng
+0,6 < cặp sai 0,606). Khi đó C1/C6 đang nói quá ở mục tiêu O2.
 
-Nguyên nhân (không phải bug): operator graph gần như không có cạnh. Ở run
-lớn nhất `wa_run_07` (128 node, 13 operator) chỉ có **đúng 1 cạnh**
-effect→precondition (`clickandexaminelink → navigate_to_post`), và cạnh đó
-chỉ hình thành khi operator thứ 13 — operator cuối — được induce, lúc run
-đã bị ngắt (`status: "running"`). Nên `all_chains(min_len=2)` rỗng suốt run
-và `_goal_tasks()` không sinh được gì. Đây là hệ quả trực tiếp của điểm yếu
-predicate canonicalization đã biết (synonym thật 0,570 < ngưỡng 0,6 < cặp
-sai 0,606): mỗi operator nhận một predicate id riêng nên không nối được.
+**Bốn run `wa_run_20_*` (08-2026) đã thay đổi tình hình:** 66 task GOAL được
+thực thi, 25 thành công. Nhưng **phần lớn không đến từ ghép chuỗi**: 57 lượt
+từ **seed năng lực website** (cơ chế từ trên xuống, thêm sau) và chỉ 6 lượt
+từ chuỗi operator, với hai website không hình thành nổi chuỗi nào. Tức chẩn
+đoán "đồ thị rỗng cạnh" vẫn đúng; thứ cứu được số liệu là một nguồn task
+song song, không phụ thuộc đồ thị.
 
-Cơ chế **có** cài đặt đầy đủ và có test trên mock (`test_operators.py`,
-`test_goal_task.py` assert đúng các chain) — chỉ là chưa kích hoạt được
-trên site thật.
+**Đã xử lý trong báo cáo (không còn nói quá):**
+- C6 bảng O2 ghi "Hoàn thành một phần", nêu thẳng 57 vs 6 và hai website
+  không có chuỗi nào.
+- C4 §4.2.1 báo cáo tỷ trọng hai nguồn như một nhận xét chính.
+- C5 §5.4.3 phân tích vì sao hai cổng lọc operator đúng nhưng đồ thị vẫn
+  thưa (cổng tautology và từ vựng trạng-thái-trang kéo ngược nhau ở skill
+  page-local), và kết luận nguồn seed từ trên xuống mới là cơ chế chính.
+- C3 §3.5.4 mô tả cơ chế seed (trước 2026-08-12 chương không hề nhắc tới nó).
+- Câu ở C5 §5.1 khẳng định "mọi công đoạn kể cả ghép chuỗi operator đã chạy
+  đầu–cuối" đã được viết lại cho đúng phạm vi.
 
-**Chỗ khóa luận đang nói quá:** `Chapter6/chapter6.tex` bảng O1–O5, dòng O2
-ghi "Achieved: ... chain-based goal generation"; `Chapter1/chapter1.tex` O2
-hứa "verified, long-horizon semantic tasks". Đúng loại lỗi P0-1 mà review
-thesis mẫu bắt nặng nhất.
+**Còn lại:** ghép chuỗi mới được chứng minh là *khả thi*, chưa *đủ dày* để
+làm nguồn dữ liệu chính. Đây là hạn chế đã công bố, không còn là rủi ro ẩn.
 
-**Chỗ thứ BA, phát hiện 2026-07-20 khi rà soát phản biện** (chưa xử lý, cần
-user quyết): `Chapter5/chapter5.tex` §5.1, câu "Equally important is what the
-end-to-end run \emph{demonstrated}: every stage --- exploration, discovery,
-**operator chaining**, curation, training, serving, and official evaluation
---- executed against a real website without manual intervention". Câu này
-mạnh hơn O2: nó khẳng định khâu ghép chuỗi operator **đã chạy đầu–cuối trên
-site thật**, trong khi `all_chains` trả về rỗng suốt cả 12 run nên không có
-chuỗi nào được ghép. Khâu induction operator thì có chạy thật; khâu *chaining*
-thì không sinh ra gì. Nếu run mới vẫn 0 goal task, phải sửa câu này cùng lúc
-với O2 (bản VI: câu "mọi công đoạn --- khám phá, phát hiện, ghép chuỗi
-operator, ... --- đều chạy..." ở cùng mục). Cố ý CHƯA sửa để giữ đúng quyết
-định "chờ kết quả run mới" của user.
+## Trạng thái viết
 
-**Quyết định của user (2026-07-20):** tạm gác, **sẽ chạy lại thực nghiệm
-sau**. Giữ nguyên câu chữ hiện tại chờ kết quả run mới. ⚠️ **Nếu run mới
-vẫn không sinh được semantic task thì BẮT BUỘC sửa O2 ở C1/C6** thành
-"cài đặt + kiểm chứng trên mock, chưa kích hoạt được trên run thật", báo
-cáo 0 GOAL episode ở C4, và viết mục C5 phân tích operator graph rỗng cạnh
-như một kết quả âm có giá trị. Không được để "Achieved" nếu số liệu không
-đỡ được.
+⚠️ **Cập nhật 2026-08-12:** bản LaTeX **đang dùng là bản tiếng Việt
+`Thesis_report/thesis_hsge_vi/`** (160 trang, build sạch, C1–C6 + phụ lục
+đều đã viết trọn và đã cập nhật theo kết quả thực nghiệm cuối). Bản tiếng
+Anh `thesis_hsge/` **đã lệch bốn chương (C3–C6)** và user quyết định tạm để
+nguyên, chưa đồng bộ. `Appendix/decuongchitiet.tex` tạm bị bỏ khỏi bản build
+vì số liệu của đề cương đã nộp không còn khớp C4.
 
-## Trạng thái viết (cập nhật 2026-07-17)
+Phần bên dưới là ghi chép trạng thái **tháng 7** của bản tiếng Anh, giữ lại
+để đối chiếu lịch sử — không phản ánh hiện trạng:
 
 Bản LaTeX sống ở **`Thesis_report/thesis_hsge/`** (fork từ template, tiếng
 Anh, lề đúng quy định Khoa, biblatex style=ieee, build sạch 43 trang):
@@ -383,67 +375,62 @@ critique** ("However, ...") — tránh lỗi "giống khảo sát tài liệu".
   (Đã kiểm tra 2026-07-17: 2 PDF trong thesis_v3 — 2507.17128v2,
   2510.02585v1 — đều là paper autoscaling của đề tài mẫu, KHÔNG liên quan.)
 
-## Chapter 3 — Proposed Method (~18–22 trang) ★ TRỌNG TÂM
+## Chapter 3 — Proposed Method — ĐÃ VIẾT XONG (36 trang, tr. 22–57)
 
-Nguồn chính: `.claude/rules/architecture.md`, `docs/superpowers/specs/*`,
-`hsge/` source. Quy tắc: sơ đồ + diễn giải từng thành phần; thuật toán = mã
-giả; hạn chế code thật; link repo để footnote.
+⚠️ Dàn ý dưới đây là **bản đã giao**, cập nhật 2026-08-12 sau đợt đồng bộ với
+code (commit `0a4b3d2`) và đợt cắt gọn (`84184a0`). Bản dàn ý dự kiến cũ
+(~18–22 trang, có bước viết lại suy nghĩ, chia train/val theo trajectory,
+task chỉ INFO/NAV/MOD) **đã lỗi thời — đừng dùng lại**. Chấm điểm và danh
+sách còn nợ: [09-rubric-citation-audit-ch3](09-rubric-citation-audit-ch3.md).
 
-- **3.1 Overview** — nhắc lại problem setup; **kiến trúc tổng quan** (hình):
-  Exploration loop → Skill discovery → Operator graph → Goal-task generation →
-  Data curation → SFT. Ba design principles: (P1) *verify trước khi tái sử
-  dụng* (skill/task/trajectory đều qua cổng kiểm chứng); (P2) *graph thay vì
-  flat* (hai tầng: trang–trạng thái & kỹ năng–operator); (P3) *task hai tầng*:
-  low-level task (LLM đề xuất theo trang) để khám phá và thu skill; semantic
-  task (compose từ operator graph) để tạo dữ liệu dài hạn có ngữ nghĩa.
-- **3.2 Two-level graph formalism** — định nghĩa & ký hiệu: low-level graph
-  (page states + trajectory edges); high-level graph (skill = option ⟨I, π, β⟩,
-  initiation/effect edges, skill→skill composition edges); operator =
-  ⟨preconditions, effects⟩ trên NL predicates được chuẩn hóa embedding;
-  terminal predicate. Đây là phần "GRAPH" của câu chuyện — viết kỹ.
-- **3.3 Graph-guided exploration** —
-  - Frontier: priority queue 2 tier (tier 0 = URL agent thực sự đi tới;
-    tier 1 = href mining) + **URL templating** với per-template cap (chống
-    flood trang trùng dạng) + content dedup bằng axtree hash. Mã giả frontier
-    loop. Lý do thiết kế: frontier starvation từ run thật (kể ở C5).
-  - **Low-level task proposal** (PageExplorer): LLM đề xuất task cụ thể theo
-    trang, phân loại cấu trúc INFO/NAV/MOD, negative context + dedup sitewide,
-    read-only mode, thứ tự cắt (INFO bị cắt trước). Nêu rõ vì sao task
-    LLM-proposed ≠ random walk, nhưng cũng nói rõ giới hạn: đây mới là task
-    theo trang, ngắn hạn — nguyên liệu cho skill discovery, chưa phải
-    semantic task (được sinh ở 3.5).
-  - **Solver**: action space 10 hành động, history có outcome, phát hiện kẹt
-    (same-target + no-progress → warn → hard stop), wrap-up call, infeasible
-    là kết cục hạng nhất. Mã giả solve loop.
-- **3.4 Skill discovery pipeline** — segmentation (cut = URL change + axtree
-  similarity drop, LLM arbitration, merge nav 1-step); streaming clustering
-  (cosine-threshold/DP-means, không cần biết trước số cluster); abstraction
-  (cluster → parameterized SkillCard); verification (admit khi ≥k lần thành
-  công ở ngữ cảnh held-out). Mỗi bước 1 hình nhỏ hoặc 1 ví dụ chạy thật.
-- **3.5 From skills to operators and composed goal tasks** — operator
-  induction bằng LLM (vocabulary-aware để tái dùng predicate, anti-tautology
-  gate `eff − pre`); predicate registry (canonical id, threshold, vì sao
-  embedding-only thất bại — số liệu 0.570/0.606 từ wa_run_09); BFS planning;
-  **operator chaining** (`all_chains` DFS bounded) → mỗi chain ≥2 operator
-  thành 1 composed GOAL task với instruction sinh tự động — **đây chính là
-  SEMANTIC TASK** theo định nghĩa của đề tài (mục trọng tâm nhất của C3, đặt
-  tiêu đề mục nêu bật điều đó, vd "Semantic task generation via operator
-  chaining"). Verify: deterministic khi có terminal predicate, self-graded +
-  offline judge khi không.
-- **3.6 Data curation for SFT** — 3 pass offline: judge (LLM re-verify các
-  episode tự nhận thành công); thought reannotation (state/reflection/subgoal/
-  completion-check, replay segmentation offline; subgoal chỉ ở target, không ở
-  prompt — tránh train/serve mismatch); dataset builder (**prompt parity** với
-  Solver thật: cùng SYSTEM, cùng axtree cap, cùng outcome-annotated history;
-  loại step lỗi; giữ infeasible; curriculum ordering; metadata trajectory).
-  Nhấn mạnh nguyên tắc: *dữ liệu train nhìn thấy đúng cái model sẽ thấy lúc
-  inference*.
-- **3.7 SLM fine-tuning and serving** — LoRA trên Qwen3.5-9B (LLaMA-Factory,
-  template nothink — lý do: data không có <think>), split theo trajectory
-  (chống leak), merge + vLLM serving, tắt thinking khi inference.
-- **3.8 Implementation** — bảng module ↔ vai trò; seam mock/real backend
-  (giá trị: test deterministic không cần API); per-role LLM routing. Ngắn gọn,
-  chi tiết đẩy xuống Appendix A.
+- **3.1 Tổng quan** — vào/ra pipeline; vòng lặp khép kín; **ba loại phiên
+  LOCAL / UNPREFIXED / GOAL** (ba nhãn này đi tới tận curriculum của tập
+  huấn luyện); ba nguyên tắc P1 kiểm chứng trước khi tái dùng, P2 đồ thị thay
+  bộ nhớ phẳng, P3 tác vụ hai tầng (tầng ngữ nghĩa có **hai nguồn**: ghép
+  chuỗi từ dưới lên + seed từ trên xuống).
+- **3.2 Đồ thị hai tầng** — POMDP; axtree + action space (nói rõ là quy ước
+  kế thừa của WebArena/BrowserGym, không phải đóng góp); bảng action space
+  **13 hành động** gồm cả `scroll`/`hover`/`noop`; `goto` dùng đường dẫn
+  tương đối + phép biến đổi URL hai chiều (độc lập máy chủ); tầng thấp; tầng
+  cao (option ⟨I,π,β⟩ + skill card); operator STRIPS.
+- **3.3 Khám phá có định hướng** (mục nặng nhất, 10 trang)
+  - 3.3.1 Frontier: hàng đợi ưu tiên hai tầng, URL template, **trần cho cả
+    hai tầng** (tier 1 = 3, tier 0 = 8 — tier 0 KHÔNG được miễn trừ), chống
+    trùng ba mức (URL chuẩn hóa / URL sau điều hướng / hash nội dung),
+    Thuật toán 3.1.
+  - 3.3.2 Đề xuất task: **bốn loại INFO/NAV/MOD/COMPOSITE**, read-only
+    fail-closed, ba cơ chế đa dạng (ghi nhớ toàn run, trần NAV=1 và INFO=2
+    vô điều kiện, thứ tự ưu tiên khi tràn), seed làm ngữ cảnh.
+  - 3.3.3 Solver: prompt (axtree 6000 ký tự, mục lỗi luôn hiện, cửa sổ 6
+    hành động); hành động lỗi vẫn vào lịch sử; **ba chốt chặn** (đối tượng
+    đích 2/4, novelty 4/8, lời gọi tổng kết); `stop_reason`; cổng "MOD và
+    COMPOSITE phải làm trang đổi"; chế độ bám subgoal.
+  - 3.3.4 **Lấy mẫu không tiền tố** — giải lại từ trang chủ mỗi task đã thành
+    công (Go-Browse Alg.3); lý do: 287/465 quỹ đạo cũ dài đúng một bước.
+  - 3.3.5 **Một phiên được chấm thành công như thế nào** — gom ba cơ chế
+    (`reached` tất định / tự tuyên bố + cổng mã / judge inline hạ cấp) và
+    nói rõ chúng chỉ chi phối dữ liệu huấn luyện, không chi phối số ở C4.
+- **3.4 Phát hiện kỹ năng** — Thuật toán 3.2; một tiểu mục gộp ba giai đoạn
+  (phân cắt / gom cụm trực tuyến / trừu tượng hóa) + tiểu mục kiểm chứng.
+- **3.5 Sinh semantic task** — induction operator (ràng buộc mệnh đề phải là
+  **trạng thái trang**, lối ra khác lối vào; vocabulary-aware; cổng
+  tautology; **cổng grounding của effect** ≥ 0,5); predicate registry; ghép
+  chuỗi (DFS có chặn, ngân sách mỗi node); **3.5.4 seed năng lực website**
+  (ba ràng buộc prompt, repeats 3 theo loại trang, cho nghỉ sớm khi thất bại).
+- **3.6 Tinh lọc dữ liệu** — một mục liền, không tiểu mục: prompt parity
+  (import prompt của solver, không chép tay), bước lỗi bị loại khỏi đích
+  nhưng giữ trong lịch sử, **ba bộ lọc** (hành động hữu hiệu / infeasible
+  kiểu biện minh theo `stop_reason` / `goto` khác origin), curriculum theo
+  độ khó 1-2-độ dài chuỗi.
+- **3.7 Fine-tune SLM** — LoRA Qwen3.5-9B, template nothink, **chia train/val
+  theo (site, goal)** kèm loại bản lặp thừa và lấy mẫu phân tầng theo site,
+  merge + vLLM.
+- **3.8 Ghi chú hiện thực** — định tuyến LLM theo vai trò + vision/SoM, đăng
+  nhập lưu phiên, checkpoint/resume + fail-soft, bảng module.
+
+**KHÔNG có trong bản đã giao** (cố ý): bước viết lại suy nghĩ (0/4288 mẫu
+thật dùng nó), thuật toán mã giả cho việc sinh semantic task, đoạn backend mô
+phỏng, hình pipeline tinh lọc dữ liệu.
 
 ## Chapter 4 — Experiments (~8 trang khung, sẽ nở ra) — bổ sung sau
 

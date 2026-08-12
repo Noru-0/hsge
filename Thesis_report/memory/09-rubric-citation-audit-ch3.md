@@ -168,3 +168,93 @@ có thật nhưng chương không tự phát biểu điểm mới), **TC5 ~7/10*
 đủ hình/bảng, nhưng câu dài, thuật ngữ lệch, thiếu con trỏ dẫn chứng).
 Không có lỗi nào thuộc nhóm "phải sửa mới nộp được"; tất cả đều là sửa cộng
 điểm, phần lớn tốn dưới nửa ngày.
+
+## Chấm lại Chương 3 (2026-08-12, bản sau khi đồng bộ code + cắt gọn)
+
+Chốt trên commit `84184a0`. Ghi chú: bản chấm trước đó trong file này được
+viết trên một trạng thái **đang sửa dở** (818 dòng, 3 thuật toán) — số liệu
+dưới đây thay thế nó.
+
+Đối tượng: `chapter3.tex` **817 dòng** (bản audit 2026-08-07: 467), tương ứng
+**trang 22–57 của PDF = 36 trang**. Build sạch: 15 citation, 46 `\ref` đều
+phân giải, 0 dấu `??`. Cấu trúc: 8 mục, 16 tiểu mục, 6 hình, 2 bảng,
+**2 thuật toán**.
+
+### Việc đã làm trong đợt này (2026-08-12)
+
+Hai đợt sửa liên tiếp, cùng ngày:
+
+**(a) Đồng bộ với code.** Chương 3 trước đó mô tả một phiên bản pipeline cũ.
+Mười nhóm sai lệch đã sửa, nặng nhất là hai chỗ **mâu thuẫn trực tiếp với
+Chương 4**: thiếu hẳn cơ chế lấy mẫu không tiền tố (C4 báo cáo cả nhóm
+UNPREFIXED mà C3 chưa từng định nghĩa → thêm §3.3.4), và ghi sai phép chia
+train/val là theo trajectory trong khi code chia theo (site, goal). Còn lại:
+cổng grounding của effect, trần template cho tier-0, loại task COMPOSITE,
+chốt novelty + chế độ bám subgoal của solver, judge chạy inline, ba bộ lọc
+khâu dựng dataset, `scroll`/`hover`/`noop` + `goto` tương đối,
+checkpoint/resume. Phụ lục: bảng tham số +8 dòng, 4 prompt cập nhật theo code,
+thêm prompt `site_seeder` và `goal_planner`.
+
+**(b) Cắt gọn theo yêu cầu user.** Thêm **§3.3.5 "Một phiên được chấm thành
+công như thế nào"** (gom ba cơ chế `reached` tất định / tự tuyên bố + cổng mã
+cho MOD-COMPOSITE / judge inline, trước đó nằm rải ở ba mục và không chỗ nào
+phát biểu trọn vẹn — đây là câu hỏi user hỏi thẳng). Bỏ §3.6.1 cũ (nội dung
+chuyển vào §3.3.5), gộp §3.4.1–3.4.3, xoá Thuật toán 3, xoá đoạn backend mô
+phỏng ở §3.8, xoá Hình `fig_curation`.
+
+**Bỏ hẳn bước viết lại suy nghĩ (thought re-annotation) khỏi toàn quyển** —
+đây là phát hiện đáng nhớ nhất của đợt này: kiểm `training_data/train.jsonl`
+cho thấy **0/4288 mẫu** mang định dạng `State:/Reflection:`, tức bước này
+**chưa từng được chạy** cho tập huấn luyện thật. Mô tả nó trong báo cáo là một
+claim không có dữ liệu đỡ. Đã gỡ ở C1 (danh sách đóng góp), C3, C4 (ablation
+(c) đổi thành cổng hành động hữu hiệu), C5 (threats), C6 (2 chỗ) và phụ lục
+(bảng script, bảng vai trò LLM, prompt, lệnh runbook).
+
+### Điểm quy đổi
+
+**TC2 8,5/10 — TC3 7,5/10 — TC5 7,5/10** (bản 2026-08-07: 7,5 / 7 / 7).
+
+- **TC2 (phương pháp, 20%)**: pipeline mô tả trọn vẹn và **khớp code đã chạy
+  thật**; §3.3.5 làm rõ tiêu chí thành công, vốn là phần "phương pháp đánh
+  giá" mà rubric đòi. Trần 8,5 chứ không cao hơn vì mục "có căn cứ, dẫn
+  chứng" bị 9 câu số liệu không truy nguyên được kéo xuống (xem nợ #1).
+- **TC3 (đóng góp, 20%)**: đóng góp có thật và nay được mô tả trung thực hơn
+  (bỏ claim không có dữ liệu, công bố các cổng lọc). Vẫn 7,5 vì chương không
+  tự phát biểu điểm mới (nợ #3).
+- **TC5 (báo cáo viết, 20%)**: cộng điểm ở cấu trúc (hết tiểu mục mồ côi, hết
+  hình mâu thuẫn với chữ), trừ điểm ở câu văn (xem nợ #5). Hai lực triệt tiêu
+  nhau nên giữ 7,5.
+
+### Còn nợ, xếp theo rủi ro trước hội đồng
+
+1. **9 câu mang số liệu run phát triển, không có ở bất kỳ chương nào khác**:
+   58/158 node, 49% INFO, 118 phiên, 287/465, effect accuracy 0,0, 136 lần bỏ
+   cuộc & 23% & 39% Reddit, 10/57, 29/56 (chỉ "465" là có mặt ở C5). Chúng
+   được dùng làm lý lẽ thiết kế nhưng không trỏ đi đâu → đúng mô tả TC5 mức
+   <5 ("nội dung thiếu dẫn chứng"). **Đợt sửa 2026-08-12 làm vấn đề này nặng
+   thêm**, vì phần lớn số mới thêm thuộc loại đó. Cách rẻ nhất vẫn là một bảng
+   phụ lục "số liệu chẩn đoán từ các run phát triển" rồi trỏ tới.
+2. **Lời hứa §3.4.2 vẫn gãy**: "đánh đổi ... thảo luận chi tiết tại
+   Chương 5", nhưng C5 không có mục nào bàn việc bỏ cổng thực-thi-lại khi
+   kiểm chứng skill trên website thật. Nặng hơn: trên website thật
+   `verify_k=0`, nghĩa là cổng kiểm chứng **không hề chạy**, chỉ còn ngưỡng độ
+   chín — trong khi P1 tuyên bố "kiểm chứng trước khi tái sử dụng". Đây là
+   chỗ chương tự mâu thuẫn với nguyên tắc của chính nó.
+3. **Ch3 không tự phát biểu điểm mới** (TC3): chương chỉ nói cái gì *không*
+   phải đóng góp (axtree/action space kế thừa từ WebArena + BrowserGym); phần
+   định vị nằm ở §2.6 và §1.4, người đọc Ch3 không thấy.
+4. **Độ dài 36 trang** so với gợi ý ~18–22 của dàn ý. Phần dôi ra chủ yếu là
+   "bài học từ run thật" vốn thuộc Chương 5 → trùng lặp hai chương.
+5. **Văn phong đi lùi**: 108/307 câu ≥ 40 âm tiết (35%; bản 08-07: 53/323 =
+   16%), 33 đoạn > 130 từ, dài nhất 226. Nguyên nhân: văn mới viết trong đợt
+   đồng bộ code đặc và dài câu hơn mặt bằng cũ của chương.
+6. **Bảng thuật ngữ (`glossary.tex`, 32 mục) thiếu**: subgoal, seed / site
+   seeder, goal task, tautology, predicate registry, COMPOSITE, lấy mẫu không
+   tiền tố (unprefixed), grounding.
+7. `Figures/fig_pipeline.pdf` còn nhãn **"Cổng chất lượng (judge, viết lại)"**
+   bên trong ảnh, không có file nguồn để sửa (cùng loại nợ với "graph" trong
+   hình, ghi ở mục trên).
+
+Tham số Ch3 ↔ `tab:app-params` khớp hoàn toàn (k=6 mặc định/9 đã dùng, c=3
+tầng 1, c=8 tầng 0, maturity 2, predicate\_sim 0,6, goal\_max\_steps cho lượt
+không tiền tố, +8 tham số mới bổ sung ngày 12-08).

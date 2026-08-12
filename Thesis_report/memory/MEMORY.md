@@ -12,9 +12,9 @@ viết report, rồi mở đúng file chủ đề cần dùng.
 | [04-quy-trinh-ai.md](04-quy-trinh-ai.md) | Quy trình viết với AI đã được kiểm chứng (ChatGPT phản biện / Claude thực thi), đạo đức AI, xác minh trích dẫn, prompt phản biện 15 bước |
 | [05-bai-hoc-review.md](05-bai-hoc-review.md) | Bài học từ các vòng review của thesis mẫu: lỗi reviewer hay bắt, pattern nhận xét của GVHD |
 | [06-de-tai-hsge.md](06-de-tai-hsge.md) | Ngữ cảnh đề tài HSGE: bài toán, kết quả đã có, nguồn tư liệu trong repo, mapping vào từng chương |
-| [07-dan-y-chi-tiet.md](07-dan-y-chi-tiet.md) | Dàn ý chi tiết 6 chương (v1, tiếng Anh, trọng tâm C3/C5/C6, C4 để khung `[TO ADD]`) + thứ tự viết + checklist mỗi chương |
+| [07-dan-y-chi-tiet.md](07-dan-y-chi-tiet.md) | Dàn ý 6 chương: **C3 là bản ĐÃ GIAO** (cập nhật 12-08), các chương khác còn là dàn ý dự kiến; kèm trạng thái viết và rủi ro O2 (semantic task) đã giải quyết tới đâu |
 | [08-citation-audit-ch2.md](08-citation-audit-ch2.md) | Kết quả xác minh citation Chương 1–2: claim nào từng sai và đã sửa, số liệu nào đã đúng, các mục còn treo trước khi nộp |
-| [09-rubric-citation-audit-ch3.md](09-rubric-citation-audit-ch3.md) | Rà Chương 3 theo rubric (TC2/TC3/TC5) + audit 9 citation: chỗ thiếu cite, claim thiếu dẫn chứng, lời hứa gãy sang Chương 5, mâu thuẫn tham số với phụ lục |
+| [09-rubric-citation-audit-ch3.md](09-rubric-citation-audit-ch3.md) | Rà + **chấm điểm Chương 3** theo rubric Khoa (TC2 8,5 / TC3 7,5 / TC5 7,5 tính tới 12-08), audit citation, và danh sách 7 khoản nợ xếp theo rủi ro trước hội đồng |
 
 ## Nguồn gốc
 
