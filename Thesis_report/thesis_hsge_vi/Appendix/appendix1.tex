@@ -525,21 +525,92 @@ Return JSON {"verdict": "PASS"|"FAIL", "reason": "<one sentence>"}.
 \chapter{Thống kê run chi tiết}
 \label{app:runs}
 
-Phụ lục này ghi lại thống kê đầy đủ của các run khám phá đã tóm tắt ở
-Mục~\ref{sec:exp-data}. Cả mười hai run đều được báo cáo, kể cả những run ngắn
-và bị ngắt giữa chừng, để công sức thu thập hiện ra trọn vẹn chứ không chỉ qua
-những run đẹp nhất.
+Phụ lục này ghi lại thống kê đầy đủ của các run khám phá, kể cả những run
+ngắn và bị ngắt giữa chừng, để công sức thu thập hiện ra trọn vẹn chứ không
+chỉ qua những run đẹp nhất.
 
-\section{Các run khám phá}
-\label{app:runs-explore}
+Cần phân biệt rõ hai bộ run, vì chúng phục vụ hai mục đích khác nhau và số
+liệu của chúng không được cộng gộp ở bất kỳ đâu trong khóa luận:
 
-Bảng~\ref{tab:app-runs} báo cáo mọi run khám phá đứng sau dữ liệu đã thu.
-Run 1-9 khám phá instance Reddit; run 10-12 khám phá GitLab. Run 4-6 là các
-lượt sinh task dùng lại đồ thị có sẵn nên không có số node riêng. Trạng thái
-\emph{bị ngắt} nghĩa là run được dừng thủ công khi đã thu đủ trajectory, không
-phải là run hỏng; run~10 là run duy nhất kết thúc bằng lỗi (một timeout điều
-hướng của trình duyệt mà cơ chế xử lý lỗi ở mức node đã chuyển thành một node
-bị bỏ qua trước khi run được dừng).
+\begin{itemize}
+  \item \textbf{Bốn đợt thu thập chính thức} (Mục~\ref{app:runs-final}) trên
+  bốn website của WebArena. Đây là nguồn của mọi con số ở
+  Mục~\ref{sec:exp-data} và của toàn bộ tập dữ liệu huấn luyện.
+  \item \textbf{Mười hai run phát triển} (Mục~\ref{app:runs-dev}) chỉ trên
+  Reddit và GitLab, chạy trong lúc pipeline còn đang được sửa. Chúng không
+  đóng góp mẫu huấn luyện nào; giá trị của chúng là các lỗi mà chúng phơi ra,
+  và phần lớn cơ chế chốt chặn mô tả ở Chương~\ref{ch:method} ra đời từ đây.
+\end{itemize}
+
+\section{Bốn đợt thu thập chính thức}
+\label{app:runs-final}
+
+Bảng~\ref{tab:app-runs-final} bổ sung cho Bảng~\ref{tab:runs} của
+Mục~\ref{sec:exp-data} những số liệu vận hành mà chương chính không trình
+bày: node bị bỏ vì lỗi, số lần khôi phục, và cơ cấu operator bị từ chối.
+
+\begin{table}[H]
+\centering
+\caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt
+thu thập chính thức. ``Node lỗi tải'' là node mà trình duyệt không mở được và
+cơ chế hỏng mềm đã bỏ qua; ``Reset lỗi'' là số lần đưa trình duyệt về trang
+của node trước một task bị thất bại. Hai cột cuối tách số operator bị từ chối
+theo lý do.}
+\label{tab:app-runs-final}
+\small
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Sự cố}} & & &
+\multicolumn{2}{c}{\textbf{Operator bị loại}} \\
+\cmidrule(lr){3-4}\cmidrule(lr){7-8}
+\textbf{Website} & \textbf{Node} & \textbf{lỗi tải} & \textbf{reset} &
+\textbf{Nối lại} & \textbf{Skill} & \textbf{lặp thừa} & \textbf{vô căn} &
+\textbf{Op.} \\
+\midrule
+Shopping       & 79 & 38 & 166 & 1 & 14 &  1 &  5 &  8 \\
+Reddit         & 68 &  0 &   8 & 1 & 16 &  5 &  7 &  4 \\
+GitLab         & 63 &  1 &  16 & 1 & 16 &  5 &  3 &  8 \\
+Shopping Admin & 48 &  3 &  22 & 2 & 13 &  3 &  5 &  5 \\
+\midrule
+\textbf{Tổng} & \textbf{258} & \textbf{42} & \textbf{212} & \textbf{5} &
+\textbf{59} & \textbf{14} & \textbf{20} & \textbf{25} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Ba điểm đáng ghi nhận. Thứ nhất, \textbf{cơ chế khôi phục đã được dùng thật
+chứ không chỉ được kiểm thử}: sau khoảng hai giờ rưỡi, cả bốn đợt cùng dừng
+vì tài khoản API hết hạn mức, và cả năm lần nối lại đều chạy tiếp từ điểm
+kiểm tra của node cuối cùng (Mục~\ref{sec:method-impl}). Nếu không có cơ chế
+này, toàn bộ phần dữ liệu thu được trong hai giờ rưỡi đầu đã mất.
+
+Thứ hai, \textbf{sự cố trang tập trung gần như trọn vẹn ở Shopping}: 38 trên
+42 node lỗi tải và 166 trên 212 lần reset hỏng đều thuộc website này, đều là
+timeout điều hướng của trình duyệt. Cơ chế hỏng mềm chuyển từng sự cố thành
+một node bị bỏ qua có ghi log, nên không đợt nào bị dừng giữa chừng vì lý do
+này.
+
+Thứ ba, \textbf{phần lớn kỹ năng không trở thành operator}: 34 trên 59 kỹ
+năng bị chặn lại, 14 vì hiệu ứng lặp lại chính điều kiện tiên quyết và 20 vì
+hiệu ứng không được dữ liệu của cụm xác nhận. Mục~\ref{sec:disc-operators}
+phân tích thế giằng co giữa hai cổng lọc này.
+
+Số episode ở Bảng~\ref{tab:runs} lấy theo bản tóm tắt cuối cùng mà mỗi đợt
+ghi ra (2178 episode). Trên đĩa có 2184 thư mục episode: sáu episode chênh
+lệch được ghi ở node đang xử lý dở khi đợt chạy bị dừng, sau lần ghi tóm tắt
+cuối cùng, nên chúng không được tính vào bất kỳ thống kê nào.
+
+\section{Mười hai run phát triển}
+\label{app:runs-dev}
+
+Bảng~\ref{tab:app-runs} báo cáo các run của giai đoạn phát triển. Run 1-9
+khám phá instance Reddit; run 10-12 khám phá GitLab. Run 4-6 là các lượt sinh
+task dùng lại đồ thị có sẵn nên không có số node riêng. Trạng thái \emph{bị
+ngắt} nghĩa là run được dừng thủ công, không phải là run hỏng; run~10 là run
+duy nhất kết thúc bằng lỗi (một timeout điều hướng của trình duyệt mà cơ chế
+xử lý lỗi ở mức node đã chuyển thành một node bị bỏ qua trước khi run được
+dừng).
 
 \begin{table}[H]
 \centering
@@ -580,11 +651,11 @@ ra trùng với một node đã thăm, xác nhận rằng chuyện các URL khá
 cùng nội dung là có thật trên những site này, nhưng không phải là chi phí chi
 phối.
 
-\section{Các lượt sinh task}
+\section{Các lượt sinh task của giai đoạn phát triển}
 \label{app:runs-gen}
 
-Run 4-6 đo riêng khâu đề xuất và kiểm chứng task, trên một đồ thị đã khám phá
-sẵn. Bảng~\ref{tab:app-gen} tách kết cục của chúng theo loại task. Quy luật
+Run 4-6, vẫn thuộc bộ run phát triển, đo riêng khâu đề xuất và kiểm chứng
+task trên một đồ thị đã khám phá sẵn. Bảng~\ref{tab:app-gen} tách kết cục của chúng theo loại task. Quy luật
 nhất quán ở cả ba lượt: task \texttt{INFO} kiểm chứng đạt ổn định nhất, task
 \texttt{MOD} kém nhất, và khoảng một đề xuất trong mười bị bỏ vì đã cũ (trang
 mà nó nhắc tới đã thay đổi kể từ lúc đồ thị được ghi.
@@ -624,28 +695,67 @@ mà vì agent thường không nhận ra là mình đã tới nơi, đúng hành
 \section{Goal task được ghép}
 \label{app:runs-goal}
 
-Không có goal task ghép nào được thử trong cả mười hai run: mọi episode đã ghi,
-ở mọi thư mục run, đều mang nhãn task mức thấp, và bộ đếm goal task ghép của cả
-mười hai bản tóm tắt run đều bằng không. Nguyên nhân mang tính cấu trúc chứ
-không phải lỗi của thủ tục ghép chuỗi. Một cạnh trong đồ thị toán tử đòi hỏi
-predicate effect của operator này trùng với precondition của operator kia, mà
-predicate registry lại chuẩn hóa predicate chỉ bằng độ tương tự embedding -
-thứ mà, như Mục~\ref{sec:disc-operators} báo cáo, không tách nổi synonym thật
-khỏi những cụm từ không liên quan ở bất kỳ ngưỡng đơn lẻ nào. Trên thực tế gần
-như mỗi operator được induce đều nhận một bộ từ vựng predicate riêng. Run~7,
-đồ thị lớn nhất với mười ba operator, chỉ chứa đúng một cạnh
-effect$\rightarrow$precondition, và cạnh đó chỉ hình thành khi operator thứ
-mười ba, cũng là operator cuối cùng, được induce (thời điểm mà run đã bị
-dừng).
+Trong suốt \emph{mười hai run phát triển}, không một goal task ghép nào được
+thử: bộ đếm chuỗi của cả mười hai bản tóm tắt đều bằng không, và mọi episode
+đã ghi đều mang nhãn task mức thấp. Run~7, đồ thị lớn nhất của giai đoạn đó
+với mười ba operator, chỉ chứa đúng một cạnh
+effect$\rightarrow$precondition, và cạnh ấy chỉ hình thành khi operator thứ
+mười ba, cũng là operator cuối cùng, được quy nạp -- thời điểm mà run đã bị
+dừng.
 
-Hệ quả cho dataset là trực tiếp: các trajectory dùng để fine-tune hoàn toàn đến
-từ task mức thấp, phạm vi một trang, còn những task dài hạn được ghép mà
-đồ thị toán tử sinh ra để tạo thì không có mặt trong đó. Bản thân cơ chế ghép
-chuỗi đã được cài đặt và có test tất định trên backend mock, nơi nó sinh ra
-đúng các chuỗi và chuỗi con mong đợi; thứ chưa được chứng minh là một site thật
-có cho ra một đồ thị toán tử đủ liên thông để cơ chế đó kích hoạt hay không.
-Mục~\ref{sec:disc-operators} bàn về phần việc hợp nhất predicate mà điều này
-đặt ra.
+\textbf{Bốn đợt thu thập chính thức thì khác: cơ chế ghép chuỗi đã kích hoạt
+được trên website sống.} Bảy chuỗi đã được thử, và
+Bảng~\ref{tab:app-chains} liệt kê trọn vẹn cả bảy, vì đây là bằng chứng
+trực tiếp cho đóng góp lõi của khóa luận nên không nên chỉ báo cáo dưới dạng
+một con số tổng.
+
+\begin{table}[H]
+\centering
+\caption[Bảy chuỗi operator đã thử]{Toàn bộ các chuỗi operator được ghép và
+đưa vào thực thi trong bốn đợt thu thập chính thức. Hai lần ``hỏng, 0 bước''
+là episode không mở được trang xuất phát, không phải tác nhân thao tác sai.}
+\label{tab:app-chains}
+\small
+\begin{tabular}{@{}lL{7.3cm}rl@{}}
+\toprule
+\textbf{Website} & \textbf{Chuỗi skill được ghép} & \textbf{Mắt} &
+\textbf{Kết cục} \\
+\midrule
+Shopping & \texttt{navigate\_to\_product\_page} $\rightarrow$
+\texttt{add\_variant\_to\_cart} & 2 & đạt, 5 bước \\
+Shopping & \texttt{clear\_filter\_via\_clear\_a} $\rightarrow$
+\texttt{navigate\_to\_product\_page} & 2 & đạt, 12 bước \\
+Shopping & \texttt{navigate\_to\_product\_cate} $\rightarrow$
+\texttt{navigate\_to\_product\_page} $\rightarrow$
+\texttt{add\_variant\_to\_cart} & 3 & đạt, 7 bước \\
+Shopping & \texttt{clear\_filter\_via\_clear\_a} $\rightarrow$
+\texttt{navigate\_to\_product\_page} $\rightarrow$
+\texttt{add\_variant\_to\_cart} & 3 & hỏng, 0 bước \\
+Shopping & \texttt{navigate\_to\_product\_cate} $\rightarrow$
+\texttt{navigate\_to\_product\_page} & 2 & hỏng, 0 bước \\
+Sh.\ Admin & \texttt{wait\_for\_checkout} $\rightarrow$
+\texttt{fill\_checkout\_form} & 2 & đạt, 15 bước \\
+GitLab & \texttt{navigate\_to\_fork\_form} $\rightarrow$
+\texttt{report\_default\_project\_n} & 2 & hỏng, 1 bước \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Bốn trên bảy chuỗi hoàn thành, trong đó có một chuỗi ba mắt đi trọn đường từ
+danh mục sản phẩm tới giỏ hàng trong bảy bước. Điều này trả lời đúng câu hỏi
+mà giai đoạn phát triển còn để ngỏ: một website thật \emph{có} cho ra đồ thị
+toán tử đủ liên thông để cơ chế ghép chuỗi chạy được.
+
+Nhưng số bảy cũng nói lên giới hạn: 25 operator chỉ sinh ra bảy chuỗi, và ba
+trong bốn website đóng góp nhiều nhất một chuỗi. Hệ quả cho tập dữ liệu là
+trực tiếp -- chỉ 6 mẫu huấn luyện ở mức độ khó 3 (Bảng~\ref{tab:dataset}),
+tức các quỹ đạo dài hạn có mặt trong dữ liệu nhưng quá thưa để chi phối quá
+trình huấn luyện. Nguyên nhân nằm ở chỗ một cạnh của đồ thị toán tử đòi hỏi
+effect của operator này trùng precondition của operator kia, trong khi sổ
+đăng ký mệnh đề chỉ chuẩn hóa bằng độ tương đồng embedding -- thứ mà
+Mục~\ref{sec:disc-operators} cho thấy không tách nổi cặp đồng nghĩa thật khỏi
+cặp không liên quan ở bất kỳ ngưỡng đơn lẻ nào.
 
 \section{Kết quả đánh giá theo từng task}
 \label{app:runs-eval}
@@ -739,8 +849,12 @@ benchmark chứ không phải một bản cài lại, nhờ vậy số liệu b�
 \section{Artifact được báo cáo}
 \label{app:repro-artifacts}
 
-Sau đây là các artifact cụ thể đứng sau Chương~\ref{ch:experiments}: mười hai
-thư mục run của Phụ lục~\ref{app:runs}, mỗi thư mục kèm skill, operator, đồ thị,
-predicate registry, kết cục theo node và log sự kiện; các episode đã ghi;
-dataset SFT đã dựng; adapter LoRA cùng model đã trộn; và kết quả đánh giá của
-bộ công cụ chính thức.
+Sau đây là các artifact cụ thể đứng sau Chương~\ref{ch:experiments}: bốn thư
+mục của các đợt thu thập chính thức (Mục~\ref{app:runs-final}) cùng mười hai
+thư mục của các run phát triển (Mục~\ref{app:runs-dev}), mỗi thư mục kèm
+skill, operator, đồ thị, sổ đăng ký mệnh đề, kết cục theo node, log sự kiện
+và điểm kiểm tra nhị phân; các episode đã ghi; tập dữ liệu SFT đã dựng;
+adapter LoRA cùng model đã trộn; và kết quả đánh giá của bộ công cụ chính
+thức. Mọi con số ở Chương~\ref{ch:experiments} đều lấy từ bốn thư mục đầu;
+mười hai thư mục còn lại chỉ được trích dẫn khi nói về các lỗi mà chúng phơi
+ra.

@@ -220,6 +220,11 @@ kết quả này cần được đo lại theo trình tự tuần tự.
 Bảng~\ref{tab:runs} tổng hợp kết quả của bốn đợt khám phá. Cả bốn đợt đều
 được dừng chủ động sau khoảng 21 giờ, khi lượng dữ liệu thu được đã đủ cho
 vòng huấn luyện. Do đó, số node đã duyệt là một cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
+Trong 21 giờ đó, cả bốn đợt đều bị ngắt một lần sau khoảng hai giờ rưỡi vì
+tài khoản API hết hạn mức, và Shopping Admin bị ngắt hai lần; mỗi lần đều
+được chạy tiếp từ điểm kiểm tra của node cuối cùng thay vì phải làm lại
+(Mục~\ref{sec:method-impl}). Đây là lần duy nhất cơ chế khôi phục được dùng
+tới ngoài các phép thử, và số liệu trong bảng là kết quả sau khi nối lại.
 Trong bảng, \emph{episode hợp lệ} là những episode được tính là thành công
 sau khi cổng kiểm chứng đã chấm lại, tức tổng ba dòng ``Thành công'' của ba
 nhóm task; tỷ lệ hợp lệ được tính trên số episode ghi nhận. Tỷ lệ thành công
@@ -272,10 +277,10 @@ nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của we
 \textit{21,4\%} & \textit{20,0\%} & \textbf{37,9\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Tri thức thu được}} \\
-\quad Skill được thu nhận & 14 & 16 & 16 & 12 & \textbf{58} \\
-\quad Operator được quy nạp & 8 & 4 & 8 & 6 & \textbf{26} \\
-\quad Chuỗi operator đã thử & 5 & 0 & 1 & 0 & \textbf{6} \\
-\quad Năng lực seed đã thử & 14 & 18 & 13 & 12 & \textbf{57} \\
+\quad Skill được thu nhận & 14 & 16 & 16 & 13 & \textbf{59} \\
+\quad Operator được quy nạp & 8 & 4 & 8 & 5 & \textbf{25} \\
+\quad Chuỗi operator đã thử & 5 & 0 & 1 & 1 & \textbf{7} \\
+\quad Năng lực seed đã thử & 14 & 18 & 13 & 14 & \textbf{59} \\
 \midrule
 Episode bị hạ cấp & 127 & 159 & 119 & 92 & \textbf{497} \\
 \textit{Tỷ lệ bị hạ cấp} & \textit{29,0\%} & \textit{33,1\%} &
@@ -287,14 +292,15 @@ Episode bị hạ cấp & 127 & 159 & 119 & 92 & \textbf{497} \\
 Từ bảng này có thể rút ra ba nhận xét.
 
 \textbf{Thứ nhất, hai nguồn sinh task ngữ nghĩa đóng góp rất không đồng
-đều.} Tổng cộng 66 task GOAL đã được thực thi trên bốn website, trong đó 57
-lượt bắt nguồn từ seed năng lực của website (mục~\ref{sec:method-seed}) và
-chỉ 6 lượt bắt nguồn từ việc ghép chuỗi operator; hai website là Reddit và
-Shopping Admin không hình thành được chuỗi operator nào. Nói cách khác, cơ
-chế sinh mục tiêu từ trên xuống là nguồn task ngữ nghĩa chủ yếu trong thực
-tế, còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết kế nhưng chỉ
-kích hoạt được ở mức thưa thớt. Nguyên nhân kỹ thuật của hiện tượng này được
-phân tích ở mục~\ref{sec:disc-operators}.
+đều.} Tổng cộng 66 task GOAL đã được thực thi trên bốn website, chia trọn vẹn
+thành 59 lượt bắt nguồn từ seed năng lực của website
+(mục~\ref{sec:method-seed}) và 7 lượt bắt nguồn từ việc ghép chuỗi operator;
+riêng Reddit không hình thành được chuỗi operator nào. Nói cách khác, cơ chế
+sinh mục tiêu từ trên xuống là nguồn task ngữ nghĩa chủ yếu trong thực tế,
+còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết kế nhưng chỉ kích
+hoạt được ở mức thưa thớt: 7 chuỗi trên tổng số 25 operator đã quy nạp.
+Nguyên nhân kỹ thuật của hiện tượng này được phân tích ở
+mục~\ref{sec:disc-operators}.
 
 \textbf{Thứ hai, task GOAL có tỷ lệ thành công thấp hơn task cục bộ.} Tỷ lệ
 này là 25/66 $=$ 37{,}9\%, so với 42{,}0\% của nhóm LOCAL và 52{,}0\% của

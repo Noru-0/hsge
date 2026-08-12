@@ -113,8 +113,9 @@ O1 &
 Thu thập trajectory tự động, bền vững và an toàn từ website không nhãn &
 Hoàn thành. Hệ thống hiện thực cơ chế frontier hai tầng kết hợp giới hạn
 template, chiến lược duyệt web fail-soft và chế độ an toàn fail-closed;
-bốn đợt khám phá chạy liên tục khoảng 21 giờ mỗi đợt trên website thật,
-thu 2178 episode mà không lần nào phải can thiệp tay
+bốn đợt khám phá chạy khoảng 21 giờ mỗi đợt trên website thật, thu 2178
+episode; can thiệp tay duy nhất là năm lần nối lại sau khi tài khoản API hết
+hạn mức, mỗi lần đều chạy tiếp từ điểm kiểm tra của node cuối
 (Mục~\ref{sec:method-exploration}, \ref{sec:exp-data}). \\
 
 \addlinespace
@@ -122,11 +123,11 @@ thu 2178 episode mà không lần nào phải can thiệp tay
 O2 &
 Sinh semantic task nhiều bước từ đồ thị các skill đã kiểm chứng &
 Hoàn thành một phần. Quy trình phát hiện, kiểm chứng skill và quy nạp
-operator có precondition/effect đã chạy thật (58 skill, 26 operator), và
+operator có precondition/effect đã chạy thật (59 skill, 25 operator), và
 lần đầu tiên sinh được semantic task trên website sống: 66 task, 25 thành
 công, so với 0 task ở toàn bộ các đợt trước. Tuy nhiên, phần lớn task này
-đến từ seed năng lực website (57 lượt) chứ không từ việc ghép chuỗi
-operator (6 lượt, hai website không hình thành được chuỗi nào), nên cơ chế
+đến từ seed năng lực website (59 lượt) chứ không từ việc ghép chuỗi
+operator (7 lượt, riêng Reddit không hình thành được chuỗi nào), nên cơ chế
 ghép chuỗi mới được chứng minh là khả thi chứ chưa đủ dày để làm nguồn dữ
 liệu chính (Mục~\ref{sec:method-semantic}, \ref{sec:disc-operators}). \\
 
