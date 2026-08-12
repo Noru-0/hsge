@@ -37,6 +37,78 @@ Ba nguyên tắc sau chi phối toàn bộ thiết kế của pipeline:
   \item \textbf{P3: Hệ thống tác vụ hai tầng.} Các tác vụ mức thấp do LLM đề xuất (Mục~\ref{sec:method-exploration}) dẫn đường cho quá trình khám phá và cung cấp nguyên liệu thô để phát hiện skill. Các tác vụ ngữ nghĩa (Mục~\ref{sec:method-semantic}) thì diễn đạt những mục tiêu nhiều bước mà không một trang đơn lẻ nào gợi ý ra được. Tầng ngữ nghĩa có hai nguồn độc lập: ghép chuỗi các năng lực đã kiểm chứng, theo hướng từ dưới lên; và seed năng lực của website, theo hướng từ trên xuống. Giữ song song hai nguồn là quyết định rút ra từ thực nghiệm, bởi nguồn từ dưới lên chỉ chạy được khi đồ thị toán tử đã có cạnh -- một điều kiện thưa hơn dự kiến rất nhiều (Mục~\ref{sec:disc-operators}).
 \end{itemize}
 
+\section{Nền tảng kế thừa và điểm mới của HSGE}
+\label{sec:method-novelty}
+
+HSGE không xây dựng lại từ đầu: nó đứng trên năm nền tảng có sẵn, và phần
+đóng góp của khóa luận nằm ở chỗ nó thay đổi gì trên mỗi nền tảng đó. Mục này
+tách bạch hai phần ấy trước khi đi vào chi tiết, để phần còn lại của chương
+không phải dừng lại giải thích mỗi lần trích dẫn một công trình nền.
+Bảng~\ref{tab:novelty} tóm tắt; Chương~\ref{ch:related} định vị HSGE so với
+các \emph{hệ thống} gần nhất, còn bảng dưới đây định vị nó so với các
+\emph{khung lý thuyết} mà nó vay mượn.
+
+\begin{table}[H]
+\centering
+\caption[Nền tảng kế thừa và phần HSGE bổ sung]{Năm nền tảng mà HSGE kế thừa,
+nơi mỗi nền tảng được dùng, và phần khóa luận bổ sung lên trên.}
+\label{tab:novelty}
+\small
+\begin{tabular}{@{}L{3.0cm} L{2.4cm} L{7.6cm}@{}}
+\toprule
+\textbf{Nền tảng} & \textbf{Dùng ở} & \textbf{Phần HSGE bổ sung} \\
+\midrule
+Options $\langle I, \pi, \beta \rangle$~\cite{sutton1999options} &
+Mục~\ref{sec:method-graph} &
+Option ở đây không được học từ tín hiệu phần thưởng mà được \emph{trừu tượng
+hóa từ quỹ đạo do LLM sinh ra}; tập khởi đầu $I$ và điều kiện kết thúc $\beta$
+là mệnh đề ngôn ngữ tự nhiên kiểm tra được, không phải tập trạng thái đã biết
+trước \\
+\addlinespace
+STRIPS $\langle \mathit{pre}, \mathit{eff} \rangle$~\cite{fikes1971strips} &
+Mục~\ref{sec:method-graph} &
+Từ vựng mệnh đề \emph{không đóng}: LLM tự sinh mệnh đề, rồi một sổ đăng ký quy
+chúng về các mã định danh ổn định. Bộ lập kế hoạch STRIPS cổ điển giả định từ
+vựng được cho trước và cố định \\
+\addlinespace
+ReAct~\cite{yao2023react} &
+Mục~\ref{sec:method-solver} &
+Ba chốt chặn cấu trúc bọc quanh vòng lặp: theo đối tượng đích, theo độ mới của
+quan sát, và một lời gọi tổng kết bắt buộc. ReAct thuần không có cơ chế nào
+dừng một tác nhân đang lặp vô ích \\
+\addlinespace
+DP-means~\cite{kulis2012dpmeans} &
+Mục~\ref{sec:method-skills} &
+Gom cụm chạy \emph{trực tuyến ngay trong vòng khám phá} thay vì theo lô sau
+khi thu xong dữ liệu, và ngưỡng độ chín của cụm trở thành cổng thu nhận một kỹ
+năng \\
+\addlinespace
+Sentence embedding~\cite{reimers2019sbert} &
+Mục~\ref{sec:method-skills}, \ref{sec:method-semantic} &
+Dùng cho hai vai trò tách biệt là gom cụm quỹ đạo con và chuẩn hóa mệnh đề.
+Khóa luận cũng chỉ ra giới hạn của nó ở vai trò thứ hai và thay bằng cơ chế
+quy nạp biết trước từ vựng (Mục~\ref{sec:disc-operators}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+Ngoài năm dòng trên, hai thành phần của HSGE không kế thừa từ một khung nào có
+sẵn. Thứ nhất là \emph{hai nguồn sinh tác vụ ngữ nghĩa chạy song song}: ghép
+chuỗi operator theo hướng từ dưới lên, và seed năng lực website theo hướng từ
+trên xuống, dùng chung một ngân sách (Mục~\ref{sec:method-semantic}). Thứ hai
+là \emph{bộ cổng chất lượng đặt bên trong vòng khám phá}: judge chấm lại mọi
+thành công tự tuyên bố trước khi phiên đó kịp nuôi khâu phát hiện kỹ năng,
+cổng hành động hữu hiệu, và cổng loại báo cáo bất khả thi kiểu biện minh
+(Mục~\ref{sec:method-success}, \ref{sec:method-data}).
+
+Cần nói thẳng giới hạn của tuyên bố này. Những gì bảng trên liệt kê là đóng
+góp về \emph{thiết kế}, và chương thực nghiệm chỉ đo được hiệu quả của toàn bộ
+pipeline chứ không đo riêng từng dòng. Đóng góp duy nhất được đo tách bạch là
+tác động của tập dữ liệu lên mô hình đích (Mục~\ref{sec:exp-baseline}); phần
+thuộc về \emph{cấu trúc} của cách khám phá thì phải chờ phép đối chứng với
+khám phá phẳng ở cùng ngân sách (Mục~\ref{sec:exp-ablation}).
+
 \section{Biểu diễn đồ thị hai tầng}
 \label{sec:method-graph}
 
@@ -146,11 +218,7 @@ $\;\rightarrow\;$
 Mỗi khuôn dạng chỉ được thăm tối đa $c$ trang; các lượt chạy của khóa luận đặt $c = 3$ cho tầng 1, còn toàn bộ tham số cùng giá trị đã dùng nằm ở Phụ lục~\ref{app:design-params}. Trần này được kiểm tra ngay lúc lấy URL ra khỏi hàng đợi chứ không phải lúc thêm vào, bởi số trang đã thăm của một khuôn dạng còn tăng dần trong khi chạy. Ở tầng 1, ứng viên thuộc khuôn dạng chưa từng gặp được ưu tiên trước, rồi tới trang ở độ sâu nông hơn, sau cùng mới xét thứ tự chèn.
 
 Cần nói rõ là tầng 0 cũng chịu một trần theo khuôn dạng, chỉ với giá trị
-rộng hơn ($c = 8$), chứ \emph{không} được miễn trừ. Việc miễn trừ hoàn toàn cho
-tầng 0 là thiết kế ban đầu và nó đã hỏng theo một cách khá đặc trưng: khi
-solver giải một tác vụ bên trong một chuỗi bình luận, mọi URL nó chạm tới trong
-lúc giải đều được đẩy lên đầu hàng đợi mà không qua bộ lọc nào, khiến một
-diễn đàn duy nhất chiếm 58 trên 158 node của một lượt chạy thật. Nói cách khác,
+rộng hơn ($c = 8$), chứ \emph{không} được miễn trừ. Miễn trừ hoàn toàn cho tầng 0 là thiết kế ban đầu, và nó đã hỏng theo một cách khá đặc trưng. Khi solver giải một tác vụ bên trong một chuỗi bình luận, mọi URL nó chạm tới đều được đẩy lên đầu hàng đợi mà không qua bộ lọc nào. Kết quả là một diễn đàn duy nhất chiếm 58 trên 158 node của một lượt chạy thật. Nói cách khác,
 bằng chứng ``tác nhân đã đi tới đó'' đủ để \emph{ưu tiên} một trang, nhưng không
 đủ để cho nó quyền chiếm ngân sách khám phá không giới hạn.
 
@@ -207,7 +275,7 @@ Trường phân loại này là thứ giữ cho chế độ \emph{chỉ đọc} 
 
 Ba cơ chế kiểm soát thành phần và độ đa dạng của danh sách đề xuất. Thứ nhất, explorer sống suốt lượt chạy và nhớ mọi tác vụ đã từng đề xuất; những đề xuất gần nhất được đưa ngược vào prompt làm ngữ cảnh phủ định, còn các bản gần trùng thì bị loại ngay ở mức mã nguồn. Không có cơ chế này, phần lớn đề xuất sẽ tụt xuống thành những lệnh điều hướng menu lặp lại ở mọi trang (Mục~\ref{sec:disc-exploration}).
 
-Thứ hai, hai nhóm tác vụ bị chặn số lượng \emph{vô điều kiện}, bất kể ngân sách $k$ còn trống hay không: mỗi trang tối đa một tác vụ \texttt{NAV} và hai tác vụ \texttt{INFO}. Trần \texttt{NAV} là vì các tác vụ \texttt{COMPOSITE} và \texttt{MOD} vốn đã tự điều hướng sang trang mới trong lúc thao tác, nên một tác vụ điều hướng thuần túy chỉ cần giữ lại làm dự phòng. Trần \texttt{INFO} đến từ số liệu của một lượt chạy thật: khi nhóm này chỉ bị cắt lúc danh sách vượt ngân sách, những trang đề xuất ít tác vụ sẽ để lọt toàn bộ \texttt{INFO}, và \texttt{INFO} chiếm tới 49\% số episode thành công, phần lớn kết thúc bằng một câu trả lời mà không có thao tác trình duyệt nào. Đó là dữ liệu dạy mô hình \emph{trả lời} chứ không dạy mô hình \emph{hành động}, nên chỉ nên giữ vừa đủ.
+Thứ hai, hai nhóm tác vụ bị chặn số lượng \emph{vô điều kiện}, bất kể ngân sách $k$ còn trống hay không: mỗi trang tối đa một tác vụ \texttt{NAV} và hai tác vụ \texttt{INFO}. Trần \texttt{NAV} là vì các tác vụ \texttt{COMPOSITE} và \texttt{MOD} vốn đã tự điều hướng sang trang mới trong lúc thao tác, nên một tác vụ điều hướng thuần túy chỉ cần giữ lại làm dự phòng. Trần \texttt{INFO} đến từ số liệu của một lượt chạy thật. Khi nhóm này chỉ bị cắt lúc danh sách vượt ngân sách, những trang đề xuất ít tác vụ sẽ để lọt toàn bộ \texttt{INFO}. Kết quả là \texttt{INFO} chiếm tới 49\% số episode thành công, phần lớn kết thúc bằng một câu trả lời mà không có thao tác trình duyệt nào. Đó là dữ liệu dạy mô hình \emph{trả lời} chứ không dạy mô hình \emph{hành động}, nên chỉ nên giữ vừa đủ.
 
 Thứ ba, nếu sau hai bước trên danh sách vẫn dài hơn $k$, thứ tự giữ lại được quy định sẵn: một lượng \texttt{COMPOSITE} dự trữ, rồi toàn bộ \texttt{MOD}, rồi một lượng \texttt{INFO} dự trữ, rồi \texttt{NAV}, sau cùng mới tới phần \texttt{COMPOSITE} dôi ra, các tác vụ không phân loại được và phần \texttt{INFO} dôi ra. Trật tự này giữ được cả hai đầu: nhóm sinh ra skill không bao giờ bị cắt sạch, còn nhóm chỉ đọc luôn có mặt trong dữ liệu ở một mức nhất định.
 
@@ -227,7 +295,7 @@ Các tác vụ này được giữ ở mức thấp một cách có chủ đích
 
 \emph{Solver} là một vòng lặp theo kiến trúc ReAct~\cite{yao2023react}, phác họa ở Hình~\ref{fig:solver}. Ở mỗi bước, nó nhận mục tiêu, URL hiện tại dưới dạng tương đối, cây trợ năng đã cắt ở 6000 ký tự kèm dấu hiệu cắt tường minh, một mục báo lỗi của hành động liền trước, và cửa sổ sáu hành động gần nhất. Mỗi hành động trong cửa sổ đó đi kèm kết quả quan sát được (``đang ở $\langle$url$\rangle$'', ``trang đã đổi'', ``không đổi'', hoặc ``hành động thất bại: $\langle$lỗi$\rangle$''), để mô hình phân biệt được lúc nào là có tiến triển và lúc nào không. Mục báo lỗi \emph{luôn có mặt} trong prompt, mang giá trị ``(none)'' khi không có lỗi, thay vì chỉ hiện ra ở những bước hiếm hoi có lỗi; nhờ vậy nó là một phần cố định của định dạng mà mô hình quen tra cứu. Sau đó solver viết dòng suy luận rồi thực thi một hành động thuộc Bảng~\ref{tab:actions}.
 
-Một hành động bị lớp thực thi từ chối vẫn được ghi vào lịch sử như mọi hành động khác, với kết quả ``thất bại'' và không có tiến triển. Chi tiết nhỏ này lại quan trọng: trước đây hành động lỗi bị bỏ qua hoàn toàn nên hai cơ chế chống lặp bên dưới không nhìn thấy gì, và một lượt chạy thật đã có 118 episode tiêu trọn ngân sách để phát đi phát lại một cú nhấp mà phần tử đích không bao giờ ở trạng thái thao tác được.
+Một hành động bị lớp thực thi từ chối vẫn được ghi vào lịch sử như mọi hành động khác, với kết quả ``thất bại'' và không có tiến triển. Chi tiết nhỏ này lại quan trọng. Trước đây hành động lỗi bị bỏ qua hoàn toàn, nên hai cơ chế chống lặp bên dưới không nhìn thấy gì. Một lượt chạy thật đã có 118 episode tiêu trọn ngân sách để phát đi phát lại một cú nhấp mà phần tử đích không bao giờ ở trạng thái thao tác được.
 
 Ba chốt chặn cấu trúc kiểm soát vòng lặp của solver, mỗi chốt bắt một dạng bế tắc.
 
@@ -235,9 +303,9 @@ Ba chốt chặn cấu trúc kiểm soát vòng lặp của solver, mỗi chốt
 
 \textbf{Chốt chặn theo độ mới của quan sát.} Chốt trên chỉ thấy bế tắc khi mô hình lặp lại \emph{cùng} một đối tượng đích. Còn một dạng bế tắc khác: mô hình liên tục đổi đối tượng nhưng không bao giờ tới được một trang mới, tức đang loanh quanh chứ không đang tiến. Vì vậy solver ghi lại tập quan sát đã đi qua và đếm số bước liên tiếp không mang lại quan sát nào mới; quá bốn bước thì prompt được chèn một lời nhắc đổi cách tiếp cận, quá tám bước thì episode kết thúc.
 
-\textbf{Lời gọi tổng kết.} Khi vòng lặp dừng mà mô hình chưa chọn hành động kết thúc nào, dù vì hết ngân sách bước hay vì một trong hai chốt chặn trên, solver thực hiện một lời gọi \emph{tổng kết} (wrap-up call) cuối cùng. Lời gọi này thuần văn bản và chỉ được phép trả về \texttt{send\_msg\_to\_user} (tuyên bố hoàn thành) hoặc \texttt{report\_infeasible} (báo bất khả thi); mọi phản hồi khác đều bị bỏ. Prompt tổng kết nói đúng \emph{lý do thật} khiến episode dừng, bởi hai chốt chặn thường bắn sớm hơn ngân sách rất nhiều; nếu cứ nói với mô hình rằng nó đã hết ngân sách thì mô hình chép lại đúng câu đó, và một lượt chạy thật đã có những episode dừng ở bước thứ năm nhưng khai lý do bất khả thi là ``ngân sách hành động đã cạn''.
+\textbf{Lời gọi tổng kết.} Khi vòng lặp dừng mà mô hình chưa chọn hành động kết thúc nào, dù vì hết ngân sách bước hay vì một trong hai chốt chặn trên, solver thực hiện một lời gọi \emph{tổng kết} (wrap-up call) cuối cùng. Lời gọi này thuần văn bản và chỉ được phép trả về \texttt{send\_msg\_to\_user} (tuyên bố hoàn thành) hoặc \texttt{report\_infeasible} (báo bất khả thi); mọi phản hồi khác đều bị bỏ. Prompt tổng kết nói đúng \emph{lý do thật} khiến episode dừng, bởi hai chốt chặn thường bắn sớm hơn ngân sách rất nhiều. Nếu cứ nói với mô hình rằng nó đã hết ngân sách, mô hình sẽ chép lại đúng câu đó: một lượt chạy thật đã có những episode dừng ở bước thứ năm nhưng khai lý do bất khả thi là ``ngân sách hành động đã cạn''.
 
-Lý do dừng được lưu cùng episode, vì nó phân biệt hai tình huống trông y hệt nhau trong dữ liệu. Một báo cáo bất khả thi mà tác nhân tự đưa ra \emph{trong lúc} đang giải là một kết luận; vẫn câu đó nhưng đến từ lời gọi tổng kết, sau khi tác nhân đã bị chặn, chỉ là lời biện minh sau sự việc. Bất khả thi là một loại kết quả hợp lệ, ngang hàng với thành công và thất bại: nó không bao giờ được thực thi trên trình duyệt, không bao giờ được thử lại và không nuôi khâu phát hiện skill; nhưng loại thứ nhất được giữ làm tín hiệu huấn luyện dạy mô hình biết khi nào nên dừng, còn loại thứ hai bị loại khỏi tập dữ liệu (Mục~\ref{sec:method-data}).
+Lý do dừng được lưu cùng episode, vì nó phân biệt hai tình huống trông y hệt nhau trong dữ liệu. Một báo cáo bất khả thi mà tác nhân tự đưa ra \emph{trong lúc} đang giải là một kết luận; vẫn câu đó nhưng đến từ lời gọi tổng kết, sau khi tác nhân đã bị chặn, chỉ là lời biện minh sau sự việc. Bất khả thi là một loại kết quả hợp lệ, ngang hàng với thành công và thất bại: nó không bao giờ được thực thi trên trình duyệt, không bao giờ được thử lại và không nuôi khâu phát hiện skill. Nhưng hai loại đi hai đường khác nhau. Loại thứ nhất được giữ làm tín hiệu huấn luyện dạy mô hình biết khi nào nên dừng; loại thứ hai bị loại khỏi tập dữ liệu (Mục~\ref{sec:method-data}).
 
 Với nhóm tác vụ thay đổi trạng thái, lời tự tuyên bố hoàn thành của tác nhân chưa đủ để episode được ghi là thành công. Một tác vụ \texttt{MOD} hoặc \texttt{COMPOSITE} còn phải thỏa một điều kiện kiểm tra được bằng mã: ít nhất một hành động đã thực sự làm trang thay đổi. Điều kiện này sinh ra từ một episode thật, nơi tác vụ ``gửi email xác nhận cho đơn hàng \#000000299'' được tuyên bố hoàn thành ngay ở bước đầu tiên, không một thao tác trình duyệt nào, với lý do email ``đã được gửi rồi''. Tác vụ \texttt{INFO} và \texttt{NAV} không chịu ràng buộc này, bởi trả lời ngay trên trang đích chính là hình dạng đúng của chúng.
 
@@ -425,10 +493,7 @@ tên cho trạng thái trang lúc ra; và trạng thái lúc ra bắt buộc ph�
 trạng thái lúc vào. Với một skill diễn ra gọn trong một trang, cách diễn đạt
 được yêu cầu là giữ nguyên tên trang nhưng bổ nghĩa bằng điều mà skill vừa
 thiết lập (``trang sửa sản phẩm \emph{đã có xác nhận lưu}''), tuyệt đối không
-lùi về mức phần tử. Lý do của ràng buộc cuối này nằm ở chỗ chỉ một mệnh đề ở
-mức trạng thái trang mới có cơ hội trùng với precondition của một skill khác;
-lý do nó được viết thẳng vào prompt, thay vì được kỳ vọng, là kết quả của cổng
-lọc ngay dưới đây (chi tiết ở Mục~\ref{sec:disc-operators}).
+lùi về mức phần tử. Ràng buộc cuối có lý do của nó: chỉ một mệnh đề ở mức trạng thái trang mới có cơ hội trùng với precondition của một skill khác. Còn việc nó được viết thẳng vào prompt thay vì chỉ được kỳ vọng là kết quả của cổng lọc ngay dưới đây (Mục~\ref{sec:disc-operators}).
 
 Nếu để LLM diễn đạt hoàn toàn tự do, các mệnh đề tương đương về ngữ nghĩa
 thường được viết theo nhiều cách khác nhau, làm phân mảnh bộ từ vựng. Thực
@@ -460,11 +525,7 @@ quỹ đạo làm ngữ cảnh, bước này đối chiếu từng mệnh đề 
 trước và sau của \emph{mọi} thành viên trong cụm, rồi tính tỷ lệ số thành viên
 mà mệnh đề đó thực sự đúng. Một effect được xác nhận trên dưới một nửa số
 thành viên thì bị loại, và một operator không còn effect nào sau bước này thì
-bị từ chối hẳn. Ngưỡng này được đặt ở mức thận trọng, tương đương với
-``chỉ loại những effect không đúng trên bất kỳ thành viên nào'', và nó có
-nguyên nhân cụ thể: một lượt chạy trên Shopping Admin đã thu nhận một operator
-với effect đạt độ chính xác 0{,}0, tức không đúng ở bất kỳ đâu, rồi vẫn lập kế
-hoạch dựa trên nó.
+bị từ chối hẳn. Ngưỡng này được đặt ở mức thận trọng, gần như tương đương ``chỉ loại những effect không đúng trên bất kỳ thành viên nào''. Nó có nguyên nhân cụ thể: một lượt chạy trên Shopping Admin đã thu nhận một operator với effect đạt độ chính xác 0{,}0 -- không đúng ở bất kỳ đâu -- rồi vẫn lập kế hoạch dựa trên nó.
 
 Cần lưu ý rằng cổng này chỉ áp dụng cho effect. Các precondition cũng được
 chấm điểm và ghi lại, nhưng không bao giờ bị loại bỏ, bởi việc gỡ đi một
@@ -523,11 +584,7 @@ thêm một số hữu hạn chuỗi mới.
 Khâu chấm ưu tiên tiêu chí tất định bất cứ khi nào có. Nếu operator cuối cùng
 là \emph{terminal} và website có điều kiện kết thúc kiểm tra được bằng chương
 trình, chẳng hạn URL xác nhận đơn hàng, thành công được xác minh trực tiếp.
-Còn lại, episode được chấm theo kết luận của solver rồi một judge độc lập xét
-lại \emph{ngay trong vòng lặp khám phá}: một phán quyết \textsc{Fail} hạ
-episode xuống thất bại trước khi nó kịp đi vào bất kỳ khâu nào phía sau, nên
-không episode nào được ghi thành công chỉ vì tác nhân tự nói vậy
-(Mục~\ref{sec:method-data}, \ref{sec:disc-slm}).
+Còn lại, episode được chấm theo kết luận của solver rồi một judge độc lập xét lại \emph{ngay trong vòng lặp khám phá}. Một phán quyết \textsc{Fail} hạ episode xuống thất bại trước khi nó kịp đi vào bất kỳ khâu nào phía sau, nên không episode nào được ghi thành công chỉ vì tác nhân tự nói vậy (Mục~\ref{sec:method-data}, \ref{sec:disc-slm}).
 
 Ở giai đoạn đầu, khi đồ thị toán tử còn thưa và chưa có chuỗi hợp lệ nào, hệ
 thống tạm lập kế hoạch thẳng tới những trạng thái kết thúc đã biết, nếu
@@ -562,15 +619,8 @@ nhân tự nghĩ ra là mục tiêu mà tác nhân sẽ từ chối một cách 
 Thứ ba, mọi năng lực phải bám vào những gì trang thật sự có, chứ không được
 suy diễn ra các tính năng không nhìn thấy.
 
-Ngân sách dành cho các mục tiêu này được phân bổ theo hai quy tắc. Một năng
-lực có thể được thử lại tối đa ba lần trong một lượt chạy, mỗi lần từ một
-\emph{loại} trang khác nhau (theo khuôn dạng URL), bởi cùng một mục tiêu theo
-đuổi từ một điểm xuất phát khác thực sự là một quỹ đạo khác; ràng buộc theo
-loại trang là thứ ngăn toàn bộ ngân sách bị tiêu hết trong vài node đầu tiên.
-Ngược lại, một năng lực liên tiếp thất bại sẽ bị cho nghỉ sớm, và trường hợp
-tác nhân tự tuyên bố bất khả thi thì bị cho nghỉ ngay lập tức: khi tác nhân đã
-nhìn trang và kết luận rằng tính năng đó không tồn tại trên bản triển khai
-này, kết luận ấy sẽ không đúng hơn ở trang thứ ba.
+Ngân sách dành cho các mục tiêu này được phân bổ theo hai quy tắc. Một năng lực có thể được thử lại tối đa ba lần trong một lượt chạy, mỗi lần từ một \emph{loại} trang khác nhau theo khuôn dạng URL, bởi cùng một mục tiêu theo đuổi từ điểm xuất phát khác thực sự là một quỹ đạo khác. Ràng buộc theo loại trang là thứ ngăn toàn bộ ngân sách bị tiêu hết trong vài node đầu.
+Ngược lại, một năng lực liên tiếp thất bại thì bị cho nghỉ sớm, còn nếu tác nhân tự tuyên bố bất khả thi thì nghỉ ngay. Khi tác nhân đã nhìn trang và kết luận tính năng đó không tồn tại trên bản triển khai này, kết luận ấy sẽ không đúng hơn ở trang thứ ba.
 
 Seed đồng thời được đưa vào prompt của explorer làm ngữ cảnh, giúp các tác vụ
 mức thấp bám mục đích thật của website thay vì chỉ mô tả những gì trang hiện
@@ -629,11 +679,7 @@ bởi trả lời ngay trên trang được đưa tới chính là hình dạng 
 nhân tự kết luận bất khả thi \emph{trong lúc} đang giải mới được giữ làm mẫu
 huấn luyện. Episode nào bị một chốt chặn dừng lại rồi mới phát
 \texttt{report\_infeasible} ở lời gọi tổng kết đều bị loại, căn cứ vào lý do
-dừng đã lưu cùng episode (Mục~\ref{sec:method-solver}). Huấn luyện trên nhóm
-sau là dạy mô hình bỏ cuộc, và hậu quả đó đo được: một tập dữ liệu chưa lọc
-chứa 136 lần bỏ cuộc như vậy, chiếm 23\% số mẫu và dồn vào đúng nhóm tác vụ
-khó nhất; mô hình huấn luyện trên nó báo bất khả thi ở 39\% số tác vụ Reddit
-khi đánh giá, đúng bằng tỷ lệ có trong dữ liệu.
+dừng đã lưu cùng episode (Mục~\ref{sec:method-solver}). Huấn luyện trên nhóm sau là dạy mô hình bỏ cuộc, và hậu quả đó đo được. Một tập dữ liệu chưa lọc chứa 136 lần bỏ cuộc như vậy, chiếm 23\% số mẫu và dồn vào đúng nhóm tác vụ khó nhất. Mô hình huấn luyện trên nó báo bất khả thi ở 39\% số tác vụ Reddit khi đánh giá, đúng bằng tỷ lệ có trong dữ liệu.
 
 \textbf{Loại bỏ hành động rời khỏi website.} Một hành động \texttt{goto} trỏ
 tới một tên miền khác với trang hiện tại thì không bao giờ được dùng làm đích
@@ -660,12 +706,7 @@ LLaMA-Factory~\cite{zheng2024llamafactory}.
 Tập huấn luyện và tập kiểm định được chia theo đơn vị \emph{tác vụ}, cụ thể là
 theo cặp (website, nội dung mục tiêu), chứ không theo từng bước và cũng không
 theo từng quỹ đạo. Chia theo bước thì sai rõ ràng, vì các bước trong cùng một
-episode gắn chặt với nhau. Nhưng chia theo quỹ đạo cũng chưa đủ, và đây là chỗ
-dễ bỏ sót: cơ chế lấy mẫu không tiền tố
-(Mục~\ref{sec:method-unprefixed}) ghi lại mỗi tác vụ đã giải được \emph{hai}
-lần, một lần từ chính trang của nó và một lần từ trang chủ, nên một mục tiêu
-sở hữu hai quỹ đạo và một phép chia ở mức quỹ đạo sẽ đặt bản sao này vào tập
-huấn luyện còn bản sao kia vào tập kiểm định. Đo trên chính tập dữ liệu của
+episode gắn chặt với nhau. Nhưng chia theo quỹ đạo cũng chưa đủ, và đây là chỗ dễ bỏ sót. Cơ chế lấy mẫu không tiền tố (Mục~\ref{sec:method-unprefixed}) ghi lại mỗi tác vụ đã giải được \emph{hai} lần: một lần từ chính trang của nó, một lần từ trang chủ. Một mục tiêu vì thế sở hữu hai quỹ đạo, và phép chia ở mức quỹ đạo sẽ đặt bản sao này vào tập huấn luyện, bản sao kia vào tập kiểm định. Đo trên chính tập dữ liệu của
 khóa luận, cách chia đó làm rò rỉ 29 trên 56 quỹ đạo kiểm định, tương đương
 một nửa số mẫu kiểm định: mô hình đã học đúng mục tiêu ấy, trên đúng website
 ấy, tới đúng trang đích ấy. Hệ quả là giá trị \texttt{eval\_loss} trở nên lạc

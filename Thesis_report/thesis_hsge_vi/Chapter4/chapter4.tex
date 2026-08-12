@@ -1,10 +1,7 @@
 \chapter{Thực nghiệm}
 \label{ch:experiments}
 
-Chương này (1) mô tả môi trường thực nghiệm và quy trình đánh giá, (2) báo
-cáo kết quả thu thập dữ liệu, (3) báo cáo kết quả tinh chỉnh, (4) trình
-bày đánh giá chính trên bộ tác vụ chính thức của bốn website WebArena, và
-(5) phân tích kết quả.
+Chương này gồm năm phần: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả tinh chỉnh; (4) đánh giá chính trên bộ tác vụ chính thức của bốn website WebArena; và (5) phân tích kết quả.
 
 \section{Môi trường thực nghiệm}
 \label{sec:exp-setup}
@@ -50,9 +47,7 @@ tác vụ đo được là 16{,}0 giờ &
 
 Như vậy, tính từ thời điểm bắt đầu tinh chỉnh cho tới khi hoàn tất đánh giá
 trên 655 tác vụ, tổng chi phí GPU của toàn bộ chu trình là 22{,}7\,USD.
-Con số này cho thấy rào cản tính toán của việc chuyên hóa một mô hình ngôn
-ngữ nhỏ cho một nhóm website không nằm ở khâu huấn luyện hay đánh giá, mà
-nằm ở khâu thu thập dữ liệu, vốn tiêu tốn thời gian điều khiển trình duyệt
+Con số này định vị lại rào cản tính toán của việc chuyên hóa một mô hình ngôn ngữ nhỏ cho một nhóm website. Rào cản không nằm ở khâu huấn luyện hay đánh giá, mà ở khâu thu thập dữ liệu, vốn tiêu tốn thời gian điều khiển trình duyệt
 và số lượng lời gọi API chứ không tiêu tốn tài nguyên GPU.
 
 \subsection{Cấu hình mô hình theo vai trò}
@@ -365,7 +360,7 @@ công giả. Cổng này loại 104 quỹ đạo, tương ứng 279 mẫu. Đi�
 đó thì không hề thay đổi.
 \end{itemize}
 
-Quá trình phân chia tập dữ liệu huấn luyện (training set) và tập kiểm định (validation set) được thực hiện nghiêm ngặt ở cấp độ \emph{tác vụ (tác vụ)}, thay vì cấp độ quỹ đạo (quỹ đạo). Cụ thể, mọi quỹ đạo phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng quỹ đạo đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Điều này sẽ dẫn đến hiện tượng rò rỉ dữ liệu (data leakage), khiến chỉ số tổn thất kiểm định (\texttt{eval\_loss}) bị sai lệch do chỉ phản ánh khả năng ghi nhớ (memorization) của mô hình thay vì năng lực khái quát hóa (generalization) thực tế.
+Quá trình phân chia tập dữ liệu huấn luyện (training set) và tập kiểm định (validation set) được thực hiện nghiêm ngặt ở cấp độ \emph{tác vụ (tác vụ)}, thay vì cấp độ quỹ đạo (quỹ đạo). Cụ thể, mọi quỹ đạo phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng quỹ đạo đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Hệ quả là rò rỉ dữ liệu: chỉ số tổn thất kiểm định (\texttt{eval\_loss}) khi đó phản ánh khả năng ghi nhớ chứ không phản ánh năng lực khái quát hóa.
 
 Nhờ chiến lược chia tách này, tập kiểm định đạt được mức độ cách ly tuyệt đối với \textbf{0} mục tiêu trùng lặp so với tập huấn luyện. Thêm vào đó, dữ liệu kiểm định được lấy mẫu phân tầng (stratified) \emph{theo từng website cụ thể}. Cơ chế này duy trì tỷ lệ phân bổ cân đối, ngăn chặn triệt để tình trạng một website có lượng dữ liệu lớn làm sai lệch và chi phối toàn bộ các chỉ số đánh giá tổng thể.
 
@@ -420,10 +415,7 @@ Về mặt hiệu suất phần cứng, có một chi tiết môi trường đá
 đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa một cách âm thầm
 khi thiếu thư viện \texttt{causal-conv1d}, làm tốc độ huấn luyện chậm đi
 2{,}3 lần (30--33 giây mỗi bước ở mức tiêu thụ 130--200\,W, thay vì 13 giây
-mỗi bước ở mức 630\,W). Vì trạng thái này không phát sinh cảnh báo nào, quy
-trình cài đặt được bổ sung một bước in ra trạng thái của đường đi nhanh sau
-khi cài đặt xong, để sai lệch cấu hình được phát hiện trước khi bắt đầu huấn
-luyện.
+mỗi bước ở mức 630\,W). Trạng thái này không phát sinh cảnh báo nào. Vì vậy quy trình cài đặt được bổ sung một bước in ra trạng thái của đường đi nhanh sau khi cài xong, để bắt sai lệch cấu hình trước khi bắt đầu huấn luyện.
 
 \section{Đánh giá chính trên WebArena}
 \label{sec:exp-main}
@@ -431,9 +423,7 @@ luyện.
 \subsection{Kết quả tổng hợp}
 
 Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 tác vụ chính thức của
-bốn website. Toàn bộ 655 tác vụ đều được chấm điểm, không tác vụ nào phát sinh
-lỗi môi trường và không tác vụ nào bị bỏ qua, nên mẫu số của mọi tỷ lệ trong
-bảng đều là số tác vụ đầy đủ của website tương ứng.
+bốn website. Toàn bộ 655 tác vụ đều được chấm điểm: không tác vụ nào phát sinh lỗi môi trường, không tác vụ nào bị bỏ qua. Mẫu số của mọi tỷ lệ trong bảng vì thế là số tác vụ đầy đủ của website tương ứng.
 
 \begin{table}[H]
 \centering
@@ -461,7 +451,7 @@ Shopping Admin & 182 & 28 & 15{,}4\% ($\pm$ 5{,}2) \\
 \subsection{So với mô hình nền chưa tinh chỉnh}
 \label{sec:exp-baseline}
 
-Để tách bạch đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ 655 tác vụ được đo lại một lần nữa trên mô hình Qwen3.5-9B \emph{chưa} tinh chỉnh, giữ nguyên prompt, ngân sách bước, cấu hình giải mã và bộ chấm đã mô tả ở mục~\ref{sec:exp-protocol}. Điểm khác biệt duy nhất giữa hai đợt đo là trọng số được nạp vào máy chủ suy luận. Đợt đo mô hình nền được thực hiện sau khi cơ sở dữ liệu của cả bốn website đã được khôi phục về trạng thái nguyên bản, vì một đợt đo trước đó đã cho thấy nếu hai lượt quét chạy nối tiếp trên cùng một instance mà không khôi phục dữ liệu ở giữa, những thay đổi mà lượt quét trước để lại sẽ được bộ chấm ghi nhận cho lượt quét sau. Cả bốn website đều hoàn tất đủ mẫu số, không có tác vụ nào phát sinh lỗi môi trường.
+Để tách đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ 655 tác vụ được đo lại một lần nữa trên mô hình Qwen3.5-9B \emph{chưa} tinh chỉnh. Mọi thứ khác giữ nguyên: prompt, ngân sách bước, cấu hình giải mã và bộ chấm đã mô tả ở mục~\ref{sec:exp-protocol}. Khác biệt duy nhất giữa hai đợt đo là trọng số nạp vào máy chủ suy luận. Đợt đo mô hình nền chỉ bắt đầu sau khi cơ sở dữ liệu của cả bốn website đã được khôi phục về trạng thái nguyên bản. Lý do đến từ một đợt đo trước đó: khi hai lượt quét chạy nối tiếp trên cùng một instance mà không khôi phục dữ liệu ở giữa, những thay đổi lượt trước để lại sẽ được bộ chấm ghi nhận cho lượt sau. Cả bốn website đều hoàn tất đủ mẫu số, không có tác vụ nào phát sinh lỗi môi trường.
 
 \begin{table}[H]
 \centering
@@ -495,7 +485,7 @@ Mức cải thiện phân bố rất không đều giữa các website. Reddit l
 
 Phân tích trace cho thấy phần lớn khoảng cách này đến từ một nguyên nhân duy nhất và có thể đo trực tiếp: \textbf{khả năng tuân thủ định dạng đầu ra}. Ở mô hình nền, 170 trên 655 episode (26{,}0\%) kết thúc vì phản hồi của mô hình không phân giải được thành một hành động hợp lệ, trong khi con số đó ở mô hình sau tinh chỉnh chỉ là 2 trên 655 (0{,}3\%). Một episode hỏng theo kiểu này bị chấm thất bại bất kể mô hình có suy luận đúng hay không, vì hành động không bao giờ tới được trình duyệt. Đây cũng là lý do mô hình nền tiêu ít bước hơn hẳn: 5424 bước so với 6578 bước của mô hình sau tinh chỉnh trên cùng 655 tác vụ.
 
-Tách 655 tác vụ thành hai nhóm theo tiêu chí này cho phép định lượng đóng góp của yếu tố định dạng, và kết quả đáng để nêu nguyên trạng. Trên 170 tác vụ mà mô hình nền hỏng định dạng, mô hình nền không giải được tác vụ nào, còn mô hình sau tinh chỉnh giải được 35 tác vụ. Trên 485 tác vụ còn lại, nơi mô hình nền chạy trọn vẹn, hai mô hình đạt 87 và 101 tác vụ, tức 17{,}9\% so với 20{,}8\%, và kiểm định theo cặp trên riêng nhóm này cho $p = 0{,}120$, không đạt ý nghĩa thống kê. Nói cách khác, 35 trong 49 tác vụ tăng thêm đến từ việc mô hình học được cách phát ra hành động đúng định dạng và đi hết một episode; phần cải thiện còn lại về năng lực thao tác web, dù cùng chiều, chưa tách được khỏi nhiễu ở quy mô mẫu hiện có. Đây là giới hạn diễn giải quan trọng nhất của Bảng~\ref{tab:baseline} và được bàn tiếp ở Mục~\ref{sec:disc-results}.
+Tách 655 tác vụ thành hai nhóm theo tiêu chí này cho phép định lượng đóng góp của yếu tố định dạng, và kết quả đáng để nêu nguyên trạng. Trên 170 tác vụ mà mô hình nền hỏng định dạng, mô hình nền không giải được tác vụ nào, còn mô hình sau tinh chỉnh giải được 35 tác vụ. Trên 485 tác vụ còn lại, nơi mô hình nền chạy trọn vẹn, hai mô hình đạt 87 và 101 tác vụ, tức 17{,}9\% so với 20{,}8\%. Kiểm định theo cặp riêng trên nhóm này cho $p = 0{,}120$, không đạt ý nghĩa thống kê. Nói cách khác, 35 trong 49 tác vụ tăng thêm đến từ việc mô hình học được cách phát ra hành động đúng định dạng và đi hết một episode; phần cải thiện còn lại về năng lực thao tác web, dù cùng chiều, chưa tách được khỏi nhiễu ở quy mô mẫu hiện có. Đây là giới hạn diễn giải quan trọng nhất của Bảng~\ref{tab:baseline} và được bàn tiếp ở Mục~\ref{sec:disc-results}.
 
 Tuân thủ định dạng cũng chỉ là điều kiện cần chứ không phải điều kiện đủ. Reddit vừa có tỷ lệ hỏng định dạng cao nhất ở mô hình nền (38{,}7\%) vừa có mức cải thiện lớn nhất, đúng như dự đoán của giả thuyết này; nhưng Shopping Admin có tỷ lệ hỏng định dạng cao thứ nhì (24{,}7\%) mà lại cải thiện ít nhất, cho thấy khi rào cản định dạng được gỡ bỏ thì độ khó nội tại của website mới là yếu tố quyết định phần còn lại.
 
@@ -507,8 +497,7 @@ Cuối cùng, cần nhấn mạnh phạm vi của kết luận này: mỗi ô tr
 
 \subsection{So với các công trình liên quan}
 
-Việc so sánh trực tiếp con số tổng của các công trình liên quan là không
-hợp lệ, bởi các công trình đó báo cáo trên toàn bộ 812 tác vụ của WebArena
+Không thể so trực tiếp con số tổng của các công trình liên quan: các công trình đó báo cáo trên toàn bộ 812 tác vụ của WebArena
 (bao gồm cả website Map và các tác vụ đa-website), trong khi khóa luận đánh
 giá trên 655 tác vụ thuộc bốn website. Vì vậy, Bảng~\ref{tab:related}
 \emph{tính lại} kết quả của các công trình đó theo trung bình có trọng số
@@ -569,7 +558,7 @@ tập dữ liệu của khóa luận chỉ có 4288 mẫu huấn luyện, nhỏ 
 nêu ở mục~\ref{sec:exp-protocol}.
 \end{enumerate}
 
-Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 4288 mẫu dữ liệu do chính chuỗi xử lý (pipeline) này tổng hợp, có khả năng đạt hiệu năng tương đương với các hệ thống tiên tiến nhất trong cùng phân khúc. Cụ thể, mô hình đề xuất đạt kết quả cao hơn NNetNav-7B (20{,}8\% so với 19{,}1\%), tiệm cận với mức hiệu năng của GPT-4o-mini (20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) khoảng 1{,}8 điểm phần trăm, một mức chênh lệch vẫn nằm trong khoảng tin cậy thống kê (confidence interval) của phép đo.
+Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 4288 mẫu dữ liệu do chính chuỗi xử lý (pipeline) này tổng hợp, có khả năng đạt hiệu năng tương đương với các hệ thống tiên tiến nhất trong cùng phân khúc. Cụ thể, mô hình đề xuất cao hơn NNetNav-7B (20{,}8\% so với 19{,}1\%) và tiệm cận GPT-4o-mini (20{,}0\%). Nó thấp hơn Go-Browse-7B (22{,}6\%) khoảng 1{,}8 điểm phần trăm, một mức chênh lệch vẫn nằm trong khoảng tin cậy thống kê (confidence interval) của phép đo.
 
 Tuy nhiên, các số liệu này \emph{chưa đủ cơ sở} để khẳng định phương pháp HSGE ưu việt hay kém hiệu quả hơn so với Go-Browse. Để có một phép so sánh công bằng và chính xác nhất, mô hình cơ sở (foundation model) cũng như quy mô tập dữ liệu huấn luyện của cả hai hệ thống cần phải được thiết lập đồng nhất.
 
@@ -726,7 +715,7 @@ Reddit là môi trường duy nhất mà lỗi vòng lặp lặp lại (56\%) v�
 Chỉ có 3 trên tổng số 519 episode thất bại (0{,}6\%) rơi vào trường hợp gọi hàm \texttt{send\_msg\_to\_user} ngay tại bước đầu tiên mà không tạo ra bất kỳ tương tác nào với trang. Đây chính xác là nhóm hành vi mà cơ chế lọc hành động hiệu quả tại Mục~\ref{sec:exp-data} đã khoanh vùng và xử lý, dẫn đến việc loại bỏ 104 quỹ đạo lỗi khỏi tập dữ liệu huấn luyện. Tỷ lệ rủi ro giảm xuống mức 0{,}6\% là minh chứng trực tiếp cho mối tương quan chặt chẽ giữa quy trình làm sạch dữ liệu và kết quả đánh giá cuối cùng: cổng kiểm duyệt đã hoàn thành đúng mục tiêu loại trừ triệt để nhóm hành vi sai lệch này.
 
 \textbf{Đầu ra không thể phân giải (unparseable output) không còn là nguồn gây lỗi đáng kể.}
-Chỉ ghi nhận 2 trên 655 episode (0{,}3\%) buộc phải kết thúc do phản hồi của mô hình không thể phân giải thành định dạng JSON hợp lệ. Quyết định lưu trữ dữ liệu thô (raw payload) từ từng lời gọi LLM trong vết theo dõi (trace) đã giúp phân tách rạch ròi nhóm lỗi này khỏi các trường hợp mô hình chủ động dừng lại, tránh việc gộp chung tất cả vào một kết quả thất bại tổng quát. Giá trị của phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170 trên 655 episode, tức 26{,}0\% (Bảng~\ref{tab:profile}).
+Chỉ ghi nhận 2 trên 655 episode (0{,}3\%) buộc phải kết thúc do phản hồi của mô hình không thể phân giải thành định dạng JSON hợp lệ. Việc lưu dữ liệu thô của từng lời gọi LLM trong vết chạy là thứ tách được nhóm lỗi này khỏi những trường hợp mô hình chủ động dừng. Không có nó, cả hai đã bị gộp thành một kết quả thất bại chung chung. Giá trị của phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170 trên 655 episode, tức 26{,}0\% (Bảng~\ref{tab:profile}).
 
 \subsection{Đối chiếu chân dung lỗi giữa hai mô hình}
 
@@ -753,7 +742,7 @@ Lỗi hành động trên mỗi bước & 0{,}358 & 0{,}347 \\
 \end{tabular}
 \end{table}
 
-Chân dung này cho thấy tinh chỉnh không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau tinh chỉnh còn cao hơn mô hình nền về giá trị tuyệt đối (2285 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}347 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau tinh chỉnh luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng phục hồi sau một thao tác hỏng, chứ không nằm ở việc mô hình có biết phát ra hành động đúng định dạng hay không, vốn là phần mà tập dữ liệu đã dạy được một cách triệt để.
+Chân dung này cho thấy tinh chỉnh không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau tinh chỉnh còn cao hơn mô hình nền về giá trị tuyệt đối (2285 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}347 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau tinh chỉnh luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng gượng dậy sau một thao tác hỏng. Nó không còn nằm ở việc mô hình có phát ra được hành động đúng định dạng hay không -- phần đó tập dữ liệu đã dạy được triệt để.
 
 \subsection{Độ dài quỹ đạo}
 
@@ -768,7 +757,7 @@ chứ không vào việc tiến tới mục tiêu.
 
 \subsection{Tổng kết chương}
 
-Quy trình đầu cuối (end-to-end pipeline) đã được triển khai hoàn chỉnh trên bốn website thực tế. Cụ thể, giai đoạn khám phá đã thu thập thành công 2178 episode và tinh lọc được 1029 quỹ đạo đạt chuẩn; bước tinh chỉnh đã huấn luyện thành công một mô hình 9B tham số với chi phí điện toán GPU đặc biệt tối ưu, chỉ ở mức 6{,}6\,USD. Trong giai đoạn đánh giá toàn diện trên 655 tác vụ chuẩn thức, hệ thống đạt tỷ lệ thành công 20{,}8\%. Thành tích này tiệm cận với các hệ thống tiên tiến nhất trong cùng phân khúc dưới 10B tham số. Phép đối chứng trên chính bốn website đó cho thấy mô hình nền khi chưa tinh chỉnh chỉ đạt 13{,}3\%, nghĩa là tập dữ liệu do pipeline sinh ra đóng góp 7{,}5 điểm phần trăm và mức đóng góp này đạt ý nghĩa thống kê theo kiểm định cặp trên ba trong bốn website.
+Quy trình đầu cuối (end-to-end pipeline) đã được triển khai hoàn chỉnh trên bốn website thực tế. Cụ thể, giai đoạn khám phá đã thu thập thành công 2178 episode và tinh lọc được 1029 quỹ đạo đạt chuẩn; bước tinh chỉnh đã huấn luyện thành công một mô hình 9B tham số với chi phí điện toán GPU đặc biệt tối ưu, chỉ ở mức 6{,}6\,USD. Trong giai đoạn đánh giá toàn diện trên 655 tác vụ chuẩn thức, hệ thống đạt tỷ lệ thành công 20{,}8\%. Thành tích này tiệm cận với các hệ thống tiên tiến nhất trong cùng phân khúc dưới 10B tham số. Phép đối chứng trên chính bốn website đó cho thấy mô hình nền khi chưa tinh chỉnh chỉ đạt 13{,}3\%. Tập dữ liệu do pipeline sinh ra vì vậy đóng góp 7{,}5 điểm phần trăm, và mức đóng góp này đạt ý nghĩa thống kê theo kiểm định cặp trên ba trong bốn website.
 
 Tuy nhiên, cần nhìn nhận một cách khách quan ba giới hạn cốt lõi của nghiên cứu: thứ nhất, các kết quả đánh giá hiện tại chỉ được ghi nhận từ một lượt chạy (run) duy nhất cho mỗi website (Mục~\ref{sec:exp-stats}); thứ hai, đợt rà soát các episode thành công giả mới được thực hiện một phía, trên mô hình nền tại hai website (Mục~\ref{sec:exp-baseline}); thứ ba, các nghiên cứu cắt bỏ (ablation study) nhằm phân tách và định lượng mức độ đóng góp của từng thành phần trong chuỗi xử lý vẫn chưa được tiến hành (Mục~\ref{sec:exp-ablation}).
 

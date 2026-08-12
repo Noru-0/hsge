@@ -1,15 +1,12 @@
 \chapter{Mở đầu}
 \label{ch:intro}
 
-Chương này (1) trình bày động lực của việc dùng mô hình ngôn ngữ nhỏ làm
-web agent, (2) phát biểu bài toán mà khóa luận giải quyết, (3) phân tích
-các thách thức, (4) nêu mục tiêu và đóng góp, (5) giới hạn phạm vi, và
-(6) giới thiệu bố cục của khóa luận.
+Chương này gồm sáu phần: (1) động lực của việc dùng mô hình ngôn ngữ nhỏ làm web agent; (2) phát biểu bài toán; (3) các thách thức; (4) mục tiêu và đóng góp; (5) phạm vi; và (6) bố cục của khóa luận.
 
 \section{Bối cảnh và động lực}
 \label{sec:intro-context}
 
-Hãy hình dung một người quản lý cửa hàng trực tuyến, mỗi sáng đều lặp lại cùng một chuỗi thao tác trên trang quản trị: mở danh sách đơn hàng mới, kiểm tra đơn nào cần xử lý gấp, cập nhật trạng thái và trả lời khách đang chờ. Không bước nào trong quy trình này đòi hỏi phán đoán vượt ra ngoài những gì hiển thị trên màn hình, vậy mà ta vẫn phải dành nhiều thời gian để làm những công việc lặp đi lặp lại này mỗi ngày và điều tương tự đúng với vô số quy trình khác trên diễn đàn, trang tin tức hay các dịch vụ web khác. Trình duyệt là giao diện chung của tất cả các dịch vụ đó, nên một agent có khả năng thao tác website \emph{qua chính giao diện người dùng} là một trong những dạng tự động hóa có phạm vi ứng dụng rộng nhất.
+Hãy hình dung một người quản lý cửa hàng trực tuyến, mỗi sáng đều lặp lại cùng một chuỗi thao tác trên trang quản trị: mở danh sách đơn hàng mới, kiểm tra đơn nào cần xử lý gấp, cập nhật trạng thái và trả lời khách đang chờ. Không bước nào trong chuỗi đó đòi hỏi phán đoán vượt ra ngoài những gì đang hiển thị trên màn hình. Vậy mà ngày nào cũng phải làm lại từ đầu, và điều tương tự đúng với vô số quy trình khác trên diễn đàn, trang tin tức hay các dịch vụ web. Trình duyệt là giao diện chung của tất cả các dịch vụ đó, nên một agent có khả năng thao tác website \emph{qua chính giao diện người dùng} là một trong những dạng tự động hóa có phạm vi ứng dụng rộng nhất.
 
 Sự bùng nổ của các mô hình ngôn ngữ lớn (LLM) trong thời gian qua đã tạo tiền đề để hiện
 thực hóa các web agent nói trên. Dựa vào bản mô tả giao diện trang web và mục tiêu do
@@ -24,31 +21,16 @@ nội dung hiển thị trên trang (bao gồm cả dữ liệu nội bộ nhạ
 của bên thứ ba. Cuối cùng, các mô hình này mang tính chất "hộp đen" (black-box), khiến người
 triển khai không thể can thiệp, kiểm tra hay cải thiện bộ trọng số bên trong.
 
-Mô hình ngôn ngữ nhỏ (SLM) chính là lời giải cho những rào cản kể trên. Theo~\cite{belcak2025slm}, SLM được định nghĩa chủ yếu qua khả năng chạy được trên một thiết bị tiêu dùng phổ thông; trên thực tế, các mô hình dưới mười tỷ tham số thường được xem là SLM. Các mô hình này mang lại ưu thế vượt trội về chi phí suy luận, khả năng chạy cục bộ,
-đảm bảo quyền riêng tư tuyệt đối và đặc biệt là người vận hành hoàn toàn làm chủ trọng
-số để có thể tùy ý tinh chỉnh (fine-tune). Dù vậy, điểm yếu lớn nhất của SLM hiện nay
+Mô hình ngôn ngữ nhỏ (SLM) chính là lời giải cho những rào cản kể trên. Theo~\cite{belcak2025slm}, SLM được định nghĩa chủ yếu qua khả năng chạy được trên một thiết bị tiêu dùng phổ thông; trên thực tế, các mô hình dưới mười tỷ tham số thường được xem là SLM. Các mô hình này rẻ hơn hẳn khi suy luận, chạy được cục bộ nên giữ được quyền riêng tư, và quan trọng nhất là người vận hành làm chủ trọng số nên tinh chỉnh được theo ý mình. Dù vậy, điểm yếu lớn nhất của SLM hiện nay
 nằm ở năng lực xử lý. Cần lưu ý rằng ngay cả những mô hình \emph{khổng lồ} cũng chật vật
-với các tác vụ web trong thực tế. Cụ thể, trên benchmark WebArena (môi trường mô
-phỏng các website thực tế với đầy đủ chức năng), tại thời điểm benchmark được công bố,
-agent sử dụng GPT-4 chỉ hoàn thành khoảng 14\% số lượng tác vụ, kém xa mức 78\% của
-con người~\cite{zhou2024webarena}.
+với các tác vụ web trong thực tế. Trên WebArena, bộ chuẩn gồm các bản sao website thật đầy đủ chức năng, tác nhân dùng GPT-4 chỉ hoàn thành khoảng 14\% số tác vụ ở thời điểm bộ chuẩn được công bố. Con người đạt 78\%~\cite{zhou2024webarena}.
 Do đó, các mô hình nhỏ nếu không được tinh chỉnh sẽ còn cho ra mức hiệu năng thấp hơn rất nhiều.
 
 Phương pháp phổ biến nhất để khắc phục điểm yếu này là tinh chỉnh có giám sát (SFT) dựa trên
-các mẫu hành vi của người dùng~\cite{lai2024autowebglm}. Tuy nhiên, cách tiếp cận này lại vấp
-phải rào cản lớn về dữ liệu: các chuỗi tương tác (trajectory) có gán nhãn mục tiêu cụ thể trên
-website đích gần như không tồn tại; đồng thời, việc thuê chuyên gia gán nhãn thủ công vừa tốn
-kém, mất thời gian, lại vừa thiếu tính tái sử dụng cho các website khác. Mức chi phí này là
-có thật chứ không phải phỏng đoán: AutoWebGLM cần 20 người gán nhãn làm việc trong một
-tháng để dựng tập dữ liệu duyệt web của họ~\cite{lai2024autowebglm}, trong khi Synatra báo cáo
-rằng một bản mẫu tổng hợp chỉ tốn khoảng 3\% chi phí của một bản mẫu do con người
-tạo~\cite{ou2024synatra}.
+các mẫu hành vi của người dùng~\cite{lai2024autowebglm}. Nhưng cách này vấp một rào cản dữ liệu. Các quỹ đạo có gán nhãn mục tiêu trên website đích gần như không tồn tại, còn thuê người gán nhãn thì vừa tốn kém vừa mất thời gian, mà kết quả lại không dùng lại được cho website khác. Mức chi phí này là có thật chứ không phải phỏng đoán. AutoWebGLM cần 20 người gán nhãn làm việc trong một tháng để dựng tập dữ liệu duyệt web của họ~\cite{lai2024autowebglm}. Ở chiều ngược lại, Synatra báo cáo một bản mẫu tổng hợp chỉ tốn khoảng 3\% chi phí của một bản mẫu do con người tạo~\cite{ou2024synatra}.
 
 Khóa luận này tập trung giải quyết chính bài toán dữ liệu đó.
-Trọng tâm là xây dựng một luồng xử lý (pipeline) tự động có khả năng \emph{khám phá} website,
-\emph{tự tổng hợp} các tác vụ có ý nghĩa dựa trên dữ liệu thu thập được, \emph{kiểm chứng}
-tính thành công của các thao tác, và cuối cùng là chuyển chúng thành tập dữ liệu huấn
-luyện. Bằng cách này, việc chuyên biệt hóa một SLM cho bất kỳ website nào sẽ được tối ưu hóa chi
+Trọng tâm là một pipeline tự động làm bốn việc: \emph{khám phá} website, \emph{tự tổng hợp} các tác vụ có ý nghĩa từ những gì thu được, \emph{kiểm chứng} kết quả, rồi chuyển chúng thành tập dữ liệu huấn luyện. Bằng cách này, việc chuyên biệt hóa một SLM cho bất kỳ website nào sẽ được tối ưu hóa chi
 phí từ mức thuê nhân công gán nhãn đắt đỏ xuống chỉ còn là chi phí tính toán (compute cost).
 Ý tưởng cốt lõi của nghiên cứu là thiết kế một pipeline khám phá có định hướng rõ ràng thay
 vì làm điều đó một cách ngẫu nhiên. Cụ thể, hệ thống sẽ xây dựng một \emph{đồ thị (graph)} nhằm lưu trữ tri thức học được từ việc khám phá website (bao gồm các kỹ năng đã được kiểm chứng, kèm theo điều
@@ -104,15 +86,10 @@ Năm đặc điểm của bài toán khiến nó trở nên khó.
   lặp hoặc bị gián đoạn khi gặp trang lỗi.
   \item \textbf{Sinh tác vụ có ý nghĩa thay vì duyệt ngẫu nhiên.} Các
   chuỗi tương tác ngẫu nhiên rất dễ tạo ra nhưng lại gần như không có
-  giá trị khi dùng làm dữ liệu mẫu. Một tác vụ huấn luyện hữu ích phải
-  phản ánh đúng mục tiêu mà một người dùng thực tế hướng đến; trong đó,
-  những tác vụ mang lại giá trị học tập cho mô hình cao thường trải dài qua
-  nhiều trang và đòi hỏi kết hợp nhiều kỹ năng.
+  giá trị khi dùng làm dữ liệu mẫu. Một tác vụ huấn luyện hữu ích phải phản ánh đúng mục tiêu của người dùng thật. Những tác vụ dạy được nhiều nhất thường trải qua nhiều trang và đòi hỏi phối hợp nhiều kỹ năng.
   \item \textbf{Kiểm chứng tính đúng đắn.} Trong hệ thống này, tác nhân
   vừa tự sinh ra tác vụ vừa tự đánh giá mức độ hoàn thành của chính nó.
-  Các kết quả ``thành công'' chưa được kiểm chứng có thể tạo ra dữ liệu
-  rác và nếu dùng để tinh chỉnh (fine-tune), chúng sẽ khiến mô hình học
-  phải thói quen báo cáo hoàn thành tác vụ trước khi thực sự đạt được mục tiêu.
+  Những kết quả ``thành công'' chưa kiểm chứng là dữ liệu rác. Đem tinh chỉnh, chúng dạy mô hình đúng một thói quen: báo hoàn thành trước khi thực sự đạt mục tiêu.
   \item \textbf{Ghép chuỗi tác vụ dài hạn.} Các tác vụ được đề xuất dựa
   trên một màn hình đơn lẻ thường chỉ phản ánh mục tiêu ngắn hạn.
   Muốn tạo ra các task nhiều bước hợp lệ cần xác định cách các tác vụ ngắn
@@ -138,7 +115,7 @@ Khóa luận theo đuổi năm mục tiêu:
   \item[\textbf{O5.}] Tổng hợp kinh nghiệm kỹ thuật trong quá trình vận hành tác nhân LLM để thu thập dữ liệu trên các website thực tế thành những bài học và tiêu chuẩn thực hành (best practice) có tính ứng dụng cao.
 \end{enumerate}
 
-Bảng~\ref{tab:contrib} phân định rõ ranh giới giữa những tài nguyên khóa luận kế thừa và những đóng góp mới. Nhìn chung, khóa luận mang lại năm đóng góp cốt lõi. Đầu tiên là phương pháp HSGE: một chu trình khám phá và ghép chuỗi dựa trên đồ thị với kiến trúc tác vụ hai tầng. Trong kiến trúc đó, các tác vụ bậc thấp (low-level task) do LLM đề xuất dẫn dắt quá trình khám phá, còn các tác vụ ngữ nghĩa sinh ra từ đồ thị toán tử cung cấp dữ liệu dài hạn. Thứ hai là bộ tinh lọc dữ liệu tự động, gồm các cổng chất lượng chấm lại từng episode ngay trong vòng lặp thu thập, được tích hợp vào một trình dựng dữ liệu tuân thủ nguyên tắc prompt parity. Ba đóng góp còn lại bao gồm: một mô hình web agent 9B đã được tinh chỉnh cùng tập dữ liệu thu thập được, kết quả đánh giá mô hình đó trên bộ tác vụ WebArena chính thức, và một báo cáo phân tích kinh nghiệm vận hành các chu trình tương tự một cách ổn định.
+Bảng~\ref{tab:contrib} phân định rõ ranh giới giữa những tài nguyên khóa luận kế thừa và những đóng góp mới. Nhìn chung, khóa luận mang lại năm đóng góp cốt lõi. Đầu tiên là phương pháp HSGE: một chu trình khám phá và ghép chuỗi dựa trên đồ thị với kiến trúc tác vụ hai tầng. Trong kiến trúc đó, các tác vụ bậc thấp (low-level task) do LLM đề xuất dẫn dắt quá trình khám phá, còn các tác vụ ngữ nghĩa sinh ra từ đồ thị toán tử cung cấp dữ liệu dài hạn. Thứ hai là bộ tinh lọc dữ liệu tự động, gồm các cổng chất lượng chấm lại từng episode ngay trong vòng lặp thu thập, được tích hợp vào một trình dựng dữ liệu tuân thủ nguyên tắc prompt parity. Ba đóng góp còn lại là: một mô hình tác nhân web 9B đã tinh chỉnh cùng tập dữ liệu đã thu; kết quả đánh giá mô hình đó trên bộ tác vụ WebArena chính thức; và một báo cáo kinh nghiệm vận hành các chu trình tương tự.
 
 \begin{table}[H]
 \centering
