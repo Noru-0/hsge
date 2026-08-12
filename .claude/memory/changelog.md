@@ -6,6 +6,24 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-12
 
+- **08:5x** — `datasets/` (mới), `training/{merge_datasets,prepare_dataset}.py`,
+  `training/README.md`, `training/artifacts/` — **dọn và tổ chức lại repo sau đợt
+  training/eval: 33GB → 16GB.** Xoá `training/artifacts/Qwen3.5-9B-all/` (18GB
+  model đã merge) — tái tạo được bằng `merge_lora_peft.py` từ base + adapter, và
+  eval thật luôn merge **trên box** chứ không dùng bản local này; không file code
+  nào trỏ vào nó. Xoá rác build (`__pycache__`, `.pytest_cache`, `.DS_Store`,
+  log LaTeX, `.env.bak`). **Giữ nguyên theo yêu cầu**: 2 adapter đời cũ
+  (`lora-adapter`, `qwen35-9b-lora-all`) và toàn bộ `outputs/wa_*` (8.7GB).
+  Gom 8 file `*.jsonl` từ thư mục gốc vào `datasets/` bằng `git mv` (giữ lịch
+  sử), kèm `datasets/README.md` phân biệt ba thứ vẫn hay bị lẫn: `datasets/`
+  (nguồn, tracked), `training/data/` (split LLaMA-Factory, sinh ra được,
+  gitignored) và `training_data/` (export khác, **không** phải bản sao — khác
+  byte, 4288 vs 2399 dòng). Chỉ sửa các **lệnh chạy thật** (default `-o` của
+  `merge_datasets.py`, ví dụ trong README/docstring); các đoạn văn xuôi nhắc tên
+  file như dữ kiện lịch sử để nguyên. Thêm `--exclude training/artifacts` vào
+  lệnh rsync trong README — thiếu nó là lý do lần sync sáng nay bò hơn 10 phút.
+  Xác minh: 335 test pass, và chạy lại `merge_datasets.py` với đường dẫn mới ra
+  đúng 3751 example khớp `train_all.jsonl` hiện có.
 - **02:22** — `training/eval_webarena.py`,
   `hsge/tests/test_eval_webarena_resume_and_trace.py` — **`--task-timeout-s`
   (default 900s): a hung task can no longer livelock a sweep.** A task that

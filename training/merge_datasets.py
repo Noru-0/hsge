@@ -14,8 +14,9 @@ every example for later slicing/debugging, then writes one combined jsonl for
 prepare_dataset.py to consume.
 
 Usage:
-    python training/merge_datasets.py train_reddit.jsonl train_shopping.jsonl \
-        train_shopping_admin.jsonl train_gitlab.jsonl -o train_all.jsonl
+    python training/merge_datasets.py datasets/train_reddit.jsonl \
+        datasets/train_shopping.jsonl datasets/train_shopping_admin.jsonl \
+        datasets/train_gitlab.jsonl -o datasets/train_all.jsonl
 """
 from __future__ import annotations
 
@@ -37,7 +38,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("srcs", nargs="+", help="per-domain train_<domain>.jsonl files")
-    ap.add_argument("-o", "--out", default="train_all.jsonl")
+    ap.add_argument("-o", "--out", default="datasets/train_all.jsonl")
     ap.add_argument("--names", nargs="*", default=None,
                     help="explicit domain name per src, same order (default: inferred "
                          "from each filename's train_<domain>.jsonl pattern)")

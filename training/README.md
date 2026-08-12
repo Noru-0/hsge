@@ -66,21 +66,29 @@ ssh -p <port> root@<host> 'cd /workspace && nohup bash vast_setup.sh > setup.log
 ```
 
 Sync the repo (from the local repo root). `train_all.jsonl` (and the four
-per-domain `train_<domain>.jsonl` it was built from) live at the repo root and
+per-domain `train_<domain>.jsonl` it was built from) live under `datasets/` and
 come along with this rsync:
 
 ```bash
 rsync -az -e "ssh -p <port>" --exclude .git --exclude outputs --exclude __pycache__ \
+    --exclude training/artifacts --exclude training/data --exclude Thesis_report \
     ./ root@<host>:/workspace/hsge/
 ```
+
+Excluding `training/artifacts` is not optional in practice: it holds the LoRA
+checkpoints and reached 22 GB, which turned a seconds-long sync into a ten-minute
+one. An **eval-only** box needs none of it -- `bootstrap_eval_box.sh --base`
+serves the untouched base model, and even a finetuned run only needs the one
+adapter directory, copied separately.
 
 If `train_all.jsonl` doesn't exist yet, build it locally first (pure Python,
 no GPU needed) from the four per-domain datasets:
 
 ```bash
 python training/merge_datasets.py \
-    train_reddit.jsonl train_shopping.jsonl train_shopping_admin.jsonl train_gitlab.jsonl \
-    -o train_all.jsonl
+    datasets/train_reddit.jsonl datasets/train_shopping.jsonl \
+    datasets/train_shopping_admin.jsonl datasets/train_gitlab.jsonl \
+    -o datasets/train_all.jsonl
 ```
 
 ## 2. Prepare the dataset
@@ -106,7 +114,7 @@ copy (this is the shape `training_data/{train,val}.jsonl` is kept in).
 ```bash
 cd /workspace/hsge
 /workspace/venvs/train/bin/python training/prepare_dataset.py \
-    train_all.jsonl --name all --out-dir training/data/all
+    datasets/train_all.jsonl --name all --out-dir training/data/all
 ```
 
 Writes `{train,val}.jsonl` + `dataset_info.json` registering

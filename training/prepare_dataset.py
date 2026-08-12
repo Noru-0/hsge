@@ -30,7 +30,7 @@ and drops the rest. Pass `--keep-repeats` to disable.
 
 Usage:
     python training/prepare_dataset.py [training/train_12.jsonl] [--out-dir training/data]
-    python training/prepare_dataset.py train_reddit.jsonl --name reddit \
+    python training/prepare_dataset.py datasets/train_reddit.jsonl --name reddit \
         --out-dir training/data/reddit
 """
 from __future__ import annotations
