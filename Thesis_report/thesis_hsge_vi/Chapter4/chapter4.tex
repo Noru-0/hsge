@@ -455,56 +455,49 @@ Shopping Admin & 182 & 28 & 15{,}4\% ($\pm$ 5{,}2) \\
 \subsection{So với mô hình nền chưa fine-tune}
 \label{sec:exp-baseline}
 
-Để tách bạch đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền,
-cần đo cùng một bộ task trên mô hình Qwen3.5-9B \emph{chưa} fine-tune, với
-đúng prompt, ngân sách bước và bộ chấm như ở mục~\ref{sec:exp-protocol}.
-Bảng~\ref{tab:baseline} tổng hợp phép đối chứng này. Tại thời điểm viết,
-phép đo mới hoàn tất trên GitLab; ba website còn lại đang được tiến hành và
-sẽ được bổ sung.
+Để tách bạch đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ 655 task được đo lại một lần nữa trên mô hình Qwen3.5-9B \emph{chưa} fine-tune, giữ nguyên prompt, ngân sách bước, cấu hình giải mã và bộ chấm đã mô tả ở mục~\ref{sec:exp-protocol}. Điểm khác biệt duy nhất giữa hai đợt đo là trọng số được nạp vào máy chủ suy luận. Đợt đo mô hình nền được thực hiện sau khi cơ sở dữ liệu của cả bốn website đã được khôi phục về trạng thái nguyên bản, vì một đợt đo trước đó đã cho thấy nếu hai lượt quét chạy nối tiếp trên cùng một instance mà không khôi phục dữ liệu ở giữa, những thay đổi mà lượt quét trước để lại sẽ được bộ chấm ghi nhận cho lượt quét sau. Cả bốn website đều hoàn tất đủ mẫu số, không có task nào phát sinh lỗi môi trường.
 
 \begin{table}[H]
 \centering
 \caption[Đối chứng mô hình nền và mô hình sau fine-tune]{Đối chứng giữa mô
 hình nền Qwen3.5-9B và mô hình sau fine-tune, đo trên cùng bộ task chính
-thức với cùng cấu hình đánh giá. Các ô ghi \emph{chưa đo} là những phép đo
-đang được tiến hành.}
+thức với cùng cấu hình đánh giá. Vì hai mô hình được đo trên \emph{cùng một}
+tập task, cột cuối báo cáo kiểm định McNemar theo cặp, tức chỉ xét những
+task mà hai mô hình cho kết quả khác nhau, thay vì kiểm định hai tỷ lệ độc
+lập.}
 \label{tab:baseline}
 \small
-\begin{tabular}{@{}L{2.9cm} R{2.9cm} R{3.5cm} R{2.7cm}@{}}
+\begin{tabular}{@{}L{2.9cm} R{2.7cm} R{2.7cm} R{2.0cm} R{2.2cm}@{}}
 \toprule
 \textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
-\textbf{Chênh lệch} \\
+\textbf{Chênh lệch} & \textbf{$p$ (McNemar)} \\
 \midrule
-GitLab & 10/180 $=$ 5{,}6\% & 33/180 $=$ 18{,}3\% & $+$12{,}7 đpt \\
-Shopping & \emph{chưa đo} & 53/187 $=$ 28{,}3\% & \emph{chưa đo} \\
-Reddit & \emph{chưa đo} & 22/106 $=$ 20{,}8\% & \emph{chưa đo} \\
-Shopping Admin & \emph{chưa đo} & 28/182 $=$ 15{,}4\% & \emph{chưa đo} \\
+Shopping & 37/187 $=$ 19{,}8\% & 53/187 $=$ 28{,}3\% & $+$8{,}6 đpt & 0{,}012 \\
+Reddit & 7/106 $=$ 6{,}6\% & 22/106 $=$ 20{,}8\% & $+$14{,}2 đpt & 0{,}005 \\
+GitLab & 20/180 $=$ 11{,}1\% & 33/180 $=$ 18{,}3\% & $+$7{,}2 đpt & 0{,}012 \\
+Shopping Admin & 23/182 $=$ 12{,}6\% & 28/182 $=$ 15{,}4\% & $+$2{,}7 đpt & 0{,}383 \\
 \midrule
-\textbf{Tổng} & \emph{chưa đo} & \textbf{136/655 $=$ 20{,}8\%} &
-\emph{chưa đo} \\
+\textbf{Tổng} & \textbf{87/655 $=$ 13{,}3\%} & \textbf{136/655 $=$ 20{,}8\%} &
+\textbf{$+$7{,}5 đpt} & \textbf{$<0{,}001$} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Trên GitLab, mô hình sau fine-tune đạt 18{,}3\% so với 5{,}6\% của mô hình
-nền, tức cải thiện 12{,}7 điểm phần trăm, tương đương hơn ba lần về giá trị
-tương đối. Kiểm định tỷ lệ hai mẫu cho $z = 3{,}74$ ($p < 0{,}001$), nghĩa là
-chênh lệch này khó có thể quy cho ngẫu nhiên lấy mẫu task.
+Trên toàn bộ bốn website, fine-tuning nâng tỷ lệ hoàn thành từ 13{,}3\% lên 20{,}8\%, tức 7{,}5 điểm phần trăm tuyệt đối và khoảng 56\% về giá trị tương đối. Do hai mô hình được đo trên cùng một tập task, phép kiểm định phù hợp là kiểm định theo cặp: có 77 task chỉ mô hình sau fine-tune giải được và 28 task chỉ mô hình nền giải được, cho $\chi^2 = 21{,}9$ và $p < 0{,}001$. Nói cách khác, mức cải thiện không phải là hệ quả của việc mô hình sau fine-tune giải được một tập task khác nhưng cùng độ khó; nó giải thêm được nhiều hơn gần ba lần so với số task mà nó đánh mất.
 
-Phép so sánh trên có một khiếm khuyết cần nêu rõ. Trong đợt đo mô hình nền,
-55 trên 180 task phát sinh lỗi môi trường ở bước đăng nhập (hết thời gian
-chờ) và bị tính là thất bại, trong khi đợt đo mô hình sau fine-tune không có
-task nào phát sinh lỗi. Nếu chỉ xét 125 task chạy sạch thì tỷ lệ của mô hình
-nền là 10/125 $=$ 8{,}0\%, và kiểm định tương ứng cho $z = 2{,}55$
-($p = 0{,}011$). Như vậy mức cải thiện vẫn đạt ý nghĩa thống kê theo cả hai
-cách tính, song biên độ thì phụ thuộc vào cách xử lý các task lỗi.
+Mức cải thiện phân bố rất không đều giữa các website. Reddit là nơi chênh lệch lớn nhất, từ 6{,}6\% lên 20{,}8\%, tức hơn ba lần; Shopping tăng 8{,}6 điểm và GitLab tăng 7{,}2 điểm, cả hai đều đạt ý nghĩa thống kê. Riêng Shopping Admin chỉ tăng 2{,}7 điểm và \emph{không} đạt ý nghĩa thống kê ($p = 0{,}383$): trên website này, 15 task được cả hai mô hình giải được, 13 task chỉ mô hình sau fine-tune giải được và 8 task chỉ mô hình nền giải được, một cán cân quá sát để kết luận. Như vậy đóng góp của tập dữ liệu là rõ ràng trên ba trong bốn website, còn trên website khó nhất thì chưa tách được khỏi nhiễu.
 
-Cần nhấn mạnh phạm vi của kết luận này: nó dựa trên \emph{một} website và
-\emph{một} lần chạy. Chừng nào ba dòng còn lại của Bảng~\ref{tab:baseline}
-chưa được điền, phần đóng góp của pipeline dữ liệu so với phần đóng góp của
-mô hình nền vẫn chưa xác định được trên ba phần tư kết quả ở
-Bảng~\ref{tab:main}. Đây là hạng mục thực nghiệm còn thiếu quan trọng nhất
-và được trình bày ở mục~\ref{sec:exp-stats}.
+Phân tích trace cho thấy phần lớn khoảng cách này đến từ một nguyên nhân duy nhất và có thể đo trực tiếp: \textbf{khả năng tuân thủ định dạng đầu ra}. Ở mô hình nền, 170 trên 655 phiên (26{,}0\%) kết thúc vì phản hồi của mô hình không phân giải được thành một hành động hợp lệ, trong khi con số đó ở mô hình sau fine-tune chỉ là 2 trên 655 (0{,}3\%). Một phiên hỏng theo kiểu này bị chấm thất bại bất kể mô hình có suy luận đúng hay không, vì hành động không bao giờ tới được trình duyệt. Đây cũng là lý do mô hình nền tiêu ít bước hơn hẳn: 5424 bước so với 6578 bước của mô hình sau fine-tune trên cùng 655 task.
+
+Tách 655 task thành hai nhóm theo tiêu chí này cho phép định lượng đóng góp của yếu tố định dạng, và kết quả đáng để nêu nguyên trạng. Trên 170 task mà mô hình nền hỏng định dạng, mô hình nền không giải được task nào, còn mô hình sau fine-tune giải được 35 task. Trên 485 task còn lại, nơi mô hình nền chạy trọn vẹn, hai mô hình đạt 87 và 101 task, tức 17{,}9\% so với 20{,}8\%, và kiểm định theo cặp trên riêng nhóm này cho $p = 0{,}120$, không đạt ý nghĩa thống kê. Nói cách khác, 35 trong 49 task tăng thêm đến từ việc mô hình học được cách phát ra hành động đúng định dạng và đi hết một phiên; phần cải thiện còn lại về năng lực thao tác web, dù cùng chiều, chưa tách được khỏi nhiễu ở quy mô mẫu hiện có. Đây là giới hạn diễn giải quan trọng nhất của Bảng~\ref{tab:baseline} và được bàn tiếp ở Mục~\ref{sec:disc-results}.
+
+Tuân thủ định dạng cũng chỉ là điều kiện cần chứ không phải điều kiện đủ. Reddit vừa có tỷ lệ hỏng định dạng cao nhất ở mô hình nền (38{,}7\%) vừa có mức cải thiện lớn nhất, đúng như dự đoán của giả thuyết này; nhưng Shopping Admin có tỷ lệ hỏng định dạng cao thứ nhì (24{,}7\%) mà lại cải thiện ít nhất, cho thấy khi rào cản định dạng được gỡ bỏ thì độ khó nội tại của website mới là yếu tố quyết định phần còn lại.
+
+\textbf{Một điều chỉnh thủ công đối với kết quả của mô hình nền cần được công bố.} Khi rà soát trace của mô hình nền trên Shopping và Shopping Admin, chúng tôi phát hiện một nhóm phiên được bộ chấm WebArena ghi nhận thành công nhưng thực chất tác nhân không hề thực hiện tác vụ. Nhóm này gồm ba khuôn dạng: (i) tác nhân cạn ngân sách bước, cơ chế tổng kết phát ra \texttt{report\_infeasible}, và câu trả lời đó vô tình trùng với nhãn ``bất khả thi'' của task trong benchmark; (ii) tác nhân điền nội dung vào biểu mẫu nhưng chưa gửi đi, trong khi tiêu chí \texttt{program\_html} của task chỉ đọc thuộc tính giá trị của ô nhập liệu; (iii) tác nhân đoán một câu trả lời chung chung, thường là \texttt{0}, ngay từ những bước đầu mà không hề truy vấn dữ liệu, và câu trả lời đó trùng với đáp án chuẩn. Mười phiên trên Shopping và sáu phiên trên Shopping Admin thuộc các khuôn dạng này đã được chuyển về thất bại, đưa số liệu thô 47/187 và 29/182 về 37/187 và 23/182 trong Bảng~\ref{tab:baseline}.
+
+Phép điều chỉnh này có một điểm bất đối xứng cần nêu rõ: nó được thực hiện trên các phiên thành công của mô hình nền tại hai website, chứ không phải là một đợt rà soát đồng đều trên cả hai mô hình và cả bốn website. Vì vậy chúng tôi báo cáo kèm số liệu thô để người đọc tự kiểm chứng: nếu giữ nguyên toàn bộ phán quyết của bộ chấm, mô hình nền đạt 103/655 $=$ 15{,}7\% và khoảng cách còn 5{,}1 điểm phần trăm, trong đó Shopping Admin đảo chiều thành 15{,}9\% so với 15{,}4\% nghiêng về mô hình nền. Kết luận tổng thể không đổi theo cả hai cách tính, vì kiểm định theo cặp trên số liệu thô vẫn cho $p < 0{,}01$; điều thay đổi là biên độ, và riêng ở Shopping Admin là cả chiều của chênh lệch. Một đợt rà soát đối xứng trên toàn bộ các phiên thành công của cả hai mô hình là hạng mục còn thiếu, được xếp cùng nhóm với các phép lặp thống kê ở mục~\ref{sec:exp-stats}.
+
+Cuối cùng, cần nhấn mạnh phạm vi của kết luận này: mỗi ô trong Bảng~\ref{tab:baseline} là kết quả của \emph{một} lần chạy, mỗi task được giải đúng một lần. Việc đặt \texttt{temperature} $= 0$ khiến phép đo tất định về phía mô hình, nhưng không tất định về phía môi trường.
 
 \subsection{So với các công trình liên quan}
 
@@ -523,8 +516,8 @@ mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
 số của các tỷ lệ theo từng website, với trọng số là số task chính thức
 (Shopping 187, Sh.\ Admin 182, GitLab 180, Reddit 106). Số liệu các dòng
 tham chiếu lấy từ Bảng 3 của Go-Browse~\cite{gandhi2026gobrowse}. Dòng cuối
-là mô hình baseline của khóa luận, hiện mới có số đo trên GitLab
-(Bảng~\ref{tab:baseline}).}
+là mô hình nền của khóa luận khi chưa fine-tune, đo trên đúng bốn website
+này (Bảng~\ref{tab:baseline}).}
 \label{tab:related}
 \small
 \begin{tabular}{@{}L{4.4cm} R{2.5cm} R{1.3cm} R{1.8cm} R{1.5cm} R{1.5cm}@{}}
@@ -542,7 +535,7 @@ NNetNav-7B~\cite{murty2024nnetnav} & 19{,}1\% & 20{,}3 & 14{,}3 & 23{,}7 & 19{,}
 Go-Browse-7B~\cite{gandhi2026gobrowse} & \textbf{22{,}6\%} & 22{,}4 & \textbf{25{,}3} & \textbf{30{,}7} & 15{,}3 \\
 \midrule
 \textbf{HSGE-9B (khóa luận)} & \textbf{20{,}8\%} & \textbf{28{,}3} & 15{,}4 & 20{,}8 & \textbf{18{,}3} \\
-Qwen3.5-9B (baseline) & \emph{chưa đo} & \emph{--} & \emph{--} & \emph{--} & 5{,}6 \\
+Qwen3.5-9B (mô hình nền) & 13{,}3\% & 19{,}8 & 12{,}6 & 6{,}6 & 11{,}1 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -554,10 +547,13 @@ Bảng này cần được diễn giải một cách thận trọng, vì \emph{b
 \item \textbf{Mô hình gốc khác nhau.} Khóa luận sử dụng Qwen3.5-9B, mới hơn
 và lớn hơn so với Qwen-2.5-7B mà NNetNav và Go-Browse sử dụng. Một phần
 khoảng cách so với đường cơ sở 8{,}3\% chắc chắn thuộc về năng lực của mô
-hình nền chứ không thuộc về pipeline dữ liệu. Cặp đối chứng trên GitLab
-(5{,}6\% $\rightarrow$ 18{,}3\%, Bảng~\ref{tab:baseline}) là bằng chứng duy
-nhất tách được hai phần đóng góp này, và nó hiện chỉ tồn tại trên một
-website.
+hình nền chứ không thuộc về pipeline dữ liệu. Bảng~\ref{tab:baseline} cho
+phép ước lượng phần này: mô hình nền Qwen3.5-9B đạt 13{,}3\% trên đúng bốn
+website, tức cao hơn Qwen-2.5-7B khoảng 5 điểm phần trăm khi chưa được huấn
+luyện thêm gì; hai con số này đến từ hai điều kiện đo khác nhau nên chỉ nên
+đọc như một tham chiếu về độ lớn. Phần còn lại, 7{,}5 điểm từ 13{,}3\% lên
+20{,}8\%, được đo trong cùng một điều kiện và là phần thuộc về tập dữ liệu
+do pipeline sinh ra.
 \item \textbf{Quy mô dữ liệu chênh lệch lớn.} Go-Browse huấn luyện trên
 khoảng 40 nghìn bước tương tác và NNetNav trên khoảng 45 nghìn, trong khi
 tập dữ liệu của khóa luận chỉ có 4288 mẫu huấn luyện, nhỏ hơn khoảng một bậc
@@ -596,9 +592,10 @@ tương tự khác thì tỷ lệ dao động bao nhiêu'', chứ không trả l
 
 Để có được kết luận thống kê vững chắc, cần bổ sung ba hạng mục: (i) lặp lại
 tối thiểu ba lần cho cả mô hình nền và mô hình sau fine-tune, báo cáo trung
-bình kèm độ lệch chuẩn và kiểm định phi tham số theo cặp task; (ii) hoàn tất
-đối chứng mô hình nền trên ba website còn trống ở Bảng~\ref{tab:baseline};
-và (iii)
+bình kèm độ lệch chuẩn bên cạnh kiểm định theo cặp task đã có ở
+Bảng~\ref{tab:baseline}; (ii) rà soát đối xứng các phiên được chấm thành
+công của \emph{cả hai} mô hình trên \emph{cả bốn} website, thay cho đợt rà
+soát một phía đã nêu ở mục~\ref{sec:exp-baseline}; và (iii)
 đo lại Shopping cùng Shopping Admin theo trình tự \emph{tuần tự} nhằm loại
 trừ khả năng nhiễu chéo đã nêu ở mục~\ref{sec:exp-protocol}. Đây là nhóm
 công việc được xếp ưu tiên cao nhất trong phần thực nghiệm còn lại.
@@ -723,7 +720,34 @@ Reddit là môi trường duy nhất mà lỗi vòng lặp lặp lại (56\%) v�
 Chỉ có 3 trên tổng số 519 phiên thất bại (0{,}6\%) rơi vào trường hợp gọi hàm \texttt{send\_msg\_to\_user} ngay tại bước đầu tiên mà không tạo ra bất kỳ tương tác nào với trang. Đây chính xác là nhóm hành vi mà cơ chế lọc hành động hiệu quả tại Mục~\ref{sec:exp-data} đã khoanh vùng và xử lý, dẫn đến việc loại bỏ 104 quỹ đạo lỗi khỏi tập dữ liệu huấn luyện. Tỷ lệ rủi ro giảm xuống mức 0{,}6\% là minh chứng trực tiếp cho mối tương quan chặt chẽ giữa quy trình làm sạch dữ liệu và kết quả đánh giá cuối cùng: cổng kiểm duyệt đã hoàn thành đúng mục tiêu loại trừ triệt để nhóm hành vi sai lệch này.
 
 \textbf{Đầu ra không thể phân giải (unparseable output) không còn là nguồn gây lỗi đáng kể.}
-Chỉ ghi nhận 2 trên 655 phiên (0{,}3\%) buộc phải kết thúc do phản hồi của mô hình không thể phân giải thành định dạng JSON hợp lệ. Quyết định lưu trữ dữ liệu thô (raw payload) từ từng lời gọi LLM trong vết theo dõi (trace) đã giúp phân tách rạch ròi nhóm lỗi này khỏi các trường hợp mô hình chủ động dừng lại, tránh việc gộp chung tất cả vào một kết quả thất bại tổng quát.
+Chỉ ghi nhận 2 trên 655 phiên (0{,}3\%) buộc phải kết thúc do phản hồi của mô hình không thể phân giải thành định dạng JSON hợp lệ. Quyết định lưu trữ dữ liệu thô (raw payload) từ từng lời gọi LLM trong vết theo dõi (trace) đã giúp phân tách rạch ròi nhóm lỗi này khỏi các trường hợp mô hình chủ động dừng lại, tránh việc gộp chung tất cả vào một kết quả thất bại tổng quát. Giá trị của phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170 trên 655 phiên, tức 26{,}0\% (Bảng~\ref{tab:profile}).
+
+\subsection{Đối chiếu chân dung lỗi giữa hai mô hình}
+
+Vì mô hình nền và mô hình sau fine-tune được đo trên cùng một tập task với cùng cấu hình, các chỉ số phụ ghi lại trong trace cho phép mô tả \emph{fine-tuning đã thay đổi hành vi của tác nhân theo hướng nào}, chứ không chỉ nó thay đổi bao nhiêu điểm. Bảng~\ref{tab:profile} tổng hợp bốn chỉ số như vậy.
+
+\begin{table}[H]
+\centering
+\caption[Chân dung hành vi của hai mô hình]{Các chỉ số hành vi cộng dồn trên
+toàn bộ 655 task, đo từ trace của hai đợt đánh giá. ``Phiên hỏng định dạng''
+là phiên phải kết thúc vì phản hồi của mô hình không phân giải được thành
+hành động.}
+\label{tab:profile}
+\small
+\begin{tabular}{@{}L{6.2cm} R{3.0cm} R{3.0cm}@{}}
+\toprule
+\textbf{Chỉ số (655 task)} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} \\
+\midrule
+Phiên hỏng định dạng & 170 (26{,}0\%) & 2 (0{,}3\%) \\
+Tổng số bước đã thực thi & 5424 & 6578 \\
+Tổng số lỗi hành động & 1940 & 2285 \\
+Trung vị số bước, phiên thất bại & 8 & 12 \\
+Lỗi hành động trên mỗi bước & 0{,}358 & 0{,}347 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Chân dung này cho thấy fine-tuning không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau fine-tune còn cao hơn mô hình nền về giá trị tuyệt đối (2285 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}347 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau fine-tune luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng phục hồi sau một thao tác hỏng, chứ không nằm ở việc mô hình có biết phát ra hành động đúng định dạng hay không, vốn là phần mà tập dữ liệu đã dạy được một cách triệt để.
 
 \subsection{Độ dài quỹ đạo}
 
@@ -738,9 +762,9 @@ chứ không vào việc tiến tới mục tiêu.
 
 \subsection{Tổng kết chương}
 
-Quy trình đầu cuối (end-to-end pipeline) đã được triển khai hoàn chỉnh trên bốn website thực tế. Cụ thể, giai đoạn khám phá đã thu thập thành công 2178 episode và tinh lọc được 1029 quỹ đạo đạt chuẩn; quá trình tinh chỉnh (fine-tuning) đã huấn luyện thành công một mô hình 9B tham số với chi phí điện toán GPU đặc biệt tối ưu, chỉ ở mức 6{,}6\,USD. Trong giai đoạn đánh giá toàn diện trên 655 tác vụ chuẩn thức, hệ thống đạt tỷ lệ thành công 20{,}8\%. Thành tích này tiệm cận với các hệ thống tiên tiến nhất trong cùng phân khúc dưới 10B tham số, đồng thời cao gấp ba lần so với mô hình cơ sở (foundation model) trên website đối chứng duy nhất.
+Quy trình đầu cuối (end-to-end pipeline) đã được triển khai hoàn chỉnh trên bốn website thực tế. Cụ thể, giai đoạn khám phá đã thu thập thành công 2178 episode và tinh lọc được 1029 quỹ đạo đạt chuẩn; quá trình tinh chỉnh (fine-tuning) đã huấn luyện thành công một mô hình 9B tham số với chi phí điện toán GPU đặc biệt tối ưu, chỉ ở mức 6{,}6\,USD. Trong giai đoạn đánh giá toàn diện trên 655 tác vụ chuẩn thức, hệ thống đạt tỷ lệ thành công 20{,}8\%. Thành tích này tiệm cận với các hệ thống tiên tiến nhất trong cùng phân khúc dưới 10B tham số. Phép đối chứng trên chính bốn website đó cho thấy mô hình nền khi chưa fine-tune chỉ đạt 13{,}3\%, nghĩa là tập dữ liệu do pipeline sinh ra đóng góp 7{,}5 điểm phần trăm và mức đóng góp này đạt ý nghĩa thống kê theo kiểm định cặp trên ba trong bốn website.
 
-Tuy nhiên, cần nhìn nhận một cách khách quan hai giới hạn cốt lõi của nghiên cứu: thứ nhất, các kết quả đánh giá hiện tại chỉ được ghi nhận từ một lượt chạy (run) duy nhất cho mỗi website (Mục~\ref{sec:exp-stats}); thứ hai, các nghiên cứu cắt bỏ (ablation study) nhằm phân tách và định lượng mức độ đóng góp của từng thành phần trong chuỗi xử lý vẫn chưa được tiến hành (Mục~\ref{sec:exp-ablation}).
+Tuy nhiên, cần nhìn nhận một cách khách quan ba giới hạn cốt lõi của nghiên cứu: thứ nhất, các kết quả đánh giá hiện tại chỉ được ghi nhận từ một lượt chạy (run) duy nhất cho mỗi website (Mục~\ref{sec:exp-stats}); thứ hai, đợt rà soát các phiên thành công giả mới được thực hiện một phía, trên mô hình nền tại hai website (Mục~\ref{sec:exp-baseline}); thứ ba, các nghiên cứu cắt bỏ (ablation study) nhằm phân tách và định lượng mức độ đóng góp của từng thành phần trong chuỗi xử lý vẫn chưa được tiến hành (Mục~\ref{sec:exp-ablation}).
 
 Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những
 bài học kỹ thuật rút ra trong quá trình thực hiện.

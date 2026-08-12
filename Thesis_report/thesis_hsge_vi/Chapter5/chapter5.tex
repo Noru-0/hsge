@@ -8,32 +8,21 @@ Mỗi bài học được trình bày theo một cấu trúc nhất quán bao g�
 \section{Diễn giải kết quả}
 \label{sec:disc-results}
 
-\subsection{Con số nói được gì}
+\subsection{Ý nghĩa của các chỉ số hiệu năng}
 
-Kết quả chính của khóa luận là 136 trên 655 task chính thức của bốn website
-WebArena, tức 20{,}8\%. Con số này cần được đọc theo đúng phạm vi mà nó
-chứng minh, không hơn. Điều nó chứng minh là: một mô hình dưới 10B, được
-fine-tune trên 4288 mẫu do chính pipeline này thu thập tự động từ các
-website \emph{không có nhãn task nào}, đạt mức ngang các hệ thống tốt nhất
-cùng phân khúc, cụ thể là cao hơn NNetNav-7B (19{,}1\%), ngang GPT-4o-mini
-(20{,}0\%) và thấp hơn Go-Browse-7B (22{,}6\%) một khoảng nằm gọn trong sai
-số của phép đo (Bảng~\ref{tab:related}). Ngược lại, điều nó \emph{không}
-chứng minh là HSGE tốt hơn hay kém hơn các hệ thống đó, bởi mô hình nền khác
-nhau, quy mô dữ liệu chênh khoảng một bậc độ lớn, còn ngân sách bước và mô
-hình chấm mờ cũng không đồng nhất.
+Kết quả đánh giá tổng thể của khóa luận ghi nhận 136/655 tác vụ được hoàn thành trên bốn website thuộc WebArena, tương đương tỷ lệ 20{,}8\%. Con số này cần được diễn giải một cách khách quan và gắn liền với giới hạn phạm vi của nghiên cứu. Điểm cốt lõi mà kết quả này minh chứng là: một mô hình ngôn ngữ với quy mô dưới 10B tham số, khi được tinh chỉnh (fine-tuned) trên 4288 mẫu dữ liệu do chính chuỗi xử lý (pipeline) đề xuất thu thập tự động từ các website \emph{hoàn toàn chưa được gán nhãn tác vụ}, có khả năng đạt hiệu năng tiệm cận với các hệ thống tiên tiến nhất trong cùng phân khúc. Cụ thể, mô hình đạt kết quả cao hơn NNetNav-7B (19{,}1\%), tương đương với GPT-4o-mini (20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) với mức chênh lệch nằm gọn trong khoảng tin cậy thống kê của phép đo (Bảng~\ref{tab:related}).
 
-Bằng chứng tách bạch được đóng góp của pipeline khỏi đóng góp của mô hình
-nền hiện chỉ có một: trên GitLab, cùng mô hình Qwen3.5-9B đi từ 5{,}6\% lên
-18{,}3\% sau khi fine-tune (8{,}0\% nếu chỉ tính các task chạy sạch của
-đợt nền; Bảng~\ref{tab:baseline}). Đây là mức tăng gấp hơn hai lần và có ý nghĩa thống kê dưới cả
-hai cách tính, nhưng nó chỉ tồn tại trên \emph{một} website và
-\emph{một} lần chạy. Ba website còn lại chưa có đối chứng mô hình nền, nên
-với ba phần tư kết quả, phần nào thuộc về dữ liệu và phần nào thuộc về mô
-hình nền vẫn là câu hỏi đang chờ được trả lời. Đó là lý do các lần chạy lặp và đối chứng ở
-Mục~\ref{sec:exp-stats} được xếp là ưu tiên thực nghiệm số một chứ không
-phải một việc dọn dẹp cuối cùng.
+Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với các hệ thống đối chuẩn kể trên. Nguyên nhân khách quan là do có sự khác biệt về mô hình cơ sở (foundation model), sự chênh lệch về quy mô dữ liệu, cũng như sự không đồng nhất trong cấu hình giới hạn ngân sách bước (step budget) và mô hình đánh giá mờ (fuzzy evaluator).
 
-\subsection{Điều gì đang chặn mức tăng}
+Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc về năng lực sẵn có của mô hình nền, đã được đo trực tiếp trên cả bốn website: cùng mô hình Qwen3.5-9B, cùng prompt và cùng bộ chấm, tỷ lệ hoàn thành đi từ 13{,}3\% lên 20{,}8\% sau khi fine-tune (Bảng~\ref{tab:baseline}). Vì hai đợt đo dùng chung một tập task, chênh lệch này được kiểm định theo cặp: 77 task chỉ mô hình sau fine-tune giải được so với 28 task chỉ mô hình nền giải được, tức $p < 0{,}001$. Đây là bằng chứng trực tiếp nhất mà khóa luận có được cho luận điểm trung tâm, rằng dữ liệu do pipeline tự thu thập từ website không nhãn là đủ để nâng năng lực của một mô hình nhỏ trên chính những website đó.
+
+Bằng chứng ấy không đồng đều giữa các website và đây là điều cần được phát biểu chính xác. Trên Reddit, Shopping và GitLab, mức tăng lần lượt là 14{,}2, 8{,}6 và 7{,}2 điểm phần trăm, đều đạt ý nghĩa thống kê. Trên Shopping Admin, mức tăng chỉ là 2{,}7 điểm với $p = 0{,}383$, tức không phân biệt được với nhiễu. Vì vậy, phát biểu đúng là pipeline cải thiện mô hình nền trên ba trong bốn website được đo, chứ không phải trên mọi website. Ngoài ra, mỗi ô của bảng đối chứng vẫn chỉ đến từ một lần chạy, nên các lần chạy lặp ở Mục~\ref{sec:exp-stats} vẫn là ưu tiên thực nghiệm hàng đầu chứ không phải một việc dọn dẹp cuối cùng.
+
+Điều mà phép đối chứng này làm rõ nhất lại nằm ở chân dung lỗi chứ không ở con số tổng, và nó buộc luận điểm trung tâm phải được phát biểu hẹp hơn. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, so với 0{,}3\% ở mô hình sau fine-tune (Bảng~\ref{tab:profile}). Khi tách 655 task theo đúng ranh giới đó, 35 trong 49 task tăng thêm rơi vào nhóm mà mô hình nền không bao giờ phát ra nổi một hành động hợp lệ; còn trên 485 task mà mô hình nền chạy trọn vẹn, khoảng cách thu lại còn 17{,}9\% so với 20{,}8\% và không đạt ý nghĩa thống kê ($p = 0{,}120$). Thêm vào đó, tỷ lệ lỗi hành động trên mỗi bước gần như không đổi giữa hai mô hình.
+
+Cách đọc trung thực của ba số liệu này là: thứ mà tập dữ liệu dạy được một cách chắc chắn và triệt để là \emph{tính kỷ luật của giao diện hành động}, tức phát ra đúng thứ mà môi trường chấp nhận, đủ đều đặn để đi hết một phiên. Đó không phải một kết quả tầm thường, vì trong một tác nhân web thì một phản hồi không phân giải được cũng đồng nghĩa với hỏng toàn bộ phiên, bất kể suy luận bên trong đúng đến đâu. Nhưng nó cũng chưa phải điều mà một pipeline khám phá có cấu trúc \emph{hứa hẹn} mang lại: bằng chứng cho việc mô hình lập kế hoạch tốt hơn hay thao tác web chuẩn xác hơn hiện chỉ cùng chiều chứ chưa đủ mạnh để kết luận ở quy mô mẫu này. Nói cách khác, phần dễ của bài toán đã được giải quyết một cách thuyết phục, còn phần khó thì mới chỉ có tín hiệu. Đây cũng là lý do ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách (Mục~\ref{sec:exp-ablation}) là phép đo không thể thay thế: nó là cách duy nhất để biết phần còn lại có thuộc về \emph{cấu trúc} của dữ liệu hay chỉ thuộc về việc có dữ liệu trong miền.
+
+\subsection{Phân tích các yếu tố giới hạn hiệu năng}
 
 Trước khi có kết quả bốn website, giả thuyết mặc định là khối lượng dữ
 liệu: thêm dữ liệu thì điểm sẽ lên. Dữ liệu mới \emph{không} ủng hộ giả
@@ -44,35 +33,15 @@ ba về lượng dữ liệu (Bảng~\ref{tab:crosssite}). Với bốn điểm d
 đây không phải một kết luận thống kê, nhưng nó đủ để bác bỏ cách nghĩ
 ``đổ thêm dữ liệu vào website nào thì website đó khá lên''.
 
-Phân loại nguyên nhân thất bại ở Mục~\ref{sec:exp-analysis} chỉ vào một
-chỗ nghẽn cụ thể hơn: từ 83\% đến 95\% episode thất bại có ít nhất một
-hành động bị trình duyệt từ chối, tổng cộng 2285 lỗi hành động trên 655
-episode. Phần lớn là hết thời gian chờ tính khả thao tác trên những phần
-tử mà accessibility tree \emph{có} hiển thị. Nói cách khác, mô hình nhìn
-đúng chỗ nhưng thao tác không đi tới nơi. Đây là một giới hạn của \emph{lớp
-thực thi}, không phải của việc mô hình thiếu ví dụ. Đi kèm với nó là hành vi
-kẹt vòng lặp: episode thất bại điển hình dài 12 bước (trung vị) so với 5
-bước của episode thành công, tức thời gian bị tiêu vào việc lặp lại chứ
-không vào việc tiến. Hai quan sát này cùng nói một điều: \emph{nới ngân
-sách bước hay nhân đôi dữ liệu đều không phải đòn bẩy tốt nhất kế tiếp}.
-Đòn bẩy tốt hơn nằm ở hai việc: dạy mô hình phục hồi sau một hành động hỏng,
-và làm cho lớp thực thi ít sinh ra hành động hỏng hơn.
+Kết quả phân loại nguyên nhân thất bại tại Mục~\ref{sec:exp-analysis} đã làm rõ một điểm nghẽn kỹ thuật đặc thù: từ 83\% đến 95\% số phiên (episode) thất bại đều ghi nhận ít nhất một hành động bị trình duyệt từ chối thực thi, với tổng số 2285 lỗi hành động trên 655 phiên. Phần lớn các trường hợp này xuất phát từ lỗi vượt quá thời gian chờ khả năng thao tác (actionability timeout) trên chính những phần tử mà cây trợ năng (accessibility tree) \emph{thực sự} có hiển thị. Nói cách khác, mô hình đã xác định chính xác phần tử cần tương tác, nhưng quá trình thực thi lại không diễn ra trọn vẹn. Điều này phản ánh giới hạn của \emph{tầng thực thi (execution layer)}, chứ không phải do sự thiếu hụt dữ liệu bản mẫu của mô hình.
 
-Ba yếu tố còn lại vẫn giữ nguyên hiệu lực. Thứ nhất, cỡ dữ liệu: 4288 mẫu
-vẫn nhỏ hơn khoảng một bậc so với 40--45 nghìn bước tương tác mà Go-Browse
-và NNetNav dùng. Thứ hai, độ phủ: dữ liệu huấn luyện thu từ 48--79 node
-của mỗi website, trong khi benchmark rút task từ toàn site. Thứ ba, chính
-mô hình nền: một mô hình 9B fine-tune thuần giám sát khó khôi phục các
-năng lực (lập kế hoạch dài hạn, tự sửa lỗi) mà trajectory chỉ minh họa
-thưa thớt. Đáng chú ý, chính năng lực tự sửa lỗi là thứ mà bảng phân loại
-lỗi cho thấy đang thiếu.
+Đi kèm với vấn đề này là hiện tượng mắc kẹt trong vòng lặp (stuck-loop): một phiên thất bại điển hình kéo dài 12 bước (giá trị trung vị) so với 5 bước ở các phiên thành công. Thực tế này chỉ ra rằng ngân sách bước đang bị tiêu hao vào các thao tác lặp lại vô nghĩa thay vì tạo ra tiến triển trong việc giải quyết tác vụ. Hai quan sát trên dẫn đến một nhận định quan trọng: \emph{việc gia tăng ngân sách bước hay nhân đôi quy mô dữ liệu huấn luyện đều không phải là hướng tối ưu mang lại hiệu suất cao nhất trong giai đoạn tiếp theo}. Thay vào đó, trọng tâm cải tiến nên được đặt vào hai giải pháp cốt lõi: huấn luyện mô hình khả năng tự phục hồi (recover) sau khi một hành động thất bại, và tối ưu hóa tầng thực thi nhằm giảm thiểu tỷ lệ phát sinh lỗi thao tác.
 
-\subsection{Điều lần chạy đầu--cuối đã chứng minh, và điều nó chưa}
+Ba yếu tố giới hạn cốt lõi vẫn tiếp tục tác động đáng kể đến hiệu năng của hệ thống. Thứ nhất, về quy mô dữ liệu: tập huấn luyện gồm 4288 mẫu vẫn thấp hơn rất nhiều so với khối lượng 40-45 nghìn mẫu được sử dụng bởi các hệ thống như Go-Browse và NNetNav. Thứ hai, về độ phủ (coverage): dữ liệu huấn luyện chỉ được thu thập trong phạm vi hẹp từ 48--79 node trên mỗi website, trong khi hệ thống đánh giá (benchmark) lại lấy mẫu tác vụ (task) trên toàn bộ không gian của trang. Thứ ba, về bản thân mô hình cơ sở (foundation model): một mô hình 9B tham số khi được tinh chỉnh thuần giám sát (purely supervised fine-tuning) sẽ gặp nhiều hạn chế trong việc phát triển các năng lực phức tạp (như lập kế hoạch dài hạn hay tự sửa lỗi) nếu những kỹ năng này chỉ được minh họa một cách thưa thớt trong các quỹ đạo tương tác. Đáng chú ý, sự khuyết thiếu năng lực tự sửa lỗi này hoàn toàn nhất quán với những điểm yếu đã được chỉ ra thông qua bảng phân loại nguyên nhân thất bại.
 
-Toàn bộ chu trình, bao gồm khám phá, phát hiện skill, quy nạp operator,
-tinh lọc, huấn luyện, serving và đánh giá chính thức, đã chạy trên bốn
-website thật mà không cần can thiệp tay, và các cổng chất lượng đã chặn được đúng
-loại dữ liệu lẽ ra sẽ làm bẩn huấn luyện (Mục~\ref{sec:disc-slm}).
+\subsection{Đánh giá quy trình đầu cuối}
+
+Toàn bộ chu trình khép kín bao gồm các giai đoạn khám phá, phát hiện kỹ năng (skill discovery), quy nạp toán tử (operator induction), tinh lọc dữ liệu, huấn luyện, triển khai suy luận (serving) và đánh giá, đã được vận hành thành công trên bốn website thực tế một cách tự động hóa hoàn toàn, không đòi hỏi bất kỳ sự can thiệp thủ công nào. Hơn thế nữa, các cổng kiểm duyệt chất lượng (quality gates) đã chứng minh được tính hiệu quả khi nhận diện và loại bỏ chính xác những luồng dữ liệu lỗi, bảo vệ mô hình khỏi nguy cơ nhiễu loạn trong quá trình huấn luyện. (Mục~\ref{sec:disc-slm}).
 
 Có một điểm cần được phát biểu thật chính xác: \emph{khâu ghép chuỗi
 operator vẫn là khâu hạn chế nhất}. Cơ chế sinh task ngữ nghĩa đã thực sự
@@ -154,166 +123,93 @@ chứ không phải việc nó có hại.
 \section{Chốt chặn cấu trúc thay vì nhắc nhở qua prompt}
 \label{sec:disc-guardrails}
 
-Một chủ đề lặp lại trong các run của chúng tôi: bảo mô hình cư xử đúng
-không đồng nghĩa hệ thống cư xử đúng. Các sự cố dưới đây đều khởi đầu là
-một quy ước mức prompt bị mô hình thật lặng lẽ vi phạm, và đều kết thúc
-bằng một cơ chế cấu trúc không phụ thuộc sự vâng lời của mô hình.
+Một hiện tượng mang tính hệ thống được ghi nhận xuyên suốt các lượt chạy thực nghiệm là: việc đưa ra chỉ thị yêu cầu mô hình hành xử chuẩn xác không đảm bảo rằng toàn bộ hệ thống sẽ vận hành đúng như kỳ vọng. Các sự cố được phân tích dưới đây đều bắt nguồn từ một kịch bản chung: những quy ước ở cấp độ câu lệnh (prompt) bị mô hình âm thầm vi phạm. Để giải quyết triệt để, hệ thống buộc phải thay thế chúng bằng các cơ chế kiểm soát cấu trúc (structural guardrails) - những chốt chặn kỹ thuật hoạt động hoàn toàn độc lập và không phụ thuộc vào mức độ tuân thủ của mô hình.
 
-\subsection{Quy ước gắn thẻ không sống sót khi gặp mô hình thật}
+\subsection{Hạn chế của quy ước gắn thẻ văn bản khi vận hành mô hình thực tế}
 
-\textbf{Vấn đề.} Đề xuất task ban đầu được phân loại bằng thẻ
-\texttt{[INFO]}\slash\texttt{[NAV]}\slash\texttt{[MOD]} đặt đầu câu mà
-explorer được chỉ thị phải ghi. Trong một run thực tế, 89\% đề xuất không mang thẻ nào.
-\textbf{Chẩn đoán.} Xu hướng tự nhiên của mô hình là trả phân loại trong
-một trường \texttt{type} có cấu trúc (thứ mà parser vứt bỏ) thay vì
-một cặp ngoặc trong chuỗi. Tệ hơn, phép kiểm tra an toàn cho task thay đổi
-trạng thái là so khớp chuỗi ký tự trên \texttt{[MOD]}, nên một task phá
-hoại không gắn thẻ sẽ lọt qua êm ái.
-\textbf{Khắc phục.} Đề xuất giờ được yêu cầu và phân tích như đối tượng có
-cấu trúc với trường phân loại tường minh; thứ gì không phân loại được gắn
-\texttt{UNKNOWN} và bị loại trong chế độ read-only.
-\textbf{Bài học.} Hãy xin mô hình \emph{cấu trúc}, đừng xin quy ước định
-dạng bên trong văn bản tự do, và tuyệt đối đừng xây phép kiểm tra an
-toàn trên một quy ước mà mô hình có thể không theo.
+\textbf{Vấn đề thực tế.} Ban đầu, các đề xuất tác vụ được phân loại thông qua các thẻ \texttt{[INFO]}\slash\texttt{[NAV]}\slash\texttt{[MOD]} đặt ở đầu câu, dựa trên chỉ thị bắt buộc dành cho module explorer. Tuy nhiên, trong một lượt chạy thực nghiệm, có đến 89\% số đề xuất không chứa bất kỳ thẻ phân loại nào.
 
-\subsection{Vòng kẹt, qua hai lần lặp}
+\textbf{Chẩn đoán nguyên nhân.} Mô hình ngôn ngữ có xu hướng tự nhiên là trả về thông tin phân loại dưới dạng một trường \texttt{type} có cấu trúc (phần dữ liệu thường bị bộ phân tích cú pháp (parser) bỏ qua), thay vì chèn trực tiếp một chuỗi ký tự trong ngoặc vuông vào văn bản tự do. Nghiêm trọng hơn, cơ chế kiểm tra an toàn đối với các tác vụ thay đổi trạng thái lại phụ thuộc vào việc so khớp chuỗi ký tự \texttt{[MOD]}. Hệ quả là, một tác vụ có tác động thay đổi trạng thái nếu không được gắn thẻ sẽ dễ dàng vượt qua cơ chế kiểm duyệt.
 
-\textbf{Vấn đề.} Solver đốt trọn ngân sách bước để lặp một hành động rõ
-ràng không có tác dụng; trong một episode ghi lại được, nó click cùng
-một phần tử trơ suốt cả mười lăm bước.
-\textbf{Chẩn đoán và khắc phục lần một.} Chúng tôi thêm một cảnh báo, tiêm
-vào prompt sau hai hành động liên tiếp không hiệu ứng trên cùng đích. Run
-thật kế tiếp bác bỏ cách sửa này: mô hình tiếp tục click dù cảnh báo hiện
-diện từ lời gọi thứ ba trở đi. Nó cũng lộ ra một điểm tinh vi: mô hình
-đôi khi thử lại một dropdown bị kẹt bằng các đối số trông-khác-nhưng-sai-
-như-nhau, nên so trùng nguyên văn chuỗi hành động sẽ bỏ lọt vòng kẹt.
-\textbf{Khắc phục lần hai.} Bộ phát hiện kẹt giờ khóa theo \emph{đích} bị
-tác động và theo việc quan sát có đổi không; sau một số lần lặp không tiến
-triển có giới hạn, episode bị chấm dứt thẳng, không tốn thêm lời gọi LLM
-nào. Yêu cầu ``không thay đổi quan sát được'' giữ chốt chặn khỏi kích hoạt
-nhầm trên các chuỗi hợp lệ tái dùng một phần tử qua các trang thay đổi.
-\textbf{Bài học.} Cảnh báo trong prompt là một lời gợi ý; ngân sách là một
-cơ chế. Khi mô hình chứng minh nó phớt lờ gợi ý, hãy leo thang thành cơ chế
-và kiểm chứng bước leo thang trên hành vi thật, không phải trên hành vi
-mà prompt yêu cầu.
+\textbf{Giải pháp khắc phục.} Hệ thống hiện tại yêu cầu và phân tích các đề xuất dưới dạng đối tượng dữ liệu có cấu trúc, với trường phân loại được xác định tường minh. Bất kỳ tác vụ nào không thể phân loại sẽ được gán nhãn \texttt{UNKNOWN} và bị loại bỏ hoàn toàn trong chế độ chỉ đọc (read-only).
 
-\subsection{Các sự cố nhỏ hơn, cùng một khuôn}
+\textbf{Bài học kinh nghiệm.} Nên ưu tiên yêu cầu mô hình trả về \emph{dữ liệu có cấu trúc} thay vì áp đặt các quy ước định dạng ẩn bên trong văn bản tự do. Đặc biệt, tuyệt đối không thiết lập các cơ chế kiểm tra an toàn dựa trên một quy ước định dạng mà mô hình có khả năng vi phạm .
 
-Ba sự cố nữa theo đúng khuôn trên và nhận cùng kiểu sửa. Task tra cứu do
-explorer đề xuất đôi khi chứa sẵn đáp án (``tìm bài đăng có tiêu đề X''),
-thứ solver ``giải'' được mà không học gì; khâu sinh giờ có chỉ thị chống
-điều đó và các task lộ đáp án bị lọc. Lời gọi có đính kèm ảnh thỉnh thoảng
-trả về rỗng (từ chối phía thượng nguồn); agent thử lại một lần ở chế độ
-thuần văn bản thay vì hỏng cả bước. Và các episode cạn ngân sách trước đây
-kết thúc bằng một thất bại câm lặng. Giờ chúng nhận một lời gọi wrap-up
-cuối, thuần văn bản, mà đầu ra hợp lệ \emph{duy nhất} là tuyên bố hoàn
-thành hoặc báo cáo bất khả thi, biến một lần hết giờ im lặng thành một
-kết cục có nhãn mà dataset dùng được.
+\subsection{Xử lý hiện tượng mắc kẹt trong vòng lặp (Stuck-loop) qua hai giai đoạn}
+
+\textbf{Vấn đề thực tế.} Tác nhân giải quyết (solver) tiêu hao toàn bộ ngân sách bước để lặp đi lặp lại một hành động không mang lại hiệu quả; trong một phiên (episode) được ghi nhận, mô hình đã liên tục nhấn (click) vào cùng một phần tử không phản hồi trong suốt mười lăm bước liên tiếp.
+
+\textbf{Chẩn đoán và khắc phục lần một.} Ban đầu, hệ thống được bổ sung một cơ chế cảnh báo, tự động chèn vào câu lệnh (prompt) sau khi ghi nhận hai hành động liên tiếp không tạo ra hiệu ứng trên cùng một đối tượng đích. Tuy nhiên, lượt chạy thực tế tiếp theo đã chứng minh sự kém hiệu quả của giải pháp này: mô hình vẫn tiếp tục thực hiện thao tác sai lầm bất chấp sự hiện diện của cảnh báo từ lời gọi API thứ ba trở đi. Đồng thời, quá trình này cũng bộc lộ một vấn đề phức tạp hơn: mô hình đôi khi thử tương tác lại với một danh sách thả xuống (dropdown) bị lỗi bằng các đối số có bề ngoài khác biệt nhưng bản chất vẫn sai lệch. Do đó, phương pháp so khớp nguyên văn (exact string matching) chuỗi hành động sẽ không thể phát hiện được các vòng lặp ẩn này.
+
+\textbf{Khắc phục lần hai.} Cơ chế phát hiện vòng lặp được tái thiết kế để theo dõi trực tiếp \emph{đối tượng đích} bị tác động kết hợp với \emph{sự thay đổi của không gian quan sát} (observation state). Khi vượt quá giới hạn số lần lặp lại mà không tạo ra tiến triển, phiên tương tác sẽ bị buộc chấm dứt (hard stop) ngay lập tức nhằm ngăn chặn việc lãng phí các lời gọi LLM tiếp theo. Điều kiện ràng buộc ``không có sự thay đổi quan sát'' đóng vai trò thiết yếu giúp cơ chế chốt chặn không bị kích hoạt sai (false positive) đối với những chuỗi thao tác hợp lệ, nơi một phần tử cần được tương tác nhiều lần qua các trạng thái trang khác nhau.
+
+\textbf{Bài học kinh nghiệm.} Các cảnh báo được đưa vào prompt thực chất chỉ mang tính chất \emph{gợi ý} đối với mô hình, trong khi quản lý ngân sách và giới hạn thực thi mới là các \emph{cơ chế} kiểm soát có tính cưỡng chế (enforcement). Khi mô hình có xu hướng phớt lờ các gợi ý, hệ thống cần nâng cấp phương pháp xử lý thành các cơ chế cấu trúc (structural mechanisms) và phải đánh giá mức độ hiệu quả của chúng dựa trên hành vi thực tế của tác nhân, thay vì kỳ vọng vào sự tuân thủ lý tưởng theo các chỉ thị trong prompt.
+
+\subsection{Các vấn đề kỹ thuật khác và cơ chế xử lý tương đồng}
+
+Ba sự cố kỹ thuật khác cũng được ghi nhận với bản chất tương tự và đều được giải quyết thông qua các cơ chế kiểm soát cấu trúc thay vì phụ thuộc vào câu lệnh.
+
+Thứ nhất, các tác vụ do mô-đun khám phá (explorer) đề xuất đôi khi làm lộ lọt \emph{chi tiết hướng dẫn từng bước thực thi} ngay trong nội dung yêu cầu (ví dụ: chỉ định rõ ràng trình tự các nút cần nhấn hoặc chuỗi thao tác điều hướng cụ thể). Hệ quả là tác nhân giải quyết (solver) chỉ đơn thuần thực thi các lệnh một cách máy móc, khiến quá trình giải quyết tác vụ mất đi giá trị huấn luyện về năng lực tự lập kế hoạch (planning) và suy luận ngữ cảnh. Để khắc phục, khâu sinh tác vụ được bổ sung các chỉ thị buộc hệ thống chỉ mô tả mục tiêu cuối cùng (end-goal) thay vì liệt kê hành động, kết hợp cùng cơ chế lọc tự động nhằm loại bỏ hoàn toàn các tác vụ mang tính chất "cầm tay chỉ việc".
+
+Thứ hai, các lời gọi API có đính kèm hình ảnh đôi khi trả về kết quả rỗng do bị từ chối từ hệ thống máy chủ cung cấp (upstream rejection). Thay vì để toàn bộ bước hành động bị gián đoạn, tác nhân được thiết kế để tự động thử lại (retry) một lần ở chế độ không ảnh (text-only fallback).
+
+Thứ ba, các phiên tương tác (episode) cạn kiệt ngân sách bước trước đây thường kết thúc bằng một thất bại ngầm. Hiện tại, hệ thống buộc mô hình thực hiện một lời gọi tổng kết (wrap-up call) cuối cùng ở định dạng thuần văn bản. Tại bước này, đầu ra hợp lệ \emph{duy nhất} được chấp nhận là tuyên bố hoàn thành tác vụ hoặc báo cáo trạng thái bất khả thi. Cơ chế này đã chuyển đổi những trường hợp ngắt kết nối do cạn ngân sách thành một trạng thái kết thúc có gắn nhãn rõ ràng, qua đó tận dụng tối đa lượng dữ liệu hợp lệ cho tập huấn luyện.
 
 \section{Bài học từ induction operator}
 \label{sec:disc-operators}
 
-Cơ chế semantic task của Mục~\ref{sec:method-semantic} chỉ tốt ngang các
-operator nó ghép. Hai chế độ hỏng lộ ra khi chúng tôi kiểm toán các
-operator sinh trong một run thực tế sớm, và cả hai đều dẫn tới các cổng
-chặn cấu trúc thay vì chỉnh prompt.
+Tính hiệu quả của cơ chế sinh tác vụ ngữ nghĩa (semantic task) được trình bày tại Mục~\ref{sec:method-semantic} phụ thuộc hoàn toàn vào chất lượng của các toán tử (operator) mà nó tiến hành ghép nối. Thông qua quá trình rà soát kỹ thuật (audit) các toán tử được sinh ra trong những lượt chạy thực nghiệm đầu tiên, hệ thống đã bộc lộ hai dạng lỗi đặc thù. Điểm đáng chú ý là, để giải quyết triệt để cả hai vấn đề này, hệ thống một lần nữa đòi hỏi việc thiết lập các cơ chế kiểm soát cấu trúc (structural guardrails) thay vì chỉ đơn thuần tinh chỉnh câu lệnh (prompt).
 
-\subsection{Operator tautology}
+\subsection{Hiện tượng lặp thừa (Tautology) ở toán tử}
 
-\textbf{Vấn đề.} Ba trong bốn operator sinh ra trong run đó có tập effect
-trùng hệt tập precondition.
-\textbf{Chẩn đoán.} Khi được yêu cầu mô tả precondition và effect của một
-skill, LLM thấy dễ nhất là nhắc lại bối cảnh: ``đang ở danh sách issue''
-trước, ``đang ở danh sách issue'' sau. Operator như vậy không mã hóa thay
-đổi trạng thái nào, nên không bao giờ đứng giữa chuỗi và không dẫn tới đâu
-mới; nếu bỏ mặc, tautology sẽ lấp đầy đồ thị toán tử bằng các node chết.
-\textbf{Khắc phục.} Cổng chặn tautology: effect nào lặp lại precondition bị
-bỏ, và skill không còn effect mới bị từ chối nâng cấp, có ghi log lý do.
-\textbf{Bài học.} Với các sản phẩm ký hiệu do LLM viết, \emph{hãy định
-nghĩa tính hợp lệ theo lý thuyết tập hợp và thi hành nó bằng mã}; đừng
-trông cậy prompt cấm được các câu trả lời thoái hóa.
+\textbf{Vấn đề thực tế.} Trong một lượt chạy thực nghiệm, có đến ba phần tư (3/4) số toán tử được sinh ra sở hữu tập hiệu ứng (effect) trùng khớp hoàn toàn với tập điều kiện tiên quyết (precondition) của chính nó.
 
-\subsection{Mệnh đề đồng nghĩa mà embedding không gộp nổi}
+\textbf{Chẩn đoán nguyên nhân.} Khi được yêu cầu mô tả các điều kiện tiên quyết và hiệu ứng của một kỹ năng, LLM có xu hướng "đi đường tắt" bằng cách chỉ lặp lại trạng thái bối cảnh (ví dụ: trạng thái trước là ``đang ở danh sách issue'', trạng thái sau vẫn là ``đang ở danh sách issue''). Những toán tử như vậy không mã hóa bất kỳ sự chuyển đổi trạng thái (state transition) nào, do đó chúng không bao giờ có thể đóng vai trò liên kết ở giữa chuỗi và không thể dẫn hướng đến các mục tiêu mới. Nếu không có cơ chế kiểm soát, hiện tượng lặp thừa này sẽ làm đồ thị toán tử bị ngập lụt bởi dead nodes.
 
-\textbf{Vấn đề.} Ghép chuỗi đòi hỏi effect của operator này khớp
-precondition của operator kia, nhưng các operator induction độc lập diễn
-đạt cùng một điều kiện theo những cách khác nhau.
-\textbf{Chẩn đoán.} Chúng tôi đo độ tương đồng embedding của các cặp mệnh
-đề trong cùng run: một cặp diễn đạt tương đương thật chấm 0{,}570,
-\emph{dưới} ngưỡng chuẩn hóa 0{,}6, trong khi một cặp khác nghĩa chấm
-0{,}606, trên ngưỡng. Không ngưỡng nào tách được hai trường hợp; chuẩn hóa
-thuần hình học không thể khôi phục một bộ từ vựng chung sau khi sự đã rồi.
-\textbf{Khắc phục.} Phòng thay vì chữa: induction nhận biết từ vựng. Prompt
-trình các nhãn mệnh đề sẵn có của registry kèm chỉ thị tái sử dụng nguyên
-văn mệnh đề tương đương, để việc thống nhất diễn ra lúc \emph{viết} (nơi
-mô hình có đủ ngữ cảnh) thay vì lúc so embedding, nơi chỉ còn bề mặt câu
-chữ.
-\textbf{Bài học.} Khi hai đầu ra LLM về sau phải \emph{khớp} nhau, hãy chia
-sẻ bộ từ vựng ngay lúc sinh; đừng ủy thác việc thống nhất ngữ nghĩa cho một
-thước đo tương đồng.
+\textbf{Giải pháp khắc phục.} Hệ thống được thiết lập thêm cơ chế lọc lỗi lặp từ (tautology blocker): bất kỳ hiệu ứng nào lặp lại điều kiện tiên quyết đều bị loại bỏ tự động bằng phép trừ tập hợp. Đồng thời, những kỹ năng không còn giữ được hiệu ứng mới nào sẽ bị hệ thống từ chối nâng cấp và tiến hành ghi chú nguyên nhân chi tiết vào nhật ký vận hành (log).
 
-\subsection{Hai cách sửa là cần, nhưng chưa đủ}
+\textbf{Bài học kinh nghiệm.} Đối với các đầu ra mang tính biểu diễn ký hiệu (symbolic outputs) do LLM sinh ra, \emph{cần định nghĩa tính hợp lệ chặt chẽ dựa trên lý thuyết tập hợp (set theory) và thực thi quá trình kiểm soát trực tiếp bằng mã nguồn}; tuyệt đối không phụ thuộc vào câu lệnh (prompt) để yêu cầu mô hình tự kiểm tra tính hợp lệ của chính nó.
 
-Cả hai cổng chặn trên đều hoạt động đúng như thiết kế: đồ thị toán tử của
-bốn đợt khám phá cuối không còn node chết, và 26 operator được quy nạp từ
-58 skill đã kiểm chứng. Nhưng chúng \emph{không} làm đồ thị dày lên. Trên
-cả bốn website chỉ có 6 chuỗi operator được thử, và hai website không hình
-thành được chuỗi nào.
+\subsection{Hạn chế của độ tương đồng embedding trong việc chuẩn hóa mệnh đề đồng nghĩa}
 
-Chẩn đoán trung thực nhất là hai lực kéo ngược nhau. Cổng chặn tautology
-đòi effect phải khác precondition; nhưng với một skill \emph{cục bộ trong
-một trang} thì trạng thái vào và ra đúng là cùng một trang, nên effect dễ
-bị bỏ và operator bị loại (ba trong sáu skill của Shopping Admin chết theo
-đúng đường này). Cách hòa giải hiện tại là buộc mô tả trạng thái ra phải
-là cùng trang đó \emph{có kèm điều kiện} mà skill vừa tạo ra, chẳng hạn
-``trang sửa sản phẩm \emph{đã có xác nhận lưu}''. Cách này giữ được
-operator, nhưng một mệnh đề đặc thù như vậy hiếm khi trùng với precondition
-mà một skill khác phát biểu, nên cạnh vẫn không hình thành.
+\textbf{Vấn đề thực tế.} Quá trình ghép chuỗi đòi hỏi hiệu ứng (effect) của toán tử này phải trùng khớp chính xác với điều kiện tiên quyết (precondition) của toán tử tiếp theo. Tuy nhiên, các lượt quy nạp toán tử (operator induction) diễn ra độc lập thường biểu diễn cùng một điều kiện ngữ nghĩa bằng các chuỗi văn bản hoàn toàn khác nhau.
 
-\textbf{Bài học.} Khi tính hợp lệ của từng phần tử được thi hành cục bộ mà
-tính \emph{kết nối} giữa chúng thì không, hệ quả là một đồ thị sạch nhưng
-rời rạc. Cơ chế thực sự mở khóa được dữ liệu dài hạn trong khóa luận này
-là seed năng lực website, tức một nguồn mục tiêu \emph{từ trên xuống} và
-không phụ thuộc đồ thị. Rút ra tổng quát: một cơ chế tổ hợp từ dưới lên cần
-được cấp cùng lúc một nguồn mục tiêu độc lập; nếu không, toàn bộ khâu sinh
-dữ liệu sẽ bị treo vào tài sản khó xây dựng nhất của hệ thống là một đồ thị
-đủ dày cạnh.
+\textbf{Chẩn đoán nguyên nhân.} Kết quả đo lường độ tương đồng dựa trên mbedding similarity giữa các cặp mệnh đề trong cùng một lượt chạy thực nghiệm đã bộc lộ giới hạn rõ rệt: một cặp mệnh đề thực sự tương đương ngữ nghĩa chỉ đạt điểm số 0{,}570 (\emph{thấp hơn} ngưỡng chuẩn hóa 0{,}6), trong khi một cặp mệnh đề mang nghĩa khác biệt lại đạt điểm số 0{,}606 (\emph{vượt trên} ngưỡng phân tách). Thực tế này chỉ ra rằng không tồn tại một ngưỡng cố định nào đủ khả năng phân tách rạch ròi hai trường hợp trên; các phương pháp chuẩn hóa thuần túy dựa trên không gian hình học (geometric normalization) không thể khôi phục một bộ từ vựng nhất quán ở giai đoạn xử lý hậu kỳ.
+
+\textbf{Giải pháp khắc phục.} Hệ thống chuyển sang hướng phòng ngừa chủ động bằng cơ chế quy nạp nhận thức từ vựng (\emph{vocabulary-aware induction}). Cụ thể, câu lệnh (prompt) được thiết kế để cung cấp sẵn danh sách các nhãn mệnh đề hiện có trong hệ thống đăng ký (registry), đi kèm chỉ thị bắt buộc mô hình phải tái sử dụng nguyên văn mệnh đề tương đương thay vì tự do diễn đạt lại. Nhờ đó, quá trình chuẩn hóa từ vựng được thực hiện ngay tại \emph{giai đoạn sinh văn bản} thay vì trì hoãn sang giai đoạn so sánh vector embedding, vốn chỉ dựa trên biểu diễn bề mặt của câu chữ.
+
+\textbf{Bài học kinh nghiệm.} Khi các đầu ra độc lập từ LLM đòi hỏi phải \emph{khớp nối} chặt chẽ với nhau về mặt logic, việc chia sẻ và ràng buộc bộ từ vựng chung cần được thực hiện ngay trong quá trình sinh dữ liệu; tuyệt đối không phó mặc nhiệm vụ đồng bộ ngữ nghĩa cho các thước đo độ tương đồng hình học thụ động.
+
+\subsection{Tính tất yếu nhưng chưa đủ của các cơ chế kiểm soát}
+
+Cả hai cơ chế kiểm soát vừa phân tích đều vận hành hoàn toàn chính xác theo thiết kế: đồ thị toán tử trong bốn lượt chạy khám phá cuối cùng đã loại bỏ hoàn toàn các node chết, đồng thời sinh thành công 26 toán tử từ 58 kỹ năng đã được kiểm chứng. Tuy nhiên, chúng lại \emph{không} làm cho đồ thị dày lên (dense). Thực tế ghi nhận trên cả bốn website cho thấy chỉ có tổng cộng 6 chuỗi toán tử được đưa vào thử nghiệm, thậm chí có đến hai website không thể hình thành nổi bất kỳ chuỗi liên kết nào.
+
+Nguyên nhân cốt lõi xuất phát từ sự giằng co giữa hai lực cản trái chiều. Một mặt, cổng chặn lỗi lặp từ (tautology blocker) đòi hỏi hiệu ứng của toán tử phải khác biệt so với điều kiện tiên quyết. Mặt khác, đối với một kỹ năng \emph{mang tính cục bộ trong một trang web} (page-local skill), trạng thái trước và sau khi thực thi bản chất vẫn nằm trên cùng một trang; điều này khiến các hiệu ứng dễ bị nhận diện nhầm là lặp thừa và dẫn đến việc toán tử bị loại bỏ (ví dụ, có tới 3 trong tổng số 6 kỹ năng của trang Shopping Admin đã bị loại theo cơ chế này). Giải pháp dung hòa hiện tại là buộc mô tả trạng thái đầu ra phải gắn liền với cùng trang đó \emph{nhưng đi kèm điều kiện mới} do kỹ năng vừa tạo ra (chẳng hạn như: ``trang sửa sản phẩm \emph{đã có xác nhận lưu}''). Dù phương pháp này giúp giữ lại được toán tử, nhưng một mệnh đề mang tính đặc thù cao như vậy lại hiếm khi trùng khớp với điều kiện tiên quyết của bất kỳ kỹ năng nào khác, khiến các cạnh nối trên đồ thị vẫn không thể hình thành.
+
+\textbf{Bài học kinh nghiệm.} Khi tính hợp lệ của từng thành phần đơn lẻ được kiểm soát chặt chẽ ở cấp độ cục bộ nhưng tính \emph{khả năng kết nối} (connectivity) giữa chúng lại không được đảm bảo, hệ thống sẽ chỉ tạo ra một đồ thị sạch sẽ nhưng rời rạc. Cơ chế thực sự đóng vai trò chìa khóa để khai thác dữ liệu dài hạn trong nghiên cứu này chính là các nguồn mục tiêu khởi tạo (seed capabilities) được định hướng \emph{từ trên xuống (top-down)} và hoàn toàn độc lập với cấu trúc đồ thị. Từ đó rút ra nguyên tắc tổng quát: một hệ thống tổ hợp từ dưới lên (bottom-up) bắt buộc phải được vận hành song song với một nguồn mục tiêu độc lập; nếu thiếu điều kiện này, toàn bộ quá trình sinh dữ liệu sẽ rơi vào thế bị động và phụ thuộc hoàn toàn vào tài nguyên khó xây dựng nhất của hệ thống - một đồ thị có mật độ cạnh đủ dày.
 
 \section{Cạm bẫy khi huấn luyện và serving SLM}
 \label{sec:disc-slm}
 
-\subsection{Chat template là một phần của mô hình}
+\subsection{Chat template là một thành phần cốt lõi của mô hình}
 
-Họ mô hình đích mặc định phát các đoạn suy nghĩ tường minh, trong khi đích
-huấn luyện của chúng tôi là các cặp thought-action trần. Chat template
-đúng (đã tắt thinking) phải được tìm từ registry template của framework
-huấn luyện thay vì đoán theo tài liệu, và cùng thiết lập đó phải được áp
-lại, trên từng request, lúc serving. Lệch ở bất kỳ phía nào là âm thầm huấn
-luyện hoặc đánh giá một phân phối khác với dự định. Điểm tổng quát:
-\emph{template và cấu hình giải mã là một phần của sản phẩm mô hình}, và
-cấu hình lúc huấn luyện với lúc serving phải được ghim cùng nhau.
+Họ mô hình đích mặc định cơ chế tự động sinh ra các chuỗi suy nghĩ tường minh, trong khi mục tiêu huấn luyện của hệ thống lại đòi hỏi các cặp thought-action thuần túy. Do đó, chat template chính xác phải được truy xuất trực tiếp từ kho lưu trữ mẫu (template registry) của framework huấn luyện, tuyệt đối không được phỏng đoán dựa trên tài liệu hướng dẫn. Hơn thế nữa, cấu hình tương ứng này bắt buộc phải được áp dụng một cách đồng nhất trên từng yêu cầu (request) trong giai đoạn triển khai suy luận (serving). Bất kỳ sự lệch pha (mismatch) nào giữa hai giai đoạn này cũng sẽ dẫn đến việc vô tình huấn luyện hoặc đánh giá trên một phân phối dữ liệu hoàn toàn sai lệch so với thiết kế ban đầu.
 
-\subsection{Lỗi prompt-fidelity}
+Từ thực tế này rút ra bài học tổng quát: \emph{cấu trúc template và các tham số giải mã (decoding configurations) không chỉ là công cụ hỗ trợ mà là một thành phần nguyên khối của sản phẩm mô hình}; do đó, cấu hình được sử dụng trong giai đoạn huấn luyện và giai đoạn phục vụ suy luận phải luôn được ràng buộc và quản lý đồng bộ cùng nhau.
 
-Thất bại nhiều bài học nhất của khâu huấn luyện không sinh ra lỗi nào. Một
-bài kiểm nhanh sau huấn luyện, viết bằng một prompt \emph{xấp xỉ} prompt
-của solver, khiến mô hình fine-tune phát ra mô tả bằng lời thay vì hành
-động thực thi được, trông y hệt một lần fine-tune hỏng. Mô hình không
-sao cả; prompt kiểm thử mới là thứ không trung thực. Kiểm lại bằng prompt
-sản xuất (import từ solver, không gõ lại) cho hành động đúng. Sự cố
-này là lý do prompt parity (Mục~\ref{sec:method-data}) được thi hành bằng
-cách \emph{import} system prompt thật và các hàm phụ trợ của nó vào trình
-dựng dataset lẫn bộ đánh giá, không bao giờ bằng cách chép tay. Mọi bài
-kiểm một agent fine-tune chỉ đáng tin ngang độ trung thực của prompt kiểm
-so với sản xuất.
+\subsection{Vấn đề về độ trung thực của câu lệnh (Prompt-Fidelity)}
 
-\subsection{Cách ly phụ thuộc}
+Một trong những bài học quan trọng nhất từ sự cố thất bại trong quá trình huấn luyện là vấn đề không nằm ở mô hình, mà nằm ở prompt được sử dụng để kiểm tra. Trong một lần kiểm tra nhanh sau khi tinh chỉnh, chúng tôi sử dụng một prompt được viết lại gần giống với prompt chính thức của tác nhân giải quyết (solver). Khi đó, mô hình liên tục sinh ra các đoạn mô tả bằng lời thay vì các hành động có thể thực thi. Điều này ban đầu khiến chúng tôi nghĩ rằng quá trình tinh chỉnh đã thất bại. Tuy nhiên, khi kiểm tra lại bằng prompt chính thức được lấy trực tiếp từ mã nguồn của solver, mô hình lập tức sinh ra các hành động chính xác.
 
-Hỗ trợ một kiến trúc mô hình mới phát hành đòi hỏi bản phát triển của thư
-viện mô hình hóa, xung đột với yêu cầu ghim phiên bản của engine serving.
-Ba môi trường cách ly (huấn luyện, serving, đánh giá) giải quyết điều
-mà không môi trường đơn nào thỏa mãn nổi. Tầm thường, nhưng nó biến một
-xung đột phiên bản vô phương thành một bước cài đặt thường quy.
+Sự cố này cho thấy việc đảm bảo tính nhất quán của prompt (\emph{prompt parity}) (Mục~\ref{sec:method-data}) là rất quan trọng. Cụ thể, system prompt gốc và các hàm phụ trợ cần được \emph{import} trực tiếp vào cả bộ dựng tập dữ liệu (dataset builder) và bộ đánh giá, thay vì viết lại thủ công. Bài học rút ra là: để đánh giá chính xác một mô hình đã tinh chỉnh, prompt dùng trong quá trình đánh giá phải giống với prompt được sử dụng trong môi trường thực tế. Nếu prompt khác nhau, kết quả đánh giá có thể phản ánh sai khả năng thực sự của mô hình.
+
+
+\subsection{Cách ly phụ thuộc môi trường}
+
+Việc hỗ trợ một kiến trúc mô hình mới phát hành thường yêu cầu sử dụng phiên bản mới của thư viện mô hình hóa. Tuy nhiên, phiên bản này có thể xung đột với yêu cầu về phiên bản của engine serving. Để giải quyết vấn đề này, chúng tôi tách hệ thống thành ba môi trường độc lập: huấn luyện, serving và đánh giá. Mỗi môi trường sử dụng các phiên bản thư viện phù hợp với nhu cầu riêng, nhờ đó tránh được xung đột giữa các thành phần.
+
+Cách tiếp cận này tuy đơn giản nhưng có ý nghĩa thực tế quan trọng: thay vì phải tìm một bộ phiên bản duy nhất có thể đáp ứng tất cả các yêu cầu, chúng tôi có thể xử lý từng môi trường độc lập. Nhờ đó, một vấn đề xung đột phiên bản khó giải quyết trở thành một bước cài đặt và quản lý môi trường tương đối đơn giản.
+
 
 \subsection{Agent tự chấm bài mình}
 
@@ -326,11 +222,11 @@ nhìn tới. Khi cổng chấm được đưa vào chạy \emph{trực tuyến} 
 phá của Chương~\ref{ch:experiments}, nó hạ cấp 497 episode, tương đương
 khoảng một phần ba số lần tác nhân tự tuyên bố hoàn thành. Nếu không có cổng này,
 xấp xỉ một phần tư tập dữ liệu huấn luyện sẽ là những quỹ đạo dạy mô hình
-đúng một điều: cách tuyên bố đã xong mà không xong.
+đúng một điều: cách tuyên bố đã xong khi tác vụ chưa hoàn thành.
 
 Cơ chế này giúp phát hiện những trường hợp solver tự kết luận sai rằng tác vụ đã thành công trước khi các trajectory tương ứng được đưa vào tập dữ liệu huấn luyện. Trong chế độ nghiêm ngặt, trình dựng dataset mặc định loại bỏ mọi trajectory được tuyên bố thành công nhưng chưa qua judge, thay vì mặc nhiên chấp nhận chúng.
 
-Theo nguyên tắc P1, \emph{dữ liệu chưa được kiểm chứng không phải là dữ liệu trung tính; đó là một khoản nợ chất lượng có thể bị khuếch đại trong quá trình huấn luyện}.
+Theo nguyên tắc P1, \emph{dữ liệu chưa được kiểm chứng không đơn giản là dữ liệu thiếu thông tin về chất lượng; đó là một khoản nợ chất lượng có thể bị khuếch đại trong quá trình huấn luyện}.
 
 \subsection{Judge không thấy được cái mà mã nguồn thấy}
 
@@ -338,6 +234,7 @@ Theo nguyên tắc P1, \emph{dữ liệu chưa được kiểm chứng không ph
 104 quỹ đạo gắn nhãn thay đổi trạng thái hoặc điều hướng mà \emph{không
 hành động nào} thực sự tác động lên trang; chúng chỉ cuộn trang hoặc không
 làm gì, rồi tuyên bố hoàn thành.
+
 \textbf{Chẩn đoán.} Judge chỉ nhìn trang cuối để phán xét, mà trang cuối
 của một task ``sửa đổi'' không sửa gì thì trông y hệt trang ban đầu, hoàn
 toàn hợp lệ. Nói cách khác, thứ chứng minh episode này sai không nằm trong
@@ -346,11 +243,13 @@ cố điều đó: nếu đếm trên episode thô thì chỉ bắt được 3 t
 khuôn dạng thường gặp là một cú click bị lỗi, mà bước lỗi lại bị loại khi
 xuất dataset; do đó bản thô trông như đã có hành động, còn bản xuất ra thì
 không.
+
 \textbf{Khắc phục.} Một cổng thuần mã nguồn: đếm số hành động thực sự tác
 động lên trang \emph{trên các bước sống sót sau khi xuất}, và loại các
 episode thay đổi trạng thái không có hành động nào như vậy. Task tra cứu
 được miễn trừ, vì trả lời ngay trên trang đích chính là hình dạng đúng của
 loại task này.
+
 \textbf{Bài học và bằng chứng.} \emph{Đừng dùng một bộ chấm ngữ nghĩa để
 bắt một lỗi cơ học}; khi tính hợp lệ có thể phát biểu thành một vị từ trên
 dấu vết thực thi, hãy viết vị từ đó bằng mã. Hiệu quả của cổng này đo được
@@ -381,6 +280,8 @@ không gọi tên hành động báo cáo mà regex chờ đợi) và việc ch�
 các mẫu so cụm ngây thơ (``open \emph{a new} issue''). Chi phí truyền tải
 cũng đáng kể: chuyển adapter LoRA 1{,}7\,GB rồi gộp lại tại chỗ thắng việc
 chuyển checkpoint đã gộp 18\,GB.
+
+Một cái bẫy nữa chỉ lộ ra khi phải quét cùng một bộ task hai lần, một lần cho mô hình nền và một lần cho mô hình sau fine-tune. Trong một đợt đo, hai lượt quét chạy nối tiếp trên cùng một instance mà không khôi phục cơ sở dữ liệu ở giữa, và kết quả là lượt quét sau được chấm cao một cách khó hiểu, đến mức mô hình nền vượt cả mô hình sau fine-tune trên một website. Nguyên nhân là bộ chấm của WebArena chỉ kiểm tra \emph{trạng thái cuối}: những tác vụ thay đổi dữ liệu mà lượt quét trước đã hoàn thành thì vẫn còn nguyên tác dụng, nên lượt quét sau chỉ cần đi ngang qua trang là được tính điểm. Cách phát hiện đáng tái sử dụng là so hai lượt quét \emph{theo từng task}, không theo tỷ lệ tổng: chênh lệch trải đều trên mọi loại task là khác biệt do mô hình, còn chênh lệch dồn vào các task thay đổi trạng thái của đúng một website là dấu hiệu môi trường bị nhiễm. Bài học chung: \emph{với một bộ chấm chỉ nhìn trạng thái cuối, việc khôi phục môi trường không phải là thao tác vệ sinh mà là một phần của phép đo}, và một lượt quét trên môi trường chưa khôi phục không cho ra số liệu tồi, nó cho ra số liệu trông hoàn toàn hợp lý nhưng sai.
 
 Điều đáng giá hơn cả về mặt vận hành là những gì phải kiểm \emph{trước}
 khi bấm nút. Một đợt quét sáu tiếng có quá nhiều cách hỏng lặng lẽ:
@@ -435,6 +336,8 @@ Cách ly theo tài nguyên trạng thái & Song song hóa theo cái tên website
 chưa đủ; phải xác nhận trên hạ tầng thật (\ref{sec:disc-slm}) \\
 Kiểm tra trước, có cổng chặn & Một đợt chạy dài chỉ được khởi động sau khi
 mọi điều kiện hỏng-lặng-lẽ đã được thử thật (\ref{sec:disc-slm}) \\
+Khôi phục môi trường giữa hai lượt đo & Bộ chấm chỉ nhìn trạng thái cuối, nên
+việc lượt trước để lại sẽ được tính cho lượt sau (\ref{sec:disc-slm}) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -447,8 +350,9 @@ mô hình; kết cục từng task trên website sống có nhiễu, nên khoả
 được có thể dịch chuyển khi lặp lại. Các lần chạy lặp dự kiến
 (Mục~\ref{sec:exp-stats}) xử lý trực diện điều này. Ba nguy cơ cụ thể khác
 đã được nêu nguyên trạng ở Chương~\ref{ch:experiments} và cần nhắc lại ở
-đây: (i) đối chứng mô hình nền chỉ có trên GitLab, nên với ba website còn
-lại không tách được đóng góp của dữ liệu khỏi đóng góp của mô hình nền;
+đây: (i) đợt rà soát các phiên thành công giả được thực hiện một phía, trên
+mô hình nền và chỉ ở hai website, nên số liệu đối chứng được báo cáo kèm cả
+bản thô để người đọc kiểm chứng (Mục~\ref{sec:exp-baseline});
 (ii) mô hình chấm mờ của bộ đánh giá chính thức đã ngừng phục vụ và được
 thay bằng một mô hình khác, ảnh hưởng 40 trong 655 task; (iii) hai đợt
 Shopping và Shopping Admin chạy đồng thời trên hạ tầng có thể dùng chung
@@ -464,6 +368,8 @@ tập dữ liệu là hỗn hợp của ba mô hình dạy khác nhau. Điều n
 hưởng tới phép đo trên mô hình đã fine-tune, nhưng khiến chất lượng dữ
 liệu không quy được cho một mô hình dạy nào, và khiến một ablation về mô
 hình dạy không thể thực hiện hồi tố trên đợt chạy này.
+
+Cũng về phía dữ liệu, có một sự bất đối xứng giữa thầy và trò cần được công bố: các trajectory huấn luyện được sinh bởi những mô hình dạy \emph{có thị giác}, tức được đính kèm ảnh chụp màn hình và lớp đánh dấu Set-of-Marks bên cạnh cây trợ năng, trong khi cả quá trình huấn luyện lẫn đánh giá mô hình 9B đều thuần văn bản. Vì huấn luyện và đánh giá dùng chung một dạng đầu vào nên phép đo ở Mục~\ref{sec:exp-main} vẫn công bằng; điều không rõ là phần nào trong các quyết định của mô hình dạy dựa trên thông tin thị giác mà mô hình học không bao giờ nhìn thấy. Nếu tồn tại một tỷ lệ đáng kể những bước như vậy, chúng là các mục tiêu huấn luyện mà mô hình học không có đủ căn cứ để tái tạo, và việc gỡ bỏ chúng, hoặc ngược lại, việc cấp cho mô hình học cùng kênh thị giác, đều là những phương án chưa được thử.
 
 \textbf{Hợp lệ ngoại vi.} Toàn bộ dữ liệu và đánh giá đến từ các website
 WebArena tự triển khai: thực tế, nhưng là bốn website của một họ

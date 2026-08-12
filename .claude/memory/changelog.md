@@ -6,6 +6,28 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-12
 
+- **09:15** — `Thesis_report/thesis_hsge_vi/Chapter{4,5,6}/*.tex` — **cập nhật
+  báo cáo theo kết quả đối chứng mô hình nền trên cả 4 website.** Bảng 4.8 điền
+  đủ (mô hình nền **87/655 = 13,3%** so với 136/655 = 20,8%, +7,5 đpt), dùng
+  **kiểm định McNemar theo cặp** (cùng tập task) thay cho z-test hai tỷ lệ:
+  shopping p=0,012 / reddit p=0,005 / gitlab p=0,012 / **shopping_admin
+  p=0,383 (không ý nghĩa)**; tổng 77 vs 28, p<0,001. Số cũ "GitLab nền 5,6%
+  (10/180)" đã bị **thay hoàn toàn** bằng 20/180 = 11,1% của đợt chạy sạch —
+  đừng dùng lại con số 5,6% ở bất kỳ đâu. Thêm Bảng `tab:profile` (chân dung
+  lỗi 2 mô hình) và §4.6 đối chiếu: **170/655 (26,0%) phiên của mô hình nền
+  chết vì đầu ra không phân giải được, so với 2/655**. Phân tách quan trọng
+  nhất (tính trong phiên này, chưa có ở handoff nào): trên 170 task đó nền
+  được **0**, finetuned được **35**; trên 485 task nền chạy sạch thì 87 vs 101
+  (17,9% vs 20,8%) và **p=0,120, KHÔNG đạt ý nghĩa** → 35/49 task tăng thêm là
+  do tuân thủ định dạng, phần năng lực web mới chỉ là tín hiệu. Đã công bố
+  nguyên trạng ở C4 §4.4.2 + C5 §5.1 + C6. Cũng ghi rõ **điều chỉnh thủ công
+  của user** (shopping 47→37, admin 29→23; 3 khuôn dạng thành công giả) kèm số
+  liệu thô 103/655 = 15,7% và cảnh báo bất đối xứng. C5: thêm bài học "khôi
+  phục môi trường giữa hai lượt đo" (nhiễm trạng thái), threats "thầy có
+  vision, trò thuần text", **xoá tiểu mục chat-template bị lặp 2 lần**.
+  Build sạch: 165 trang, 0 undefined ref/citation, 7 overfull (vbox 71pt là
+  của C3 fig_semantic, có sẵn từ trước).
+
 - **08:5x** — `datasets/` (mới), `training/{merge_datasets,prepare_dataset}.py`,
   `training/README.md`, `training/artifacts/` — **dọn và tổ chức lại repo sau đợt
   training/eval: 33GB → 16GB.** Xoá `training/artifacts/Qwen3.5-9B-all/` (18GB

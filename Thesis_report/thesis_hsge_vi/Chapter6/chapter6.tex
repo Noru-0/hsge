@@ -60,11 +60,14 @@ fine-tune đạt \textbf{136 trên 655 task} của bốn website, tức 20{,}8\%
 15{,}4\%), với toàn bộ mẫu số đầy đủ và không task nào bị lỗi. Khi tính lại
 kết quả của các công trình liên quan trên đúng bốn website này, con số đó
 nằm giữa NNetNav-7B (19{,}1\%) và Go-Browse-7B (22{,}6\%), và ngang
-GPT-4o-mini (20{,}0\%). Trên GitLab, website duy nhất hiện có đối chứng, mô
-hình nền cùng loại chỉ đạt 5{,}6\%. Do mỗi task chỉ được đánh giá một
-lần và ba website còn lại chưa có đối chứng mô hình nền, kết quả này được
-xem là một tín hiệu mạnh về hiệu quả của phương pháp chứ chưa phải một kết
-luận có ý nghĩa thống kê đầy đủ (Mục~\ref{sec:disc-results}).
+GPT-4o-mini (20{,}0\%). Cùng bộ task đó, mô hình nền khi chưa fine-tune đạt
+87 trên 655 task, tức 13{,}3\%; chênh lệch 7{,}5 điểm phần trăm đạt ý nghĩa
+thống kê theo kiểm định cặp trên ba trong bốn website. Do mỗi task chỉ được
+đánh giá một lần, và do phân tích trace cho thấy phần lớn mức tăng đến từ
+khả năng tuân thủ định dạng hành động chứ chưa tách bạch được phần thuộc về
+năng lực thao tác web, kết quả này được xem là một tín hiệu mạnh về hiệu quả
+của phương pháp chứ chưa phải một kết luận đầy đủ
+(Mục~\ref{sec:disc-results}).
 
 \item \textbf{Báo cáo kinh nghiệm triển khai.}
 Trong quá trình xây dựng hệ thống, khóa luận tổng hợp các kinh nghiệm và
@@ -142,10 +145,9 @@ curriculum trước khi fine-tune
 O4 &
 Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chính thức &
 Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
-655 task chính thức của cả bốn website, đạt 20{,}8\%; riêng GitLab tăng từ
-5{,}6\% lên 18{,}3\% so với mô hình nền. Phần còn thiếu là các phép lặp
-thống kê, đối chứng mô hình nền trên ba website còn lại, và các ablation
-tách bạch đóng góp của từng thành phần
+655 task chính thức của cả bốn website, đạt 20{,}8\% so với 13{,}3\% của mô
+hình nền đo trong cùng điều kiện. Phần còn thiếu là các phép lặp
+thống kê và các ablation tách bạch đóng góp của từng thành phần
 (Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
 
 \addlinespace
@@ -216,8 +218,8 @@ thức có cấu trúc trong cùng một hệ thống web agent.
 Ba hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất, lặp
 lại mỗi phép đo ít nhất ba lần cho cả mô hình nền và mô hình sau fine-tune
 để báo cáo trung bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất, đồng
-thời bổ sung đối chứng mô hình nền cho ba website chưa có và chạy lại
-Shopping cùng Shopping Admin một cách tuần tự. Thứ hai, thực hiện ablation
+thời rà soát đối xứng các phiên được chấm thành công của cả hai mô hình và
+chạy lại Shopping cùng Shopping Admin một cách tuần tự. Thứ hai, thực hiện ablation
 so sánh dữ liệu khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách.
 Đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu trúc đồ
 thị, đồng thời cũng là phần còn thiếu để có thể phát biểu mạnh hơn về
@@ -232,7 +234,8 @@ cho web agent từ các website không có nhãn thông qua quá trình khám ph
 cấu trúc. Kết quả thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ để đưa
 một mô hình 9B lên 20{,}8\% trên 655 task chính thức của bốn website
 WebArena, tức ngang mức các hệ thống tốt nhất cùng phân khúc dưới 10B và
-gấp hơn ba lần mô hình nền trên website duy nhất có đối chứng. Kết quả này
+cao hơn 7{,}5 điểm phần trăm so với chính mô hình nền đó khi chưa fine-tune.
+Kết quả này
 đạt được trong khi chỉ sử dụng 4288 mẫu huấn luyện, nhỏ hơn khoảng một bậc
 độ lớn so với các công trình cùng hướng. Mặc dù vẫn còn nhiều hướng cần tiếp tục nghiên cứu
 và đánh giá ở quy mô lớn hơn, phương pháp này cho thấy việc đầu tư vào
