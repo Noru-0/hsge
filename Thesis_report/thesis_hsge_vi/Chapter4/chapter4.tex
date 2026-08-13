@@ -83,7 +83,7 @@ Khác với hai giai đoạn còn lại, giai đoạn khám phá không thuê GP
 tiền theo số token gửi tới API của các mô hình đóng, nên chi phí của nó tỷ
 lệ với \emph{số lời gọi LLM} chứ không với thời gian chạy. Bảng~\ref{tab:calls}
 thống kê ngân sách lời gọi thực tế của cả bốn đợt khám phá, đếm trực tiếp
-từ các tạo phẩm mà hệ thống ghi lại.
+từ các sản phẩm mà hệ thống ghi lại.
 
 \begin{table}[H]
 \centering
@@ -123,7 +123,7 @@ các đợt chạy, khi một đợt rà soát cho thấy đơn giá token đầ
 cao hơn khoảng mười hai lần.
 
 Hệ thống không được trang bị cơ chế ghi lại số token của từng lời gọi, nên
-chi phí API thực tế của giai đoạn này không thể tái dựng từ tạo phẩm mà phải
+chi phí API thực tế của giai đoạn này không thể tái dựng từ sản phẩm ghi lại mà phải
 đối chiếu với hóa đơn của nhà cung cấp; con số đó được ghi ở
 Bảng~\ref{tab:apicost}. Đây là một thiếu sót về công cụ đo cần khắc phục:
 nếu số token được ghi ngay tại lớp gọi API, chi phí sẽ quy được về từng
@@ -176,7 +176,7 @@ trên cả bốn website).}
 \texttt{use\_site\_seed} & bật & sinh task GOAL từ seed năng lực của website \\
 \texttt{plan\_subgoals} & bật & phân rã GOAL thành chuỗi subgoal \\
 \texttt{mine\_hrefs} & bật & khai thác \texttt{<a href>} vào frontier \\
-\texttt{per\_template\_cap} & 3 & trần số node cho mỗi khuôn dạng URL (tier 1) \\
+\texttt{per\_template\_cap} & 3 & giới hạn số node cho mỗi khuôn dạng URL (tier 1) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -189,19 +189,19 @@ hoàn toàn với cơ chế xác minh nội bộ của hệ thống đề xuất
 khởi tạo trong môi trường BrowserGym ở chế độ có tính điểm, solver chạy tối
 đa 15 bước hành động với \texttt{temperature} $= 0$. Reward function của
 WebArena phân xử thành công hay thất bại bằng ba cơ chế kiểm tra tùy loại
-task: so khớp URL, so khớp lập trình trên DOM, và so khớp mờ bằng LLM. Mô
+task: so khớp URL, so khớp lập trình trên DOM và so khớp mờ bằng LLM. Mô
 hình sau fine-tune được merge trọng số LoRA rồi serving bằng vLLM
 ngay trên máy chủ đánh giá, ở chế độ nothink để giữ đúng prompt parity với
 lúc huấn luyện.
 
 Trước mỗi đợt đánh giá, hệ thống chạy một quy trình kiểm tra tự động gồm
-chín precondition, và chỉ khởi động khi tất cả được thỏa mãn; ba
+chín điều kiện tiên quyết, và chỉ khởi động khi tất cả được thỏa mãn; ba
 điều kiện cốt lõi là: (1) endpoint phục vụ mô hình phản hồi văn bản hợp lệ;
 (2) website mục tiêu truy cập được \emph{trực tiếp từ máy chủ đánh giá}; và
 (3) một đợt chạy thử trên ba task ngẫu nhiên ghi nhận ít nhất một thành
 công mà không phát sinh lỗi hệ thống. Kết quả mỗi task được lưu thành một
 bản ghi riêng, kèm trace đầy đủ của episode đó: các bước của solver, dữ
-liệu thô từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác --
+liệu thô từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác -
 nguồn dữ liệu chính cho phần phân tích lỗi ở Mục~\ref{sec:exp-analysis}.
 
 \textbf{Hai sai lệch cần được công bố kèm theo mọi số liệu ở
@@ -233,7 +233,7 @@ Bảng~\ref{tab:runs} tổng hợp kết quả của bốn đợt khám phá. C�
 vòng huấn luyện. Do đó, số node đã duyệt là một cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
 Trong 21 giờ đó, cả bốn đợt đều bị ngắt một lần sau khoảng hai giờ rưỡi vì
 tài khoản API hết hạn mức, và Shopping Admin bị ngắt hai lần; mỗi lần đều
-được chạy tiếp từ điểm kiểm tra của node cuối cùng thay vì phải làm lại
+được chạy tiếp từ checkpoint của node cuối cùng thay vì phải làm lại
 (Mục~\ref{sec:method-impl}). Đây là lần duy nhất cơ chế khôi phục được dùng
 tới ngoài các phép thử, và số liệu trong bảng là kết quả sau khi nối lại.
 Trong bảng, \emph{episode hợp lệ} là những episode được tính là thành công
@@ -574,9 +574,9 @@ tập dữ liệu của khóa luận chỉ có 4288 mẫu huấn luyện, nhỏ 
 nêu ở mục~\ref{sec:exp-protocol}.
 \end{enumerate}
 
-Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 4288 mẫu dữ liệu do chính chuỗi xử lý (pipeline) này tổng hợp, có khả năng đạt hiệu năng tương đương với các hệ thống tiên tiến nhất trong cùng phân khúc. Cụ thể, mô hình đề xuất cao hơn NNetNav-7B (20{,}8\% so với 19{,}1\%) và tiệm cận GPT-4o-mini (20{,}0\%). Nó thấp hơn Go-Browse-7B (22{,}6\%) khoảng 1{,}8 điểm phần trăm, một mức chênh lệch vẫn nằm trong khoảng tin cậy thống kê (confidence interval) của phép đo.
+Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 4288 mẫu dữ liệu do chính pipeline này tổng hợp, có khả năng đạt hiệu năng tương đương với các hệ thống tiên tiến nhất trong cùng phân khúc. Cụ thể, mô hình đề xuất cao hơn NNetNav-7B (20{,}8\% so với 19{,}1\%) và tiệm cận GPT-4o-mini (20{,}0\%). Nó thấp hơn Go-Browse-7B (22{,}6\%) khoảng 1{,}8 điểm phần trăm, một mức chênh lệch vẫn nằm trong khoảng tin cậy thống kê của phép đo.
 
-Tuy nhiên, các số liệu này \emph{chưa đủ cơ sở} để khẳng định phương pháp HSGE ưu việt hay kém hiệu quả hơn so với Go-Browse. Để có một phép so sánh công bằng và chính xác nhất, mô hình cơ sở (foundation model) cũng như quy mô tập dữ liệu huấn luyện của cả hai hệ thống cần phải được thiết lập đồng nhất.
+Tuy nhiên, các số liệu này \emph{chưa đủ cơ sở} để khẳng định phương pháp HSGE ưu việt hay kém hiệu quả hơn so với Go-Browse. Để có một phép so sánh công bằng và chính xác nhất, mô hình nền cũng như quy mô tập dữ liệu huấn luyện của cả hai hệ thống cần phải được thiết lập đồng nhất.
 
 Phân bố kết quả theo từng website mang nhiều thông tin hơn con số tổng. Điểm
 mạnh và điểm yếu của khóa luận gần như trái ngược với Go-Browse: khóa luận
@@ -722,7 +722,7 @@ Tự báo bất khả thi & 26\% & 33\% & 31\% & 31\% \\
 suy luận.} Từ 83\% đến 95\% số episode thất bại có ít nhất một hành động bị
 trình duyệt từ chối, tổng cộng 2285 lỗi thực thi trên 655 episode. Phần lớn
 là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử
-mà accessibility tree \emph{thực sự} có hiển thị -- nghĩa là mô hình đã
+mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã
 chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác. Đây là
 giới hạn của execution layer, không phải của năng lực mô hình, nên khắc phục
 nó là hướng đáng đầu tư nhất (Chương~\ref{ch:discussion},
@@ -739,13 +739,13 @@ ngân sách bước.
 \textbf{Cạn ngân sách 15 bước là nguyên nhân thất bại nặng nhất trên
 GitLab} (45\%), đúng với đặc điểm các task ở đó vốn cần chuỗi điều hướng
 dài. Đáng chú ý, không episode nào rơi vào tình trạng ``chạm mục tiêu rồi
-rời đi'' -- tức một bước giữa chừng đã đạt điểm nhưng episode kết thúc với
+rời đi'' - tức một bước giữa chừng đã đạt điểm nhưng episode kết thúc với
 điểm 0. Đây là bằng chứng cho tính hợp lệ của phép đo: giới hạn 15 bước
 đang đóng vai trò \emph{thước đo} năng lực mô hình, không phải \emph{trừng
 phạt} nó, vì không task nào bị cắt ngang ngay sau khi đã hoàn thành đúng
 mục tiêu.
 
-\textbf{Báo cáo hoàn thành ảo -- tuyên bố xong mà không thao tác gì -- gần
+\textbf{Báo cáo hoàn thành ảo - tuyên bố xong mà không thao tác gì - gần
 như biến mất.} Chỉ 3 trên 519 episode thất bại (0{,}6\%) gọi
 \texttt{send\_msg\_to\_user} ngay ở bước đầu tiên mà không hề tương tác với
 trang. Đây đúng là nhóm hành vi mà cổng hành động hữu hiệu ở
@@ -785,7 +785,7 @@ Lỗi hành động trên mỗi bước & 0{,}358 & 0{,}347 \\
 \end{tabular}
 \end{table}
 
-Chân dung này cho thấy fine-tuning không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau fine-tune còn cao hơn mô hình nền về giá trị tuyệt đối (2285 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}347 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau fine-tune luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng gượng dậy sau một thao tác hỏng. Nó không còn nằm ở việc mô hình có phát ra được hành động đúng định dạng hay không -- phần đó tập dữ liệu đã dạy được triệt để.
+Chân dung này cho thấy fine-tuning không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau fine-tune còn cao hơn mô hình nền về giá trị tuyệt đối (2285 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}347 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau fine-tune luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng gượng dậy sau một thao tác hỏng. Nó không còn nằm ở việc mô hình có phát ra được hành động đúng định dạng hay không - phần đó tập dữ liệu đã dạy được triệt để.
 
 \subsection{Độ dài trajectory}
 
@@ -804,7 +804,7 @@ Pipeline đã chạy trọn vẹn trên bốn website thật: giai đoạn khám
 được 2178 episode và tinh lọc còn 1029 trajectory đạt chuẩn; giai đoạn tinh
 chỉnh huấn luyện một mô hình 9B tham số với chi phí GPU 6{,}6\,USD. Trên bộ
 655 task chính thức, mô hình đạt tỷ lệ thành công 20{,}8\%, so với
-13{,}3\% của chính mô hình đó khi chưa fine-tune -- chênh lệch 7{,}5 điểm
+13{,}3\% của chính mô hình đó khi chưa fine-tune - chênh lệch 7{,}5 điểm
 phần trăm, đạt ý nghĩa thống kê trên ba trong bốn website
 (Mục~\ref{sec:exp-baseline}). So với các công trình liên quan cùng đo trên
 bốn website này, kết quả nằm trong khoảng của các mô hình mở dưới 10B tham
