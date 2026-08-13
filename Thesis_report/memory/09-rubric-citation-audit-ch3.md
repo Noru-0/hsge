@@ -312,7 +312,14 @@ rồi mới quyết.
 **Cập nhật 2026-08-13**: C4 đã rà xong (thuật ngữ hóa ra đã sạch từ đợt đồng bộ
 run 20 trước đó; chỉ còn 4 dấu hiệu dịch máy ở §4.1.4, §4.6.2, "Tổng kết
 chương" + 6 chú tiếng Anh dư bị chuyển vào glossary). Chi tiết: xem entry
-2026-08-13 08:26 trong `.claude/memory/changelog.md`. C5, C6 vẫn chưa đụng.
+2026-08-13 08:26 trong `.claude/memory/changelog.md`.
+
+C5 cũng đã rà, nhưng hóa ra **đã sạch từ trước** — không có 4 dấu hiệu dịch
+máy, chỉ 3 điểm nhỏ (2 chú tiếng Anh dư + 1 đoạn dài gộp ý). Chi tiết: entry
+2026-08-13 08:30 trong changelog. Bài học rút ra: không phải chương nào cũng
+cần cùng mức sửa — nên chẩn đoán trước rồi mới quyết mức độ, thay vì áp mù
+quáng cùng một lượng sửa cho mọi chương. C6 vẫn chưa đụng (nặng nhất theo ghi
+nhận cũ: "agent" 12 / "tác nhân" 0).
 
 
 ## Nợ #3 và #5 đã đóng (2026-08-12 19:46)

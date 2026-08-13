@@ -12,7 +12,7 @@ Mỗi bài học được trình bày theo một cấu trúc nhất quán bao g�
 
 Kết quả đánh giá tổng thể của khóa luận ghi nhận 136/655 tác vụ được hoàn thành trên bốn website thuộc WebArena, tương đương tỷ lệ 20{,}8\%. Con số này chỉ có nghĩa khi đọc kèm phạm vi của nghiên cứu. Điều nó cho thấy là: một mô hình dưới 10B tham số, tinh chỉnh trên 4288 mẫu do chính pipeline tự thu từ những website \emph{chưa hề được gán nhãn tác vụ}, đạt mức tiệm cận các hệ thống tốt nhất cùng cỡ. Cụ thể, mô hình đạt kết quả cao hơn NNetNav-7B (19{,}1\%), tương đương với GPT-4o-mini (20{,}0\%), và thấp hơn Go-Browse-7B (22{,}6\%) với mức chênh lệch nằm gọn trong khoảng tin cậy thống kê của phép đo (Bảng~\ref{tab:related}).
 
-Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với các hệ thống đối chuẩn kể trên. Ba hệ thống này khác nhau ở mô hình nền, ở quy mô dữ liệu, và ở cấu hình ngân sách bước cùng bộ chấm mờ (fuzzy evaluator) -- ba khác biệt đủ để nuốt trọn khoảng cách vài điểm phần trăm.
+Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với các hệ thống đối chuẩn kể trên. Ba hệ thống này khác nhau ở mô hình nền, ở quy mô dữ liệu, và ở cấu hình ngân sách bước cùng bộ chấm mờ -- ba khác biệt đủ để nuốt trọn khoảng cách vài điểm phần trăm.
 
 Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc về năng lực sẵn có của mô hình nền, đã được đo trực tiếp trên cả bốn website: cùng mô hình Qwen3.5-9B, cùng prompt và cùng bộ chấm, tỷ lệ hoàn thành đi từ 13{,}3\% lên 20{,}8\% sau khi tinh chỉnh (Bảng~\ref{tab:baseline}). Vì hai đợt đo dùng chung một tập tác vụ, chênh lệch này được kiểm định theo cặp: 77 tác vụ chỉ mô hình sau tinh chỉnh giải được so với 28 tác vụ chỉ mô hình nền giải được, tức $p < 0{,}001$. Đây là bằng chứng trực tiếp nhất mà khóa luận có được cho luận điểm trung tâm, rằng dữ liệu do pipeline tự thu thập từ website không nhãn là đủ để nâng năng lực của một mô hình nhỏ trên chính những website đó.
 
@@ -135,7 +135,7 @@ Một quy luật lặp lại xuyên suốt các lượt chạy: bảo mô hình 
 
 \textbf{Bài học.} Hãy xin mô hình \emph{dữ liệu có cấu trúc} thay vì áp một quy ước định dạng chìm trong văn bản tự do. Và tuyệt đối không dựng một cổng an toàn trên một quy ước mà mô hình có thể vi phạm.
 
-\subsection{Xử lý hiện tượng mắc kẹt trong vòng lặp (Stuck-loop) qua hai giai đoạn}
+\subsection{Xử lý hiện tượng kẹt vòng lặp qua hai giai đoạn}
 
 \textbf{Vấn đề.} Solver tiêu trọn ngân sách bước để lặp lại một hành động vô hiệu; trong một episode đã ghi, mô hình nhấn vào cùng một phần tử trơ suốt mười lăm bước liền.
 
@@ -425,7 +425,25 @@ thay vì một hệ quả ngầm định. So sánh với các công trình liên
 đúng bốn website để mẫu số khớp nhau, nhưng mô hình nền và quy mô dữ liệu
 thì không đồng nhất được hồi tố.
 
-\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành tác vụ theo bộ chấm chính thức là thước đo tiêu chuẩn trong lĩnh vực, nhưng đây là một chỉ số nhị phân và chỉ phản ánh trạng thái cuối cùng. Do đó, chỉ số này không ghi nhận mức độ tiến bộ từng phần trong quá trình thực hiện. Bên cạnh đó, trong giai đoạn thu thập dữ liệu, các tác vụ ngữ nghĩa được xác nhận bằng tự báo cáo của solver rồi được một judge chấm lại ngay trong vòng lặp; mức độ tin cậy của cách này vẫn thấp hơn các tác vụ được kiểm chứng trực tiếp bằng chương trình, vì judge chỉ xét trạng thái cuối. Vì vậy, chúng tôi lưu tách biệt hai chế độ kiểm chứng trong dữ liệu, qua đó cho phép thực hiện các phân tích nghiêm ngặt hơn về sau. Cũng cần nói rõ một điều nữa về từ ngữ: nhãn ``đã kiểm chứng'' của một kỹ năng trong khóa luận \emph{không} có nghĩa kỹ năng đó từng được thực thi lại thành công, vì cổng thực thi lại không chạy trên website thật (Mục~\ref{sec:disc-verify}); nó có nghĩa là kỹ năng đã tái xuất hiện qua nhiều quỹ đạo độc lập mà mọi episode nguồn đều đã qua judge. Lưu ý rằng giới hạn này chỉ áp dụng cho dữ liệu huấn luyện: các con số ở Mục~\ref{sec:exp-main} do bộ chấm chính thức của WebArena quyết định, không do cơ chế kiểm chứng nội bộ của hệ thống.
+\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành tác vụ theo bộ chấm chính thức là
+thước đo tiêu chuẩn trong lĩnh vực, nhưng đây là một chỉ số nhị phân và chỉ
+phản ánh trạng thái cuối cùng; nó không ghi nhận mức độ tiến bộ từng phần.
+
+Trong giai đoạn thu thập dữ liệu, các tác vụ ngữ nghĩa được xác nhận bằng
+tự báo cáo của solver rồi được một judge chấm lại ngay trong vòng lặp; mức
+độ tin cậy của cách này vẫn thấp hơn các tác vụ được kiểm chứng trực tiếp
+bằng chương trình, vì judge chỉ xét trạng thái cuối. Vì vậy, chúng tôi lưu
+tách biệt hai chế độ kiểm chứng trong dữ liệu, để cho phép các phân tích
+nghiêm ngặt hơn về sau.
+
+Cũng cần nói rõ một điều về từ ngữ: nhãn ``đã kiểm chứng'' của một kỹ năng
+trong khóa luận \emph{không} có nghĩa kỹ năng đó từng được thực thi lại
+thành công, vì cổng thực thi lại không chạy trên website thật
+(Mục~\ref{sec:disc-verify}); nó có nghĩa là kỹ năng đã tái xuất hiện qua
+nhiều quỹ đạo độc lập mà mọi episode nguồn đều đã qua judge. Giới hạn này
+chỉ áp dụng cho dữ liệu huấn luyện: các con số ở Mục~\ref{sec:exp-main} do
+bộ chấm chính thức của WebArena quyết định, không do cơ chế kiểm chứng nội
+bộ của hệ thống.
 
 \vspace{1em}
 \noindent

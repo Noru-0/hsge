@@ -6,6 +6,17 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **08:30** — `Thesis_report/thesis_hsge_vi/Chapter5/chapter5.tex` — **rà văn
+  phong Chương 5.** Đọc lại thấy chương đã sạch từ trước (0 "agent"/"task"
+  trần, 12 chỗ dùng "sẽ" đều là tương lai/điều kiện thật, cấu trúc
+  Vấn đề/Chẩn đoán/Khắc phục/Bài học tự nhiên) — khác hẳn tình trạng C4 trước
+  khi sửa. Chỉ còn 3 điểm nhỏ, sửa theo xác nhận của user: bỏ 2 chú tiếng Anh
+  dư ("(fuzzy evaluator)" dòng 15, "(Stuck-loop)" trong tiêu đề §5.2.2 — cả
+  hai đã có bản dịch chuẩn dùng khắp quyển); tách đoạn §5.5.3 "Hợp lệ cấu
+  trúc" (1 đoạn ~200 từ gộp 4 ý: chỉ số nhị phân / hai chế độ kiểm chứng /
+  nghĩa của nhãn "đã kiểm chứng" / phạm vi áp dụng) thành 3 đoạn theo ý. Build
+  sạch: 169 trang (không đổi), 0 error, 0 undefined ref, overfull vẫn 9
+  (không tăng).
 - **08:26** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex`,
   `Thesis_report/thesis_hsge_vi/Appendix/glossary.tex` — **rà văn phong Chương
   4** theo cùng checklist "4 dấu hiệu dịch máy" đã dùng cho C3 (memory 09),
