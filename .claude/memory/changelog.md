@@ -6,6 +6,17 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **08:48** — `Thesis_report/thesis_hsge_vi/Chapter1/chapter1.tex` — **đảo
+  ngược quy ước thuật ngữ**: theo yêu cầu mới của user, mọi từ đã có trong
+  `glossary.tex` (agent, task + các dạng ghép semantic/goal/low-level task,
+  trajectory, fine-tune/fine-tuning, serving) giờ **giữ tiếng Anh xuyên
+  suốt** thay vì dịch sang tác nhân/tác vụ/quỹ đạo/tinh chỉnh — đảo ngược
+  quy ước đã chốt 12-08. Riêng cặp precondition/effect: giữ dạng song ngữ ở
+  lần định nghĩa đầu tiên (đã có sẵn ở dòng 37, không đụng), dùng tiếng Anh
+  thuần các chỗ khác trong toàn quyển. C1 là chương đầu tiên áp quy ước mới;
+  nhiều chỗ vốn đã bán-song-ngữ ("quỹ đạo tương tác (trajectory)", "tác vụ
+  ngữ nghĩa (semantic task)") được gọn lại thành thuần tiếng Anh. Build
+  sạch: 169 trang, 0 error, 0 undefined ref, overfull không đổi (9).
 - **08:34** — `Thesis_report/thesis_hsge_vi/Chapter6/chapter6.tex` — **rà văn
   phong Chương 6.** Ghi chú cũ trong memory 09 ("C6 nặng nhất: agent 12 /
   tác nhân 0") đã lỗi thời — đợt đồng bộ thuật ngữ C4–C6 (`eb0ef76`) sửa từ

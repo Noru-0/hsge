@@ -281,23 +281,45 @@ C4–C6):
 4. Từ đao to búa lớn: "kiến tạo nên", "thoái hóa thành", "ồ ạt", "dừng một
    cách ồn ào" (dịch literal của *noisily*).
 
-**Quy ước thuật ngữ đã chốt cho C3 (user duyệt 12-08)** — áp dụng tiếp khi
-sửa C4–C6:
+**Quy ước thuật ngữ 12-08 (agent→tác nhân, task→tác vụ, ...) — ĐÃ ĐẢO NGƯỢC
+13-08.** User quyết định lại: mọi từ đã có trong `glossary.tex` thì **giữ
+tiếng Anh xuyên suốt thân bài**, không dịch sang tiếng Việt nữa — kể cả
+những từ "nổi bật và hay dùng" như agent/task, chứ không chỉ skill/operator/
+episode/pipeline như trước. Lý do: đọc tự nhiên hơn, và khớp cách
+skill/operator/frontier/episode/pipeline/node/prompt/... vốn đã luôn giữ
+tiếng Anh mà không ai thấy cộm.
 
-| Khái niệm | Từ dùng | Ghi chú |
+| Khái niệm | Từ dùng (từ 13-08) | Ghi chú |
 |---|---|---|
-| agent | **tác nhân** | "agent" chỉ còn trong Bảng thuật ngữ |
-| task | **tác vụ** | trừ tên nhãn `INFO/NAV/MOD/COMPOSITE/GOAL` |
-| trajectory | **quỹ đạo** | |
-| episode | **episode** | user chọn (đa số ở C4 + phụ lục, là từ khóa glossary); "phiên làm việc" = session đăng nhập, giữ nguyên |
-| pipeline | **pipeline** | bỏ chú "(chuỗi xử lý)" lặp — đã có trong glossary |
-| semantic task | **tác vụ ngữ nghĩa** | đổi cả tiêu đề §3.5 |
-| goal task | **tác vụ mục tiêu** | chú tiếng Anh một lần ở §3.5.3 |
-| induction | **quy nạp** | đổi tiêu đề §3.5.1 |
-| fine-tune | **tinh chỉnh** | đổi tiêu đề §3.7 |
+| agent | **agent** | trước đó "tác nhân" (12-08→13-08) |
+| task | **task** | trừ tên nhãn `INFO/NAV/MOD/COMPOSITE/GOAL`; trước đó "tác vụ" |
+| trajectory | **trajectory** | trước đó "quỹ đạo" |
+| fine-tune/fine-tuning | **fine-tune** (động từ) / **fine-tuning** (danh từ/quá trình) | trước đó "tinh chỉnh" |
+| semantic task | **semantic task** | trước đó "tác vụ ngữ nghĩa" |
+| goal task | **goal task** | trước đó "tác vụ mục tiêu" |
+| low-level task | **low-level task** | trước đó "tác vụ mức thấp/bậc thấp" |
+| web agent | **web agent** | trước đó "tác nhân web" |
+| accessibility tree | **accessibility tree** | trước đó "cây trợ năng" |
+| precondition / effect | **precondition / effect** | **ngoại lệ**: giữ song ngữ ở lần định nghĩa đầu tiên (Chương 1, §1.1), tiếng Anh thuần các chỗ khác |
+| serving | **serving** | trước đó "phục vụ suy luận"/"triển khai suy luận" |
+| merge | **merge** | trước đó "hợp nhất" |
+| execution layer | **execution layer** | trước đó "tầng thực thi" |
+| predicate registry | **predicate registry** | trước đó "sổ đăng ký mệnh đề" |
+| reward function | **reward function** | trước đó "hàm phần thưởng" |
+| episode | **episode** | không đổi — đã tiếng Anh từ trước; "phiên làm việc" = session đăng nhập, giữ nguyên |
+| pipeline, skill, operator, frontier, node, prompt, judge, seed, subgoal, grounding, tautology, trace, curriculum, instance, benchmark, baseline, best practice, chat template, option, runtime, self-host, unprefixed sampling, workflow, world model, wrap-up call | **giữ nguyên tiếng Anh** | không đổi — chưa bao giờ bị dịch |
+| induction | **quy nạp** | không đổi — KHÔNG có trong glossary.tex nên không thuộc phạm vi đảo ngược này |
+| "đồ thị" (graph) | **đồ thị** | không đổi — "graph" KHÔNG phải headword trong glossary.tex, quy ước dịch riêng (memory 09, đợt 07-08) vẫn giữ nguyên |
 
-Nguyên tắc chung: thuật ngữ đã có trong `glossary.tex` thì **không chú thích
-lại** mỗi lần dùng (đúng quy ước user ở [05-bai-hoc-review](05-bai-hoc-review.md)).
+Nguyên tắc chung (không đổi): thuật ngữ đã có trong `glossary.tex` thì
+**không chú thích lại** mỗi lần dùng (quy ước user ở
+[05-bai-hoc-review](05-bai-hoc-review.md)).
+
+**Tiến độ đảo ngược** (theo dõi để không sót chương): C1 xong (13-08 08:48).
+C2, C3, C4, C5, C6, Phụ lục 1 còn phải làm — quy mô ước tính ban đầu ~650+
+chỗ toàn quyển (agent ~89, task ~348, trajectory ~99, fine-tune ~86, effect
+27, precondition 13, accessibility tree 9, serving 8, predicate registry 3,
+execution layer 3, merge 2, reward function 1 — đếm trước khi sửa C1).
 
 **Tác động lên các khoản nợ đang mở:** nợ #5 (văn phong) đỡ được một phần —
 câu ≥ 40 âm tiết 62 → 46 theo cách đếm tự động, nhưng đây là **tác dụng phụ**
