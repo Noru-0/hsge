@@ -6,6 +6,18 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-14
 
+- **05:53** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — rà
+  Chương 4 theo cùng checklist đã dùng cho Chương 3 (theo yêu cầu "kiểm tra
+  xem chương 4 có gì cần sửa giống chương 3 không"). Ít vấn đề hơn hẳn C3
+  vì C4 đã qua đợt dọn AI-voice từ đầu phiên. **Bắt được 1 lỗi thuật ngữ
+  thật**: "chín precondition" (9 điều kiện sanity-check trước khi đánh giá)
+  bị script thay thế hàng loạt ở đợt "đảo ngược quy ước thuật ngữ" (13-08)
+  bắt nhầm thành thuật ngữ STRIPS — sửa lại "chín điều kiện tiên quyết".
+  Cộng 7 chỗ khác: trần->giới hạn, điểm kiểm tra->checkpoint, dấu phẩy thừa
+  trước "và", tạo phẩm->sản phẩm (khớp C3), 3 chú song ngữ dư (pipeline,
+  confidence interval, mô hình cơ sở->mô hình nền), gạch đôi->gạch đơn (6
+  chỗ). Build sạch, commit `f5284bf`, đã push.
+
 - **05:34** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex`,
   `Thesis_report/thesis_hsge_vi/main.tex` — **rà văn phong Chương 3 theo
   checklist chi tiết của user** (`temp/thesis.md`, ~40 mục từ §3.0 đến
