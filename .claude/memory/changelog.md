@@ -6,6 +6,15 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-14
 
+- **06:19** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — điền
+  Bảng tab:apicost (trước đó "chưa tổng hợp"): OpenAI 32,29 USD + DeepSeek
+  4,19 USD = 36,48 USD cho giai đoạn khám phá. Thêm chi phí/trajectory
+  thành công: 36,48/1029 = 0,0355 USD, so sánh với Synatra (0,031 USD/mẫu,
+  đã có trong C1/C2) và Go-Browse (975,57 USD / ~10K trajectory = 0,0976
+  USD/trajectory, từ Appendix B.2 paper Go-Browse — rẻ hơn ~2,7 lần, kèm
+  caveat không phải so sánh có kiểm soát). Build sạch: 172 trang, 0 error.
+  Commit `0a551a2`, đã push.
+
 - **05:53** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — rà
   Chương 4 theo cùng checklist đã dùng cho Chương 3 (theo yêu cầu "kiểm tra
   xem chương 4 có gì cần sửa giống chương 3 không"). Ít vấn đề hơn hẳn C3
