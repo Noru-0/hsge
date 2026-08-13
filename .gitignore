@@ -8,8 +8,12 @@
 # Cached WebArena login sessions (cookies == live session credentials)
 .auth/
 
-# Real-run artifacts
-outputs/
+# Real-run artifacts — raw exploration/eval run dirs (episodes with
+# per-step screenshots, checkpoints) are multi-GB and excluded. The
+# curated eval results (outputs/eval/: per-task json + anomaly reports,
+# no screenshots, 112 MB) are the eval proof and stay tracked.
+outputs/*
+!outputs/eval/
 
 # Training checkpoints — LoRA adapters/optimizer states run to ~1.7 GB and
 # individual files exceed GitHub's hard 100 MB per-file limit.
@@ -18,6 +22,10 @@ training/artifacts/
 # Per-site train/val splits: ~42 MB of pure duplication, regenerated from the
 # committed train_<site>.jsonl by training/prepare_dataset.py.
 training/data/*/
+
+# Superseded backup copies from the last manual dataset edit — pure
+# duplication of the current train.jsonl/val.jsonl.
+training_data/*.bak
 
 # OS / editor / Python junk
 .DS_Store
