@@ -70,7 +70,7 @@ tế của các đợt khám phá.
 \texttt{solver} & GPT-5.6-luna & tối đa 15 call/episode; bật vision \\
 \texttt{solver\_goal} & GPT-5.6-terra & chỉ cho tác vụ GOAL nhiều bước \\
 \texttt{episode\_judge} & DeepSeek-chat & 1 call cho mỗi lần tự nhận thành công \\
-\texttt{quỹ đạo\_segmenter}, \texttt{skill\_abstractor}, \texttt{skill\_verifier},
+\texttt{trajectory\_segmenter}, \texttt{skill\_abstractor}, \texttt{skill\_verifier},
 \texttt{operator\_inducer} & DeepSeek-chat & pipeline phát hiện skill \\
 \bottomrule
 \end{tabular}
@@ -101,7 +101,7 @@ không phân tích được.}
 \midrule
 \texttt{solver} & GPT-5.6-luna / GPT-4o & 17\,785 & 85{,}5\% \\
 \texttt{episode\_judge} & DeepSeek-chat & 1\,564 & 7{,}5\% \\
-\texttt{quỹ đạo\_segmenter} & DeepSeek-chat & 1\,067 & 5{,}1\% \\
+\texttt{trajectory\_segmenter} & DeepSeek-chat & 1\,067 & 5{,}1\% \\
 \texttt{page\_explorer} & GPT-5.6-luna & 263 & 1{,}3\% \\
 \texttt{goal\_planner} & GPT-5.6-luna & 66 & 0{,}3\% \\
 \texttt{operator\_inducer} & DeepSeek-chat & 59 & 0{,}3\% \\
@@ -184,9 +184,25 @@ trên cả bốn website).}
 \subsection{Quy trình đánh giá}
 \label{sec:exp-protocol}
 
-Quá trình đánh giá được thực hiện dựa trên \emph{tập tác vụ và bộ đánh giá chuẩn thức của WebArena}, hoàn toàn độc lập với cơ chế xác minh nội bộ của hệ thống đề xuất. Cụ thể, mỗi tác vụ được khởi tạo thông qua môi trường BrowserGym ở chế độ có tính điểm. Tác nhân giải quyết (solver) được giới hạn ở mức ngân sách tối đa là 15 bước hành động, với tham số \texttt{temperature} $= 0$. Kết quả thành công hay thất bại của tác vụ được phân xử bởi hàm phần thưởng (reward function) của WebArena, thông qua ba cơ chế kiểm tra: so khớp URL (URL matching), so khớp bằng chương trình (programmatic matching), và so khớp mờ dựa trên LLM (LLM-based fuzzy matching). Mô hình sau tinh chỉnh được hợp nhất (merge) trọng số LoRA và được triển khai suy luận (serving) bằng vLLM trực tiếp trên máy chủ đánh giá. Đặc biệt, cấu hình triển khai được thiết lập ở chế độ vô hiệu hóa chuỗi suy luận (\emph{nothink}), nhằm đảm bảo tính nhất quán tuyệt đối (prompt parity) với thiết lập trong giai đoạn huấn luyện.
+Việc đánh giá dùng đúng tập tác vụ và bộ chấm chuẩn của WebArena, tách biệt
+hoàn toàn với cơ chế xác minh nội bộ của hệ thống đề xuất: mỗi tác vụ được
+khởi tạo trong môi trường BrowserGym ở chế độ có tính điểm, solver chạy tối
+đa 15 bước hành động với \texttt{temperature} $= 0$. Hàm phần thưởng của
+WebArena phân xử thành công hay thất bại bằng ba cơ chế kiểm tra tùy loại
+tác vụ: so khớp URL, so khớp lập trình trên DOM, và so khớp mờ bằng LLM. Mô
+hình sau tinh chỉnh được merge trọng số LoRA rồi phục vụ suy luận bằng vLLM
+ngay trên máy chủ đánh giá, ở chế độ nothink để giữ đúng prompt parity với
+lúc huấn luyện.
 
-Trước mỗi đợt đánh giá, hệ thống thực thi một quy trình kiểm tra tự động (sanity check) bao gồm chín điều kiện tiên quyết. Đợt chạy chỉ được khởi động khi toàn bộ các điều kiện này được thỏa mãn đồng thời, trong đó bao gồm ba tiêu chí cốt lõi: (1) điểm cuối (endpoint) phục vụ mô hình phải phản hồi văn bản hợp lệ; (2) website mục tiêu phải truy cập thành công \emph{trực tiếp từ máy chủ đánh giá}; và (3) đợt chạy thử nghiệm (smoke test) trên ba tác vụ ngẫu nhiên phải ghi nhận ít nhất một trường hợp thành công mà không phát sinh lỗi hệ thống. Kết quả của từng tác vụ được lưu trữ thành các bản ghi riêng biệt, đính kèm một \emph{vết theo dõi (trace)} toàn diện cho mỗi episode. Dữ liệu vết này bao gồm tiến trình các bước của solver, dữ liệu thô từ từng lời gọi LLM, và phản hồi tương ứng của trình duyệt sau mỗi thao tác. Hệ thống dữ liệu này đóng vai trò là nguồn thông tin đầu vào cốt lõi cho quá trình phân tích lỗi được trình bày tại Mục~\ref{sec:exp-analysis}.
+Trước mỗi đợt đánh giá, hệ thống chạy một quy trình kiểm tra tự động gồm
+chín điều kiện tiên quyết, và chỉ khởi động khi tất cả được thỏa mãn; ba
+điều kiện cốt lõi là: (1) endpoint phục vụ mô hình phản hồi văn bản hợp lệ;
+(2) website mục tiêu truy cập được \emph{trực tiếp từ máy chủ đánh giá}; và
+(3) một đợt chạy thử trên ba tác vụ ngẫu nhiên ghi nhận ít nhất một thành
+công mà không phát sinh lỗi hệ thống. Kết quả mỗi tác vụ được lưu thành một
+bản ghi riêng, kèm trace đầy đủ của episode đó: các bước của solver, dữ
+liệu thô từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác --
+nguồn dữ liệu chính cho phần phân tích lỗi ở Mục~\ref{sec:exp-analysis}.
 
 \textbf{Hai sai lệch cần được công bố kèm theo mọi số liệu ở
 mục~\ref{sec:exp-main}:}
@@ -702,20 +718,47 @@ Tự báo bất khả thi & 26\% & 33\% & 31\% & 31\% \\
 
 \subsection{Nhận xét từ kết quả phân loại lỗi}
 
-\textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất, thay vì lỗi suy luận.}
-Từ 83\% đến 95\% số episode (episode) thất bại ghi nhận ít nhất một hành động bị trình duyệt từ chối, với tổng số 2285 lỗi thực thi trên 655 episode. Nguyên nhân chủ yếu xuất phát từ lỗi vượt quá thời gian chờ khả năng thao tác (timeout) của Playwright, diễn ra ngay trên các phần tử mà accessibility tree \emph{thực sự} có hiển thị. Điều này đồng nghĩa với việc mô hình đã xác định chính xác đối tượng mục tiêu, nhưng phần tử đó chưa ở trạng thái sẵn sàng tiếp nhận tương tác. Đây thực chất là điểm yếu của tầng thực thi (execution layer) chứ không phản ánh sự thiếu hụt năng lực của mô hình; do đó, việc tập trung khắc phục vấn đề này sẽ là hướng tối ưu mang lại hiệu quả cải thiện cao nhất (Chương~\ref{ch:discussion}, Mục~\ref{sec:disc-guardrails}).
+\textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất, không phải lỗi
+suy luận.} Từ 83\% đến 95\% số episode thất bại có ít nhất một hành động bị
+trình duyệt từ chối, tổng cộng 2285 lỗi thực thi trên 655 episode. Phần lớn
+là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử
+mà accessibility tree \emph{thực sự} có hiển thị -- nghĩa là mô hình đã
+chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác. Đây là
+giới hạn của tầng thực thi, không phải của năng lực mô hình, nên khắc phục
+nó là hướng đáng đầu tư nhất (Chương~\ref{ch:discussion},
+Mục~\ref{sec:disc-guardrails}).
 
-\textbf{Hiện tượng mắc kẹt trong vòng lặp (stuck-loop) lý giải khoảng cách hiệu năng trên Reddit.}
-Reddit là môi trường duy nhất mà lỗi vòng lặp lặp lại (56\%) vượt qua lỗi thực thi (25\%) để trở thành nguyên nhân thất bại chủ đạo, với tỷ lệ cao gấp khoảng 1{,}7 lần so với ba website còn lại. Đây đồng thời là website chứng kiến khoảng cách hiệu năng lớn nhất so với hệ thống Go-Browse (20{,}8\% so với 30{,}7\%). Từ đó có thể thấy, rào cản trên Reddit không xuất phát từ việc mô hình mất phương hướng, mà do hệ thống liên tục lặp lại một thao tác vô tác dụng cho đến khi tiêu hao toàn bộ ngân sách bước.
+\textbf{Kẹt vòng lặp lý giải khoảng cách hiệu năng trên Reddit.} Reddit là
+website duy nhất mà lỗi kẹt vòng lặp (56\%) vượt lỗi thực thi (25\%) để trở
+thành nguyên nhân thất bại chính, cao gấp khoảng 1{,}7 lần ba website còn
+lại; đây cũng là nơi có khoảng cách hiệu năng lớn nhất so với Go-Browse
+(20{,}8\% so với 30{,}7\%). Rào cản trên Reddit vì vậy không phải do mô
+hình mất phương hướng, mà do nó lặp lại một thao tác vô ích cho tới khi hết
+ngân sách bước.
 
-\textbf{Tình trạng cạn kiệt ngân sách 15 bước tác động tiêu cực nhất đến GitLab} (45\%),
-điều này hoàn toàn nhất quán với đặc thù của các tác vụ trên GitLab vốn đòi hỏi những chuỗi điều hướng phức tạp và kéo dài. Đáng chú ý, hệ thống \emph{không ghi nhận} bất kỳ episode nào rơi vào tình trạng ``chạm mục tiêu rồi rời đi'', tức là hiện tượng một bước trung gian đã đạt điểm, nhưng episode lại kết thúc với điểm số không. Điểm mù này mang ý nghĩa quyết định đối với tính hợp lệ (validity) của phương pháp đo lường: nó chứng minh rằng giới hạn 15 bước thực sự đang đóng vai trò \emph{thước đo} năng lực của mô hình thay vì \emph{trừng phạt} nó, bởi không có bất kỳ tác vụ nào bị tước điểm do hệ thống ngắt quãng sau khi đã hoàn thành đúng mục tiêu.
+\textbf{Cạn ngân sách 15 bước là nguyên nhân thất bại nặng nhất trên
+GitLab} (45\%), đúng với đặc điểm các tác vụ ở đó vốn cần chuỗi điều hướng
+dài. Đáng chú ý, không episode nào rơi vào tình trạng ``chạm mục tiêu rồi
+rời đi'' -- tức một bước giữa chừng đã đạt điểm nhưng episode kết thúc với
+điểm 0. Đây là bằng chứng cho tính hợp lệ của phép đo: giới hạn 15 bước
+đang đóng vai trò \emph{thước đo} năng lực mô hình, không phải \emph{trừng
+phạt} nó, vì không tác vụ nào bị cắt ngang ngay sau khi đã hoàn thành đúng
+mục tiêu.
 
-\textbf{Hiện tượng ``báo cáo hoàn thành ảo'' (tuyên bố hoàn thành mà không thực hiện thao tác) gần như được triệt tiêu.}
-Chỉ có 3 trên tổng số 519 episode thất bại (0{,}6\%) rơi vào trường hợp gọi hàm \texttt{send\_msg\_to\_user} ngay tại bước đầu tiên mà không tạo ra bất kỳ tương tác nào với trang. Đây chính xác là nhóm hành vi mà cơ chế lọc hành động hiệu quả tại Mục~\ref{sec:exp-data} đã khoanh vùng và xử lý, dẫn đến việc loại bỏ 104 quỹ đạo lỗi khỏi tập dữ liệu huấn luyện. Tỷ lệ rủi ro giảm xuống mức 0{,}6\% là minh chứng trực tiếp cho mối tương quan chặt chẽ giữa quy trình làm sạch dữ liệu và kết quả đánh giá cuối cùng: cổng kiểm duyệt đã hoàn thành đúng mục tiêu loại trừ triệt để nhóm hành vi sai lệch này.
+\textbf{Báo cáo hoàn thành ảo -- tuyên bố xong mà không thao tác gì -- gần
+như biến mất.} Chỉ 3 trên 519 episode thất bại (0{,}6\%) gọi
+\texttt{send\_msg\_to\_user} ngay ở bước đầu tiên mà không hề tương tác với
+trang. Đây đúng là nhóm hành vi mà cổng hành động hữu hiệu ở
+Mục~\ref{sec:exp-data} đã lọc ra, loại 104 quỹ đạo khỏi tập huấn luyện; tỷ
+lệ còn lại 0{,}6\% cho thấy cổng lọc đó làm đúng việc của nó.
 
-\textbf{Đầu ra không thể phân giải (unparseable output) không còn là nguồn gây lỗi đáng kể.}
-Chỉ ghi nhận 2 trên 655 episode (0{,}3\%) buộc phải kết thúc do phản hồi của mô hình không thể phân giải thành định dạng JSON hợp lệ. Việc lưu dữ liệu thô của từng lời gọi LLM trong vết chạy là thứ tách được nhóm lỗi này khỏi những trường hợp mô hình chủ động dừng. Không có nó, cả hai đã bị gộp thành một kết quả thất bại chung chung. Giá trị của phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170 trên 655 episode, tức 26{,}0\% (Bảng~\ref{tab:profile}).
+\textbf{Đầu ra không phân tích được không còn là nguồn gây lỗi đáng kể.}
+Chỉ 2 trên 655 episode (0{,}3\%) kết thúc vì phản hồi của mô hình không phân
+giải được thành JSON hợp lệ. Nhờ lưu dữ liệu thô của từng lời gọi LLM trong
+trace, nhóm lỗi này tách bạch được khỏi trường hợp mô hình chủ động dừng;
+không có nó, hai loại thất bại rất khác nhau sẽ bị gộp làm một. Giá trị của
+phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170
+trên 655 episode, tức 26{,}0\% (Bảng~\ref{tab:profile}).
 
 \subsection{Đối chiếu chân dung lỗi giữa hai mô hình}
 
@@ -757,9 +800,22 @@ chứ không vào việc tiến tới mục tiêu.
 
 \subsection{Tổng kết chương}
 
-Quy trình đầu cuối (end-to-end pipeline) đã được triển khai hoàn chỉnh trên bốn website thực tế. Cụ thể, giai đoạn khám phá đã thu thập thành công 2178 episode và tinh lọc được 1029 quỹ đạo đạt chuẩn; bước tinh chỉnh đã huấn luyện thành công một mô hình 9B tham số với chi phí điện toán GPU đặc biệt tối ưu, chỉ ở mức 6{,}6\,USD. Trong giai đoạn đánh giá toàn diện trên 655 tác vụ chuẩn thức, hệ thống đạt tỷ lệ thành công 20{,}8\%. Thành tích này tiệm cận với các hệ thống tiên tiến nhất trong cùng phân khúc dưới 10B tham số. Phép đối chứng trên chính bốn website đó cho thấy mô hình nền khi chưa tinh chỉnh chỉ đạt 13{,}3\%. Tập dữ liệu do pipeline sinh ra vì vậy đóng góp 7{,}5 điểm phần trăm, và mức đóng góp này đạt ý nghĩa thống kê theo kiểm định cặp trên ba trong bốn website.
+Pipeline đã chạy trọn vẹn trên bốn website thật: giai đoạn khám phá thu
+được 2178 episode và tinh lọc còn 1029 quỹ đạo đạt chuẩn; giai đoạn tinh
+chỉnh huấn luyện một mô hình 9B tham số với chi phí GPU 6{,}6\,USD. Trên bộ
+655 tác vụ chính thức, mô hình đạt tỷ lệ thành công 20{,}8\%, so với
+13{,}3\% của chính mô hình đó khi chưa tinh chỉnh -- chênh lệch 7{,}5 điểm
+phần trăm, đạt ý nghĩa thống kê trên ba trong bốn website
+(Mục~\ref{sec:exp-baseline}). So với các công trình liên quan cùng đo trên
+bốn website này, kết quả nằm trong khoảng của các mô hình mở dưới 10B tham
+số hiện có (Bảng~\ref{tab:related}), dù phép so sánh đó không kiểm soát
+được mô hình gốc và quy mô dữ liệu huấn luyện.
 
-Tuy nhiên, cần nhìn nhận một cách khách quan ba giới hạn cốt lõi của nghiên cứu: thứ nhất, các kết quả đánh giá hiện tại chỉ được ghi nhận từ một lượt chạy (run) duy nhất cho mỗi website (Mục~\ref{sec:exp-stats}); thứ hai, đợt rà soát các episode thành công giả mới được thực hiện một phía, trên mô hình nền tại hai website (Mục~\ref{sec:exp-baseline}); thứ ba, các nghiên cứu cắt bỏ (ablation study) nhằm phân tách và định lượng mức độ đóng góp của từng thành phần trong chuỗi xử lý vẫn chưa được tiến hành (Mục~\ref{sec:exp-ablation}).
+Ba giới hạn cần nêu rõ: các kết quả trên chỉ đến từ một lượt chạy cho mỗi
+website (Mục~\ref{sec:exp-stats}); đợt rà soát episode thành công giả mới
+thực hiện một phía, trên mô hình nền tại hai website
+(Mục~\ref{sec:exp-baseline}); và các ablation nhằm cô lập đóng góp của từng
+thành phần trong pipeline vẫn chưa được chạy (Mục~\ref{sec:exp-ablation}).
 
 Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những
 bài học kỹ thuật rút ra trong quá trình thực hiện.

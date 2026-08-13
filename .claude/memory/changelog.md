@@ -4,6 +4,30 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-13
+
+- **08:26** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex`,
+  `Thesis_report/thesis_hsge_vi/Appendix/glossary.tex` — **rà văn phong Chương
+  4** theo cùng checklist "4 dấu hiệu dịch máy" đã dùng cho C3 (memory 09),
+  đối chiếu với văn phong C1/C2. Sửa nặng nhất ở §4.1.4 (giọng bị động dồn
+  dập + 8 chú tiếng Anh ngoặc đơn dồn trong 1 đoạn), §4.6.2 "Nhận xét từ kết
+  quả phân loại lỗi" (4 đoạn, từ đao to: "minh chứng trực tiếp cho mối tương
+  quan chặt chẽ", "hướng tối ưu mang lại hiệu quả cải thiện cao nhất"), và
+  "Tổng kết chương" (viết lại theo giọng khách quan hơn — bỏ "quy trình đầu
+  cuối đã được triển khai hoàn chỉnh", "chi phí đặc biệt tối ưu", "tiệm cận
+  các hệ thống tiên tiến nhất" — theo yêu cầu user, đúng tinh thần đoạn tự
+  giới hạn đã thêm ở §3.2). Thêm 6 mục vào `glossary.tex` (execution layer,
+  merge, nothink, reward function, serving, trace) rồi bỏ chú inline lặp lại
+  trong C4 cho các từ đó — theo lựa chọn của user (bổ sung glossary thay vì
+  giữ chú hoặc cắt trắng). **Bắt được 1 lỗi kỹ thuật khi rà**: dòng 73/104 có
+  `\texttt{quỹ đạo\_segmenter}` — đợt tự động thay "trajectory"→"quỹ đạo"
+  trước đó ăn nhầm vào một định danh code thật (`trajectory_segmenter`, tên
+  vai trò LLM trong `run_webarena.py`); đã sửa lại đúng tên. Build sạch: 169
+  trang (không đổi), 0 error, 0 undefined ref, overfull 7→9 (2 cái mới đều
+  <7pt, một cái là hệ quả tất yếu của việc sửa bug — cột bảng hẹp với tên dài
+  hơn). Chưa đụng C1/C2 (user chỉ yêu cầu tham khảo văn phong, không mở rộng
+  phạm vi rà soát).
+
 ## 2026-08-12
 
 - **19:46** — `Thesis_report/thesis_hsge_vi/Chapter{1,2,3,4,6}` — **đóng nợ #3

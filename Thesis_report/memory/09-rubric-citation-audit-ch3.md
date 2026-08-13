@@ -309,6 +309,11 @@ Chương ngắn đi 3 trang (36 → 33), nợ #4 (độ dài) nhích một chút
 ("agent" 12 lần / "tác nhân" 0, "task" 21 / "tác vụ" 0). User muốn đọc lại C3
 rồi mới quyết.
 
+**Cập nhật 2026-08-13**: C4 đã rà xong (thuật ngữ hóa ra đã sạch từ đợt đồng bộ
+run 20 trước đó; chỉ còn 4 dấu hiệu dịch máy ở §4.1.4, §4.6.2, "Tổng kết
+chương" + 6 chú tiếng Anh dư bị chuyển vào glossary). Chi tiết: xem entry
+2026-08-13 08:26 trong `.claude/memory/changelog.md`. C5, C6 vẫn chưa đụng.
+
 
 ## Nợ #3 và #5 đã đóng (2026-08-12 19:46)
 

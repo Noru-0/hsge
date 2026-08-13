@@ -32,6 +32,9 @@ crawl / crawling & Duyệt và thu thập trang web tự động theo liên kế
 curriculum & Trình tự huấn luyện sắp xếp dữ liệu từ dễ đến khó. \\
 episode & Một lượt agent thực hiện trọn vẹn một task, tính từ trạng thái
 khởi đầu đến khi thành công, thất bại hoặc hết ngân sách bước. \\
+execution layer & Tầng thực thi: lớp chuyển một hành động đã chọn (click,
+điền form, \dots) thành thao tác thật trên trình duyệt; lỗi ở tầng này
+(phần tử chưa sẵn sàng tương tác) khác với lỗi suy luận của mô hình. \\
 fine-tune / fine-tuning & Tinh chỉnh: huấn luyện tiếp một mô hình đã
 pretrain trên dữ liệu chuyên biệt để chuyên hóa nó cho một nhiệm vụ. \\
 frontier & Biên khám phá: hàng đợi các URL ứng viên chưa thăm, quyết định
@@ -44,8 +47,13 @@ judge & Bộ chấm độc lập: một LLM thứ hai kiểm tra lại các epis
 tự tuyên bố thành công. \\
 low-level task & Task mức thấp: nhiệm vụ ngắn, gắn với một trang cụ thể, do
 LLM đề xuất khi khám phá (phân biệt với semantic task). \\
+merge & Hợp nhất: gộp trọng số đã tinh chỉnh (LoRA) trở lại vào trọng số
+gốc của mô hình, để triển khai suy luận như một mô hình nguyên khối duy nhất. \\
 node & Đỉnh của đồ thị; trong khóa luận là một trang web đã thăm (đồ thị
 tầng thấp) hoặc một skill/operator (đồ thị tầng cao). \\
+nothink & Chế độ tắt chuỗi suy luận hiển thị (chain-of-thought) trong
+chat template của mô hình khi phục vụ suy luận, để khớp với thiết lập lúc
+huấn luyện (prompt parity). \\
 operator & Toán tử lập kế hoạch: một skill được nâng lên dạng
 $\langle$precondition, effect$\rangle$ (điều kiện tiên quyết, hiệu ứng) để
 có thể ghép chuỗi bằng thuật toán lập kế hoạch. \\
@@ -61,6 +69,9 @@ gọi (bao gồm chỉ dẫn hệ thống, quan sát, lịch sử). \\
 prompt parity & Nguyên tắc ``đồng nhất prompt'': prompt trong dữ liệu huấn
 luyện phải trùng khớp từng cấu trúc với prompt agent nhìn thấy lúc chạy
 thật. \\
+reward function & Hàm phần thưởng: hàm chấm điểm thành công/thất bại của
+một task; ở WebArena hàm này kết hợp so khớp URL, so khớp lập trình trên
+DOM và so khớp mờ bằng LLM, tùy loại task. \\
 runtime & Giai đoạn agent thực sự chạy trong môi trường (phân biệt với giai
 đoạn huấn luyện); cũng dùng để chỉ phần mã lo việc vận hành đó. \\
 seed / site seeder & Seed năng lực website: bản tóm tắt trang chủ thành mô tả website kèm bốn tới tám năng lực mà website cho phép người dùng thực hiện; mỗi năng lực trở thành một goal task. \\
@@ -68,11 +79,19 @@ self-host / self-hosted & Tự triển khai trên hạ tầng của mình thay v
 dịch vụ bên thứ ba. \\
 semantic task & Task ngữ nghĩa: nhiệm vụ dài hạn được sinh ra từ operator
 đồ thị toán tử bằng cách ghép chuỗi. \\
+serving & Phục vụ suy luận: giai đoạn triển khai mô hình đã huấn luyện để
+trả lời request thật (phân biệt với giai đoạn huấn luyện); trong khóa luận
+dùng vLLM làm engine serving. \\
 skill & Kỹ năng: một hành vi tái sử dụng được, có tham số, được phát hiện
 từ các trajectory lặp lại và kiểm chứng trước khi đưa vào thư viện. \\
 subgoal & Mục tiêu con: một chặng có thứ tự trong kế hoạch phân rã từ một tác vụ ngữ nghĩa; solver ở chế độ bám subgoal chỉ làm việc trên subgoal hiện tại. \\
 task & Nhiệm vụ giao cho agent, phát biểu bằng ngôn ngữ tự nhiên. \\
-tautology & Mệnh đề hiển nhiên đúng: ở đây là một effect của operator chỉ lặp lại chính precondition của nó, nên không diễn tả thay đổi trạng thái nào. \\
+tautology & Mệnh đề hiển nhiên đúng: ở đây là một effect của operator chỉ
+lặp lại chính precondition của nó, nên không diễn tả thay đổi trạng thái
+nào. \\
+trace & Bản ghi chi tiết một episode: các bước của solver, dữ liệu thô
+từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác -- dùng để phân
+tích lỗi sau khi episode kết thúc. \\
 trajectory & Quỹ đạo tương tác: chuỗi các cặp (quan sát, hành động) sinh ra
 khi agent thực hiện một task. \\
 unprefixed sampling & Lấy mẫu không tiền tố: giải lại một tác vụ đã thành công từ trang chủ thay vì từ trang gắn với nó, để quỹ đạo chứa cả phần tìm đường. \\
