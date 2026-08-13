@@ -4,6 +4,30 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-14
+
+- **05:34** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex`,
+  `Thesis_report/thesis_hsge_vi/main.tex` — **rà văn phong Chương 3 theo
+  checklist chi tiết của user** (`temp/thesis.md`, ~40 mục từ §3.0 đến
+  §3.9), duyệt tuần tự từng section qua nhiều lượt hỏi-đáp trong phiên.
+  Các nhóm sửa chính: thêm Go-Browse làm nền tảng kế thừa thứ 6 (bảng
+  `tab:novelty`) và định nghĩa "khám phá phẳng" ngay tại chỗ dùng; "trần"
+  → "giới hạn" xuyên suốt §3.4 (8 chỗ); "nuôi khâu phát hiện" → "được đưa
+  vào khâu phát hiện"; giải thích các thuật ngữ dùng lần đầu mà chưa từng
+  định nghĩa (độ chín, vị từ mục tiêu, bộ ba/option, URL ứng viên, chuỗi
+  bình luận, cơ chế nguyên tử); "hiện thực(hóa)" → "cài đặt" (5 chỗ,
+  không phải từ chuẩn CNTT); "điểm kiểm tra (checkpoint)" → "checkpoint"
+  tiếng Anh xuyên suốt; rút gọn 1 đoạn trùng lặp ở §3.6.3 bằng cross-ref
+  thay vì diễn giải lại. **Quy tắc mới phát sinh trong phiên**: mọi dấu
+  gạch đôi `--` (LaTeX ra gạch dài, đọc như văn phong AI) đổi thành gạch
+  đơn `-` — áp dụng toàn Chương 3 (21 chỗ), chưa áp cho các chương khác
+  (C4 6 chỗ, C5 11, C6 1, Phụ lục 1 10 — còn treo nếu user muốn quét
+  tiếp). Kèm 1 sửa nhỏ không liên quan: thêm `\usepackage{cmap}` vào
+  `main.tex` (tồn đọng chưa commit từ phiên trước, hỗ trợ tìm/copy chữ
+  trong PDF) — tách commit riêng. Build sạch xuyên suốt mọi bước: 169
+  trang, 0 error, 0 undefined ref. Commit `16b7cb3` (cmap) +
+  `61399a0` (Chương 3), đã push lên `origin/Skill_Operator`.
+
 ## 2026-08-13
 
 - **21:55** — `README.md`, `datasets/README.md` — **cập nhật README gốc
