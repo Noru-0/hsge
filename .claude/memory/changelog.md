@@ -6,6 +6,20 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **21:18** — `.gitignore`, `outputs/eval/`, `training_data/` — **push lên
+  GitHub** (`origin/Skill_Operator`, 85 commit, `6333b74..97d8209`), theo
+  yêu cầu user: code + toàn bộ công việc thesis đã commit trước đó, cộng
+  `training_data/` (4605 mẫu, trừ 2 file `.bak` trùng lặp) và
+  `outputs/eval/` (112MB kết quả eval đã tổng hợp: json từng task + báo cáo
+  bất thường, không ảnh chụp màn hình) làm "eval proof". **Loại trừ đúng
+  yêu cầu** ("trừ dữ liệu explore được"): `outputs/wa_run_20_*` (4 đợt khám
+  phá chính thức) và `outputs/wa_eval_*`/`wa_eval_*_1` (6 thư mục run eval
+  thô, ~4,6GB, ~9000 ảnh chụp/bước) — sửa `.gitignore` từ `outputs/` (chặn
+  cả thư mục) thành `outputs/*` + `!outputs/eval/` (chặn mọi thứ trừ eval
+  đã tổng hợp). Không đụng `Thesis_report/papers/` (PDF bên thứ ba, không
+  thuộc phạm vi yêu cầu, có rủi ro bản quyền nếu đưa lên) và `temp/` (bản
+  backup trùng lặp của `outputs/eval/`, không cần thiết).
+
 - **09:07** — `Thesis_report/thesis_hsge_vi/Appendix/appendix1.tex` — **đảo
   ngược quy ước thuật ngữ xong toàn quyển.** 6 chỗ "tinh chỉnh" xử lý bằng
   cụm cố định, rồi `revert_terms.py` (46 tác vụ→task, 12 quỹ đạo→trajectory,
