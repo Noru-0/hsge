@@ -315,11 +315,17 @@ Nguyên tắc chung (không đổi): thuật ngữ đã có trong `glossary.tex`
 **không chú thích lại** mỗi lần dùng (quy ước user ở
 [05-bai-hoc-review](05-bai-hoc-review.md)).
 
-**Tiến độ đảo ngược** (theo dõi để không sót chương): C1 xong (13-08 08:48).
-C2, C3, C4, C5, C6, Phụ lục 1 còn phải làm — quy mô ước tính ban đầu ~650+
-chỗ toàn quyển (agent ~89, task ~348, trajectory ~99, fine-tune ~86, effect
-27, precondition 13, accessibility tree 9, serving 8, predicate registry 3,
-execution layer 3, merge 2, reward function 1 — đếm trước khi sửa C1).
+**Tiến độ đảo ngược — HOÀN TẤT 13-08 09:07.** C1→C2→C3→C4→C5→C6→Phụ lục 1,
+7 commit riêng biệt (08:48→09:07). Rà lại toàn quyển sau cùng: chỉ còn 2 chỗ
+tiếng Việt sót lại, cả hai có chủ đích (C1 dòng 37 — bilingual gloss đầu
+tiên của precondition/effect; C2 dòng 137 — "tinh chỉnh" nghĩa refine kỹ
+năng, không phải ML fine-tuning). Công cụ dùng: script
+`revert_terms.py` (đã xóa khỏi scratchpad, không lưu trong repo — thay thế
+cụm dài trước/đơn từ sau + dọn chú song ngữ trùng lặp) cho khối lượng lớn,
+cộng sed/Edit tay cho "tinh chỉnh" (luôn cần xét ngữ cảnh danh từ/động từ
+fine-tune vs fine-tuning, và tách bạch với nghĩa "refine" chung chung).
+Build sạch xuyên suốt tất cả 7 lần: 0 error, 0 undefined ref, trang giảm
+169→167 (tiếng Anh ngắn hơn), overfull 9→8.
 
 **Tác động lên các khoản nợ đang mở:** nợ #5 (văn phong) đỡ được một phần —
 câu ≥ 40 âm tiết 62 → 46 theo cách đếm tự động, nhưng đây là **tác dụng phụ**

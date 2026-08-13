@@ -6,6 +6,17 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **09:07** — `Thesis_report/thesis_hsge_vi/Appendix/appendix1.tex` — **đảo
+  ngược quy ước thuật ngữ xong toàn quyển.** 6 chỗ "tinh chỉnh" xử lý bằng
+  cụm cố định, rồi `revert_terms.py` (46 tác vụ→task, 12 quỹ đạo→trajectory,
+  5 tác nhân→agent, + 6 từ khác). Build sạch: 167 trang, 0 error, 0
+  undefined ref, overfull 9→8. Rà lại toàn bộ 6 chương + phụ lục: chỉ còn 2
+  chỗ tiếng Việt sót lại, cả hai **có chủ đích**: (1) C1 dòng 37 — bilingual
+  gloss đầu tiên của precondition/effect theo quyết định của user; (2) C2
+  dòng 137 — "tinh chỉnh" nghĩa refine kỹ năng (SkillWeaver), không phải ML
+  fine-tuning, tránh false positive. **Đợt đảo ngược thuật ngữ hoàn tất**:
+  C1→C2→C3→C4→C5→C6→Phụ lục 1, tổng cộng ~700+ chỗ trên 7 commit riêng biệt
+  cùng ngày (08:48→09:07).
 - **09:06** — `Thesis_report/thesis_hsge_vi/Chapter6/chapter6.tex` — tiếp tục
   đảo ngược quy ước thuật ngữ. 12 chỗ "tinh chỉnh" xử lý bằng cụm cố định
   trước, rồi `revert_terms.py` (21 tác vụ→task, 9 tác nhân→agent, 8 quỹ
