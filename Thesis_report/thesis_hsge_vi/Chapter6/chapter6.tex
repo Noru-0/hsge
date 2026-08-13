@@ -88,7 +88,7 @@ Bảng~\ref{tab:objectives} đối chiếu các mục tiêu đã đề ra trong
 Mục~\ref{sec:intro-contrib} với những kết quả đạt được của khóa luận.
 
 \small
-\begin{longtable}{@{}L{1.0cm} L{5.6cm} L{6.4cm}@{}}
+\begin{longtable}{@{}L{1.0cm} L{4.6cm} L{7.4cm}@{}}
 \caption[Mục tiêu của khóa luận và kết quả đạt được]{Đối chiếu các mục tiêu
 đặt ra trong Mục~\ref{sec:intro-contrib} với kết quả đạt được.}
 \label{tab:objectives}\\
@@ -164,14 +164,16 @@ còn có thể đi tiếp, cả về quy mô dữ liệu lẫn hiệu quả củ
 
 \textbf{Mở rộng quy mô thu thập dữ liệu.}
 Tập dữ liệu hiện tại (4288 mẫu huấn luyện) vẫn nhỏ hơn khoảng một bậc độ
-lớn so với các công trình cùng hướng, vốn dùng 40--45 nghìn bước tương tác.
-Pipeline HSGE không phụ thuộc vào một website cụ thể và đã hỗ trợ cơ chế
-chuyển giao skill giữa các website có cấu trúc tương đồng. Mở rộng sang nhiều website hơn, đồng thời tái dùng các skill đã học, sẽ cho
-một tập dữ liệu đa dạng hơn mà không phải dựng lại toàn bộ quá trình khám phá.
-Nhưng kết quả liên-website ở Mục~\ref{sec:exp-ablation} cảnh báo một điều:
-lượng dữ liệu thu được cho một website không dự đoán được điểm số trên chính
-website đó. Vì vậy việc mở rộng nên nhắm vào \emph{độ phủ} và \emph{độ khó}
-của task, chứ không chỉ vào số lượng mẫu.
+lớn so với các nghiên cứu cùng hướng vốn sử dụng khoảng 40.000 đến 45.000 bước tương
+tác. Do pipeline HSGE không phụ thuộc vào một website cố định và đã hỗ trợ
+cơ chế chuyển giao skill giữa các giao diện tương đồng, việc mở rộng sang
+nhiều nền tảng mới kết hợp tái sử dụng các skill đã tích lũy sẽ giúp gia tăng
+độ đa dạng của dữ liệu mà không cần thực thi lại toàn bộ quá trình khám phá.
+Tuy nhiên, kết quả đánh giá cross-website ở Mục~\ref{sec:exp-ablation} đưa ra
+một lưu ý quan trọng: khối lượng dữ liệu thu thập trên một website không tỉ
+lệ thuận với hiệu năng đạt được trên chính website đó. Do đó, định hướng
+mở rộng dữ liệu tiếp theo nên ưu tiên nâng cao \emph{độ phủ} và \emph{độ khó}
+của task, thay vì chỉ gia tăng đơn thuần về số lượng mẫu.
 
 \textbf{Giảm tỷ lệ hành động thất bại ở lớp thực thi.}
 Phân tích nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) cho thấy từ
@@ -185,14 +187,12 @@ thực thi ít sinh ra lỗi khả thao tác giả hơn.
 \textbf{Khai thác tín hiệu kiểm chứng để huấn luyện.}
 Ngoài tập dữ liệu dùng cho fine-tuning có giám sát, pipeline còn để lại nhiều
 tín hiệu khác: trajectory đã được judge xác nhận, trajectory thất bại, và episode
-kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở
-thích hoặc học tăng cường dùng được cả những tín hiệu này, tức tận dụng được
-cả phần chưa thành công thay vì chỉ học trên mẫu đúng.
+kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở thích (Preference-based Optimization) hoặc học tăng cường (Reinforcement Learning) có thể khai thác triệt để các nguồn tín hiệu này, giúp mô hình học tập được từ cả những trường hợp chưa thành công thay vì chỉ giới hạn trên các mẫu đạt chuẩn.
 
 \textbf{Mở rộng sang các mô hình nhỏ hơn.}
 Qwen3.5-9B đã nhỏ hơn hẳn các mô hình lớn thường dùng cho web agent,
 nhưng chi phí triển khai vẫn còn cao với một số môi trường thực tế. Hướng tiếp
-theo là chưng cất hành vi của agent đã fine-tune xuống mô hình cỡ 1B--3B,
+theo là chưng cất hành vi của agent đã fine-tune xuống mô hình cỡ 1B-3B,
 để xem phương pháp còn giữ được hiệu quả tới đâu khi dung lượng mô hình giảm
 tiếp.
 
@@ -207,13 +207,12 @@ thức có cấu trúc trong cùng một hệ thống web agent.
 Ba hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất là lặp
 phép đo: mỗi cấu hình chạy ít nhất ba lần cho cả hai mô hình, báo cáo trung
 bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất. Đi kèm là hai việc dọn
-dẹp phép đo hiện tại -- rà soát đối xứng các episode được chấm thành công của
+dẹp phép đo hiện tại: rà soát đối xứng các episode được chấm thành công của
 cả hai mô hình, và chạy lại Shopping cùng Shopping Admin một cách tuần tự.
 Thứ hai là ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng
 ngân sách; đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu
 trúc đồ thị, và cũng là phần còn thiếu để phát biểu mạnh hơn về phương pháp.
-Thứ ba là mở rộng sang các bộ chuẩn web agent khác, cùng những thước đo
-chi tiết hơn tỷ lệ thành công nhị phân, chẳng hạn mức độ tiến bộ từng phần.
+Thứ ba là mở rộng sang các bộ chuẩn (benchmark) khác, kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân (binary success rate), chẳng hạn như chỉ số tiến bộ từng phần (partial progress).
 
 \vspace{1em}
 \noindent

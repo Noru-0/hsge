@@ -1,4 +1,4 @@
-\chapter{Thiết kế chi tiết}
+\chapter{Chi tiết thiết kế kiến trúc hệ thống}
 \label{app:design}
 
 Phụ lục này ghi lại phần chi tiết cài đặt mà Chương~\ref{ch:method} cố ý lược
@@ -7,7 +7,7 @@ trừu tượng backend cho phép cùng một pipeline chạy trên mock hoặc 
 duyệt thật, và cấu hình chính xác đã dùng cho các run báo cáo ở
 Chương~\ref{ch:experiments}.
 
-\section{Bản đồ module}
+\section{Bản đồ module phần mềm}
 \label{app:design-modules}
 
 Bảng~\ref{tab:app-modules} liệt kê mọi module của phần cài đặt kèm vai trò của
@@ -16,9 +16,9 @@ từ một trajectory thô đến một skill được chấp nhận chưa tới
 điều đó làm cho bộ test mock tất định trở nên khả thi.
 
 {\footnotesize
+\setlength{\LTcapwidth}{\textwidth}
 \begin{longtable}{@{}L{4.3cm}rL{8.0cm}@{}}
-\caption[Bản đồ module của phần cài đặt HSGE]{Bản đồ module. Số dòng chỉ tính
-phần cài đặt, không tính test.}
+\caption[Bản đồ module của phần cài đặt HSGE]{Bản đồ module. Số dòng chỉ tính phần cài đặt, không tính test.}
 \label{tab:app-modules}\\
 \toprule
 \textbf{Module} & \textbf{Dòng} & \textbf{Vai trò} \\
@@ -146,16 +146,9 @@ module là điều làm cho các artifact do LLM sinh ra có thể soi xét đư
 
 \noindent
 {\sloppy
-Sự tương ứng với khung options là trực tiếp và có chủ đích: một
-\texttt{SkillCard} chính là một option $\langle I, \pi, \beta \rangle$ với ba
-thành phần lần lượt là \texttt{precondition}, \texttt{action\_template} cùng
-các \texttt{slots}, và \texttt{success\_predicate}. Còn
-\texttt{action\_signature} của một \texttt{SubTrajectory}, chỉ gồm dãy động
-từ hành động, là thứ làm cho việc gom cụm không phụ thuộc site: đăng nhập
-trên hai site khác nhau cho cùng một signature dù mọi selector và giá trị đều
-khác.\par}
+Mô hình \texttt{SkillCard} được thiết kế dựa trên sự ánh xạ trực tiếp với khung lý thuyết Option (Options Framework): một \texttt{SkillCard} tương ứng với một option $\langle I, \pi, \beta \rangle$, trong đó ba thành phần cốt lõi lần lượt là \texttt{precondition}, \texttt{action\_template} (kèm các \texttt{slots}), và \texttt{success\_predicate}. Bên cạnh đó, chỉ số \texttt{action\_signature} của một \texttt{SubTrajectory} (chỉ chứa chuỗi các động từ hành động) cho phép quá trình gom cụm đạt tính độc lập với từng trang web. Nhờ vậy, hành vi như đăng nhập trên hai website khác nhau vẫn thu được cùng một chữ ký (\texttt{signature}), ngay cả khi mọi bộ chọn (\texttt{selector}) hay dữ liệu nhập vào hoàn toàn khác biệt.\par}
 
-\section{Lớp tách backend}
+\section{Lớp trừu tượng hóa môi trường thực thi}
 \label{app:design-backends}
 
 Ba giao diện tách pipeline khỏi mọi thứ tốn tiền, cần GPU, hoặc cần site thật:
@@ -182,7 +175,7 @@ Nhờ lớp tách hẹp này, toàn bộ pipeline khám phá được kiểm th�
 tất định khẳng định chính xác số skill và số cạnh compose, mà không cần API
 key, GPU hay trình duyệt nào.
 
-\section{Cấu hình model theo vai trò}
+\section{Phân bổ và cấu hình mô hình theo vai trò}
 \label{app:design-config}
 
 Mỗi thành phần dùng LLM được cấu hình độc lập, nhờ đó phần việc rẻ có thể giao
@@ -193,29 +186,27 @@ phân bổ đã dùng cho các run ở Chương~\ref{ch:experiments}.
 
 \begin{table}[H]
 \centering
-\caption[Phân bổ model theo vai trò]{Phân bổ model theo vai trò. Cột ``Số lần
-gọi'' là bậc độ lớn số lần gọi trên mỗi node, chính nó biện minh cho đánh
-đổi chi phí/độ mạnh ở từng dòng.}
+\caption[Phân bổ mô hình theo vai trò]{Phân bổ mô hình theo từng vai trò trong các đợt khám phá. Cột ``Số lần gọi'' thể hiện tần suất gọi mô hình, làm cơ sở lý giải sự đánh đổi giữa chi phí tính toán và năng lực mô hình ở từng tác vụ.}
 \label{tab:app-roles}
 \footnotesize
-\begin{tabular}{@{}L{3.6cm}L{2.8cm}L{2.6cm}L{4.4cm}@{}}
+\begin{tabular}{@{}L{3.6cm}L{2.8cm}L{2.8cm}L{4.2cm}@{}}
 \toprule
-\textbf{Vai trò} & \textbf{Model} & \textbf{Số lần gọi} & \textbf{Ghi chú} \\
+\textbf{Vai trò} & \textbf{Mô hình} & \textbf{Số lần gọi} & \textbf{Ghi chú} \\
 \midrule
-\texttt{page\_explorer} & GPT-4o & một lần/node & Vision + Set-of-Marks,
-\texttt{detail=low}, temperature 0,7 để đề xuất đa dạng \\
-\texttt{solver} & GPT-4o-mini & tối đa
-\texttt{max\_steps}/episode & Vision + Set-of-Marks, temperature 0,0 \\
-\texttt{trajectory\_segmenter} & DeepSeek & mỗi trajectory & Chỉ văn bản \\
-\texttt{skill\_abstractor} & DeepSeek & mỗi cụm chín & Chỉ văn bản \\
-\texttt{skill\_verifier} & DeepSeek & mỗi skill ứng viên & Chỉ văn bản \\
-\texttt{operator\_inducer} & DeepSeek & mỗi skill được nhận & Chỉ văn bản \\
-\texttt{episode\_judge} & DeepSeek & mỗi lần tự nhận đạt & Chỉ văn bản \\
+\texttt{site\_seeder} & GPT-5.6-luna & 1 lần/domain & Đọc trang chủ, đề xuất hồ sơ năng lực website \\
+\texttt{page\_explorer} & GPT-5.6-luna & 1 lần/node & Vision + Set-of-Marks, \texttt{detail=low}, temperature 0,7 \\
+\texttt{solver} & GPT-5.6-luna & tối đa 15 lần/episode & Vision + Set-of-Marks, temperature 0,0 \\
+\texttt{solver\_goal} & GPT-5.6-terra & tối đa 25 lần/episode & Vision + Set-of-Marks, chỉ cho task GOAL nhiều bước \\
+\texttt{trajectory\_segmenter} & DeepSeek-chat & mỗi trajectory & Chỉ văn bản, phân đoạn vết chạy thành kỹ năng \\
+\texttt{skill\_abstractor} & DeepSeek-chat & mỗi cụm 9 mẫu & Chỉ văn bản, trừu tượng hóa tên và tham số kỹ năng \\
+\texttt{skill\_verifier} & DeepSeek-chat & mỗi skill ứng viên & Chỉ văn bản, kiểm chứng tiền/hậu điều kiện kỹ năng \\
+\texttt{operator\_inducer} & DeepSeek-chat & mỗi skill nhận được & Chỉ văn bản, quy nạp toán tử lập kế hoạch \\
+\texttt{episode\_judge} & DeepSeek-chat & mỗi lần tự nhận đạt & Chỉ văn bản, chấm độc lập trạng thái cuối episode \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Tham số chạy}
+\section{Thông số cấu hình thực thi}
 \label{app:design-params}
 
 Bảng~\ref{tab:app-params} liệt kê các tham số chạy không thuộc diện bí mật.
@@ -255,18 +246,12 @@ tập tin cấu hình, rồi giá trị mặc định.
 \end{tabular}
 \end{table}
 
-\chapter{Các prompt}
+\chapter{Danh mục các Prompt hệ thống}
 \label{app:prompts}
 
-Mọi prompt được chép lại nguyên văn, đúng dạng model thực sự nhận được, và giữ
-nguyên tiếng Anh vì đó chính là văn bản chạy thật. Chúng được đặt ở đây thay vì
-trong Chương~\ref{ch:method} vì cách diễn đạt chính xác của chúng là kết quả
-của những sửa chữa hành vi bàn ở Chương~\ref{ch:discussion}: việc phân loại
-task có cấu trúc, điều cấm lộ đáp án và điều cấm đề xuất trùng lặp ở
-Mục~\ref{app:prompt-explorer} mỗi thứ đều thay thế cho một cách diễn đạt đã bị
-một run thật chứng minh là hỏng.
+Tất cả các prompt được trích dẫn nguyên văn theo đúng định dạng mô hình nhận được trong thực tế và giữ nguyên bằng tiếng Anh nhằm đảm bảo tính xác thực với hệ thống thực thi. Phần này được đặt ở phụ lục thay vì trình bày trong Chương~\ref{ch:method}, bởi cách diễn đạt chi tiết của từng prompt là kết quả của quá trình hiệu chỉnh và tối ưu hành vi được phân tích tại Chương~\ref{ch:discussion}. Cụ thể, các quy định như phân loại tác vụ có cấu trúc, lệnh cấm rò rỉ đáp án hay quy tắc ngăn chặn đề xuất trùng lặp ở Mục~\ref{app:prompt-explorer} đều được rút ra nhằm khắc phục những cách diễn đạt trước đó vốn đã bị thực nghiệm chứng minh là không hiệu quả.
 
-\section{Không gian hành động}
+\section{Không gian hành động của tác tử}
 \label{app:prompt-actions}
 
 Được dùng chung bởi prompt của solver và bộ dựng dataset ngoại tuyến, nhờ đó
@@ -291,20 +276,20 @@ impossible on this site, NOT when you are stuck, out of ideas, or cannot find
 something yet. If an element is not visible, navigate or look elsewhere first.
 \end{lstlisting}
 
-\section{Page explorer}
+\section{Prompt khám phá trang (Page Explorer)}
 \label{app:prompt-explorer}
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 PROPOSE concrete, feasible tasks a typical user could do on THIS page.
-Return JSON {"tasks": [{"text": "...", "type":
-"INFO"|"NAV"|"MOD"|"COMPOSITE"}, ...]}.
+Return JSON {"tasks": [{"text": "...", "type": "INFO"|"NAV"|"MOD"|"COMPOSITE"}, ...]}.
 Phrase every task the way a real user would state their GOAL or intent - a
 natural request, NOT a click-by-click script. Say WHAT they want, not which
 buttons to press.
   GOOD: 'How much did I spend on shopping in March?', 'Add a Samsung Galaxy
-  S21 to my wish list'.
+  S21 to my wish list', 'Show me the cheapest in-stock wireless mouse and add
+  it to the cart'.
   BAD (too rigid / step-by-step): 'Click the March filter, then read the
-  total'.
+  total', 'Open the product page, click Add to Wishlist'.
 Rules:
 - Be SPECIFIC using names/values visible on the page (e.g. 'Add the Sony PS5
   to the cart', 'Open the post titled "Best budget GPU"'), NOT generic
@@ -312,14 +297,17 @@ Rules:
 - "type" must be exactly one of: INFO (find/extract a fact), NAV (reach a
   specific page), MOD (change content/state - post, vote, add to cart, edit),
   COMPOSITE (a goal that inherently needs SEVERAL actions to satisfy, stated
-  as ONE natural intent - e.g. 'Buy the cheapest in-stock wireless mouse' -
-  name the concrete targets from THIS page, but do NOT spell out the
-  individual steps). List COMPOSITE tasks FIRST, then MOD, then INFO. Include
-  at least 2-3 COMPOSITE tasks whenever the page affords a multi-step goal -
-  these are how reusable, chainable skills get discovered - and include a few
-  INFO fact-lookup tasks specific to this page. Propose AT MOST ONE NAV task
+  as ONE natural intent - e.g. 'Buy the cheapest in-stock wireless mouse', 'Post a
+  reply to the top comment on the newest post in r/technology', 'Add all books
+  by Jane Smith to the cart and open the cart' - name the concrete targets from
+  THIS page, but do NOT spell out the individual steps). List COMPOSITE tasks
+  FIRST, then MOD, then INFO. Include at least 2-3 COMPOSITE tasks whenever the
+  page affords a multi-step goal - these are how reusable, chainable skills get
+  discovered - and include a few INFO fact-lookup tasks specific to this page
+  (information-seeking is common in real use). Propose AT MOST ONE NAV task
   (list it LAST), and only to reach an important page that no COMPOSITE/MOD
-  task here would visit.
+  task here would visit: COMPOSITE and MOD tasks already navigate to new pages
+  as they act, so a single NAV is enough as a reserve.
 - INFO tasks must name WHAT to find (e.g. 'Find the number of submissions for
   r/relationship_advice'), but must NEVER state the value/answer itself in the
   task text (NOT 'Find the number of submissions for r/relationship_advice
@@ -339,7 +327,9 @@ Rules:
 - If THIS page has a form with MULTIPLE input fields (e.g. checkout, create a
   listing/post, edit profile, contact/review form), do NOT propose a task that
   fills just one field in isolation ('Enter an email in the email box').
-  Propose ONE task that completes the WHOLE form to accomplish its purpose.
+  Propose ONE task that completes the WHOLE form to accomplish its purpose -
+  e.g. 'Fill out the checkout form and place the order', 'Create a new forum by
+  completing the form', 'Submit a product review with a rating and comment'.
   Such a task is naturally COMPOSITE.
 - Focus on common things a real user of THIS site would do; skip niche tasks.
 - NEVER propose an account/authentication task - log in, log out, sign in,
@@ -359,7 +349,7 @@ type MOD / content-modification tasks (no posting, commenting, voting, adding
 to cart, or checkout).
 \end{lstlisting}
 
-\section{Site seeder}
+\section{Prompt khởi tạo năng lực (Site Seeder)}
 \label{app:prompt-seeder}
 
 Được gọi đúng một lần cho mỗi lượt chạy, trên trang chủ. Ba ràng buộc
@@ -379,24 +369,39 @@ Rules:
 - Each "goal" must be a concrete, self-contained user intent phrased the way a
   real user would state it (WHAT they want), NOT a click-by-click script.
 - Each "goal" must inherently take SEVERAL actions to satisfy - a multi-step
-  flow, not a one-shot lookup.
+  flow, not a one-shot lookup. GOOD: 'Buy the cheapest in-stock wireless mouse
+  and reach the order confirmation', 'Post a new question to the most active
+  forum and add a first comment'. BAD (single lookup): 'Find the store's phone
+  number'. BAD (step script): 'Click Cart, then click Checkout, then click Pay'.
 - Each "goal" must END in a CONCRETE, VERIFIABLE state that a checker (or a
-  person) could confirm from the resulting page. AVOID open-ended activities
-  whose completion is TRIVIAL TO CLAIM: never phrase a goal around 'explore',
-  'browse', 'look around', 'view the site/category', or 'find items of
-  interest'.
+  person) could confirm from the resulting page - e.g. a specific item is in
+  the cart, a specific product page is open, a new post is visible. AVOID
+  open-ended activities whose completion is TRIVIAL TO CLAIM: never phrase a
+  goal around 'explore', 'browse', 'look around', 'view the site/category', or
+  'find items of interest'. BAD (open-ended): 'Explore the electronics
+  category', 'Click product showcases to view details'. GOOD (verifiable):
+  'Open the Electronics category and add the first in-stock item to the cart',
+  'Search for "wireless mouse" and open the top result's product page'.
 - Every INPUT the goal needs must either be STATED in the goal itself or be
-  derivable from the page (e.g. 'the cheapest one', 'the most recent order').
-  NEVER leave a value for the agent to invent - it cannot know which one you
-  meant and will correctly refuse.
+  derivable from the page (e.g. 'the cheapest one', 'the first result', 'the
+  most recent order'). NEVER leave a value for the agent to invent - it cannot
+  know which one you meant and will correctly refuse. BAD (unspecified value):
+  'Edit a product's price and quantity and save', 'Update an order's status'.
+  GOOD (value stated): 'Set the price of the first product in the catalog to
+  19.99 and save'. GOOD (value derivable): 'Open the most recent order and
+  change its status to the next one its page offers'.
 - Ground every capability in what THIS site actually offers - use section/menu
-  names visible in the tree. Do NOT invent features you cannot see.
+  names visible in the tree. Do NOT invent features you cannot see on the page.
 - Prefer capabilities whose completion CHANGES site state or reaches a NEW page
-  over pure read-only lookups.
-- NEVER include an account/authentication goal.
+  (these yield chainable, reusable skills) over pure read-only lookups.
+- NEVER include an account/authentication goal - log in/out, sign in/up,
+  register, create an account, change/reset/forgot password, edit email/username,
+  manage security settings, or delete/deactivate the account. The session is
+  already authenticated and the account is shared across runs, so these are
+  useless and risk locking the run out.
 \end{lstlisting}
 
-\section{Bộ lập kế hoạch subgoal}
+\section{Prompt lập kế hoạch mục tiêu con (Subgoal Planner)}
 \label{app:prompt-planner}
 
 Chỉ được gọi cho các task GOAL, khi \texttt{plan\_subgoals} được bật.
@@ -407,8 +412,9 @@ will complete one at a time, in order, to achieve the GOAL on the current site.
 You are given the GOAL and the current page (URL + accessibility tree).
 Return JSON {"subgoals": ["<subgoal 1>", "<subgoal 2>", ...]}.
 Rules:
-- 2-5 subgoals. Each is a single, concrete, checkable step stated as an intent,
-  NOT a click-by-click script.
+- 2-5 subgoals. Each is a single, concrete, checkable step stated as an intent
+  (e.g. 'Open the Electronics category page', 'Select the first in-stock product',
+  'Add it to the cart'), NOT a click-by-click script.
 - Order them so each subgoal leaves the page in the state the next needs.
 - The LAST subgoal must correspond to the GOAL's final end-state (what a grader
   would check), so completing it means the whole GOAL is done.
@@ -417,7 +423,7 @@ Rules:
 - If the GOAL is already a single concrete step, return it as one subgoal.
 \end{lstlisting}
 
-\section{Solver}
+\section{Prompt thực thi tác vụ (Solver)}
 \label{app:prompt-solver}
 
 Đây chính là prompt mà model đã fine-tune được huấn luyện theo; bộ dựng dataset
@@ -431,14 +437,16 @@ from the page accessibility tree (elements shown as [bid] role 'name').
 Think step by step; reflect on your past actions and any error from your last
 action before deciding. Output ONE action as JSON
 {"thought": "...", "action": "<one action>"}.
-Examples: {"thought": "Open the product", "action": "click('12')"} ;
+Examples: {"thought": "I need to open the product to read its price. It is
+the link with bid 12.", "action": "click('12')"} ;
 {"thought": "My last action failed because bid 41 does not exist on this page.
 Looking at the tree again, the search box is bid 57, so I will type there
 instead.", "action": "fill('57','wireless mouse')"} ;
 {"thought": "My click on bid 41 timed out, so the element is on the page but
 not clickable yet - it is probably below the fold. I will scroll down to bring
 it into view before clicking it again.", "action": "scroll(0, 400)"} ;
-{"thought": "Goal met", "action": "send_msg_to_user('done: price is $19')"}.
+{"thought": "I found the information requested, I will send it to the
+user.", "action": "send_msg_to_user('done: price is $19')"}.
 When the `# Error Message from Last Action` section is not (none), your thought
 MUST say what went wrong and what you are doing differently - never repeat the
 action that just failed.
@@ -448,7 +456,7 @@ destination the goal is DONE - call send_msg_to_user immediately; do NOT
 click the same link again.
 \end{lstlisting}
 
-\section{Induction operator}
+\section{Prompt quy nạp toán tử và kiểm chứng (Operator Induction \& Grounding)}
 \label{app:prompt-operator}
 
 Chỉ dẫn buộc tái dùng nguyên văn một predicate đã biết chính là cơ chế
@@ -463,10 +471,13 @@ in short, site-agnostic natural language. Preconditions = what must already be
 true to apply the skill; effects = what becomes true after.
 State preconditions and effects as PAGE STATES - what page or screen the user
 is on and what is visible on it (e.g. 'on the product listing page', 'the cart
-page is shown') - NOT the mere presence of one element ('a cart link is
-present'). Include at least one precondition naming the ENTRY page-state and at
-least one effect naming the EXIT page-state, worded so a later skill starting
-from that exit state would phrase its own entry precondition identically.
+page is shown', 'the checkout page is shown') - NOT the mere presence of one
+element ('a cart link is present'). Include at least one precondition naming the
+ENTRY page-state and at least one effect naming the EXIT page-state, worded so
+a later skill starting from that exit state would phrase its own entry
+precondition identically. This shared page-state vocabulary is what lets one
+skill's effect satisfy another skill's precondition so the planner can chain
+them.
 The EXIT page-state MUST DIFFER from the ENTRY page-state. If the skill stays
 on the same page, do not repeat the entry phrase - name the same page QUALIFIED
 by what the skill established on it, e.g. entry 'on the product edit page' ->
@@ -505,7 +516,7 @@ per predicate, with member_holds having exactly one boolean per occurrence in
 the order given.
 \end{lstlisting}
 
-\section{Judge cho episode}
+\section{Prompt đánh giá kết quả (Episode Judge)}
 \label{app:prompt-judge}
 
 Judge được yêu cầu một cách có chủ đích là chấm trạng thái cuối chứ không chấm
@@ -522,27 +533,30 @@ actually shown on the final page; it navigated to the wrong page.
 Return JSON {"verdict": "PASS"|"FAIL", "reason": "<one sentence>"}.
 \end{lstlisting}
 
-\chapter{Thống kê run chi tiết}
+\chapter{Thống kê chi tiết các đợt thực nghiệm}
 \label{app:runs}
 
-Phụ lục này ghi lại thống kê đầy đủ của các run khám phá, kể cả những run
-ngắn và bị ngắt giữa chừng, để công sức thu thập hiện ra trọn vẹn chứ không
-chỉ qua những run đẹp nhất.
+Phụ lục này ghi lại thống kê đầy đủ của các đợt khám phá, kể cả những đợt chạy
+ngắn và bị ngắt giữa chừng, nhằm phản ánh trọn vẹn quá trình thu thập dữ liệu
+thay vì chỉ báo cáo những lượt chạy tối ưu nhất. Cần lưu ý rằng toàn bộ số liệu
+tại đây chỉ ghi nhận các đợt chạy sử dụng thiết kế phương pháp đề xuất hoàn chỉnh
+cuối cùng của hệ thống HSGE; phụ lục không thống kê các lượt chạy thử nghiệm ban
+đầu theo các phương án thiết kế tiền đề đã bị loại bỏ trong quá trình phát triển.
 
-Cần phân biệt rõ hai bộ run, vì chúng phục vụ hai mục đích khác nhau và số
+Cần phân biệt rõ hai nhóm đợt chạy, vì chúng phục vụ hai mục đích khác nhau và số
 liệu của chúng không được cộng gộp ở bất kỳ đâu trong khóa luận:
 
 \begin{itemize}
   \item \textbf{Bốn đợt thu thập chính thức} (Mục~\ref{app:runs-final}) trên
   bốn website của WebArena. Đây là nguồn của mọi con số ở
   Mục~\ref{sec:exp-data} và của toàn bộ tập dữ liệu huấn luyện.
-  \item \textbf{Mười hai run phát triển} (Mục~\ref{app:runs-dev}) chỉ trên
+  \item \textbf{Mười hai đợt chạy phát triển} (Mục~\ref{app:runs-dev}) chỉ trên
   Reddit và GitLab, chạy trong lúc pipeline còn đang được sửa. Chúng không
   đóng góp mẫu huấn luyện nào; giá trị của chúng là các lỗi mà chúng phơi ra,
   và phần lớn cơ chế chốt chặn mô tả ở Chương~\ref{ch:method} ra đời từ đây.
 \end{itemize}
 
-\section{Bốn đợt thu thập chính thức}
+\section{Số liệu các đợt thu thập chính thức}
 \label{app:runs-final}
 
 Bảng~\ref{tab:app-runs-final} bổ sung cho Bảng~\ref{tab:runs} của
@@ -551,21 +565,15 @@ bày: node bị bỏ vì lỗi, số lần khôi phục, và cơ cấu operator 
 
 \begin{table}[H]
 \centering
-\caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt
-thu thập chính thức. ``Node lỗi tải'' là node mà trình duyệt không mở được và
-cơ chế hỏng mềm đã bỏ qua; ``Reset lỗi'' là số lần đưa trình duyệt về trang
-của node trước một task bị thất bại. Hai cột cuối tách số operator bị từ chối
-theo lý do.}
+\caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt thu thập chính thức. Trong đó, ``Lỗi tải'' đại diện cho các node trình duyệt không thể truy cập và được cơ chế hỏng mềm (fail-soft) xử lý bỏ qua; ``Reset'' là số lần đưa trình duyệt về trang trước đó sau khi tác vụ thất bại. Hai cột cuối phân loại số operator bị từ chối theo từng lý do cụ thể.}
 \label{tab:app-runs-final}
-\small
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-& & \multicolumn{2}{c}{\textbf{Sự cố}} & & &
-\multicolumn{2}{c}{\textbf{Operator bị loại}} \\
+& & \multicolumn{2}{c}{\textbf{Sự cố}} & & & \multicolumn{2}{c}{\textbf{Operator bị loại}} \\
 \cmidrule(lr){3-4}\cmidrule(lr){7-8}
-\textbf{Website} & \textbf{Node} & \textbf{lỗi tải} & \textbf{reset} &
-\textbf{Nối lại} & \textbf{Skill} & \textbf{lặp thừa} & \textbf{vô căn} &
-\textbf{Op.} \\
+\textbf{Website} & \textbf{Node} & \textbf{Lỗi tải} & \textbf{Reset} & \textbf{Khôi phục} & \textbf{Skill} & \textbf{Lặp trạng thái} & \textbf{Chưa xác minh} & \textbf{Op.} \\
 \midrule
 Shopping       & 79 & 38 & 166 & 1 & 14 &  1 &  5 &  8 \\
 Reddit         & 68 &  0 &   8 & 1 & 16 &  5 &  7 &  4 \\
@@ -591,24 +599,26 @@ timeout điều hướng của trình duyệt. Cơ chế hỏng mềm chuyển t
 một node bị bỏ qua có ghi log, nên không đợt nào bị dừng giữa chừng vì lý do
 này.
 
-Thứ ba, \textbf{phần lớn kỹ năng không trở thành operator}: 34 trên 59 kỹ
-năng bị chặn lại, 14 vì effect lặp lại chính precondition và 20 vì
-effect không được dữ liệu của cụm xác nhận. Mục~\ref{sec:disc-operators}
-phân tích thế giằng co giữa hai cổng lọc này.
+Thứ ba, \textbf{phần lớn skill không trở thành operator}: 34 trên 59 skill
+bị chặn lại, gồm 14 trường hợp do effect lặp lại chính precondition và 20 trường
+hợp do effect không được dữ liệu của cụm xác nhận. Mối quan hệ đánh đổi và
+tác động qua lại giữa hai cổng lọc này được phân tích chi tiết tại
+Mục~\ref{sec:disc-operators}.
 
 Số episode ở Bảng~\ref{tab:runs} lấy theo bản tóm tắt cuối cùng mà mỗi đợt
 ghi ra (2178 episode). Trên đĩa có 2184 thư mục episode: sáu episode chênh
 lệch được ghi ở node đang xử lý dở khi đợt chạy bị dừng, sau lần ghi tóm tắt
 cuối cùng, nên chúng không được tính vào bất kỳ thống kê nào.
 
-\section{Seed năng lực, thư viện skill và predicate registry}
+\section{Các tạo phẩm tri thức trích xuất}
 \label{app:runs-knowledge}
 
-Ba tạo phẩm tri thức mà bốn đợt thu thập để lại được trình bày ở đây, vì
-Chương~\ref{ch:experiments} chỉ báo cáo số lượng của chúng còn nội dung thì
-không xuất hiện ở đâu trong phần chính.
+Mục này tổng hợp chi tiết ba sản phẩm tri thức thu được từ bốn đợt thu
+thập dữ liệu. Do Chương~\ref{ch:experiments} chỉ mới báo cáo số liệu thống kê
+tổng quát, nội dung cụ thể của các tri thức này được trình bày tại đây để phục
+vụ việc tra cứu trọn vẹn.
 
-\subsection*{Seed năng lực của website}
+\subsection*{Seed năng lực website}
 
 Ở node đầu tiên của mỗi đợt, site seeder đọc trang chủ và trả về một mô tả
 website kèm danh sách năng lực (Mục~\ref{sec:method-seed}). Bốn đợt cho ra
@@ -719,21 +729,23 @@ Sh.\ Admin (13) & \texttt{navigate\_to\_customers\_section},
 \end{table}
 
 \noindent
-Danh sách này nói được một điều mà con số 59 che mất: \emph{không phải skill
-nào cũng là một năng lực thật}. Bốn cái tên -- \texttt{ConfirmTaskCompletion},
+Danh sách này phản ánh một khía cạnh quan trọng mà con số tổng 59 chưa thể
+hiện hết: \emph{không phải skill nào được trích xuất cũng đại diện cho một năng
+lực thực sự}. Bốn định danh gồm \texttt{ConfirmTaskCompletion},
 \texttt{send\_done\_message}, \texttt{report\_answer} và
-\texttt{click\_target\_field} -- không mô tả một thao tác trên website mà mô
-tả chính hành vi kết thúc episode hoặc một cú nhấp không rõ đích. Chúng là sản
-phẩm của việc gom cụm những trajectory \texttt{INFO} chỉ gồm một bước trả lời:
-các trajectory đó giống nhau thật, tái xuất hiện đủ ngưỡng độ chín thật, nhưng
-cái được trừu tượng hóa ra lại là khuôn dạng của câu trả lời chứ không phải
-một hành vi tái sử dụng được. Đây là mặt trái của việc ngưỡng độ chín phải
-gánh thay cổng thực thi lại (Mục~\ref{sec:disc-verify}). Điểm đáng ghi nhận
-là cả bốn cái tên đó về sau \emph{đều} bị cổng grounding chặn lại ở bước nâng
-operator, cả bốn với cùng lý do: effect mà chúng tự nhận không đúng ở bất kỳ
-thành viên nào của cụm.
+\texttt{click\_target\_field} thực chất không mô tả thao tác nghiệp vụ trên
+website mà chỉ đại diện cho hành vi kết thúc episode hoặc thao tác tương tác
+chưa rõ mục tiêu. Chúng là kết quả của quá trình gom cụm các trajectory
+\texttt{INFO} chỉ gồm một bước phản hồi: dù các trajectory này tương đồng và
+xuất hiện đạt ngưỡng độ chín (maturity threshold), đối tượng được trừu tượng
+hóa thực chất chỉ là khuôn mẫu của câu trả lời chứ không phải một hành vi thao
+tác có tính tái sử dụng. Đây là điểm hạn chế khi ngưỡng độ chín phải gánh vác
+thay cho cổng thực thi lại (Mục~\ref{sec:disc-verify}). Dù vậy, điểm đáng ghi
+nhận là cả bốn trường hợp này về sau \emph{đều} bị cổng grounding loại bỏ ở bước
+nâng cấp thành operator, với cùng một lý do: effect tự kê khai không được xác
+minh trên bất kỳ thành viên nào trong cụm.
 
-\subsection*{Predicate registry}
+\subsection*{Sổ đăng ký mệnh đề (Predicate Registry)}
 
 Bốn sổ đăng ký chứa lần lượt 14, 21, 17 và 15 mệnh đề chuẩn hóa. Bốn mệnh đề
 đầu tiên của Reddit cho thấy rất rõ hình dạng mà prompt quy nạp ép ra
@@ -756,20 +768,20 @@ thích trực quan vì sao đồ thị không có cạnh: một bổ ngữ đặ
 kiện tiên quyết của mình được. Đây chính là thế giằng co mà
 Mục~\ref{sec:disc-operators} phân tích, quan sát được trực tiếp trên dữ liệu.
 
-\section{Mười hai run phát triển}
+\section{Số liệu các đợt chạy phát triển}
 \label{app:runs-dev}
 
-Bảng~\ref{tab:app-runs} báo cáo các run của giai đoạn phát triển. Run 1-9
-khám phá instance Reddit; run 10-12 khám phá GitLab. Run 4-6 là các lượt sinh
+Bảng~\ref{tab:app-runs} báo cáo các đợt chạy của giai đoạn phát triển. Đợt chạy 1--9
+khám phá instance Reddit; đợt chạy 10--12 khám phá GitLab. Các đợt chạy 4--6 là các lượt sinh
 task dùng lại đồ thị có sẵn nên không có số node riêng. Trạng thái \emph{bị
-ngắt} nghĩa là run được dừng thủ công, không phải là run hỏng; run~10 là run
+ngắt} nghĩa là đợt chạy được dừng thủ công, không phải là đợt chạy hỏng; đợt chạy~10 là đợt chạy
 duy nhất kết thúc bằng lỗi (một timeout điều hướng của trình duyệt mà cơ chế
-xử lý lỗi ở mức node đã chuyển thành một node bị bỏ qua trước khi run được
+xử lý lỗi ở mức node đã chuyển thành một node bị bỏ qua trước khi đợt chạy được
 dừng).
 
 \begin{table}[H]
 \centering
-\caption[Thống kê khám phá theo từng run]{Thống kê khám phá theo từng run. Cột
+\caption[Thống kê khám phá theo từng đợt chạy]{Thống kê khám phá theo từng đợt chạy. Cột
 ``Task'' đếm mỗi task đúng một lần, theo kết cục cuối cùng.}
 \label{tab:app-runs}
 \small
@@ -777,7 +789,7 @@ dừng).
 \toprule
 & & & \multicolumn{3}{c}{\textbf{Task}} & & & \\
 \cmidrule(lr){4-6}
-\textbf{Run} & \textbf{Node} & \textbf{Ep.} & \textbf{đạt} & \textbf{hỏng} &
+\textbf{Đợt chạy} & \textbf{Node} & \textbf{Ep.} & \textbf{đạt} & \textbf{hỏng} &
 \textbf{bất khả} & \textbf{Skill} & \textbf{Op.} & \textbf{Site} \\
 \midrule
 1  &   1 &   6 &   3 &   3 &  0 &  1 &  1 & Reddit \\
@@ -797,28 +809,28 @@ dừng).
 \end{table}
 
 \noindent
-Có hai điểm đáng ghi nhận. Thứ nhất, run lớn nhất (run~7, 128 node) ra đời
+Có hai điểm đáng ghi nhận. Thứ nhất, đợt chạy lớn nhất (đợt chạy~7, 128 node) ra đời
 trước khi có kết cục \emph{bất khả thi}, và đó là lý do tỉ lệ thất bại của nó
-cao nhất: những episode mà một run về sau sẽ xếp là bất khả thi thì ở đây bị
+cao nhất: những episode mà một đợt chạy về sau sẽ xếp là bất khả thi thì ở đây bị
 tính là thất bại. Thứ hai, hiện tượng trùng lặp node là có thật nhưng ở mức vừa
-phải: 29 node trên toàn bộ các run bị bỏ qua vì axtree ban đầu của chúng băm
+phải: 29 node trên toàn bộ các đợt chạy bị bỏ qua vì axtree ban đầu của chúng băm
 ra trùng với một node đã thăm, xác nhận rằng chuyện các URL khác nhau hiển thị
 cùng nội dung là có thật trên những site này, nhưng không phải là chi phí chi
 phối.
 
-\section{Các lượt sinh task ở giai đoạn phát triển}
+\section{Kết quả sinh và kiểm chứng tác vụ ở giai đoạn phát triển}
 \label{app:runs-gen}
 
-Run 4-6, vẫn thuộc bộ run phát triển, đo riêng khâu đề xuất và kiểm chứng
+Các đợt chạy 4--6, vẫn thuộc bộ đợt chạy phát triển, đo riêng khâu đề xuất và kiểm chứng
 task trên một đồ thị đã khám phá sẵn. Bảng~\ref{tab:app-gen} tách kết cục của chúng theo loại task. Quy luật
 nhất quán ở cả ba lượt: task \texttt{INFO} kiểm chứng đạt ổn định nhất, task
 \texttt{MOD} kém nhất, và khoảng một đề xuất trong mười bị bỏ vì đã cũ (trang
-mà nó nhắc tới đã thay đổi kể từ lúc đồ thị được ghi.
+mà nó nhắc tới đã thay đổi kể từ lúc đồ thị được ghi).
 
 \begin{table}[H]
 \centering
 \caption[Sinh và kiểm chứng task theo loại]{Sinh và kiểm chứng task theo loại,
-run 4-6.}
+các đợt chạy 4--6.}
 \label{tab:app-gen}
 \small
 \begin{tabular}{@{}lrrrrrrrr@{}}
@@ -826,7 +838,7 @@ run 4-6.}
 & & \multicolumn{2}{c}{\textbf{INFO}} & \multicolumn{2}{c}{\textbf{NAV}} &
 \multicolumn{2}{c}{\textbf{MOD}} & \\
 \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
-\textbf{Run} & \textbf{Thử} & \textbf{đạt} & \textbf{hỏng} & \textbf{đạt} &
+\textbf{Đợt chạy} & \textbf{Thử} & \textbf{đạt} & \textbf{hỏng} & \textbf{đạt} &
 \textbf{hỏng} & \textbf{đạt} & \textbf{hỏng} & \textbf{Cũ} \\
 \midrule
 4 & 92 & 43 &  9 & 12 & 8 & 16 & 4 &  8 \\
@@ -847,15 +859,15 @@ mà vì agent thường không nhận ra là mình đã tới nơi, đúng hành
 ``một khi URL đã đổi thì mục tiêu ĐÃ XONG'' trong prompt của solver
 (Mục~\ref{app:prompt-solver}) được thêm vào để sửa.
 
-\section{Các chuỗi operator đã ghép}
+\section{Kết quả ghép nối và thực thi chuỗi operator}
 \label{app:runs-goal}
 
-Trong suốt \emph{mười hai run phát triển}, không một goal task ghép nào được
+Trong suốt \emph{mười hai đợt chạy phát triển}, không một goal task ghép nào được
 thử: bộ đếm chuỗi của cả mười hai bản tóm tắt đều bằng không, và mọi episode
-đã ghi đều mang nhãn low-level task. Run~7, đồ thị lớn nhất của giai đoạn đó
+đã ghi đều mang nhãn low-level task. Đợt chạy~7, đồ thị lớn nhất của giai đoạn đó
 với mười ba operator, chỉ chứa đúng một cạnh
 effect$\rightarrow$precondition, và cạnh ấy chỉ hình thành khi operator thứ
-mười ba, cũng là operator cuối cùng, được quy nạp -- thời điểm mà run đã bị
+mười ba, cũng là operator cuối cùng, được quy nạp -- thời điểm mà đợt chạy đã bị
 dừng.
 
 \textbf{Bốn đợt thu thập chính thức thì khác: cơ chế ghép chuỗi đã kích hoạt
@@ -871,10 +883,10 @@ một con số tổng.
 là episode không mở được trang xuất phát, không phải agent thao tác sai.}
 \label{tab:app-chains}
 \small
-\begin{tabular}{@{}lL{7.3cm}rl@{}}
+\begin{tabular}{@{}lL{6.6cm}cr@{}}
 \toprule
-\textbf{Website} & \textbf{Chuỗi skill được ghép} & \textbf{Mắt} &
-\textbf{Kết cục} \\
+\textbf{Website} & \textbf{Chuỗi skill được ghép} & \textbf{Độ dài chuỗi} &
+\textbf{Kết quả} \\
 \midrule
 Shopping & \texttt{navigate\_to\_product\_page} $\rightarrow$
 \texttt{add\_variant\_to\_cart} & 2 & đạt, 5 bước \\
@@ -897,22 +909,26 @@ GitLab & \texttt{navigate\_to\_fork\_form} $\rightarrow$
 \end{table}
 
 \noindent
-Bốn trên bảy chuỗi hoàn thành, trong đó có một chuỗi ba mắt đi trọn đường từ
-danh mục sản phẩm tới giỏ hàng trong bảy bước. Điều này trả lời đúng câu hỏi
-mà giai đoạn phát triển còn để ngỏ: một website thật \emph{có} cho ra đồ thị
-toán tử đủ liên thông để cơ chế ghép chuỗi chạy được.
+Kết quả ghi nhận 4 trong tổng số 7 chuỗi đã thực thi thành công, nổi bật
+là chuỗi gồm ba mắt xích hoàn tất trọn vẹn quy trình từ danh mục sản phẩm đến
+giỏ hàng trong 7 bước thao tác. Kết quả này giải quyết trực tiếp câu hỏi còn
+để ngỏ ở giai đoạn phát triển: liệu môi trường website thực tế \emph{có} hình
+thành được đồ thị operator đủ tính liên thông để cơ chế ghép chuỗi vận hành hay không.
 
-Nhưng số bảy cũng nói lên giới hạn: 25 operator chỉ sinh ra bảy chuỗi, và ba
-trong bốn website đóng góp nhiều nhất một chuỗi. Hệ quả cho tập dữ liệu là
-trực tiếp -- chỉ 6 mẫu huấn luyện ở mức độ khó 3 (Bảng~\ref{tab:dataset}),
-tức các trajectory dài hạn có mặt trong dữ liệu nhưng quá thưa để chi phối quá
-trình huấn luyện. Nguyên nhân nằm ở chỗ một cạnh của đồ thị toán tử đòi hỏi
-effect của operator này trùng precondition của operator kia, trong khi sổ
-đăng ký mệnh đề chỉ chuẩn hóa bằng độ tương đồng embedding -- thứ mà
-Mục~\ref{sec:disc-operators} cho thấy không tách nổi cặp đồng nghĩa thật khỏi
-cặp không liên quan ở bất kỳ ngưỡng đơn lẻ nào.
+Tuy nhiên, con số 7 chuỗi cũng phản ánh hạn chế hiện tại: từ 25 operator mới
+chỉ hình thành được 7 chuỗi ghép, và 3 trong số 4 website chỉ đóng góp tối đa một
+chuỗi. Điều này dẫn đến hệ quả trực tiếp đối với tập dữ liệu thu được: chỉ có 6
+mẫu huấn luyện đạt mức độ khó 3 (Bảng~\ref{tab:dataset}). Điều đó đồng nghĩa các
+trajectory dài hạn tuy xuất hiện trong tập dữ liệu nhưng với mật độ quá thưa
+thớt, chưa đủ tác động định hình quá trình huấn luyện. Nguyên nhân cốt lõi nằm
+ở điều kiện thiết lập cạnh trên đồ thị operator: bắt buộc effect của operator
+trước phải khớp chính xác với precondition của operator sau. Trong khi đó, sổ
+đăng ký mệnh đề (predicate registry) mới chỉ chuẩn hóa dựa trên độ tương đồng
+embedding, cơ chế mà Mục~\ref{sec:disc-operators} đã chứng minh là không thể
+phân tách chính xác các cặp đồng nghĩa thực sự khỏi các cặp mệnh đề không liên
+quan chỉ với một ngưỡng đơn lẻ.
 
-\section{Đối chiếu kết quả đánh giá theo từng task}
+\section{Đối chiếu chi tiết kết quả đánh giá theo tác vụ}
 \label{app:runs-eval}
 
 Tỷ lệ hoàn thành tổng hợp ở Mục~\ref{sec:exp-main} che mất một điều mà chỉ
@@ -968,14 +984,14 @@ gồm mục tiêu, số bước, số lỗi hành động và hành động cu�
 nằm trong tạo phẩm đánh giá đi kèm khóa luận
 (Mục~\ref{app:repro-artifacts}).
 
-\chapter{Hướng dẫn tái lập}
+\chapter{Hướng dẫn quy trình tái lập thực nghiệm}
 \label{app:repro}
 
 Pipeline có thể tái lập trọn vẹn từ một bản checkout sạch. Phụ lục này đưa ra
 chuỗi lệnh chính xác; kho mã nguồn đi kèm khóa luận chứa mã, tập tin cấu hình
 đã dùng cho các run được báo cáo, và bản hướng dẫn mà mục này cô đọng lại.
 
-\section{Môi trường}
+\section{Cấu hình môi trường thực thi}
 \label{app:repro-env}
 
 Pipeline mock chỉ cần \texttt{numpy} và chạy được mà không cần API key, GPU hay
@@ -996,7 +1012,7 @@ Pipeline thật cần thêm \texttt{sentence-transformers}, \texttt{openai},
 \texttt{requests}, một instance WebArena tự dựng, cùng thông tin xác thực API
 đặt trong một tập tin môi trường không bao giờ được commit.
 
-\section{Thu thập trajectory}
+\section{Quy trình khám phá và thu thập trajectory}
 \label{app:repro-collect}
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
@@ -1038,19 +1054,20 @@ bằng cờ này. Thứ ba, việc đăng nhập cho bốn site có tài khoản
 lần rồi được lưu dưới dạng storage state của trình duyệt; đây là thông tin
 phiên còn sống nên bị loại khỏi quản lý phiên bản.
 
-Tạo phẩm (skill, operator, đồ thị, mệnh đề, kết cục task theo node và một
+Các sản phẩm (skill, operator, đồ thị, mệnh đề, kết quả task theo node và một
 bản tóm tắt) được ghi sau mỗi node, kèm một điểm kiểm tra nhị phân chứa trọn
 trạng thái vòng lặp, nên một đợt bị ngắt vẫn để lại ảnh chụp nhất quán và nối
 lại được; mọi sự kiện đồng thời được ghi ra một log JSON lines.
 
-\section{Tinh lọc dataset}
+\section{Quy trình tinh lọc tập dữ liệu}
 \label{app:repro-curate}
 
-Vì \texttt{verify\_episodes} đã bật trong cả bốn đợt, judge đã chấm ngay trong
-vòng lặp và lượt chấm ngoại tuyến \texttt{judge\_episodes.py} là không cần
-thiết; nó chỉ dùng cho những đợt chạy cũ hơn, và khi dùng thì nó sửa các
-episode tại chỗ theo kiểu bổ sung, nên hãy chạy trên một bản sao nếu muốn giữ
-nguyên tạo phẩm gốc.
+Do tùy chọn \texttt{verify\_episodes} đã được kích hoạt trong cả 4 đợt thu thập,
+thành phần judge đã thực hiện đánh giá trực tiếp ngay trong vòng lặp khám phá.
+Do đó, công đoạn đánh giá ngoại tuyến (\texttt{judge\_episodes.py}) không còn
+bắt buộc; kịch bản này chỉ áp dụng cho các lượt chạy thử nghiệm cũ hơn. Lưu ý
+rằng kịch bản sẽ thực hiện cập nhật episode trực tiếp tại chỗ (in-place), vì vậy
+cần khởi chạy trên một bản sao dữ liệu nếu muốn bảo toàn tập dữ liệu gốc.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 # 1. Episode -> mau huan luyen, mot lan cho moi website.
@@ -1069,26 +1086,29 @@ python training/prepare_dataset.py training_data/train_all.jsonl \
 \end{lstlisting}
 
 \noindent
-Ba bước trên tương ứng ba cổng đã mô tả ở Mục~\ref{sec:method-data}.
-\texttt{-{}-require-judge} loại mọi episode tự nhận thành công nhưng chưa từng
-được judge hoặc bị judge đánh trượt, đồng thời vẫn giữ những episode agent
-báo là bất khả thi; việc chấm không áp dụng cho chúng và chúng vẫn là mục tiêu
-huấn luyện hợp lệ. Bước gộp phải thêm tiền tố tên miền vào mã trajectory trước
-khi nối tập tin, bởi mỗi đợt đánh số episode độc lập từ \texttt{ep\_0000}, nên
-\texttt{ep\_0005} của Reddit và của Shopping là hai trajectory không liên quan mà
-lại trùng mã. Bước chia tách theo cặp \emph{(website, nội dung mục tiêu)} và
-tự khẳng định rằng không mục tiêu nào của tập kiểm định xuất hiện trong tập
-huấn luyện, nên một lần thoái lui sẽ làm hỏng bước chạy chứ không âm thầm thổi
-phồng \texttt{eval\_loss} (Mục~\ref{sec:method-sft}).
+Ba bước xử lý trên tương ứng với 3 cổng lọc đã được mô tả tại
+Mục~\ref{sec:method-data}. Cờ \texttt{-{}-require-judge} loại bỏ mọi episode tự
+nhận hoàn thành nhưng chưa được judge xác nhận hoặc bị judge đánh trượt, đồng
+thời vẫn giữ lại các episode mà agent báo là bất khả thi (do cơ chế đánh giá
+không áp dụng cho dạng này và chúng vẫn là mẫu huấn luyện hợp lệ). Ở bước ghép
+nối, kịch bản phải bổ sung tiền tố tên miền vào mã trajectory trước khi hợp
+nhất, do mỗi đợt thu thập tự đánh số episode độc lập từ \texttt{ep\_0000} (ví dụ
+\texttt{ep\_0005} của Reddit và Shopping là hai trajectory độc lập nhưng trùng
+mã). Ở bước phân chia tập dữ liệu, kịch bản thực hiện chia tách theo cặp
+\emph{(website, nội dung mục tiêu)}, bảo đảm tuyệt đối không có mục tiêu nào
+trong tập kiểm định (validation set) xuất hiện lại trong tập huấn luyện (train
+set), ngăn chặn hiện tượng rò rỉ dữ liệu và tránh làm giảm ảo độ mất mát
+\texttt{eval\_loss} (Mục~\ref{sec:method-sft}).
 
-\section{Tinh chỉnh, phục vụ và đánh giá}
+\section{Quy trình tinh chỉnh, phục vụ và đánh giá mô hình}
 \label{app:repro-train}
 
-Ba giai đoạn này chạy trên GPU thuê theo giờ và dùng \emph{ba môi trường ảo
-tách rời} cho huấn luyện, serving và đánh giá: engine phục vụ ghim
-phiên bản thư viện mô hình hóa, trong khi kiến trúc mới cần bản mới hơn, và
-việc tách môi trường biến một bài toán tương thích phiên bản thành ba lần cài
-đặt độc lập (Mục~\ref{sec:disc-slm}).
+Ba giai đoạn này được thực thi trên môi trường GPU thuê theo giờ và sử dụng
+\emph{ba môi trường ảo độc lập} cho các công đoạn huấn luyện, serving
+và đánh giá. Việc tách biệt môi trường là bắt buộc do engine phục vụ yêu cầu cố
+định phiên bản thư viện mô hình, trong khi kiến trúc mô hình mới đòi hỏi phiên bản
+cập nhật hơn; giải pháp này giúp chuyển bài toán xung đột phiên bản phức tạp
+thành các cấu hình cài đặt độc lập (Mục~\ref{sec:disc-slm}).
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
 # 1. Huan luyen LoRA (template qwen3_5_nothink: du lieu khong co khoi <think>).
@@ -1114,27 +1134,31 @@ python training/analyze_eval_traces.py outputs/eval/*/finetuned --examples 3
 \end{lstlisting}
 
 \noindent
-Bốn chi tiết trong chuỗi lệnh trên là bắt buộc chứ không phải tùy chọn. Thứ
-nhất, chat template phải tắt chế độ suy nghĩ tường minh ở \emph{cả} huấn luyện
-lẫn phục vụ: dữ liệu không chứa khối suy nghĩ nào, nên bật nó lên là huấn
-luyện mô hình sinh ra một phần mà nó chưa từng thấy mục tiêu. Thứ hai, bước
-trộn phải nạp model gốc bằng lớp mô hình đa phương thức đúng của nó; dùng lớp
-thuần văn bản sẽ lặng lẽ bỏ phần thị giác và engine phục vụ sẽ từ chối nạp.
-Thứ ba, \texttt{bootstrap\_eval\_box.sh} chạy chín chặng có cổng, kết thúc
-bằng một lượt thử ba task phải ghi được ít nhất một điểm; đợt quét đầy đủ
-chỉ khởi động khi chặng này đạt, và mỗi cổng đều ra đời từ một lần bỏ qua nó
-đã làm hỏng cả đợt chạy (Mục~\ref{sec:disc-slm}). Thứ tư, phải khôi phục cơ sở
-dữ liệu của website giữa lượt đo mô hình nền và lượt đo mô hình đã fine-tune:
-bộ chấm chỉ nhìn trạng thái cuối, nên việc lượt trước để lại sẽ được tính điểm
-cho lượt sau.
+Bốn chi tiết kỹ thuật trong chuỗi lệnh trên mang tính bắt buộc. Thứ nhất,
+chat template phải tắt chế độ suy nghĩ tường minh ở \emph{cả} giai đoạn huấn luyện
+lẫn phục vụ: tập dữ liệu không chứa khối suy nghĩ, nên nếu bật tính năng này, mô
+hình sẽ sinh ra cấu trúc dữ liệu không khớp với phân bố mục tiêu. Thứ hai, bước
+trộn trọng số phải nạp mô hình gốc bằng lớp đa phương thức tương ứng; nếu sử
+dụng lớp thuần văn bản, thành phần thị giác sẽ bị bỏ qua và engine phục vụ sẽ
+từ chối nạp mô hình. Thứ ba, kịch bản \texttt{bootstrap\_eval\_box.sh} thực thi
+qua 9 chặng kiểm soát (gated steps), kết thúc bằng lượt chạy thử trên 3 tác vụ
+mẫu yêu cầu phải đạt ít nhất một điểm thành công; đợt đánh giá đầy đủ chỉ bắt đầu
+khi chặng kiểm tra này vượt qua thành công (Mục~\ref{sec:disc-slm}). Thứ tư,
+phải khôi phục cơ sở dữ liệu (reset database) của website giữa đợt đánh giá mô
+hình nền và mô hình đã fine-tune: bộ chấm chỉ kiểm tra trạng thái cuối cùng trên
+trang, do đó nếu không reset, các thay đổi do mô hình trước để lại có thể gây
+sai lệch kết quả chấm cho mô hình sau.
 
-Đánh giá được chạy song song bốn máy, mỗi máy một website, nên thời gian thực
-tế bằng website nhiều task nhất thay vì tổng của cả bốn. Kết quả từng máy
-phải được thu về và đối chiếu mã băm \emph{trước khi} hủy máy: một máy không
-gắn ổ đĩa lưu trữ sẽ mất toàn bộ vết chạy vĩnh viễn, và mã thoát 0 của lệnh
-đồng bộ chỉ chứng minh lệnh đã chạy chứ không chứng minh hai bên khớp nhau.
+Quá trình đánh giá được thực thi song song trên 4 máy độc lập (mỗi máy phụ trách
+một website), nhờ đó tổng thời gian thực tế chỉ phụ thuộc vào website có số lượng
+tác vụ lớn nhất. Dữ liệu kết quả từ từng máy bắt buộc phải được thu thập và đối
+chiếu mã băm (checksum) \emph{trước khi} giải phóng máy chủ. Việc kiểm tra này
+rất quan trọng vì hai lý do: (1) các máy chủ đám mây tạm thời không dùng ổ đĩa
+cố định sẽ xóa vĩnh viễn toàn bộ nhật ký (trace logs) ngay khi tắt máy; và (2)
+mã thoát 0 của lệnh đồng bộ chỉ bảo đảm lệnh đã thực thi xong chứ chưa xác nhận
+dữ liệu thu về đã trùng khớp hoàn toàn.
 
-\section{Artifact được báo cáo}
+\section{Danh mục các tạo phẩm được lưu trữ và báo cáo}
 \label{app:repro-artifacts}
 
 Bảng~\ref{tab:app-artifacts} liệt kê các tạo phẩm cụ thể đứng sau
