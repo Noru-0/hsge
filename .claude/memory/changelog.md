@@ -6,6 +6,14 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **09:00** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex` — tiếp tục
+  đảo ngược quy ước thuật ngữ (103 tác vụ→task, 51 quỹ đạo→trajectory, 29
+  tác nhân→agent, 16 tác vụ ngữ nghĩa→semantic task, 10 tinh chỉnh→fine-tune/
+  fine-tuning theo ngữ cảnh, + 8 từ khác). Viết script
+  `revert_terms.py` (thay thế cụm dài trước, đơn từ sau, có dọn chú song ngữ
+  trùng lặp) để xử lý khối lượng lớn — dùng lại cho C4-C6 + phụ lục. 5 chỗ
+  script không dọn được (do `\emph{}` chắn regex) sửa tay: dòng 4, 126, 128,
+  572. Build sạch: 167 trang, 0 error, 0 undefined ref, overfull không đổi.
 - **08:54** — `Thesis_report/thesis_hsge_vi/Chapter2/chapter2.tex` — tiếp tục
   đảo ngược quy ước thuật ngữ (agent/task/trajectory/semantic task/
   precondition/effect/reward function/serving/merge giữ tiếng Anh). Giữ
