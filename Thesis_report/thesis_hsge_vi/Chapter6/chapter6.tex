@@ -9,18 +9,18 @@ hướng nghiên cứu có thể đi tiếp.
 \label{sec:conc-summary}
 
 Khóa luận nhắm tới một mục tiêu: nâng năng lực của mô hình ngôn ngữ nhỏ
-trong vai trò tác nhân web, bằng cách tự động thu thập dữ liệu huấn luyện từ
+trong vai trò web agent, bằng cách tự động thu thập dữ liệu huấn luyện từ
 những website không có nhãn. Giải pháp đề xuất là HSGE, một pipeline khám phá
 có cấu trúc: quá trình tương tác với website được tổ chức quanh một biểu diễn
-đồ thị, thay vì chỉ khai thác từng tác vụ rời rạc.
+đồ thị, thay vì chỉ khai thác từng task rời rạc.
 
-Trong quá trình khám phá, hệ thống phát hiện các skill lặp lại từ quỹ đạo,
+Trong quá trình khám phá, hệ thống phát hiện các skill lặp lại từ trajectory,
 kiểm chứng chúng trước khi đưa vào thư viện skill, rồi trừu tượng hóa thành
 các operator có precondition và effect tường minh. Trên cơ sở các operator
 đã thu nhận, pipeline tiếp tục xây dựng đồ thị toán tử và ghép chuỗi các
-operator tương thích để sinh ra các tác vụ ngữ nghĩa nhiều bước. Nhờ vậy, mục tiêu huấn luyện mới được dựng trên các năng lực đã kiểm chứng,
-chứ không chỉ trên những tác vụ gắn với một trang riêng lẻ. Trước khi vào bước
-tinh chỉnh, mọi quỹ đạo còn phải qua các cổng chấm và tinh lọc tự động, và
+operator tương thích để sinh ra các semantic task nhiều bước. Nhờ vậy, mục tiêu huấn luyện mới được dựng trên các năng lực đã kiểm chứng,
+chứ không chỉ trên những task gắn với một trang riêng lẻ. Trước khi vào bước
+fine-tuning, mọi trajectory còn phải qua các cổng chấm và tinh lọc tự động, và
 toàn bộ đường đi đó giữ nguyên tắc \emph{prompt parity} giữa huấn luyện và
 suy luận.
 
@@ -31,54 +31,54 @@ Khóa luận tạo ra năm sản phẩm chính như sau.
 \item \textbf{Pipeline HSGE.}
 Hệ thống hiện thực trọn quy trình khám phá có cấu trúc: khám phá website
 theo đồ thị, phát hiện và kiểm chứng skill, quy nạp operator kèm cơ chế chuẩn
-hóa mệnh đề, sinh tác vụ ngữ nghĩa từ đồ thị toán tử, và thu thập dữ liệu huấn
+hóa mệnh đề, sinh semantic task từ đồ thị toán tử, và thu thập dữ liệu huấn
 luyện. Cùng một pipeline chạy được trên cả backend mô phỏng dùng để kiểm thử
 lẫn website thật qua trình duyệt.
 
 \item \textbf{Pipeline tinh lọc và tập dữ liệu huấn luyện.}
 Khóa luận xây dựng đầy đủ pipeline tinh lọc dữ liệu gồm các cổng chất lượng
 chấm lại từng episode ngay trong vòng lặp thu thập và trình dựng dataset theo
-nguyên tắc prompt parity. Từ đó thu được tập dữ liệu tinh chỉnh được xây dựng hoàn
-toàn tự động trên bốn website WebArena tự triển khai: 1029 quỹ đạo và 4554
+nguyên tắc prompt parity. Từ đó thu được tập dữ liệu fine-tuning được xây dựng hoàn
+toàn tự động trên bốn website WebArena tự triển khai: 1029 trajectory và 4554
 mẫu huấn luyện, sau khi các cổng chất lượng đã loại 497 lần tự tuyên bố
-thành công sai và 104 quỹ đạo không có hành động hữu hiệu nào
+thành công sai và 104 trajectory không có hành động hữu hiệu nào
 (Mục~\ref{sec:exp-data}).
 
-\item \textbf{Mô hình tác nhân web đã tinh chỉnh.}
-Qwen3.5-9B được tinh chỉnh bằng LoRA trên tập dữ liệu do pipeline thu thập,
+\item \textbf{Mô hình web agent đã fine-tune.}
+Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập,
 rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
 huấn luyện, nên hai giai đoạn dùng chung một dạng đầu vào và đầu ra.
 
 \item \textbf{Đánh giá trên benchmark WebArena.}
-Khóa luận xây dựng pipeline đánh giá sử dụng cùng prompt với tác nhân triển khai
-thực tế, chấm bằng bộ tác vụ và bộ chấm chính thức của WebArena. Mô hình sau
-tinh chỉnh đạt \textbf{136 trên 655 tác vụ} của bốn website, tức 20{,}8\%
+Khóa luận xây dựng pipeline đánh giá sử dụng cùng prompt với agent triển khai
+thực tế, chấm bằng bộ task và bộ chấm chính thức của WebArena. Mô hình sau
+fine-tune đạt \textbf{136 trên 655 task} của bốn website, tức 20{,}8\%
 (Shopping 28{,}3\%, Reddit 20{,}8\%, GitLab 18{,}3\%, Shopping Admin
-15{,}4\%), với toàn bộ mẫu số đầy đủ và không tác vụ nào bị lỗi. Khi tính lại
+15{,}4\%), với toàn bộ mẫu số đầy đủ và không task nào bị lỗi. Khi tính lại
 kết quả của các công trình liên quan trên đúng bốn website này, con số đó
 nằm giữa NNetNav-7B (19{,}1\%) và Go-Browse-7B (22{,}6\%), và ngang
-GPT-4o-mini (20{,}0\%). Cùng bộ tác vụ đó, mô hình nền khi chưa tinh chỉnh đạt
-87 trên 655 tác vụ, tức 13{,}3\%; chênh lệch 7{,}5 điểm phần trăm đạt ý nghĩa
+GPT-4o-mini (20{,}0\%). Cùng bộ task đó, mô hình nền khi chưa fine-tune đạt
+87 trên 655 task, tức 13{,}3\%; chênh lệch 7{,}5 điểm phần trăm đạt ý nghĩa
 thống kê theo kiểm định cặp trên ba trong bốn website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ,
-vì hai lý do: mỗi tác vụ mới chỉ được đánh giá một lần, và phân tích vết chạy
+vì hai lý do: mỗi task mới chỉ được đánh giá một lần, và phân tích vết chạy
 cho thấy phần lớn mức tăng đến từ khả năng tuân thủ định dạng hành động, chưa
 tách bạch được phần thuộc về năng lực thao tác web
 (Mục~\ref{sec:disc-results}).
 
 \item \textbf{Báo cáo kinh nghiệm triển khai.}
 Quá trình xây dựng hệ thống để lại một tập kinh nghiệm và best practice về
-khám phá website, điều khiển tác nhân, quy nạp operator, xây dựng dữ liệu và
-tinh chỉnh mô hình. Chúng được trình bày ở Chương~\ref{ch:discussion}, kèm
+khám phá website, điều khiển agent, quy nạp operator, xây dựng dữ liệu và
+fine-tuning mô hình. Chúng được trình bày ở Chương~\ref{ch:discussion}, kèm
 hướng dẫn tái lập thực nghiệm ở Phụ lục~\ref{app:repro}.
 
 \end{enumerate}
 
 Bên cạnh các sản phẩm cụ thể, khóa luận cũng đề xuất một cách tổ chức quá
-trình thu thập dữ liệu cho tác nhân web dựa trên biểu diễn đồ thị. Thay vì sinh thẳng tác vụ huấn luyện từ từng trang, phương pháp dựng trước
+trình thu thập dữ liệu cho web agent dựa trên biểu diễn đồ thị. Thay vì sinh thẳng task huấn luyện từ từng trang, phương pháp dựng trước
 một biểu diễn có cấu trúc về các skill đã kiểm chứng, rồi mới khai thác biểu
-diễn đó để tạo tác vụ ngữ nghĩa nhiều bước. Cách tiếp cận đó
+diễn đó để tạo semantic task nhiều bước. Cách tiếp cận đó
 giúp tách biệt quá trình khám phá website với quá trình sinh dữ liệu huấn
-luyện, đồng thời mở rộng không gian các tác vụ có thể tạo ra từ cùng một tập
+luyện, đồng thời mở rộng không gian các task có thể tạo ra từ cùng một tập
 trải nghiệm.
 
 \section{Đối chiếu mục tiêu và kết quả}
@@ -104,7 +104,7 @@ Mục~\ref{sec:intro-contrib} với những kết quả đạt được của kh
 \endfoot
 
 O1 &
-Thu thập quỹ đạo tự động, bền vững và an toàn từ website không nhãn &
+Thu thập trajectory tự động, bền vững và an toàn từ website không nhãn &
 Hoàn thành. Hệ thống hiện thực cơ chế frontier hai tầng kết hợp giới hạn
 template, chiến lược duyệt web fail-soft và chế độ an toàn fail-closed;
 bốn đợt khám phá chạy khoảng 21 giờ mỗi đợt trên website thật, thu 2178
@@ -115,11 +115,11 @@ hạn mức, mỗi lần đều chạy tiếp từ điểm kiểm tra của node
 \addlinespace
 
 O2 &
-Sinh tác vụ ngữ nghĩa nhiều bước từ đồ thị các skill đã kiểm chứng &
+Sinh semantic task nhiều bước từ đồ thị các skill đã kiểm chứng &
 Hoàn thành một phần. Quy trình phát hiện, kiểm chứng skill và quy nạp
 operator có precondition/effect đã chạy thật (59 skill, 25 operator), và
-lần đầu tiên sinh được tác vụ ngữ nghĩa trên website sống: 66 tác vụ, 25 thành
-công, so với 0 tác vụ ở toàn bộ các đợt trước. Tuy nhiên, phần lớn tác vụ này
+lần đầu tiên sinh được semantic task trên website sống: 66 task, 25 thành
+công, so với 0 task ở toàn bộ các đợt trước. Tuy nhiên, phần lớn task này
 đến từ seed năng lực website (59 lượt) chứ không từ việc ghép chuỗi
 operator (7 lượt, riêng Reddit không hình thành được chuỗi nào), nên cơ chế
 ghép chuỗi mới được chứng minh là khả thi chứ chưa đủ dày để làm nguồn dữ
@@ -132,15 +132,15 @@ Xây dựng pipeline tinh lọc dữ liệu theo nguyên tắc prompt parity &
 Hoàn thành. Pipeline bao gồm bước judge đánh giá độc lập ngay trong vòng lặp
 thu thập và dựng dataset với cùng cấu trúc prompt sử dụng trong quá trình
 suy luận. Các bước thực thi lỗi được loại bỏ và dữ liệu được sắp xếp theo
-curriculum trước khi tinh chỉnh
+curriculum trước khi fine-tune
 (Mục~\ref{sec:method-data}). \\
 
 \addlinespace
 
 O4 &
 Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chính thức &
-Hoàn thành một phần. Mô hình đã được tinh chỉnh và đánh giá trên toàn bộ
-655 tác vụ chính thức của cả bốn website, đạt 20{,}8\% so với 13{,}3\% của mô
+Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
+655 task chính thức của cả bốn website, đạt 20{,}8\% so với 13{,}3\% của mô
 hình nền đo trong cùng điều kiện. Phần còn thiếu là các phép lặp
 thống kê và các ablation tách bạch đóng góp của từng thành phần
 (Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
@@ -171,28 +171,28 @@ một tập dữ liệu đa dạng hơn mà không phải dựng lại toàn b�
 Nhưng kết quả liên-website ở Mục~\ref{sec:exp-ablation} cảnh báo một điều:
 lượng dữ liệu thu được cho một website không dự đoán được điểm số trên chính
 website đó. Vì vậy việc mở rộng nên nhắm vào \emph{độ phủ} và \emph{độ khó}
-của tác vụ, chứ không chỉ vào số lượng mẫu.
+của task, chứ không chỉ vào số lượng mẫu.
 
 \textbf{Giảm tỷ lệ hành động thất bại ở lớp thực thi.}
 Phân tích nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) cho thấy từ
 83\% đến 95\% episode thất bại có ít nhất một hành động bị trình duyệt từ
 chối. Một episode thất bại điển hình cũng dài gấp hơn hai lần episode thành
 công, vì bị kẹt lặp lại. Đây là hai hướng cải thiện có tỷ suất cao và độc lập với
-quy mô dữ liệu: bổ sung các quỹ đạo \emph{phục hồi sau lỗi} vào tập huấn
+quy mô dữ liệu: bổ sung các trajectory \emph{phục hồi sau lỗi} vào tập huấn
 luyện để mô hình học cách đổi chiến lược thay vì thử lại, và làm cho lớp
 thực thi ít sinh ra lỗi khả thao tác giả hơn.
 
 \textbf{Khai thác tín hiệu kiểm chứng để huấn luyện.}
-Ngoài tập dữ liệu dùng cho tinh chỉnh có giám sát, pipeline còn để lại nhiều
-tín hiệu khác: quỹ đạo đã được judge xác nhận, quỹ đạo thất bại, và episode
+Ngoài tập dữ liệu dùng cho fine-tuning có giám sát, pipeline còn để lại nhiều
+tín hiệu khác: trajectory đã được judge xác nhận, trajectory thất bại, và episode
 kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở
 thích hoặc học tăng cường dùng được cả những tín hiệu này, tức tận dụng được
 cả phần chưa thành công thay vì chỉ học trên mẫu đúng.
 
 \textbf{Mở rộng sang các mô hình nhỏ hơn.}
-Qwen3.5-9B đã nhỏ hơn hẳn các mô hình lớn thường dùng cho tác nhân web,
+Qwen3.5-9B đã nhỏ hơn hẳn các mô hình lớn thường dùng cho web agent,
 nhưng chi phí triển khai vẫn còn cao với một số môi trường thực tế. Hướng tiếp
-theo là chưng cất hành vi của tác nhân đã tinh chỉnh xuống mô hình cỡ 1B--3B,
+theo là chưng cất hành vi của agent đã fine-tune xuống mô hình cỡ 1B--3B,
 để xem phương pháp còn giữ được hiệu quả tới đâu khi dung lượng mô hình giảm
 tiếp.
 
@@ -201,7 +201,7 @@ Trong phạm vi khóa luận, đồ thị kỹ năng chỉ được sử dụng 
 luyện. Tuy nhiên, cùng một biểu diễn này cũng có thể được khai thác ở thời
 điểm suy luận nhằm truy xuất các skill hoặc subgoal liên quan để bổ sung ngữ
 cảnh cho mô hình. Điều này mở ra khả năng kết hợp giữa dữ liệu đã học và tri
-thức có cấu trúc trong cùng một hệ thống tác nhân web.
+thức có cấu trúc trong cùng một hệ thống web agent.
 
 \textbf{Hoàn thiện phần thực nghiệm còn thiếu.}
 Ba hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất là lặp
@@ -212,19 +212,19 @@ cả hai mô hình, và chạy lại Shopping cùng Shopping Admin một cách t
 Thứ hai là ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng
 ngân sách; đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu
 trúc đồ thị, và cũng là phần còn thiếu để phát biểu mạnh hơn về phương pháp.
-Thứ ba là mở rộng sang các bộ chuẩn tác nhân web khác, cùng những thước đo
+Thứ ba là mở rộng sang các bộ chuẩn web agent khác, cùng những thước đo
 chi tiết hơn tỷ lệ thành công nhị phân, chẳng hạn mức độ tiến bộ từng phần.
 
 \vspace{1em}
 \noindent
 Khóa luận đã đề xuất HSGE, một pipeline tự động thu thập dữ liệu huấn luyện
-cho tác nhân web từ các website không có nhãn thông qua quá trình khám phá có
+cho web agent từ các website không có nhãn thông qua quá trình khám phá có
 cấu trúc. Thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ để đưa một mô hình 9B lên
-20{,}8\% trên 655 tác vụ chính thức của bốn website WebArena. Mức đó nằm
+20{,}8\% trên 655 task chính thức của bốn website WebArena. Mức đó nằm
 giữa các hệ thống mở tốt nhất cùng phân khúc dưới 10B, và cao hơn 7{,}5
-điểm phần trăm so với chính mô hình nền khi chưa tinh chỉnh. Đáng nói hơn, kết quả đạt
+điểm phần trăm so với chính mô hình nền khi chưa fine-tune. Đáng nói hơn, kết quả đạt
 được chỉ với 4288 mẫu huấn luyện, ít hơn khoảng một bậc độ lớn so với các
 công trình cùng hướng. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
 giá ở quy mô lớn hơn. Nhưng chừng đó đã đủ để nói rằng đầu tư vào chất lượng
 và cấu trúc của dữ liệu huấn luyện là một hướng khả thi để nâng năng lực của
-tác nhân web chạy trên mô hình ngôn ngữ nhỏ.
+web agent chạy trên mô hình ngôn ngữ nhỏ.

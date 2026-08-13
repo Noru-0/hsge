@@ -6,6 +6,12 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **09:06** — `Thesis_report/thesis_hsge_vi/Chapter6/chapter6.tex` — tiếp tục
+  đảo ngược quy ước thuật ngữ. 12 chỗ "tinh chỉnh" xử lý bằng cụm cố định
+  trước, rồi `revert_terms.py` (21 tác vụ→task, 9 tác nhân→agent, 8 quỹ
+  đạo→trajectory, 7 tác nhân web→web agent, 5 tác vụ ngữ nghĩa→semantic
+  task). Build sạch: 167 trang, 0 error, 0 undefined ref. **C1–C6 xong**,
+  còn lại Phụ lục 1.
 - **09:05** — `Thesis_report/thesis_hsge_vi/Chapter5/chapter5.tex` — tiếp tục
   đảo ngược quy ước thuật ngữ. "tinh chỉnh" (7 chỗ, chủ yếu "mô hình sau
   tinh chỉnh") xử lý bằng sed cụm cố định trước khi chạy
