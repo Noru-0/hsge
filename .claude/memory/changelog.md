@@ -6,6 +6,15 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **08:34** — `Thesis_report/thesis_hsge_vi/Chapter6/chapter6.tex` — **rà văn
+  phong Chương 6.** Ghi chú cũ trong memory 09 ("C6 nặng nhất: agent 12 /
+  tác nhân 0") đã lỗi thời — đợt đồng bộ thuật ngữ C4–C6 (`eb0ef76`) sửa từ
+  trước rồi. Đọc lại thấy chương sạch, chỉ 2 điểm nhỏ theo xác nhận của
+  user: câu bị động ở dòng 62 ("được xem là" → "Đây là"); câu kết đoạn cuối
+  ("ngang các hệ thống tốt nhất cùng phân khúc dưới 10B") tự tin hơn số liệu
+  thật (mô hình thấp hơn Go-Browse-7B 1,8 điểm) — sửa thành "nằm giữa các hệ
+  thống mở tốt nhất", khớp cách bảng O4 đã diễn đạt cùng số liệu. Build
+  sạch: 169 trang (không đổi), 0 error, 0 undefined ref, overfull vẫn 9.
 - **08:30** — `Thesis_report/thesis_hsge_vi/Chapter5/chapter5.tex` — **rà văn
   phong Chương 5.** Đọc lại thấy chương đã sạch từ trước (0 "agent"/"task"
   trần, 12 chỗ dùng "sẽ" đều là tương lai/điều kiện thật, cấu trúc

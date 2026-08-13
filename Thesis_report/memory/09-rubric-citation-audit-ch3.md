@@ -318,8 +318,14 @@ C5 cũng đã rà, nhưng hóa ra **đã sạch từ trước** — không có 4
 máy, chỉ 3 điểm nhỏ (2 chú tiếng Anh dư + 1 đoạn dài gộp ý). Chi tiết: entry
 2026-08-13 08:30 trong changelog. Bài học rút ra: không phải chương nào cũng
 cần cùng mức sửa — nên chẩn đoán trước rồi mới quyết mức độ, thay vì áp mù
-quáng cùng một lượng sửa cho mọi chương. C6 vẫn chưa đụng (nặng nhất theo ghi
-nhận cũ: "agent" 12 / "tác nhân" 0).
+quáng cùng một lượng sửa cho mọi chương.
+
+C6 cũng đã rà (2026-08-13 08:34) — ghi chú cũ "C6 nặng nhất: agent 12 lần /
+tác nhân 0" đã **lỗi thời**, đợt đồng bộ thuật ngữ C4–C6 (`eb0ef76`, trước
+phiên này) đã sửa hết rồi. Chỉ còn 2 điểm nhỏ: 1 câu bị động, 1 câu kết tự
+tin hơn số liệu thật (đã hạ giọng khớp cách bảng O4 diễn đạt). Cả C4/C5/C6
+giờ đã rà xong; chỉ C1/C2 còn ở mức "chỉ tách câu dài" (chưa áp checklist 4
+dấu hiệu dịch máy) — nhưng user chỉ yêu cầu "từ chương 3" nên chưa đụng.
 
 
 ## Nợ #3 và #5 đã đóng (2026-08-12 19:46)
