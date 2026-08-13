@@ -7,11 +7,19 @@ with precondition/effect edges at the high level — discovers skills online, ad
 only those that execute successfully, transfers them to unseen sites, and generates
 an easy→hard curriculum whose deepest chains are full transactions (e.g. a purchase).
 
-This repository is a **runnable skeleton with deterministic mock backends**: the
-whole pipeline runs with no API keys, GPU, or live browser. Real backends
-(LLM, embedder, WebArena browser) are subclass swaps, not rewrites — the
-standalone WebArena runtime under `hsge/webarena/` runs the same discovery
-pipeline against a real browser.
+The core pipeline runs with **deterministic mock backends**: no API keys,
+GPU, or live browser needed to explore the code. Real backends (LLM, embedder,
+WebArena browser) are subclass swaps, not rewrites — the standalone WebArena
+runtime under `hsge/webarena/` runs the same discovery pipeline against a
+real browser and real websites.
+
+This has been run for real: four WebArena sites (Shopping, Shopping Admin,
+GitLab, Reddit) explored end to end, turned into a 4,605-example SFT dataset,
+used to LoRA-fine-tune Qwen3.5-9B, and evaluated on WebArena's own 655-task
+benchmark — **20.8% success vs. 13.3% for the same base model unfine-tuned**
+(+7.5 points, statistically significant on 3/4 sites; see
+`training/README.md` and the tracked `outputs/eval/` results for the full
+numbers and caveats).
 
 ## Quickstart (mock, no keys)
 
@@ -21,7 +29,7 @@ python explore.py             # run the exploration loop (frontier -> discover -
 python demo_shopping.py       # shopping domain: plan -> execute -> verify a purchase
 python demo.py                # login/search domain: discover -> verify -> transfer
 python compare_three_way.py   # Flat baseline vs AWM vs HSGE on identical input
-PYTHONPATH=. python hsge/tests/test_clustering.py
+python -m pytest hsge/tests/ -q   # or: PYTHONPATH=. python hsge/tests/test_clustering.py
 ```
 
 Run everything from this directory (the one containing `hsge/`).
@@ -64,6 +72,40 @@ an effect once episodes have actually been judged — without it (or before
 running `judge_episodes.py`), every declared-success episode is kept as
 before.
 
+### Fine-tuning and evaluating on WebArena
+
+`training/` takes a built `train.jsonl` the rest of the way: LoRA-fine-tune a
+model with LLaMA-Factory, merge the adapter, serve it with vLLM, and evaluate
+it against WebArena's official per-site tasks — including running a base vs.
+fine-tuned comparison across multiple sites in parallel on separate GPU boxes.
+
+```bash
+python training/merge_datasets.py datasets/train_reddit.jsonl datasets/train_shopping.jsonl \
+    datasets/train_shopping_admin.jsonl datasets/train_gitlab.jsonl -o datasets/train_all.jsonl
+python training/prepare_dataset.py datasets/train_all.jsonl --name all --out-dir training/data/all
+llamafactory-cli train training/qwen35_9b_lora_all.yaml
+llamafactory-cli export training/merge_lora_all.yaml         # or merge_lora_peft.py (no train venv needed)
+bash training/serve_vllm.sh /path/to/merged-model
+python training/eval_webarena.py --site reddit --site-url https://<tunnel> --out outputs/eval/reddit/finetuned
+python training/eval_status.py outputs/eval/reddit/finetuned          # progress / sanity checks
+python training/analyze_eval_traces.py outputs/eval/reddit/finetuned  # failure-cause breakdown
+```
+
+`datasets/` holds the per-domain and merged SFT exports (see
+`datasets/README.md`) — `train_all.jsonl` is what the shipped `checkpoint-536`
+result above was trained on. `training_data/` is a separate, full-column
+audit copy of the same train/val split (`build_sft_dataset.py`'s
+`--keep-all-fields` output), useful for inspecting an example by eye without
+regenerating it.
+
+`training/README.md` is the full, tested command reference (vast.ai setup,
+per-domain parallel eval, troubleshooting); `docs/14_vast_ai_training_eval_tutorial.md`
+narrates the same pipeline with the reasoning and gotchas behind each step.
+The curated results this repo ships under `outputs/eval/` (per-task JSON +
+anomaly reports, no screenshots) back the numbers quoted above; the raw
+exploration/eval run directories (multi-GB, per-step screenshots) are not
+tracked.
+
 Highlights of the runtime (see `.claude/rules/architecture.md` for the full map):
 
 - **Skill → operator promotion**: once a skill recurs enough to be admitted
@@ -97,6 +139,11 @@ Highlights of the runtime (see `.claude/rules/architecture.md` for the full map)
 | `judge_episodes.py` | Optional: LLM re-checks declared-success episodes, catches false positives |
 | `reannotate_thoughts.py` | Optional: rewrites each step's thought into a state/subgoal/reflection/completion-check template |
 | `build_sft_dataset.py` | Converts collected trajectories into curriculum-ordered SFT data (prompt byte-for-byte matches the live Solver; `--require-judge` to only keep judge-verified successes) |
+| `replay_segmentation.py` | Replays segmentation over recorded episodes to compare the URL-only baseline against the URL+axtree-similarity+LLM algorithm |
+
+`training/` has its own set of scripts (dataset merge/prepare, LoRA configs,
+vLLM serving, WebArena evaluation, trace analysis) — see
+`training/README.md` for what each one does.
 
 ## Documentation (`docs/`)
 
@@ -112,7 +159,16 @@ Highlights of the runtime (see `.claude/rules/architecture.md` for the full map)
 | `11_vision_auth_hardening_session.md` | Node dedup, persisted artifacts, vision + Set-of-Marks, retry/backoff, login/auth |
 | `12_real_run_bug_fixes_session.md` | Task-diversity dedup, structured INFO/NAV/MOD classification, Solver stuck-loop fix |
 | `13_run02_reddit_exploration_log.md` | Real reddit run: frontier-starvation root cause + operator quality via grounding check |
+| `14_vast_ai_training_eval_tutorial.md` | LoRA fine-tuning + WebArena eval on rented vast.ai GPUs, narrated (venv isolation, template gotchas, parallel-eval technique) |
+| `15_seed_refinement_improvement_plan.md` | Seed-conditioned bottom-up refinement roadmap (planning only) |
+| `16_phaseBC_verification_refinement_plan.md` | Verification-first / solver-competence roadmap, reprioritized from a real seed run (planning only) |
+| `17_phaseC_solver_competence_plan.md` | Solver-competence tasks (subgoal-guided GOAL solving, anti-wandering, grounded operators), reprioritized from a second real run (planning only) |
+| `go-browse.md` | Full text of the Go-Browse paper — the closest related work, kept for reference |
 | `00_package_readme.md` | The original package-level README |
+
+`training/README.md` is the terse command reference for the fine-tune →
+merge → serve → evaluate loop (see "Fine-tuning and evaluating on WebArena"
+above); `docs/14_...` is the narrated version of the same pipeline.
 
 ## The pipeline at a glance
 
@@ -120,8 +176,11 @@ Highlights of the runtime (see `.claude/rules/architecture.md` for the full map)
 explore / run_webarena.py (collect verified, composed trajectories)
    -> judge_episodes.py        (optional: catch false-positive "success")
    -> reannotate_thoughts.py   (optional: richer per-step thoughts)
-   -> build_sft_dataset.py (curriculum-ordered SFT data)
-      -> fine-tune a model
-         -> evaluate on WebArena
-            -> re-collect with the improved agent   (iterated bootstrap)
+   -> build_sft_dataset.py (curriculum-ordered SFT data, train_<site>.jsonl)
+      -> training/merge_datasets.py + prepare_dataset.py
+         -> llamafactory-cli train (LoRA)   -> llamafactory-cli export (merge)
+            -> training/serve_vllm.sh
+               -> training/eval_webarena.py   (official WebArena tasks)
+                  -> training/eval_status.py / analyze_eval_traces.py
+                     -> re-collect with the improved agent   (iterated bootstrap)
 ```

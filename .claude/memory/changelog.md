@@ -6,6 +6,29 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **21:55** — `README.md`, `datasets/README.md` — **cập nhật README gốc
+  khớp source code hiện tại.** README trước đó dừng ở mức "runnable
+  skeleton" và hoàn toàn không nhắc tới `training/` (LoRA fine-tune + eval
+  WebArena), dù đây giờ là một nhánh lớn và đã có kết quả thật (20,8% vs
+  13,3%, checkpoint-536, 655 tác vụ WebArena). Thêm: đoạn giới thiệu kết quả
+  thật ở đầu file; mục "Fine-tuning and evaluating on WebArena" (lệnh
+  merge_datasets → prepare_dataset → train → merge → serve → eval_webarena
+  → eval_status/analyze_eval_traces, trỏ `training/README.md` +
+  `docs/14_...`); `replay_segmentation.py` vào bảng Scripts; docs 14–17 +
+  `go-browse.md` vào bảng Documentation; sơ đồ pipeline cụ thể hóa bằng tên
+  script thật thay vì mô tả chung chung; `python -m pytest hsge/tests/ -q`
+  làm cách chạy test chính (43 file test, trước đó README chỉ nhắc 1 file).
+  **Phát hiện + sửa một mâu thuẫn số liệu có thật trong tài liệu cũ**:
+  `datasets/README.md` ghi `datasets/train_all.jsonl` (3751 dòng, đợt thu
+  thập cũ) "là thứ checkpoint-536 được huấn luyện trên" — sai, số đó không
+  khớp bảng `tab:dataset` của khóa luận. Dữ liệu đúng là
+  `training_data/train.jsonl`+`val.jsonl` (4288+266=4554, từ 4 đợt
+  `wa_run_20_*` chính thức) — đã sửa `datasets/README.md` ghi rõ correction
+  kèm ngày, không xóa số liệu cũ (vẫn hữu ích tham chiếu đợt thu thập
+  trước). **Chưa đụng** `training/README.md` — file đó cũng có khả năng
+  mang cùng số liệu cũ (3751) nhưng không thuộc phạm vi yêu cầu của user
+  (chỉ "cập nhật README.md"); cần rà riêng nếu muốn sửa.
+
 - **21:18** — `.gitignore`, `outputs/eval/`, `training_data/` — **push lên
   GitHub** (`origin/Skill_Operator`, 85 commit, `6333b74..97d8209`), theo
   yêu cầu user: code + toàn bộ công việc thesis đã commit trước đó, cộng
