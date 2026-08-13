@@ -6,6 +6,14 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **09:04** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — tiếp tục
+  đảo ngược quy ước thuật ngữ. Riêng "execution layer"/"merge"/"serving"/
+  "reward function" — bốn từ chính tôi vừa thêm vào glossary sáng nay để
+  dịch sang tiếng Việt — nay quay lại tiếng Anh theo quy ước mới (mỉa mai
+  nhưng đúng logic: mọi từ glossary giữ tiếng Anh, kể cả từ mới thêm). Xử lý
+  "tinh chỉnh" (mật độ cao, ~25 chỗ, chủ yếu "mô hình sau tinh chỉnh") bằng
+  sed theo cụm cố định trước khi chạy `revert_terms.py`. Build sạch: 167
+  trang, 0 error, 0 undefined ref.
 - **09:00** — `Thesis_report/thesis_hsge_vi/Chapter3/chapter3.tex` — tiếp tục
   đảo ngược quy ước thuật ngữ (103 tác vụ→task, 51 quỹ đạo→trajectory, 29
   tác nhân→agent, 16 tác vụ ngữ nghĩa→semantic task, 10 tinh chỉnh→fine-tune/
