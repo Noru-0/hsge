@@ -581,6 +581,27 @@ Entry format:
 
 ## Fixed
 
+### `datasets/README.md` claimed the wrong file trained checkpoint-536
+- **Status**: fixed (2026-08-13 21:55)
+- **Found**: 2026-08-13, updating the root `README.md` to match the current
+  source tree.
+- **Where**: `datasets/README.md`.
+- **Symptom**: the file asserted `datasets/train_all.jsonl` (3,751 examples,
+  merged from an earlier per-domain collection round) "is what checkpoint-536
+  was trained on". That contradicts the thesis's `tab:dataset` table, which
+  reports checkpoint-536 as trained on 4,554 examples (4,288 train / 266 val)
+  from the four official `wa_run_20_*` runs — the dataset actually shipped as
+  `training_data/train.jsonl`/`val.jsonl`.
+- **Cause**: `datasets/README.md` describes an earlier training round and was
+  never updated after the final `wa_run_20_*` collection + `training_data/`
+  export superseded it; the checkpoint step number (536) coincidentally
+  recurred across the two rounds, making the stale claim look plausible.
+- **Fix**: `datasets/README.md` now states the correction explicitly (with
+  date) and points to `training_data/` as the dataset behind the current
+  result; the old per-file numbers are kept, relabeled as "an earlier
+  collection round, superseded". `training/README.md` was not audited for
+  the same stale claim — out of scope of this fix, flagged for a follow-up.
+
 ### The train/val split is trajectory-level, so 52% of val trajectories share a goal with train
 - **Status**: fixed (2026-08-11 03:32)
 - **Found**: 2026-08-11, auditing `training_data/{train,val}.jsonl` (built from
