@@ -6,6 +6,13 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-13
 
+- **08:54** — `Thesis_report/thesis_hsge_vi/Chapter2/chapter2.tex` — tiếp tục
+  đảo ngược quy ước thuật ngữ (agent/task/trajectory/semantic task/
+  precondition/effect/reward function/serving/merge giữ tiếng Anh). Giữ
+  nguyên 1 chỗ "tinh chỉnh" ở dòng 137 (SkillWeaver) vì đó là nghĩa chung
+  "refine kỹ năng", không phải ML fine-tuning — tránh false positive.
+  Build sạch: 168 trang (giảm 1 do tiếng Anh ngắn hơn), 0 error, 0 undefined
+  ref, overfull không đổi.
 - **08:48** — `Thesis_report/thesis_hsge_vi/Chapter1/chapter1.tex` — **đảo
   ngược quy ước thuật ngữ**: theo yêu cầu mới của user, mọi từ đã có trong
   `glossary.tex` (agent, task + các dạng ghép semantic/goal/low-level task,
