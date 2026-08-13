@@ -133,8 +133,7 @@ giữa các cấu hình khám phá thay vì chỉ so tổng.
 \begin{table}[H]
 \centering
 \caption[Chi phí API của giai đoạn khám phá]{Chi phí API thực tế của giai
-đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp. Ô ghi \emph{chưa tổng
-hợp} là số liệu sẽ được bổ sung.}
+đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp.}
 \label{tab:apicost}
 \small
 \begin{tabular}{@{}L{5.4cm} L{4.0cm} R{3.4cm}@{}}
@@ -142,14 +141,35 @@ hợp} là số liệu sẽ được bổ sung.}
 \textbf{Nhà cung cấp} & \textbf{Vai trò sử dụng} & \textbf{Chi phí} \\
 \midrule
 OpenAI & \texttt{solver}, \texttt{page\_explorer},
-\texttt{goal\_planner}, \texttt{site\_seeder} & \emph{chưa tổng hợp} \\
+\texttt{goal\_planner}, \texttt{site\_seeder} & 32{,}29\,USD \\
 DeepSeek & \texttt{episode\_judge}, pipeline phát hiện skill &
-\emph{chưa tổng hợp} \\
+4{,}19\,USD \\
 \midrule
-\textbf{Tổng} & & \emph{chưa tổng hợp} \\
+\textbf{Tổng} & & \textbf{36{,}48\,USD} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Quy về mỗi trajectory thành công đưa vào tập dữ liệu huấn luyện (1029
+trajectory, Bảng~\ref{tab:dataset}), chi phí API của giai đoạn khám phá là
+36{,}48 / 1029 $\approx$ 0{,}0355\,USD mỗi trajectory. Con số này cùng bậc độ
+lớn với 0{,}031\,USD mỗi mẫu mà Synatra báo cáo cho việc tổng hợp bản mẫu
+ngoại tuyến từ tài liệu hướng dẫn~\cite{ou2024synatra} (Mục~\ref{sec:rel-datagen}),
+dù hai quy trình khác hẳn nhau về bản chất: Synatra không hề tương tác với
+website thật, còn con số của khóa luận đã bao gồm toàn bộ chi phí điều
+khiển trình duyệt, đề xuất, giải và chấm lại task trên môi trường sống.
+
+So với Go-Browse - công trình gần nhất về mặt phương pháp, cũng thu thập
+dữ liệu bằng cách tương tác trực tiếp với website - khoảng cách còn rõ hơn.
+Go-Browse báo cáo tổng chi phí 975{,}57\,USD (gồm cả rollout lẫn chấm lại
+bằng GPT-4o) cho khoảng 10\,000 trajectory thành công~\cite{gandhi2026gobrowse},
+tương đương 0{,}0976\,USD mỗi trajectory - cao hơn khoảng 2{,}7 lần chi phí
+của khóa luận. Một phần khác biệt đến từ việc Go-Browse dùng nhiều mô hình
+đề xuất/giải task đắt hơn (Claude-3.7-Sonnet, GPT-4o) cho phần lớn khối
+lượng rollout, trong khi khóa luận dồn phần lớn lời gọi tần suất cao (vai
+trò solver) sang một mô hình rẻ hơn (Mục~\ref{sec:exp-cost-explore}); đây
+không phải một phép so sánh có kiểm soát, vì hai quy trình khám phá không
+cùng cấu trúc và không cùng tập website.
 
 \subsection{Tham số chạy}
 
