@@ -4,6 +4,21 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-16
+
+- **19:12** — `scripts/watchdog_webarena.sh` (new) — auto-recovery watchdog for
+  `run_webarena.py` unattended collection runs. Written after 3 real hangs in
+  `outputs/wa_run_21_reddit`/`wa_run_21_shopping_admin` (new WebArena tunnel
+  instances) that were CPU-frozen and immune to `SIGINT` — root cause
+  unconfirmed (no stack trace: `py-spy` needs root on macOS, unavailable here;
+  `lldb -p <pid>` attach itself stalled). Watchdog polls `run_log.jsonl` mtime
+  every 2 min; a stall >= 30 min with the process still alive gets `SIGKILL`ed
+  (works even against a blocked native call) and relaunched with `--resume`,
+  automating the manual kill+resume cycle done by hand 3x this session. Both
+  reddit/shopping_admin collection runs switched over to it. See
+  `.claude/memory/bugs.md` ("run_webarena.py hangs indefinitely mid-run,
+  immune to SIGINT") for full diagnosis notes.
+
 ## 2026-08-14
 
 - **06:19** — `Thesis_report/thesis_hsge_vi/Chapter4/chapter4.tex` — điền

@@ -15,6 +15,44 @@ Entry format:
 
 ## Open
 
+### `run_webarena.py` hangs indefinitely mid-run, immune to SIGINT
+- **Status**: open (mitigated with an external watchdog, root cause unconfirmed)
+- **Found**: 2026-08-16, `outputs/wa_run_21_reddit` (real WebArena run, new
+  tunnel instances). Hit **3 times** in one run: 21:33–22:42 (shopping_admin,
+  same run family), 14:36–15:05 and 17:42–18:24+ (reddit).
+- **Where**: somewhere inside the Playwright sync-API call chain reached from
+  `hsge/webarena/browser.py` / `hsge/webarena/agents.py::Solver.solve` /
+  `WebArenaExplorer._solve_with_retries` — exact frame unconfirmed (see Cause).
+- **Symptom**: the process is still alive (`ps` shows it running, not zombie)
+  but CPU time stops advancing entirely (e.g. +0.03s of CPU over 15+ real
+  minutes) and `run_log.jsonl`/episode files stop being written. No exception,
+  no timeout error, nothing in stdout. **`SIGINT` does not interrupt it** —
+  sent directly to the hung PID, the process was completely unaffected (no
+  traceback, no exit), meaning it's blocked in a native/C call, not stopped at
+  a Python bytecode boundary where `KeyboardInterrupt` could fire.
+- **Cause**: unconfirmed. Could not get a stack trace in this environment:
+  `py-spy dump --pid` requires root on macOS (unavailable here), and
+  `lldb -p <pid>` attach itself stalled indefinitely (likely blocked on a
+  macOS permission prompt this sandbox can't answer). Leading hypothesis based
+  on the SIGINT-immunity + frozen-CPU signature: a Playwright sync-API call is
+  blocked in the IPC layer between the Python process and its Node.js driver
+  subprocess (or the driver and the underlying Chromium subprocess), which has
+  no timeout of its own — `page.goto(timeout=10000)` etc. bound the
+  *navigation*, not the underlying pipe read if the driver/browser process
+  itself stops responding. All 3 hangs occurred around heavy
+  Playwright activity (a broken admin route retried on 10s goto timeouts, a
+  154-comment thread, and immediately after a 24-step episode finished) but no
+  single common trigger was isolated.
+- **Fix**: root cause not fixed (would need a stack trace this sandbox can't
+  capture, or reproducing under `py-spy`-capable conditions). Mitigated with
+  `scripts/watchdog_webarena.sh`: polls `run_log.jsonl` mtime every 2 min, and
+  if it goes stale >= 30 min while the process is still alive, `SIGKILL`s it
+  (SIGKILL always works, unlike SIGINT/SIGTERM which can't interrupt a blocked
+  native call) and relaunches with `--resume`. This automates the manual
+  kill+resume cycle already performed 3x by hand for this run. Run it instead
+  of calling `run_webarena.py` directly for any long unattended collection run:
+  `bash scripts/watchdog_webarena.sh <site> <out_dir> [max_nodes] [stall_secs] [target_success]`.
+
 ### The stall watchdog killed a slow-but-legitimate task 8 times in a row
 - **Status**: fixed (2026-08-12 07:05). Thresholds corrected; the underlying
   design flaw (two guards with inverted thresholds) is what to remember.
