@@ -20,9 +20,22 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   (news sites; gitlab.com/docs.gitlab.com respectively). Verified: 335 tests
   pass (suite grew from 304 -- picked up more collected since last full run),
   `--dry-run` unaffected, 7 manual allow-pattern cases all correct. See
-  `.claude/memory/bugs.md` for full detail. **Follow-up not yet done**:
-  filter the off-domain episodes out of `wa_run_20_reddit`/`wa_run_20_gitlab`/
-  `wa_run_21_reddit` before they feed `build_sft_dataset.py`.
+  `.claude/memory/bugs.md` for full detail.
+
+- **03:54** — `hsge/webarena/runtime.py`, `scripts/filter_offdomain_episodes.py`
+  (new) — follow-up to the allow-pattern fix above. Added a pop-time
+  `self.allow`/`self.deny` re-check in the frontier loop: a `--resume` run
+  restores its frontier straight from `checkpoint.pkl`, so a URL enqueued
+  under the old buggy pattern would still get visited after only fixing
+  `_default_allow_pattern` -- confirmed by inspecting
+  `wa_run_21_reddit/checkpoint.pkl` directly, **1333/1531 queued frontier
+  entries (87%) were off-domain**. Suite still 335 passed. Then quarantined
+  (moved, not deleted) contaminated episodes out of `episodes/` into
+  `episodes_offdomain/` for the three affected runs:
+  `wa_run_20_reddit` 69/619, `wa_run_20_gitlab` 99/563, `wa_run_21_reddit`
+  238/522 -- 550/464/284 clean episodes remain, safe for
+  `build_sft_dataset.py`. `wa_run_20_shopping` and `wa_run_21_shopping_admin`
+  were confirmed clean (not touched).
 
 ## 2026-08-16
 

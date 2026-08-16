@@ -49,11 +49,24 @@ Entry format:
   anchor, so an unrelated URL containing the host as a substring anywhere
   could have matched). Verified: 7 manual root/URL pairs incl. bare-host and
   path-having roots, both same-site and off-site targets, all correct; full
-  suite 304 -> 335 passed; `--dry-run` unaffected. **Data cleanup still
-  needed**: the off-domain nodes/episodes already collected in
-  `wa_run_20_reddit`, `wa_run_20_gitlab`, `wa_run_21_reddit` must be filtered
-  out before those runs feed `build_sft_dataset.py` (see changelog for the
-  filter script/approach once written).
+  suite 304 -> 335 passed; `--dry-run` unaffected.
+
+  A second, larger part of the fix: `hsge/webarena/runtime.py`'s main loop
+  now re-checks `self.allow`/`self.deny` **at frontier-pop time**, not just
+  at push time (`_admit_url`). Reason: a `--resume` run restores its frontier
+  straight from `checkpoint.pkl`, so URLs enqueued under the old buggy
+  pattern would still get visited after the fix above -- checked
+  `wa_run_21_reddit/checkpoint.pkl` directly: **1333 of 1531 queued frontier
+  entries (87%) were off-domain** (blast.ncbi.nlm.nih.gov, ensembl.org,
+  news24.com, postmill.xyz, ...). Without this second check, resuming after
+  only the pattern fix would have kept the run almost entirely off the real
+  target site. Cleanup done: `scripts/filter_offdomain_episodes.py` (new)
+  quarantines (moves, doesn't delete) any episode whose steps touched a host
+  other than the site's own into `<run_dir>/episodes_offdomain/`, applied to
+  the three contaminated runs -- `wa_run_20_reddit` 69/619 episodes moved,
+  `wa_run_20_gitlab` 99/563, `wa_run_21_reddit` 238/522 -- leaving
+  550/464/284 clean episodes respectively, safe to feed straight into
+  `build_sft_dataset.py`.
 
 ### `run_webarena.py` hangs indefinitely mid-run, immune to SIGINT
 - **Status**: open (mitigated with an external watchdog, root cause unconfirmed)

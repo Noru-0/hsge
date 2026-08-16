@@ -896,6 +896,17 @@ class WebArenaExplorer:
                 tier, _novelty, depth, _seq, url = heapq.heappop(frontier)
                 if self._norm_url(url) in visited:
                     continue
+                # Re-check allow/deny at pop time, not just at push time: a
+                # resumed run loads its frontier straight from checkpoint.pkl,
+                # so a URL enqueued under a since-fixed (or since-tightened)
+                # allow pattern would otherwise still get visited after
+                # --resume even though it would never be admitted today. Real
+                # case: wa_run_21_reddit's checkpoint carried ncbi.nlm.nih.gov/
+                # auth.nih.gov entries queued before the default allow-pattern
+                # fix (see bugs.md); without this check, resuming after the
+                # fix would still have walked straight into them.
+                if not (self.allow.search(url) and not (self.deny and self.deny.search(url))):
+                    continue
                 # Lazy per-template cap: the visited count of a template grows during
                 # the run, so a URL under cap when pushed can be over cap by the time
                 # it pops. Tier 0 (reached) gets its own, looser cap rather than an
