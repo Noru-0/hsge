@@ -16,6 +16,7 @@ import argparse
 import copy
 import os
 import re
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -72,6 +73,27 @@ def _load_config(path: str | None) -> dict:
 def _pick(cli_val, cfg_val):
     """CLI wins when the user passed it (not None), else fall back to config."""
     return cli_val if cli_val is not None else cfg_val
+
+
+def _default_allow_pattern(root_url: str) -> str:
+    """Restrict the frontier to the site's own scheme+host by default.
+
+    The old approach (``root_url.rsplit("/", 1)[0]``) assumed root_url has at
+    least one path segment beyond the host -- true for shopping_admin's
+    ".../admin", false for a bare ``WA_<SITE>`` root
+    (``https://x.trycloudflare.com``, no trailing path). For a bare host,
+    ``rsplit("/", 1)`` cuts at the "//" *after the scheme*, producing
+    "https:/" -- a pattern effectively matching any https URL at all. Real
+    fallout: ``outputs/wa_run_21_reddit`` wandered onto
+    ncbi.nlm.nih.gov/auth.nih.gov/support.google.com (72/177 nodes, 244/532
+    episodes ended up off-domain); ``wa_run_20_reddit``/``wa_run_20_gitlab``
+    were hit the same way (news sites, gitlab.com/docs.gitlab.com) whenever a
+    page happened to link off-site. Anchoring on scheme+netloc via urlsplit
+    (with a leading ``^``, since callers use ``re.search``) fixes both the
+    missing-path case and a latent substring-match risk in the old pattern.
+    """
+    parsed = urlsplit(root_url)
+    return "^" + re.escape(f"{parsed.scheme}://{parsed.netloc}") + r"(/|$)"
 
 
 # --------------------------- dry-run fakes --------------------------------- #
@@ -395,7 +417,7 @@ def main():
 
     if args.dry_run:
         root_url = args.root_url or "http://shop/home"
-        allow = _pick(args.allow, run["allow"]) or (re.escape(root_url.rsplit("/", 1)[0]) + ".*")
+        allow = _pick(args.allow, run["allow"]) or _default_allow_pattern(root_url)
         terminal_goal = "order_confirmed"                # fake browser reaches success
         llm, embedder = _DryLLM(), HashingEmbedder()
         agent_llms = {role: llm for role in AGENT_ROLES}
@@ -417,7 +439,7 @@ def main():
             root_url = os.environ.get(f"WA_{site.upper()}") if site else None
         if not root_url:
             ap.error("no start URL: set --root-url, run.root_url, or --site/run.site + WA_<SITE> in .env")
-        allow = _pick(args.allow, run["allow"]) or (re.escape(root_url.rsplit("/", 1)[0]) + ".*")
+        allow = _pick(args.allow, run["allow"]) or _default_allow_pattern(root_url)
 
         success_url_re = _pick(args.success_url_re, run["success_url_re"])
         if success_url_re:

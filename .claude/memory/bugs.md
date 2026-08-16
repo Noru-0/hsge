@@ -15,6 +15,46 @@ Entry format:
 
 ## Open
 
+### Default `allow` pattern lets the frontier escape onto real external sites
+- **Status**: fixed (2026-08-17 03:40)
+- **Found**: 2026-08-17, live during `outputs/wa_run_21_reddit` -- the run
+  started mining `<a href>`s off real pages (support.google.com,
+  www.ncbi.nlm.nih.gov, **auth.nih.gov** -- a US federal login page,
+  www.orthodb.org). Killed the run immediately on discovery.
+- **Where**: `run_webarena.py::_default_allow_pattern` (was inlined as
+  `re.escape(root_url.rsplit("/", 1)[0]) + ".*"` at both the dry-run and real
+  call sites).
+- **Symptom**: when `run.allow` is unset (the default) and `WA_<SITE>` in
+  `.env` is a bare host with no trailing path (true for
+  shopping/reddit/gitlab -- only shopping_admin's `.../admin` has one),
+  `root_url.rsplit("/", 1)[0]` splits on the `//` *after the scheme* instead
+  of a path boundary, e.g. `"https://x.trycloudflare.com".rsplit("/", 1)[0]`
+  -> `"https:/"`. The resulting allow pattern (`re.escape("https:/") + ".*"`)
+  matches essentially any `https://` URL, so `mine_hrefs` (any `<a href>` on
+  a page) and tier-0 navigated URLs are effectively **unfiltered** the moment
+  a page links off-site. Measured contamination: `wa_run_21_reddit` 72/177
+  nodes (41%) and 244/532 episodes (46%) off-domain; `wa_run_20_reddit`
+  10/76 nodes, 58/622 episodes; `wa_run_20_gitlab` 12/69 nodes, 103/574
+  episodes (wandered onto the real gitlab.com/docs.gitlab.com). `wa_run_20_
+  shopping` and `wa_run_21_shopping_admin` happened to stay clean only
+  because their pages didn't contain off-site links / because
+  shopping_admin's root URL has a path segment that made the old rsplit
+  correct by accident.
+- **Cause**: as above -- a path-splitting heuristic that silently assumed
+  every root URL has a path component.
+- **Fix**: `_default_allow_pattern(root_url)` now uses `urllib.parse.urlsplit`
+  to anchor on scheme+netloc directly (`^https://host(/|$)`) regardless of
+  whether root_url has a path, used at both call sites in `run_webarena.py`.
+  Also closes a latent substring-match risk in the old pattern (no `^`
+  anchor, so an unrelated URL containing the host as a substring anywhere
+  could have matched). Verified: 7 manual root/URL pairs incl. bare-host and
+  path-having roots, both same-site and off-site targets, all correct; full
+  suite 304 -> 335 passed; `--dry-run` unaffected. **Data cleanup still
+  needed**: the off-domain nodes/episodes already collected in
+  `wa_run_20_reddit`, `wa_run_20_gitlab`, `wa_run_21_reddit` must be filtered
+  out before those runs feed `build_sft_dataset.py` (see changelog for the
+  filter script/approach once written).
+
 ### `run_webarena.py` hangs indefinitely mid-run, immune to SIGINT
 - **Status**: open (mitigated with an external watchdog, root cause unconfirmed)
 - **Found**: 2026-08-16, `outputs/wa_run_21_reddit` (real WebArena run, new

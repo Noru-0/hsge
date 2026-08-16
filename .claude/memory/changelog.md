@@ -4,6 +4,26 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-17
+
+- **03:40** — `run_webarena.py` — **fix: default `allow` pattern let the
+  frontier escape onto real external sites.** `_default_allow_pattern()`
+  replaces the inlined `re.escape(root_url.rsplit("/", 1)[0]) + ".*"` at both
+  call sites, now anchoring on `urlsplit(root_url)`'s scheme+netloc
+  (`^https://host(/|$)`) instead of splitting on the last `/` -- the old code
+  produced `"https:/"` (matches almost any https URL) whenever `root_url` was
+  a bare host with no path, which is every `WA_<SITE>` in `.env` except
+  shopping_admin's `.../admin`. Caught live: `wa_run_21_reddit` had wandered
+  onto ncbi.nlm.nih.gov/auth.nih.gov/support.google.com (72/177 nodes, 244/532
+  episodes off-domain) before being killed; `wa_run_20_reddit` and
+  `wa_run_20_gitlab` were separately confirmed to have the same contamination
+  (news sites; gitlab.com/docs.gitlab.com respectively). Verified: 335 tests
+  pass (suite grew from 304 -- picked up more collected since last full run),
+  `--dry-run` unaffected, 7 manual allow-pattern cases all correct. See
+  `.claude/memory/bugs.md` for full detail. **Follow-up not yet done**:
+  filter the off-domain episodes out of `wa_run_20_reddit`/`wa_run_20_gitlab`/
+  `wa_run_21_reddit` before they feed `build_sft_dataset.py`.
+
 ## 2026-08-16
 
 - **19:12** — `scripts/watchdog_webarena.sh` (new) — auto-recovery watchdog for
