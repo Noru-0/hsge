@@ -6,6 +6,27 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-17
 
+- **15:07** — `Thesis_report/thesis_hsge_vi/{References/references.bib,
+  Chapter1/chapter1.tex, Chapter2/chapter2.tex}` — **thesis: address supervisor
+  feedback items 1-2 (Ch.1 results section, Ch.2 survey breadth) + reference
+  expansion.** `references.bib` 40 -> 76 entries; every new entry was checked
+  against the arXiv API or the publisher record on 2026-08-17 rather than
+  copied from HxAgent's bibliography, which contains at least one wrong id
+  (it cites "Computer use agents" as arXiv:2307.09288, which is Llama 2).
+  Where the peer-reviewed venue could not be confirmed the entry deliberately
+  cites the arXiv preprint instead of guessing a venue.
+  Ch.1: new `\section{Kết quả đạt được}` (`sec:intro-results`) before the
+  organisation section, reporting collection/model/cost/deliverable numbers
+  with `\ref` back to the Ch.4 tables they come from, plus an explicit
+  self-limitation paragraph (35 of the 49 extra solved tasks come from output
+  format compliance, p=0.120 on the remaining 485).
+  Ch.2: benchmark survey 4 -> 17 systems in four generations with new table
+  `tab:benchmarks` and an argument for why WebArena is the only benchmark
+  meeting all three requirements; agent survey ~6 -> 27 systems in four groups
+  with new table `tab:agents`; `tab:positioning` gains SeeAct, UI-TARS,
+  HxAgent, WALT. Verified: clean latexmk build, 0 errors, 0 undefined
+  ref/cite, 184 pages (was 172), 5 overfull hboxes all pre-existing.
+
 - **03:40** — `run_webarena.py` — **fix: default `allow` pattern let the
   frontier escape onto real external sites.** `_default_allow_pattern()`
   replaces the inlined `re.escape(root_url.rsplit("/", 1)[0]) + ".*"` at both
