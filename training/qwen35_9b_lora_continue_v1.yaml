@@ -1,0 +1,74 @@
+# LLaMA-Factory LoRA SFT config: CONTINUE-finetune checkpoint-536 on the
+# increment dataset (training_data_continue_v1/), not a fresh run from base.
+# Run from the repo root on the vast.ai box:
+#   /workspace/venvs/train/bin/llamafactory-cli train training/qwen35_9b_lora_continue_v1.yaml
+#
+# Dataset: training_data_continue_v1/{train,val}.jsonl (built by
+# scripts/build_continue_finetune_dataset.py), staged for LLaMA-Factory at
+# training/data/continue_v1/. Composition (see training_data_continue_v1/README.md):
+#   - increment (85%): reddit + shopping_admin from wa_run_21/wa_run_22 --
+#     genuinely new episodes checkpoint-536 never saw (it was trained only on
+#     the four wa_run_20_* runs, confirmed against datasets/README.md).
+#   - replay (15%, evenly shopping/gitlab): resampled whole trajectories from
+#     the ORIGINAL training_data/ (what checkpoint-536 was trained on), so a
+#     pass that otherwise only sees reddit/shopping_admin doesn't
+#     catastrophically forget those two domains it already learned.
+# After training: eval ALL FOUR domains, not just reddit/shopping_admin, to
+# catch regression the replay slice didn't fully prevent.
+
+### model
+model_name_or_path: /workspace/models/Qwen3.5-9B
+# Warm-start from checkpoint-536's adapter weights instead of a fresh LoRA
+# init -- this is what makes it a *continue*-finetune, not a from-scratch run.
+# Path assumes checkpoint-536 lives where qwen35_9b_lora_all.yaml's
+# output_dir put it; adjust if it was moved/renamed on the box.
+adapter_name_or_path: /workspace/saves/qwen35-9b-lora-all/checkpoint-536
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+# Must match checkpoint-536's own adapter_config.json (confirmed: r=16,
+# alpha=32, dropout=0.05) -- these aren't re-applied when loading an existing
+# adapter, but keep them declared so a mismatch here is easy to eyeball.
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+### dataset
+dataset: hsge_continue_v1_train
+eval_dataset: hsge_continue_v1_val
+dataset_dir: training/data/continue_v1
+template: qwen3_5_nothink
+cutoff_len: 4096
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+### output
+output_dir: /workspace/saves/qwen35-9b-lora-continue-v1
+logging_steps: 10
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+report_to: none
+
+### train
+# Lower LR and fewer epochs than the from-scratch run (learning_rate: 1.0e-4,
+# num_train_epochs: 3.0 in qwen35_9b_lora_all.yaml): this pass starts from an
+# already-converged checkpoint, not random LoRA init, so a full-strength
+# schedule risks overwriting what checkpoint-536 already learned rather than
+# extending it. ~5026 examples / effective batch 16 -> ~314 steps/epoch.
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 4
+learning_rate: 3.0e-5
+num_train_epochs: 1.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+bf16: true
+gradient_checkpointing: true
+
+### eval
+per_device_eval_batch_size: 2
+eval_strategy: epoch

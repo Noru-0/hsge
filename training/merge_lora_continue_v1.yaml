@@ -1,0 +1,11 @@
+# Merge the continue-finetuned LoRA adapter (training/qwen35_9b_lora_continue_v1.yaml,
+# warm-started from checkpoint-536) into a standalone checkpoint for vLLM serving.
+#   /workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_continue_v1.yaml
+model_name_or_path: /workspace/models/Qwen3.5-9B
+adapter_name_or_path: /workspace/saves/qwen35-9b-lora-continue-v1
+template: qwen3_5_nothink
+trust_remote_code: true
+export_dir: /workspace/models/Qwen3.5-9B-continue-v1
+export_size: 5
+export_device: auto
+export_legacy_format: false
