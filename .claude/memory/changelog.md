@@ -6,6 +6,34 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-18
 
+- **03:20** — `training/artifacts/qwen35-9b-lora-continue-v1/` (new, gitignored) —
+  **continue-finetune of checkpoint-536 on the increment dataset completed on
+  a rented vast.ai A100-PCIE-40GB box** (`202.122.49.242:31291`, ephemeral,
+  no persistent volume). `train_loss=0.4536`, `eval_loss=0.4219` (1 epoch,
+  315 steps, 5,026 train / 234 val examples, ~2h03m wall time). Adapter
+  downloaded back to this repo immediately after training finished
+  (sha256-verified) since the box has no persistent storage.
+  - **Bug hit and fixed mid-run**: `qwen35_9b_lora_continue_v1.yaml`'s
+    `per_device_train_batch_size: 4` (copied from `qwen35_9b_lora_all.yaml`,
+    tuned for an H100-80GB) OOM'd at step 0 on this box's actual 40GB GPU —
+    the fp32-upcast logits tensor at `cutoff_len: 4096` × Qwen3.5's ~152k
+    vocab is ~10 GiB per micro-batch alone. Fixed by dropping to
+    `per_device_train_batch_size: 1` / `gradient_accumulation_steps: 16`
+    (same effective batch 16); re-ran clean, GPU settled at 35/41 GB. Config
+    comment updated so this isn't rediscovered per-box.
+  - One-time box setup also done this session: `training/vast_setup.sh`
+    (train/serve/eval venvs + `Qwen3.5-9B` base model download, all 4
+    markers OK, GDN fast path confirmed ON) and a full repo rsync to
+    `/workspace/hsge` (excluding `.git`/`outputs`/`training/artifacts`/
+    `training/data`/`Thesis_report`/`.env`/`.auth`), plus scp of
+    checkpoint-536's adapter (166 MB, not the full 515 MB checkpoint dir —
+    optimizer/scheduler/rng state isn't needed for a warm-start, only
+    `adapter_config.json`+`adapter_model.safetensors`) to seed
+    `adapter_name_or_path`.
+  - Not yet done: merge (`training/merge_lora_continue_v1.yaml`) and
+    WebArena eval on all 4 domains (shopping/gitlab regression check is the
+    whole point of the replay slice — still unverified).
+
 - **00:36** — `scripts/build_continue_finetune_dataset.py` (new),
   `training_data_continue_v1/{train,val,README}` (new),
   `training/data/continue_v1/{train,val,dataset_info.json}` (new,
