@@ -1,7 +1,7 @@
 \chapter{Thực nghiệm}
 \label{ch:experiments}
 
-Chương này gồm năm phần: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả fine-tuning; (4) đánh giá chính trên bộ task chính thức của bốn website WebArena; và (5) phân tích kết quả.
+Chương này gồm sáu phần: (1) bốn câu hỏi nghiên cứu mà toàn bộ phần thực nghiệm nhằm trả lời; (2) môi trường thực nghiệm và quy trình đánh giá; (3) kết quả thu thập dữ liệu; (4) kết quả fine-tuning; (5) đánh giá chính trên bộ task chính thức của bốn website WebArena; và (6) phân tích kết quả.
 
 Toàn bộ bảng số liệu trong chương tuân theo một quy ước đơn vị thống nhất.
 Khi mọi ô của một cột cùng đơn vị, đơn vị được ghi ở tiêu đề cột và các ô chỉ
@@ -11,14 +11,43 @@ dòng là một chỉ số khác nhau - tiêu đề cột không thể mang đơ
 được giữ ngay trong ô. Nguồn của mọi số liệu không do khóa luận tự đo được
 dẫn ngay tại dòng tương ứng chứ không chỉ ở phần chú thích bảng.
 
+\section{Câu hỏi nghiên cứu}
+\label{sec:exp-rq}
+
+Toàn bộ phần thực nghiệm được tổ chức quanh bốn câu hỏi. Mỗi câu hỏi được
+trả lời ở đúng một mục và câu trả lời được nhắc lại ngay đầu mục đó.
+
+\begin{enumerate}
+  \item[\textbf{CH1.}] Pipeline khám phá thu được những gì khi chạy trên một
+    website thật chưa có nhãn task nào: bao nhiêu skill, bao nhiêu operator,
+    bao nhiêu semantic task, và bao nhiêu trong số đó sống sót qua các cổng
+    lọc chất lượng? (Mục~\ref{sec:exp-data})
+  \item[\textbf{CH2.}] Dữ liệu đó có nâng được năng lực của một mô hình ngôn
+    ngữ nhỏ trên chính những website đã khám phá hay không, và phần nâng lên
+    thuộc về năng lực nào? (Mục~\ref{sec:exp-main},
+    \ref{sec:exp-baseline})
+  \item[\textbf{CH3.}] Kết quả thu được đứng ở đâu so với các hệ thống cùng
+    phân khúc dưới 10 tỷ tham số, và những khác biệt nào về điều kiện đo
+    khiến phép so sánh đó không phải một phép so sánh có kiểm soát?
+    (Mục~\ref{sec:exp-main})
+  \item[\textbf{CH4.}] Thành phần nào của pipeline đóng góp bao nhiêu vào kết
+    quả, và điểm nghẽn còn lại nằm ở đâu?
+    (Mục~\ref{sec:exp-ablation}, \ref{sec:exp-analysis})
+\end{enumerate}
+
+Cần nói rõ ngay từ đầu: CH4 chỉ được trả lời \emph{một phần}. Các ablation có
+kiểm soát chưa được chạy (Mục~\ref{sec:exp-ablation}); phần trả lời được đến
+từ phân tích lỗi và từ đối chiếu liên-website, không từ một phép cô lập biến
+số.
+
 \section{Môi trường thực nghiệm}
 \label{sec:exp-setup}
 
 \subsection{Website và hạ tầng}
 
-Bốn website thuộc nền tảng WebArena~\cite{zhou2024webarena} bao gồm: Shopping (Magento), Shopping Admin (Magento CMS), GitLab và Reddit (Postmill) được triển khai cục bộ (self-hosted) thông qua các container chính thức của WebArena trên một máy chủ nội bộ. Để hỗ trợ khả năng truy cập từ xa, hệ thống được mở cổng kết nối thông qua dịch vụ Cloudflare quick tunnel. Đặc tính thiết yếu của các môi trường này là chúng mang \emph{trạng thái dùng chung và có thể bị thay đổi (mutable shared state)}. Do đó, mọi tiến trình khám phá và đánh giá đều phải được thực thi theo cơ chế đơn luồng (single-threaded) trên từng website; đồng thời, cơ sở dữ liệu luôn được khôi phục về trạng thái nguyên bản trước khi bắt đầu mỗi đợt đánh giá mới.
+Bốn website thuộc nền tảng WebArena~\cite{zhou2024webarena} bao gồm: Shopping (Magento), Shopping Admin (Magento CMS), GitLab và Reddit (Postmill) được self-host thông qua các container chính thức của WebArena trên một máy chủ nội bộ. Để hỗ trợ khả năng truy cập từ xa, hệ thống được mở cổng kết nối thông qua dịch vụ Cloudflare quick tunnel. Đặc tính thiết yếu của các môi trường này là chúng mang \emph{trạng thái dùng chung và có thể bị thay đổi}. Do đó, mọi tiến trình khám phá và đánh giá đều phải được thực thi theo cơ chế đơn luồng trên từng website; đồng thời, cơ sở dữ liệu luôn được khôi phục về trạng thái nguyên bản trước khi bắt đầu mỗi đợt đánh giá mới.
 
-Về hạ tầng phần cứng, nghiên cứu sử dụng dịch vụ GPU cho thuê theo giờ trên nền tảng vast.ai (Bảng~\ref{tab:infra}). Riêng quá trình khám phá không yêu cầu tài nguyên GPU cục bộ, do các agent khám phá (exploration agents) hoàn toàn giao tiếp với API của các mô hình ngôn ngữ đóng (proprietary models). Vì vậy, quy trình này được vận hành trực tiếp trên máy tính cá nhân, thực hiện nhiệm vụ điều khiển trình duyệt Chromium thông qua bộ thư viện Playwright và BrowserGym~\cite{dechezelles2025browsergym}.
+Về hạ tầng phần cứng, nghiên cứu sử dụng dịch vụ GPU cho thuê theo giờ trên nền tảng vast.ai (Bảng~\ref{tab:infra}). Riêng quá trình khám phá không yêu cầu tài nguyên GPU cục bộ, do các agent khám phá hoàn toàn giao tiếp với API của các mô hình ngôn ngữ đóng. Vì vậy, quy trình này được vận hành trực tiếp trên máy tính cá nhân, thực hiện nhiệm vụ điều khiển trình duyệt Chromium thông qua bộ thư viện Playwright và BrowserGym~\cite{dechezelles2025browsergym}.
 
 \begin{table}[H]
 \centering
@@ -68,7 +97,7 @@ tế của các đợt khám phá.
 
 \begin{table}[H]
 \centering
-\caption[Cấu hình LLM theo vai trò]{Cấu hình LLM theo từng vai trò trong các đợt khám phá. Do agent giải quyết (solver) nằm trên luồng xử lý có tần suất gọi cao nhất (đòi hỏi một lời gọi API cho mỗi bước hành động, ước tính khoảng 1200 lời gọi cho mỗi đợt chạy), thành phần này quyết định phần lớn tổng chi phí vận hành.}
+\caption[Cấu hình LLM theo vai trò]{Cấu hình LLM theo từng vai trò trong các đợt khám phá. Do solver nằm trên luồng xử lý có tần suất gọi cao nhất (đòi hỏi một lời gọi API cho mỗi bước hành động, ước tính khoảng 1200 lời gọi cho mỗi đợt chạy), thành phần này quyết định phần lớn tổng chi phí vận hành.}
 \label{tab:llm-roles}
 \small
 \begin{tabular}{@{}L{4.2cm} L{4.0cm} L{4.8cm}@{}}
@@ -104,9 +133,9 @@ nó chưa tính các lời gọi kết thúc episode và các lần gọi lại 
 không phân tích được.}
 \label{tab:calls}
 \small
-\begin{tabular}{@{}L{5.0cm} L{3.4cm} R{2.2cm} R{2.2cm}@{}}
+\begin{tabular}{@{}L{4.6cm} L{3.2cm} R{2.4cm} R{2.6cm}@{}}
 \toprule
-\textbf{Vai trò} & \textbf{Mô hình} & \mbox{\textbf{Số lời gọi (lượt)}} &
+\textbf{Vai trò} & \textbf{Mô hình} & \mbox{\textbf{Số lời gọi}} &
 \mbox{\textbf{Tỷ trọng (\%)}} \\
 \midrule
 \texttt{solver} & GPT-5.6-luna / GPT-4o & 17\,785 & 85{,}5 \\
@@ -225,7 +254,7 @@ khởi tạo trong môi trường BrowserGym~\cite{dechezelles2025browsergym} �
 WebArena phân xử thành công hay thất bại bằng ba cơ chế kiểm tra tùy loại
 task: so khớp URL, so khớp lập trình trên DOM và so khớp mờ bằng LLM. Mô
 hình sau fine-tune được merge trọng số LoRA~\cite{hu2022lora} rồi serving bằng vLLM~\cite{kwon2023vllm}
-ngay trên máy chủ đánh giá, ở chế độ tắt suy luận hiển thị (nothink) để giữ đúng prompt parity với
+ngay trên máy chủ đánh giá, ở chế độ nothink để giữ đúng prompt parity với
 lúc huấn luyện.
 
 Trước mỗi đợt đánh giá, hệ thống chạy một quy trình kiểm tra tự động gồm
@@ -234,7 +263,7 @@ chín điều kiện tiên quyết, và chỉ khởi động khi tất cả đư
 (2) website mục tiêu truy cập được \emph{trực tiếp từ máy chủ đánh giá}; và
 (3) một đợt chạy thử trên ba task ngẫu nhiên ghi nhận ít nhất một thành
 công mà không phát sinh lỗi hệ thống. Kết quả mỗi task được lưu thành một
-bản ghi riêng, kèm bản ghi chi tiết (trace) đầy đủ của episode đó: các bước của solver, dữ
+bản ghi riêng, kèm trace chi tiết đầy đủ của episode đó: các bước của solver, dữ
 liệu thô từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác -
 nguồn dữ liệu chính cho phần phân tích lỗi ở Mục~\ref{sec:exp-analysis}.
 
@@ -259,6 +288,8 @@ kết quả này cần được đo lại theo trình tự tuần tự.
 
 \section{Kết quả thu thập dữ liệu}
 \label{sec:exp-data}
+
+\noindent\emph{Mục này trả lời CH1.}
 
 \subsection{Kết quả khám phá}
 
@@ -411,7 +442,7 @@ công giả. Cổng này loại 104 trajectory, tương ứng 279 mẫu. Điểm
 đó thì không hề thay đổi.
 \end{itemize}
 
-Quá trình phân chia tập dữ liệu huấn luyện (training set) và tập kiểm định (validation set) được thực hiện nghiêm ngặt ở cấp độ \emph{task}, thay vì cấp độ trajectory. Cụ thể, mọi trajectory phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng trajectory đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Hệ quả là rò rỉ dữ liệu: chỉ số tổn thất kiểm định (\texttt{eval\_loss}) khi đó phản ánh khả năng ghi nhớ chứ không phản ánh năng lực khái quát hóa.
+Quá trình phân chia tập train và tập validation được thực hiện nghiêm ngặt ở cấp độ \emph{task}, thay vì cấp độ trajectory. Cụ thể, mọi trajectory phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng trajectory đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Hệ quả là rò rỉ dữ liệu: chỉ số tổn thất kiểm định (\texttt{eval\_loss}) khi đó phản ánh khả năng ghi nhớ chứ không phản ánh năng lực khái quát hóa.
 
 Nhờ chiến lược chia tách này, tập kiểm định đạt được mức độ cách ly tuyệt đối với \textbf{0} mục tiêu trùng lặp so với tập huấn luyện. Thêm vào đó, dữ liệu kiểm định được lấy mẫu phân tầng (stratified) \emph{theo từng website cụ thể}. Cơ chế này duy trì tỷ lệ phân bổ cân đối, ngăn chặn triệt để tình trạng một website có lượng dữ liệu lớn làm sai lệch và chi phối toàn bộ các chỉ số đánh giá tổng thể.
 
@@ -470,6 +501,8 @@ mỗi bước ở mức 630\,W). Trạng thái này không phát sinh cảnh bá
 
 \section{Đánh giá chính trên WebArena}
 \label{sec:exp-main}
+
+\noindent\emph{Mục này trả lời CH2 và CH3.}
 
 \subsection{Kết quả tổng hợp}
 
@@ -654,6 +687,8 @@ công việc được xếp ưu tiên cao nhất trong phần thực nghiệm c�
 \section{Nghiên cứu ablation}
 \label{sec:exp-ablation}
 
+\noindent\emph{Mục này trả lời CH4, và trả lời một phần.}
+
 \textbf{Các ablation có kiểm soát chưa được thực hiện.} Ba ablation đã được
 thiết kế nhưng chưa được chạy, mỗi ablation nhằm cô lập đóng góp của một
 thành phần trong pipeline: (a) so sánh dữ liệu khám phá theo đồ thị với dữ
@@ -696,6 +731,8 @@ thông qua phân bố các kiểu lỗi.
 
 \section{Phân tích}
 \label{sec:exp-analysis}
+
+\noindent\emph{Mục này bổ sung cho CH4: điểm nghẽn còn lại nằm ở đâu.}
 
 \subsection{Phân loại nguyên nhân thất bại}
 
@@ -765,8 +802,7 @@ suy luận.} Từ 83\% đến 95\% số episode thất bại có ít nhất mộ
 trình duyệt từ chối, tổng cộng 2285 lỗi thực thi trên 655 episode. Phần lớn
 là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử
 mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã
-chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác. Đây là
-giới hạn của tầng thực thi (execution layer), không phải của năng lực mô hình, nên khắc phục
+chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác. Đây là giới hạn của execution layer, không phải của năng lực mô hình, nên khắc phục
 nó là hướng đáng đầu tư nhất (Chương~\ref{ch:discussion},
 Mục~\ref{sec:disc-guardrails}).
 

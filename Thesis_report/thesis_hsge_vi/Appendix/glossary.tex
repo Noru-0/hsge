@@ -1,10 +1,12 @@
 \chapter*{Bảng thuật ngữ và từ viết tắt}
 \addcontentsline{toc}{chapter}{Bảng thuật ngữ và từ viết tắt}
 
-Khóa luận giữ nguyên một số thuật ngữ chuyên ngành bằng tiếng Anh khi bản
-dịch tiếng Việt chưa phổ biến hoặc dễ gây hiểu nhầm. Bảng dưới đây chú thích
-ý nghĩa của các thuật ngữ đó (xếp theo thứ tự bảng chữ cái), tiếp theo là
-bảng các từ viết tắt.
+Khóa luận dùng nguyên dạng tiếng Anh cho các thuật ngữ chuyên ngành có mặt
+trong bảng dưới đây, thay vì dịch sang tiếng Việt hoặc chú thích song ngữ
+trong ngoặc đơn ở mỗi lần dùng. Bảng này là nơi duy nhất giải nghĩa chúng,
+xếp theo thứ tự bảng chữ cái; tiếp theo là bảng các từ viết tắt. Ngoại lệ duy
+nhất là các từ viết tắt, vẫn được mở ngoặc đầy đủ ở lần xuất hiện đầu tiên
+theo thông lệ, chẳng hạn ``mô hình ngôn ngữ nhỏ (Small Language Model - SLM)''.
 
 \section*{Bảng chú thích thuật ngữ}
 
@@ -17,6 +19,8 @@ phần tử giao diện đang hiển thị trên một trang web, mỗi phần t
 định danh; là ``quan sát'' mà agent nhìn thấy thay cho ảnh chụp màn hình. \\
 action space & Không gian hành động: tập hữu hạn các thao tác agent được
 phép thực hiện (click, điền form, điều hướng, \dots). \\
+adapter & Ma trận trọng số hạng thấp được chèn thêm vào mô hình khi
+fine-tune bằng LoRA; chỉ phần này được huấn luyện, trọng số gốc bị đóng băng. \\
 agent & Tác nhân phần mềm tự trị: chương trình tự quan sát môi trường,
 suy luận và hành động để đạt một mục tiêu. \\
 baseline & Phương pháp đối chứng: hệ thống dùng làm mốc so sánh khi đánh
@@ -27,22 +31,35 @@ best practice & Kinh nghiệm thực hành tốt đã được kiểm chứng, n
 lại trong các dự án tương tự. \\
 chat template & Khuôn dạng hội thoại mà một mô hình ngôn ngữ được huấn luyện
 để đọc (cách đánh dấu vai trò, lượt nói, chế độ suy nghĩ). \\
+checkpoint & Bản lưu trạng thái tại một thời điểm: trọng số mô hình sau một
+epoch huấn luyện, hoặc tiến độ của một lượt khám phá để chạy tiếp sau khi bị ngắt. \\
 COMPOSITE & Nhãn của một tác vụ phải qua nhiều thao tác và nhiều trạng thái trang mới xong (phân biệt với INFO/NAV/MOD); đây là nhóm sinh ra phần lớn skill. \\
 crawl / crawling & Duyệt và thu thập trang web tự động theo liên kết. \\
 curriculum & Trình tự huấn luyện sắp xếp dữ liệu từ dễ đến khó. \\
+distribution shift & Lệch phân phối: dữ liệu lúc huấn luyện và dữ liệu lúc
+chạy thật không cùng một phân phối, khiến chỉ số đo được không phản ánh
+năng lực thật. \\
 episode & Một lượt agent thực hiện trọn vẹn một task, tính từ trạng thái
 khởi đầu đến khi thành công, thất bại hoặc hết ngân sách bước. \\
 execution layer & Tầng thực thi: lớp chuyển một hành động đã chọn (click,
 điền form, \dots) thành thao tác thật trên trình duyệt; lỗi ở tầng này
 (phần tử chưa sẵn sàng tương tác) khác với lỗi suy luận của mô hình. \\
+fail-closed & Nguyên tắc an toàn ``không chắc thì chặn'': thao tác nào không
+chứng minh được là vô hại thì bị coi là có hại và bị loại. \\
+fail-soft & Nguyên tắc ``hỏng mềm'': một thao tác lỗi được ghi log và bỏ qua
+để tiến trình chạy tiếp, thay vì làm sập cả lượt chạy. \\
 fine-tune / fine-tuning & Tinh chỉnh: huấn luyện tiếp một mô hình đã
 pretrain trên dữ liệu chuyên biệt để chuyên hóa nó cho một nhiệm vụ. \\
 frontier & Biên khám phá: hàng đợi các URL ứng viên chưa thăm, quyết định
 ``đi đâu tiếp theo'' trong quá trình khám phá website. \\
 goal task & Tác vụ mục tiêu: một tác vụ ngữ nghĩa nhiều bước, sinh từ chuỗi operator hoặc từ seed năng lực website. \\
 grounding & Đối chiếu một mệnh đề do LLM sinh với dữ liệu thật (trạng thái trang trước/sau của các thành viên trong cụm) để xem mệnh đề đó có đúng hay không. \\
+inference & Giai đoạn mô hình chạy để trả lời, phân biệt với giai đoạn huấn
+luyện. \\
 instance & Một bản triển khai cụ thể của website hoặc dịch vụ (ví dụ bản
 GitLab được dựng riêng cho benchmark). \\
+instruction tuning & Fine-tune mô hình trên các cặp (chỉ dẫn, phản hồi mong
+muốn) để nó làm theo yêu cầu phát biểu bằng ngôn ngữ tự nhiên. \\
 judge & Bộ chấm độc lập: một LLM thứ hai kiểm tra lại các episode mà agent
 tự tuyên bố thành công. \\
 low-level task & Task mức thấp: nhiệm vụ ngắn, gắn với một trang cụ thể, do
@@ -54,21 +71,32 @@ tầng thấp) hoặc một skill/operator (đồ thị tầng cao). \\
 nothink & Chế độ tắt chuỗi suy luận hiển thị (chain-of-thought) trong
 chat template của mô hình khi phục vụ suy luận, để khớp với thiết lập lúc
 huấn luyện (prompt parity). \\
+observation & Quan sát: phần trạng thái môi trường mà agent nhìn thấy ở một
+bước, ở đây gồm URL hiện tại và accessibility tree. \\
+open-weights & Mô hình công bố trọng số để người dùng tự tải về, tự chạy và
+tự fine-tune, phân biệt với mô hình chỉ truy cập được qua API. \\
 operator & Toán tử lập kế hoạch: một skill được nâng lên dạng
 $\langle$precondition, effect$\rangle$ (điều kiện tiên quyết, hiệu ứng) để
 có thể ghép chuỗi bằng thuật toán lập kế hoạch. \\
+operator graph & Đồ thị toán tử: đồ thị có hướng nối các operator theo quan
+hệ effect của operator này khớp precondition của operator kia. \\
 option & Khung hình thức hóa skill trong học tăng cường: bộ ba $\langle I,
 \pi, \beta \rangle$ gồm tập khởi đầu, chính sách và điều kiện kết thúc. \\
 pipeline & Chuỗi xử lý: dãy các bước tự động nối tiếp nhau, đầu ra của bước
 trước là đầu vào của bước sau. \\
+policy & Chính sách: quy tắc chọn hành động tiếp theo từ quan sát hiện tại. \\
 precondition / effect & Điều kiện tiên quyết / hiệu ứng của một operator,
 biểu diễn bằng các mệnh đề ngôn ngữ tự nhiên đã được chuẩn hóa. \\
 predicate registry & Sổ đăng ký mệnh đề: thành phần quy các mệnh đề ngôn ngữ tự nhiên tự do về những mã định danh ổn định, để effect và precondition so khớp được với nhau. \\
+pretrain & Huấn luyện trước: giai đoạn huấn luyện mô hình nền trên dữ liệu
+tổng quát, trước mọi bước chuyên biệt hóa. \\
 prompt & Toàn bộ văn bản đầu vào đưa cho mô hình ngôn ngữ trong một lần
 gọi (bao gồm chỉ dẫn hệ thống, quan sát, lịch sử). \\
 prompt parity & Nguyên tắc ``đồng nhất prompt'': prompt trong dữ liệu huấn
 luyện phải trùng khớp từng cấu trúc với prompt agent nhìn thấy lúc chạy
 thật. \\
+read-only / read-write & Phân loại task theo việc nó có thay đổi trạng thái
+website hay không; dùng để chạy an toàn trên instance dùng chung. \\
 reward function & Hàm phần thưởng: hàm chấm điểm thành công/thất bại của
 một task; ở WebArena hàm này kết hợp so khớp URL, so khớp lập trình trên
 DOM và so khớp mờ bằng LLM, tùy loại task. \\
@@ -84,7 +112,16 @@ trả lời request thật (phân biệt với giai đoạn huấn luyện); tro
 dùng vLLM làm engine serving. \\
 skill & Kỹ năng: một hành vi tái sử dụng được, có tham số, được phát hiện
 từ các trajectory lặp lại và kiểm chứng trước khi đưa vào thư viện. \\
+skill card & Thẻ kỹ năng: bản mô tả một skill gồm tên, mô tả ngôn ngữ tự
+nhiên, danh sách tham số có kiểu và mẫu hành động. \\
+skill graph & Đồ thị kỹ năng: cấu trúc hai tầng lưu tri thức thu được khi
+khám phá, tầng thấp là trang web, tầng cao là skill và operator. \\
+sub-trajectory & Trajectory con: một đoạn liền mạch cắt ra từ trajectory,
+tương ứng một mục tiêu con duy nhất; là đơn vị đầu vào của bước gom cụm. \\
 subgoal & Mục tiêu con: một chặng có thứ tự trong kế hoạch phân rã từ một tác vụ ngữ nghĩa; solver ở chế độ bám subgoal chỉ làm việc trên subgoal hiện tại. \\
+symbolic planning & Lập kế hoạch ký hiệu: tìm chuỗi toán tử đưa trạng thái
+đầu về trạng thái đích, dựa trên precondition và effect chứ không mô phỏng
+môi trường. \\
 task & Nhiệm vụ giao cho agent, phát biểu bằng ngôn ngữ tự nhiên. \\
 tautology & Mệnh đề hiển nhiên đúng: ở đây là một effect của operator chỉ
 lặp lại chính precondition của nó, nên không diễn tả thay đổi trạng thái
@@ -92,9 +129,15 @@ nào. \\
 trace & Bản ghi chi tiết một episode: các bước của solver, dữ liệu thô
 từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác -- dùng để phân
 tích lỗi sau khi episode kết thúc. \\
+train / validation set & Tập huấn luyện / tập kiểm định: hai phần của tập dữ
+liệu, phần sau chỉ dùng để đo mức khái quát hóa và không tham gia cập nhật
+trọng số. \\
 trajectory & Quỹ đạo tương tác: chuỗi các cặp (quan sát, hành động) sinh ra
 khi agent thực hiện một task. \\
 unprefixed sampling & Lấy mẫu không tiền tố: giải lại một tác vụ đã thành công từ trang chủ thay vì từ trang gắn với nó, để quỹ đạo chứa cả phần tìm đường. \\
+URL template & Khuôn dạng URL: dạng chuẩn hóa của một URL sau khi bỏ tham số
+truy vấn và thay các đoạn dạng mã định danh bằng ký tự đại diện; dùng để
+tránh nạp quá nhiều trang gần trùng nhau vào frontier. \\
 web agent & Tác nhân web: agent thao tác website qua giao diện người dùng
 (đọc trang, click, gõ phím) như một người dùng thật. \\
 workflow & Chuỗi thao tác nghiệp vụ lặp lại theo một trình tự quen thuộc. \\

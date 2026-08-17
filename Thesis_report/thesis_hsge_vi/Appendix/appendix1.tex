@@ -146,7 +146,7 @@ module là điều làm cho các artifact do LLM sinh ra có thể soi xét đư
 
 \noindent
 {\sloppy
-Mô hình \texttt{SkillCard} được thiết kế dựa trên sự ánh xạ trực tiếp với khung lý thuyết Option (Options Framework): một \texttt{SkillCard} tương ứng với một option $\langle I, \pi, \beta \rangle$, trong đó ba thành phần cốt lõi lần lượt là \texttt{precondition}, \texttt{action\_template} (kèm các \texttt{slots}), và \texttt{success\_predicate}. Bên cạnh đó, chỉ số \texttt{action\_signature} của một \texttt{SubTrajectory} (chỉ chứa chuỗi các động từ hành động) cho phép quá trình gom cụm đạt tính độc lập với từng trang web. Nhờ vậy, hành vi như đăng nhập trên hai website khác nhau vẫn thu được cùng một chữ ký (\texttt{signature}), ngay cả khi mọi bộ chọn (\texttt{selector}) hay dữ liệu nhập vào hoàn toàn khác biệt.\par}
+Mô hình \texttt{SkillCard} được thiết kế dựa trên sự ánh xạ trực tiếp với khung lý thuyết option: một \texttt{SkillCard} tương ứng với một option $\langle I, \pi, \beta \rangle$, trong đó ba thành phần cốt lõi lần lượt là \texttt{precondition}, \texttt{action\_template} (kèm các \texttt{slots}), và \texttt{success\_predicate}. Bên cạnh đó, chỉ số \texttt{action\_signature} của một \texttt{SubTrajectory} (chỉ chứa chuỗi các động từ hành động) cho phép quá trình gom cụm đạt tính độc lập với từng trang web. Nhờ vậy, hành vi như đăng nhập trên hai website khác nhau vẫn thu được cùng một chữ ký (\texttt{signature}), ngay cả khi mọi bộ chọn (\texttt{selector}) hay dữ liệu nhập vào hoàn toàn khác biệt.\par}
 
 \section{Lớp trừu tượng hóa môi trường thực thi}
 \label{app:design-backends}
@@ -349,7 +349,7 @@ type MOD / content-modification tasks (no posting, commenting, voting, adding
 to cart, or checkout).
 \end{lstlisting}
 
-\section{Prompt khởi tạo năng lực (Site Seeder)}
+\section{Prompt khởi tạo năng lực website}
 \label{app:prompt-seeder}
 
 Được gọi đúng một lần cho mỗi lượt chạy, trên trang chủ. Ba ràng buộc
@@ -565,7 +565,7 @@ bày: node bị bỏ vì lỗi, số lần khôi phục, và cơ cấu operator 
 
 \begin{table}[H]
 \centering
-\caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt thu thập chính thức. Trong đó, ``Lỗi tải'' đại diện cho các node trình duyệt không thể truy cập và được cơ chế hỏng mềm (fail-soft) xử lý bỏ qua; ``Reset'' là số lần đưa trình duyệt về trang trước đó sau khi tác vụ thất bại. Hai cột cuối phân loại số operator bị từ chối theo từng lý do cụ thể.}
+\caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt thu thập chính thức. Trong đó, ``Lỗi tải'' đại diện cho các node trình duyệt không thể truy cập và được cơ chế fail-soft xử lý bỏ qua; ``Reset'' là số lần đưa trình duyệt về trang trước đó sau khi tác vụ thất bại. Hai cột cuối phân loại số operator bị từ chối theo từng lý do cụ thể.}
 \label{tab:app-runs-final}
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
@@ -737,7 +737,7 @@ lực thực sự}. Bốn định danh gồm \texttt{ConfirmTaskCompletion},
 website mà chỉ đại diện cho hành vi kết thúc episode hoặc thao tác tương tác
 chưa rõ mục tiêu. Chúng là kết quả của quá trình gom cụm các trajectory
 \texttt{INFO} chỉ gồm một bước phản hồi: dù các trajectory này tương đồng và
-xuất hiện đạt ngưỡng độ chín (maturity threshold), đối tượng được trừu tượng
+xuất hiện đạt ngưỡng độ chín, đối tượng được trừu tượng
 hóa thực chất chỉ là khuôn mẫu của câu trả lời chứ không phải một hành vi thao
 tác có tính tái sử dụng. Đây là điểm hạn chế khi ngưỡng độ chín phải gánh vác
 thay cho cổng thực thi lại (Mục~\ref{sec:disc-verify}). Dù vậy, điểm đáng ghi
@@ -745,7 +745,7 @@ nhận là cả bốn trường hợp này về sau \emph{đều} bị cổng gr
 nâng cấp thành operator, với cùng một lý do: effect tự kê khai không được xác
 minh trên bất kỳ thành viên nào trong cụm.
 
-\subsection*{Sổ đăng ký mệnh đề (Predicate Registry)}
+\subsection*{Predicate registry}
 
 Bốn sổ đăng ký chứa lần lượt 14, 21, 17 và 15 mệnh đề chuẩn hóa. Bốn mệnh đề
 đầu tiên của Reddit cho thấy rất rõ hình dạng mà prompt quy nạp ép ra
@@ -922,8 +922,7 @@ mẫu huấn luyện đạt mức độ khó 3 (Bảng~\ref{tab:dataset}). Đi�
 trajectory dài hạn tuy xuất hiện trong tập dữ liệu nhưng với mật độ quá thưa
 thớt, chưa đủ tác động định hình quá trình huấn luyện. Nguyên nhân cốt lõi nằm
 ở điều kiện thiết lập cạnh trên đồ thị operator: bắt buộc effect của operator
-trước phải khớp chính xác với precondition của operator sau. Trong khi đó, sổ
-đăng ký mệnh đề (predicate registry) mới chỉ chuẩn hóa dựa trên độ tương đồng
+trước phải khớp chính xác với precondition của operator sau. Trong khi đó, predicate registry mới chỉ chuẩn hóa dựa trên độ tương đồng
 embedding, cơ chế mà Mục~\ref{sec:disc-operators} đã chứng minh là không thể
 phân tách chính xác các cặp đồng nghĩa thực sự khỏi các cặp mệnh đề không liên
 quan chỉ với một ngưỡng đơn lẻ.
@@ -1066,7 +1065,7 @@ Do tùy chọn \texttt{verify\_episodes} đã được kích hoạt trong cả 4
 thành phần judge đã thực hiện đánh giá trực tiếp ngay trong vòng lặp khám phá.
 Do đó, công đoạn đánh giá ngoại tuyến (\texttt{judge\_episodes.py}) không còn
 bắt buộc; kịch bản này chỉ áp dụng cho các lượt chạy thử nghiệm cũ hơn. Lưu ý
-rằng kịch bản sẽ thực hiện cập nhật episode trực tiếp tại chỗ (in-place), vì vậy
+rằng kịch bản sẽ thực hiện cập nhật episode trực tiếp tại chỗ, vì vậy
 cần khởi chạy trên một bản sao dữ liệu nếu muốn bảo toàn tập dữ liệu gốc.
 
 \begin{lstlisting}[style=mystyle,numbers=none,basicstyle=\scriptsize\ttfamily]
@@ -1095,9 +1094,7 @@ nối, kịch bản phải bổ sung tiền tố tên miền vào mã trajectory
 nhất, do mỗi đợt thu thập tự đánh số episode độc lập từ \texttt{ep\_0000} (ví dụ
 \texttt{ep\_0005} của Reddit và Shopping là hai trajectory độc lập nhưng trùng
 mã). Ở bước phân chia tập dữ liệu, kịch bản thực hiện chia tách theo cặp
-\emph{(website, nội dung mục tiêu)}, bảo đảm tuyệt đối không có mục tiêu nào
-trong tập kiểm định (validation set) xuất hiện lại trong tập huấn luyện (train
-set), ngăn chặn hiện tượng rò rỉ dữ liệu và tránh làm giảm ảo độ mất mát
+\emph{(website, nội dung mục tiêu)}, bảo đảm tuyệt đối không có mục tiêu nào trong tập validation xuất hiện lại trong tập train, ngăn chặn hiện tượng rò rỉ dữ liệu và tránh làm giảm ảo độ mất mát
 \texttt{eval\_loss} (Mục~\ref{sec:method-sft}).
 
 \section{Quy trình tinh chỉnh, phục vụ và đánh giá mô hình}
@@ -1141,20 +1138,19 @@ hình sẽ sinh ra cấu trúc dữ liệu không khớp với phân bố mục 
 trộn trọng số phải nạp mô hình gốc bằng lớp đa phương thức tương ứng; nếu sử
 dụng lớp thuần văn bản, thành phần thị giác sẽ bị bỏ qua và engine phục vụ sẽ
 từ chối nạp mô hình. Thứ ba, kịch bản \texttt{bootstrap\_eval\_box.sh} thực thi
-qua 9 chặng kiểm soát (gated steps), kết thúc bằng lượt chạy thử trên 3 tác vụ
+qua 9 chặng kiểm soát, kết thúc bằng lượt chạy thử trên 3 tác vụ
 mẫu yêu cầu phải đạt ít nhất một điểm thành công; đợt đánh giá đầy đủ chỉ bắt đầu
 khi chặng kiểm tra này vượt qua thành công (Mục~\ref{sec:disc-slm}). Thứ tư,
-phải khôi phục cơ sở dữ liệu (reset database) của website giữa đợt đánh giá mô
+phải khôi phục cơ sở dữ liệu của website giữa đợt đánh giá mô
 hình nền và mô hình đã fine-tune: bộ chấm chỉ kiểm tra trạng thái cuối cùng trên
 trang, do đó nếu không reset, các thay đổi do mô hình trước để lại có thể gây
 sai lệch kết quả chấm cho mô hình sau.
 
 Quá trình đánh giá được thực thi song song trên 4 máy độc lập (mỗi máy phụ trách
 một website), nhờ đó tổng thời gian thực tế chỉ phụ thuộc vào website có số lượng
-tác vụ lớn nhất. Dữ liệu kết quả từ từng máy bắt buộc phải được thu thập và đối
-chiếu mã băm (checksum) \emph{trước khi} giải phóng máy chủ. Việc kiểm tra này
+tác vụ lớn nhất. Dữ liệu kết quả từ từng máy bắt buộc phải được thu thập và đối chiếu checksum \emph{trước khi} giải phóng máy chủ. Việc kiểm tra này
 rất quan trọng vì hai lý do: (1) các máy chủ đám mây tạm thời không dùng ổ đĩa
-cố định sẽ xóa vĩnh viễn toàn bộ nhật ký (trace logs) ngay khi tắt máy; và (2)
+cố định sẽ xóa vĩnh viễn toàn bộ trace ngay khi tắt máy; và (2)
 mã thoát 0 của lệnh đồng bộ chỉ bảo đảm lệnh đã thực thi xong chứ chưa xác nhận
 dữ liệu thu về đã trùng khớp hoàn toàn.
 

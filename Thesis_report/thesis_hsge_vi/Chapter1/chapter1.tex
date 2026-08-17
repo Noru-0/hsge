@@ -6,25 +6,25 @@ Chương này gồm bảy phần: (1) động lực của việc dùng mô hình
 \section{Bối cảnh và động lực}
 \label{sec:intro-context}
 
-Hãy hình dung một người quản lý cửa hàng trực tuyến, mỗi sáng đều lặp lại một chuỗi thao tác dường như không thay đổi trên trang quản trị: mở danh sách đơn hàng mới, kiểm tra đơn nào cần xử lý gấp, cập nhật trạng thái và trả lời những khách hàng đang chờ. Những thao tác này không đòi hỏi kiến thức chuyên môn hay khả năng suy luận phức tạp; phần lớn thông tin cần thiết đã được hiển thị trực tiếp trên giao diện. Thế nhưng, ngày qua ngày, con người vẫn phải tự mình thực hiện lại những công việc đó. Tình trạng tương tự xuất hiện trong vô số quy trình khác trên diễn đàn, trang tin tức, hệ thống quản trị hay các dịch vụ trực tuyến. Điểm chung của chúng là đều được thực hiện thông qua trình duyệt - một giao diện thống nhất để con người tiếp cận và điều khiển các dịch vụ web. Vì vậy, một tác nhân (agent) có khả năng thao tác với website \emph{thông qua chính giao diện người dùng} có tiềm năng trở thành một dạng tự động hóa có phạm vi ứng dụng đặc biệt rộng.
+Hãy hình dung một người quản lý cửa hàng trực tuyến, mỗi sáng đều lặp lại một chuỗi thao tác dường như không thay đổi trên trang quản trị: mở danh sách đơn hàng mới, kiểm tra đơn nào cần xử lý gấp, cập nhật trạng thái và trả lời những khách hàng đang chờ. Những thao tác này không đòi hỏi kiến thức chuyên môn hay khả năng suy luận phức tạp; phần lớn thông tin cần thiết đã được hiển thị trực tiếp trên giao diện. Thế nhưng, ngày qua ngày, con người vẫn phải tự mình thực hiện lại những công việc đó. Tình trạng tương tự xuất hiện trong vô số quy trình khác trên diễn đàn, trang tin tức, hệ thống quản trị hay các dịch vụ trực tuyến. Điểm chung của chúng là đều được thực hiện thông qua trình duyệt - một giao diện thống nhất để con người tiếp cận và điều khiển các dịch vụ web. Vì vậy, một agent có khả năng thao tác với website \emph{thông qua chính giao diện người dùng} có tiềm năng trở thành một dạng tự động hóa có phạm vi ứng dụng đặc biệt rộng.
 
 Sự phát triển mạnh mẽ của các mô hình ngôn ngữ lớn (LLM) trong những năm gần đây đã tạo tiền đề để hiện thực hóa khả năng này. Thay vì phải lập trình cứng từng chuỗi thao tác, một web agent có thể nhận vào mục tiêu ở dạng ngôn ngữ tự nhiên, quan sát trạng thái của website, suy luận bước hành động tiếp theo và liên tục tương tác với giao diện cho đến khi hoàn thành nhiệm vụ. Cách tiếp cận này đã cho phép các agent thực hiện những chuỗi thao tác ngày càng phức tạp trên các môi trường web mô phỏng nhiều dịch vụ thực tế~\cite{sodhi2024step, yang2024agentoccam}.
 
-Tuy nhiên, năng lực đó hiện vẫn phụ thuộc phần lớn vào các mô hình độc quyền có quy mô rất lớn và thường được cung cấp thông qua API. Sự phụ thuộc này tạo ra nhiều rào cản khi đưa web agent vào vận hành thực tế. Trước hết, một nhiệm vụ (task) thường bao gồm nhiều bước quan sát và tương tác, khiến chi phí tích lũy từ hàng loạt lần gọi API có thể trở nên đáng kể. Bên cạnh đó, độ trễ của máy chủ từ xa làm tăng thời gian hoàn thành task, đặc biệt đối với những quy trình dài. Đặc biệt hơn, việc gửi toàn bộ nội dung quan sát được từ website về máy chủ của bên thứ ba cũng đặt ra những lo ngại nghiêm trọng về quyền riêng tư, nhất là trong các hệ thống chứa dữ liệu nội bộ hoặc thông tin nhạy cảm. Cuối cùng, việc không kiểm soát được trọng số của mô hình khiến người triển khai khó có thể trực tiếp kiểm tra, điều chỉnh hoặc chuyên biệt hóa năng lực của agent cho một môi trường cụ thể.
+Tuy nhiên, năng lực đó hiện vẫn phụ thuộc phần lớn vào các mô hình độc quyền có quy mô rất lớn và thường được cung cấp thông qua API. Sự phụ thuộc này tạo ra nhiều rào cản khi đưa web agent vào vận hành thực tế. Trước hết, một task thường bao gồm nhiều bước quan sát và tương tác, khiến chi phí tích lũy từ hàng loạt lần gọi API có thể trở nên đáng kể. Bên cạnh đó, độ trễ của máy chủ từ xa làm tăng thời gian hoàn thành task, đặc biệt đối với những quy trình dài. Đặc biệt hơn, việc gửi toàn bộ nội dung quan sát được từ website về máy chủ của bên thứ ba cũng đặt ra những lo ngại nghiêm trọng về quyền riêng tư, nhất là trong các hệ thống chứa dữ liệu nội bộ hoặc thông tin nhạy cảm. Cuối cùng, việc không kiểm soát được trọng số của mô hình khiến người triển khai khó có thể trực tiếp kiểm tra, điều chỉnh hoặc chuyên biệt hóa năng lực của agent cho một môi trường cụ thể.
 
-Mô hình ngôn ngữ nhỏ (Small Language Model — SLM) vì thế trở thành một hướng tiếp cận hấp dẫn để giảm bớt những rào cản trên. Theo~\cite{belcak2025slm}, SLM chủ yếu được phân biệt bởi khả năng triển khai trên các thiết bị tiêu dùng phổ thông; trên thực tế, các mô hình có quy mô dưới mười tỷ tham số thường được xếp vào nhóm này. So với các LLM lớn, SLM có chi phí suy luận thấp hơn, có thể chạy cục bộ để hạn chế việc dữ liệu rời khỏi hệ thống, đồng thời cho phép người triển khai toàn quyền kiểm soát trọng số và thực hiện tinh chỉnh (fine-tuning) cho từng nhu cầu cụ thể.
+Mô hình ngôn ngữ nhỏ (Small Language Model — SLM) vì thế trở thành một hướng tiếp cận hấp dẫn để giảm bớt những rào cản trên. Theo~\cite{belcak2025slm}, SLM chủ yếu được phân biệt bởi khả năng triển khai trên các thiết bị tiêu dùng phổ thông; trên thực tế, các mô hình có quy mô dưới mười tỷ tham số thường được xếp vào nhóm này. So với các LLM lớn, SLM có chi phí suy luận thấp hơn, có thể chạy cục bộ để hạn chế việc dữ liệu rời khỏi hệ thống, đồng thời cho phép người triển khai toàn quyền kiểm soát trọng số và thực hiện fine-tuning cho từng nhu cầu cụ thể.
 
-Dẫu vậy, lợi thế về chi phí và khả năng triển khai đi kèm với một đánh đổi lớn về năng lực. Đây không phải là một bài toán dễ dàng ngay cả đối với những mô hình lớn nhất hiện nay. Trên WebArena — một bộ chuẩn đánh giá (benchmark) gồm các bản sao website thực với đầy đủ chức năng và các task yêu cầu agent thực hiện nhiều bước tương tác — agent sử dụng GPT-4 chỉ hoàn thành khoảng 14\% số task tại thời điểm benchmark được công bố, trong khi con người đạt tới 78\%~\cite{zhou2024webarena}. Khoảng cách này cho thấy việc sử dụng trực tiếp một SLM chưa được chuyên biệt hóa khó có thể đáp ứng yêu cầu của các tác vụ web thực tế. Muốn thu hẹp khoảng cách đó, SLM cần được huấn luyện để học cách quan sát giao diện, lựa chọn hành động và phối hợp nhiều thao tác thành một chuỗi hoàn chỉnh.
+Dẫu vậy, lợi thế về chi phí và khả năng triển khai đi kèm với một đánh đổi lớn về năng lực. Đây không phải là một bài toán dễ dàng ngay cả đối với những mô hình lớn nhất hiện nay. Trên WebArena - một benchmark gồm các bản sao website thực với đầy đủ chức năng và các task yêu cầu agent thực hiện nhiều bước tương tác — agent sử dụng GPT-4 chỉ hoàn thành khoảng 14\% số task tại thời điểm benchmark được công bố, trong khi con người đạt tới 78\%~\cite{zhou2024webarena}. Khoảng cách này cho thấy việc sử dụng trực tiếp một SLM chưa được chuyên biệt hóa khó có thể đáp ứng yêu cầu của các tác vụ web thực tế. Muốn thu hẹp khoảng cách đó, SLM cần được huấn luyện để học cách quan sát giao diện, lựa chọn hành động và phối hợp nhiều thao tác thành một chuỗi hoàn chỉnh.
 
-Một hướng tiếp cận tự nhiên là fine-tuning có giám sát (Supervised Fine-Tuning — SFT) từ các quỹ đạo tương tác (trajectory) thể hiện hành vi đúng của agent~\cite{lai2024autowebglm}. Tuy nhiên, cách tiếp cận này ngay lập tức đưa bài toán về một nút thắt khác: \textbf{dữ liệu huấn luyện}. Để một SLM có thể thực hiện tốt task trên một website cụ thể, cần có những trajectory mô tả chính xác cách hoàn thành các task trên website đó. Trong khi đó, các trajectory được gán nhãn mục tiêu trên từng website gần như không sẵn có ở quy mô lớn. Tự xây dựng chúng nhờ sức của con người lại đòi hỏi một lượng lớn thời gian và chi phí, đồng thời dữ liệu được tạo ra cho một website thường khó tái sử dụng trực tiếp cho website khác. Đây là một rào cản có tính hệ thống: khi mỗi website mới lại đòi hỏi một quy trình thu thập và gán nhãn dữ liệu gần như từ đầu, chi phí chuyên biệt hóa agent sẽ tăng theo số lượng môi trường cần hỗ trợ.
+Một hướng tiếp cận tự nhiên là fine-tuning có giám sát (Supervised Fine-Tuning — SFT) từ các trajectory thể hiện hành vi đúng của agent~\cite{lai2024autowebglm}. Tuy nhiên, cách tiếp cận này ngay lập tức đưa bài toán về một nút thắt khác: \textbf{dữ liệu huấn luyện}. Để một SLM có thể thực hiện tốt task trên một website cụ thể, cần có những trajectory mô tả chính xác cách hoàn thành các task trên website đó. Trong khi đó, các trajectory được gán nhãn mục tiêu trên từng website gần như không sẵn có ở quy mô lớn. Tự xây dựng chúng nhờ sức của con người lại đòi hỏi một lượng lớn thời gian và chi phí, đồng thời dữ liệu được tạo ra cho một website thường khó tái sử dụng trực tiếp cho website khác. Đây là một rào cản có tính hệ thống: khi mỗi website mới lại đòi hỏi một quy trình thu thập và gán nhãn dữ liệu gần như từ đầu, chi phí chuyên biệt hóa agent sẽ tăng theo số lượng môi trường cần hỗ trợ.
 
 Chi phí này đã được thể hiện rõ trong các nghiên cứu trước. AutoWebGLM cần 20 người gán nhãn làm việc trong một tháng để xây dựng tập dữ liệu duyệt web của họ~\cite{lai2024autowebglm}. Ngược lại, Synatra cho thấy dữ liệu tổng hợp có thể giảm đáng kể chi phí tạo mẫu, với chi phí cho một mẫu tổng hợp chỉ khoảng 3\% so với một mẫu do con người tạo~\cite{ou2024synatra}. Những kết quả này gợi ý rằng thay vì tiếp tục mở rộng quy mô gán nhãn thủ công, một hướng đi khả thi hơn là \textbf{tự động hóa chính quá trình tạo dữ liệu huấn luyện}.
 
-Đây chính là bài toán mà khóa luận này tập trung giải quyết. Mục tiêu là xây dựng một chuỗi xử lý (pipeline) có khả năng tự động đi từ một website chưa được biết trước đến một tập dữ liệu có thể sử dụng để chuyên biệt hóa SLM. Pipeline thực hiện bốn bước chính: \emph{khám phá} website để tìm hiểu khả năng tương tác, \emph{tự tổng hợp} các task có ý nghĩa từ những gì đã khám phá, \emph{kiểm chứng} kết quả thực hiện và cuối cùng \emph{chuyển đổi} các trajectory hợp lệ thành dữ liệu huấn luyện. Với cách tiếp cận này, chi phí chuyên biệt hóa agent được chuyển từ một quy trình phụ thuộc nhiều vào nhân công sang một quy trình chủ yếu dựa trên chi phí tính toán (compute cost), qua đó mở ra khả năng mở rộng sang nhiều website và nhiều môi trường khác nhau.
+Đây chính là bài toán mà khóa luận này tập trung giải quyết. Mục tiêu là xây dựng một pipeline có khả năng tự động đi từ một website chưa được biết trước đến một tập dữ liệu có thể sử dụng để chuyên biệt hóa SLM. Pipeline thực hiện bốn bước chính: \emph{khám phá} website để tìm hiểu khả năng tương tác, \emph{tự tổng hợp} các task có ý nghĩa từ những gì đã khám phá, \emph{kiểm chứng} kết quả thực hiện và cuối cùng \emph{chuyển đổi} các trajectory hợp lệ thành dữ liệu huấn luyện. Với cách tiếp cận này, chi phí chuyên biệt hóa agent được chuyển từ một quy trình phụ thuộc nhiều vào nhân công sang một quy trình chủ yếu dựa trên chi phí tính toán, qua đó mở ra khả năng mở rộng sang nhiều website và nhiều môi trường khác nhau.
 
 Tuy nhiên, tự động hóa việc khám phá không đơn giản là để agent tương tác ngẫu nhiên với website và ghi lại mọi trajectory thu được. Một chiến lược khám phá thiếu định hướng dễ dẫn đến việc lặp lại những thao tác quen thuộc, bỏ sót các chức năng quan trọng hoặc tạo ra những trajectory dài nhưng ít giá trị huấn luyện. Do đó, vấn đề cốt lõi của nghiên cứu không chỉ là \emph{khám phá được bao nhiêu}, mà còn là \emph{tích lũy và sử dụng tri thức đã khám phá như thế nào để tạo ra những task mới có giá trị}.
 
-Từ đó, khóa luận đề xuất xây dựng một \emph{đồ thị kỹ năng (skill graph)} để làm cấu trúc trung gian lưu trữ tri thức thu được trong quá trình khám phá. Mỗi kỹ năng đã được kiểm chứng được biểu diễn cùng với các điều kiện tiên quyết (\emph{precondition}) và hiệu ứng (\emph{effect}) mà nó tạo ra trên trạng thái website. Thay vì xem mỗi trajectory là một chuỗi thao tác độc lập, hệ thống có thể xem chúng như những thành phần có thể tái sử dụng. Các kỹ năng trong đồ thị sau đó được \emph{ghép nối (compose)} dựa trên quan hệ giữa precondition và effect để hình thành những task dài hơn, đa dạng hơn và có ngữ nghĩa hoàn chỉnh.
+Từ đó, khóa luận đề xuất xây dựng một \emph{skill graph} để làm cấu trúc trung gian lưu trữ tri thức thu được trong quá trình khám phá. Mỗi kỹ năng đã được kiểm chứng được biểu diễn cùng với \emph{precondition} và \emph{effect} mà nó tạo ra trên trạng thái website. Thay vì xem mỗi trajectory là một chuỗi thao tác độc lập, hệ thống có thể xem chúng như những thành phần có thể tái sử dụng. Các kỹ năng trong đồ thị sau đó được \emph{ghép nối} dựa trên quan hệ giữa precondition và effect để hình thành những task dài hơn, đa dạng hơn và có ngữ nghĩa hoàn chỉnh.
 
 Theo hướng tiếp cận này, quá trình tạo dữ liệu không còn là việc đơn thuần thu thập thật nhiều trajectory, mà trở thành một quá trình \textbf{khám phá, tích lũy, kiểm chứng và tái tổ hợp tri thức}. Đây là nền tảng để xây dựng một pipeline có khả năng tự động tạo ra dữ liệu huấn luyện chất lượng cao, qua đó giảm sự phụ thuộc vào gán nhãn thủ công và hỗ trợ việc chuyên biệt hóa SLM cho các môi trường web khác nhau với chi phí thấp hơn.
 
@@ -36,7 +36,7 @@ Bài toán của khóa luận được phát biểu như sau.
 \begin{quote}
   \textbf{Cho} (i) một website đang hoạt động,
   truy cập được qua trình duyệt tiêu chuẩn, và (ii) một mô hình ngôn ngữ nhỏ đã
-  được huấn luyện trước (pretrain), \textbf{hãy tạo ra} phiên bản fine-tune của mô hình đó có khả
+  được pretrain, \textbf{hãy tạo ra} phiên bản fine-tune của mô hình đó có khả
   năng hoàn thành các task phát biểu bằng ngôn ngữ tự nhiên trên website,
   \textbf{mà không dùng} dữ liệu huấn luyện có sẵn hoặc do con người tạo.
 \end{quote}
@@ -44,9 +44,9 @@ Bài toán của khóa luận được phát biểu như sau.
 Giao diện tương tác của agent được tuân
 theo các thiết lập tiêu chuẩn của bài toán web agent. Cụ thể, ở mỗi bước,
 mô hình sẽ phân tích trạng thái môi trường thông qua URL hiện tại và
-cây trợ năng (accessibility tree) – bản mô tả cấu trúc văn bản của giao diện người dùng
+accessibility tree - bản mô tả cấu trúc văn bản của giao diện người dùng
 đang hiển thị. Tiếp đó, hệ thống sẽ quyết định và thực thi một hành động thuộc một
-không gian hành động (action space) đã được định nghĩa trước, bao gồm: nhấp chuột,
+action space đã được định nghĩa trước, bao gồm: nhấp chuột,
 nhập văn bản, chọn menu, điều hướng, hoặc báo cáo trạng thái task (đã hoàn thành
 hoặc bất khả thi). Khi đó, một \emph{trajectory} chính là chuỗi tuần tự các cặp
 (quan sát, hành động) được sinh ra trong suốt quá trình agent thực hiện một mục tiêu cụ thể.
@@ -70,7 +70,7 @@ Năm đặc điểm của bài toán khiến nó trở nên khó.
   \item \textbf{Khám phá trên website thật.} Các website thực tế thường
     chứa hàng nghìn trang có cấu trúc tương tự nhau (như sản phẩm, bài
     đăng, trang cá nhân). Bên cạnh đó, các trang web có thể gặp lỗi hoặc
-    hết thời gian phản hồi (timeout), và các thao tác của agent có thể
+    hết thời gian phản hồi, và các thao tác của agent có thể
     để lại tác dụng phụ lên trạng thái dùng chung. Do đó một chiến lược
     khám phá đơn giản sẽ nhanh chóng bị sa vào các trang trùng
     lặp hoặc bị gián đoạn khi gặp trang lỗi.
@@ -86,8 +86,8 @@ Năm đặc điểm của bài toán khiến nó trở nên khó.
     ở các trang đơn lẻ có thể kết hợp với nhau, tức những mối liên hệ
     không thể rút ra từ một trang duy nhất.
   \item \textbf{Đảm bảo tính đồng nhất khi chuyển giao.} Dữ liệu mà pipeline thu thập được phải được đưa vào mô hình mà không gây
-    ra hiện tượng lệch phân phối (distribution shift). Cụ thể, các câu lệnh
-    (prompt) huấn luyện, cấu hình phục vụ suy luận (serving) và bộ đánh giá phải
+    ra hiện tượng distribution shift. Cụ thể, prompt huấn luyện,
+    cấu hình serving và bộ đánh giá phải
     khớp chính xác với môi trường thực thi của agent. Nếu vi phạm, quá
     trình fine-tuning sẽ vô tình tối ưu hóa mô hình cho một phân phối sai lệch.
 \end{enumerate}
@@ -99,13 +99,13 @@ Khóa luận theo đuổi năm mục tiêu:
 
 \begin{enumerate}
   \item[\textbf{O1.}] Xây dựng pipeline khám phá tự động nhằm thu thập trajectory tương tác từ một website chưa có sẵn dữ liệu task nào, có khả năng xử lý hiệu quả cấu trúc trùng lặp hoặc trang web bị lỗi, và đảm bảo an toàn đối với các trạng thái dùng chung.
-  \item[\textbf{O2.}] Sinh ra các \emph{task ngữ nghĩa (semantic task) dài hạn đã qua kiểm chứng} bằng cách phát hiện các kỹ năng (skill) có thể tái sử dụng, mô hình hóa chúng thành các toán tử (operator) để lập kế hoạch và ghép chuỗi các toán tử này trên đồ thị.
-  \item[\textbf{O3.}] Tinh lọc các trajectory tương tác thu thập được thành tập dữ liệu fine-tuning thông qua các cổng kiểm soát chất lượng tự động, tuân thủ nghiêm ngặt nguyên tắc đồng nhất câu lệnh (prompt parity) giữa quá trình huấn luyện và triển khai thực tế.
+  \item[\textbf{O2.}] Sinh ra các \emph{semantic task dài hạn đã qua kiểm chứng} bằng cách phát hiện các skill có thể tái sử dụng, mô hình hóa chúng thành các operator để lập kế hoạch và ghép chuỗi các toán tử này trên đồ thị.
+  \item[\textbf{O3.}] Tinh lọc các trajectory tương tác thu thập được thành tập dữ liệu fine-tuning thông qua các cổng kiểm soát chất lượng tự động, tuân thủ nghiêm ngặt nguyên tắc prompt parity giữa quá trình huấn luyện và triển khai thực tế.
   \item[\textbf{O4.}] Fine-tune một mô hình ngôn ngữ nhỏ trên tập dữ liệu thu được và đánh giá hiệu năng trên bộ task chính thức của bốn website thuộc WebArena.
-  \item[\textbf{O5.}] Tổng hợp kinh nghiệm kỹ thuật trong quá trình vận hành agent LLM để thu thập dữ liệu trên các website thực tế thành những bài học và tiêu chuẩn thực hành (best practice) có tính ứng dụng cao.
+  \item[\textbf{O5.}] Tổng hợp kinh nghiệm kỹ thuật trong quá trình vận hành agent LLM để thu thập dữ liệu trên các website thực tế thành những bài học và best practice có tính ứng dụng cao.
 \end{enumerate}
 
-Bảng~\ref{tab:contrib} phân định rõ ranh giới giữa những tài nguyên khóa luận kế thừa và những đóng góp mới. Nhìn chung, khóa luận mang lại năm đóng góp cốt lõi. Đầu tiên là phương pháp HSGE: một chu trình khám phá và ghép chuỗi dựa trên đồ thị với kiến trúc task hai tầng. Trong kiến trúc đó, các task mức thấp (low-level task) do LLM đề xuất dẫn dắt quá trình khám phá, còn các semantic task sinh ra từ đồ thị toán tử cung cấp dữ liệu dài hạn. Thứ hai là bộ tinh lọc dữ liệu tự động, gồm các cổng chất lượng chấm lại từng lượt thực thi (episode) ngay trong vòng lặp thu thập, được tích hợp vào một trình dựng dữ liệu tuân thủ nguyên tắc prompt parity. Ba đóng góp còn lại là: một mô hình web agent 9B đã fine-tune cùng tập dữ liệu đã thu; kết quả đánh giá mô hình đó trên bộ task WebArena chính thức; và một báo cáo kinh nghiệm vận hành các chu trình tương tự.
+Bảng~\ref{tab:contrib} phân định rõ ranh giới giữa những tài nguyên khóa luận kế thừa và những đóng góp mới. Nhìn chung, khóa luận mang lại năm đóng góp cốt lõi. Đầu tiên là phương pháp HSGE: một chu trình khám phá và ghép chuỗi dựa trên đồ thị với kiến trúc task hai tầng. Trong kiến trúc đó, các low-level task do LLM đề xuất dẫn dắt quá trình khám phá, còn các semantic task sinh ra từ đồ thị toán tử cung cấp dữ liệu dài hạn. Thứ hai là bộ tinh lọc dữ liệu tự động, gồm các cổng chất lượng chấm lại từng episode ngay trong vòng lặp thu thập, được tích hợp vào một trình dựng dữ liệu tuân thủ nguyên tắc prompt parity. Ba đóng góp còn lại là: một mô hình web agent 9B đã fine-tune cùng tập dữ liệu đã thu; kết quả đánh giá mô hình đó trên bộ task WebArena chính thức; và một báo cáo kinh nghiệm vận hành các chu trình tương tự.
 
 \begin{table}[H]
   \centering
@@ -123,7 +123,7 @@ Bảng~\ref{tab:contrib} phân định rõ ranh giới giữa những tài nguy�
     \addlinespace
     Mô hình gốc Qwen3.5-9B~\cite{qwen2026qwen35}; LoRA~\cite{hu2022lora};
     LLaMA-Factory~\cite{zheng2024llamafactory}; vLLM~\cite{kwon2023vllm} &
-    Sinh semantic task bằng cách ghép chuỗi toán tử, kết hợp cơ chế quy nạp (induction) nhận thức từ vựng và cổng chặn lỗi lặp logic (tautology) (Mục~\ref{sec:method-semantic}) \\
+    Sinh semantic task bằng cách ghép chuỗi toán tử, kết hợp cơ chế induction nhận thức từ vựng và cổng chặn tautology (Mục~\ref{sec:method-semantic}) \\
     \addlinespace
     Bộ mã hóa sentence embedding~\cite{reimers2019sbert};
     khung hình thức options, STRIPS và các công trình nâng options thành toán tử
@@ -147,7 +147,7 @@ tối ưu theo sở thích không thuộc phạm vi nghiên cứu. Mô hình đ�
 có khoảng $\sim$9 tỷ tham số, với toàn bộ task được viết bằng tiếng Anh. Agent đăng
 nhập bằng tài khoản thử nghiệm chuẩn của benchmark, sử dụng phiên đăng nhập đã
 được lưu sẵn. Việc giải CAPTCHA, vượt qua các cơ chế chống bot, cũng như mọi
-tương tác với các website ngoài các bản triển khai (instance) WebArena tự triển khai đều nằm
+tương tác với các website ngoài các instance WebArena tự triển khai đều nằm
 ngoài phạm vi của khóa luận.
 
 \section{Kết quả đạt được}

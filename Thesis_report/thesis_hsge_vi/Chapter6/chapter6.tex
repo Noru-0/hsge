@@ -2,8 +2,9 @@
 \label{ch:conclusion}
 
 Chương này tổng kết những đóng góp chính của khóa luận và đối chiếu kết quả
-đạt được với các mục tiêu đề ra ở Chương~\ref{ch:intro}. Phần cuối nêu những
-hướng nghiên cứu có thể đi tiếp.
+đạt được với các mục tiêu đề ra ở Chương~\ref{ch:intro}, sau đó nêu rõ những
+hiện vật đã công bố để người đọc kiểm chứng. Phần cuối nêu những hướng nghiên
+cứu có thể đi tiếp.
 
 \section{Tổng kết đóng góp và sản phẩm}
 \label{sec:conc-summary}
@@ -156,6 +157,38 @@ nhân, quy nạp operator, xây dựng dữ liệu và huấn luyện mô hình
 \end{longtable}
 \normalsize
 
+\section{Tính sẵn có của mã nguồn và dữ liệu}
+\label{sec:conc-availability}
+
+Để kết quả của khóa luận có thể được kiểm chứng và tái lập, toàn bộ hiện vật
+được công bố tại kho mã nguồn \url{https://github.com/Noru-0/hsge}. Kho này
+gồm bốn nhóm nội dung.
+
+\begin{itemize}
+  \item \textbf{Mã nguồn pipeline}: toàn bộ vòng lặp khám phá, cơ chế phát
+    hiện skill, quy nạp operator, các cổng lọc chất lượng và trình dựng tập
+    dữ liệu, kèm tệp cấu hình của bốn đợt khám phá đã báo cáo ở
+    Chương~\ref{ch:experiments}.
+  \item \textbf{Tập dữ liệu huấn luyện}: thư mục \texttt{training\_data/}
+    chứa 4288 mẫu train và 266 mẫu validation, cùng bản tách theo từng
+    website, ở đúng định dạng đã dùng để fine-tune
+    (Bảng~\ref{tab:dataset}).
+  \item \textbf{Kết quả đánh giá thô}: thư mục \texttt{outputs/eval/} chứa
+    kết quả từng task của cả hai đợt đo - mô hình nền và mô hình sau
+    fine-tune - trên đủ 655 task, đủ để người đọc tự tính lại mọi con số ở
+    Bảng~\ref{tab:main} và Bảng~\ref{tab:baseline}, bao gồm cả phép điều
+    chỉnh thủ công đã công bố ở Mục~\ref{sec:exp-baseline}.
+  \item \textbf{Tài liệu vận hành}: hướng dẫn dựng lại môi trường WebArena,
+    chạy pipeline, huấn luyện và đánh giá.
+\end{itemize}
+
+Hai hạng mục \emph{không} nằm trong kho vì lý do dung lượng và bảo mật. Thứ
+nhất là các trace thô của những đợt khám phá và đánh giá (khoảng 11\,GB, chủ
+yếu là ảnh chụp màn hình); các số liệu tổng hợp rút ra từ chúng đã được báo
+cáo đầy đủ trong Chương~\ref{ch:experiments} và Phụ lục~\ref{app:runs}. Thứ
+hai là khóa API và phiên đăng nhập của các website benchmark, vốn là thông
+tin xác thực sống.
+
 \section{Hướng phát triển}
 \label{sec:conc-future}
 
@@ -187,7 +220,7 @@ thực thi ít sinh ra lỗi khả thao tác giả hơn.
 \textbf{Khai thác tín hiệu kiểm chứng để huấn luyện.}
 Ngoài tập dữ liệu dùng cho fine-tuning có giám sát, pipeline còn để lại nhiều
 tín hiệu khác: trajectory đã được judge xác nhận, trajectory thất bại, và episode
-kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở thích (Preference-based Optimization) hoặc học tăng cường (Reinforcement Learning), như cách WebRL~\cite{qi2025webrl} và WebAgent-R1~\cite{wei2025webagentr1} đã làm, có thể khai thác triệt để các nguồn tín hiệu này, giúp mô hình học tập được từ cả những trường hợp chưa thành công thay vì chỉ giới hạn trên các mẫu đạt chuẩn.
+kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở thích hoặc học tăng cường, như cách WebRL~\cite{qi2025webrl} và WebAgent-R1~\cite{wei2025webagentr1} đã làm, có thể khai thác triệt để các nguồn tín hiệu này, giúp mô hình học tập được từ cả những trường hợp chưa thành công thay vì chỉ giới hạn trên các mẫu đạt chuẩn.
 
 \textbf{Mở rộng sang các mô hình nhỏ hơn.}
 Qwen3.5-9B đã nhỏ hơn hẳn các mô hình lớn thường dùng cho web agent,
@@ -212,7 +245,7 @@ cả hai mô hình, và chạy lại Shopping cùng Shopping Admin một cách t
 Thứ hai là ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng
 ngân sách; đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu
 trúc đồ thị, và cũng là phần còn thiếu để phát biểu mạnh hơn về phương pháp.
-Thứ ba là mở rộng sang các benchmark khác - VisualWebArena~\cite{koh2024visualwebarena} cho các mục tiêu diễn đạt bằng hình ảnh, WorkArena~\cite{drouin2024workarena} cho miền công việc văn phòng, và Online-Mind2Web~\cite{xue2025illusion} cho điều kiện web mở - kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân (binary success rate), chẳng hạn như chỉ số tiến bộ từng phần (partial progress).
+Thứ ba là mở rộng sang các benchmark khác - VisualWebArena~\cite{koh2024visualwebarena} cho các mục tiêu diễn đạt bằng hình ảnh, WorkArena~\cite{drouin2024workarena} cho miền công việc văn phòng, và Online-Mind2Web~\cite{xue2025illusion} cho điều kiện web mở - kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân, chẳng hạn như chỉ số tiến bộ từng phần.
 
 \vspace{1em}
 \noindent

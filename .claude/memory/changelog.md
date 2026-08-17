@@ -6,7 +6,50 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-17
 
-- **15:24** — `Thesis_report/thesis_hsge_vi/Chapter{4,5,6}/*.tex` — **thesis:
+- **15:28** — `Thesis_report/thesis_hsge_vi/{Chapter1..6,Appendix/{appendix1,
+  glossary,tomtat}}.tex` — **thesis: supervisor feedback item 3 — glossary terms
+  are now used bare in English, bilingual parentheticals removed.** ~130
+  replacements across the whole document: `tác nhân (agent)` -> `agent`,
+  `chuỗi xử lý (pipeline)` -> `pipeline`, `cây trợ năng (accessibility tree)`
+  -> `accessibility tree`, and so on. Section titles too
+  (`Agent giải quyết (Solver)` -> `Solver`, `Lấy mẫu không tiền tố (unprefixed
+  sampling)` -> `Unprefixed sampling`). Deliberately kept: `\ref`
+  parentheticals, math, code, enumerations `(i)(ii)`, genuine explanatory
+  asides, and first-use abbreviation expansions
+  (`Small Language Model (SLM)`) — the last of these is now stated as an
+  explicit exception in the glossary preamble, which was rewritten to describe
+  the new convention.
+  Glossary 45 -> 65 terms: added the 20 terms that are now used bare in English
+  but had no entry (adapter, checkpoint, distribution shift, fail-closed,
+  fail-soft, inference, instruction tuning, observation, open-weights, operator
+  graph, policy, pretrain, read-only / read-write, skill card, skill graph,
+  sub-trajectory, symbolic planning, train / validation set, URL template);
+  rows re-sorted alphabetically.
+  Also fixed an unbalanced-parenthesis typo in Ch.5 §5.6 that predates this
+  session, and narrowed two boxes that overflowed after the header rewording.
+  An automated audit over all nine files now finds 0 remaining glossary-term
+  parentheticals.
+  Verified: clean build from scratch, 0 errors, 0 undefined ref/cite, 188
+  pages, 5 overfull hboxes (down from 7 at session start).
+
+- **15:26** — `Thesis_report/thesis_hsge_vi/Chapter{4,6}/*.tex` — **thesis:
+  supervisor feedback item 6 (compare structure against HxAgent).** Audit found
+  the thesis already has HxAgent's formulation, algorithm, cost analysis,
+  ablation, limitations and related-work sections. Two real gaps closed:
+  (1) new §4.1 "Câu hỏi nghiên cứu" stating CH1-CH4 up front, with a one-line
+  pointer at the head of each answering section, and an explicit note that CH4
+  is only partly answered because the controlled ablations were never run;
+  (2) new §6.3 "Tính sẵn có của mã nguồn và dữ liệu" pointing at
+  github.com/Noru-0/hsge, `training_data/`, `outputs/eval/`, and naming the two
+  things deliberately not published (11 GB of raw traces, live credentials).
+
+- **build note** — the working copy's `main.bbl` / `main.fdb_latexmk` were stale
+  against the enlarged `references.bib`, which made every citation render as
+  `[0]` while the log still reported zero undefined citations. Removed those
+  untracked artifacts so the next build regenerates them; verified a
+  from-scratch build resolves all 76 labels.
+
+- **15:16** — `Thesis_report/thesis_hsge_vi/Chapter{4,5,6}/*.tex` — **thesis:
   supervisor feedback items 4-5 (table units, citation density).** Adopted and
   stated one unit convention at the top of Ch.4: when every cell in a column
   shares a unit, the unit moves to the column header and cells hold bare
