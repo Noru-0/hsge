@@ -165,7 +165,7 @@ còn có thể đi tiếp, cả về quy mô dữ liệu lẫn hiệu quả củ
 \textbf{Mở rộng quy mô thu thập dữ liệu.}
 Tập dữ liệu hiện tại (4288 mẫu huấn luyện) vẫn nhỏ hơn khoảng một bậc độ
 lớn so với các nghiên cứu cùng hướng vốn sử dụng khoảng 40.000 đến 45.000 bước tương
-tác. Do pipeline HSGE không phụ thuộc vào một website cố định và đã hỗ trợ
+tác~\cite{murty2024nnetnav,gandhi2026gobrowse}. Do pipeline HSGE không phụ thuộc vào một website cố định và đã hỗ trợ
 cơ chế chuyển giao skill giữa các giao diện tương đồng, việc mở rộng sang
 nhiều nền tảng mới kết hợp tái sử dụng các skill đã tích lũy sẽ giúp gia tăng
 độ đa dạng của dữ liệu mà không cần thực thi lại toàn bộ quá trình khám phá.
@@ -187,7 +187,7 @@ thực thi ít sinh ra lỗi khả thao tác giả hơn.
 \textbf{Khai thác tín hiệu kiểm chứng để huấn luyện.}
 Ngoài tập dữ liệu dùng cho fine-tuning có giám sát, pipeline còn để lại nhiều
 tín hiệu khác: trajectory đã được judge xác nhận, trajectory thất bại, và episode
-kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở thích (Preference-based Optimization) hoặc học tăng cường (Reinforcement Learning) có thể khai thác triệt để các nguồn tín hiệu này, giúp mô hình học tập được từ cả những trường hợp chưa thành công thay vì chỉ giới hạn trên các mẫu đạt chuẩn.
+kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở thích (Preference-based Optimization) hoặc học tăng cường (Reinforcement Learning), như cách WebRL~\cite{qi2025webrl} và WebAgent-R1~\cite{wei2025webagentr1} đã làm, có thể khai thác triệt để các nguồn tín hiệu này, giúp mô hình học tập được từ cả những trường hợp chưa thành công thay vì chỉ giới hạn trên các mẫu đạt chuẩn.
 
 \textbf{Mở rộng sang các mô hình nhỏ hơn.}
 Qwen3.5-9B đã nhỏ hơn hẳn các mô hình lớn thường dùng cho web agent,
@@ -200,7 +200,7 @@ tiếp.
 Trong phạm vi khóa luận, đồ thị kỹ năng chỉ được sử dụng để sinh dữ liệu huấn
 luyện. Tuy nhiên, cùng một biểu diễn này cũng có thể được khai thác ở thời
 điểm suy luận nhằm truy xuất các skill hoặc subgoal liên quan để bổ sung ngữ
-cảnh cho mô hình. Điều này mở ra khả năng kết hợp giữa dữ liệu đã học và tri
+cảnh cho mô hình, theo cách mà Synapse~\cite{zheng2024synapse}, AWM~\cite{wang2024awm} và SkillWeaver~\cite{zheng2025skillweaver} đã chứng minh là hiệu quả với các mô hình lớn. Điều này mở ra khả năng kết hợp giữa dữ liệu đã học và tri
 thức có cấu trúc trong cùng một hệ thống web agent.
 
 \textbf{Hoàn thiện phần thực nghiệm còn thiếu.}
@@ -212,14 +212,14 @@ cả hai mô hình, và chạy lại Shopping cùng Shopping Admin một cách t
 Thứ hai là ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng
 ngân sách; đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu
 trúc đồ thị, và cũng là phần còn thiếu để phát biểu mạnh hơn về phương pháp.
-Thứ ba là mở rộng sang các bộ chuẩn (benchmark) khác, kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân (binary success rate), chẳng hạn như chỉ số tiến bộ từng phần (partial progress).
+Thứ ba là mở rộng sang các benchmark khác - VisualWebArena~\cite{koh2024visualwebarena} cho các mục tiêu diễn đạt bằng hình ảnh, WorkArena~\cite{drouin2024workarena} cho miền công việc văn phòng, và Online-Mind2Web~\cite{xue2025illusion} cho điều kiện web mở - kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân (binary success rate), chẳng hạn như chỉ số tiến bộ từng phần (partial progress).
 
 \vspace{1em}
 \noindent
 Khóa luận đã đề xuất HSGE, một pipeline tự động thu thập dữ liệu huấn luyện
 cho web agent từ các website không có nhãn thông qua quá trình khám phá có
 cấu trúc. Thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ để đưa một mô hình 9B lên
-20{,}8\% trên 655 task chính thức của bốn website WebArena. Mức đó nằm
+20{,}8\% trên 655 task chính thức của bốn website WebArena~\cite{zhou2024webarena}. Mức đó nằm
 giữa các hệ thống mở tốt nhất cùng phân khúc dưới 10B, và cao hơn 7{,}5
 điểm phần trăm so với chính mô hình nền khi chưa fine-tune. Đáng nói hơn, kết quả đạt
 được chỉ với 4288 mẫu huấn luyện, ít hơn khoảng một bậc độ lớn so với các

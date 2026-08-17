@@ -6,6 +6,27 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-17
 
+- **15:24** — `Thesis_report/thesis_hsge_vi/Chapter{4,5,6}/*.tex` — **thesis:
+  supervisor feedback items 4-5 (table units, citation density).** Adopted and
+  stated one unit convention at the top of Ch.4: when every cell in a column
+  shares a unit, the unit moves to the column header and cells hold bare
+  numbers (`tab:infra`, `tab:calls`, `tab:apicost`, `tab:main`, `tab:baseline`,
+  `tab:related`, `tab:crosssite`, `tab:signals`); when a column has to mix
+  counts with rates (`tab:runs`, `tab:failures`, `tab:profile`) the header
+  cannot carry a unit, so it stays in the cell — this exception is now stated
+  in the chapter text and in each of those captions.
+  Citations: `tab:related`'s GPT-4o / GPT-4o-mini / Qwen-2.5-7B rows were
+  uncited (source named only in the caption) and now cite
+  `gandhi2026gobrowse` per row; McNemar and the binomial CI now cite
+  `mcnemar1947` / `brown2001binomial`; WebArena / BrowserGym / LoRA /
+  LLaMA-Factory / vLLM / Set-of-Marks / Qwen3.5 are cited at their Ch.4
+  mentions. Ch.5 went 0 -> 16 cites and Ch.6 0 -> 10. Where a number has no
+  public source (vast.ai hourly price, GPT-4o token price at run time) the
+  text now says so explicitly instead of leaving it unattributed.
+  `\cite` counts: Ch.4 6 -> 24, Ch.5 0 -> 16, Ch.6 0 -> 10.
+  Verified: clean build from scratch, 0 errors, 0 undefined ref/cite,
+  186 pages, all 76 bibliography labels resolve.
+
 - **15:07** — `Thesis_report/thesis_hsge_vi/{References/references.bib,
   Chapter1/chapter1.tex, Chapter2/chapter2.tex}` — **thesis: address supervisor
   feedback items 1-2 (Ch.1 results section, Ch.2 survey breadth) + reference
