@@ -143,11 +143,11 @@
 
 % Đề cương chi tiết — bắt buộc theo checklist của Khoa, đặt ngay sau Lời cảm
 % ơn và trước Mục lục. Bản nộp SAU bảo vệ phải thay bằng bản scan có chữ ký.
-% TẠM BỎ khỏi bản build: số liệu trong Appendix/decuongchitiet.tex là của đề
-% cương đã nộp (370 mẫu, GitLab 10/180 vs 12/180) và không còn khớp Chương 4.
-% Bật lại sau khi đồng bộ hai bản.
-% \addcontentsline{toc}{chapter}{Đề cương chi tiết}
-% \include{Appendix/decuongchitiet}
+% Số liệu trong Appendix/decuongchitiet.tex là hiện trạng tại thời điểm nộp đề
+% cương (370 mẫu, GitLab 10/180 vs 12/180); §2.3.3 của file đó nói rõ điều này
+% và trỏ sang Chương 4 cho kết quả cuối, nên hai bản không mâu thuẫn nhau.
+\addcontentsline{toc}{chapter}{Đề cương chi tiết}
+\include{Appendix/decuongchitiet}
 
 \addcontentsline{toc}{chapter}{Tóm lược nội dung các chương}
 \include{Appendix/tomluoc}

@@ -499,6 +499,8 @@ của chặng hai, nên tập huấn luyện của chặng này được trộn 
 lại chiếm khoảng 15\%, gồm các trajectory Shopping và GitLab lấy lại từ chặng
 trước.
 
+Bảng~\ref{tab:sft} tổng hợp cấu hình và kết quả của cả hai chặng.
+
 \begin{table}[H]
 \centering
 \caption[Kết quả fine-tuning]{Kết quả fine-tuning LoRA của hai chặng huấn
@@ -941,7 +943,7 @@ Tự báo bất khả thi & 26 & 31 & 31 & 27 \\
 \subsection{Nhận xét từ kết quả phân loại lỗi}
 
 \textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất, không phải lỗi
-suy luận.} Từ 83\% đến 95\% số episode thất bại có ít nhất một hành động bị
+suy luận.} Từ 85\% đến 96\% số episode thất bại có ít nhất một hành động bị
 trình duyệt từ chối, tổng cộng 2315 lỗi thực thi trên 655 episode. Phần lớn
 là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử
 mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã
@@ -1008,7 +1010,7 @@ Lỗi hành động trên mỗi bước & 0{,}358 & 0{,}344 \\
 \end{tabular}
 \end{table}
 
-Chân dung này cho thấy fine-tuning không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau fine-tune còn cao hơn mô hình nền về giá trị tuyệt đối (2285 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}347 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau fine-tune luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng gượng dậy sau một thao tác hỏng. Nó không còn nằm ở việc mô hình có phát ra được hành động đúng định dạng hay không - phần đó tập dữ liệu đã dạy được triệt để.
+Chân dung này cho thấy fine-tuning không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau fine-tune còn cao hơn mô hình nền về giá trị tuyệt đối (2315 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}344 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau fine-tune luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng gượng dậy sau một thao tác hỏng. Nó không còn nằm ở việc mô hình có phát ra được hành động đúng định dạng hay không - phần đó tập dữ liệu đã dạy được triệt để.
 
 \subsection{Độ dài trajectory}
 
@@ -1025,7 +1027,7 @@ chứ không vào việc tiến tới mục tiêu.
 
 Pipeline đã chạy trọn vẹn trên bốn website thật: 3981 episode được ghi nhận
 và tinh lọc còn 1760 trajectory đạt chuẩn, tương ứng 8554 mẫu huấn luyện.
-Việc fine-tune một mô hình 9B tham số tốn dưới 15\,USD chi phí GPU. Trên bộ 655 task chính
+Việc fine-tune một mô hình 9B tham số tốn 6{,}6\,USD chi phí GPU, và cả chu trình fine-tune lẫn đánh giá cộng lại là 22{,}7\,USD (Bảng~\ref{tab:infra}). Trên bộ 655 task chính
 thức, mô hình đạt tỷ lệ thành công 24{,}6\%, so với 13{,}3\% của chính mô
 hình đó khi chưa fine-tune - chênh lệch 11{,}3 điểm phần trăm, đạt ý nghĩa
 thống kê trên \emph{cả bốn} website (Mục~\ref{sec:exp-baseline}). Quan

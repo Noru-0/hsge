@@ -142,7 +142,7 @@ cần thực sự thay đổi trạng thái website để phát hiện và kiể
 \emph{tự triển khai được}: quá trình khám phá thực hiện hàng nghìn thao tác
 ghi lên dữ liệu, nên chạy trên web mở vừa không được phép vừa không tái lập
 được. Thứ ba, việc chấm điểm phải \emph{tự động và theo trạng thái cuối},
-để đánh giá cuối cùng không phụ thuộc vào phán quyết của chính họ mô hình
+để đánh giá cuối cùng không phụ thuộc vào phán quyết của chính mô hình
 đang được nghiên cứu. WebArena là benchmark duy nhất tại thời điểm thực hiện
 khóa luận hội đủ cả ba, nên nó vừa đóng vai trò môi trường khám phá vừa là
 benchmark đánh giá chính thức.
@@ -341,7 +341,7 @@ Trong kỷ nguyên của các mô hình ngôn ngữ lớn (LLM), Voyager~\cite{w
 là minh chứng tiêu biểu cho khả năng học tập kỹ năng liên tục
 của agent trong môi trường Minecraft. Hệ thống này xây dựng một thư viện các kỹ
 năng dưới dạng mã thực thi có khả năng tự mở rộng, trong đó mỗi kỹ năng bắt buộc phải
- được nghiệm chứng thông qua thực thi trước khi được tích hợp. Tuy nhiên, giới hạn của
+ được kiểm chứng thông qua thực thi trước khi được tích hợp. Tuy nhiên, giới hạn của
  phương pháp này nằm ở chỗ môi trường giả lập cung cấp sẵn các trạng thái chân lý nền
  có thể truy xuất chính xác bằng mã nguồn, một đặc quyền không tồn tại
  trong môi trường website thực tế. Thêm vào đó, kỹ năng thu thập được chỉ đóng vai trò
@@ -380,7 +380,7 @@ chúng thành toán tử có precondition/effect rồi \emph{ghép chuỗi} các
 sinh \emph{dữ liệu huấn luyện} là hướng đi chưa được khai thác.
 
 Đây chính là khoảng trống mà HSGE nhắm tới. Kỹ năng vẫn trải qua các bước phát
-hiện và nghiệm chứng tương tự, nhưng thay vì dừng lại ở đó, chúng được nâng thành
+hiện và kiểm chứng tương tự, nhưng thay vì dừng lại ở đó, chúng được nâng thành
 các planning operator. Từ các toán tử này, hệ thống ghép
 chuỗi để tổng hợp những semantic task dài hạn, và chính chúng mới là nguồn dữ
 liệu dùng để huấn luyện một mô hình ngôn ngữ nhỏ.
@@ -394,7 +394,7 @@ Hướng nghiên cứu có nhiều nét tương đồng nhất với khóa luậ
 
 Synatra~\cite{ou2024synatra} chuyển hóa tri thức gián tiếp, lấy từ các bài viết và tài liệu hướng dẫn trực tuyến, thành bản mẫu tổng hợp ở quy mô lớn. Kết quả là khoảng 100 nghìn bản mẫu, chi phí chỉ vào khoảng 0{,}031 USD mỗi mẫu. Mặc dù vậy, hạn chế của phương pháp này là các bản mẫu được tổng hợp ngoại tuyến và không qua tương tác trực tiếp với môi trường website động; do đó, tính khả thi của chúng khi triển khai thực tế không được đảm bảo.
 
-AgentTrek~\cite{xu2024agenttrek} khắc phục điểm yếu này bằng cách replay các bài hướng dẫn trực tiếp trên trình duyệt thực, kết hợp với một mô hình VLM để nghiệm chứng tính đúng đắn của toàn bộ trajectory. Nhưng độ phủ của cách này bị chặn bởi đúng một thứ: lượng tài liệu hướng dẫn sẵn có. Quy trình chưa từng được tài liệu hóa, hay thao tác đặc thù trên nền tảng nội bộ và website mới triển khai, đều nằm ngoài tầm với.
+AgentTrek~\cite{xu2024agenttrek} khắc phục điểm yếu này bằng cách replay các bài hướng dẫn trực tiếp trên trình duyệt thực, kết hợp với một mô hình VLM để kiểm chứng tính đúng đắn của toàn bộ trajectory. Nhưng độ phủ của cách này bị chặn bởi đúng một thứ: lượng tài liệu hướng dẫn sẵn có. Quy trình chưa từng được tài liệu hóa, hay thao tác đặc thù trên nền tảng nội bộ và website mới triển khai, đều nằm ngoài tầm với.
 
 \subsection{Khai thác qua tự động khám phá}
 

@@ -30,11 +30,11 @@ Một điều kiện phải đi kèm phát biểu này: kết quả $p = 0{,}003
 
 Trước khi có kết quả bốn website, giả thuyết mặc định là khối lượng dữ
 liệu: thêm dữ liệu thì điểm sẽ lên. Dữ liệu mới \emph{không} ủng hộ giả
-thuyết đó ở dạng đơn giản như vậy. Website có nhiều dữ liệu thứ nhì (Shopping Admin, chiếm 27{,}5\% tập huấn luyện) lại có tỷ lệ thành công thấp nhất (15{,}4\%), trong khi website có kết quả cao nhất (Shopping, tỷ lệ thành công 28{,}3\%) chỉ đứng thứ ba về lượng dữ liệu (chiếm 22{,}6\% tập huấn luyện) (Bảng~\ref{tab:crosssite}). Với bốn điểm dữ liệu thì đây không phải một kết luận thống kê, nhưng nó đủ để bác bỏ cách nghĩ ``đổ thêm dữ liệu vào website nào thì website đó khá lên''.
+thuyết đó ở dạng đơn giản như vậy. Website có nhiều dữ liệu nhất (Shopping Admin, chiếm 41{,}9\% tập huấn luyện) chỉ xếp thứ ba về tỷ lệ thành công (21{,}4\%), trong khi website đứng thứ nhì về kết quả (Shopping, tỷ lệ thành công 28{,}3\%) lại chỉ đứng thứ ba về lượng dữ liệu (chiếm 11{,}4\% tập huấn luyện) (Bảng~\ref{tab:crosssite}). Với bốn điểm dữ liệu thì đây không phải một kết luận thống kê, nhưng nó đủ để bác bỏ cách nghĩ ``đổ thêm dữ liệu vào website nào thì website đó khá lên''.
 
-Bảng phân loại nguyên nhân thất bại ở Mục~\ref{sec:exp-analysis} chỉ ra một điểm nghẽn rất cụ thể: từ 83\% đến 95\% số episode thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2285 lỗi trên 655 episode. Phần lớn là lỗi quá hạn chờ thao tác, và xảy ra ngay trên những phần tử mà accessibility tree \emph{có} hiển thị. Nghĩa là mô hình đã chỉ đúng phần tử cần bấm, nhưng thao tác không đi trọn. Đây là giới hạn của \emph{execution layer}, không phải của dữ liệu huấn luyện.
+Bảng phân loại nguyên nhân thất bại ở Mục~\ref{sec:exp-analysis} chỉ ra một điểm nghẽn rất cụ thể: từ 85\% đến 96\% số episode thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi trên 655 episode. Phần lớn là lỗi quá hạn chờ thao tác, và xảy ra ngay trên những phần tử mà accessibility tree \emph{có} hiển thị. Nghĩa là mô hình đã chỉ đúng phần tử cần bấm, nhưng thao tác không đi trọn. Đây là giới hạn của \emph{execution layer}, không phải của dữ liệu huấn luyện.
 
-Đi kèm là hiện tượng kẹt vòng lặp: một episode thất bại kéo dài 12 bước tính theo trung vị, so với 5 bước ở episode thành công. Ngân sách bước đang bị tiêu vào những thao tác lặp lại chứ không vào tiến triển. Hai quan sát này cùng nói một điều: \emph{nới ngân sách bước hay nhân đôi dữ liệu huấn luyện đều không phải chỗ đáng đầu tư tiếp theo}. Hai việc đáng làm hơn là dạy mô hình gượng dậy sau một hành động hỏng, và làm execution layer bớt sinh lỗi.
+Đi kèm là hiện tượng kẹt vòng lặp: một episode thất bại kéo dài 13 bước tính theo trung vị, so với 6 bước ở episode thành công. Ngân sách bước đang bị tiêu vào những thao tác lặp lại chứ không vào tiến triển. Hai quan sát này cùng nói một điều: \emph{nới ngân sách bước hay nhân đôi dữ liệu huấn luyện đều không phải chỗ đáng đầu tư tiếp theo}. Hai việc đáng làm hơn là dạy mô hình gượng dậy sau một hành động hỏng, và làm execution layer bớt sinh lỗi.
 
 Bên cạnh đó, hệ thống vẫn đối mặt với ba giới hạn chính. Thứ nhất là quy mô dữ liệu: tập dữ liệu 8.554 mẫu huấn luyện của nghiên cứu vẫn nhỏ hơn khoảng năm lần so với quy mô 40.000-45.000 mẫu của các hệ thống đối chuẩn như Go-Browse~\cite{gandhi2026gobrowse} hay NNetNav~\cite{murty2024nnetnav}. Thứ hai là độ phủ không gian trang: dữ liệu khám phá bao quát từ 63 đến 179 node mỗi website, trong khi bộ task đánh giá chuẩn của WebArena~\cite{zhou2024webarena} được phân bố trên toàn bộ không gian trang rộng lớn hơn nhiều. Thứ ba là giới hạn nội tại của mô hình nền: việc tinh chỉnh thuần giám sát (SFT) trên một mô hình 9B tham số khó có thể giúp tác tử tiếp thu đầy đủ các năng lực phức tạp như lập kế hoạch dài hạn hay tự phục hồi sau lỗi thao tác, nếu các dạng hành vi này chỉ xuất hiện thưa thớt trong tập trajectory. Sự hạn chế trong khả năng tự sửa lỗi này phản ánh chính xác các điểm nghẽn được chỉ ra tại bảng phân loại nguyên nhân thất bại (Bảng~\ref{tab:failures}).
 
@@ -73,7 +73,7 @@ Có một điểm cần được phát biểu thật chính xác: \emph{khâu gh
 
 \textbf{Chẩn đoán.} Nguyên nhân do các thao tác tương tác trình duyệt được tin tưởng mặc định mà không có cơ chế xử lý ngoại lệ phù hợp; một lỗi phát sinh không được bắt kịp thời tại nút xử lý sẽ lan truyền trực tiếp lên cấp điều khiển chính gây sụp đổ hệ thống.
 
-\textbf{Khắc phục.} Áp dụng cơ chế fail-soft cho mọi thao tác trình duyệt: nếu một node không thể mở được, hệ thống sẽ ghi log nhật ký lỗi, lưu trữ trạng thái liên quan và bỏ qua để tiếp tục tiến trình. Đối với các ngoại lệ bất ngờ, hệ thống sẽ ngắt có kiểm soát và chủ động lưu trữ dữ liệu trung gian sau mỗi node, cho phép lượt chạy khôi phục mượt mạ từ điểm kiểm tra gần nhất mà không mất mát vết thực thi.
+\textbf{Khắc phục.} Áp dụng cơ chế fail-soft cho mọi thao tác trình duyệt: nếu một node không thể mở được, hệ thống sẽ ghi log nhật ký lỗi, lưu trữ trạng thái liên quan và bỏ qua để tiếp tục tiến trình. Đối với các ngoại lệ bất ngờ, hệ thống sẽ ngắt có kiểm soát và chủ động lưu trữ dữ liệu trung gian sau mỗi node, cho phép lượt chạy khôi phục mượt mà từ điểm kiểm tra gần nhất mà không mất mát vết thực thi.
 
 \textbf{Bài học.} Cần coi mọi tương tác trên giao diện web thực tế đều là thao tác \emph{có rủi ro thất bại}, từ đó thiết lập chính sách xử lý lỗi phù hợp cho từng thao tác; tiến trình thực thi của lượt chạy phải được thiết kế bền vững ở mức độ hạt mịn nhất mà ngân sách tính toán cho phép.
 
@@ -90,7 +90,7 @@ Có một điểm cần được phát biểu thật chính xác: \emph{khâu gh
 \section{Chốt chặn cấu trúc thay vì nhắc nhở qua prompt}
 \label{sec:disc-guardrails}
 
-Một quy luật nhất quán được rút ra xuyên suốt các lượt chạy thực nghiệm: việc chỉ yêu cầu mô hình tuân thủ quy tắc ở tầng prompt là không đủ để bảo đảm tính vận hành chính xác của hệ thống. Toàn bộ các sự cố ghi nhận được đều xuất phát từ cùng một nguyên nhân gốc rễ: mô hình tự động bỏ qua hoặc vi phạm các chỉ thị định dạng ở tầng prompt. Bài toán chỉ được khắc phục triệt để khi các quy ước này được chuyển đổi thành các chốt chặn cấu trúc, tức các cơ chế kiểm soát thực thi độc lập hoàn toàn với mức độ tuân thủ của mô hình. Báo cáo chi tiết về toàn bộ các sự cố này được tập hợp tại Phụ lục C.
+Một quy luật nhất quán được rút ra xuyên suốt các lượt chạy thực nghiệm: việc chỉ yêu cầu mô hình tuân thủ quy tắc ở tầng prompt là không đủ để bảo đảm tính vận hành chính xác của hệ thống. Toàn bộ các sự cố ghi nhận được đều xuất phát từ cùng một nguyên nhân gốc rễ: mô hình tự động bỏ qua hoặc vi phạm các chỉ thị định dạng ở tầng prompt. Bài toán chỉ được khắc phục triệt để khi các quy ước này được chuyển đổi thành các chốt chặn cấu trúc, tức các cơ chế kiểm soát thực thi độc lập hoàn toàn với mức độ tuân thủ của mô hình. Báo cáo chi tiết về toàn bộ các sự cố này được tập hợp tại Phụ lục~\ref{app:runs}.
 
 \subsection{Hạn chế của quy ước gắn thẻ văn bản khi vận hành mô hình thực tế}
 
@@ -134,8 +134,8 @@ Hiệu quả của cơ chế sinh tác vụ ngữ nghĩa (Mục~\ref{sec:method-
 dụng''. Trong môi trường giả lập, phát biểu đó có nghĩa đúng theo nghĩa đen:
 một kỹ năng chỉ vào thư viện sau khi được \emph{thực thi lại} thành công ở
 $k$ bối cảnh tách riêng. Trên website thật, cổng ấy được đặt $k = 0$ với danh
-sách bối cảnh rỗng, tức nó \emph{không chạy}. Cả 59 kỹ năng của bốn đợt thu
-thập đều được thu nhận mà chưa lần nào bị thực thi lại.
+sách bối cảnh rỗng, tức nó \emph{không chạy}. Cả 146 kỹ năng của bốn website đều được thu nhận mà chưa lần nào bị
+thực thi lại.
 
 \textbf{Chẩn đoán.} Ba lý do, và không lý do nào biến mất nếu chỉ cấp thêm
 ngân sách. Thứ nhất, thực thi lại một kỹ năng thay đổi trạng thái trên một
@@ -152,7 +152,7 @@ thao tác trình duyệt, trên chính ngân sách đang dùng để khám phá.
 nâng operator đối chiếu từng mệnh đề effect với trạng thái trang của mọi
 thành viên trong cụm.
 
-\textbf{Cái giá đo được.} Lớp thứ ba cho thấy hai lớp đầu để lọt những gì. Nó loại 20 mệnh đề effect, và \emph{cả 20 đều có độ chính xác đúng bằng 0,0}: không một thành viên nào của cụm xác nhận điều mà kỹ năng tự nhận là mình làm được. Ngưỡng 0,5 vì thế chưa bao giờ thực sự tạo ra rào cản phân loại, do hệ thống chỉ lọc bỏ các phát biểu sai sót ở mọi ngữ cảnh mà không có trường hợp nào nằm ở mức trung gian. Cộng thêm 14 effect lặp thừa, 34 trên 59 kỹ năng không qua nổi bước nâng operator. Nói cách khác, thư viện đã thu nhận một số lượng đáng kể kỹ năng có phát biểu về effect không chính xác ở bất kỳ ngữ cảnh nào. Đây chính là loại sai sót mà một cổng thực thi lại có thể phát hiện ngay tại chỗ, thay vì để lọt qua hai khâu xử lý tiếp theo mới bộc lộ.
+\textbf{Cái giá đo được.} Lớp thứ ba cho thấy hai lớp đầu để lọt những gì. Nó loại 44 mệnh đề effect, và \emph{cả 44 đều có độ chính xác đúng bằng 0,0}: không một thành viên nào của cụm xác nhận điều mà kỹ năng tự nhận là mình làm được. Ngưỡng 0,5 vì thế chưa bao giờ thực sự tạo ra rào cản phân loại, do hệ thống chỉ lọc bỏ các phát biểu sai sót ở mọi ngữ cảnh mà không có trường hợp nào nằm ở mức trung gian. Cộng thêm 46 mệnh đề effect bị cổng tautology loại, 89 trên 146 kỹ năng không qua nổi bước nâng operator. Nói cách khác, thư viện đã thu nhận một số lượng đáng kể kỹ năng có phát biểu về effect không chính xác ở bất kỳ ngữ cảnh nào. Đây chính là loại sai sót mà một cổng thực thi lại có thể phát hiện ngay tại chỗ, thay vì để lọt qua hai khâu xử lý tiếp theo mới bộc lộ.
 
 \textbf{Bài học.} Khi một cổng kiểm chứng buộc phải tắt vì môi trường, việc cần làm không phải là giữ nguyên lời phát biểu về nguyên tắc, mà là làm rõ cổng kiểm soát nào đã bị tắt và cơ chế nào đang thay thế vai trò đó, đồng thời đo lường cụ thể hiệu quả ngăn chặn của cơ chế thay thế. Hướng đi khả dĩ mà khóa luận chưa thử là một cổng kiểm chứng \emph{chỉ đọc}: chỉ thực thi lại những kỹ năng không thay đổi trạng thái, nhóm vốn không có rủi ro tác dụng phụ, và chấp nhận rằng nhóm thay đổi trạng thái vẫn chỉ được bảo chứng bằng độ lặp cùng cổng grounding.
 
@@ -178,7 +178,7 @@ thành viên trong cụm.
 
 \subsection{Tính tất yếu nhưng chưa đủ của các cơ chế kiểm soát}
 
-Cả hai cơ chế kiểm soát vừa phân tích đều vận hành đúng thiết kế: đồ thị operator không còn node chết ở bất kỳ lượt chạy nào. Trên cả bốn website, 146 kỹ năng đã kiểm chứng sinh ra 57 operator. Con số bị loại mới là điều đáng chú ý: 89 kỹ năng còn lại không trở thành operator, phần lớn vì effect lặp lại chính precondition hoặc vì effect không được dữ liệu của cụm xác nhận. Nhưng ngay cả 57 operator sống sót cũng \emph{không} làm đồ thị dày lên: chỉ 12 chuỗi operator được đưa vào thử nghiệm, phân bố rất lệch (Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1).
+Cả hai cơ chế kiểm soát vừa phân tích đều vận hành đúng thiết kế: đồ thị operator không còn node chết ở bất kỳ lượt chạy nào. Trên cả bốn website, 146 kỹ năng đã kiểm chứng sinh ra 57 operator. Con số bị loại mới là điều đáng chú ý: 89 kỹ năng còn lại không trở thành operator, chia gần đều cho hai nguyên nhân: 45 kỹ năng vì effect lặp lại chính precondition và 44 kỹ năng vì effect không được dữ liệu của cụm xác nhận. Nhưng ngay cả 57 operator sống sót cũng \emph{không} làm đồ thị dày lên: chỉ 12 chuỗi operator được đưa vào thử nghiệm, phân bố rất lệch (Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1).
 
 Nguyên nhân là hai lực kéo ngược nhau. Một bên, cổng chặn mệnh đề hiển nhiên đúng đòi effect phải khác precondition. Bên kia, với một kỹ năng gọn trong một trang, trạng thái trước và sau vẫn là cùng trang đó, nên effect của nó rất dễ bị bắt nhầm là lặp thừa và operator bị loại: trên Shopping Admin, 3 trong 13 kỹ năng chết đúng theo đường này. Cách dung hòa hiện tại là buộc trạng thái ra phải giữ tên trang cũ \emph{nhưng bổ nghĩa bằng điều kiện mới} mà kỹ năng vừa tạo, chẳng hạn ``trang sửa sản phẩm \emph{đã có xác nhận lưu}''. Cách này cứu được operator, nhưng một mệnh đề đặc thù đến vậy lại hiếm khi trùng precondition của kỹ năng nào khác, nên cạnh vẫn không hình thành.
 
@@ -215,8 +215,8 @@ Quy mô của vấn đề không hề nhỏ. Một lần chấm lại hồi tố
 giá cũ cho thấy 198 trong 465 lời tuyên bố thành công (43\%) là sai, và
 149 trong số đó thuộc các task tra cứu mà không một phép kiểm nào từng
 nhìn tới. Khi cổng chấm được đưa vào chạy \emph{trực tuyến} ở bốn đợt khám
-phá của Chương~\ref{ch:experiments}, nó hạ cấp 497 episode, tương đương
-khoảng một phần ba số lần agent tự tuyên bố hoàn thành. Nếu không có cổng này,
+phá của Chương~\ref{ch:experiments}, nó hạ cấp 801 episode, tương đương
+khoảng 27\% số lần agent tự tuyên bố hoàn thành. Nếu không có cổng này,
 xấp xỉ một phần tư tập dữ liệu huấn luyện sẽ là những trajectory dạy mô hình
 đúng một điều: cách tuyên bố đã xong khi task chưa hoàn thành.
 
@@ -246,7 +246,7 @@ episode thay đổi trạng thái không có hành động nào như vậy. Task
 được miễn trừ, vì trả lời ngay trên trang đích chính là hình dạng đúng của
 loại task này.
 
-\textbf{Bài học.} \emph{Không nên sử dụng bộ chấm ngữ nghĩa để kiểm soát các lỗi mang tính cơ học}; bất kỳ điều kiện hợp lệ nào có thể biểu diễn dưới dạng vị từ trên trace đều cần được cụ thể hóa trực tiếp bằng mã nguồn. Hiệu quả thực tế của cổng kiểm soát này được xác nhận qua kết quả đầu ra: trong tổng số 519 episode thất bại ở đợt đánh giá cuối cùng, chỉ ghi nhận 03 trường hợp (tỷ lệ 0{,}6\%) rơi vào tình trạng ``tuyên bố hoàn thành nhưng không thực hiện hành động'', cải thiện triệt để so với tỷ lệ 42\% trajectory chỉ dài một bước ở tập dữ liệu trước khi áp dụng cổng lọc.
+\textbf{Bài học.} \emph{Không nên sử dụng bộ chấm ngữ nghĩa để kiểm soát các lỗi mang tính cơ học}; bất kỳ điều kiện hợp lệ nào có thể biểu diễn dưới dạng vị từ trên trace đều cần được cụ thể hóa trực tiếp bằng mã nguồn. Hiệu quả thực tế của cổng kiểm soát này được xác nhận qua kết quả đầu ra: trong tổng số 494 episode thất bại ở đợt đánh giá cuối cùng, chỉ ghi nhận 2 trường hợp (tỷ lệ 0{,}4\%) rơi vào tình trạng ``tuyên bố hoàn thành nhưng không thực hiện hành động'', cải thiện triệt để so với tỷ lệ 42\% trajectory chỉ dài một bước ở tập dữ liệu trước khi áp dụng cổng lọc.
 
 \subsection{Đánh giá an toàn trên website sống dùng chung}
 
