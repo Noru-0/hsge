@@ -147,6 +147,44 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   (3e-5 vs 1e-4) and 1 epoch (vs 3) instead of a fresh LoRA init. Not yet run
   on a training box — dataset/config prep only.
 
+## 2026-08-18
+
+- **19:15** — `Thesis_report/thesis_hsge_vi/{Chapter1,4,5,6,Appendix}/*.tex` —
+  **thesis: fold in the second collection round (reddit + shopping_admin) and
+  the re-evaluation.** New data: `wa_run_21`/`wa_run_22` on those two sites
+  (197 nodes, 1803 episodes, 87 skills, 32 operators); dataset 4554 -> 9007
+  samples (8554 train / 453 val, 1760 trajectories); model is a
+  *continue*-finetune from checkpoint-536 (315 steps, 1 epoch, lr 3e-5, 2h04),
+  not a from-scratch run on the merged set.
+  Headline moves 136/655 = 20.8% -> 161/655 = 24.6% vs an unchanged base of
+  87/655 = 13.3%; McNemar now significant on all four sites (was three).
+  Biggest substantive change: the decomposition on the 485 tasks where the base
+  model ran cleanly went from p=0.120 (not significant) to p=0.003, so the
+  thesis's previously-stated limitation "cannot separate web-manipulation
+  capability from output-format compliance" is now resolved.
+  **Two disclosures added because the data required them.** (1) Only reddit and
+  shopping_admin were re-evaluated; shopping/gitlab still carry checkpoint-536
+  numbers (proved by identical n_action_errors 771/691 and step counts
+  1679/2001, and the missing `variant` field in their summaries), so the total
+  row is a splice of two checkpoints — flagged in tab:main's caption, §4.4.1,
+  §4.6, §5.6 and Ch.6. (2) The two manual scoring reviews run in *opposite*
+  directions and are not symmetric: base was demoted 16 episodes (12/08
+  report), the new finetuned runs were promoted 19 (18/08 reports). Raw-vs-raw
+  is 142 vs 103 (+6.0 pts); adjusted-vs-adjusted is 161 vs 87 (+11.3 pts). The
+  p=0.003 result above **does not survive** on raw scores (21.2% vs 21.6%,
+  p=0.906), which is stated explicitly in §4.4.2 and §5.1.1. New table
+  `tab:rawadj` prints both columns side by side.
+  Also: new §4.2.3 + `tab:runs2` for the second round; `tab:dataset` rebuilt
+  with per-round columns; `tab:sft` rebuilt as two stages with a note that the
+  two eval_loss values are measured on different validation sets and are not
+  comparable; `tab:crosssite`, `tab:failures`, `tab:signals`, `tab:profile`
+  regenerated from the new traces via `training/analyze_eval_traces.py`;
+  appendix material scoped to "đợt một" where it describes round-1 artifacts.
+  Fixed a badly stale abstract in `Appendix/tomtat.tex` that still reported
+  "GitLab 6.67% vs 5.56%" from a pre-round-1 run.
+  Verified: clean build from scratch, 0 errors, 0 undefined ref/cite, 197
+  pages, 5 overfull hboxes.
+
 ## 2026-08-17
 
 - **15:28** — `Thesis_report/thesis_hsge_vi/{Chapter1..6,Appendix/{appendix1,

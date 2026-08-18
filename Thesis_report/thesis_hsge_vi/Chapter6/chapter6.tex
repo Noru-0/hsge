@@ -40,31 +40,33 @@ lẫn website thật qua trình duyệt.
 Khóa luận xây dựng đầy đủ pipeline tinh lọc dữ liệu gồm các cổng chất lượng
 chấm lại từng episode ngay trong vòng lặp thu thập và trình dựng dataset theo
 nguyên tắc prompt parity. Từ đó thu được tập dữ liệu fine-tuning được xây dựng hoàn
-toàn tự động trên bốn website WebArena tự triển khai: 1029 trajectory và 4554
-mẫu huấn luyện, sau khi các cổng chất lượng đã loại 497 lần tự tuyên bố
-thành công sai và 104 trajectory không có hành động hữu hiệu nào
-(Mục~\ref{sec:exp-data}).
+toàn tự động trên bốn website WebArena tự triển khai, qua hai đợt thu thập:
+1760 trajectory và 8554 mẫu huấn luyện, sau khi các cổng chất lượng đã loại
+hàng trăm lần tự tuyên bố thành công sai và các trajectory không có hành động
+hữu hiệu nào (Mục~\ref{sec:exp-data}, \ref{sec:exp-data-round2}).
 
 \item \textbf{Mô hình web agent đã fine-tune.}
 Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập,
-rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
+qua hai giai đoạn tương ứng hai đợt thu thập, rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
 huấn luyện, nên hai giai đoạn dùng chung một dạng đầu vào và đầu ra.
 
 \item \textbf{Đánh giá trên benchmark WebArena.}
 Khóa luận xây dựng pipeline đánh giá sử dụng cùng prompt với agent triển khai
 thực tế, chấm bằng bộ task và bộ chấm chính thức của WebArena. Mô hình sau
-fine-tune đạt \textbf{136 trên 655 task} của bốn website, tức 20{,}8\%
-(Shopping 28{,}3\%, Reddit 20{,}8\%, GitLab 18{,}3\%, Shopping Admin
-15{,}4\%), với toàn bộ mẫu số đầy đủ và không task nào bị lỗi. Khi tính lại
+fine-tune đạt \textbf{161 trên 655 task} của bốn website, tức 24{,}6\%
+(Shopping 28{,}3\%, Reddit 34{,}0\%, GitLab 18{,}3\%, Shopping Admin
+21{,}4\%), với toàn bộ mẫu số đầy đủ và không task nào bị lỗi. Khi tính lại
 kết quả của các công trình liên quan trên đúng bốn website này, con số đó
-nằm giữa NNetNav-7B (19{,}1\%) và Go-Browse-7B (22{,}6\%), và ngang
-GPT-4o-mini (20{,}0\%). Cùng bộ task đó, mô hình nền khi chưa fine-tune đạt
-87 trên 655 task, tức 13{,}3\%; chênh lệch 7{,}5 điểm phần trăm đạt ý nghĩa
-thống kê theo kiểm định cặp trên ba trong bốn website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ,
-vì hai lý do: mỗi task mới chỉ được đánh giá một lần, và phân tích vết chạy
-cho thấy phần lớn mức tăng đến từ khả năng tuân thủ định dạng hành động, chưa
-tách bạch được phần thuộc về năng lực thao tác web
-(Mục~\ref{sec:disc-results}).
+cao hơn NNetNav-7B (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang
+Go-Browse-7B (22{,}6\%) trong phạm vi sai số của phép đo. Cùng bộ task đó, mô
+hình nền khi chưa fine-tune đạt 87 trên 655 task, tức 13{,}3\%; chênh lệch
+11{,}3 điểm phần trăm đạt ý nghĩa thống kê theo kiểm định cặp trên cả bốn
+website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ, vì ba lý
+do: mỗi task mới chỉ được đánh giá một lần; Shopping và GitLab chưa được đo
+lại sau giai đoạn huấn luyện thứ hai nên con số tổng ghép từ hai checkpoint;
+và phần cải thiện vượt ra ngoài yếu tố tuân thủ định dạng tuy đã đạt ý nghĩa
+thống kê nhưng phụ thuộc vào một đợt rà soát thủ công chưa đối xứng
+(Mục~\ref{sec:disc-results}, \ref{sec:disc-validity}).
 
 \item \textbf{Báo cáo kinh nghiệm triển khai.}
 Quá trình xây dựng hệ thống để lại một tập kinh nghiệm và best practice về
@@ -108,7 +110,7 @@ O1 &
 Thu thập trajectory tự động, bền vững và an toàn từ website không nhãn &
 Hoàn thành. Hệ thống hiện thực cơ chế frontier hai tầng kết hợp giới hạn
 template, chiến lược duyệt web fail-soft và chế độ an toàn fail-closed;
-bốn đợt khám phá chạy khoảng 21 giờ mỗi đợt trên website thật, thu 2178
+hai đợt thu thập trên website thật, tổng cộng 455 node và 3981
 episode; can thiệp tay duy nhất là năm lần nối lại sau khi tài khoản API hết
 hạn mức, mỗi lần đều chạy tiếp từ điểm kiểm tra của node cuối
 (Mục~\ref{sec:method-exploration}, \ref{sec:exp-data}). \\
@@ -118,13 +120,13 @@ hạn mức, mỗi lần đều chạy tiếp từ điểm kiểm tra của node
 O2 &
 Sinh semantic task nhiều bước từ đồ thị các skill đã kiểm chứng &
 Hoàn thành một phần. Quy trình phát hiện, kiểm chứng skill và quy nạp
-operator có precondition/effect đã chạy thật (59 skill, 25 operator), và
-lần đầu tiên sinh được semantic task trên website sống: 66 task, 25 thành
+operator có precondition/effect đã chạy thật (146 skill, 57 operator), và
+lần đầu tiên sinh được semantic task trên website sống: 142 task, 71 thành
 công, so với 0 task ở toàn bộ các đợt trước. Tuy nhiên, phần lớn task này
-đến từ seed năng lực website (59 lượt) chứ không từ việc ghép chuỗi
-operator (7 lượt, riêng Reddit không hình thành được chuỗi nào), nên cơ chế
-ghép chuỗi mới được chứng minh là khả thi chứ chưa đủ dày để làm nguồn dữ
-liệu chính (Mục~\ref{sec:method-semantic}, \ref{sec:disc-operators}). \\
+đến từ seed năng lực website (130 lượt) chứ không từ việc ghép chuỗi
+operator (12 lượt), nên cơ chế ghép chuỗi mới được chứng minh là khả thi
+chứ chưa đủ dày để làm nguồn dữ liệu chính
+(Mục~\ref{sec:method-semantic}, \ref{sec:disc-operators}). \\
 
 \addlinespace
 
@@ -141,9 +143,10 @@ curriculum trước khi fine-tune
 O4 &
 Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chính thức &
 Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
-655 task chính thức của cả bốn website, đạt 20{,}8\% so với 13{,}3\% của mô
-hình nền đo trong cùng điều kiện. Phần còn thiếu là các phép lặp
-thống kê và các ablation tách bạch đóng góp của từng thành phần
+655 task chính thức của cả bốn website, đạt 24{,}6\% so với 13{,}3\% của mô
+hình nền đo trong cùng điều kiện. Phần còn thiếu là đo lại Shopping và GitLab
+trên checkpoint giai đoạn hai, một đợt rà soát chấm điểm đối xứng, các phép
+lặp thống kê và các ablation tách bạch đóng góp của từng thành phần
 (Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
 
 \addlinespace
@@ -170,9 +173,9 @@ gồm bốn nhóm nội dung.
     dữ liệu, kèm tệp cấu hình của bốn đợt khám phá đã báo cáo ở
     Chương~\ref{ch:experiments}.
   \item \textbf{Tập dữ liệu huấn luyện}: thư mục \texttt{training\_data/}
-    chứa 4288 mẫu train và 266 mẫu validation, cùng bản tách theo từng
-    website, ở đúng định dạng đã dùng để fine-tune
-    (Bảng~\ref{tab:dataset}).
+    chứa 8554 mẫu train và 453 mẫu validation của cả hai đợt thu thập, cùng
+    bản tách theo từng website và bản chỉ gồm phần tăng thêm của đợt hai, ở
+    đúng định dạng đã dùng để fine-tune (Bảng~\ref{tab:dataset}).
   \item \textbf{Kết quả đánh giá thô}: thư mục \texttt{outputs/eval/} chứa
     kết quả từng task của cả hai đợt đo - mô hình nền và mô hình sau
     fine-tune - trên đủ 655 task, đủ để người đọc tự tính lại mọi con số ở
@@ -196,8 +199,9 @@ Các mục tiêu chính của khóa luận đã đạt được. Phần dưới 
 còn có thể đi tiếp, cả về quy mô dữ liệu lẫn hiệu quả của mô hình.
 
 \textbf{Mở rộng quy mô thu thập dữ liệu.}
-Tập dữ liệu hiện tại (4288 mẫu huấn luyện) vẫn nhỏ hơn khoảng một bậc độ
-lớn so với các nghiên cứu cùng hướng vốn sử dụng khoảng 40.000 đến 45.000 bước tương
+Tập dữ liệu hiện tại (8554 mẫu huấn luyện) tuy đã gần gấp đôi sau đợt bổ
+sung, vẫn nhỏ hơn khoảng năm lần so với các nghiên cứu cùng hướng vốn sử dụng
+khoảng 40.000 đến 45.000 bước tương
 tác~\cite{murty2024nnetnav,gandhi2026gobrowse}. Do pipeline HSGE không phụ thuộc vào một website cố định và đã hỗ trợ
 cơ chế chuyển giao skill giữa các giao diện tương đồng, việc mở rộng sang
 nhiều nền tảng mới kết hợp tái sử dụng các skill đã tích lũy sẽ giúp gia tăng
@@ -252,10 +256,10 @@ Thứ ba là mở rộng sang các benchmark khác - VisualWebArena~\cite{koh202
 Khóa luận đã đề xuất HSGE, một pipeline tự động thu thập dữ liệu huấn luyện
 cho web agent từ các website không có nhãn thông qua quá trình khám phá có
 cấu trúc. Thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ để đưa một mô hình 9B lên
-20{,}8\% trên 655 task chính thức của bốn website WebArena~\cite{zhou2024webarena}. Mức đó nằm
-giữa các hệ thống mở tốt nhất cùng phân khúc dưới 10B, và cao hơn 7{,}5
+24{,}6\% trên 655 task chính thức của bốn website WebArena~\cite{zhou2024webarena}. Mức đó ngang
+các hệ thống mở tốt nhất cùng phân khúc dưới 10B, và cao hơn 11{,}3
 điểm phần trăm so với chính mô hình nền khi chưa fine-tune. Đáng nói hơn, kết quả đạt
-được chỉ với 4288 mẫu huấn luyện, ít hơn khoảng một bậc độ lớn so với các
+được chỉ với 8554 mẫu huấn luyện, ít hơn khoảng năm lần so với các
 công trình cùng hướng. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
 giá ở quy mô lớn hơn. Nhưng chừng đó đã đủ để nói rằng đầu tư vào chất lượng
 và cấu trúc của dữ liệu huấn luyện là một hướng khả thi để nâng năng lực của

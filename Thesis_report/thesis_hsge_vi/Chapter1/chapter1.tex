@@ -157,48 +157,58 @@ Toàn bộ pipeline đã được cài đặt và chạy trọn vẹn trên bố
 Mục này tóm tắt những kết quả chính; số liệu chi tiết và cách đo được trình
 bày ở Chương~\ref{ch:experiments}.
 
-\textbf{Về khả năng thu thập dữ liệu.} Bốn đợt khám phá, mỗi đợt khoảng 21
-giờ trên một website, đã duyệt 258 node, ghi nhận 2178 episode và thu nhận
-59 skill đã kiểm chứng, từ đó quy nạp được 25 operator lập kế hoạch
-(Bảng~\ref{tab:runs}). Trên nền tri thức đó, hệ thống sinh và thực thi 66
-semantic task nhiều bước. Sau hai cổng lọc chất lượng tự động, 1029
-trajectory hợp lệ được chuyển thành 4554 mẫu huấn luyện, chia thành 4288 mẫu
-train và 266 mẫu validation không chia sẻ mục tiêu nào với nhau
+\textbf{Về khả năng thu thập dữ liệu.} Pipeline được chạy hai đợt. Đợt một
+trải trên cả bốn website, mỗi website khoảng 21 giờ; đợt hai bổ sung dữ liệu
+cho Reddit và Shopping Admin, hai website khó nhất về thao tác thay đổi trạng
+thái. Cộng dồn, hệ thống đã duyệt 455 node, ghi nhận 3981 episode, thu nhận
+146 skill đã kiểm chứng và quy nạp được 57 operator lập kế hoạch
+(Bảng~\ref{tab:runs}, \ref{tab:runs2}). Trên nền tri thức đó, 142 semantic
+task nhiều bước đã được sinh và thực thi. Sau hai cổng lọc chất lượng tự
+động, 1760 trajectory hợp lệ được chuyển thành 9007 mẫu, chia thành 8554 mẫu
+train và 453 mẫu validation không chia sẻ mục tiêu nào với nhau
 (Bảng~\ref{tab:dataset}). Không có bất kỳ mẫu nào trong tập này do con người
 gán nhãn.
 
 \textbf{Về hiệu năng của mô hình.} Qwen3.5-9B sau khi fine-tune bằng LoRA
-trên tập dữ liệu nói trên đạt tỷ lệ hoàn thành 20{,}8\% trên 655 task chính
+trên tập dữ liệu nói trên đạt tỷ lệ hoàn thành 24{,}6\% trên 655 task chính
 thức của bốn website, so với 13{,}3\% của chính mô hình đó khi chưa
-fine-tune - chênh lệch 7{,}5 điểm phần trăm, có ý nghĩa thống kê theo kiểm
-định McNemar theo cặp ($p < 0{,}001$, Bảng~\ref{tab:baseline}). Mức cải
-thiện đạt ý nghĩa thống kê trên ba trong bốn website. Đặt cạnh các công
-trình cùng phân khúc dưới 10 tỷ tham số khi tính lại trên đúng bốn website
-này, kết quả cao hơn NNetNav-7B (19{,}1\%), tiệm cận GPT-4o-mini (20{,}0\%)
-và thấp hơn Go-Browse-7B (22{,}6\%) khoảng 1{,}8 điểm
-(Bảng~\ref{tab:related}).
+fine-tune - chênh lệch 11{,}3 điểm phần trăm, có ý nghĩa thống kê theo kiểm
+định McNemar theo cặp ($p < 0{,}001$, Bảng~\ref{tab:baseline}). Sau đợt bổ
+sung dữ liệu, mức cải thiện đạt ý nghĩa thống kê trên cả bốn website, thay vì
+ba trên bốn như ở đợt đánh giá đầu. Đặt cạnh các công trình cùng phân khúc
+dưới 10 tỷ tham số khi tính lại trên đúng bốn website này, kết quả cao hơn
+NNetNav-7B (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang Go-Browse-7B
+(22{,}6\%) - chênh lệch giữa hai hệ thống nhỏ hơn khoảng tin cậy của phép đo
+nên không phải một khác biệt có ý nghĩa (Bảng~\ref{tab:related}).
 
-\textbf{Về chi phí.} Toàn bộ chu trình tiêu tốn 36{,}48 USD chi phí API cho
-giai đoạn khám phá và 22{,}7 USD chi phí GPU cho giai đoạn fine-tuning và
-đánh giá, tương đương khoảng 0{,}0355 USD cho mỗi trajectory đưa vào tập
-huấn luyện (Bảng~\ref{tab:apicost}). Con số này thay thế cho quy trình gán
-nhãn thủ công vốn cần nhiều người-tháng trong các công trình
+\textbf{Về chi phí.} Riêng đợt thu thập thứ nhất tiêu tốn 36{,}48 USD chi phí
+API và 22{,}7 USD chi phí GPU cho fine-tuning và đánh giá, tương đương khoảng
+0{,}0358 USD cho mỗi trajectory đưa vào tập huấn luyện
+(Bảng~\ref{tab:apicost}). Con số này thay thế cho quy trình gán nhãn thủ
+công vốn cần nhiều người-tháng trong các công trình
 trước~\cite{lai2024autowebglm}.
 
 \textbf{Về sản phẩm bàn giao.} Khóa luận bàn giao bốn hiện vật: mã nguồn của
-toàn bộ pipeline khám phá và dựng dữ liệu; tập dữ liệu 4554 mẫu; checkpoint
+toàn bộ pipeline khám phá và dựng dữ liệu; tập dữ liệu 9007 mẫu; checkpoint
 của mô hình đã fine-tune; và một báo cáo kinh nghiệm vận hành
 (Chương~\ref{ch:discussion}).
 
-\textbf{Một giới hạn cần nêu ngay cùng với kết quả.} Phân tích ở
-Mục~\ref{sec:exp-baseline} cho thấy phần lớn mức tăng 7{,}5 điểm đến từ việc
-mô hình học được cách phát ra hành động đúng định dạng: 35 trong 49 task
-tăng thêm thuộc nhóm mà mô hình nền hỏng định dạng đầu ra và do đó không thể
-hoàn thành bất kỳ task nào. Trên nhóm 485 task còn lại, nơi mô hình nền chạy
-trọn vẹn, mức cải thiện tuy cùng chiều nhưng chưa tách được khỏi nhiễu
-($p = 0{,}120$). Nói cách khác, kết quả chứng minh pipeline sinh được dữ liệu
-đủ chất lượng để chuyên biệt hóa một mô hình nhỏ, nhưng chưa đủ cơ sở để
-khẳng định nó nâng năng lực thao tác web ở quy mô mẫu hiện có.
+\textbf{Hai giới hạn cần nêu ngay cùng với kết quả.} Thứ nhất, một phần mức
+tăng đến từ việc mô hình học được cách phát ra hành động đúng định dạng: 47
+trong 74 task tăng thêm thuộc nhóm mà mô hình nền hỏng định dạng đầu ra và do
+đó không thể hoàn thành bất kỳ task nào. Điểm khác so với đợt đánh giá đầu là
+phần còn lại nay cũng đạt ý nghĩa: riêng trên nhóm 485 task mà mô hình nền
+chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$,
+trong khi trước đó phép tách này cho $p = 0{,}120$
+(Mục~\ref{sec:exp-baseline}).
+
+Thứ hai, kết luận vừa nêu phụ thuộc vào một đợt rà soát thủ công khôi phục
+những episode bị bộ chấm WebArena chấm sai. Nếu giữ nguyên phán quyết tự
+động cho cả hai mô hình, tỷ lệ là 21{,}7\% so với 15{,}7\% và riêng phép tách
+theo nhóm định dạng thì khoảng cách biến mất ($p = 0{,}906$). Khóa luận vì
+vậy công bố song song cả hai cách tính (Bảng~\ref{tab:rawadj}) và xếp một
+đợt rà soát đối xứng hai chiều vào nhóm việc còn thiếu quan trọng nhất
+(Mục~\ref{sec:exp-stats}).
 
 \section{Bố cục khóa luận}
 \label{sec:intro-organization}
