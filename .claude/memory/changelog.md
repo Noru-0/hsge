@@ -6,6 +6,40 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-18
 
+- **16:40** — `outputs/eval/reddit/finetuned_continue_v1/`,
+  `outputs/eval/shopping_admin/finetuned_continue_v1/` (new, gitignored) —
+  **full WebArena eval of the continue-finetuned checkpoint (from
+  `training/artifacts/qwen35-9b-lora-continue-v1/`) on reddit + shopping_admin,
+  the two domains it was continue-finetuned on.** Two rented vast.ai boxes
+  (202.122.49.242, 178.226.8.60), one domain each, via
+  `training/bootstrap_eval_box.sh`.
+  - **reddit: 25/106 = 23.6%** (checkpoint-536 baseline: 22/106 = 20.8%, **+2.8pp**)
+  - **shopping_admin: 31/182 = 17.0%** (checkpoint-536 baseline: 28/182 = 15.4%, **+1.6pp**)
+  - Both improved over checkpoint-536 despite continue-finetuning on only
+    4,266 new examples + a 15% shopping/gitlab replay slice — the replay
+    slice's actual regression-prevention effect on shopping/gitlab is still
+    unverified (out of scope this round, only reddit+admin were re-evaluated
+    per explicit user request).
+  - Same judge-model deviation as the original sweep applies here: the
+    published evaluator's `gpt-4-1106-preview` is retired,
+    `gpt-4-turbo` was substituted (`training/patch_webarena_judge.py`) —
+    disclose this with these numbers, same as the 2026-08-11 sweep.
+  - **Bug hit and fixed mid-run**: first `bootstrap_eval_box.sh` call for
+    shopping_admin passed the tunnel's bare root URL, which serves the
+    Magento **storefront** (customer-facing), not the **admin login page**
+    at `/admin` — every smoke task failed with
+    `TimeoutError: waiting for get_by_label("Username")` since no login form
+    exists at the root. `eval_webarena.py` does not auto-append `/admin`
+    (`set_wa_env` uses the URL verbatim); re-ran with `--site-url .../admin`
+    and it passed smoke + the full sweep cleanly.
+  - Both boxes turned out to be **fully fresh containers** despite one
+    reusing the same public IP as the box trained on hours earlier
+    (`container_id` differed, `/workspace` was empty) — confirms
+    `workspace_is_volume: false` means a stop/recycle wipes everything, not
+    just a destroy; re-ran `vast_setup.sh eval` + re-uploaded the adapter
+    bundle (`training/artifacts/for-eval-continue-v1/`, built from the local
+    backup + checkpoint-536's tokenizer files) on both from scratch.
+
 - **15:31** — `scripts/build_merged_dataset.py` (new),
   `training_data_merged_v1/{train,val,README}` (new) — **full-union dataset**:
   `training_data/` (4,288/266, what checkpoint-536 trained on) +
