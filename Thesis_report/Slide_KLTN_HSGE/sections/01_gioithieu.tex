@@ -1,0 +1,75 @@
+% !TEX root = ../main.tex
+
+%%% ============================================================
+\section{Giới thiệu}
+%%% ============================================================
+
+\begin{frame}{Bối cảnh, bài toán và thách thức}
+  \begin{columns}[t]
+    \begin{column}{0.52\textwidth}
+      \small
+      \textbf{Web agent} thao tác website qua chính giao diện người dùng ---
+      nhưng đang phụ thuộc \textbf{LLM lớn, độc quyền}: tốn chi phí, độ trễ
+      cao, dữ liệu phải rời khỏi hệ thống.
+
+      \vspace{0.2cm}
+      \textbf{SLM (${<}10$B)} chạy cục bộ, rẻ, kiểm soát được trọng số ---
+      nhưng yếu nếu chưa chuyên biệt hóa.
+
+      \vspace{0.2cm}
+      Chuyên biệt hóa cần fine-tune, mà fine-tune vướng \kw{nút thắt dữ liệu}:
+      mỗi website mới cần một tập trajectory gán nhãn gần như làm lại từ đầu.
+
+      \vspace{0.15cm}
+      {\footnotesize AutoWebGLM: \textbf{20 người gán nhãn} $\times$
+      \textbf{1 tháng}. Synatra: dữ liệu tổng hợp chỉ tốn
+      \textbf{$\approx$3\%} chi phí mỗi mẫu.}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Phát biểu bài toán}
+        \footnotesize
+        \textbf{Cho} một website đang hoạt động và một SLM đã pretrain,
+        \textbf{hãy tạo ra} phiên bản fine-tune hoàn thành được các task
+        ngôn ngữ tự nhiên trên website đó, \textbf{mà không dùng} dữ liệu
+        do con người gán nhãn.
+      \end{block}
+
+      \vspace{-0.1cm}
+      {\footnotesize\textbf{Năm thách thức}}
+      \vspace{-0.15cm}
+      \begin{enumerate}\scriptsize
+        \item Khám phá website thật: trang trùng cấu trúc, trang lỗi, trạng
+              thái dùng chung.
+        \item Sinh task \emph{có ý nghĩa} thay vì duyệt ngẫu nhiên.
+        \item Kiểm chứng: agent vừa ra đề vừa tự chấm.
+        \item Ghép chuỗi task dài hạn vượt khỏi một trang đơn lẻ.
+        \item Đồng nhất prompt huấn luyện --- serving --- đánh giá.
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Mục tiêu, đóng góp và lộ trình nghiên cứu}
+  \begin{columns}[c]
+    \begin{column}{0.34\textwidth}
+      \scriptsize
+      \textbf{Năm mục tiêu}
+      \begin{itemize}
+        \item[\textbf{O1}] Pipeline khám phá tự động trên website chưa có nhãn.
+        \item[\textbf{O2}] Sinh \textbf{semantic task} dài hạn đã kiểm chứng:
+              skill $\rightarrow$ operator $\rightarrow$ ghép chuỗi.
+        \item[\textbf{O3}] Tinh lọc trajectory thành dataset SFT,
+              giữ \emph{prompt parity}.
+        \item[\textbf{O4}] Fine-tune SLM, đánh giá trên bộ task chính thức
+              của 4 website WebArena.
+        \item[\textbf{O5}] Đúc kết kinh nghiệm vận hành thành best practice.
+      \end{itemize}
+      \textbf{Đóng góp:} phương pháp HSGE $\cdot$ bộ tinh lọc dữ liệu tự động
+      $\cdot$ dataset $+$ mô hình 9B $\cdot$ kết quả đánh giá $\cdot$ báo cáo
+      kinh nghiệm.
+    \end{column}
+    \begin{column}{0.64\textwidth}
+      \includegraphics[width=\linewidth,height=0.76\textheight,keepaspectratio]{fig_roadmap.pdf}
+    \end{column}
+  \end{columns}
+\end{frame}

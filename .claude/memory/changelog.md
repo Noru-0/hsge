@@ -6,6 +6,23 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-18
 
+- **14:04** — `Thesis_report/Slide_KLTN_HSGE/` (new) — **bộ slide bảo vệ KLTN
+  (beamer, tiếng Việt, 15 slide)** dựng theo cấu trúc của deck mẫu
+  `Slide_WebAgent_SLM` (`main.tex` + `config/{preamble,metadata}.tex` +
+  `sections/`). Bám trần của Khoa: 10–15 slide, 15 phút + 15 phút hỏi đáp, ưu
+  tiên hình. Dùng lại 7 hình vector của quyển (`fig_roadmap/pipeline/twolevel/
+  frontier/discovery/semantic/curation`) — `fig_curation` trước nay chưa được
+  dùng ở chương nào. Hai khác biệt so với deck mẫu: (i) `[T5]{fontenc}` +
+  `lmodern` cho tiếng Việt trên pdflatex (`t5lmss.fd` có sẵn); (ii) bỏ các frame
+  outline `\AtBeginSection`/`\AtBeginSubsection` và rút headline Antibes còn
+  một thanh section — hai thứ đó ăn cả slide lẫn chiều cao mà ngân sách 15
+  slide không kham nổi. Slide 14 nêu chủ động giới hạn diễn giải (170/655 hỏng
+  định dạng, 35/49 task tăng thêm thuộc về format compliance, p=0,120 trên 485
+  task nền chạy sạch) thay vì giấu — rủi ro hỏi đáp lớn nhất. Kèm
+  `presentation_script.md`: kịch bản từng slide có mốc thời gian, điểm cắt giữa
+  hai người trình bày (sau slide 10) và 6 câu hỏi dự kiến. Build sạch:
+  `latexmk -pdf main.tex` → 15 trang, không còn overfull vbox đáng kể.
+
 - **03:20** — `training/artifacts/qwen35-9b-lora-continue-v1/` (new, gitignored) —
   **continue-finetune of checkpoint-536 on the increment dataset completed on
   a rented vast.ai A100-PCIE-40GB box** (`202.122.49.242:31291`, ephemeral,

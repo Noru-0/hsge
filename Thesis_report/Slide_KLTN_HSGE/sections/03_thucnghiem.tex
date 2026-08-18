@@ -1,0 +1,183 @@
+% !TEX root = ../main.tex
+
+%%% ============================================================
+\section{Thực nghiệm và kết quả}
+%%% ============================================================
+
+\begin{frame}{Thiết lập thực nghiệm và câu hỏi nghiên cứu}
+  \begin{columns}[t]
+    \begin{column}{0.52\textwidth}
+      \footnotesize
+      \textbf{Môi trường.} Bốn website WebArena tự triển khai --- Shopping,
+      Shopping Admin, GitLab, Reddit. Đánh giá trên \kw{655 task chính thức}
+      của benchmark, chấm bằng bộ chấm tự động, ngân sách 15 bước/task,
+      \texttt{temperature} $=0$.
+
+      \vspace{0.2cm}
+      \textbf{Khám phá.} Bốn đợt, mỗi đợt $\approx$21 giờ trên một website.
+      Mỗi vai trò LLM dùng một mô hình riêng (solver, page\_explorer,
+      episode\_judge, segmenter, operator\_inducer\ldots), tổng
+      \kw{20\,808 lời gọi}.
+
+      \vspace{0.2cm}
+      \textbf{Huấn luyện.} Qwen3.5-9B $+$ LoRA (rank 16, $\alpha$ 32, mọi lớp
+      tuyến tính), LLaMA-Factory, 3 epoch $=$ 804 bước, ngữ cảnh 4096 token;
+      chọn \texttt{checkpoint-536} (3 giờ 05 phút trên H100-80GB).
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      \begin{block}{Bốn câu hỏi nghiên cứu}
+        \textbf{CH1.} Pipeline thu được gì trên một website chưa có nhãn, và
+        bao nhiêu sống sót qua các cổng chất lượng?
+
+        \textbf{CH2.} Dữ liệu đó có nâng được năng lực của SLM không, và phần
+        nâng lên \emph{thuộc về năng lực nào}?
+
+        \textbf{CH3.} Kết quả đứng ở đâu so với các hệ thống cùng phân khúc
+        dưới 10B?
+
+        \textbf{CH4.} Thành phần nào đóng góp bao nhiêu, điểm nghẽn còn lại
+        ở đâu?
+      \end{block}
+      \textit{Nói rõ ngay:} CH4 chỉ được trả lời \emph{một phần} --- các
+      ablation có kiểm soát đã thiết kế nhưng chưa chạy; phần trả lời đến từ
+      phân tích lỗi và đối chiếu liên-website.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{CH1 --- Pipeline thu được gì, và với chi phí bao nhiêu}
+  \begin{columns}[t]
+    \begin{column}{0.50\textwidth}
+      \footnotesize
+      \textbf{Phễu khám phá} (tổng của bốn đợt, mỗi đợt $\approx$21 giờ)
+      \vspace{0.1cm}
+
+      \begin{tabular}{@{}L{5.1cm} R{1.6cm}@{}}
+        \toprule
+        Node đã duyệt (31 trùng nội dung) & \textbf{258} \\
+        Episode ghi nhận & \textbf{2178} \\
+        Episode hợp lệ sau kiểm chứng & \textbf{1067} \\
+        \midrule
+        Skill được thu nhận & \textbf{59} \\
+        Operator được quy nạp & \textbf{25} \\
+        Semantic task đã thực thi & \textbf{66} \\
+        \midrule
+        Trajectory vào dataset & \textbf{1029} \\
+        Mẫu huấn luyện (4288 / 266) & \textbf{4554} \\
+        \bottomrule
+      \end{tabular}
+
+      \vspace{0.15cm}
+      \textbf{0} mục tiêu trùng giữa train và val, \textbf{0} nhãn do con người tạo.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \footnotesize
+      \begin{block}{Chi phí toàn chu trình}
+        \footnotesize
+        API khám phá \textbf{36,48} USD $+$ GPU \textbf{22,70} USD
+        $\Rightarrow$ \kw{0,0355 USD / trajectory}
+        {\scriptsize (Go-Browse: 0,0976 USD --- cao hơn $\approx$2,7 lần)}
+      \end{block}
+
+      \vspace{-0.1cm}
+      \textbf{Ba nhận xét}
+      \begin{itemize}
+        \item Nguồn semantic task rất lệch: \textbf{59} từ seed năng lực,
+              chỉ \textbf{7} từ ghép chuỗi operator.
+        \item Task GOAL khó hơn hẳn task cục bộ: 37,9\% so với 42,0\% và 52,0\%.
+        \item Cổng chấm lại loại \textbf{497} lần agent tự đánh giá sai; cổng
+              hành động hữu hiệu loại thêm \textbf{104} trajectory.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{CH2 --- Kết quả chính trên 655 task chính thức}
+  \centering
+  \footnotesize
+  \begin{table}
+    \begin{tabular}{@{}L{3.2cm} R{2.4cm} R{2.6cm} R{2.0cm} R{2.4cm}@{}}
+      \toprule
+      \textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
+      \textbf{Chênh lệch} & \textbf{$p$ (McNemar)} \\
+      \midrule
+      Shopping       & 37/187 $=$ 19,8\% & 53/187 $=$ 28,3\% & $+$8,6 & 0,012 \\
+      Reddit         & 7/106 $=$ 6,6\%   & 22/106 $=$ 20,8\% & $+$14,2 & 0,005 \\
+      GitLab         & 20/180 $=$ 11,1\% & 33/180 $=$ 18,3\% & $+$7,2 & 0,012 \\
+      Shopping Admin & 23/182 $=$ 12,6\% & 28/182 $=$ 15,4\% & $+$2,7 & 0,383 \\
+      \midrule
+      \textbf{Tổng} & \textbf{87/655 $=$ 13,3\%} & \textbf{136/655 $=$ 20,8\%} &
+      \textbf{$+$7,5} & \textbf{$<$0,001} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \vspace{0.15cm}
+  \begin{columns}[t]
+    \begin{column}{0.48\textwidth}
+      \scriptsize
+      Cùng tập task, cùng prompt, cùng ngân sách bước, cùng bộ chấm --- khác biệt
+      duy nhất là trọng số nạp vào máy chủ suy luận. \textbf{McNemar theo cặp}:
+      77 task chỉ mô hình fine-tune giải được, 28 task chỉ mô hình nền giải được.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \scriptsize
+      Đạt ý nghĩa thống kê trên \textbf{ba trong bốn} website; riêng Shopping
+      Admin ($p=0{,}383$) chưa tách khỏi nhiễu. Cơ sở dữ liệu cả bốn website
+      được khôi phục nguyên trạng trước khi đo mô hình nền.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{CH2--CH3 --- Phần tăng thuộc về năng lực nào, và đứng ở đâu}
+  \begin{columns}[t]
+    \begin{column}{0.50\textwidth}
+      \footnotesize
+      \begin{alertblock}{Giới hạn diễn giải quan trọng nhất}
+        Mô hình nền hỏng \emph{định dạng đầu ra} ở \kw{170/655 (26,0\%)}
+        episode; mô hình sau fine-tune chỉ 2/655.
+        \begin{itemize}
+          \item Trên đúng 170 task đó: nền \textbf{0}, fine-tune \textbf{35}.
+          \item Trên 485 task nền chạy sạch: 87 vs 101,
+                \textbf{$p = 0{,}120$ --- chưa đạt ý nghĩa}.
+        \end{itemize}
+        $\Rightarrow$ \textbf{35 trong 49} task tăng thêm thuộc về việc học
+        \emph{tuân thủ giao diện hành động}. Phần cải thiện về năng lực thao
+        tác web tuy cùng chiều nhưng chưa tách khỏi nhiễu ở quy mô mẫu hiện có.
+      \end{alertblock}
+      {\scriptsize Đã công bố kèm một điều chỉnh thủ công phía mô hình nền (loại
+      thành công giả trên Shopping/Admin); số liệu thô 103/655 $=$ 15,7\% cũng
+      được báo cáo nguyên trạng --- kết luận tổng thể không đổi.}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \scriptsize
+      \begin{table}
+        \centering
+        \begin{tabular}{@{}L{3.9cm} R{2.4cm}@{}}
+          \toprule
+          \textbf{Mô hình} & \textbf{Tổng 4 site (\%)} \\
+          \midrule
+          GPT-4o & 37,5 \\
+          GPT-4o-mini & 20,0 \\
+          \midrule
+          Qwen-2.5-7B-Instruct & 8,3 \\
+          NNetNav-7B & 19,1 \\
+          Go-Browse-7B & \textbf{22,6} \\
+          \midrule
+          \textbf{HSGE-9B (khóa luận)} & \textbf{20,8} \\
+          Qwen3.5-9B (mô hình nền) & 13,3 \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \vspace{0.1cm}
+      \footnotesize
+      Cao hơn NNetNav-7B, tiệm cận GPT-4o-mini, thấp hơn Go-Browse-7B 1,8 điểm ---
+      \emph{với tập dữ liệu nhỏ hơn khoảng một bậc độ lớn}.
+
+      \vspace{0.1cm}
+      Đây \textbf{không} phải so sánh có kiểm soát: khác mô hình gốc, khác quy mô
+      dữ liệu, khác ngân sách bước và bộ chấm.
+    \end{column}
+  \end{columns}
+\end{frame}
