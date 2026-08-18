@@ -547,13 +547,14 @@ Cần phân biệt rõ hai nhóm đợt chạy, vì chúng phục vụ hai mục
 liệu của chúng không được cộng gộp ở bất kỳ đâu trong khóa luận:
 
 \begin{itemize}
-  \item \textbf{Bốn đợt thu thập chính thức của đợt một}
-  (Mục~\ref{app:runs-final}) trên bốn website của WebArena. Đây là nguồn của
-  mọi con số ở Mục~\ref{sec:exp-data}. Toàn bộ số liệu chi tiết trong phụ lục
-  này thuộc về \emph{đợt một}; đợt thu thập bổ sung về sau trên Reddit và
-  Shopping Admin (\texttt{wa\_run\_21}, \texttt{wa\_run\_22}) chỉ được báo
-  cáo ở mức tổng hợp tại Mục~\ref{sec:exp-data-round2} và không được phân
-  tích chi tiết ở đây.
+  \item \textbf{Các lượt thu thập chính thức} (Mục~\ref{app:runs-final}) trên
+  bốn website của WebArena. Đây là nguồn của mọi con số ở
+  Mục~\ref{sec:exp-data} và của toàn bộ tập dữ liệu huấn luyện. Phần phân
+  tích chi tiết dưới đây lấy ví dụ từ bốn lượt chạy đầu tiên
+  (\texttt{wa\_run\_20\_*}), nơi mọi hiện vật còn nguyên trên đĩa; các lượt
+  bổ sung về sau trên Reddit và Shopping Admin (\texttt{wa\_run\_21},
+  \texttt{wa\_run\_22}) đã được cộng vào mọi con số tổng ở
+  Mục~\ref{sec:exp-data} nhưng không được mổ xẻ riêng ở đây.
   \item \textbf{Mười hai đợt chạy phát triển} (Mục~\ref{app:runs-dev}) chỉ trên
   Reddit và GitLab, chạy trong lúc pipeline còn đang được sửa. Chúng không
   đóng góp mẫu huấn luyện nào; giá trị của chúng là các lỗi mà chúng phơi ra,
@@ -603,14 +604,14 @@ timeout điều hướng của trình duyệt. Cơ chế hỏng mềm chuyển t
 một node bị bỏ qua có ghi log, nên không đợt nào bị dừng giữa chừng vì lý do
 này.
 
-Thứ ba, \textbf{phần lớn skill không trở thành operator}: ở đợt một, 34 trên 59 skill
+Thứ ba, \textbf{phần lớn skill không trở thành operator}: trong bốn lượt chạy này, 34 trên 59 skill
 bị chặn lại, gồm 14 trường hợp do effect lặp lại chính precondition và 20 trường
 hợp do effect không được dữ liệu của cụm xác nhận. Mối quan hệ đánh đổi và
 tác động qua lại giữa hai cổng lọc này được phân tích chi tiết tại
 Mục~\ref{sec:disc-operators}.
 
-Số episode ở Bảng~\ref{tab:runs} lấy theo bản tóm tắt cuối cùng mà mỗi đợt
-của \emph{đợt một} ghi ra (2178 episode). Trên đĩa có 2184 thư mục episode: sáu episode chênh
+Số episode của bốn lượt chạy \texttt{wa\_run\_20\_*} lấy theo bản tóm tắt
+cuối cùng mà mỗi lượt ghi ra (2178 episode). Trên đĩa có 2184 thư mục episode: sáu episode chênh
 lệch được ghi ở node đang xử lý dở khi đợt chạy bị dừng, sau lần ghi tóm tắt
 cuối cùng, nên chúng không được tính vào bất kỳ thống kê nào.
 
@@ -626,8 +627,8 @@ vụ việc tra cứu trọn vẹn.
 
 Ở node đầu tiên của mỗi đợt, site seeder đọc trang chủ và trả về một mô tả
 website kèm danh sách năng lực (Mục~\ref{sec:method-seed}). Bốn đợt cho ra
-tổng cộng \textbf{26 năng lực} ở đợt một, và chính 26 năng lực này là nguồn của 59 trong
-66 task GOAL đã thực thi ở đợt đó -- mỗi năng lực được thử lại tối đa ba lần, từ ba
+tổng cộng \textbf{26 năng lực} trong bốn lượt chạy này, và chính 26 năng lực đó là nguồn của 59 trong
+66 task GOAL đã thực thi ở các lượt đó -- mỗi năng lực được thử lại tối đa ba lần, từ ba
 loại trang khác nhau.
 
 \begin{itemize}
@@ -677,9 +678,9 @@ bước trừu tượng hóa tự đặt; ba tên được bước này viết h
 
 \begin{table}[H]
 \centering
-\caption[Tên các skill đã thu nhận]{Tên của 59 skill đã thu nhận trong bốn
-đợt thu thập của \emph{đợt một}, do chính bước trừu tượng hóa đặt. Đợt hai
-bổ sung thêm 87 skill, không liệt kê ở đây.}
+\caption[Tên các skill đã thu nhận]{Tên của 59 skill thu nhận trong bốn lượt
+chạy \texttt{wa\_run\_20\_*}, do chính bước trừu tượng hóa đặt. Các lượt bổ
+sung về sau thu thêm 87 skill, không liệt kê ở đây.}
 \label{tab:app-skills}
 \footnotesize
 \begin{tabular}{@{}L{2.6cm} L{11cm}@{}}
@@ -920,7 +921,7 @@ giỏ hàng trong 7 bước thao tác. Kết quả này giải quyết trực ti
 để ngỏ ở giai đoạn phát triển: liệu môi trường website thực tế \emph{có} hình
 thành được đồ thị operator đủ tính liên thông để cơ chế ghép chuỗi vận hành hay không.
 
-Tuy nhiên, con số 7 chuỗi cũng phản ánh hạn chế hiện tại: từ 25 operator của đợt một mới
+Tuy nhiên, con số 7 chuỗi cũng phản ánh hạn chế hiện tại: từ 25 operator của bốn lượt chạy này mới
 chỉ hình thành được 7 chuỗi ghép, và 3 trong số 4 website chỉ đóng góp tối đa một
 chuỗi. Điều này dẫn đến hệ quả trực tiếp đối với tập dữ liệu thu được: chỉ có 6
 mẫu huấn luyện đạt mức độ khó 3 (Bảng~\ref{tab:dataset}). Điều đó đồng nghĩa các

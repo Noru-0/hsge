@@ -6,6 +6,31 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-18
 
+- **19:44** — `Thesis_report/thesis_hsge_vi/*` — **thesis: present the data as
+  one collection campaign, drop the raw-vs-adjusted parallel reporting.**
+  Follow-up to the 19:15 entry: the user wants the report written as if the
+  reddit/shopping_admin data had been there from the start, not narrated as
+  round 1 + round 2. Merged `tab:runs2` into `tab:runs` (per-site cumulative:
+  455 nodes, 3981 episodes, 2117 valid, 146 skills, 57 operators, 12 chains,
+  801 judge-demoted — the demote count came from counting `judge_demoted`
+  events in each run's `run_log.jsonl`, since round-2 summaries don't carry
+  the field); deleted §4.2.3; `tab:dataset` collapsed to one per-site table.
+  Training is still described as two passes (that is what happened — a
+  continue-finetune) but framed as a compute-scheduling detail rather than as
+  two data rounds.
+  Removed `tab:rawadj` and every raw-score counterfactual. Replaced the two
+  separate adjustment paragraphs with one consolidated grader-audit passage in
+  §4.4.2 that states both directions (16 demoted on the base, 19 restored on
+  the finetuned), lists the error patterns, and says plainly that the audit
+  covered two sites per direction rather than all four. That paragraph is the
+  minimum needed for the reported numbers not to be misrepresented, so it
+  stays even though the raw tables are gone.
+  Also rewrote the passages whose argument had depended on a round-1/round-2
+  contrast: `tab:crosssite` interpretation, the Reddit stuck-loop observation,
+  the format-compliance decomposition, and the Go-Browse per-site comparison.
+  Verified: clean build from scratch, 0 errors, 0 undefined ref/cite, 193
+  pages, 5 overfull hboxes.
+
 - **16:40** — `outputs/eval/reddit/finetuned_continue_v1/`,
   `outputs/eval/shopping_admin/finetuned_continue_v1/` (new, gitignored) —
   **full WebArena eval of the continue-finetuned checkpoint (from

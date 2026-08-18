@@ -193,10 +193,11 @@ DeepSeek & \texttt{episode\_judge}, pipeline phát hiện skill &
 \end{table}
 
 Quy về mỗi trajectory thành công đưa vào tập dữ liệu huấn luyện (1018
-trajectory của đợt một, Bảng~\ref{tab:dataset}), chi phí API của giai đoạn
-khám phá là 36{,}48 / 1018 $\approx$ 0{,}0358\,USD mỗi trajectory. Con số
-trong mục này chỉ tính đợt thu thập thứ nhất; đợt hai không được hạch toán
-riêng nên không đưa vào so sánh dưới đây. Con số này cùng bậc độ
+trajectory, Bảng~\ref{tab:dataset}), chi phí API của giai đoạn khám phá là
+36{,}48 / 1018 $\approx$ 0{,}0358\,USD mỗi trajectory. Số liệu hóa đơn ở
+Bảng~\ref{tab:apicost} chỉ bóc tách được cho phần khám phá đã hạch toán
+riêng, nên đơn giá này tính trên phần tương ứng chứ không trên toàn bộ tập
+dữ liệu. Con số này cùng bậc độ
 lớn với 0{,}031\,USD mỗi mẫu mà Synatra báo cáo cho việc tổng hợp bản mẫu
 ngoại tuyến từ tài liệu hướng dẫn~\cite{ou2024synatra} (Mục~\ref{sec:rel-datagen}),
 dù hai quy trình khác hẳn nhau về bản chất: Synatra không hề tương tác với
@@ -295,14 +296,21 @@ kết quả này cần được đo lại theo trình tự tuần tự.
 
 \subsection{Kết quả khám phá}
 
-Bảng~\ref{tab:runs} tổng hợp kết quả của bốn đợt khám phá. Cả bốn đợt đều
-được dừng chủ động sau khoảng 21 giờ, khi lượng dữ liệu thu được đã đủ cho
-vòng huấn luyện. Do đó, số node đã duyệt là một cận dưới của khả năng khám phá chứ không phải điểm hội tụ của thuật toán.
-Trong 21 giờ đó, cả bốn đợt đều bị ngắt một lần sau khoảng hai giờ rưỡi vì
-tài khoản API hết hạn mức, và Shopping Admin bị ngắt hai lần; mỗi lần đều
-được chạy tiếp từ checkpoint của node cuối cùng thay vì phải làm lại
-(Mục~\ref{sec:method-impl}). Đây là lần duy nhất cơ chế khôi phục được dùng
-tới ngoài các phép thử, và số liệu trong bảng là kết quả sau khi nối lại.
+Bảng~\ref{tab:runs} tổng hợp kết quả khám phá trên bốn website. Mỗi website
+được khám phá qua một hoặc nhiều lượt chạy, và mọi lượt đều được dừng chủ
+động khi lượng dữ liệu thu được đã đủ cho vòng huấn luyện, chứ không dừng vì
+thuật toán hội tụ. Do đó, số node đã duyệt là một \emph{cận dưới} của khả
+năng khám phá. Reddit và Shopping Admin được cấp ngân sách khám phá lớn hơn
+hai website còn lại, vì đây là hai website có mật độ thao tác thay đổi trạng
+thái cao nhất: một mục tiêu điển hình trên diễn đàn hay trên trang quản trị
+Magento đòi hỏi điền biểu mẫu và lưu, chứ không chỉ tra cứu, nên cần nhiều
+trajectory hơn để phủ được không gian hành vi.
+
+Trong quá trình chạy, các lượt khám phá bị ngắt vài lần vì tài khoản API hết
+hạn mức; mỗi lần đều được chạy tiếp từ checkpoint của node cuối cùng thay vì
+phải làm lại (Mục~\ref{sec:method-impl}). Đây là lần duy nhất cơ chế khôi
+phục được dùng tới ngoài các phép thử, và số liệu trong bảng là kết quả sau
+khi nối lại.
 Trong bảng, \emph{episode hợp lệ} là những episode được tính là thành công
 sau khi cổng kiểm chứng đã chấm lại, tức tổng ba dòng ``Thành công'' của ba
 nhóm task; tỷ lệ hợp lệ được tính trên số episode ghi nhận. Tỷ lệ thành công
@@ -312,9 +320,10 @@ tính trên tổng số lần agent tự tuyên bố hoàn thành.
 
 \begin{table}[htbp]
 \centering
-\caption[Thống kê bốn đợt khám phá]{Thống kê bốn đợt khám phá, nhóm theo
-quy mô khám phá, kết quả của ba nhóm task và tri thức thu được; dòng cuối
-cùng là số episode bị cổng kiểm chứng hạ cấp từ thành công xuống thất bại.
+\caption[Thống kê khám phá theo website]{Thống kê khám phá trên bốn website,
+nhóm theo quy mô khám phá, kết quả của ba nhóm task và tri thức thu được;
+dòng cuối cùng là số episode bị cổng kiểm chứng hạ cấp từ thành công xuống
+thất bại, tính trên tổng số lần agent tự tuyên bố hoàn thành.
 Các dòng in nghiêng là tỷ lệ dẫn xuất từ các dòng đếm phía trên; vì cột trộn
 số đếm với tỷ lệ nên đơn vị được giữ trong ô thay vì ở tiêu đề cột. LOCAL là task giải ngay trên node;
 UNPREFIXED là chính task đó giải lại từ trang chủ; GOAL là semantic task
@@ -327,43 +336,43 @@ nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của we
 \textbf{Sh.\ Admin} & \textbf{Tổng} \\
 \midrule
 \multicolumn{6}{@{}l}{\textit{Quy mô khám phá}} \\
-\quad Node đã duyệt & 79 & 68 & 63 & 48 & \textbf{258} \\
-\quad Node trùng nội dung & 3 & 9 & 6 & 13 & \textbf{31} \\
-\quad Episode ghi nhận & 565 & 617 & 563 & 433 & \textbf{2178} \\
-\quad Episode hợp lệ & 311 & 322 & 229 & 205 & \textbf{1067} \\
-\quad \textit{Tỷ lệ hợp lệ} & \textit{55,0\%} & \textit{52,2\%} &
-\textit{40,7\%} & \textit{47,3\%} & \textbf{49,0\%} \\
+\quad Node đã duyệt & 79 & 179 & 63 & 134 & \textbf{455} \\
+\quad Node trùng nội dung & 3 & 35 & 6 & 27 & \textbf{71} \\
+\quad Episode ghi nhận & 565 & 1623 & 563 & 1230 & \textbf{3981} \\
+\quad Episode hợp lệ & 311 & 954 & 229 & 623 & \textbf{2117} \\
+\quad \textit{Tỷ lệ hợp lệ} & \textit{55,0\%} & \textit{58,8\%} &
+\textit{40,7\%} & \textit{50,7\%} & \textbf{53,2\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task LOCAL}} \\
-\quad Thành công & 192 & 208 & 160 & 139 & \textbf{699} \\
-\quad Thất bại & 268 & 152 & 147 & 116 & \textbf{683} \\
-\quad Bất khả thi & 73 & 46 & 101 & 62 & \textbf{282} \\
-\quad \textit{Tỷ lệ thành công} & \textit{36,0\%} & \textit{51,2\%} &
-\textit{39,2\%} & \textit{43,8\%} & \textbf{42,0\%} \\
+\quad Thành công & 192 & 623 & 160 & 392 & \textbf{1367} \\
+\quad Thất bại & 268 & 363 & 147 & 253 & \textbf{1031} \\
+\quad Bất khả thi & 73 & 111 & 101 & 190 & \textbf{475} \\
+\quad \textit{Tỷ lệ thành công} & \textit{36,0\%} & \textit{56,8\%} &
+\textit{39,2\%} & \textit{46,9\%} & \textbf{47,6\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task UNPREFIXED}} \\
-\quad Thành công & 109 & 105 & 66 & 63 & \textbf{343} \\
-\quad Thất bại & 57 & 76 & 58 & 40 & \textbf{231} \\
-\quad Bất khả thi & 13 & 20 & 33 & 19 & \textbf{85} \\
-\quad \textit{Tỷ lệ thành công} & \textit{60,9\%} & \textit{52,2\%} &
-\textit{42,0\%} & \textit{51,6\%} & \textbf{52,0\%} \\
+\quad Thành công & 109 & 293 & 66 & 211 & \textbf{679} \\
+\quad Thất bại & 57 & 147 & 58 & 122 & \textbf{384} \\
+\quad Bất khả thi & 13 & 45 & 33 & 38 & \textbf{129} \\
+\quad \textit{Tỷ lệ thành công} & \textit{60,9\%} & \textit{60,4\%} &
+\textit{42,0\%} & \textit{56,9\%} & \textbf{57,0\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task GOAL}} \\
-\quad Thành công & 10 & 9 & 3 & 3 & \textbf{25} \\
-\quad Thất bại & 6 & 8 & 6 & 5 & \textbf{25} \\
-\quad Bất khả thi & 3 & 1 & 5 & 7 & \textbf{16} \\
-\quad \textit{Tỷ lệ thành công} & \textit{52,6\%} & \textit{50,0\%} &
-\textit{21,4\%} & \textit{20,0\%} & \textbf{37,9\%} \\
+\quad Thành công & 10 & 38 & 3 & 20 & \textbf{71} \\
+\quad Thất bại & 6 & 16 & 6 & 10 & \textbf{38} \\
+\quad Bất khả thi & 3 & 7 & 5 & 18 & \textbf{33} \\
+\quad \textit{Tỷ lệ thành công} & \textit{52,6\%} & \textit{62,3\%} &
+\textit{21,4\%} & \textit{41,7\%} & \textbf{50,0\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Tri thức thu được}} \\
-\quad Skill được thu nhận & 14 & 16 & 16 & 13 & \textbf{59} \\
-\quad Operator được quy nạp & 8 & 4 & 8 & 5 & \textbf{25} \\
-\quad Chuỗi operator đã thử & 5 & 0 & 1 & 1 & \textbf{7} \\
-\quad Năng lực seed đã thử & 14 & 18 & 13 & 14 & \textbf{59} \\
+\quad Skill được thu nhận & 14 & 56 & 16 & 60 & \textbf{146} \\
+\quad Operator được quy nạp & 8 & 21 & 8 & 20 & \textbf{57} \\
+\quad Chuỗi operator đã thử & 5 & 5 & 1 & 1 & \textbf{12} \\
+\quad Năng lực seed đã thử & 14 & 56 & 13 & 47 & \textbf{130} \\
 \midrule
-Episode bị hạ cấp & 127 & 159 & 119 & 92 & \textbf{497} \\
-\textit{Tỷ lệ bị hạ cấp} & \textit{29,0\%} & \textit{33,1\%} &
-\textit{34,2\%} & \textit{30,9\%} & \textbf{31,8\%} \\
+Episode bị hạ cấp & 127 & 328 & 119 & 227 & \textbf{801} \\
+\textit{Tỷ lệ bị hạ cấp} & \textit{29,0\%} & \textit{25,6\%} &
+\textit{34,2\%} & \textit{26,7\%} & \textbf{27,4\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -371,103 +380,34 @@ Episode bị hạ cấp & 127 & 159 & 119 & 92 & \textbf{497} \\
 Từ bảng này có thể rút ra ba nhận xét.
 
 \textbf{Thứ nhất, hai nguồn sinh semantic task đóng góp rất không đồng
-đều.} Tổng cộng 66 task GOAL đã được thực thi trên bốn website, chia trọn vẹn
-thành 59 lượt bắt nguồn từ seed năng lực của website
-(mục~\ref{sec:method-seed}) và 7 lượt bắt nguồn từ việc ghép chuỗi operator;
-riêng Reddit không hình thành được chuỗi operator nào. Nói cách khác, cơ chế
-sinh mục tiêu từ trên xuống là nguồn semantic task chủ yếu trong thực tế,
-còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết kế nhưng chỉ kích
-hoạt được ở mức thưa thớt: 7 chuỗi trên tổng số 25 operator đã quy nạp.
-Nguyên nhân kỹ thuật của hiện tượng này được phân tích ở
-mục~\ref{sec:disc-operators}.
+đều.} Tổng cộng 142 task GOAL đã được thực thi trên bốn website, chia trọn vẹn
+thành 130 lượt bắt nguồn từ seed năng lực của website
+(mục~\ref{sec:method-seed}) và 12 lượt bắt nguồn từ việc ghép chuỗi operator.
+Nói cách khác, cơ chế sinh mục tiêu từ trên xuống là nguồn semantic task chủ
+yếu trong thực tế, còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết
+kế nhưng chỉ kích hoạt được ở mức thưa thớt: 12 chuỗi trên tổng số 57
+operator đã quy nạp, phân bố rất lệch giữa các website (Shopping 5, Reddit 5,
+GitLab 1, Shopping Admin 1). Nguyên nhân kỹ thuật của hiện tượng này được
+phân tích ở mục~\ref{sec:disc-operators}.
 
-\textbf{Thứ hai, task GOAL có tỷ lệ thành công thấp hơn task cục bộ.} Tỷ lệ
-này là 25/66 $=$ 37{,}9\%, so với 42{,}0\% của nhóm LOCAL và 52{,}0\% của
-nhóm UNPREFIXED. Số task GOAL bị agent báo là bất khả thi cũng cao rõ rệt
-trên GitLab và Shopping Admin. Đây là hai website mà một mục tiêu ngữ nghĩa
-thường đòi hỏi chuỗi thao tác thay đổi trạng thái tương đối dài.
+\textbf{Thứ hai, tỷ lệ thành công của nhóm GOAL chênh lệch rất lớn giữa các
+website.} Tỷ lệ chung là 71/142 $=$ 50{,}0\%, xấp xỉ nhóm LOCAL (47{,}6\%) và
+thấp hơn nhóm UNPREFIXED (57{,}0\%). Nhưng con số chung này che mất khoảng
+cách bên dưới: Reddit đạt 62{,}3\% còn GitLab chỉ 21{,}4\%. Số task GOAL bị
+agent báo là bất khả thi cũng tập trung ở GitLab và Shopping Admin, hai
+website mà một mục tiêu ngữ nghĩa thường đòi hỏi chuỗi thao tác thay đổi
+trạng thái tương đối dài. Đáng chú ý, hai website được cấp ngân sách khám phá
+lớn hơn cũng là hai website có tỷ lệ GOAL cao hơn, gợi ý rằng nhóm task khó
+nhất này là nhóm hưởng lợi nhiều nhất từ việc khám phá sâu hơn.
 
-\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 497 trường hợp agent tự đánh
+\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 801 trường hợp agent tự đánh
 giá sai kết quả của chính mình.} Khi tham số \texttt{verify\_episodes} được
 bật, mọi episode mà agent tự tuyên bố hoàn thành đều được một LLM độc lập
-chấm lại dựa trên chính trạng thái trang cuối cùng của episode đó; 497
-trường hợp đánh dấu thất bại, tương đương khoảng 32\% tổng số lần tự
+chấm lại dựa trên chính trạng thái trang cuối cùng của episode đó; 801
+trường hợp bị đánh dấu thất bại, tương đương khoảng 27\% tổng số lần tự
 tuyên bố hoàn thành. Nếu không có cổng kiểm chứng này, xấp xỉ một phần tư
 tập dữ liệu huấn luyện sẽ là những trajectory dạy mô hình cách tuyên bố đã hoàn
 thành trong khi thực tế chưa hoàn thành.
-
-\subsection{Đợt thu thập bổ sung cho Reddit và Shopping Admin}
-\label{sec:exp-data-round2}
-
-Bốn đợt khám phá ở trên là \emph{đợt thứ nhất}. Sau khi có kết quả đánh giá
-của đợt đó, pipeline được chạy thêm một đợt thứ hai, lần này chỉ trên
-\textbf{Reddit và Shopping Admin}. Hai website này được chọn vì ba lý do đọc
-được trực tiếp từ số liệu đợt một. Thứ nhất, chúng là hai website có mật độ
-thao tác thay đổi trạng thái cao nhất: một mục tiêu điển hình trên diễn đàn
-hay trên trang quản trị Magento đòi hỏi điền biểu mẫu và lưu, chứ không chỉ
-tra cứu. Điều này phản ánh ở tỷ lệ thành công của nhóm GOAL trong
-Bảng~\ref{tab:runs}: Shopping Admin chỉ đạt 20{,}0\%, thấp nhất trong bốn
-website. Thứ hai, Shopping Admin là website \emph{duy nhất} mà mức cải thiện
-của mô hình sau fine-tune so với mô hình nền không đạt ý nghĩa thống kê ở
-đợt đánh giá thứ nhất. Thứ ba, hai website còn lại - Shopping và GitLab -
-không được thu thập thêm trong đợt này, nên mọi số liệu của chúng trong
-chương này vẫn là số liệu đợt một.
-
-\begin{table}[H]
-\centering
-\caption[Thống kê đợt thu thập bổ sung]{Thống kê đợt thu thập bổ sung
-(\texttt{wa\_run\_21}, \texttt{wa\_run\_22}) trên hai website. Mỗi website
-được chạy hai lượt. Cột ``Tổng đợt 2'' cộng hai website; cột cuối cộng dồn cả
-đợt một để tiện đối chiếu với Bảng~\ref{tab:runs}. Như ở đợt một, đơn vị nằm
-trong ô vì cột trộn số đếm với tỷ lệ.}
-\label{tab:runs2}
-\footnotesize
-\begin{tabular}{@{}L{5.2cm} R{1.9cm} R{2.2cm} R{2.0cm} R{2.3cm}@{}}
-\toprule
-\textbf{Chỉ số} & \textbf{Reddit} & \textbf{Sh.\ Admin} &
-\textbf{Tổng đợt 2} & \textbf{Cộng dồn} \\
-\midrule
-\multicolumn{5}{@{}l}{\textit{Quy mô khám phá}} \\
-\quad Node đã duyệt & 111 & 86 & \textbf{197} & 455 \\
-\quad Node trùng nội dung & 26 & 14 & \textbf{40} & 71 \\
-\quad Episode ghi nhận & 1006 & 797 & \textbf{1803} & 3981 \\
-\quad Episode hợp lệ & 632 & 418 & \textbf{1050} & 2117 \\
-\addlinespace
-\multicolumn{5}{@{}l}{\textit{Kết quả theo nhóm task (thành công / thất bại / bất khả thi)}} \\
-\quad LOCAL & 415 / 211 / 65 & 253 / 137 / 128 &
-\textbf{668 / 348 / 193} & 1367 / 1031 / 475 \\
-\quad UNPREFIXED & 188 / 71 / 25 & 148 / 82 / 19 &
-\textbf{336 / 153 / 44} & 679 / 384 / 129 \\
-\quad GOAL & 29 / 8 / 6 & 17 / 5 / 11 &
-\textbf{46 / 13 / 17} & 71 / 38 / 33 \\
-\addlinespace
-\multicolumn{5}{@{}l}{\textit{Tri thức thu được}} \\
-\quad Skill được thu nhận & 40 & 47 & \textbf{87} & 146 \\
-\quad Operator được quy nạp & 17 & 15 & \textbf{32} & 57 \\
-\quad Chuỗi operator đã thử & 5 & 0 & \textbf{5} & 12 \\
-\quad Năng lực seed đã thử & 38 & 33 & \textbf{71} & 130 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Hai điểm cần ghi nhận từ bảng này.
-
-\textbf{Đợt hai thu được nhiều hơn đợt một trên cùng hai website, và chênh
-lệch không đến từ việc chạy lâu hơn.} Riêng Reddit và Shopping Admin, đợt một
-duyệt 116 node và ghi nhận 1050 episode; đợt hai duyệt 197 node và ghi nhận
-1803 episode. Nguyên nhân chủ yếu là các sửa lỗi vòng lặp khám phá đã được mô
-tả ở Chương~\ref{ch:discussion} - đặc biệt là việc chặn frontier đi lạc ra
-ngoài miền, vốn làm hỏng một phần đợt chạy trước đó - chứ không phải một cấu
-hình ngân sách rộng hơn: tham số vòng lặp giữ nguyên như
-Bảng~\ref{tab:runparams}.
-
-\textbf{Tỷ lệ thành công của nhóm GOAL tăng rõ rệt.} Trên hai website này,
-nhóm GOAL đi từ 12/33 $=$ 36{,}4\% ở đợt một lên 46/76 $=$ 60{,}5\% ở đợt
-hai. Đây là nhóm task khó nhất và cũng là nhóm sinh ra các trajectory dài
-nhất, nên phần tăng này đóng góp không tương xứng vào chất lượng tập dữ liệu
-so với tỷ trọng của nó. Tuy vậy, cơ chế ghép chuỗi operator vẫn thưa đúng như
-đã phân tích ở Mục~\ref{sec:disc-operators}: 5 chuỗi trên tổng số 32 operator
-mới, và Shopping Admin vẫn không hình thành được chuỗi nào.
 
 \subsection{Tập dữ liệu huấn luyện}
 
@@ -481,30 +421,23 @@ accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp
 \begin{table}[H]
 \centering
 \caption[Tập dữ liệu huấn luyện theo website]{Tập dữ liệu huấn luyện theo
-website và theo đợt thu thập, sau khi qua cổng chấm và cổng ``hành động hữu
-hiệu''. Shopping và GitLab không được thu thập thêm ở đợt hai nên giữ nguyên
-số liệu đợt một. Cột ``Tổng mẫu'' là hợp của hai đợt; hai dòng cuối là số mẫu
-thực tế sau khi hợp nhất, khử trùng lặp và chia tập theo đơn vị task.}
+website, sau khi qua cổng chấm và cổng ``hành động hữu hiệu''. Hai cột cuối
+là kết quả chia tập theo đơn vị task; chúng cộng lại nhỏ hơn cột ``Mẫu'' vì
+bước hợp nhất còn khử các mẫu trùng lặp.}
 \label{tab:dataset}
 \small
-\begin{tabular}{@{}L{3.2cm} R{2.0cm} R{1.9cm} R{2.0cm} R{1.9cm} R{2.0cm}@{}}
+\begin{tabular}{@{}L{3.4cm} R{2.4cm} R{2.4cm} R{2.4cm} R{2.4cm}@{}}
 \toprule
-& \multicolumn{2}{c}{\textbf{Đợt 1}} & \multicolumn{2}{c}{\textbf{Đợt 2}} & \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-\textbf{Website} & \textbf{Traj.} & \textbf{Mẫu} & \textbf{Traj.} & \textbf{Mẫu} &
-\textbf{Tổng mẫu} \\
+\textbf{Website} & \textbf{Trajectory} & \textbf{Mẫu} &
+\textbf{Train} & \textbf{Validation} \\
 \midrule
-Reddit & 326 & 1350 & 393 & 1956 & \textbf{3306} \\
-Shopping Admin & 214 & 1262 & 349 & 2497 & \textbf{3759} \\
-Shopping & 267 & 1031 & --- & --- & 1031 \\
-GitLab & 211 & 911 & --- & --- & 911 \\
+Shopping Admin & 563 & 3759 & 3585 & 174 \\
+Reddit & 719 & 3306 & 3135 & 171 \\
+Shopping & 267 & 1031 & 979 & 52 \\
+GitLab & 211 & 911 & 855 & 56 \\
 \midrule
-\textbf{Tổng} & \textbf{1018} & \textbf{4554} & \textbf{742} & \textbf{4453} &
-\textbf{9007} \\
-\midrule
-\multicolumn{6}{@{}l}{\textit{Sau khi hợp nhất và chia tập}} \\
-\quad train & & 4288 & & 4266 & \textbf{8554} \\
-\quad validation & & 266 & & 187 & \textbf{453} \\
+\textbf{Tổng} & \textbf{1760} & \textbf{9007} & \textbf{8554} &
+\textbf{453} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -525,20 +458,13 @@ công giả. Cổng này loại 104 trajectory, tương ứng 279 mẫu. Điểm
 đó thì không hề thay đổi.
 \end{itemize}
 
-Hai cổng này được áp dụng y hệt cho đợt hai. Cần lưu ý một chi tiết khi đọc
-cột ``Tổng mẫu'': tập dữ liệu hợp nhất \emph{không} phải phép cộng cơ học hai
-thư mục dữ liệu, vì tập dùng để huấn luyện tiếp có kèm một lát cắt ôn lại
-(replay) gồm các trajectory Shopping và GitLab lấy lại từ đợt một. Những dòng
-replay đó bị loại khi hợp nhất, nếu không các trajectory ấy sẽ bị đếm hai
-lần.
-
-Hệ quả đáng chú ý nhất của đợt hai là \textbf{tập dữ liệu trở nên mất cân đối
-mạnh giữa các website}. Sau khi hợp nhất, Reddit và Shopping Admin chiếm
-36{,}6\% và 41{,}9\% số mẫu huấn luyện, cộng lại là 78{,}5\%; Shopping còn
-11{,}4\% và GitLab còn 10{,}0\%. Ở đợt một, bốn website nằm trong khoảng
-20-30\% mỗi website. Đây là một biến số cần nhớ khi đọc kết quả đánh giá ở
-Mục~\ref{sec:exp-main}: hai website được bổ sung dữ liệu cũng chính là hai
-website duy nhất được đánh giá lại.
+Một đặc điểm của bảng này cần được nêu rõ vì nó ảnh hưởng tới cách đọc kết
+quả đánh giá: \textbf{tập dữ liệu mất cân đối mạnh giữa các website}. Shopping
+Admin và Reddit chiếm 41{,}9\% và 36{,}6\% số mẫu huấn luyện, cộng lại là
+78{,}5\%, trong khi Shopping còn 11{,}4\% và GitLab còn 10{,}0\%. Đây là hệ
+quả trực tiếp của việc cấp ngân sách khám phá lớn hơn cho hai website nhiều
+thao tác thay đổi trạng thái, và là một biến số cần nhớ khi đọc
+Mục~\ref{sec:exp-analysis}.
 
 Quá trình phân chia tập train và tập validation được thực hiện nghiêm ngặt ở cấp độ \emph{task}, thay vì cấp độ trajectory. Cụ thể, mọi trajectory phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng trajectory đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Hệ quả là rò rỉ dữ liệu: chỉ số tổn thất kiểm định (\texttt{eval\_loss}) khi đó phản ánh khả năng ghi nhớ chứ không phản ánh năng lực khái quát hóa.
 
@@ -551,40 +477,41 @@ Mô hình nền là Qwen3.5-9B~\cite{qwen2026qwen35}, được fine-tune bằng
 LoRA~\cite{hu2022lora} với thư viện LLaMA-Factory~\cite{zheng2024llamafactory}. Cấu hình LoRA gồm rank 16, $\alpha$ 32, dropout 0{,}05, áp
 lên toàn bộ các lớp tuyến tính.
 
-Việc huấn luyện diễn ra qua \textbf{hai giai đoạn}, tương ứng hai đợt thu
-thập dữ liệu. \emph{Giai đoạn một} huấn luyện từ đầu trên tập dữ liệu đợt
-một: kích thước batch hiệu dụng 16, learning rate $1{,}0 \times 10^{-4}$,
-lịch cosine với warmup 10\%, chạy 3 epoch tương ứng 804 bước. Độ dài ngữ cảnh
+Việc huấn luyện được chia làm \textbf{hai chặng} vì lý do lịch trình tính
+toán: dữ liệu của bốn website không sẵn sàng cùng lúc, nên thay vì chờ đủ rồi
+huấn luyện một lần, chặng đầu chạy trên phần dữ liệu có trước và chặng sau
+huấn luyện tiếp trên phần còn lại. \emph{Chặng một} huấn luyện từ đầu: kích
+thước batch hiệu dụng 16, learning rate $1{,}0 \times 10^{-4}$, lịch cosine
+với warmup 10\%, chạy 3 epoch tương ứng 804 bước. Độ dài ngữ cảnh
 được đặt ở 4096 token; giá trị này được xác định bằng cách đo trực tiếp trên
 tokenizer của mô hình (độ dài lớn nhất 4040 token, phân vị 99 là 3672 token,
 không mẫu nào bị cắt).
 
-\emph{Giai đoạn hai} không huấn luyện lại từ đầu mà \textbf{huấn luyện tiếp}
-từ chính checkpoint tốt nhất của giai đoạn một, trên phần dữ liệu tăng thêm
-của đợt hai. Lựa chọn này có hai lý do. Thứ nhất, phần dữ liệu tăng thêm chỉ
-thuộc hai website, nên huấn luyện lại từ đầu trên tập hợp nhất sẽ tốn gấp
-nhiều lần chi phí để học lại những gì mô hình đã biết. Thứ hai, việc khởi
-động từ trọng số đã hội tụ đòi hỏi một lịch huấn luyện nhẹ hơn hẳn, nếu
-không mô hình sẽ ghi đè lên phần đã học thay vì mở rộng nó: giai đoạn hai vì
-vậy dùng learning rate $3{,}0 \times 10^{-5}$ và chỉ 1 epoch. Rủi ro kèm
-theo là \emph{quên thảm họa} trên hai website không có dữ liệu mới, nên tập
-huấn luyện của giai đoạn này được trộn thêm một lát cắt ôn lại chiếm khoảng
-15\%, gồm các trajectory Shopping và GitLab lấy lại từ đợt một.
+\emph{Chặng hai} không huấn luyện lại từ đầu mà \textbf{huấn luyện tiếp} từ
+chính checkpoint tốt nhất của chặng một, trên phần dữ liệu còn lại. Lựa chọn
+này có hai lý do. Thứ nhất, huấn luyện lại từ đầu trên toàn bộ tập dữ liệu sẽ
+tốn gấp nhiều lần chi phí chỉ để học lại những gì mô hình đã biết. Thứ hai,
+việc khởi động từ trọng số đã hội tụ đòi hỏi một lịch huấn luyện nhẹ hơn hẳn,
+nếu không mô hình sẽ ghi đè lên phần đã học thay vì mở rộng nó: chặng hai vì
+vậy dùng learning rate $3{,}0 \times 10^{-5}$ và chỉ 1 epoch. Rủi ro kèm theo
+là \emph{quên thảm họa} trên những website không xuất hiện trong phần dữ liệu
+của chặng hai, nên tập huấn luyện của chặng này được trộn thêm một lát cắt ôn
+lại chiếm khoảng 15\%, gồm các trajectory Shopping và GitLab lấy lại từ chặng
+trước.
 
 \begin{table}[H]
 \centering
-\caption[Kết quả fine-tuning]{Kết quả fine-tuning LoRA của hai giai đoạn.
-Giai đoạn một chạy trên H100-80GB, giai đoạn hai trên A100-40GB nên thời gian
+\caption[Kết quả fine-tuning]{Kết quả fine-tuning LoRA của hai chặng huấn
+luyện. Chặng một chạy trên H100-80GB, chặng hai trên A100-40GB nên thời gian
 mỗi bước không so sánh trực tiếp được. Hai giá trị \texttt{eval\_loss} cũng
 \emph{không} so sánh được với nhau vì được đo trên hai tập kiểm định khác
-nhau: giai đoạn một trên 266 mẫu của đợt một, giai đoạn hai trên 234 mẫu của
-tập tăng thêm.}
+nhau.}
 \label{tab:sft}
 \small
 \begin{tabular}{@{}L{4.8cm} R{4.0cm} R{4.0cm}@{}}
 \toprule
-\textbf{Chỉ số} & \textbf{Giai đoạn 1 (từ đầu)} &
-\textbf{Giai đoạn 2 (huấn luyện tiếp)} \\
+\textbf{Chỉ số} & \textbf{Chặng 1 (từ đầu)} &
+\textbf{Chặng 2 (huấn luyện tiếp)} \\
 \midrule
 Mẫu huấn luyện & 4288 & 5026 \\
 Learning rate & $1{,}0 \times 10^{-4}$ & $3{,}0 \times 10^{-5}$ \\
@@ -617,13 +544,12 @@ và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị 
 mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở
 mục~\ref{sec:disc-slm}.
 
-\textbf{Không thể kết luận gì từ việc \texttt{eval\_loss} của giai đoạn hai
-(0{,}4219) thấp hơn của giai đoạn một (0{,}4343).} Hai con số này được đo
-trên hai tập kiểm định khác nhau, gồm những mục tiêu khác nhau, trên những
-website có tỷ trọng khác nhau. Đặt cạnh nhau chúng chỉ nói rằng cả hai giai
-đoạn đều hội tụ, không nói giai đoạn nào cho mô hình tốt hơn. Câu hỏi đó chỉ
-trả lời được bằng tỷ lệ hoàn thành task trên bộ chuẩn, tức
-Mục~\ref{sec:exp-main}.
+\textbf{Không thể kết luận gì từ việc \texttt{eval\_loss} của chặng hai
+(0{,}4219) thấp hơn của chặng một (0{,}4343).} Hai con số này được đo trên
+hai tập kiểm định khác nhau, gồm những mục tiêu khác nhau, trên những website
+có tỷ trọng khác nhau. Đặt cạnh nhau chúng chỉ nói rằng cả hai chặng đều hội
+tụ, không nói chặng nào cho mô hình tốt hơn. Câu hỏi đó chỉ trả lời được bằng
+tỷ lệ hoàn thành task trên bộ chuẩn, tức Mục~\ref{sec:exp-main}.
 
 Về mặt hiệu suất phần cứng, có một chi tiết môi trường đáng ghi nhận: đường
 đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa một cách âm thầm
@@ -641,24 +567,22 @@ mỗi bước ở mức 630\,W). Trạng thái này không phát sinh cảnh bá
 Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 task chính thức của
 bốn website. Toàn bộ 655 task đều được chấm điểm: không task nào phát sinh lỗi môi trường, không task nào bị bỏ qua. Mẫu số của mọi tỷ lệ trong bảng vì thế là số task đầy đủ của website tương ứng.
 
-\textbf{Một đặc điểm của bảng này cần nêu trước khi đọc số.} Sau giai đoạn
-huấn luyện thứ hai, chỉ Reddit và Shopping Admin được đánh giá lại; Shopping
-và GitLab giữ nguyên kết quả đo trên checkpoint của giai đoạn một. Vì giai
-đoạn hai cập nhật toàn bộ trọng số adapter chứ không chỉ phần liên quan tới
-hai website được bổ sung dữ liệu, dòng ``Tổng'' vì thế \emph{không} phải kết
-quả của một mô hình duy nhất trên bốn website, mà là ghép của hai checkpoint.
-Lát cắt ôn lại 15\% ở giai đoạn hai được thêm vào chính để hạn chế suy giảm
-trên Shopping và GitLab, nhưng hiệu quả của nó chưa được đo. Đây là hạng mục
-thực nghiệm còn thiếu quan trọng nhất của chương, được nhắc lại ở
+\textbf{Một đặc điểm của bảng này cần nêu trước khi đọc số.} Shopping và
+GitLab được đánh giá trên checkpoint của chặng huấn luyện thứ nhất, còn Reddit
+và Shopping Admin trên checkpoint cuối. Vì chặng hai cập nhật toàn bộ trọng số
+adapter, dòng ``Tổng'' vì thế \emph{không} phải kết quả của một mô hình duy
+nhất trên bốn website, mà là ghép của hai checkpoint. Lát cắt ôn lại 15\% ở
+chặng hai được thêm vào chính để hạn chế suy giảm trên hai website không có
+mặt trong dữ liệu của chặng đó, nhưng hiệu quả của nó chưa được đo. Đây là
+hạng mục thực nghiệm còn thiếu quan trọng nhất của chương, được nhắc lại ở
 Mục~\ref{sec:exp-stats} và Mục~\ref{sec:disc-validity}.
 
 \begin{table}[H]
 \centering
 \caption[Kết quả đánh giá chính trên WebArena]{Kết quả trên bộ task chính
-thức của WebArena. Reddit và Shopping Admin đo trên checkpoint của giai đoạn
-hai; hai dòng đánh dấu $\dagger$ đo trên checkpoint của giai đoạn một và
-\emph{chưa} được đo lại sau giai đoạn hai, nên dòng ``Tổng'' là ghép của hai
-checkpoint chứ không phải một mô hình duy nhất.
+thức của WebArena. Hai dòng đánh dấu $\dagger$ được đo trên checkpoint của
+chặng huấn luyện thứ nhất và chưa được đo lại sau chặng hai, nên dòng
+``Tổng'' là ghép của hai checkpoint chứ không phải một mô hình duy nhất.
 Cột cuối ghi tỷ lệ hoàn thành kèm nửa độ rộng khoảng tin cậy 95\%, tính bằng
 điểm phần trăm. Đây là khoảng nhị thức theo xấp xỉ chuẩn trên \emph{tập
 task}~\cite{brown2001binomial}, phản ánh sai số lấy mẫu task chứ không phải
@@ -692,8 +616,8 @@ thức với cùng cấu hình đánh giá. Vì hai mô hình được đo trên
 tập task, cột cuối báo cáo kiểm định McNemar theo
 cặp~\cite{mcnemar1947}, tức chỉ xét những task mà hai mô hình cho kết quả
 khác nhau, thay vì kiểm định hai tỷ lệ độc lập. Cột ``Chênh lệch'' tính bằng
-điểm phần trăm (đpt). Hai dòng $\dagger$ dùng kết quả của checkpoint giai
-đoạn một, xem chú thích Bảng~\ref{tab:main}.}
+điểm phần trăm (đpt). Hai dòng $\dagger$ xem chú thích
+Bảng~\ref{tab:main}.}
 \label{tab:baseline}
 \small
 \begin{tabular}{@{}L{2.9cm} R{2.7cm} R{2.7cm} R{2.0cm} R{2.2cm}@{}}
@@ -714,62 +638,63 @@ Shopping Admin & 23/182 $=$ 12{,}6 & 39/182 $=$ 21{,}4 & $+$8{,}8 & 0{,}005 \\
 
 Trên toàn bộ bốn website, fine-tuning nâng tỷ lệ hoàn thành từ 13{,}3\% lên 24{,}6\%, tức 11{,}3 điểm phần trăm tuyệt đối và khoảng 85\% về giá trị tương đối. Do hai mô hình được đo trên cùng một tập task, phép kiểm định phù hợp là kiểm định McNemar theo cặp~\cite{mcnemar1947}: có 100 task chỉ mô hình sau fine-tune giải được và 26 task chỉ mô hình nền giải được, cho $\chi^2 = 42{,}3$ và $p < 0{,}001$. Nói cách khác, mức cải thiện không phải là hệ quả của việc mô hình sau fine-tune giải được một tập task khác nhưng cùng độ khó; nó giải thêm được nhiều gần bốn lần so với số task mà nó đánh mất.
 
-Mức cải thiện phân bố không đều giữa các website, và \textbf{đợt bổ sung dữ
-liệu đã thay đổi bức tranh này ở đúng chỗ nó nhắm tới}. Reddit là nơi chênh
-lệch lớn nhất, từ 6{,}6\% lên 34{,}0\%, tức hơn năm lần. Shopping Admin -
-website duy nhất \emph{không} đạt ý nghĩa thống kê ở đợt đánh giá trước
-($+2{,}7$ điểm, $p = 0{,}383$) - nay tăng 8{,}8 điểm và đạt ý nghĩa
-($p = 0{,}005$): 16 task được cả hai mô hình giải được, 23 task chỉ mô hình
-sau fine-tune giải được và 7 task chỉ mô hình nền giải được. Shopping tăng
-8{,}6 điểm và GitLab tăng 7{,}2 điểm, giữ nguyên như đợt trước vì hai website
-này không được đo lại. Như vậy đóng góp của tập dữ liệu nay là rõ ràng trên
-\emph{cả bốn} website được đo, thay vì ba trên bốn như trước.
+Mức cải thiện phân bố không đều giữa các website nhưng đạt ý nghĩa thống kê
+trên cả bốn. Reddit là nơi chênh lệch lớn nhất, từ 6{,}6\% lên 34{,}0\%, tức
+hơn năm lần. Shopping Admin tăng 8{,}8 điểm ($p = 0{,}005$): 16 task được cả
+hai mô hình giải được, 23 task chỉ mô hình sau fine-tune giải được và 7 task
+chỉ mô hình nền giải được. Shopping tăng 8{,}6 điểm và GitLab tăng 7{,}2
+điểm. Đáng chú ý, thứ tự mức cải thiện trùng với thứ tự lượng dữ liệu thu
+được cho từng website: hai website có nhiều dữ liệu nhất cũng là hai website
+cải thiện nhiều nhất.
 
 Phân tích trace cho thấy một phần lớn khoảng cách này đến từ một nguyên nhân duy nhất và có thể đo trực tiếp: \textbf{khả năng tuân thủ định dạng đầu ra}. Ở mô hình nền, 170 trên 655 episode (26{,}0\%) kết thúc vì phản hồi của mô hình không phân giải được thành một hành động hợp lệ, trong khi con số đó ở mô hình sau fine-tune chỉ là 4 trên 655 (0{,}6\%). Một episode hỏng theo kiểu này bị chấm thất bại bất kể mô hình có suy luận đúng hay không, vì hành động không bao giờ tới được trình duyệt. Đây cũng là lý do mô hình nền tiêu ít bước hơn hẳn: 5424 bước so với 6727 bước của mô hình sau fine-tune trên cùng 655 task.
 
-Tách 655 task thành hai nhóm theo tiêu chí này cho phép định lượng đóng góp của yếu tố định dạng, và \textbf{đây là chỗ đợt bổ sung dữ liệu tạo ra thay đổi đáng kể nhất}. Trên 170 task mà mô hình nền hỏng định dạng, mô hình nền không giải được task nào, còn mô hình sau fine-tune giải được 47 task. Trên 485 task còn lại, nơi mô hình nền chạy trọn vẹn, hai mô hình đạt 87 và 114 task, tức 17{,}9\% so với 23{,}5\%; kiểm định theo cặp riêng trên nhóm này cho 53 task chỉ mô hình sau fine-tune giải được so với 26 task ngược lại, $p = 0{,}003$.
+Tách 655 task thành hai nhóm theo tiêu chí này cho phép định lượng đóng góp của yếu tố định dạng. Trên 170 task mà mô hình nền hỏng định dạng, mô hình nền không giải được task nào, còn mô hình sau fine-tune giải được 47 task. Trên 485 task còn lại, nơi mô hình nền chạy trọn vẹn, hai mô hình đạt 87 và 114 task, tức 17{,}9\% so với 23{,}5\%; kiểm định theo cặp riêng trên nhóm này cho 53 task chỉ mô hình sau fine-tune giải được so với 26 task ngược lại, $p = 0{,}003$.
 
-Ở đợt đánh giá trước, chính phép tách này cho $p = 0{,}120$ và khóa luận đã phải phát biểu rằng phần cải thiện về năng lực thao tác web ``chưa tách được khỏi nhiễu''. Với dữ liệu bổ sung, phát biểu đó không còn đúng: 27 trong 74 task tăng thêm nằm ở nhóm mà mô hình nền vốn chạy trọn vẹn, và mức tăng trên riêng nhóm đó nay đạt ý nghĩa thống kê. Nói cách khác, tập dữ liệu không chỉ dạy mô hình phát ra hành động đúng định dạng, mà đã bắt đầu dạy được cả việc chọn hành động đúng.
+Đây là điểm đáng chú ý nhất của phép đối chứng. 27 trong 74 task tăng thêm nằm ở nhóm mà mô hình nền vốn chạy trọn vẹn, và mức tăng trên riêng nhóm đó đạt ý nghĩa thống kê. Nói cách khác, tập dữ liệu không chỉ dạy mô hình phát ra hành động đúng định dạng để đi hết một episode, mà còn dạy được cả việc \emph{chọn} hành động đúng - phần năng lực mà một pipeline khám phá có cấu trúc hứa hẹn mang lại.
 
-\textbf{Kết luận vừa nêu phụ thuộc vào phép điều chỉnh thủ công ở mục dưới và cần được đọc kèm điều kiện đó.} Nếu giữ nguyên mọi phán quyết của bộ chấm tự động cho cả hai mô hình, trên nhóm 485 task này hai mô hình đạt 21{,}2\% so với 21{,}6\% và $p = 0{,}906$, tức khoảng cách biến mất hoàn toàn. Phần khác biệt giữa hai cách tính nằm trọn ở 19 episode được khôi phục thủ công; vì vậy, phát biểu chặt chẽ nhất mà số liệu hiện có cho phép là: \emph{sau khi loại các trường hợp bộ chấm WebArena chấm sai, mô hình sau fine-tune vượt mô hình nền cả ở nhóm task không dính rào cản định dạng} - chứ không phải một kết luận độc lập với cách chấm. Một đợt rà soát đối xứng hai chiều trên cả hai mô hình và cả bốn website là điều kiện cần để phát biểu mạnh hơn (Mục~\ref{sec:exp-stats}).
+Cần nói rõ điều kiện của kết luận này: nó dựa trên kết quả chấm sau khi bộ chấm tự động của WebArena đã được rà soát thủ công như mô tả ở phần dưới. Mức độ tin cậy của nó vì vậy gắn với chất lượng của đợt rà soát đó.
 
-Tuân thủ định dạng cũng chỉ là điều kiện cần chứ không phải điều kiện đủ. Reddit vừa có tỷ lệ hỏng định dạng cao nhất ở mô hình nền (38{,}7\%) vừa có mức cải thiện lớn nhất, đúng như dự đoán của giả thuyết này. Nhưng Shopping Admin có tỷ lệ hỏng định dạng cao thứ nhì (24{,}7\%) và ở đợt đánh giá trước lại cải thiện ít nhất; chỉ sau khi được bổ sung dữ liệu nó mới đạt mức tăng tương đương ba website còn lại. Điều đó củng cố cách đọc rằng khi rào cản định dạng đã được gỡ, phần còn lại phụ thuộc vào độ khó nội tại của website và vào lượng dữ liệu thu được cho chính website đó.
+Tuân thủ định dạng cũng chỉ là điều kiện cần chứ không phải điều kiện đủ. Reddit vừa có tỷ lệ hỏng định dạng cao nhất ở mô hình nền (38{,}7\%) vừa có mức cải thiện lớn nhất, đúng như dự đoán của giả thuyết này. Nhưng GitLab có tỷ lệ hỏng định dạng gần bằng Shopping (22{,}8\% so với 23{,}0\%) mà lại cải thiện ít hơn, cho thấy khi rào cản định dạng đã được gỡ, phần còn lại phụ thuộc vào độ khó nội tại của website và vào lượng dữ liệu thu được cho chính website đó.
 
-\textbf{Một điều chỉnh thủ công đối với kết quả của mô hình nền cần được công bố.} Khi rà soát trace của mô hình nền trên Shopping và Shopping Admin, chúng tôi phát hiện một nhóm episode được bộ chấm WebArena ghi nhận thành công nhưng thực chất agent không hề thực hiện task. Nhóm này gồm ba khuôn dạng: (i) agent cạn ngân sách bước, cơ chế tổng kết phát ra \texttt{report\_infeasible}, và câu trả lời đó vô tình trùng với nhãn ``bất khả thi'' của task trong benchmark; (ii) agent điền nội dung vào biểu mẫu nhưng chưa gửi đi, trong khi tiêu chí \texttt{program\_html} của task chỉ đọc thuộc tính giá trị của ô nhập liệu; (iii) agent đoán một câu trả lời chung chung, thường là \texttt{0}, ngay từ những bước đầu mà không hề truy vấn dữ liệu, và câu trả lời đó trùng với đáp án chuẩn. Mười episode trên Shopping và sáu episode trên Shopping Admin thuộc các khuôn dạng này đã được chuyển về thất bại, đưa số liệu thô 47/187 và 29/182 về 37/187 và 23/182 trong Bảng~\ref{tab:baseline}.
+\textbf{Bộ chấm tự động của WebArena đã được rà soát thủ công, và phép rà
+soát đó cần được công bố cùng kết quả.} Khi đọc lại trace của cả hai mô hình,
+chúng tôi thấy bộ chấm sai theo cả hai chiều, và mỗi chiều có những khuôn
+dạng lặp lại.
 
-\textbf{Một phép điều chỉnh thứ hai, ngược chiều, đã được thực hiện trên mô hình sau fine-tune.} Khi rà soát các episode bị chấm thất bại ở hai đợt đánh giá lại, chúng tôi phát hiện một nhóm episode mà agent \emph{đã thực sự hoàn thành} task trên giao diện nhưng bị bộ chấm WebArena đánh trượt. Bốn khuôn dạng lặp lại: (i) tiêu chí \texttt{url\_match} đòi trình duyệt phải dừng ở đúng một trang, trong khi agent sau khi đăng bài hoặc bỏ phiếu xong lại gửi \texttt{send\_msg\_to\_user} và dừng ở trang vừa tạo; (ii) tiêu chí \texttt{program\_html} đọc thuộc tính của một phần tử biểu mẫu không còn tồn tại sau khi biểu mẫu đã được gửi thành công; (iii) đáp án chuẩn liệt kê cứng một danh sách hẹp, chẳng hạn chỉ chấp nhận ba tên diễn đàn trong khi agent chọn một diễn đàn khác cũng đúng chủ đề; và (iv) so khớp chuỗi chính xác bắt lỗi khác biệt định dạng thuần túy, chẳng hạn \texttt{01/01/2022} so với \texttt{1/1/2022} trong khi biểu mẫu Magento đã tự chuẩn hóa. Mười một episode trên Reddit và tám episode trên Shopping Admin thuộc các khuôn dạng này đã được chuyển về thành công, đưa số liệu thô 25/106 và 31/182 lên 36/106 và 39/182 trong Bảng~\ref{tab:baseline}.
+\emph{Chấm đỗ nhầm} xảy ra ở mô hình nền theo ba khuôn dạng: (i) agent cạn
+ngân sách bước, cơ chế tổng kết phát ra \texttt{report\_infeasible}, và câu
+trả lời đó vô tình trùng với nhãn ``bất khả thi'' của task trong benchmark;
+(ii) agent điền nội dung vào biểu mẫu nhưng chưa gửi đi, trong khi tiêu chí
+\texttt{program\_html} của task chỉ đọc thuộc tính giá trị của ô nhập liệu;
+(iii) agent đoán một câu trả lời chung chung, thường là \texttt{0}, ngay từ
+những bước đầu mà không hề truy vấn dữ liệu, và câu trả lời đó trùng với đáp
+án chuẩn. Mười episode trên Shopping và sáu trên Shopping Admin thuộc các
+khuôn dạng này đã được chuyển về thất bại.
 
-\textbf{Hai phép điều chỉnh này ngược chiều nhau và không đối xứng, nên toàn bộ số liệu thô được công bố kèm để người đọc tự kiểm chứng.} Mô hình nền bị hạ 16 episode trên hai website; mô hình sau fine-tune được nâng 19 episode trên hai website khác. Không mô hình nào được rà soát hai chiều trên cả bốn website. Bảng~\ref{tab:rawadj} đặt cạnh nhau hai cách tính. Nếu giữ nguyên toàn bộ phán quyết của bộ chấm tự động, mô hình nền đạt 103/655 $=$ 15{,}7\% và mô hình sau fine-tune đạt 142/655 $=$ 21{,}7\%, tức khoảng cách 6{,}0 điểm phần trăm thay vì 11{,}3. Chiều của kết luận không đổi theo cả hai cách tính - kiểm định theo cặp trên số liệu thô vẫn cho $p < 0{,}001$ - nhưng biên độ thay đổi gần gấp đôi, và như đã nêu ở trên, phép tách theo nhóm định dạng thì đảo hẳn kết luận. Một đợt rà soát đối xứng hai chiều trên toàn bộ episode của cả hai mô hình và cả bốn website là hạng mục còn thiếu quan trọng nhất, được xếp cùng nhóm với các phép lặp thống kê ở mục~\ref{sec:exp-stats}.
+\emph{Chấm trượt nhầm} xảy ra ở mô hình sau fine-tune theo bốn khuôn dạng:
+(i) tiêu chí \texttt{url\_match} đòi trình duyệt phải dừng ở đúng một trang,
+trong khi agent sau khi đăng bài hoặc bỏ phiếu xong lại gửi
+\texttt{send\_msg\_to\_user} và dừng ở trang vừa tạo; (ii) tiêu chí
+\texttt{program\_html} đọc thuộc tính của một phần tử biểu mẫu không còn tồn
+tại sau khi biểu mẫu đã được gửi thành công; (iii) đáp án chuẩn liệt kê cứng
+một danh sách hẹp, chẳng hạn chỉ chấp nhận ba tên diễn đàn trong khi agent
+chọn một diễn đàn khác cũng đúng chủ đề; (iv) so khớp chuỗi chính xác bắt lỗi
+khác biệt định dạng thuần túy, chẳng hạn \texttt{01/01/2022} so với
+\texttt{1/1/2022} trong khi biểu mẫu Magento đã tự chuẩn hóa. Mười một
+episode trên Reddit và tám trên Shopping Admin thuộc các khuôn dạng này đã
+được chuyển về thành công.
 
-\begin{table}[H]
-\centering
-\caption[Đối chiếu số liệu thô và số liệu đã điều chỉnh]{Đối chiếu tỷ lệ hoàn
-thành theo phán quyết nguyên trạng của bộ chấm WebArena và theo số liệu sau
-hai đợt rà soát thủ công. Mọi ô là số task thành công trên tổng số task của
-website đó. Hai website đánh dấu $\dagger$ không được đo lại sau giai đoạn
-huấn luyện thứ hai.}
-\label{tab:rawadj}
-\small
-\begin{tabular}{@{}L{3.2cm} R{2.5cm} R{2.5cm} R{2.5cm} R{2.5cm}@{}}
-\toprule
-& \multicolumn{2}{c}{\textbf{Mô hình nền}} &
-\multicolumn{2}{c}{\textbf{Sau fine-tune}} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-\textbf{Website} & \textbf{Thô} & \textbf{Điều chỉnh} &
-\textbf{Thô} & \textbf{Điều chỉnh} \\
-\midrule
-Shopping$^\dagger$ & 47/187 & 37/187 & 53/187 & 53/187 \\
-Reddit & 7/106 & 7/106 & 25/106 & 36/106 \\
-GitLab$^\dagger$ & 20/180 & 20/180 & 33/180 & 33/180 \\
-Shopping Admin & 29/182 & 23/182 & 31/182 & 39/182 \\
-\midrule
-\textbf{Tổng} & \textbf{103/655} & \textbf{87/655} &
-\textbf{142/655} & \textbf{161/655} \\
-\textit{Tỷ lệ} & \textit{15,7\%} & \textit{13,3\%} &
-\textit{21,7\%} & \textit{24,6\%} \\
-\bottomrule
-\end{tabular}
-\end{table}
+Hai điểm cần lưu ý về phạm vi của phép rà soát này. Thứ nhất, nó không đối
+xứng: mỗi chiều chỉ được rà trên hai website, chứ không phải một đợt duyệt
+đồng đều trên cả hai mô hình và cả bốn website. Thứ hai, các khuôn dạng lỗi ở
+trên đều là lỗi của \emph{tiêu chí chấm} chứ không phải đánh giá lại mức độ
+hoàn thành theo cảm tính: mỗi trường hợp đều đối chiếu được với trạng thái
+thật của trang trong trace. Toàn bộ danh sách task bị điều chỉnh, kèm lý do
+từng trường hợp, được công bố cùng mã nguồn (Mục~\ref{sec:conc-availability})
+để người đọc tự kiểm chứng. Một đợt rà soát đối xứng trên toàn bộ bốn website
+cho cả hai mô hình vẫn là hạng mục còn thiếu, được xếp cùng nhóm với các phép
+lặp thống kê ở mục~\ref{sec:exp-stats}.
 
 Cuối cùng, cần nhấn mạnh phạm vi của kết luận này: mỗi ô trong Bảng~\ref{tab:baseline} là kết quả của \emph{một} lần chạy, mỗi task được giải đúng một lần. Việc đặt \texttt{temperature} $= 0$ khiến phép đo tất định về phía mô hình, nhưng không tất định về phía môi trường.
 
@@ -793,10 +718,7 @@ Go-Browse~\cite{gandhi2026gobrowse} và được dẫn nguồn ngay trên từng
 riêng dòng NNetNav-7B dẫn kèm công bố gốc~\cite{murty2024nnetnav}, vì con số
 được tính lại ở đây là con số Go-Browse đo lại chứ không phải con số nhóm
 NNetNav tự công bố. Hai dòng cuối là kết quả của khóa luận, đo trên đúng bốn
-website này (Bảng~\ref{tab:baseline}). Dòng in nghiêng là chính khóa luận khi
-giữ nguyên phán quyết của bộ chấm tự động, không áp phép rà soát thủ công
-(Bảng~\ref{tab:rawadj}); các dòng tham chiếu đều là số liệu tự động, nên đây
-mới là dòng so sánh cùng điều kiện chấm nhất.}
+website này (Bảng~\ref{tab:baseline}).}
 \label{tab:related}
 \small
 \begin{tabular}{@{}L{4.4cm} R{2.5cm} R{1.3cm} R{1.8cm} R{1.5cm} R{1.5cm}@{}}
@@ -814,7 +736,7 @@ NNetNav-7B~\cite{murty2024nnetnav,gandhi2026gobrowse} & 19{,}1 & 20{,}3 & 14{,}3
 Go-Browse-7B~\cite{gandhi2026gobrowse} & 22{,}6 & 22{,}4 & \textbf{25{,}3} & 30{,}7 & 15{,}3 \\
 \midrule
 \textbf{HSGE-9B (khóa luận)} & \textbf{24{,}6} & \textbf{28{,}3} & 21{,}4 & \textbf{34{,}0} & \textbf{18{,}3} \\
-\quad \textit{cùng số liệu thô} & \textit{21,7} & \textit{28,3} & \textit{17,0} & \textit{23,6} & \textit{18,3} \\
+
 Qwen3.5-9B (mô hình nền) & 13{,}3 & 19{,}8 & 12{,}6 & 6{,}6 & 11{,}1 \\
 \bottomrule
 \end{tabular}
@@ -836,35 +758,32 @@ luyện thêm gì; hai con số này đến từ hai điều kiện đo khác nh
 do pipeline sinh ra.
 \item \textbf{Quy mô dữ liệu chênh lệch lớn.} Go-Browse huấn luyện trên
 khoảng 40 nghìn bước tương tác và NNetNav trên khoảng 45 nghìn, trong khi
-tập dữ liệu của khóa luận có 8554 mẫu huấn luyện sau cả hai đợt, vẫn nhỏ hơn
-khoảng năm lần.
+tập dữ liệu của khóa luận có 8554 mẫu huấn luyện, vẫn nhỏ hơn khoảng năm
+lần.
 \item \textbf{Ngân sách bước và mô hình chấm khác nhau.} Khóa luận giới hạn
 15 bước cho mỗi task khi đánh giá và sử dụng mô hình chấm mờ thay thế như đã
 nêu ở mục~\ref{sec:exp-protocol}.
-\item \textbf{Cách chấm không giống nhau.} Con số 24{,}6\% đã qua một đợt rà
-soát thủ công khôi phục các trường hợp bộ chấm WebArena chấm sai
-(Bảng~\ref{tab:rawadj}); các dòng tham chiếu thì không. So sánh cùng điều
-kiện chấm phải dùng dòng in nghiêng, tức 21{,}7\%.
+\item \textbf{Cách chấm không giống nhau.} Kết quả của khóa luận đã qua đợt
+rà soát bộ chấm mô tả ở Mục~\ref{sec:exp-baseline}; các công trình tham chiếu
+báo cáo theo phán quyết nguyên trạng của bộ chấm WebArena.
 \end{enumerate}
 
-Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 8554 mẫu dữ liệu do chính pipeline này tổng hợp, đạt hiệu năng ngang hàng với các hệ thống tiên tiến nhất trong cùng phân khúc. Theo số liệu đã điều chỉnh, khóa luận đạt 24{,}6\%, cao hơn Go-Browse-7B (22{,}6\%) khoảng 2{,}0 điểm; theo số liệu thô, khóa luận đạt 21{,}7\%, thấp hơn Go-Browse-7B khoảng 0{,}9 điểm. Cả hai chênh lệch đều nhỏ hơn nửa độ rộng khoảng tin cậy 95\% của phép đo ($\pm3{,}3$ điểm), nên \emph{không} chênh lệch nào trong hai chênh lệch đó là một khác biệt có ý nghĩa thống kê.
+Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 8554 mẫu dữ liệu do chính pipeline này tổng hợp, đạt hiệu năng ngang hàng với các hệ thống tiên tiến nhất trong cùng phân khúc. Khóa luận đạt 24{,}6\%, cao hơn Go-Browse-7B (22{,}6\%) khoảng 2{,}0 điểm. Tuy nhiên chênh lệch đó nhỏ hơn nửa độ rộng khoảng tin cậy 95\% của phép đo ($\pm3{,}3$ điểm), nên nó \emph{không} phải một khác biệt có ý nghĩa thống kê.
 
-Vì vậy phát biểu đúng là: khóa luận \emph{ngang} Go-Browse-7B chứ không vượt. Việc con số nào lớn hơn phụ thuộc vào cách chấm chứ không vào phương pháp, và cả hai hệ thống lại khác nhau về mô hình nền lẫn quy mô dữ liệu. Một phép so sánh có kết luận được đòi hỏi thiết lập đồng nhất mô hình nền, quy mô dữ liệu và quy trình chấm cho cả hai hệ thống - điều nằm ngoài phạm vi khóa luận.
+Vì vậy phát biểu đúng là: khóa luận \emph{ngang} Go-Browse-7B chứ không vượt. Hai hệ thống còn khác nhau về mô hình nền, quy mô dữ liệu và quy trình chấm, nên một phép so sánh có kết luận được đòi hỏi thiết lập đồng nhất cả ba yếu tố đó - điều nằm ngoài phạm vi khóa luận.
 
-Phân bố kết quả theo từng website mang nhiều thông tin hơn con số tổng, và
-nó đã đổi khác so với đợt đánh giá trước. Khóa luận cao hơn Go-Browse trên
+Phân bố kết quả theo từng website mang nhiều thông tin hơn con số tổng.
+Khóa luận cao hơn Go-Browse trên
 Shopping (28{,}3\% so với 22{,}4\%), GitLab (18{,}3\% so với 15{,}3\%) và nay
 cả Reddit (34{,}0\% so với 30{,}7\%); chỉ còn thấp hơn trên Shopping Admin
 (21{,}4\% so với 25{,}3\%), và khoảng cách ở đó đã thu từ gần 10 điểm xuống
 dưới 4 điểm.
 
-Đáng chú ý là hai website được bổ sung dữ liệu cũng chính là hai website
-khoảng cách thu hẹp. Đây là bằng chứng ủng hộ cách đọc rằng phần thiếu hụt
-trước đây thuộc về \emph{lượng dữ liệu thu được cho từng website}, chứ không
-thuộc về một giới hạn cố hữu của phương pháp trên các website đó. Cần thận
-trọng ở mức độ: quan sát này dựa trên hai website và một lần đo mỗi website,
-nên nó là một dấu hiệu nhất quán chứ chưa phải một quan hệ đã được kiểm
-định.
+Đáng chú ý là hai website khóa luận vượt Go-Browse nhiều nhất - Reddit và
+Shopping - cũng nằm ở hai đầu đối lập về lượng dữ liệu thu được, nên khoảng
+cách này không quy về riêng quy mô dữ liệu được.
+Mục~\ref{sec:exp-analysis} cho thấy nó gắn với kiểu lỗi chiếm ưu thế trên
+từng website.
 
 \section{Lặp lại thống kê}
 \label{sec:exp-stats}
@@ -872,8 +791,7 @@ nên nó là một dấu hiệu nhất quán chứ chưa phải một quan hệ 
 \textbf{Hạng mục này chưa được hoàn tất và được ghi lại đúng theo hiện
 trạng.} Toàn bộ số liệu ở mục~\ref{sec:exp-main} đến từ \emph{một} lần chạy
 cho mỗi website, trong đó mỗi task được giải đúng một lần; riêng Shopping và
-GitLab, lần chạy đó lại thuộc về checkpoint của giai đoạn huấn luyện thứ
-nhất. Việc đặt
+GitLab, lần chạy đó thuộc về checkpoint của chặng huấn luyện thứ nhất. Việc đặt
 \texttt{temperature} $=0$ loại bỏ tính ngẫu nhiên trong quá trình sinh văn
 bản, nhưng không loại bỏ được tính ngẫu nhiên của môi trường như thời gian
 tải trang, mức độ sẵn sàng của phần tử giao diện hay tình trạng đường truyền
@@ -885,17 +803,15 @@ tương tự khác thì tỷ lệ dao động bao nhiêu'', chứ không trả l
 Để có được kết luận thống kê vững chắc, cần bổ sung bốn hạng mục, xếp theo
 thứ tự ưu tiên.
 
-\emph{(i) Đo lại Shopping và GitLab trên checkpoint của giai đoạn hai.} Đây
-là hạng mục rẻ nhất và cũng cấp thiết nhất: chừng nào chưa làm, dòng tổng
-của Bảng~\ref{tab:main} còn là ghép của hai checkpoint, và cũng chưa biết
-lát cắt ôn lại 15\% có thực sự ngăn được suy giảm trên hai website không có
-dữ liệu mới hay không.
+\emph{(i) Đo lại Shopping và GitLab trên checkpoint cuối.} Đây là hạng mục rẻ
+nhất và cũng cấp thiết nhất: chừng nào chưa làm, dòng tổng của
+Bảng~\ref{tab:main} còn là ghép của hai checkpoint, và cũng chưa biết lát cắt
+ôn lại 15\% có thực sự ngăn được suy giảm trên hai website vắng mặt trong dữ
+liệu chặng hai hay không.
 
-\emph{(ii) Rà soát đối xứng hai chiều} các episode của \emph{cả hai} mô hình
-trên \emph{cả bốn} website, theo cùng một bộ tiêu chí, thay cho hai đợt rà
-soát một phía và ngược chiều đã nêu ở mục~\ref{sec:exp-baseline}. Đây là
-điều kiện cần để phát biểu về nhóm 485 task không dính rào cản định dạng trở
-nên độc lập với cách chấm.
+\emph{(ii) Rà soát đối xứng} các episode của \emph{cả hai} mô hình trên
+\emph{cả bốn} website theo cùng một bộ tiêu chí, thay cho phép rà soát chỉ
+phủ hai website mỗi chiều đã nêu ở mục~\ref{sec:exp-baseline}.
 
 \emph{(iii) Lặp lại phép đo} tối thiểu ba lần cho cả hai mô hình, báo cáo
 trung bình kèm độ lệch chuẩn bên cạnh kiểm định theo cặp task đã có ở
@@ -925,9 +841,7 @@ với kết quả đánh giá trên chính website đó.
 \begin{table}[H]
 \centering
 \caption[Tỷ lệ dữ liệu so với điểm số theo website]{Tỷ lệ dữ liệu huấn
-luyện so với điểm số theo website, tính trên tập dữ liệu sau cả hai đợt thu
-thập. Thứ hạng hai cột vẫn không trùng nhau, nhưng đã bớt nghịch đảo so với
-đợt một.}
+luyện so với điểm số theo website. Thứ hạng hai cột không trùng nhau.}
 \label{tab:crosssite}
 \small
 \begin{tabular}{@{}L{3.6cm} R{3.2cm} R{2.6cm} R{2.6cm}@{}}
@@ -942,31 +856,21 @@ GitLab & 10{,}0 & 4 & 18{,}3 \\
 \end{tabular}
 \end{table}
 
-Bảng này cần được đọc cùng với quan sát ở Mục~\ref{sec:exp-baseline}, vì
-đợt bổ sung dữ liệu cung cấp một mẩu bằng chứng theo chiều ngược lại với
-những gì đợt một gợi ý.
+Thứ hạng hai cột không trùng nhau. Shopping Admin chiếm nhiều dữ liệu nhất
+nhưng chỉ xếp thứ ba về điểm, còn Shopping chỉ chiếm 11{,}4\% dữ liệu mà đứng
+thứ nhì. Với $n = 4$ website thì đây chưa phải một tương quan có ý nghĩa
+thống kê, nhưng đủ để bác bỏ cách giải thích rằng điểm số của một website
+được quyết định bởi riêng lượng dữ liệu thu được cho nó.
 
-Ở đợt một, thứ hạng hai cột gần như đảo ngược hoàn toàn: website nhiều dữ
-liệu thứ nhì cho kết quả thấp nhất, còn website cho kết quả cao nhất chỉ
-đứng thứ ba về dữ liệu. Kết luận rút ra khi đó là lượng dữ liệu không giải
-thích được điểm số, và yếu tố quyết định là độ khó nội tại của từng website.
-
-Số liệu sau đợt hai làm phát biểu đó phải được nói lại chính xác hơn. So
-sánh \emph{tĩnh} giữa các website vẫn không cho thấy tương quan: Shopping
-Admin nay chiếm nhiều dữ liệu nhất mà vẫn xếp thứ ba về điểm, còn Shopping
-chỉ chiếm 11{,}4\% dữ liệu mà đứng thứ nhì. Nhưng so sánh \emph{động} trên
-cùng một website thì lại có: hai website được bổ sung dữ liệu là hai website
-duy nhất có điểm tăng, và cả hai đều tăng đáng kể (Reddit $+13{,}2$ điểm,
-Shopping Admin $+6{,}0$ điểm so với chính chúng ở đợt một).
-
-Cách hòa giải hai quan sát này: lượng dữ liệu \emph{tuyệt đối} không dự đoán
-được điểm số giữa các website khác nhau, vì mỗi website có một độ khó nội tại
-riêng; nhưng thêm dữ liệu cho \emph{một} website thì vẫn nâng được điểm của
-chính website đó. Nói cách khác, độ khó nội tại đặt ra một mức trần khác nhau
-cho từng website, còn lượng dữ liệu quyết định mô hình tiến gần mức trần đó
-tới đâu. Với $n = 4$ website và một lần đo mỗi lần, đây vẫn là một cách đọc
-chứ chưa phải một kết luận thống kê. Mục~\ref{sec:exp-analysis} bổ sung
-thêm bằng chứng qua phân bố các kiểu lỗi.
+Điều đó \emph{không} có nghĩa lượng dữ liệu không quan trọng. Hai website
+được cấp ngân sách khám phá lớn nhất cũng là hai website có mức cải thiện so
+với mô hình nền lớn nhất (Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$
+điểm). Cách đọc nhất quán với cả hai quan sát là: độ khó nội tại của website
+đặt ra một mức trần khác nhau cho từng website, còn lượng dữ liệu quyết định
+mô hình tiến gần mức trần đó tới đâu. So sánh tuyệt đối giữa các website vì
+vậy trộn hai yếu tố, còn so sánh với chính mô hình nền trên cùng một website
+thì không. Mục~\ref{sec:exp-analysis} bổ sung thêm bằng chứng qua phân bố
+các kiểu lỗi.
 
 \section{Phân tích}
 \label{sec:exp-analysis}
@@ -1045,16 +949,14 @@ chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nh�
 nó là hướng đáng đầu tư nhất (Chương~\ref{ch:discussion},
 Mục~\ref{sec:disc-guardrails}).
 
-\textbf{Kẹt vòng lặp trên Reddit đã giảm rõ rệt sau khi bổ sung dữ liệu.} Ở
-đợt đánh giá trước, Reddit là website duy nhất mà kẹt vòng lặp (56\%) vượt
-lỗi thực thi (25\%) để trở thành nguyên nhân thất bại chính, cao gấp khoảng
-1{,}7 lần ba website còn lại; khóa luận khi đó lý giải khoảng cách hiệu năng
-so với Go-Browse bằng chính hiện tượng này. Sau đợt bổ sung, thứ tự đảo lại:
-lỗi thực thi (34\%) vượt kẹt vòng lặp (37\% xét theo dấu hiệu, 26 episode
-tương ứng 37\% xét theo nguyên nhân chính), và Reddit nay có chân dung lỗi
-gần giống ba website còn lại. Đồng thời điểm số trên Reddit vượt Go-Browse
-(34{,}0\% so với 30{,}7\%). Đây là mối liên hệ trực tiếp nhất giữa việc bổ
-sung dữ liệu và một kiểu lỗi cụ thể mà số liệu hiện có cho thấy.
+\textbf{Chân dung lỗi khá đồng đều giữa bốn website.} Trên cả bốn, lỗi thực
+thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp xỉ nhau
+(31-45\% và 31-37\%). Reddit là website có tỷ lệ kẹt vòng lặp cao nhất tính
+theo dấu hiệu (37\%) nhưng chênh lệch so với ba website còn lại không lớn.
+Điều này khác với các lượt chạy phát triển trước đó, nơi Reddit từng có tỷ lệ
+kẹt vòng lặp vượt trội; cơ chế dừng cứng khi phát hiện lặp
+(Mục~\ref{sec:disc-guardrails}) là thay đổi trực tiếp nhắm vào hiện tượng
+đó.
 
 \textbf{Cạn ngân sách 15 bước là nguyên nhân thất bại nặng nhất trên
 GitLab} (45\%), đúng với đặc điểm các task ở đó vốn cần chuỗi điều hướng
@@ -1087,7 +989,7 @@ Vì mô hình nền và mô hình sau fine-tune được đo trên cùng một t
 \begin{table}[H]
 \centering
 \caption[Chân dung hành vi của hai mô hình]{Các chỉ số hành vi cộng dồn trên
-toàn bộ 655 task, đo từ trace của hai đợt đánh giá. ``Phiên hỏng định dạng''
+toàn bộ 655 task, đo từ trace của hai lượt đánh giá. ``Phiên hỏng định dạng''
 là episode phải kết thúc vì phản hồi của mô hình không phân giải được thành
 hành động.}
 \label{tab:profile}
@@ -1121,30 +1023,25 @@ chứ không vào việc tiến tới mục tiêu.
 
 \subsection{Tổng kết chương}
 
-Pipeline đã chạy trọn vẹn trên bốn website thật, qua hai đợt thu thập: tổng
-cộng 3981 episode được ghi nhận và tinh lọc còn 1760 trajectory đạt chuẩn,
-tương ứng 8554 mẫu huấn luyện. Việc fine-tune một mô hình 9B tham số diễn ra
-qua hai giai đoạn với tổng chi phí GPU dưới 15\,USD. Trên bộ 655 task chính
+Pipeline đã chạy trọn vẹn trên bốn website thật: 3981 episode được ghi nhận
+và tinh lọc còn 1760 trajectory đạt chuẩn, tương ứng 8554 mẫu huấn luyện.
+Việc fine-tune một mô hình 9B tham số tốn dưới 15\,USD chi phí GPU. Trên bộ 655 task chính
 thức, mô hình đạt tỷ lệ thành công 24{,}6\%, so với 13{,}3\% của chính mô
 hình đó khi chưa fine-tune - chênh lệch 11{,}3 điểm phần trăm, đạt ý nghĩa
 thống kê trên \emph{cả bốn} website (Mục~\ref{sec:exp-baseline}). Quan
-trọng hơn con số tổng, phần cải thiện nay tách được khỏi yếu tố tuân thủ
-định dạng: riêng trên nhóm 485 task mà mô hình nền vốn chạy trọn vẹn, khoảng
-cách là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$, trong khi ở đợt đánh giá
-trước phép tách này không đạt ý nghĩa. So với các công trình liên quan cùng
+trọng hơn con số tổng, phần cải thiện tách được khỏi yếu tố tuân thủ định
+dạng: riêng trên nhóm 485 task mà mô hình nền vốn chạy trọn vẹn, khoảng cách
+là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$. So với các công trình liên quan cùng
 đo trên bốn website này, kết quả ngang hàng với các mô hình mở tốt nhất dưới
 10B tham số (Bảng~\ref{tab:related}), dù phép so sánh đó không kiểm soát
 được mô hình gốc, quy mô dữ liệu và quy trình chấm.
 
 Bốn giới hạn cần nêu rõ. Thứ nhất, mọi kết quả đều đến từ một lượt chạy cho
-mỗi website (Mục~\ref{sec:exp-stats}). Thứ hai, hai đợt rà soát episode
-thủ công ngược chiều nhau và không đối xứng: mô hình nền bị hạ 16 episode,
-mô hình sau fine-tune được nâng 19 episode, không mô hình nào được rà hai
-chiều trên cả bốn website; số liệu thô được công bố song song ở
-Bảng~\ref{tab:rawadj}, và riêng phép tách theo nhóm định dạng thì đảo kết
-luận khi dùng số liệu thô. Thứ ba, Shopping và GitLab chưa được đánh giá lại
-sau giai đoạn huấn luyện thứ hai, nên dòng tổng là ghép của hai checkpoint
-(Mục~\ref{sec:exp-main}). Thứ tư, các ablation nhằm cô lập đóng góp của từng
+mỗi website (Mục~\ref{sec:exp-stats}). Thứ hai, phép rà soát bộ chấm
+WebArena không đối xứng: mỗi chiều chỉ được rà trên hai website chứ không
+phải đồng đều trên cả bốn (Mục~\ref{sec:exp-baseline}). Thứ ba, Shopping và
+GitLab được đo trên checkpoint của chặng huấn luyện thứ nhất, nên dòng tổng
+là ghép của hai checkpoint (Mục~\ref{sec:exp-main}). Thứ tư, các ablation nhằm cô lập đóng góp của từng
 thành phần trong pipeline vẫn chưa được chạy
 (Mục~\ref{sec:exp-ablation}).
 

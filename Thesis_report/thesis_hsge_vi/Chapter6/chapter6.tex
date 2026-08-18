@@ -40,14 +40,14 @@ lẫn website thật qua trình duyệt.
 Khóa luận xây dựng đầy đủ pipeline tinh lọc dữ liệu gồm các cổng chất lượng
 chấm lại từng episode ngay trong vòng lặp thu thập và trình dựng dataset theo
 nguyên tắc prompt parity. Từ đó thu được tập dữ liệu fine-tuning được xây dựng hoàn
-toàn tự động trên bốn website WebArena tự triển khai, qua hai đợt thu thập:
-1760 trajectory và 8554 mẫu huấn luyện, sau khi các cổng chất lượng đã loại
-hàng trăm lần tự tuyên bố thành công sai và các trajectory không có hành động
-hữu hiệu nào (Mục~\ref{sec:exp-data}, \ref{sec:exp-data-round2}).
+toàn tự động trên bốn website WebArena tự triển khai: 1760 trajectory và
+8554 mẫu huấn luyện, sau khi các cổng chất lượng đã loại 801 lần tự tuyên bố
+thành công sai và các trajectory không có hành động hữu hiệu nào
+(Mục~\ref{sec:exp-data}).
 
 \item \textbf{Mô hình web agent đã fine-tune.}
 Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập,
-qua hai giai đoạn tương ứng hai đợt thu thập, rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
+qua hai chặng huấn luyện, rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
 huấn luyện, nên hai giai đoạn dùng chung một dạng đầu vào và đầu ra.
 
 \item \textbf{Đánh giá trên benchmark WebArena.}
@@ -110,7 +110,7 @@ O1 &
 Thu thập trajectory tự động, bền vững và an toàn từ website không nhãn &
 Hoàn thành. Hệ thống hiện thực cơ chế frontier hai tầng kết hợp giới hạn
 template, chiến lược duyệt web fail-soft và chế độ an toàn fail-closed;
-hai đợt thu thập trên website thật, tổng cộng 455 node và 3981
+quá trình khám phá trên website thật duyệt 455 node và ghi nhận 3981
 episode; can thiệp tay duy nhất là năm lần nối lại sau khi tài khoản API hết
 hạn mức, mỗi lần đều chạy tiếp từ điểm kiểm tra của node cuối
 (Mục~\ref{sec:method-exploration}, \ref{sec:exp-data}). \\
@@ -145,7 +145,7 @@ Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chí
 Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
 655 task chính thức của cả bốn website, đạt 24{,}6\% so với 13{,}3\% của mô
 hình nền đo trong cùng điều kiện. Phần còn thiếu là đo lại Shopping và GitLab
-trên checkpoint giai đoạn hai, một đợt rà soát chấm điểm đối xứng, các phép
+trên checkpoint cuối, một đợt rà soát chấm điểm đối xứng, các phép
 lặp thống kê và các ablation tách bạch đóng góp của từng thành phần
 (Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
 
@@ -173,11 +173,11 @@ gồm bốn nhóm nội dung.
     dữ liệu, kèm tệp cấu hình của bốn đợt khám phá đã báo cáo ở
     Chương~\ref{ch:experiments}.
   \item \textbf{Tập dữ liệu huấn luyện}: thư mục \texttt{training\_data/}
-    chứa 8554 mẫu train và 453 mẫu validation của cả hai đợt thu thập, cùng
-    bản tách theo từng website và bản chỉ gồm phần tăng thêm của đợt hai, ở
-    đúng định dạng đã dùng để fine-tune (Bảng~\ref{tab:dataset}).
+    chứa 8554 mẫu train và 453 mẫu validation, cùng bản tách theo từng
+    website, ở đúng định dạng đã dùng để fine-tune
+    (Bảng~\ref{tab:dataset}).
   \item \textbf{Kết quả đánh giá thô}: thư mục \texttt{outputs/eval/} chứa
-    kết quả từng task của cả hai đợt đo - mô hình nền và mô hình sau
+    kết quả từng task của cả hai lượt đo - mô hình nền và mô hình sau
     fine-tune - trên đủ 655 task, đủ để người đọc tự tính lại mọi con số ở
     Bảng~\ref{tab:main} và Bảng~\ref{tab:baseline}, bao gồm cả phép điều
     chỉnh thủ công đã công bố ở Mục~\ref{sec:exp-baseline}.
