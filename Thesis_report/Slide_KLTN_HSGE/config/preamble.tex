@@ -16,15 +16,27 @@
 \usepackage{xcolor}
 \graphicspath{{images/}}
 
-% No navigation symbols. Antibes stacks a section bar and a subsection bar in
-% the headline; this deck has no subsections, so keep only the section bar and
-% give the reclaimed vertical space back to the content.
+% No navigation symbols. Antibes stacks a section bar over a row of per-frame
+% dots and a subsection bar; this deck has no subsections, so keep only the
+% section bar (mini frames emptied so nothing gets clipped in it) and give the
+% reclaimed vertical space back to the content.
 \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{mini frames}{}
 \setbeamertemplate{headline}{%
-  \begin{beamercolorbox}[ht=2.6ex,dp=1.2ex]{section in head/foot}
+  \begin{beamercolorbox}[ht=2.6ex,dp=1.3ex]{section in head/foot}
     \insertnavigation{\paperwidth}
   \end{beamercolorbox}
 }
+
+% A thin footline: reserves a bottom margin (Antibes has none, so body text ran
+% to the paper edge) and gives the committee a slide number to refer to in Q&A.
+\setbeamertemplate{footline}{%
+  \hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.0ex,dp=0.9ex,leftskip=1em,rightskip=1em]{section in head/foot}%
+    \usebeamerfont{footline}\scriptsize\insertshortauthor\hfill
+    \insertframenumber\,/\,\inserttotalframenumber%
+  \end{beamercolorbox}}%
+}
+
 \setbeamertemplate{caption}[numbered]
 \setbeamercolor{block title}{bg=structure.fg!15,fg=black}
 \setbeamercolor{block body}{bg=structure.fg!5}

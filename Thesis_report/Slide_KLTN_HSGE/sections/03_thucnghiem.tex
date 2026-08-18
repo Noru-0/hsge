@@ -53,7 +53,7 @@
       \textbf{Phễu khám phá} (tổng của bốn đợt, mỗi đợt $\approx$21 giờ)
       \vspace{0.1cm}
 
-      \begin{tabular}{@{}L{5.1cm} R{1.6cm}@{}}
+      \begin{tabular}{@{}L{4.9cm} R{1.6cm}@{}}
         \toprule
         Node đã duyệt (31 trùng nội dung) & \textbf{258} \\
         Episode ghi nhận & \textbf{2178} \\
@@ -96,8 +96,9 @@
 \begin{frame}{CH2 --- Kết quả chính trên 655 task chính thức}
   \centering
   \footnotesize
+  \setlength{\tabcolsep}{4pt}
   \begin{table}
-    \begin{tabular}{@{}L{3.2cm} R{2.4cm} R{2.6cm} R{2.0cm} R{2.4cm}@{}}
+    \begin{tabular}{@{}L{2.6cm} R{2.9cm} R{3.0cm} R{1.9cm} R{2.3cm}@{}}
       \toprule
       \textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
       \textbf{Chênh lệch} & \textbf{$p$ (McNemar)} \\
@@ -143,12 +144,12 @@
                 \textbf{$p = 0{,}120$ --- chưa đạt ý nghĩa}.
         \end{itemize}
         $\Rightarrow$ \textbf{35 trong 49} task tăng thêm thuộc về việc học
-        \emph{tuân thủ giao diện hành động}. Phần cải thiện về năng lực thao
-        tác web tuy cùng chiều nhưng chưa tách khỏi nhiễu ở quy mô mẫu hiện có.
+        \emph{tuân thủ giao diện hành động}; phần còn lại tuy cùng chiều nhưng
+        chưa tách khỏi nhiễu.
       \end{alertblock}
-      {\scriptsize Đã công bố kèm một điều chỉnh thủ công phía mô hình nền (loại
-      thành công giả trên Shopping/Admin); số liệu thô 103/655 $=$ 15,7\% cũng
-      được báo cáo nguyên trạng --- kết luận tổng thể không đổi.}
+      {\scriptsize Kèm một điều chỉnh thủ công phía mô hình nền (loại thành công
+      giả trên Shopping/Admin); số liệu thô 103/655 $=$ 15,7\% cũng được báo cáo
+      nguyên trạng --- kết luận không đổi.}
     \end{column}
     \begin{column}{0.48\textwidth}
       \scriptsize
@@ -170,14 +171,12 @@
           \bottomrule
         \end{tabular}
       \end{table}
-      \vspace{0.1cm}
+      \vspace{0.05cm}
       \footnotesize
       Cao hơn NNetNav-7B, tiệm cận GPT-4o-mini, thấp hơn Go-Browse-7B 1,8 điểm ---
-      \emph{với tập dữ liệu nhỏ hơn khoảng một bậc độ lớn}.
-
-      \vspace{0.1cm}
-      Đây \textbf{không} phải so sánh có kiểm soát: khác mô hình gốc, khác quy mô
-      dữ liệu, khác ngân sách bước và bộ chấm.
+      \emph{với tập dữ liệu nhỏ hơn khoảng một bậc độ lớn}. Nhưng đây \textbf{không}
+      phải so sánh có kiểm soát: khác mô hình gốc, khác quy mô dữ liệu, khác ngân
+      sách bước.
     \end{column}
   \end{columns}
 \end{frame}

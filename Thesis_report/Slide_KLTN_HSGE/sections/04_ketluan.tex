@@ -8,14 +8,13 @@
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \footnotesize
-      \textbf{Đã đạt được.} Một pipeline đi trọn vẹn từ \emph{một website
-      không nhãn} đến \emph{một SLM được đánh giá chính thức}, không dùng
-      bất kỳ nhãn nào do con người tạo:
+      \textbf{Đã đạt được.} Một pipeline đi trọn từ \emph{website không nhãn}
+      đến \emph{SLM được đánh giá chính thức}, không dùng nhãn người:
       \begin{itemize}
         \item 258 node $\rightarrow$ 2178 episode $\rightarrow$ 59 skill
               $\rightarrow$ 25 operator $\rightarrow$ 66 semantic task.
         \item 1029 trajectory $\rightarrow$ 4554 mẫu, qua hai cổng chất lượng
-              tự động và nguyên tắc prompt parity.
+              và nguyên tắc prompt parity.
         \item \kw{13,3\% $\rightarrow$ 20,8\%} trên 655 task WebArena chính
               thức ($p<0{,}001$), với 59,18 USD cho toàn chu trình.
         \item Bốn hiện vật bàn giao: mã nguồn, dataset, checkpoint, báo cáo
@@ -27,7 +26,7 @@
       \textbf{Hạn chế, nêu nguyên trạng.}
       \begin{itemize}
         \item Phần lớn mức tăng thuộc về tuân thủ định dạng; trên nhóm task
-              mô hình nền chạy sạch thì $p = 0{,}120$.
+              nền chạy sạch thì $p = 0{,}120$.
         \item Mỗi ô số liệu là \emph{một} lần chạy --- chưa lặp thống kê.
         \item Ablation \emph{đồ thị so với khám phá phẳng} --- phép đo duy nhất
               chứng minh trực tiếp giá trị của đồ thị --- chưa chạy.
@@ -37,11 +36,10 @@
       \vspace{0.1cm}
       \textbf{Hướng phát triển.} Chạy nốt các phép đo còn thiếu; bổ sung trajectory
       \emph{phục hồi sau lỗi}; khai thác tín hiệu thất bại bằng RL/preference;
-      chưng cất xuống 1--3B; dùng đồ thị skill ngay khi suy luận.
+      chưng cất xuống 1--3B.
     \end{column}
   \end{columns}
 
-  \vspace{0.05cm}
   \centering
   \footnotesize\itshape Xin cảm ơn Hội đồng --- nhóm sẵn sàng lắng nghe câu hỏi và góp ý.
 \end{frame}

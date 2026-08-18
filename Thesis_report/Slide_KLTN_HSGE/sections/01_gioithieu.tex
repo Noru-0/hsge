@@ -12,18 +12,15 @@
       nhưng đang phụ thuộc \textbf{LLM lớn, độc quyền}: tốn chi phí, độ trễ
       cao, dữ liệu phải rời khỏi hệ thống.
 
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       \textbf{SLM (${<}10$B)} chạy cục bộ, rẻ, kiểm soát được trọng số ---
       nhưng yếu nếu chưa chuyên biệt hóa.
 
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       Chuyên biệt hóa cần fine-tune, mà fine-tune vướng \kw{nút thắt dữ liệu}:
       mỗi website mới cần một tập trajectory gán nhãn gần như làm lại từ đầu.
-
-      \vspace{0.15cm}
-      {\footnotesize AutoWebGLM: \textbf{20 người gán nhãn} $\times$
-      \textbf{1 tháng}. Synatra: dữ liệu tổng hợp chỉ tốn
-      \textbf{$\approx$3\%} chi phí mỗi mẫu.}
+      {\footnotesize\ (AutoWebGLM: \textbf{20 người} $\times$ \textbf{1 tháng};
+      Synatra: dữ liệu tổng hợp chỉ tốn \textbf{$\approx$3\%} chi phí mỗi mẫu.)}
     \end{column}
     \begin{column}{0.46\textwidth}
       \begin{block}{Phát biểu bài toán}
@@ -34,16 +31,16 @@
         do con người gán nhãn.
       \end{block}
 
-      \vspace{-0.1cm}
-      {\footnotesize\textbf{Năm thách thức}}
       \vspace{-0.15cm}
-      \begin{enumerate}\scriptsize
+      {\footnotesize\textbf{Năm thách thức}}
+      \vspace{-0.2cm}
+      \begin{enumerate}\scriptsize\setlength{\itemsep}{0pt}
         \item Khám phá website thật: trang trùng cấu trúc, trang lỗi, trạng
               thái dùng chung.
         \item Sinh task \emph{có ý nghĩa} thay vì duyệt ngẫu nhiên.
         \item Kiểm chứng: agent vừa ra đề vừa tự chấm.
         \item Ghép chuỗi task dài hạn vượt khỏi một trang đơn lẻ.
-        \item Đồng nhất prompt huấn luyện --- serving --- đánh giá.
+        \item Đồng nhất prompt huấn luyện / serving / đánh giá.
       \end{enumerate}
     \end{column}
   \end{columns}

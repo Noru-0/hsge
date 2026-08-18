@@ -6,6 +6,20 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-18
 
+- **14:32** — `Thesis_report/Slide_KLTN_HSGE/config/preamble.tex` + 4 file
+  `sections/*.tex` — **sửa tràn chữ ở đầu và cuối slide**. Hai nguyên nhân
+  riêng biệt: (1) headline tự định nghĩa cao 2,6ex cắt mất hàng chấm mini-frame
+  mà `\insertnavigation` vẫn vẽ dưới tên section → thêm
+  `\setbeamertemplate{mini frames}{}`; (2) Antibes **không có footline**, nên
+  thân slide chạy sát mép giấy → thêm footline mỏng (tên nhóm + `n/15`, hữu ích
+  khi Hội đồng hỏi theo số slide) để chừa lề dưới, rồi cắt bớt chữ ở 6 frame bị
+  đội chiều cao. Cũng sửa hai bảng tràn ngang (bảng kết quả chính đổi
+  `\tabcolsep` 6pt→4pt cho dòng Tổng không xuống dòng). Kết quả: **0 cảnh báo
+  overfull**, 15 trang, đã soi lại dải trên/dưới của cả 15 trang bằng ảnh render.
+  Ghi nhận cách làm: `str.replace` trên file .tex im lặng khi pattern lệch thụt
+  đầu dòng — phải `assert` chuỗi sau khi thay, một loạt sửa bảng trước đó đã
+  no-op mà không báo lỗi.
+
 - **14:04** — `Thesis_report/Slide_KLTN_HSGE/` (new) — **bộ slide bảo vệ KLTN
   (beamer, tiếng Việt, 15 slide)** dựng theo cấu trúc của deck mẫu
   `Slide_WebAgent_SLM` (`main.tex` + `config/{preamble,metadata}.tex` +

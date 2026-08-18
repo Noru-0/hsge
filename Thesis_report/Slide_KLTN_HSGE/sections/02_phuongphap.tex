@@ -6,7 +6,7 @@
 
 \begin{frame}{Tổng quan pipeline HSGE}
   \begin{center}
-    \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_pipeline.pdf}
+    \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{fig_pipeline.pdf}
   \end{center}
   \figcap{Vòng lặp khép kín: khám phá $\rightarrow$ phát hiện \textbf{skill}
   $\rightarrow$ nâng thành \textbf{operator} $\rightarrow$ ghép chuỗi thành
@@ -16,7 +16,7 @@
 \begin{frame}{Biểu diễn: đồ thị hai tầng}
   \begin{columns}[c]
     \begin{column}{0.62\textwidth}
-      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{fig_twolevel.pdf}
+      \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{fig_twolevel.pdf}
     \end{column}
     \begin{column}{0.36\textwidth}
       \footnotesize
@@ -25,17 +25,16 @@
 
       \vspace{0.25cm}
       \textbf{Tầng cao} --- skill dưới dạng \emph{option} $\langle I,\pi,\beta\rangle$,
-      được nâng thành \textbf{operator} mang \emph{precondition} và \emph{effect}
-      phát biểu bằng ngôn ngữ tự nhiên đã chuẩn hóa.
+      nâng thành \textbf{operator} mang \emph{precondition} và \emph{effect} phát
+      biểu bằng ngôn ngữ tự nhiên đã chuẩn hóa.
 
       \vspace{0.25cm}
       Hai operator nối được với nhau khi \kw{effect} của cái trước
-      \kw{thỏa precondition} của cái sau --- đây chính là cạnh sinh ra
-      task dài hạn.
+      \kw{thỏa precondition} của cái sau --- cạnh này sinh ra task dài hạn.
 
       \vspace{0.25cm}
-      \textit{Hệ quả:} tri thức khám phá được lưu ở dạng
-      \emph{tái sử dụng và tái tổ hợp được}, không phải một đống trajectory rời rạc.
+      \textit{Hệ quả:} tri thức khám phá được lưu ở dạng \emph{tái sử dụng và
+      tái tổ hợp được}, không phải một đống trajectory rời rạc.
     \end{column}
   \end{columns}
 \end{frame}
@@ -49,9 +48,9 @@
       \footnotesize
       \textbf{Tier 0} --- URL solver đã thực sự đi tới: vào thẳng hàng đợi.
 
-      \textbf{Tier 1} --- liên kết khai thác từ DOM: phải qua
-      \emph{giới hạn theo khuôn dạng URL} ($\le 3$ trang/khuôn dạng), nên
-      hàng nghìn trang sản phẩm hay bài đăng không thể làm ngập frontier.
+      \textbf{Tier 1} --- liên kết khai thác từ DOM: phải qua \emph{giới hạn theo
+      khuôn dạng URL} ($\le 3$ trang/khuôn dạng), nên hàng nghìn trang sản phẩm
+      hay bài đăng không làm ngập frontier.
 
       \vspace{0.2cm}
       Ưu tiên: \emph{tầng} $\rightarrow$ \emph{độ mới của khuôn dạng}
@@ -60,8 +59,7 @@
 
       \vspace{0.2cm}
       \textbf{Solver} có chốt chặn cấu trúc thay vì chỉ nhắc bằng prompt:
-      cảnh báo rồi \emph{dừng cứng} khi lặp cùng một đích mà trang không đổi;
-      \texttt{report\_infeasible} là kết cục hợp lệ.
+      \emph{dừng cứng} khi lặp cùng một đích mà trang không đổi.
     \end{column}
   \end{columns}
 \end{frame}
