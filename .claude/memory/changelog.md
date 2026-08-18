@@ -6,6 +6,19 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-18
 
+- **15:31** — `scripts/build_merged_dataset.py` (new),
+  `training_data_merged_v1/{train,val,README}` (new) — **full-union dataset**:
+  `training_data/` (4,288/266, what checkpoint-536 trained on) +
+  `training_data_continue_v1/`'s increment (reddit+shopping_admin,
+  replay rows excluded to avoid double-counting — verified every replay
+  trajectory_id is an exact match back to `training_data/`) = **8,554 train /
+  453 val**. reddit 1,279→3,135 examples, shopping_admin 1,175→3,585;
+  shopping/gitlab unchanged (979/855) since not re-collected this round.
+  Both source directories (`training_data/`, `training_data_continue_v1/`)
+  left untouched — this is an additional, separate pair for a from-scratch
+  4-domain run, as an alternative to continue-finetuning off
+  `training_data_continue_v1/` alone.
+
 - **15:10** — `Thesis_report/Slide_KLTN_HSGE/**` — **chỉnh deck theo hướng dẫn
   trình bày của thầy Vũ** (`KLTN/Huong-dan-viet-va-trinh-bay-Khoa-luan-2023-1.pdf`,
   tr.35–39). Bốn khoản lệch đã sửa: (1) thiếu slide **Công trình liên quan** —
