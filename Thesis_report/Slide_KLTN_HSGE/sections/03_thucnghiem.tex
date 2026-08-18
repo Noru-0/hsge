@@ -83,11 +83,11 @@
       \vspace{-0.1cm}
       \textbf{Ba nhận xét}
       \begin{itemize}
-        \item Nguồn semantic task rất lệch: \textbf{59} từ seed năng lực,
-              chỉ \textbf{7} từ ghép chuỗi operator.
-        \item Task GOAL khó hơn hẳn task cục bộ: 37,9\% so với 42,0\% và 52,0\%.
-        \item Cổng chấm lại loại \textbf{497} lần agent tự đánh giá sai; cổng
-              hành động hữu hiệu loại thêm \textbf{104} trajectory.
+        \item Nguồn semantic task rất lệch: \textbf{59} từ seed, chỉ \textbf{7}
+              từ ghép chuỗi operator.
+        \item Task GOAL khó hơn task cục bộ: 37,9\% so với 42,0\% và 52,0\%.
+        \item Hai cổng chất lượng loại \textbf{497} episode và \textbf{104}
+              trajectory.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -137,19 +137,17 @@
       \footnotesize
       \begin{alertblock}{Giới hạn diễn giải quan trọng nhất}
         Mô hình nền hỏng \emph{định dạng đầu ra} ở \kw{170/655 (26,0\%)}
-        episode; mô hình sau fine-tune chỉ 2/655.
+        episode; fine-tune chỉ 2/655.
         \begin{itemize}
           \item Trên đúng 170 task đó: nền \textbf{0}, fine-tune \textbf{35}.
           \item Trên 485 task nền chạy sạch: 87 vs 101,
                 \textbf{$p = 0{,}120$ --- chưa đạt ý nghĩa}.
         \end{itemize}
         $\Rightarrow$ \textbf{35 trong 49} task tăng thêm thuộc về việc học
-        \emph{tuân thủ giao diện hành động}; phần còn lại tuy cùng chiều nhưng
-        chưa tách khỏi nhiễu.
+        \emph{tuân thủ giao diện hành động}.
       \end{alertblock}
-      {\scriptsize Kèm một điều chỉnh thủ công phía mô hình nền (loại thành công
-      giả trên Shopping/Admin); số liệu thô 103/655 $=$ 15,7\% cũng được báo cáo
-      nguyên trạng --- kết luận không đổi.}
+      {\scriptsize Kèm một điều chỉnh thủ công phía mô hình nền; số liệu thô
+      103/655 $=$ 15,7\% cũng được báo cáo nguyên trạng.}
     \end{column}
     \begin{column}{0.48\textwidth}
       \scriptsize
@@ -159,7 +157,6 @@
           \toprule
           \textbf{Mô hình} & \textbf{Tổng 4 site (\%)} \\
           \midrule
-          GPT-4o & 37,5 \\
           GPT-4o-mini & 20,0 \\
           \midrule
           Qwen-2.5-7B-Instruct & 8,3 \\
@@ -171,12 +168,49 @@
           \bottomrule
         \end{tabular}
       \end{table}
-      \vspace{0.05cm}
+      {\scriptsize Nguồn: Bảng 3, Go-Browse~(2026), tính lại theo trọng số.}
+
+      \vspace{0.1cm}
       \footnotesize
       Cao hơn NNetNav-7B, tiệm cận GPT-4o-mini, thấp hơn Go-Browse-7B 1,8 điểm ---
-      \emph{với tập dữ liệu nhỏ hơn khoảng một bậc độ lớn}. Nhưng đây \textbf{không}
-      phải so sánh có kiểm soát: khác mô hình gốc, khác quy mô dữ liệu, khác ngân
-      sách bước.
+      với dữ liệu nhỏ hơn một bậc độ lớn. Nhưng \textbf{không} phải so sánh có
+      kiểm soát.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Demo: mô hình sau fine-tune giải một task WebArena}
+  \begin{columns}[c]
+    \begin{column}{0.42\textwidth}
+      \footnotesize
+      \textbf{Task}: một task lấy nguyên văn từ bộ chính thức, mô hình chưa từng
+      thấy khi huấn luyện.
+
+      \vspace{0.2cm}
+      \textbf{Xin Hội đồng lưu ý ba điểm}
+      \begin{itemize}
+        \item Mỗi bước chỉ nhận URL $+$ accessibility tree, không nhận ảnh.
+        \item Mô hình phát ra cặp \texttt{\{thought, action\}} đúng định dạng ---
+              đây là năng lực mô hình nền không có.
+        \item Kết thúc bằng \texttt{send\_msg\_to\_user}, và bộ chấm của
+              benchmark tự xác nhận, không phải agent tự khai.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      % Thay khối này bằng ảnh poster của video demo khi đã quay xong:
+      %   \includegraphics[width=\linewidth]{demo_poster.png}
+      % Video phát riêng ngoài slide (xem cue trong presentation_script.md).
+      \centering
+      \setbeamercolor{demoframe}{bg=structure.fg!8,fg=structure.fg}
+      \begin{beamercolorbox}[wd=\linewidth,ht=0.52\textheight,center]{demoframe}
+        \vfill
+        {\large \textbf{[\,VIDEO DEMO\,]}}\\[0.3cm]
+        {\footnotesize Phát video ở đây --- 60--90 giây}
+        \vfill
+      \end{beamercolorbox}
+      \vspace{0.15cm}
+      {\scriptsize\itshape Video đã quay sẵn, không thao tác trực tiếp trên
+      website sống trong lúc bảo vệ.}
     \end{column}
   \end{columns}
 \end{frame}

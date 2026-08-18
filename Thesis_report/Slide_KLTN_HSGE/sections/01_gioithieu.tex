@@ -46,27 +46,49 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Mục tiêu, đóng góp và lộ trình nghiên cứu}
-  \begin{columns}[c]
-    \begin{column}{0.34\textwidth}
-      \scriptsize
+\begin{frame}{Mục tiêu và định vị so với công trình liên quan}
+  \begin{columns}[t]
+    \begin{column}{0.37\textwidth}
+      \footnotesize
       \textbf{Năm mục tiêu}
       \begin{itemize}
-        \item[\textbf{O1}] Pipeline khám phá tự động trên website chưa có nhãn.
-        \item[\textbf{O2}] Sinh \textbf{semantic task} dài hạn đã kiểm chứng:
-              skill $\rightarrow$ operator $\rightarrow$ ghép chuỗi.
-        \item[\textbf{O3}] Tinh lọc trajectory thành dataset SFT,
-              giữ \emph{prompt parity}.
-        \item[\textbf{O4}] Fine-tune SLM, đánh giá trên bộ task chính thức
-              của 4 website WebArena.
-        \item[\textbf{O5}] Đúc kết kinh nghiệm vận hành thành best practice.
+        \item[\textbf{O1}] Khám phá tự động website chưa có nhãn.
+        \item[\textbf{O2}] Sinh \textbf{semantic task} dài hạn đã kiểm chứng.
+        \item[\textbf{O3}] Tinh lọc trajectory thành dataset SFT.
+        \item[\textbf{O4}] Fine-tune SLM và đánh giá trên WebArena.
+        \item[\textbf{O5}] Đúc kết best practice vận hành.
       \end{itemize}
-      \textbf{Đóng góp:} phương pháp HSGE $\cdot$ bộ tinh lọc dữ liệu tự động
-      $\cdot$ dataset $+$ mô hình 9B $\cdot$ kết quả đánh giá $\cdot$ báo cáo
-      kinh nghiệm.
+
+      \vspace{0.1cm}
+      \textbf{Khoảng trống}: chưa công trình nào đi trọn cả ba bước --- kiểm chứng
+      skill, ghép chúng thành task dài hạn, rồi dùng chính task đó huấn luyện SLM.
     \end{column}
-    \begin{column}{0.64\textwidth}
-      \includegraphics[width=\linewidth,height=0.76\textheight,keepaspectratio]{fig_roadmap.pdf}
+    \begin{column}{0.61\textwidth}
+      \scriptsize
+      \setlength{\tabcolsep}{3pt}
+      \begin{table}
+        \begin{tabular}{@{}L{2.3cm} C{1.15cm} C{1.25cm} C{1.25cm} C{1.15cm}@{}}
+          \toprule
+          \textbf{Hệ thống} & \textbf{Khám phá có cấu trúc} & \textbf{Skill được
+          kiểm chứng} & \textbf{Ghép chuỗi task dài} & \textbf{Huấn luyện SLM} \\
+          \midrule
+          AWM & - & \LEFTcircle & - & - \\
+          SkillWeaver & - & \CIRCLE & \LEFTcircle & - \\
+          NNetNav & - & - & - & \CIRCLE \\
+          Go-Browse & \CIRCLE & - & - & \CIRCLE \\
+          \textbf{HSGE} & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \vspace{0.1cm}
+      {\scriptsize \CIRCLE{} có \quad \LEFTcircle{} một phần \quad - không.
+      Trích từ bảng định vị 18 hệ thống, Chương 2.}
+
+      \vspace{0.15cm}
+      \footnotesize
+      Nhóm khám phá skill (AWM, SkillWeaver) chỉ dùng tri thức lúc \emph{suy luận}.
+      Nhóm sinh dữ liệu (NNetNav, Go-Browse) khám phá ít cấu trúc và dừng ở mức
+      trang đơn lẻ.
     \end{column}
   \end{columns}
 \end{frame}

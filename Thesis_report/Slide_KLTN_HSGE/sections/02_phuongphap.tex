@@ -126,23 +126,22 @@
       \textbf{Không episode nào được tính thành công bằng lời khai của agent.}
 
       \begin{itemize}
-        \item \textbf{Cổng chấm lại (judge)} --- mọi lần agent tự tuyên bố hoàn
-              thành đều được một LLM độc lập chấm lại trên chính trang cuối.
-              Đã hạ cấp \kw{497 episode ($\approx$32\%)}.
-        \item \textbf{Cổng hành động hữu hiệu} --- task \texttt{[MOD]}/\texttt{[NAV]}
-              mà không có hành động nào thay đổi trang thì bị loại: một task
-              ``sửa đổi'' không sửa gì là thành công giả. Loại thêm
-              \kw{104 trajectory}. Judge \emph{không} bắt được nhóm này vì
-              trang cuối không hề đổi.
+        \item \textbf{Cổng chấm lại (judge)} --- LLM độc lập chấm lại trên chính
+              trang cuối. Hạ cấp \kw{497 episode ($\approx$32\%)}.
+        \item \textbf{Cổng hành động hữu hiệu} --- task sửa đổi mà không đổi gì
+              trên trang thì loại. Loại thêm \kw{104 trajectory}.
         \item \textbf{Viết lại suy nghĩ} --- trạng thái, phản tư, subgoal,
               kiểm tra hoàn thành.
       \end{itemize}
 
+      \vspace{0.1cm}
+      Judge \emph{không} bắt được nhóm thứ hai, vì nó chỉ xét trang cuối --- mà
+      trang cuối thì không hề đổi.
+
       \vspace{0.15cm}
       \textbf{Prompt parity:} prompt huấn luyện \emph{trùng từng byte} với prompt
-      solver dùng lúc chạy thật, kể cả ngưỡng cắt accessibility tree 6000 ký tự.
-      Chia train/val ở cấp \emph{task} $\rightarrow$ \kw{0} mục tiêu trùng nhau
-      giữa hai tập.
+      solver lúc chạy thật, kể cả ngưỡng cắt accessibility tree 6000 ký tự. Chia
+      train/val ở cấp \emph{task} $\rightarrow$ \kw{0} mục tiêu trùng nhau.
     \end{column}
   \end{columns}
 \end{frame}

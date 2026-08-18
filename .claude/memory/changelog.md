@@ -6,6 +6,22 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-18
 
+- **15:10** — `Thesis_report/Slide_KLTN_HSGE/**` — **chỉnh deck theo hướng dẫn
+  trình bày của thầy Vũ** (`KLTN/Huong-dan-viet-va-trinh-bay-Khoa-luan-2023-1.pdf`,
+  tr.35–39). Bốn khoản lệch đã sửa: (1) thiếu slide **Công trình liên quan** —
+  thầy liệt kê nó là mục bắt buộc, đặt trước phương pháp; thêm slide "Mục tiêu và
+  định vị" với bảng harvey-ball 5 hệ thống × 4 trục rút từ bảng định vị 18 hệ
+  thống ở C2; (2) thiếu **Demo** — thêm slide demo có khung chờ video + cue kỹ
+  thuật trong script (user xác nhận sẽ quay video); (3) **slide quá nhiều chữ** —
+  thầy yêu cầu tối đa 2 dòng/gạch đầu dòng, đã rút gọn bullet ở slide tinh lọc dữ
+  liệu, CH1 và kết luận; (4) **thiếu nguồn trên bảng** — thêm dòng nguồn cho bảng
+  so sánh (Bảng 3, Go-Browse 2026). Để giữ trần 15 slide: bỏ slide Outline (thanh
+  navigation ở headline đã làm đúng việc đó) và bỏ slide lộ trình nghiên cứu
+  (`fig_roadmap` trùng nội dung với `fig_pipeline`) — cả hai được ghi lại trong
+  mục "Nếu được 20 phút" của script. **Mâu thuẫn văn bản đã ghi nhận**: hướng dẫn
+  2023 ghi 20–35 slide / 20 phút, thông báo đợt 04/2026 ghi 10–15 slide / 15 phút;
+  user chọn theo bản 2026. Build: 0 overfull, 15 trang.
+
 - **14:32** — `Thesis_report/Slide_KLTN_HSGE/config/preamble.tex` + 4 file
   `sections/*.tex` — **sửa tràn chữ ở đầu và cuối slide**. Hai nguyên nhân
   riêng biệt: (1) headline tự định nghĩa cao 2,6ex cắt mất hàng chấm mini-frame
