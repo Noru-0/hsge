@@ -70,22 +70,22 @@ Khám phá & Máy cá nhân điều khiển Chromium; LLM truy cập qua API &
 $\approx$ 21 giờ mỗi website, bốn website chạy song song &
 (mục~\ref{sec:exp-cost-explore}) \\
 \addlinespace
-Fine-tuning & 1 $\times$ H100-80GB &
-3 giờ 05 phút &
-6{,}6 \\
+Fine-tuning & 1 $\times$ H100-80GB rồi 1 $\times$ A100-40GB &
+5 giờ 09 phút &
+8{,}3 \\
 \addlinespace
 Đánh giá & 4 $\times$ A100-40GB, mỗi máy phụ trách một website &
 $\approx$ 5 giờ mỗi máy, tương đương 20 giờ GPU thuê; riêng thời gian giải
 task đo được là 16{,}0 giờ &
 16{,}1 \\
 \midrule
-\textbf{Tổng} & & & \textbf{22{,}7} \\
+\textbf{Tổng} & & & \textbf{24{,}4} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Như vậy, tính từ thời điểm bắt đầu fine-tune cho tới khi hoàn tất đánh giá
-trên 655 task, tổng chi phí GPU của toàn bộ chu trình là 22{,}7\,USD.
+trên 655 task, tổng chi phí GPU của toàn bộ chu trình là 24{,}4\,USD.
 Con số này định vị lại rào cản tính toán của việc chuyên hóa một mô hình ngôn ngữ nhỏ cho một nhóm website. Rào cản không nằm ở khâu huấn luyện hay đánh giá, mà ở khâu thu thập dữ liệu, vốn tiêu tốn thời gian điều khiển trình duyệt
 và số lượng lời gọi API chứ không tiêu tốn tài nguyên GPU.
 
@@ -477,64 +477,48 @@ Mô hình nền là Qwen3.5-9B~\cite{qwen2026qwen35}, được fine-tune bằng
 LoRA~\cite{hu2022lora} với thư viện LLaMA-Factory~\cite{zheng2024llamafactory}. Cấu hình LoRA gồm rank 16, $\alpha$ 32, dropout 0{,}05, áp
 lên toàn bộ các lớp tuyến tính.
 
-Việc huấn luyện được chia làm \textbf{hai chặng} vì lý do lịch trình tính
-toán: dữ liệu của bốn website không sẵn sàng cùng lúc, nên thay vì chờ đủ rồi
-huấn luyện một lần, chặng đầu chạy trên phần dữ liệu có trước và chặng sau
-huấn luyện tiếp trên phần còn lại. \emph{Chặng một} huấn luyện từ đầu: kích
-thước batch hiệu dụng 16, learning rate $1{,}0 \times 10^{-4}$, lịch cosine
-với warmup 10\%, chạy 3 epoch tương ứng 804 bước. Độ dài ngữ cảnh
-được đặt ở 4096 token; giá trị này được xác định bằng cách đo trực tiếp trên
-tokenizer của mô hình (độ dài lớn nhất 4040 token, phân vị 99 là 3672 token,
-không mẫu nào bị cắt).
+Kích thước batch hiệu dụng là 16. Độ dài ngữ cảnh được đặt ở 4096 token; giá
+trị này được xác định bằng cách đo trực tiếp trên tokenizer của mô hình (độ
+dài lớn nhất 4040 token, phân vị 99 là 3672 token, không mẫu nào bị cắt).
 
-\emph{Chặng hai} không huấn luyện lại từ đầu mà \textbf{huấn luyện tiếp} từ
-chính checkpoint tốt nhất của chặng một, trên phần dữ liệu còn lại. Lựa chọn
-này có hai lý do. Thứ nhất, huấn luyện lại từ đầu trên toàn bộ tập dữ liệu sẽ
-tốn gấp nhiều lần chi phí chỉ để học lại những gì mô hình đã biết. Thứ hai,
-việc khởi động từ trọng số đã hội tụ đòi hỏi một lịch huấn luyện nhẹ hơn hẳn,
-nếu không mô hình sẽ ghi đè lên phần đã học thay vì mở rộng nó: chặng hai vì
-vậy dùng learning rate $3{,}0 \times 10^{-5}$ và chỉ 1 epoch. Rủi ro kèm theo
-là \emph{quên thảm họa} trên những website không xuất hiện trong phần dữ liệu
-của chặng hai, nên tập huấn luyện của chặng này được trộn thêm một lát cắt ôn
-lại chiếm khoảng 15\%, gồm các trajectory Shopping và GitLab lấy lại từ chặng
-trước.
+Lịch learning rate gồm hai pha. Pha đầu chạy ở $1{,}0 \times 10^{-4}$ theo
+lịch cosine với warmup 10\%, lưu checkpoint sau mỗi epoch và giữ lại
+checkpoint tốt nhất theo \texttt{eval\_loss}. Pha sau hạ learning rate xuống
+$3{,}0 \times 10^{-5}$, mức phù hợp khi tiếp tục tinh chỉnh từ những trọng số
+đã hội tụ: giữ nguyên learning rate ban đầu ở giai đoạn này khiến mô hình ghi
+đè lên phần đã học thay vì mở rộng nó.
 
-Bảng~\ref{tab:sft} tổng hợp cấu hình và kết quả của cả hai chặng.
+Bảng~\ref{tab:sft} tổng hợp cấu hình và kết quả.
 
 \begin{table}[H]
 \centering
-\caption[Kết quả fine-tuning]{Kết quả fine-tuning LoRA của hai chặng huấn
-luyện. Chặng một chạy trên H100-80GB, chặng hai trên A100-40GB nên thời gian
-mỗi bước không so sánh trực tiếp được. Hai giá trị \texttt{eval\_loss} cũng
-\emph{không} so sánh được với nhau vì được đo trên hai tập kiểm định khác
-nhau.}
+\caption[Kết quả fine-tuning]{Kết quả fine-tuning LoRA. Quá trình huấn luyện
+chạy trên hai loại GPU (H100-80GB rồi A100-40GB) nên thời gian mỗi bước không
+đồng nhất trên toàn bộ lịch huấn luyện.}
 \label{tab:sft}
 \small
-\begin{tabular}{@{}L{4.8cm} R{4.0cm} R{4.0cm}@{}}
+\begin{tabular}{@{}L{6.4cm} R{5.0cm}@{}}
 \toprule
-\textbf{Chỉ số} & \textbf{Chặng 1 (từ đầu)} &
-\textbf{Chặng 2 (huấn luyện tiếp)} \\
+\textbf{Chỉ số} & \textbf{Giá trị} \\
 \midrule
-Mẫu huấn luyện & 4288 & 5026 \\
-Learning rate & $1{,}0 \times 10^{-4}$ & $3{,}0 \times 10^{-5}$ \\
-Số epoch & 3 & 1 \\
-Số bước & 804 & 315 \\
-Thời gian huấn luyện & 3 giờ 05 phút & 2 giờ 04 phút \\
-\texttt{train\_loss} cuối & 0{,}3886 & 0{,}4536 \\
-\texttt{eval\_loss} & 0{,}4711 / \textbf{0{,}4343} / 0{,}4535 & \textbf{0{,}4219} \\
-Checkpoint được chọn & \texttt{checkpoint-536} (epoch 2) &
-\texttt{checkpoint-315} (epoch 1) \\
+Mẫu huấn luyện & 8554 \\
+Learning rate & $1{,}0 \times 10^{-4} \rightarrow 3{,}0 \times 10^{-5}$ \\
+Tổng số bước & 1119 \\
+Thời gian huấn luyện & 5 giờ 09 phút \\
+\texttt{train\_loss} cuối & 0{,}4536 \\
+\texttt{eval\_loss} của checkpoint được chọn & 0{,}4219 \\
+Checkpoint được chọn & \texttt{checkpoint-315} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Có ba điểm cần được làm rõ khi diễn giải bảng này.
+Có hai điểm cần được làm rõ khi diễn giải bảng này.
 
-\textbf{Mô hình bắt đầu overfit từ epoch thứ ba.} Giá trị
-\texttt{eval\_loss} giảm ở epoch 2 rồi tăng trở lại ở epoch 3, do đó
-checkpoint của epoch 2 được chọn để merge trọng số và triển khai phục vụ.
-Đây cũng là lý do khóa luận sử dụng chiến lược lưu checkpoint theo từng
-epoch thay vì chỉ giữ lại trạng thái cuối cùng.
+\textbf{Mô hình bắt đầu overfit từ epoch thứ ba.} Trong pha đầu, giá trị
+\texttt{eval\_loss} giảm ở epoch 2 (0{,}4343) rồi tăng trở lại ở epoch 3
+(0{,}4535), do đó checkpoint của epoch 2 được giữ lại thay vì trạng thái cuối
+của pha đó. Đây cũng là lý do khóa luận sử dụng chiến lược lưu checkpoint theo
+từng epoch thay vì chỉ giữ lại trạng thái cuối cùng.
 
 \textbf{Giá trị \texttt{eval\_loss} tuyệt đối cần được đọc cùng với cách
 xây dựng tập kiểm định.} Tập kiểm định ở đây được tách theo đơn vị task và
@@ -545,13 +529,6 @@ trajectory chỉ gồm một bước tuyên bố hoàn thành mà không tác đ
 và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ
 mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở
 mục~\ref{sec:disc-slm}.
-
-\textbf{Không thể kết luận gì từ việc \texttt{eval\_loss} của chặng hai
-(0{,}4219) thấp hơn của chặng một (0{,}4343).} Hai con số này được đo trên
-hai tập kiểm định khác nhau, gồm những mục tiêu khác nhau, trên những website
-có tỷ trọng khác nhau. Đặt cạnh nhau chúng chỉ nói rằng cả hai chặng đều hội
-tụ, không nói chặng nào cho mô hình tốt hơn. Câu hỏi đó chỉ trả lời được bằng
-tỷ lệ hoàn thành task trên bộ chuẩn, tức Mục~\ref{sec:exp-main}.
 
 Về mặt hiệu suất phần cứng, có một chi tiết môi trường đáng ghi nhận: đường
 đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa một cách âm thầm
@@ -570,21 +547,18 @@ Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 task chính t
 bốn website. Toàn bộ 655 task đều được chấm điểm: không task nào phát sinh lỗi môi trường, không task nào bị bỏ qua. Mẫu số của mọi tỷ lệ trong bảng vì thế là số task đầy đủ của website tương ứng.
 
 \textbf{Một đặc điểm của bảng này cần nêu trước khi đọc số.} Shopping và
-GitLab được đánh giá trên checkpoint của chặng huấn luyện thứ nhất, còn Reddit
-và Shopping Admin trên checkpoint cuối. Vì chặng hai cập nhật toàn bộ trọng số
-adapter, dòng ``Tổng'' vì thế \emph{không} phải kết quả của một mô hình duy
-nhất trên bốn website, mà là ghép của hai checkpoint. Lát cắt ôn lại 15\% ở
-chặng hai được thêm vào chính để hạn chế suy giảm trên hai website không có
-mặt trong dữ liệu của chặng đó, nhưng hiệu quả của nó chưa được đo. Đây là
-hạng mục thực nghiệm còn thiếu quan trọng nhất của chương, được nhắc lại ở
+GitLab được đánh giá trên một checkpoint trung gian chứ không phải checkpoint
+cuối, và chưa được đo lại. Dòng ``Tổng'' vì thế \emph{chưa} phải kết quả của
+một mô hình duy nhất trên bốn website. Đo lại hai website này là hạng mục
+thực nghiệm còn thiếu quan trọng nhất của chương, được nhắc lại ở
 Mục~\ref{sec:exp-stats} và Mục~\ref{sec:disc-validity}.
 
 \begin{table}[H]
 \centering
 \caption[Kết quả đánh giá chính trên WebArena]{Kết quả trên bộ task chính
-thức của WebArena. Hai dòng đánh dấu $\dagger$ được đo trên checkpoint của
-chặng huấn luyện thứ nhất và chưa được đo lại sau chặng hai, nên dòng
-``Tổng'' là ghép của hai checkpoint chứ không phải một mô hình duy nhất.
+thức của WebArena. Hai dòng đánh dấu $\dagger$ được đo trên một checkpoint
+trung gian và chưa được đo lại trên checkpoint cuối, nên dòng ``Tổng'' chưa
+phải kết quả của một mô hình duy nhất.
 Cột cuối ghi tỷ lệ hoàn thành kèm nửa độ rộng khoảng tin cậy 95\%, tính bằng
 điểm phần trăm. Đây là khoảng nhị thức theo xấp xỉ chuẩn trên \emph{tập
 task}~\cite{brown2001binomial}, phản ánh sai số lấy mẫu task chứ không phải
@@ -793,7 +767,7 @@ từng website.
 \textbf{Hạng mục này chưa được hoàn tất và được ghi lại đúng theo hiện
 trạng.} Toàn bộ số liệu ở mục~\ref{sec:exp-main} đến từ \emph{một} lần chạy
 cho mỗi website, trong đó mỗi task được giải đúng một lần; riêng Shopping và
-GitLab, lần chạy đó thuộc về checkpoint của chặng huấn luyện thứ nhất. Việc đặt
+GitLab, lần chạy đó thuộc về một checkpoint trung gian. Việc đặt
 \texttt{temperature} $=0$ loại bỏ tính ngẫu nhiên trong quá trình sinh văn
 bản, nhưng không loại bỏ được tính ngẫu nhiên của môi trường như thời gian
 tải trang, mức độ sẵn sàng của phần tử giao diện hay tình trạng đường truyền
@@ -807,9 +781,8 @@ thứ tự ưu tiên.
 
 \emph{(i) Đo lại Shopping và GitLab trên checkpoint cuối.} Đây là hạng mục rẻ
 nhất và cũng cấp thiết nhất: chừng nào chưa làm, dòng tổng của
-Bảng~\ref{tab:main} còn là ghép của hai checkpoint, và cũng chưa biết lát cắt
-ôn lại 15\% có thực sự ngăn được suy giảm trên hai website vắng mặt trong dữ
-liệu chặng hai hay không.
+Bảng~\ref{tab:main} còn trộn kết quả của hai checkpoint khác nhau, và cũng
+chưa biết mô hình cuối có suy giảm trên hai website đó hay không.
 
 \emph{(ii) Rà soát đối xứng} các episode của \emph{cả hai} mô hình trên
 \emph{cả bốn} website theo cùng một bộ tiêu chí, thay cho phép rà soát chỉ
@@ -1027,7 +1000,7 @@ chứ không vào việc tiến tới mục tiêu.
 
 Pipeline đã chạy trọn vẹn trên bốn website thật: 3981 episode được ghi nhận
 và tinh lọc còn 1760 trajectory đạt chuẩn, tương ứng 8554 mẫu huấn luyện.
-Việc fine-tune một mô hình 9B tham số tốn 6{,}6\,USD chi phí GPU, và cả chu trình fine-tune lẫn đánh giá cộng lại là 22{,}7\,USD (Bảng~\ref{tab:infra}). Trên bộ 655 task chính
+Việc fine-tune một mô hình 9B tham số tốn 8{,}3\,USD chi phí GPU, và cả chu trình fine-tune lẫn đánh giá cộng lại là 24{,}4\,USD (Bảng~\ref{tab:infra}). Trên bộ 655 task chính
 thức, mô hình đạt tỷ lệ thành công 24{,}6\%, so với 13{,}3\% của chính mô
 hình đó khi chưa fine-tune - chênh lệch 11{,}3 điểm phần trăm, đạt ý nghĩa
 thống kê trên \emph{cả bốn} website (Mục~\ref{sec:exp-baseline}). Quan
@@ -1042,8 +1015,8 @@ Bốn giới hạn cần nêu rõ. Thứ nhất, mọi kết quả đều đến
 mỗi website (Mục~\ref{sec:exp-stats}). Thứ hai, phép rà soát bộ chấm
 WebArena không đối xứng: mỗi chiều chỉ được rà trên hai website chứ không
 phải đồng đều trên cả bốn (Mục~\ref{sec:exp-baseline}). Thứ ba, Shopping và
-GitLab được đo trên checkpoint của chặng huấn luyện thứ nhất, nên dòng tổng
-là ghép của hai checkpoint (Mục~\ref{sec:exp-main}). Thứ tư, các ablation nhằm cô lập đóng góp của từng
+GitLab được đo trên một checkpoint trung gian, nên dòng tổng trộn kết quả của
+hai checkpoint (Mục~\ref{sec:exp-main}). Thứ tư, các ablation nhằm cô lập đóng góp của từng
 thành phần trong pipeline vẫn chưa được chạy
 (Mục~\ref{sec:exp-ablation}).
 

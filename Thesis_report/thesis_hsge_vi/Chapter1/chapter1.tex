@@ -178,7 +178,7 @@ NNetNav-7B (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang Go-Browse-7B
 nên không phải một khác biệt có ý nghĩa (Bảng~\ref{tab:related}).
 
 \textbf{Về chi phí.} Chi phí API của giai đoạn khám phá vào khoảng 0{,}0358
-USD cho mỗi trajectory đưa vào tập huấn luyện, cộng thêm 22{,}7 USD chi phí
+USD cho mỗi trajectory đưa vào tập huấn luyện, cộng thêm 24{,}4 USD chi phí
 GPU cho fine-tuning và đánh giá (Bảng~\ref{tab:apicost}). Con số này thay thế cho quy trình gán nhãn thủ
 công vốn cần nhiều người-tháng trong các công trình
 trước~\cite{lai2024autowebglm}.
@@ -195,9 +195,8 @@ trong 74 task tăng thêm thuộc nhóm mà mô hình nền hỏng định dạn
 kê: riêng trên nhóm 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là
 17{,}9\% so với 23{,}5\% với $p = 0{,}003$ (Mục~\ref{sec:exp-baseline}).
 
-Thứ hai, Shopping và GitLab được đánh giá trên checkpoint của chặng huấn
-luyện thứ nhất chứ không phải checkpoint cuối, nên con số tổng là ghép của
-hai checkpoint; đo lại hai website này là hạng mục thực nghiệm còn thiếu cấp
+Thứ hai, Shopping và GitLab được đánh giá trên một checkpoint trung gian chứ
+không phải checkpoint cuối, nên con số tổng trộn kết quả của hai checkpoint; đo lại hai website này là hạng mục thực nghiệm còn thiếu cấp
 thiết nhất (Mục~\ref{sec:exp-stats}).
 
 \section{Bố cục khóa luận}

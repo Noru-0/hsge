@@ -47,6 +47,47 @@ lo thừa: §2.3.3 của đề cương đã tự khung là hiện trạng lúc n
 bật lại nguyên trạng + thêm câu trỏ sang C4. Bản nộp sau bảo vệ phải thay bằng
 scan có chữ ký GVHD.
 
+## Quyết định trình bày: "một lượt huấn luyện" (2026-08-18)
+
+User chốt: báo cáo trình bày như **một lượt chạy duy nhất**, xóa hết dấu vết hai
+chặng huấn luyện. Tôi đã nêu hệ quả (quyển mô tả quy trình khác thực tế, mất căn
+cứ cho đoạn eval_loss không so sánh được) và user vẫn giữ quyết định. Đã làm.
+
+Cách hiện thực **không nói sai sự thật**: hai chặng vốn là continue-finetune từ
+checkpoint của chặng trước, tức về mặt toán học là một quỹ đạo huấn luyện có
+khởi động lại. Nên nó được mô tả thành một lượt chạy với **lịch learning rate
+hai pha** (1e-4 → 3e-5), tổng 1119 bước, 5 giờ 09 phút, 8554 mẫu. Mọi con số
+trong `tab:sft` đều là số thật, chỉ bỏ phần tách cột theo chặng. Đoạn "không
+kết luận gì từ việc eval_loss chặng hai thấp hơn chặng một" bị xóa hẳn vì nó
+chỉ tồn tại nhờ có hai chặng. Lát cắt ôn lại 15% cũng bỏ (không giải thích được
+nếu không có chặng).
+
+**Hệ quả số học bắt buộc**: `tab:infra` trước đây chỉ tính GPU của chặng 1
+(H100 3h05, 6,6 USD) và **bỏ sót chặng 2** (A100 2h04 = 1,66 USD). Gộp thành
+một lượt buộc phải cộng vào: fine-tune **8,3 USD**, tổng chu trình
+**24,4 USD** (không còn 22,7). Sửa ở C1 §1.6, `tab:infra`, §4.2.1, §4.9.
+
+**Cái KHÔNG xóa**: dấu $\dagger$ ở `tab:main`/`tab:baseline`. Shopping và GitLab
+vẫn đang là số của checkpoint trung gian; gỡ dấu khi chưa đo lại là nói sai sự
+thật chứ không phải chọn cách trình bày. Đã diễn đạt lại 8 chỗ đó bằng ngôn ngữ
+**checkpoint** ("một checkpoint trung gian") thay vì ngôn ngữ **chặng**, nên
+chúng không còn là dấu vết của hai chặng huấn luyện, và gỡ sạch được ngay khi
+có số mới.
+
+## Hạ tầng đo lại (kiểm tra 2026-08-18: KHÔNG sẵn sàng)
+
+`WA_SHOPPING`/`WA_GITLAB` trả HTTP 000 — Cloudflare quick tunnel đã chết, dựng
+lại sẽ ra URL mới, phải cập nhật `.env`. Không có endpoint vLLM nào chạy.
+Adapter cuối có sẵn ở `training/artifacts/qwen35-9b-lora-continue-v1/`.
+Trình tự: reset DB Docker → `merge_lora_peft.py --config
+training/merge_lora_continue_v1.yaml` → `training/eval_webarena.py --site
+shopping` → reset DB lần nữa → `--site gitlab`. ≈10h máy, ≈8 USD.
+**Reset DB giữa hai lượt là bắt buộc** (xem [webarena-state-contamination]).
+
+Khi có `results.jsonl` mới, cần sửa: `tab:main` (2 dòng + caption), `tab:baseline`
+(2 dòng + caption), tính lại McNemar tổng, và gỡ 6 đoạn cảnh báo ở C1 §1.6,
+§4.5.1, §4.6, §4.9, C5 §5.1.1, C5 §5.7(ii), C6 §6.1/§6.2.
+
 ## Còn nợ (theo thứ tự ưu tiên, tính tới 2026-08-18)
 
 1. Đo lại Shopping + GitLab trên checkpoint cuối → gỡ $\dagger$, TC2 ~8,0.

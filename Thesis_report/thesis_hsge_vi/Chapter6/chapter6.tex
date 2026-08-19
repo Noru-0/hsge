@@ -47,7 +47,7 @@ thành công sai và các trajectory không có hành động hữu hiệu nào
 
 \item \textbf{Mô hình web agent đã fine-tune.}
 Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập,
-qua hai chặng huấn luyện, rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
+rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
 huấn luyện, nên hai giai đoạn dùng chung một dạng đầu vào và đầu ra.
 
 \item \textbf{Đánh giá trên benchmark WebArena.}
@@ -63,7 +63,7 @@ hình nền khi chưa fine-tune đạt 87 trên 655 task, tức 13{,}3\%; chênh
 11{,}3 điểm phần trăm đạt ý nghĩa thống kê theo kiểm định cặp trên cả bốn
 website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ, vì ba lý
 do: mỗi task mới chỉ được đánh giá một lần; Shopping và GitLab chưa được đo
-lại sau giai đoạn huấn luyện thứ hai nên con số tổng ghép từ hai checkpoint;
+lại trên checkpoint cuối nên con số tổng trộn kết quả của hai checkpoint;
 và phần cải thiện vượt ra ngoài yếu tố tuân thủ định dạng tuy đã đạt ý nghĩa
 thống kê nhưng phụ thuộc vào một đợt rà soát thủ công chưa đối xứng
 (Mục~\ref{sec:disc-results}, \ref{sec:disc-validity}).

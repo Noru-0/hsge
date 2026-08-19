@@ -18,7 +18,7 @@ Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc v
 
 Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Thứ tự này trùng với thứ tự lượng dữ liệu thu được cho từng website.
 
-Hai điều kiện phải đi kèm phát biểu đó. Thứ nhất, Shopping và GitLab được đo trên checkpoint của chặng huấn luyện thứ nhất, nên hai con số của chúng thuộc về một mô hình khác với hai con số còn lại. Thứ hai, mỗi ô của bảng đối chứng vẫn chỉ đến từ một lần chạy. Vì vậy các hạng mục ở Mục~\ref{sec:exp-stats} vẫn là ưu tiên thực nghiệm hàng đầu chứ không phải một việc dọn dẹp cuối cùng.
+Hai điều kiện phải đi kèm phát biểu đó. Thứ nhất, Shopping và GitLab được đo trên một checkpoint trung gian, nên hai con số của chúng thuộc về một mô hình khác với hai con số còn lại. Thứ hai, mỗi ô của bảng đối chứng vẫn chỉ đến từ một lần chạy. Vì vậy các hạng mục ở Mục~\ref{sec:exp-stats} vẫn là ưu tiên thực nghiệm hàng đầu chứ không phải một việc dọn dẹp cuối cùng.
 
 Điều mà phép đối chứng này làm rõ nhất lại nằm ở chân dung lỗi chứ không ở con số tổng. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, so với 0{,}6\% ở mô hình sau fine-tune (Bảng~\ref{tab:profile}). Khi tách 655 task theo đúng ranh giới đó, 47 trong 74 task tăng thêm rơi vào nhóm mà mô hình nền không bao giờ phát ra nổi một hành động hợp lệ; còn trên 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% và \emph{đạt} ý nghĩa thống kê ($p = 0{,}003$).
 
@@ -315,7 +315,7 @@ Nhằm đảm bảo sự minh bạch và tính khách quan khoa học, phần n�
 
 \emph{(i) Phép rà soát bộ chấm chưa đối xứng.} Bộ chấm tự động của WebArena được rà theo cả hai chiều - hạ 16 phiên chấm đỗ nhầm của mô hình nền, khôi phục 19 phiên chấm trượt nhầm của mô hình sau fine-tune - nhưng mỗi chiều chỉ phủ hai website chứ không phải cả bốn. Vì kết luận về nhóm 485 task không dính rào cản định dạng (Mục~\ref{sec:disc-results}) dựa trên điểm số đã rà soát, độ tin cậy của nó gắn với phạm vi này. Danh sách task bị điều chỉnh kèm lý do được công bố cùng mã nguồn để người đọc tự kiểm chứng, nhưng công bố không thay thế được một đợt rà soát đối xứng.
 
-\emph{(ii) Dòng tổng ghép từ hai checkpoint.} Shopping và GitLab được đánh giá trên checkpoint của chặng huấn luyện thứ nhất, Reddit và Shopping Admin trên checkpoint cuối. Vì chặng hai cập nhật toàn bộ trọng số adapter, không thể loại trừ khả năng mô hình đã suy giảm trên hai website không được đo lại - đúng rủi ro mà lát cắt ôn lại 15\% được thêm vào để hạn chế, nhưng hiệu quả của nó chưa được đo. Con số 24{,}6\% vì vậy là một \emph{ước lượng lạc quan} nếu suy giảm có xảy ra.
+\emph{(ii) Dòng tổng trộn hai checkpoint.} Shopping và GitLab được đánh giá trên một checkpoint trung gian, Reddit và Shopping Admin trên checkpoint cuối. Vì phần cuối lịch huấn luyện cập nhật toàn bộ trọng số adapter, không thể loại trừ khả năng mô hình cuối đã suy giảm trên hai website không được đo lại. Con số 24{,}6\% vì vậy là một \emph{ước lượng lạc quan} nếu suy giảm có xảy ra.
 
 \emph{(iii)} Mô hình chấm mờ của bộ đánh giá chính thức ngừng hoạt động và được thay thế bằng mô hình tương đương, tác động đến 40 trên tổng số 655 tác vụ.
 
