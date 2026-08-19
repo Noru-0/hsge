@@ -356,7 +356,7 @@ yếu trong thực tế, còn cơ chế ghép chuỗi từ dưới lên tuy ho�
 kế nhưng chỉ kích hoạt được ở mức thưa thớt: 12 chuỗi trên tổng số 57
 operator đã quy nạp, phân bố rất lệch giữa các website (Shopping 5, Reddit 5,
 GitLab 1, Shopping Admin 1). Nguyên nhân kỹ thuật của hiện tượng này được
-phân tích ở mục~\ref{sec:disc-operators}.
+phân tích ở Phụ lục~\ref{sec:disc-operators}.
 
 \textbf{Thứ hai, tỷ lệ thành công của nhóm GOAL chênh lệch rất lớn giữa các
 website.} Tỷ lệ chung là 71/142 $=$ 50{,}0\%, xấp xỉ nhóm LOCAL (47{,}6\%) và
@@ -496,7 +496,7 @@ trajectory chỉ gồm một bước tuyên bố hoàn thành mà không tác đ
 đã bị loại khỏi dữ liệu. Cả hai yếu tố này đều làm bài toán dự đoán khó hơn
 và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ
 mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở
-mục~\ref{sec:disc-slm}.
+Phụ lục~\ref{sec:disc-slm}.
 
 Về mặt hiệu suất phần cứng, có một chi tiết môi trường đáng ghi nhận: đường
 đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa một cách âm thầm
@@ -812,8 +812,8 @@ trình duyệt từ chối, tổng cộng 2315 lỗi thực thi trên 655 episod
 là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử
 mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã
 chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác. Đây là giới hạn của execution layer, không phải của năng lực mô hình, nên khắc phục
-nó là hướng đáng đầu tư nhất (Chương~\ref{ch:discussion},
-Mục~\ref{sec:disc-guardrails}).
+nó là hướng đáng đầu tư nhất (Mục~\ref{sec:disc-results},
+Phụ lục~\ref{sec:disc-guardrails}).
 
 \textbf{Chân dung lỗi khá đồng đều giữa bốn website.} Trên cả bốn, lỗi thực
 thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp xỉ nhau
@@ -821,7 +821,7 @@ thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp x
 theo dấu hiệu (37\%) nhưng chênh lệch so với ba website còn lại không lớn.
 Điều này khác với các lượt chạy phát triển trước đó, nơi Reddit từng có tỷ lệ
 kẹt vòng lặp vượt trội; cơ chế dừng cứng khi phát hiện lặp
-(Mục~\ref{sec:disc-guardrails}) là thay đổi trực tiếp nhắm vào hiện tượng
+(Phụ lục~\ref{sec:disc-guardrails}) là thay đổi trực tiếp nhắm vào hiện tượng
 đó.
 
 \textbf{Cạn ngân sách 15 bước là nguyên nhân thất bại nặng nhất trên

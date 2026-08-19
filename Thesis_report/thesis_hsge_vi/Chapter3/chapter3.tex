@@ -84,7 +84,7 @@ Ba nguyên tắc sau chi phối toàn bộ thiết kế của pipeline:
     website, theo hướng từ trên xuống. Giữ song song hai nguồn là
     quyết định rút ra từ thực nghiệm, bởi nguồn từ dưới lên chỉ chạy
     được khi đồ thị toán tử đã có cạnh - một điều kiện thưa hơn dự
-    kiến rất nhiều (Mục~\ref{sec:disc-operators}).
+    kiến rất nhiều (Phụ lục~\ref{sec:disc-operators}).
 \end{itemize}
 
 \section{Nền tảng kế thừa và điểm mới của HSGE}
@@ -152,7 +152,7 @@ các \emph{hệ thống} gần nhất, còn bảng dưới đây định vị n�
     Dùng cho hai vai trò tách biệt là gom cụm trajectory con và chuẩn
     hóa mệnh đề.
     Khóa luận cũng chỉ ra giới hạn của nó ở vai trò thứ hai và thay bằng cơ chế
-    quy nạp biết trước từ vựng (Mục~\ref{sec:disc-operators}) \\
+    quy nạp biết trước từ vựng (Phụ lục~\ref{sec:disc-operators}) \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -366,7 +366,7 @@ tab; bản thân việc agent đi tới được đã là bằng chứng cho th�
 các liên kết trích từ cấu trúc DOM của mỗi trang đã thăm. Không khai
 thác liên kết thì frontier chỉ mở rộng nhờ những thao tác điều hướng
 phát sinh lúc giải task, và đó là một lỗ hổng có thật
-(Chương~\ref{ch:discussion} phân tích kỹ hơn): một trang chỉ sinh ra
+(Phụ lục~\ref{sec:disc-exploration} phân tích kỹ hơn): một trang chỉ sinh ra
 toàn task tra cứu thông tin sẽ không góp thêm URL nào cho biên khám phá.
 
 Nhưng số liên kết trích được thường rất lớn, và phần lớn lại trỏ tới
@@ -463,7 +463,7 @@ cụ thể), \texttt{MOD} (thay đổi nội dung hoặc trạng thái) và
 chẳng hạn ``mua con chuột không dây rẻ nhất còn hàng''). Cách này
 thay cho việc để LLM trả lời bằng văn bản tự do có gắn thẻ phân loại
 ở đầu câu, một quy ước mà mô hình không tuân thủ ổn định khi chạy
-trên website thật (Mục~\ref{sec:disc-guardrails}).
+trên website thật (Phụ lục~\ref{sec:disc-guardrails}).
 
 Nhóm \texttt{COMPOSITE} có vai trò riêng và được prompt yêu cầu đặt
 lên đầu danh sách: đây là nhóm duy nhất trong bốn nhóm mà một task
@@ -488,7 +488,7 @@ nên nó nhớ được mọi task đã từng đề xuất; những đề xuấ
 đưa ngược vào prompt làm ngữ cảnh phủ định, còn các bản gần trùng thì
 bị loại ngay ở mức mã nguồn.
 Không có cơ chế này, phần lớn đề xuất sẽ tụt xuống thành những lệnh
-điều hướng menu lặp lại ở mọi trang (Mục~\ref{sec:disc-exploration}).
+điều hướng menu lặp lại ở mọi trang (Phụ lục~\ref{sec:disc-exploration}).
 
 Thứ hai, hai nhóm task bị chặn số lượng \emph{vô điều kiện}, bất kể
 ngân sách $k$ còn trống hay không: mỗi trang tối đa một task
@@ -569,7 +569,7 @@ Một chuỗi hành động cuối cùng cứ nhắm vào \emph{cùng một đ�
 thẳng vào prompt (sau hai lần), rồi bị dừng ngay lập tức nếu vẫn tiếp
 diễn (sau bốn lần). Hai mức này đến từ một quan sát trên website
 thật: cảnh báo bằng văn bản không đủ để mô hình thôi nhấp vào một
-phần tử trơ (Mục~\ref{sec:disc-guardrails}). Điều kiện ``quan sát
+phần tử trơ (Phụ lục~\ref{sec:disc-guardrails}). Điều kiện ``quan sát
 không đổi'', thay vì chỉ so khớp chuỗi hành động, là thứ giữ cho chốt
 chặn không bắn nhầm vào những chuỗi thao tác hợp lệ có tái dùng một
 phần tử qua nhiều trang.
@@ -818,7 +818,7 @@ làm vậy được: thực thi lại vừa tốn tài nguyên, vừa có thể 
 động phụ làm đổi trạng thái website. Vì vậy quyết định thu nhận dựa
 trên số lần tái xuất hiện qua các trajectory độc lập, tức ngưỡng độ
 chín, cộng với kết quả của những episode liên quan.
-Mục~\ref{sec:disc-verify} đo cái giá của lựa chọn này: cổng thực thi
+Phụ lục~\ref{sec:disc-verify} đo cái giá của lựa chọn này: cổng thực thi
 lại không chạy trên website thật, và phần gánh thay bắt được những gì.
 
 \section{Sinh semantic task bằng ghép chuỗi operator}
@@ -860,7 +860,7 @@ thiết lập (``trang sửa sản phẩm \emph{đã có xác nhận lưu}''), t
 lùi về mức phần tử. Ràng buộc cuối có lý do của nó: chỉ một mệnh đề ở
 mức trạng thái trang mới có cơ hội trùng với precondition của một
 skill khác. Còn việc nó được viết thẳng vào prompt thay vì chỉ được
-kỳ vọng là kết quả của cổng lọc ngay dưới đây (Mục~\ref{sec:disc-operators}).
+kỳ vọng là kết quả của cổng lọc ngay dưới đây (Phụ lục~\ref{sec:disc-operators}).
 
 Nếu để LLM diễn đạt hoàn toàn tự do, các mệnh đề tương đương về ngữ nghĩa
 thường được viết theo nhiều cách khác nhau, làm phân mảnh bộ từ vựng. Thực
@@ -868,7 +868,7 @@ nghiệm trên một lượt chạy cho thấy hiện tượng này xảy ra nga
 sentence embedding để chuẩn hóa. Một cặp mệnh đề thực sự đồng nghĩa chỉ đạt
 độ tương đồng 0{,}570, thấp hơn ngưỡng gộp 0{,}6, trong khi một cặp khác
 nghĩa lại đạt 0{,}606; số liệu chi tiết nằm ở
-Mục~\ref{sec:disc-operators}. Vì vậy bước quy nạp được thiết kế theo hướng
+Phụ lục~\ref{sec:disc-operators}. Vì vậy bước quy nạp được thiết kế theo hướng
 \emph{biết trước từ vựng đã dùng}: prompt đưa sẵn một tập mệnh đề đã có trong predicate registry, ưu tiên những mục dùng nhiều và mới
 nhất, kèm yêu cầu LLM chép nguyên văn mệnh đề tương đương thay vì diễn đạt
 lại.
@@ -971,7 +971,7 @@ website có. Nhờ đó việc thu thập dữ liệu vẫn chạy được trư
 Cách ghép chuỗi ở trên đi \emph{từ dưới lên}: nó chỉ sinh được task khi đồ
 thị toán tử đã có cạnh, mà cạnh lại chỉ hình thành khi hai operator độc lập
 tình cờ phát biểu trùng một mệnh đề. Trên thực tế, điều kiện này thưa hơn dự
-kiến rất nhiều (Mục~\ref{sec:disc-operators}), khiến việc thu thập dữ liệu dài
+kiến rất nhiều (Phụ lục~\ref{sec:disc-operators}), khiến việc thu thập dữ liệu dài
 hạn bị treo vào đúng thứ khó xây dựng nhất của hệ thống.
 
 Vì vậy, hệ thống bổ sung một nguồn mục tiêu thứ hai, hoạt động \emph{từ trên
