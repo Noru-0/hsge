@@ -1214,6 +1214,20 @@ Chạy được một kiến trúc mô hình vừa phát hành thường đòi t
 
 Cách này tầm thường nhưng đáng nói, vì nó đổi bản chất công việc: thay vì đi tìm một bộ phiên bản duy nhất làm hài lòng mọi thành phần, chỉ còn ba lần cài đặt độc lập.
 
+
+\subsection*{Cách ly và truyền tải khi đánh giá song song}
+
+Một phương án thử nghiệm trước đó phân loại tác vụ theo ý định thực thi, chỉ
+đọc hoặc đọc-ghi, nhằm cho nhiều máy quét đồng thời trên cùng một website. Quá
+trình này bộc lộ hai rào cản của việc phân loại bằng luật: va chạm ngữ pháp của
+các cụm danh từ - cụm ``merge request'' chứa động từ ``merge'' về mặt cú pháp,
+còn cụm ``report bugs'' lại không khớp mẫu biểu thức chính quy tìm từ khóa báo
+cáo - và hiện tượng chèn từ làm vô hiệu hóa các mẫu so khớp chuỗi đơn giản, như
+``open \emph{a new} issue''. Về chi phí truyền tải giữa các máy, việc gửi tệp
+LoRA adapter 1{,}7\,GB rồi gộp trọng số tại chỗ hiệu quả hơn hẳn so với gửi
+toàn bộ checkpoint đã gộp nặng 18\,GB.
+
+
 \section{Bảng best practice đã chưng cất}
 \label{app:practices}
 

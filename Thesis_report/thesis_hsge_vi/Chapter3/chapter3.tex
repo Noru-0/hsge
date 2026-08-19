@@ -98,7 +98,7 @@ Bảng~\ref{tab:novelty} tóm tắt; Chương~\ref{ch:related} định vị HSGE
 các \emph{hệ thống} gần nhất, còn bảng dưới đây định vị nó so với các
 \emph{khung lý thuyết} mà nó vay mượn.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption[Nền tảng kế thừa và phần HSGE bổ sung]{Sáu nền tảng mà HSGE kế thừa,
   nơi mỗi nền tảng được dùng, và phần khóa luận bổ sung lên trên.}
@@ -218,7 +218,7 @@ trả lời người dùng hoặc tuyên bố task bất khả thi. Chuỗi $\ta
 \langle (o_0, a_0), (o_1, a_1), \dots \rangle$ sinh ra khi agent làm
 một task chính là một \emph{trajectory tương tác}.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption[Action space của solver]{Không gian hành động của solver.
     Đối số phần tử là mã định danh xuất hiện trong accessibility tree.
@@ -389,16 +389,13 @@ trang đã thăm của một khuôn dạng còn tăng dần trong khi chạy. �
 tới trang ở độ sâu nông hơn, sau cùng mới xét thứ tự chèn.
 
 Cần nói rõ là tầng 0 cũng chịu một giới hạn theo khuôn dạng, chỉ với giá trị
-rộng hơn ($c = 8$), chứ \emph{không} được miễn trừ. Miễn trừ hoàn
-toàn cho tầng 0 là thiết kế ban đầu, và nó đã hỏng theo một cách khá
-đặc trưng. Khi solver giải một task bên trong một chuỗi bình luận
-trên diễn đàn kiểu Reddit - nơi mỗi bình luận, kể cả bình luận lồng
-bên trong bình luận khác, đều có URL riêng - mọi URL nó chạm tới đều
-được đẩy lên đầu hàng đợi mà không qua bộ lọc nào. Kết quả là một
-diễn đàn duy nhất chiếm 58 trên 158 node của một lượt chạy thật. Nói
-cách khác,
-bằng chứng ``agent đã đi tới đó'' đủ để \emph{ưu tiên} một trang, nhưng không
-đủ để cho nó quyền chiếm ngân sách khám phá không giới hạn.
+rộng hơn ($c = 8$), chứ \emph{không} được miễn trừ. Thiết kế ban đầu miễn trừ
+hoàn toàn cho tầng 0, và trên diễn đàn kiểu Reddit - nơi mỗi bình luận, kể cả
+bình luận lồng nhau, đều có URL riêng - mọi URL solver chạm tới đều lên đầu
+hàng đợi không qua bộ lọc nào, khiến một diễn đàn duy nhất chiếm 58 trên 158
+node của một lượt chạy thật. Bằng chứng ``agent đã đi tới đó'' đủ để
+\emph{ưu tiên} một trang, nhưng không đủ để cho nó quyền chiếm ngân sách khám
+phá không giới hạn.
 
 Thuật toán~\ref{alg:frontier} tóm tắt vòng lặp này. Hệ thống chống trùng ở ba
 mức, bởi cùng một trang có thể xuất hiện dưới ba dạng. Thứ nhất, mỗi URL được

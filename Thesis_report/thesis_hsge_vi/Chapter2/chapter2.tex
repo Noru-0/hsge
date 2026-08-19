@@ -65,36 +65,32 @@ hiệu chỉnh lại của WebArena, được giới thiệu cùng WebRL~\cite{q
 để giảm chi phí cho các vòng lặp huấn luyện tăng cường.
 
 \textbf{Thế hệ thứ tư: web mở, trực tuyến.}
-Nhóm này đánh giá agent trên chính Internet đang vận hành.
-WebVoyager~\cite{he2024webvoyager} chấm agent trên các task lấy từ 15
-website phổ biến, dùng một mô hình thị giác-ngôn ngữ làm bộ chấm.
-Online-Mind2Web~\cite{xue2025illusion} đánh giá 300 task trải trên 136
-website thật và, đáng chú ý, kết luận rằng nhiều báo cáo hiệu năng trước đó
-bị thổi phồng khi đo lại trong điều kiện trực tuyến.
-AssistantBench~\cite{yoran2024assistantbench} gồm 214 task đòi hỏi nhiều
-thời gian tra cứu, còn GAIA~\cite{mialon2024gaia} với 466 câu hỏi và
-BrowseComp~\cite{wei2025browsecomp} với 1266 câu hỏi tập trung vào năng lực
-tìm kiếm thông tin khó chứ không vào thao tác giao diện.
-BEARCUBS~\cite{song2025bearcubs} gồm 111 câu hỏi kèm trajectory duyệt web đã
-được con người xác nhận, và EconWebArena~\cite{liu2025econwebarena} gồm 360
-task trên 82 website kinh tế chính thống. Ưu điểm của nhóm này là tính chân
-thực tuyệt đối; nhược điểm là môi trường thay đổi liên tục nên kết quả khó
-tái lập, và mọi thao tác thay đổi trạng thái đều bị hạn chế vì lý do đạo đức
-và pháp lý.
+Nhóm này đánh giá agent trên chính Internet đang vận hành:
+WebVoyager~\cite{he2024webvoyager} chấm agent trên các task lấy từ 15 website
+phổ biến bằng một mô hình thị giác-ngôn ngữ, còn
+Online-Mind2Web~\cite{xue2025illusion} đánh giá 300 task trải trên 136 website
+thật và, đáng chú ý, kết luận rằng nhiều báo cáo hiệu năng trước đó bị thổi
+phồng khi đo lại trong điều kiện trực tuyến. Một nhánh khác nhấn vào năng lực
+tìm kiếm thông tin khó hơn là thao tác giao diện, gồm
+AssistantBench~\cite{yoran2024assistantbench} (214 task tra cứu dài),
+GAIA~\cite{mialon2024gaia} (466 câu hỏi), BrowseComp~\cite{wei2025browsecomp}
+(1266 câu hỏi), BEARCUBS~\cite{song2025bearcubs} (111 câu hỏi kèm trajectory
+đã được con người xác nhận) và
+EconWebArena~\cite{liu2025econwebarena} (360 task trên 82 website kinh tế
+chính thống). Ưu điểm của nhóm này là tính chân thực tuyệt đối; nhược điểm là
+môi trường thay đổi liên tục nên kết quả khó tái lập, và mọi thao tác thay đổi
+trạng thái đều bị hạn chế vì lý do đạo đức và pháp lý.
 
-\textbf{Mở rộng ra ngoài trình duyệt.}
-WebGames~\cite{thomas2025webgames} tập hợp hơn 50 thử thách tương tác được
-thiết kế để tách bạch từng năng lực cụ thể trong một môi trường kín, tái lập
-được. OSUniverse~\cite{davydova2025osuniverse} chuyển bài toán sang giao
-diện desktop, còn AgentBench~\cite{liu2024agentbench} đặt web thành một
-trong nhiều môi trường dùng để đo năng lực agent nói chung.
+\textbf{Mở rộng ra ngoài trình duyệt.} WebGames~\cite{thomas2025webgames} tập
+hợp hơn 50 thử thách tương tác tách bạch từng năng lực trong một môi trường kín
+tái lập được, OSUniverse~\cite{davydova2025osuniverse} chuyển bài toán sang
+giao diện desktop, còn AgentBench~\cite{liu2024agentbench} đặt web thành một
+trong nhiều môi trường dùng để đo năng lực agent nói chung. Cuối cùng,
+BrowserGym~\cite{drouin2024workarena, dechezelles2025browsergym} không phải
+benchmark mà là một lớp chuẩn hóa giao diện quan sát và hành động giữa nhiều
+benchmark kể trên; runtime của khóa luận được xây dựng trên nền tảng này.
 
-Cuối cùng, BrowserGym~\cite{drouin2024workarena, dechezelles2025browsergym}
-không phải là một benchmark mà là một lớp chuẩn hóa giao diện quan sát và
-hành động giữa nhiều benchmark web agent kể trên. Runtime của khóa luận được
-xây dựng trên nền tảng này.
-
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Đối chiếu các benchmark cho web agent]{Đối chiếu các benchmark cho
 web agent theo mức độ chân thực của môi trường. Mọi số liệu quy mô trong
@@ -170,97 +166,75 @@ nhóm theo thứ tự thời gian.
 
 \subsection{Nhóm 1: cải tiến cấu trúc suy luận}
 
-ReAct~\cite{yao2023react} thiết lập khuôn mẫu cơ bản mà hầu hết các hệ thống
-sau này kế thừa: xen kẽ một bước suy luận bằng ngôn ngữ với một bước hành
-động, nhờ đó mỗi quyết định đều có lập luận tường minh đứng sau.
-RCI~\cite{kim2023rci} bổ sung một vòng tự phê bình, buộc mô hình rà lại kế
-hoạch của chính nó trước khi thực thi.
-Reflexion~\cite{shinn2023reflexion} đưa cơ chế này lên mức episode: sau mỗi
-lần thất bại, agent viết ra một bản tự kiểm điểm bằng ngôn ngữ và giữ lại
-làm ngữ cảnh cho lần thử tiếp theo.
-AdaPlanner~\cite{sun2023adaplanner} cho phép điều chỉnh kế hoạch ngay giữa
-chừng dựa trên phản hồi của môi trường thay vì chỉ sửa sau khi kết thúc.
-Sumers và cộng sự~\cite{sumers2024cognitive} hệ thống hóa các biến thể này
-thành một khung kiến trúc nhận thức chung, phân tách rõ bộ nhớ, quá trình ra
-quyết định và không gian hành động.
+ReAct~\cite{yao2023react} thiết lập khuôn mẫu mà hầu hết hệ thống sau này kế
+thừa: xen kẽ một bước suy luận bằng ngôn ngữ với một bước hành động, nhờ đó mỗi
+quyết định đều có lập luận tường minh đứng sau. Các công trình tiếp theo bổ
+sung những vòng phản hồi ở các mức khác nhau - tự phê bình trước khi thực thi
+(RCI~\cite{kim2023rci}), tự kiểm điểm sau mỗi episode và giữ lại làm ngữ cảnh
+cho lần thử sau (Reflexion~\cite{shinn2023reflexion}), sửa kế hoạch ngay giữa
+chừng theo phản hồi môi trường (AdaPlanner~\cite{sun2023adaplanner}) - và Sumers
+cùng cộng sự~\cite{sumers2024cognitive} hệ thống hóa chúng thành một khung kiến
+trúc nhận thức chung, phân tách bộ nhớ, quá trình ra quyết định và không gian
+hành động.
 
-Trên riêng WebArena, SteP~\cite{sodhi2024step} đề xuất một kiến trúc phân
-tầng gồm nhiều chính sách LLM, cho phép tự động chuyển đổi giữa các chính
-sách con tùy theo trạng thái hiện tại của agent. Cách tiếp cận này nâng tỷ
-lệ hoàn thành trên WebArena từ 14{,}9\% lên 33{,}5\%. Tuy nhiên, các chính
-sách con của SteP vẫn phải được thiết kế thủ công cho từng họ website, nên
-chưa loại bỏ được sự phụ thuộc vào công sức và tri thức từ con người trong
-quá trình xây dựng agent.
-
-AgentOccam~\cite{yang2024agentoccam} đưa ra một phản biện đáng chú ý cho cả
-nhóm này: chỉ cần thiết kế cẩn thận không gian quan sát và hành động, không
-cần bổ sung cơ chế lập kế hoạch phức tạp, cũng có thể đạt 43{,}1\% trên
-WebArena - vượt qua nhiều hệ thống đương thời, trong đó có chính SteP. Kết
-quả này cho thấy phần lớn mức cải thiện về hiệu năng của agent đến từ cách
-biểu diễn giao diện và không gian hành động, thay vì chỉ từ các cơ chế lập
-kế hoạch.
+Riêng trên WebArena, SteP~\cite{sodhi2024step} dùng kiến trúc phân tầng gồm
+nhiều chính sách LLM chuyển đổi theo trạng thái, nâng tỷ lệ hoàn thành từ
+14{,}9\% lên 33{,}5\%; nhưng các chính sách con vẫn phải thiết kế thủ công cho
+từng họ website, nên chưa gỡ được sự phụ thuộc vào công sức con người.
+AgentOccam~\cite{yang2024agentoccam} đưa ra phản biện đáng chú ý cho cả nhóm:
+chỉ cần thiết kế cẩn thận không gian quan sát và hành động, không thêm cơ chế
+lập kế hoạch phức tạp nào, cũng đạt 43{,}1\% - vượt nhiều hệ thống đương thời,
+trong đó có chính SteP. Nói cách khác, phần lớn mức cải thiện đến từ cách biểu
+diễn giao diện và không gian hành động chứ không từ bản thân cơ chế lập kế
+hoạch.
 
 \subsection{Nhóm 2: grounding hành động vào giao diện}
 
 Nhóm thứ hai xuất phát từ nhận định rằng nút thắt không nằm ở suy luận mà ở
-việc \emph{chỉ đúng phần tử} cần thao tác.
-SeeAct~\cite{zheng2024seeact} tách bài toán thành hai giai đoạn, sinh ý định
-hành động rồi mới grounding ý định đó vào một phần tử cụ thể, và chỉ ra rằng
-GPT-4V suy luận tốt nhưng grounding kém - chính bước grounding mới là điểm
-gãy.
-SeeClick~\cite{cheng2024seeclick} và CogAgent~\cite{hong2024cogagent} loại
-bỏ hẳn cây DOM, huấn luyện mô hình thị giác-ngôn ngữ dự đoán trực tiếp tọa
-độ trên ảnh chụp màn hình.
-ShowUI~\cite{lin2024showui} hợp nhất thị giác, ngôn ngữ và hành động vào một
-mô hình duy nhất.
-Gần đây, UI-TARS~\cite{qin2025uitars},
-InfiGUIAgent~\cite{liu2025infiguiagent}, UI-AGILE~\cite{lian2025uiagile} và
-UI-Venus~\cite{gu2025uivenus} đẩy hướng này xa hơn bằng học tăng cường và
-suy luận nội sinh, biến grounding thành năng lực được huấn luyện chứ không
-phải một bước xử lý hậu kỳ.
-
-Hạn chế chung của nhóm này đối với bài toán của khóa luận là chúng tối ưu
-một bước hành động đơn lẻ. Việc chỉ đúng phần tử là điều kiện cần, nhưng
-không trả lời được câu hỏi \emph{nên làm gì tiếp theo} trong một quy trình
-nhiều trang.
+việc \emph{chỉ đúng phần tử} cần thao tác. SeeAct~\cite{zheng2024seeact} tách
+bài toán thành sinh ý định rồi mới grounding ý định đó vào một phần tử cụ thể,
+và chỉ ra rằng GPT-4V suy luận tốt nhưng grounding kém - chính bước grounding
+mới là điểm gãy. Từ đó, một loạt hệ thống bỏ hẳn cây DOM để dự đoán trực tiếp
+trên ảnh chụp màn hình (SeeClick~\cite{cheng2024seeclick},
+CogAgent~\cite{hong2024cogagent}, ShowUI~\cite{lin2024showui}), rồi gần đây
+dùng học tăng cường và suy luận nội sinh để biến grounding thành năng lực được
+huấn luyện chứ không phải một bước xử lý hậu kỳ (UI-TARS~\cite{qin2025uitars},
+InfiGUIAgent~\cite{liu2025infiguiagent}, UI-AGILE~\cite{lian2025uiagile},
+UI-Venus~\cite{gu2025uivenus}). Hạn chế chung của nhóm này đối với bài toán của
+khóa luận là chúng tối ưu một bước hành động đơn lẻ: chỉ đúng phần tử là điều
+kiện cần, nhưng không trả lời được câu hỏi \emph{nên làm gì tiếp theo} trong
+một quy trình nhiều trang.
 
 \subsection{Nhóm 3: nâng năng lực nội tại của mô hình}
 
-Nhóm thứ ba không tối ưu prompt mà cập nhật trọng số.
-WebGUM~\cite{furuta2024webgum} fine-tune một mô hình nền đa phương thức trên
-dữ liệu điều hướng web.
-WebAgent~\cite{gur2024webagent} kết hợp lập kế hoạch, xử lý ngữ cảnh dài và
-sinh mã Python để thao tác trên website thật.
-AutoWebGLM~\cite{lai2024autowebglm} xây dựng một agent 6B bằng fine-tuning
-có giám sát theo curriculum kết hợp học theo sở thích.
-NNetNav~\cite{murty2024nnetnav} và Go-Browse~\cite{gandhi2026gobrowse} thay
-nguồn dữ liệu gán nhãn thủ công bằng dữ liệu do chính agent tự khám phá;
-hai hệ thống này được phân tích kỹ ở Mục~\ref{sec:rel-datagen} vì chúng
-thuộc cùng hướng với khóa luận.
-Khóa luận này thuộc nhóm 3.
+Nhóm thứ ba không tối ưu prompt mà cập nhật trọng số:
+WebGUM~\cite{furuta2024webgum} fine-tune một mô hình nền đa phương thức trên dữ
+liệu điều hướng web; WebAgent~\cite{gur2024webagent} kết hợp lập kế hoạch, xử
+lý ngữ cảnh dài và sinh mã Python để thao tác trên website thật;
+AutoWebGLM~\cite{lai2024autowebglm} xây dựng một agent 6B bằng fine-tuning có
+giám sát theo curriculum kết hợp học theo sở thích. NNetNav~\cite{murty2024nnetnav}
+và Go-Browse~\cite{gandhi2026gobrowse} thay nguồn dữ liệu gán nhãn thủ công
+bằng dữ liệu do chính agent tự khám phá; hai hệ thống này được phân tích kỹ ở
+Mục~\ref{sec:rel-datagen} vì thuộc cùng hướng với khóa luận. Khóa luận này
+thuộc nhóm 3.
 
 \subsection{Nhóm 4: mở rộng ra ngoài trình duyệt}
 
-Cùng khuôn mẫu đã được áp dụng cho các nền tảng khác.
-GPTDroid~\cite{liu2023gptdroid}, AutoDroid~\cite{wen2024autodroid} và
-DroidAgent~\cite{yoon2023droidagent} điều khiển giao diện Android, trong đó
-hai hệ thống sau nhắm thẳng vào bài toán kiểm thử tự động thay vì hoàn thành
-task cho người dùng.
-TaskMatrix.AI~\cite{liang2023taskmatrix} nối mô hình nền với hàng loạt API
-thay vì thao tác giao diện.
-Ở chiều ngược lại, Song và cộng sự~\cite{song2025apiagents} chỉ ra rằng khi
-website có sẵn API thì gọi API hiệu quả hơn hẳn thao tác giao diện, và đề
-xuất agent lai giữa hai phương thức.
-WALT~\cite{prabhu2025walt} để agent tự chưng cất các thao tác lặp lại trên
-website thành công cụ tái sử dụng được - ý tưởng gần với việc phát hiện
-skill của khóa luận, nhưng công cụ ở đó phục vụ suy luận chứ không trở thành
-dữ liệu huấn luyện.
-HxAgent~\cite{hxagent2026} lập kế hoạch lặp cho bài toán kiểm thử đầu cuối,
-tách hẳn một mô hình đánh giá trạng thái khỏi mô hình grounding hành động,
-và trích các quy tắc hành vi từ cả trajectory thành công lẫn thất bại để
-điều kiện hóa các bước sau.
+Cùng khuôn mẫu đã được áp dụng cho các nền tảng khác: điều khiển giao diện
+Android cho tự động hóa tác vụ hoặc kiểm thử (GPTDroid~\cite{liu2023gptdroid},
+AutoDroid~\cite{wen2024autodroid}, DroidAgent~\cite{yoon2023droidagent}), và
+nối mô hình nền với API thay vì thao tác giao diện
+(TaskMatrix.AI~\cite{liang2023taskmatrix}) - ở chiều ngược lại, Song và cộng
+sự~\cite{song2025apiagents} chỉ ra rằng khi website có sẵn API thì gọi API hiệu
+quả hơn hẳn, và đề xuất agent lai giữa hai phương thức. Hai hệ thống gần khóa
+luận nhất nằm ở nhóm này: WALT~\cite{prabhu2025walt} để agent tự chưng cất các
+thao tác lặp lại thành công cụ tái sử dụng được - ý tưởng gần với việc phát
+hiện skill, nhưng công cụ ở đó phục vụ suy luận chứ không trở thành dữ liệu
+huấn luyện; và HxAgent~\cite{hxagent2026} lập kế hoạch lặp cho kiểm thử đầu
+cuối, tách hẳn mô hình đánh giá trạng thái khỏi mô hình grounding hành động, và
+trích quy tắc hành vi từ cả trajectory thành công lẫn thất bại.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Khảo sát các agent thao tác giao diện]{Khảo sát các agent thao tác
 giao diện, nhóm theo thành phần mà mỗi hệ thống tập trung cải tiến. Cột
@@ -452,7 +426,7 @@ tiêu huấn luyện một mô hình ngôn ngữ nhỏ hay không. Các ô trong
 trên nội dung công bố của chính các tác giả; ô \LEFTcircle{} đánh dấu những trường
 hợp hệ thống chỉ đáp ứng một phần tiêu chí.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Định vị HSGE so với các hệ thống liên quan gần nhất]{Định vị HSGE
 so với các hệ thống liên quan gần nhất. \CIRCLE{} = có,

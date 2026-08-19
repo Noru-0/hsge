@@ -49,7 +49,7 @@ Bốn website thuộc nền tảng WebArena~\cite{zhou2024webarena} bao gồm: S
 
 Về hạ tầng phần cứng, nghiên cứu sử dụng dịch vụ GPU cho thuê theo giờ trên nền tảng vast.ai (Bảng~\ref{tab:infra}). Riêng quá trình khám phá không yêu cầu tài nguyên GPU cục bộ, do các agent khám phá hoàn toàn giao tiếp với API của các mô hình ngôn ngữ đóng. Vì vậy, quy trình này được vận hành trực tiếp trên máy tính cá nhân, thực hiện nhiệm vụ điều khiển trình duyệt Chromium thông qua bộ thư viện Playwright và BrowserGym~\cite{dechezelles2025browsergym}.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Hạ tầng tính toán và chi phí]{Hạ tầng tính toán, thời gian và chi
 phí GPU của từng giai đoạn. Đơn giá thuê tại thời điểm thực nghiệm là
@@ -111,7 +111,7 @@ lệ với \emph{số lời gọi LLM} chứ không với thời gian chạy. B�
 thống kê ngân sách lời gọi thực tế của cả bốn đợt khám phá, đếm trực tiếp
 từ các sản phẩm mà hệ thống ghi lại.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Ngân sách lời gọi LLM của giai đoạn khám phá]{Ngân sách lời gọi LLM
 của cả bốn đợt khám phá, đếm từ nhật ký sự kiện và các tệp episode. Số lời
@@ -159,7 +159,7 @@ nếu số token được ghi ngay tại lớp gọi API, chi phí sẽ quy đư
 website, từng vai trò và từng task, qua đó cho phép so sánh hiệu quả chi phí
 giữa các cấu hình khám phá thay vì chỉ so tổng.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Chi phí API của giai đoạn khám phá]{Chi phí API thực tế của giai
 đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp.}
@@ -386,7 +386,7 @@ prompt mà solver sử dụng lúc chạy thật, bao gồm cả cách cắt ng�
 accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp
 \texttt{\{thought, action\}}.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Tập dữ liệu huấn luyện theo website]{Tập dữ liệu huấn luyện theo
 website, sau khi qua cổng chấm và cổng ``hành động hữu hiệu''. Hai cột cuối
@@ -458,7 +458,7 @@ $3{,}0 \times 10^{-5}$, mức phù hợp khi tiếp tục tinh chỉnh từ nh�
 
 Bảng~\ref{tab:sft} tổng hợp cấu hình và kết quả.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Kết quả fine-tuning]{Kết quả fine-tuning LoRA. Quá trình huấn luyện
 chạy trên hai loại GPU (H100-80GB rồi A100-40GB) nên thời gian mỗi bước không
@@ -514,7 +514,7 @@ mỗi bước ở mức 630\,W). Trạng thái này không phát sinh cảnh bá
 Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 task chính thức của
 bốn website. Toàn bộ 655 task đều được chấm điểm: không task nào phát sinh lỗi môi trường, không task nào bị bỏ qua. Mẫu số của mọi tỷ lệ trong bảng vì thế là số task đầy đủ của website tương ứng.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Kết quả đánh giá chính trên WebArena]{Kết quả trên bộ task chính
 thức của WebArena. Hai dòng đánh dấu $\dagger$ được đo trên một checkpoint
@@ -545,7 +545,7 @@ Shopping Admin & 182 & 39 & 21{,}4 $\pm$ 6{,}0 \\
 
 Để tách đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ 655 task được đo lại một lần nữa trên mô hình Qwen3.5-9B \emph{chưa} fine-tune. Mọi thứ khác giữ nguyên: prompt, ngân sách bước, cấu hình giải mã và bộ chấm đã mô tả ở mục~\ref{sec:exp-protocol}. Khác biệt duy nhất giữa hai đợt đo là trọng số nạp vào máy chủ suy luận. Đợt đo mô hình nền chỉ bắt đầu sau khi cơ sở dữ liệu của cả bốn website đã được khôi phục về trạng thái nguyên bản. Lý do đến từ một đợt đo trước đó: khi hai lượt quét chạy nối tiếp trên cùng một instance mà không khôi phục dữ liệu ở giữa, những thay đổi lượt trước để lại sẽ được bộ chấm ghi nhận cho lượt sau. Cả bốn website đều hoàn tất đủ mẫu số, không có task nào phát sinh lỗi môi trường.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Đối chứng mô hình nền và mô hình sau fine-tune]{Đối chứng giữa mô
 hình nền Qwen3.5-9B và mô hình sau fine-tune, đo trên cùng bộ task chính
@@ -608,7 +608,7 @@ giá trên 655 task thuộc bốn website. Vì vậy, Bảng~\ref{tab:related}
 trên đúng bốn website này, dựa trên bảng kết quả chi tiết theo từng website
 mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[So sánh với các công trình liên quan]{So sánh trên đúng bốn website
 được đánh giá. Cột ``Tổng (4 site)'' được tính lại theo trung bình có trọng
@@ -725,7 +725,7 @@ và quan sát này phủ định một giả thuyết tưởng chừng hiển nh
 Bảng~\ref{tab:crosssite} đối chiếu tỷ lệ dữ liệu huấn luyện của mỗi website
 với kết quả đánh giá trên chính website đó.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Tỷ lệ dữ liệu so với điểm số theo website]{Tỷ lệ dữ liệu huấn
 luyện so với điểm số theo website. Thứ hạng hai cột không trùng nhau.}
@@ -774,7 +774,7 @@ episode thất bại được gán \emph{đúng một} nguyên nhân chính theo
 tiên từ cụ thể đến tổng quát, nhờ vậy tổng các dòng trong
 Bảng~\ref{tab:failures} bằng đúng số episode thất bại.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Phân loại nguyên nhân thất bại]{Nguyên nhân chính của các episode
 thất bại (mỗi episode một nhãn). Mỗi ô ghi số episode kèm tỷ lệ phần trăm
@@ -852,7 +852,7 @@ trên 655 episode, tức 26{,}0\% (Bảng~\ref{tab:profile}).
 
 Vì mô hình nền và mô hình sau fine-tune được đo trên cùng một tập task với cùng cấu hình, các chỉ số phụ ghi lại trong trace cho phép mô tả \emph{fine-tuning đã thay đổi hành vi của agent theo hướng nào}, chứ không chỉ nó thay đổi bao nhiêu điểm. Bảng~\ref{tab:profile} tổng hợp năm chỉ số như vậy.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption[Chân dung hành vi của hai mô hình]{Các chỉ số hành vi cộng dồn trên
 toàn bộ 655 task, đo từ trace của hai lượt đánh giá. ``Phiên hỏng định dạng''
