@@ -9,8 +9,19 @@
   \titlepage
 \end{frame}
 
-% No outline frame: the section bar in the headline is visible on every slide
-% and does the same job, and the Faculty caps the deck at 15 slides.
+% Outline frame
+\begin{frame}{Nội dung báo cáo}
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+% Show outline before each section
+\AtBeginSection[]
+{
+  \begin{frame}{Nội dung báo cáo}
+    \tableofcontents[currentsection,hideallsubsections]
+  \end{frame}
+}
+
 \input{sections/01_gioithieu}
 \input{sections/02_phuongphap}
 \input{sections/03_thucnghiem}

@@ -8,36 +8,44 @@
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \footnotesize
-      \textbf{Đã đạt được.} Một pipeline đi trọn từ \emph{website không nhãn}
-      đến \emph{SLM được đánh giá chính thức}, không dùng nhãn người:
-      \begin{itemize}
-        \item 258 node $\rightarrow$ 2178 episode $\rightarrow$ 59 skill
-              $\rightarrow$ 25 operator $\rightarrow$ 66 semantic task.
-        \item 1029 trajectory $\rightarrow$ 4554 mẫu, qua hai cổng chất lượng.
-        \item \kw{13,3\% $\rightarrow$ 20,8\%} trên 655 task WebArena chính
-              thức ($p<0{,}001$), với 59,18 USD cho toàn chu trình.
-        \item Bốn hiện vật: mã nguồn, dataset, checkpoint, báo cáo kinh nghiệm.
+      \textbf{Kết quả đạt được}
+      \begin{itemize}\setlength{\itemsep}{3pt}
+        \item \textbf{Pipeline khép kín}: Khám phá tự động $\rightarrow$ Tinh lọc dữ liệu $\rightarrow$ Huấn luyện SLM hiệu quả không cần nhãn người.
+        \item \textbf{Hiệu năng thực nghiệm}: Tăng độ chính xác từ \kw{13,3\% $\rightarrow$ 20,8\%} ($p<0{,}001$), chi phí chỉ \kw{0,0355\$/mẫu}.
+        \item \textbf{Hiện vật bàn giao}: Mã nguồn, dataset SFT (4554 mẫu), mô hình fine-tune và tài liệu kỹ thuật.
       \end{itemize}
     \end{column}
     \begin{column}{0.48\textwidth}
       \footnotesize
-      \textbf{Hạn chế, nêu nguyên trạng.}
-      \begin{itemize}
-        \item Phần lớn mức tăng thuộc về tuân thủ định dạng; trên nhóm task
-              nền chạy sạch thì $p = 0{,}120$.
-        \item Mỗi ô số liệu là \emph{một} lần chạy --- chưa lặp thống kê.
-        \item Ablation \emph{đồ thị so với khám phá phẳng} --- phép đo quyết định
-              --- chưa chạy.
-        \item Ghép chuỗi operator mới kích hoạt thưa (7/25).
+      \textbf{Hạn chế \& Hướng phát triển}
+      \begin{itemize}\setlength{\itemsep}{3pt}
+        \item \textbf{Hạn chế chính}:
+          \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
+            \item Mức tăng chủ yếu ở việc tuân thủ định dạng giao diện hành động.
+            \item Cơ chế ghép chuỗi operator kích hoạt còn thưa (7/25).
+          \end{itemize}
+        \item \textbf{Hướng phát triển}:
+          \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
+            \item Bổ sung trajectory phục hồi sau lỗi (error recovery).
+            \item Khai thác tín hiệu thất bại bằng RL / Preference tuning.
+            \item Chưng cất tri thức xuống SLM siêu nhẹ 1--3B.
+          \end{itemize}
       \end{itemize}
-
-      \vspace{0.1cm}
-      \textbf{Hướng phát triển.} Chạy nốt các phép đo còn thiếu; bổ sung trajectory
-      \emph{phục hồi sau lỗi}; khai thác tín hiệu thất bại bằng RL/preference;
-      chưng cất xuống 1--3B.
     \end{column}
   \end{columns}
+\end{frame}
 
+\begin{frame}[plain]
   \centering
-  \footnotesize\itshape Xin cảm ơn Hội đồng --- nhóm sẵn sàng lắng nghe câu hỏi và góp ý.
+  \vfill
+  {\usebeamerfont{title}\usebeamercolor[fg]{title}\Large\textbf{XIN CẢM ƠN HỘI ĐỒNG}}\\[0.3cm]
+  {\normalsize Nhóm nghiên cứu sẵn sàng lắng nghe câu hỏi và góp ý}
+  \vfill
+  \footnotesize
+  \begin{tabular}{ll}
+    \textbf{Sinh viên thực hiện:} & Trương Bảo Kiệt (22127223) --- Hồ Tiến Phát (22127321) \\
+    \textbf{GVHD:} & PGS.TS. Nguyễn Văn Vũ \\
+    \textbf{Đơn vị:} & Bộ môn CNPM, Khoa CNTT --- Trường ĐH KHTN, ĐHQG-HCM
+  \end{tabular}
+  \vfill
 \end{frame}

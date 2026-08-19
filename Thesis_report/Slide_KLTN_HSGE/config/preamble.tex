@@ -16,22 +16,14 @@
 \usepackage{xcolor}
 \graphicspath{{images/}}
 
-% No navigation symbols. Antibes stacks a section bar over a row of per-frame
-% dots and a subsection bar; this deck has no subsections, so keep only the
-% section bar (mini frames emptied so nothing gets clipped in it) and give the
-% reclaimed vertical space back to the content.
+% Navigation symbols & clean headline (remove jammed navigation bar at top)
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{mini frames}{}
-\setbeamertemplate{headline}{%
-  \begin{beamercolorbox}[ht=2.6ex,dp=1.3ex]{section in head/foot}
-    \insertnavigation{\paperwidth}
-  \end{beamercolorbox}
-}
+\setbeamertemplate{headline}{}
 
-% A thin footline: reserves a bottom margin (Antibes has none, so body text ran
-% to the paper edge) and gives the committee a slide number to refer to in Q&A.
+% A clean footline: reserves a bottom margin and gives slide numbers
 \setbeamertemplate{footline}{%
-  \hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.0ex,dp=0.9ex,leftskip=1em,rightskip=1em]{section in head/foot}%
+  \hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.2ex,dp=1.0ex,leftskip=1.2em,rightskip=1.2em]{section in head/foot}%
     \usebeamerfont{footline}\scriptsize\insertshortauthor\hfill
     \insertframenumber\,/\,\inserttotalframenumber%
   \end{beamercolorbox}}%

@@ -8,110 +8,95 @@
   \begin{center}
     \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{fig_pipeline.pdf}
   \end{center}
-  \figcap{Vòng lặp khép kín: khám phá $\rightarrow$ phát hiện \textbf{skill}
-  $\rightarrow$ nâng thành \textbf{operator} $\rightarrow$ ghép chuỗi thành
-  \textbf{semantic task}; tri thức thu được lại nuôi vòng khám phá kế tiếp.}
+  \figcap{Vòng lặp khép kín: Khám phá $\rightarrow$ Phát hiện skill $\rightarrow$ Quy nạp operator $\rightarrow$ Ghép semantic task $\rightarrow$ Tinh lọc dữ liệu.}
 \end{frame}
 
 \begin{frame}{Biểu diễn: đồ thị hai tầng}
   \begin{columns}[c]
-    \begin{column}{0.62\textwidth}
+    \begin{column}{0.58\textwidth}
       \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{fig_twolevel.pdf}
     \end{column}
-    \begin{column}{0.36\textwidth}
+    \begin{column}{0.40\textwidth}
       \footnotesize
-      \textbf{Tầng thấp} --- trạng thái trang đã thăm, nối bởi cạnh hành động
-      (website mô hình hóa như một POMDP).
-
-      \vspace{0.25cm}
-      \textbf{Tầng cao} --- skill dưới dạng \emph{option} $\langle I,\pi,\beta\rangle$,
-      nâng thành \textbf{operator} mang \emph{precondition} và \emph{effect} phát
-      biểu bằng ngôn ngữ tự nhiên đã chuẩn hóa.
-
-      \vspace{0.25cm}
-      Hai operator nối được với nhau khi \kw{effect} của cái trước
-      \kw{thỏa precondition} của cái sau --- cạnh này sinh ra task dài hạn.
-
-      \vspace{0.25cm}
-      \textit{Hệ quả:} tri thức khám phá được lưu ở dạng \emph{tái sử dụng và
-      tái tổ hợp được}, không phải một đống trajectory rời rạc.
+      \textbf{Đồ thị hai tầng (Two-level Graph)}
+      \begin{itemize}\setlength{\itemsep}{4pt}
+        \item \textbf{Tầng thấp (State Graph)}:
+          Không gian POMDP gồm các trang đã thăm \& hành động chuyển trang.
+        \item \textbf{Tầng cao (Operator Graph)}:
+          Option $\langle I,\pi,\beta\rangle$ được nâng thành \textbf{Operator} mang \textit{Precondition} \& \textit{Effect} chuẩn hóa.
+        \item \textbf{Liên kết ngữ nghĩa}:
+          $\text{Effect}_A \models \text{Precondition}_B \Rightarrow$ Ghép nối sinh task dài hạn.
+        \item \textbf{Ưu thế}: Tri thức được lưu dạng \kw{tái sử dụng \& tái tổ hợp}.
+      \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Khám phá có định hướng: frontier hai tầng}
   \begin{columns}[c]
-    \begin{column}{0.63\textwidth}
+    \begin{column}{0.58\textwidth}
       \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_frontier.pdf}
     \end{column}
-    \begin{column}{0.35\textwidth}
+    \begin{column}{0.40\textwidth}
       \footnotesize
-      \textbf{Tier 0} --- URL solver đã thực sự đi tới: vào thẳng hàng đợi.
-
-      \textbf{Tier 1} --- liên kết khai thác từ DOM: phải qua \emph{giới hạn theo
-      khuôn dạng URL} ($\le 3$ trang/khuôn dạng), nên hàng nghìn trang sản phẩm
-      hay bài đăng không làm ngập frontier.
-
-      \vspace{0.2cm}
-      Ưu tiên: \emph{tầng} $\rightarrow$ \emph{độ mới của khuôn dạng}
-      $\rightarrow$ \emph{độ sâu}. Node có nội dung trùng mã băm với trang đã
-      thăm thì bị bỏ qua (\kw{31/258} node).
-
-      \vspace{0.2cm}
-      \textbf{Solver} có chốt chặn cấu trúc thay vì chỉ nhắc bằng prompt:
-      \emph{dừng cứng} khi lặp cùng một đích mà trang không đổi.
+      \textbf{Cơ chế Frontier hai tầng}
+      \begin{itemize}\setlength{\itemsep}{4pt}
+        \item \textbf{Tier 0}: URL do solver ghé thăm thực tế $\rightarrow$ Ưu tiên hàng đầu.
+        \item \textbf{Tier 1}: URL trích từ DOM $\rightarrow$ Giới hạn $\le 3$ trang/khuôn dạng (chống tràn frontier).
+        \item \textbf{Lọc trùng cấu trúc}: Mã băm nội dung loại bỏ \kw{31/258} node trùng lặp.
+        \item \textbf{Solver Guard}: Dừng cứng khi lặp hành động mà trạng thái không đổi.
+      \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Phát hiện skill và quy nạp operator}
   \begin{columns}[c]
-    \begin{column}{0.40\textwidth}
-      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{fig_discovery.pdf}
+    \begin{column}{0.38\textwidth}
+      \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_discovery.pdf}
     \end{column}
-    \begin{column}{0.58\textwidth}
+    \begin{column}{0.60\textwidth}
       \footnotesize
-      Chỉ chạy trên trajectory của task \emph{đã giải thành công}:
-
-      \begin{enumerate}
-        \item \textbf{Phân cắt} --- cắt trajectory tại điểm đổi URL và điểm
-              tụt độ tương đồng accessibility tree, có LLM trọng tài.
-        \item \textbf{Gom cụm} --- clusterer phi tham số theo ngưỡng cosine.
-        \item \textbf{Trừu tượng hóa} --- nâng cụm thành \emph{SkillCard}
-              có tham số.
-        \item \textbf{Kiểm chứng} --- chỉ thu nhận khi lặp lại thành công
-              trong ngữ cảnh khác; không đạt thì loại.
+      \textbf{4 bước phát hiện Skill (từ episode thành công)}:
+      \begin{enumerate}\scriptsize\setlength{\itemsep}{1.5pt}
+        \item \textbf{Phân cắt}: Cắt theo đổi URL và tụt tương đồng AXTree (LLM trọng tài).
+        \item \textbf{Gom cụm}: Clusterer phi tham số theo ngưỡng cosine.
+        \item \textbf{Trừu tượng hóa}: Tạo \textit{SkillCard} có tham số hóa.
+        \item \textbf{Kiểm chứng}: Thực thi kiểm chứng trong ngữ cảnh mới.
       \end{enumerate}
 
       \vspace{0.15cm}
-      \textbf{Skill $\rightarrow$ operator}, hai cổng chặn rút ra từ chạy thật:
-      \emph{chống tautology} (effect chỉ lặp lại precondition thì loại) và
-      \emph{grounding} (effect không đúng trên $\ge 50\%$ thành viên thì gỡ bỏ).
-      Prompt quy nạp \emph{nhận thức từ vựng}: tái dùng nguyên văn mệnh đề đã có,
-      vì embedding không hợp nhất được từ đồng nghĩa (0,570 $<$ ngưỡng 0,6).
+      \textbf{Quy nạp Operator \& Cổng chặn}:
+      \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
+        \item \textbf{Chống tautology}: Loại operator có Effect chỉ lặp lại Precondition.
+        \item \textbf{Grounding}: Gỡ bỏ Effect không đúng trên $\ge 50\%$ thành viên cụm.
+        \item \textbf{Lexical-aware prompt}: Tái dùng nguyên văn mệnh đề có sẵn để tăng khả năng ghép chuỗi.
+      \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Sinh semantic task: ghép chuỗi operator}
   \begin{columns}[c]
-    \begin{column}{0.60\textwidth}
+    \begin{column}{0.56\textwidth}
       \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{fig_semantic.pdf}
     \end{column}
-    \begin{column}{0.38\textwidth}
+    \begin{column}{0.42\textwidth}
       \footnotesize
-      Duyệt DFS có chặn trên đồ thị operator: mỗi chuỗi $\ge 2$ operator
-      trở thành \emph{một} semantic task nhiều bước, kèm chỉ dẫn sinh từ
-      mô tả các skill trong chuỗi.
+      \textbf{Hai nguồn sinh Semantic Task}
+      \begin{itemize}\setlength{\itemsep}{4pt}
+        \item \textbf{Ghép chuỗi Operator (Bottom-up)}:
+          Duyệt DFS trên đồ thị operator; chuỗi $\ge 2$ bước $\rightarrow$ sinh task dài hạn kèm chỉ dẫn tự nhiên.
+        \item \textbf{Seed năng lực website (Top-down)}:
+          Sinh từ tổng quan năng lực khi đồ thị còn thưa.
+      \end{itemize}
 
-      \vspace{0.25cm}
-      \textbf{Nguồn thứ hai --- seed năng lực website} (từ trên xuống):
-      dùng khi đồ thị còn quá thưa để hình thành chuỗi.
-
-      \vspace{0.25cm}
-      \textit{Thực tế đo được:} 66 semantic task đã thực thi, chia thành
-      \kw{59 từ seed} và \kw{7 từ ghép chuỗi} --- cơ chế từ dưới lên chạy
-      \emph{đúng thiết kế nhưng thưa}; nguyên nhân được phân tích ở Chương 5.
+      \vspace{0.15cm}
+      \textbf{Kết quả thực thi}:
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item Đã thực thi \kw{66 semantic task} (\textbf{59 từ seed} + \textbf{7 từ ghép chuỗi}).
+        \item Minh chứng cơ chế ghép chuỗi hoạt động đúng thiết kế.
+      \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
@@ -119,29 +104,22 @@
 \begin{frame}{Tinh lọc dữ liệu và nguyên tắc prompt parity}
   \begin{columns}[c]
     \begin{column}{0.32\textwidth}
-      \includegraphics[width=\linewidth,height=0.74\textheight,keepaspectratio]{fig_curation.pdf}
+      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{fig_curation.pdf}
     \end{column}
     \begin{column}{0.66\textwidth}
       \footnotesize
-      \textbf{Không episode nào được tính thành công bằng lời khai của agent.}
-
-      \begin{itemize}
-        \item \textbf{Cổng chấm lại (judge)} --- LLM độc lập chấm lại trên chính
-              trang cuối. Hạ cấp \kw{497 episode ($\approx$32\%)}.
-        \item \textbf{Cổng hành động hữu hiệu} --- task sửa đổi mà không đổi gì
-              trên trang thì loại. Loại thêm \kw{104 trajectory}.
-        \item \textbf{Viết lại suy nghĩ} --- trạng thái, phản tư, subgoal,
-              kiểm tra hoàn thành.
+      \textbf{Kiểm soát chất lượng nghiêm ngặt}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item \textbf{Cổng Judge (LLM độc lập)}: Chấm lại khách quan trên trạng thái trang đích $\rightarrow$ Hạ cấp \kw{497 episode ($\approx$32\%)}.
+        \item \textbf{Cổng Effective Action}: Loại các task thay đổi nhưng không tạo ra tác động thật $\rightarrow$ Loại thêm \kw{104 trajectory}.
+        \item \textbf{Viết lại suy nghĩ (CoT)}: Bổ sung chuỗi suy luận chuẩn hóa (State, Reflection, Subgoal).
       \end{itemize}
 
       \vspace{0.1cm}
-      Judge \emph{không} bắt được nhóm thứ hai, vì nó chỉ xét trang cuối --- mà
-      trang cuối thì không hề đổi.
-
-      \vspace{0.15cm}
-      \textbf{Prompt parity:} prompt huấn luyện \emph{trùng từng byte} với prompt
-      solver lúc chạy thật, kể cả ngưỡng cắt accessibility tree 6000 ký tự. Chia
-      train/val ở cấp \emph{task} $\rightarrow$ \kw{0} mục tiêu trùng nhau.
+      \begin{block}{Nguyên tắc Prompt Parity}
+        \scriptsize
+        Prompt huấn luyện \kw{khớp từng byte} với prompt solver khi suy luận (kể cả ngưỡng cắt AXTree 6000 ký tự). Chia train/val theo cấp task $\rightarrow$ \kw{0} mục tiêu trùng lặp.
+      \end{block}
     \end{column}
   \end{columns}
 \end{frame}

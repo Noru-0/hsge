@@ -6,88 +6,74 @@
 
 \begin{frame}{Thiết lập thực nghiệm và câu hỏi nghiên cứu}
   \begin{columns}[t]
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.48\textwidth}
       \footnotesize
-      \textbf{Môi trường.} Bốn website WebArena tự triển khai --- Shopping,
-      Shopping Admin, GitLab, Reddit. Đánh giá trên \kw{655 task chính thức}
-      của benchmark, chấm bằng bộ chấm tự động, ngân sách 15 bước/task,
-      \texttt{temperature} $=0$.
-
-      \vspace{0.2cm}
-      \textbf{Khám phá.} Bốn đợt, mỗi đợt $\approx$21 giờ trên một website.
-      Mỗi vai trò LLM dùng một mô hình riêng (solver, page\_explorer,
-      episode\_judge, segmenter, operator\_inducer\ldots), tổng
-      \kw{20\,808 lời gọi}.
-
-      \vspace{0.2cm}
-      \textbf{Huấn luyện.} Qwen3.5-9B $+$ LoRA (rank 16, $\alpha$ 32, mọi lớp
-      tuyến tính), LLaMA-Factory, 3 epoch $=$ 804 bước, ngữ cảnh 4096 token;
-      chọn \texttt{checkpoint-536} (3 giờ 05 phút trên H100-80GB).
+      \textbf{Thiết lập thực nghiệm}
+      \begin{itemize}\setlength{\itemsep}{3pt}
+        \item \textbf{Môi trường}: 4 website WebArena tự triển khai (Shopping, Shopping Admin, GitLab, Reddit).
+        \item \textbf{Đánh giá}: \kw{655 task chính thức}, chấm tự động, 15 bước/task, \texttt{temperature} $=0$.
+        \item \textbf{Khám phá}: 4 đợt ($\approx$21h/site), phân tách rõ vai trò các LLM agent (\kw{20\,808 lượt gọi}).
+        \item \textbf{Huấn luyện}: Qwen3.5-9B $+$ LoRA, 3 epoch (804 bước); checkpoint-536 (3h05 trên H100).
+      \end{itemize}
     \end{column}
-    \begin{column}{0.46\textwidth}
-      \footnotesize
-      \begin{block}{Bốn câu hỏi nghiên cứu}
-        \textbf{CH1.} Pipeline thu được gì trên một website chưa có nhãn, và
-        bao nhiêu sống sót qua các cổng chất lượng?
-
-        \textbf{CH2.} Dữ liệu đó có nâng được năng lực của SLM không, và phần
-        nâng lên \emph{thuộc về năng lực nào}?
-
-        \textbf{CH3.} Kết quả đứng ở đâu so với các hệ thống cùng phân khúc
-        dưới 10B?
-
-        \textbf{CH4.} Thành phần nào đóng góp bao nhiêu, điểm nghẽn còn lại
-        ở đâu?
+    \begin{column}{0.50\textwidth}
+      \begin{block}{Bốn câu hỏi nghiên cứu (RQ)}
+        \footnotesize
+        \begin{itemize}\setlength{\itemsep}{2pt}
+          \item[\textbf{CH1.}] Pipeline thu được gì và chi phí bao nhiêu?
+          \item[\textbf{CH2.}] SLM cải thiện năng lực nào sau fine-tune?
+          \item[\textbf{CH3.}] Vị thế so với các hệ thống $<10$B hiện nay?
+          \item[\textbf{CH4.}] Đóng góp từng thành phần \& điểm nghẽn?
+        \end{itemize}
       \end{block}
-      \textit{Nói rõ ngay:} CH4 chỉ được trả lời \emph{một phần} --- các
-      ablation có kiểm soát đã thiết kế nhưng chưa chạy; phần trả lời đến từ
-      phân tích lỗi và đối chiếu liên-website.
+
+      \vspace{0.05cm}
+      {\scriptsize\textit{*CH4 được giải đáp qua phân tích lỗi và đối chiếu liên-website (ablation đầy đủ là hướng phát triển).}}
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}{CH1 --- Pipeline thu được gì, và với chi phí bao nhiêu}
   \begin{columns}[t]
-    \begin{column}{0.50\textwidth}
+    \begin{column}{0.48\textwidth}
       \footnotesize
-      \textbf{Phễu khám phá} (tổng của bốn đợt, mỗi đợt $\approx$21 giờ)
-      \vspace{0.1cm}
+      \textbf{Phễu dữ liệu khám phá} (4 đợt $\approx 84$ giờ)
+      \vspace{0.05cm}
 
-      \begin{tabular}{@{}L{4.9cm} R{1.6cm}@{}}
+      \scriptsize
+      \begin{tabular}{@{}L{4.4cm} R{1.5cm}@{}}
         \toprule
-        Node đã duyệt (31 trùng nội dung) & \textbf{258} \\
+        Node đã duyệt (31 trùng lặp) & \textbf{258} \\
         Episode ghi nhận & \textbf{2178} \\
         Episode hợp lệ sau kiểm chứng & \textbf{1067} \\
         \midrule
-        Skill được thu nhận & \textbf{59} \\
-        Operator được quy nạp & \textbf{25} \\
-        Semantic task đã thực thi & \textbf{66} \\
+        Skill thu nhận & \textbf{59} \\
+        Operator quy nạp & \textbf{25} \\
+        Semantic task thực thi & \textbf{66} \\
         \midrule
         Trajectory vào dataset & \textbf{1029} \\
-        Mẫu huấn luyện (4288 / 266) & \textbf{4554} \\
+        Mẫu huấn luyện (Train/Val) & \textbf{4288 / 266} \\
         \bottomrule
       \end{tabular}
 
-      \vspace{0.15cm}
-      \textbf{0} mục tiêu trùng giữa train và val, \textbf{0} nhãn do con người tạo.
+      \vspace{0.08cm}
+      {\scriptsize \kw{0} mục tiêu trùng train/val, \kw{0} nhãn từ con người.}
     \end{column}
-    \begin{column}{0.48\textwidth}
-      \footnotesize
+    \begin{column}{0.50\textwidth}
       \begin{block}{Chi phí toàn chu trình}
         \footnotesize
-        API khám phá \textbf{36,48} USD $+$ GPU \textbf{22,70} USD
-        $\Rightarrow$ \kw{0,0355 USD / trajectory}
-        {\scriptsize (Go-Browse: 0,0976 USD --- cao hơn $\approx$2,7 lần)}
+        API khám phá: \textbf{\$36,48} $+$ GPU: \textbf{\$22,70} \\
+        $\Rightarrow$ \kw{0,0355 USD / trajectory} \\
+        {\scriptsize (Go-Browse: \$0,0976 --- HSGE rẻ hơn $\approx$2,7 lần)}
       \end{block}
 
-      \vspace{-0.1cm}
-      \textbf{Ba nhận xét}
-      \begin{itemize}
-        \item Nguồn semantic task rất lệch: \textbf{59} từ seed, chỉ \textbf{7}
-              từ ghép chuỗi operator.
-        \item Task GOAL khó hơn task cục bộ: 37,9\% so với 42,0\% và 52,0\%.
-        \item Hai cổng chất lượng loại \textbf{497} episode và \textbf{104}
-              trajectory.
+      \vspace{0.05cm}
+      \footnotesize
+      \textbf{Nhận xét chính}
+      \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
+        \item Nguồn semantic task: \textbf{59} từ seed, \textbf{7} từ ghép chuỗi.
+        \item Task dài hạn (GOAL) khó hơn cục bộ (37,9\% vs 42,0\%/52,0\%).
+        \item Cổng kiểm soát loại bỏ \textbf{497} episode và \textbf{104} trajectory rác.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -98,7 +84,7 @@
   \footnotesize
   \setlength{\tabcolsep}{4pt}
   \begin{table}
-    \begin{tabular}{@{}L{2.6cm} R{2.9cm} R{3.0cm} R{1.9cm} R{2.3cm}@{}}
+    \begin{tabular}{@{}L{2.6cm} R{2.7cm} R{2.7cm} R{1.8cm} R{2.2cm}@{}}
       \toprule
       \textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
       \textbf{Chênh lệch} & \textbf{$p$ (McNemar)} \\
@@ -109,51 +95,45 @@
       Shopping Admin & 23/182 $=$ 12,6\% & 28/182 $=$ 15,4\% & $+$2,7 & 0,383 \\
       \midrule
       \textbf{Tổng} & \textbf{87/655 $=$ 13,3\%} & \textbf{136/655 $=$ 20,8\%} &
-      \textbf{$+$7,5} & \textbf{$<$0,001} \\
+      \kw{$+$7,5\%} & \kw{$<$0,001} \\
       \bottomrule
     \end{tabular}
   \end{table}
 
-  \vspace{0.15cm}
+  \vspace{0.1cm}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \scriptsize
-      Cùng tập task, cùng prompt, cùng ngân sách bước, cùng bộ chấm --- khác biệt
-      duy nhất là trọng số nạp vào máy chủ suy luận. \textbf{McNemar theo cặp}:
-      77 task chỉ mô hình fine-tune giải được, 28 task chỉ mô hình nền giải được.
+      \textbf{Đánh giá công bằng, nghiêm ngặt}:\\
+      Cùng tập task, prompt, ngân sách bước và bộ chấm. McNemar theo cặp: 77 task chỉ mô hình fine-tune giải được (vs 28 task mô hình nền).
     \end{column}
     \begin{column}{0.48\textwidth}
       \scriptsize
-      Đạt ý nghĩa thống kê trên \textbf{ba trong bốn} website; riêng Shopping
-      Admin ($p=0{,}383$) chưa tách khỏi nhiễu. Cơ sở dữ liệu cả bốn website
-      được khôi phục nguyên trạng trước khi đo mô hình nền.
+      \textbf{Ý nghĩa thống kê}:\\
+      Đạt độ tin cậy cao trên 3/4 website. Cơ sở dữ liệu cả 4 website được khôi phục nguyên trạng trước mỗi lượt đo.
     \end{column}
   \end{columns}
 \end{frame}
 
-\begin{frame}{CH2--CH3 --- Phần tăng thuộc về năng lực nào, và đứng ở đâu}
+\begin{frame}{CH2--CH3 --- Phân tích năng lực và so sánh hệ thống}
   \begin{columns}[t]
     \begin{column}{0.50\textwidth}
       \footnotesize
-      \begin{alertblock}{Giới hạn diễn giải quan trọng nhất}
-        Mô hình nền hỏng \emph{định dạng đầu ra} ở \kw{170/655 (26,0\%)}
-        episode; fine-tune chỉ 2/655.
-        \begin{itemize}
-          \item Trên đúng 170 task đó: nền \textbf{0}, fine-tune \textbf{35}.
-          \item Trên 485 task nền chạy sạch: 87 vs 101,
-                \textbf{$p = 0{,}120$ --- chưa đạt ý nghĩa}.
+      \begin{alertblock}{Năng lực cốt lõi đạt được}
+        \scriptsize
+        Mô hình nền bị lỗi \textbf{định dạng đầu ra} ở \kw{170/655 (26,0\%)} episode; sau fine-tune chỉ còn \kw{2/655 (0,3\%)}.
+        \begin{itemize}\setlength{\itemsep}{1pt}
+          \item Trên 170 task lỗi định dạng: Nền giải \textbf{0} $\rightarrow$ Fine-tune giải \textbf{35}.
+          \item Trên 485 task nền chạy sạch: 87 vs 101 ($p=0{,}120$).
         \end{itemize}
-        $\Rightarrow$ \textbf{35 trong 49} task tăng thêm thuộc về việc học
-        \emph{tuân thủ giao diện hành động}.
+        $\Rightarrow$ \textbf{35/49 task tăng thêm} đến từ việc học \kw{tuân thủ giao diện hành động}.
       \end{alertblock}
-      {\scriptsize Kèm một điều chỉnh thủ công phía mô hình nền; số liệu thô
-      103/655 $=$ 15,7\% cũng được báo cáo nguyên trạng.}
     \end{column}
     \begin{column}{0.48\textwidth}
       \scriptsize
       \begin{table}
         \centering
-        \begin{tabular}{@{}L{3.9cm} R{2.4cm}@{}}
+        \begin{tabular}{@{}L{3.6cm} R{2.2cm}@{}}
           \toprule
           \textbf{Mô hình} & \textbf{Tổng 4 site (\%)} \\
           \midrule
@@ -168,49 +148,40 @@
           \bottomrule
         \end{tabular}
       \end{table}
-      {\scriptsize Nguồn: Bảng 3, Go-Browse~(2026), tính lại theo trọng số.}
 
-      \vspace{0.1cm}
+      \vspace{0.05cm}
       \footnotesize
-      Cao hơn NNetNav-7B, tiệm cận GPT-4o-mini, thấp hơn Go-Browse-7B 1,8 điểm ---
-      với dữ liệu nhỏ hơn một bậc độ lớn. Nhưng \textbf{không} phải so sánh có
-      kiểm soát.
+      \textbf{Vị thế hệ thống}:
+      \begin{itemize}\scriptsize\setlength{\itemsep}{1pt}
+        \item Vượt NNetNav-7B (19,1\%), tiệm cận GPT-4o-mini (20,0\%).
+        \item Kém Go-Browse (22,6\%) 1,8\% nhưng dùng dữ liệu nhỏ hơn một bậc độ lớn.
+      \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}{Demo: mô hình sau fine-tune giải một task WebArena}
   \begin{columns}[c]
-    \begin{column}{0.42\textwidth}
+    \begin{column}{0.44\textwidth}
       \footnotesize
-      \textbf{Task}: một task lấy nguyên văn từ bộ chính thức, mô hình chưa từng
-      thấy khi huấn luyện.
-
-      \vspace{0.2cm}
-      \textbf{Xin Hội đồng lưu ý ba điểm}
-      \begin{itemize}
-        \item Mỗi bước chỉ nhận URL $+$ accessibility tree, không nhận ảnh.
-        \item Mô hình phát ra cặp \texttt{\{thought, action\}} đúng định dạng ---
-              đây là năng lực mô hình nền không có.
-        \item Kết thúc bằng \texttt{send\_msg\_to\_user}, và bộ chấm của
-              benchmark tự xác nhận, không phải agent tự khai.
+      \textbf{Đặc điểm thực thi của mô hình}
+      \begin{itemize}\setlength{\itemsep}{4pt}
+        \item \textbf{Đầu vào tinh gọn}: Chỉ nhận URL $+$ accessibility tree (không dùng ảnh).
+        \item \textbf{Định dạng chuẩn}: Sinh chuỗi suy luận \texttt{thought} và \texttt{action} chuẩn xác.
+        \item \textbf{Tự động chấm}: Benchmark chính thức tự kiểm chứng kết quả hoàn thành task.
       \end{itemize}
     \end{column}
-    \begin{column}{0.56\textwidth}
-      % Thay khối này bằng ảnh poster của video demo khi đã quay xong:
-      %   \includegraphics[width=\linewidth]{demo_poster.png}
-      % Video phát riêng ngoài slide (xem cue trong presentation_script.md).
+    \begin{column}{0.54\textwidth}
       \centering
       \setbeamercolor{demoframe}{bg=structure.fg!8,fg=structure.fg}
       \begin{beamercolorbox}[wd=\linewidth,ht=0.52\textheight,center]{demoframe}
         \vfill
         {\large \textbf{[\,VIDEO DEMO\,]}}\\[0.3cm]
-        {\footnotesize Phát video ở đây --- 60--90 giây}
+        {\footnotesize Minh họa tác nhân thực thi task WebArena}
         \vfill
       \end{beamercolorbox}
-      \vspace{0.15cm}
-      {\scriptsize\itshape Video đã quay sẵn, không thao tác trực tiếp trên
-      website sống trong lúc bảo vệ.}
+      \vspace{0.1cm}
+      {\scriptsize\itshape Video thực thi 60--90 giây quay sẵn.}
     \end{column}
   \end{columns}
 \end{frame}
