@@ -187,25 +187,20 @@ Nguyên nhân là hai lực kéo ngược nhau. Một bên, cổng chặn mệnh
 \section{Cạm bẫy khi huấn luyện và serving SLM}
 \label{sec:disc-slm}
 
-\subsection{Chat template là một thành phần cốt lõi của mô hình}
-
-Họ mô hình đích mặc định sinh ra các đoạn suy nghĩ tường minh, trong khi dữ liệu huấn luyện của hệ thống chỉ bao gồm các cặp suy nghĩ và hành động đã được chuẩn hóa. Chat template đúng vì vậy phải lấy thẳng từ kho mẫu của framework huấn luyện~\cite{zheng2024llamafactory} chứ không đoán theo tài liệu, và phải được áp y hệt trên từng yêu cầu lúc triển khai. Lệch một chút giữa hai giai đoạn là huấn luyện hoặc đánh giá trên một phân phối khác hẳn phân phối đã thiết kế.
-
-Bài học: \emph{chat template và các tham số giải mã là một phần của chính sản phẩm mô hình, không phải thứ phụ trợ}; cấu hình lúc huấn luyện và lúc serving phải được quản lý như một.
-
-\subsection{Prompt dùng để kiểm tra cũng phải là prompt thật}
-
-Một lần tưởng là hỏng mô hình, hóa ra hỏng ở prompt đem đi kiểm tra. Trong một lượt thử nhanh sau khi fine-tune, chúng tôi dùng một prompt viết lại cho gần giống prompt của solver. Mô hình liên tục sinh ra những đoạn mô tả bằng lời thay vì hành động thực thi được, và kết luận đầu tiên của chúng tôi là bước fine-tuning đã thất bại. Thử lại bằng đúng prompt lấy thẳng từ mã nguồn của solver, mô hình sinh ra hành động chuẩn ngay.
-
-Đó là lý do nguyên tắc \emph{prompt parity} (Mục~\ref{sec:method-data}) phải được thi hành bằng \emph{import} chứ không bằng chép tay: system prompt gốc và các hàm phụ trợ được nạp thẳng vào cả bộ dựng tập dữ liệu lẫn bộ đánh giá. Bài học: prompt lúc đánh giá phải trùng prompt lúc chạy thật, nếu không kết quả đo được nói về prompt nhiều hơn nói về mô hình.
-
-
-\subsection{Cách ly phụ thuộc môi trường}
-
-Chạy được một kiến trúc mô hình vừa phát hành thường đòi thư viện mô hình hóa bản mới, mà bản mới đó lại xung khắc với phiên bản mà engine serving~\cite{kwon2023vllm} cần. Chúng tôi tách thành ba môi trường riêng cho huấn luyện, serving và đánh giá, mỗi môi trường giữ bộ phiên bản hợp với việc của nó.
-
-Cách này tầm thường nhưng đáng nói, vì nó đổi bản chất công việc: thay vì đi tìm một bộ phiên bản duy nhất làm hài lòng mọi thành phần, chỉ còn ba lần cài đặt độc lập.
-
+Ba cạm bẫy đầu thuộc về khâu vận hành và được ghi lại đầy đủ ở
+Phụ lục~\ref{app:slm-pitfalls}. Tóm tắt: (i) \emph{chat template và các tham số
+giải mã là một phần của chính sản phẩm mô hình} - phải lấy thẳng từ kho mẫu
+của framework huấn luyện~\cite{zheng2024llamafactory} và áp y hệt lúc triển
+khai, vì lệch một chút giữa hai giai đoạn là huấn luyện hoặc đánh giá trên một
+phân phối khác hẳn phân phối đã thiết kế; (ii) \emph{prompt đem đi kiểm tra
+cũng phải là prompt thật} - một lượt thử nhanh dùng prompt viết lại cho gần
+giống prompt của solver đã khiến chúng tôi kết luận nhầm rằng bước fine-tuning
+thất bại, nên nguyên tắc prompt parity (Mục~\ref{sec:method-data}) phải được
+thi hành bằng \emph{import} chứ không bằng chép tay; (iii) \emph{cách ly phụ
+thuộc môi trường} - thư viện mô hình hóa bản mới xung khắc với phiên bản mà
+engine serving~\cite{kwon2023vllm} cần, nên huấn luyện, serving và đánh giá
+được tách thành ba môi trường độc lập thay vì đi tìm một bộ phiên bản duy nhất
+làm hài lòng mọi thành phần.
 
 \subsection{Agent tự chấm bài mình}
 
@@ -261,50 +256,24 @@ Khía cạnh quan trọng nhất về mặt vận hành hệ thống là quy tr�
 \section{Best practice}
 \label{sec:disc-practices}
 
-Bảng~\ref{tab:practices} cô đọng các bài học của chương thành những thực
-hành chúng tôi sẽ áp dụng từ ngày đầu của một dự án tương tự.
-
-\begin{table}[H]
-\centering
-\caption[Các best practice đã chưng cất]{Các best practice cho pipeline
-thu thập dữ liệu bằng agent LLM trên website thật.}
-\label{tab:practices}
-\small
-\begin{tabular}{@{}L{4.4cm} L{8.8cm}@{}}
-\toprule
-\textbf{Thực hành} & \textbf{Lý do (mục)} \\
-\midrule
-Kiểm chứng rồi mới thu nhận & Skill, operator, thành công đều là khoản nợ
-cho tới khi được kiểm độc lập (\ref{sec:disc-slm}, \ref{sec:disc-operators}) \\
-Prompt parity bằng import & Dữ liệu huấn luyện, agent thật, bộ đánh giá
-dùng chung một nguồn prompt; chép tay sẽ trôi dạt (\ref{sec:disc-slm}) \\
-Cấu trúc thay vì quy ước & Xin mô hình trường có kiểu; đừng bao giờ trích
-thông tin an toàn từ văn bản tự do (\ref{sec:disc-guardrails}) \\
-Cơ chế thay vì cảnh báo & Chuyển vi phạm lặp lại của mô hình thành ngân
-sách và lệnh dừng cứng, kiểm chứng trên run thật (\ref{sec:disc-guardrails}) \\
-Duyệt web fail-soft & Thao tác trang nào cũng có thể hỏng; bỏ qua và ghi
-log cục bộ, chỉ sập với điều thật sự bất ngờ (\ref{sec:disc-exploration}) \\
-Lưu bền theo từng node & Run bị ngắt phải để lại sản phẩm nhất quán, nối
-lại được (\ref{sec:disc-exploration}) \\
-An toàn fail-closed & Task không phân loại được tính là phá hoại; hành động
-phá hoại cấp tài khoản bị cấm thẳng (\ref{sec:disc-exploration}) \\
-Chia sẻ từ vựng lúc sinh & Sản phẩm ký hiệu phải khớp nhau về sau nên được
-sinh trên một bộ nhãn chung (\ref{sec:disc-operators}) \\
-Ghim template cùng mô hình & Chat template và cờ giải mã là một phần của
-sản phẩm, cho cả huấn luyện lẫn serving (\ref{sec:disc-slm}) \\
-Ghi mọi thứ thành sự kiện & Nhật ký sự kiện từng run là thứ khiến phân
-tích hậu kỳ (phần lớn chương này) khả thi (\ref{sec:disc-exploration}) \\
-Vị từ cơ học thì viết bằng mã & Bộ chấm ngữ nghĩa chỉ thấy trạng thái
-cuối; lỗi nằm trong lịch sử hành động phải bắt bằng mã (\ref{sec:disc-slm}) \\
-Cách ly theo tài nguyên trạng thái & Song song hóa theo cái tên website là
-chưa đủ; phải xác nhận trên hạ tầng thật (\ref{sec:disc-slm}) \\
-Kiểm tra trước, có cổng chặn & Một đợt chạy dài chỉ được khởi động sau khi
-mọi điều kiện hỏng-lặng-lẽ đã được thử thật (\ref{sec:disc-slm}) \\
-Khôi phục môi trường giữa hai lượt đo & Bộ chấm chỉ nhìn trạng thái cuối, nên
-việc lượt trước để lại sẽ được tính cho lượt sau (\ref{sec:disc-slm}) \\
-\bottomrule
-\end{tabular}
-\end{table}
+Các bài học của chương có thể cô đọng thành một bộ thực hành mà chúng tôi sẽ
+áp dụng từ ngày đầu của một dự án tương tự, xoay quanh bốn nguyên tắc. Thứ
+nhất, \emph{kiểm chứng rồi mới thu nhận}: skill, operator hay một lần tự nhận
+thành công đều là khoản nợ cho tới khi được một cổng độc lập kiểm lại, và
+những vị từ mang tính cơ học phải viết bằng mã chứ không giao cho bộ chấm ngữ
+nghĩa vốn chỉ nhìn thấy trạng thái cuối. Thứ hai, \emph{cơ chế thay vì quy
+ước}: xin mô hình trả về trường có kiểu thay vì trích thông tin an toàn từ văn
+bản tự do, và chuyển các vi phạm lặp lại thành ngân sách kèm lệnh dừng cứng
+thay vì một câu cảnh báo trong prompt. Thứ ba, \emph{đồng nhất bằng cách dùng
+chung một nguồn}: prompt của dữ liệu huấn luyện, của agent thật và của bộ đánh
+giá phải cùng import một chỗ, chat template và cờ giải mã phải được ghim kèm
+mô hình, và các sản phẩm ký hiệu cần khớp nhau về sau thì phải được sinh trên
+một bộ nhãn chung. Thứ tư, \emph{coi hạ tầng thí nghiệm là trạng thái}: duyệt
+web fail-soft và lưu bền theo từng node để một đợt chạy dài bị ngắt vẫn nối
+lại được, cách ly theo tài nguyên trạng thái thay vì theo tên website, khôi
+phục môi trường giữa hai lượt đo, và chỉ khởi động một đợt chạy dài sau khi mọi
+điều kiện hỏng-lặng-lẽ đã được thử thật. Bảng liệt kê đầy đủ mười bốn thực
+hành kèm mục tương ứng nằm ở Phụ lục~\ref{app:practices}.
 
 \section{Nguy cơ đối với tính hợp lệ}
 \label{sec:disc-validity}

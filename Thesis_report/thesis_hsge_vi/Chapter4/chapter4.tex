@@ -92,28 +92,15 @@ và số lượng lời gọi API chứ không tiêu tốn tài nguyên GPU.
 \subsection{Cấu hình mô hình theo vai trò}
 
 Kiến trúc cho phép định tuyến mỗi vai trò LLM tới một mô hình khác nhau
-(mục~\ref{sec:method-impl}). Bảng~\ref{tab:llm-roles} liệt kê cấu hình thực
-tế của các đợt khám phá.
-
-\begin{table}[H]
-\centering
-\caption[Cấu hình LLM theo vai trò]{Cấu hình LLM theo từng vai trò trong các đợt khám phá. Do solver nằm trên luồng xử lý có tần suất gọi cao nhất (đòi hỏi một lời gọi API cho mỗi bước hành động, ước tính khoảng 1200 lời gọi cho mỗi đợt chạy), thành phần này quyết định phần lớn tổng chi phí vận hành.}
-\label{tab:llm-roles}
-\small
-\begin{tabular}{@{}L{4.2cm} L{4.0cm} L{4.8cm}@{}}
-\toprule
-\textbf{Vai trò} & \textbf{Mô hình} & \textbf{Ghi chú} \\
-\midrule
-\texttt{site\_seeder} & GPT-5.6-luna & 1 call/domain \\
-\texttt{page\_explorer} & GPT-5.6-luna & 1 call/node; bật vision + Set-of-Marks~\cite{yang2023som} \\
-\texttt{solver} & GPT-5.6-luna & tối đa 15 call/episode; bật vision \\
-\texttt{solver\_goal} & GPT-5.6-terra & chỉ cho task GOAL nhiều bước \\
-\texttt{episode\_judge} & DeepSeek-chat & 1 call cho mỗi lần tự nhận thành công \\
-\texttt{trajectory\_segmenter}, \texttt{skill\_abstractor}, \texttt{skill\_verifier},
-\texttt{operator\_inducer} & DeepSeek-chat & pipeline phát hiện skill \\
-\bottomrule
-\end{tabular}
-\end{table}
+(mục~\ref{sec:method-impl}). Cả bốn đợt khám phá dùng chung một cách phân bổ:
+các vai trò làm việc trực tiếp với trang - \texttt{site\_seeder},
+\texttt{page\_explorer} và \texttt{solver} - dùng GPT-5.6-luna có bật thị giác
+kèm Set-of-Marks~\cite{yang2023som}, riêng task GOAL nhiều bước dùng
+GPT-5.6-terra; toàn bộ pipeline phát hiện skill cùng bộ chấm lại episode dùng
+DeepSeek-chat. Bảng phân bổ đầy đủ kèm tần suất gọi và tham số sinh của từng
+vai trò nằm ở Phụ lục~\ref{app:design-config}. Vì solver nằm trên luồng có tần
+suất gọi cao nhất - một lời gọi cho mỗi bước hành động, khoảng 1200 lời gọi
+mỗi đợt chạy - thành phần này quyết định phần lớn tổng chi phí vận hành.
 
 \subsection{Chi phí của giai đoạn khám phá}
 \label{sec:exp-cost-explore}
@@ -218,33 +205,14 @@ cùng cấu trúc và không cùng tập website.
 
 \subsection{Tham số chạy}
 
-Bảng~\ref{tab:runparams} liệt kê các tham số điều khiển vòng lặp khám phá.
-Cả bốn đợt khám phá đều sử dụng chung một cấu hình; danh sách tham số đầy đủ
-được trình bày ở Phụ lục~\ref{app:design-params}.
-
-\begin{table}[H]
-\centering
-\caption[Tham số vòng lặp khám phá]{Tham số vòng lặp khám phá (giống nhau
-trên cả bốn website).}
-\label{tab:runparams}
-\small
-\begin{tabular}{@{}L{4.6cm} L{1.8cm} L{6.6cm}@{}}
-\toprule
-\textbf{Tham số} & \textbf{Giá trị} & \textbf{Ý nghĩa} \\
-\midrule
-\texttt{max\_steps} & 15 & ngân sách hành động cho task cục bộ \\
-\texttt{goal\_max\_steps} & 25 & ngân sách cho task GOAL nhiều bước \\
-\texttt{max\_tasks} & 9 & số task đề xuất cho mỗi node \\
-\texttt{maturity} & 2 & số lần một cụm phải lặp lại để thành operator \\
-\texttt{unprefixed\_sampling} & bật & giải lại mỗi task đã giải được từ trang gốc \\
-\texttt{verify\_episodes} & bật & LLM chấm lại mọi lần tự nhận thành công \\
-\texttt{use\_site\_seed} & bật & sinh task GOAL từ seed năng lực của website \\
-\texttt{plan\_subgoals} & bật & phân rã GOAL thành chuỗi subgoal \\
-\texttt{mine\_hrefs} & bật & khai thác \texttt{<a href>} vào frontier \\
-\texttt{per\_template\_cap} & 3 & giới hạn số node cho mỗi khuôn dạng URL (tier 1) \\
-\bottomrule
-\end{tabular}
-\end{table}
+Cả bốn đợt khám phá đều chạy trên cùng một cấu hình vòng lặp: ngân sách 15
+bước hành động cho task cục bộ và 25 bước cho task GOAL nhiều bước, 9 task đề
+xuất mỗi node, ngưỡng \texttt{maturity} $=2$ lần lặp lại để một cụm trở thành
+operator, cùng bốn cơ chế được bật gồm lấy mẫu không tiền tố, chấm lại episode
+bằng LLM, sinh task GOAL từ seed năng lực website và khai thác liên kết
+\texttt{<a href>} vào frontier với giới hạn 3 node cho mỗi khuôn dạng URL.
+Danh sách tham số đầy đủ kèm giá trị đã dùng được trình bày ở
+Phụ lục~\ref{app:design-params}.
 
 \subsection{Quy trình đánh giá}
 \label{sec:exp-protocol}
@@ -833,29 +801,8 @@ Tuyên bố xong mà không làm gì & 0 & 0 & 2 (1\%) & 0 \\
 
 Các nguyên nhân trên có thể chồng lấn lên nhau; chẳng hạn hiện tượng kẹt
 vòng lặp thường đi kèm một chuỗi lỗi hành động. Vì vậy,
-Bảng~\ref{tab:signals} báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu
+Phụ lục~\ref{app:signals} báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu
 hiệu} tại bất kỳ vị trí nào trong một episode thất bại.
-
-\begin{table}[H]
-\centering
-\caption[Dấu hiệu xuất hiện trong episode thất bại]{Tần suất mỗi dấu hiệu
-xuất hiện ở bất kỳ đâu trong một episode thất bại, tính bằng phần trăm số
-episode thất bại của website đó. Các dòng chồng lấn nên không cộng thành
-100.}
-\label{tab:signals}
-\small
-\begin{tabular}{@{}L{4.6cm} R{2.1cm} R{2.1cm} R{2.1cm} R{2.1cm}@{}}
-\toprule
-\textbf{Dấu hiệu (\%)} & \textbf{Shopping} & \textbf{Reddit} &
-\textbf{GitLab} & \textbf{Sh.\ Admin} \\
-\midrule
-Có lỗi hành động & 85 & 96 & 95 & 93 \\
-Cạn ngân sách 15 bước & 35 & 40 & 45 & 47 \\
-Kẹt vòng lặp & 34 & 37 & 31 & 35 \\
-Tự báo bất khả thi & 26 & 31 & 31 & 27 \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \subsection{Nhận xét từ kết quả phân loại lỗi}
 

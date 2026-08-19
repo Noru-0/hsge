@@ -116,6 +116,18 @@
 \renewcommand{\listtablename}{Danh sách bảng}
 \renewcommand{\appendixname}{Phụ lục}
 
+% Base font size 13pt (Faculty guideline allows 13pt or 14pt).
+% NOTE: extreport/extsizes has no 13pt option — passing [13pt] to \documentclass
+% silently falls back to 10pt. The fontsize package is the correct way.
+\usepackage[fontsize=13pt]{fontsize}
+
+% Tables, figures and captions are set single-spaced (body text stays at 1.5).
+\usepackage{etoolbox}
+\AtBeginEnvironment{table}{\singlespacing}
+\AtBeginEnvironment{longtable}{\singlespacing}
+\AtBeginEnvironment{figure}{\singlespacing}
+\AtBeginEnvironment{algorithm}{\singlespacing}
+
 % Cover page
 \usepackage{tikz}
 \usetikzlibrary{calc, positioning, arrows.meta, shapes.geometric}

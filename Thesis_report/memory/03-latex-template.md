@@ -84,6 +84,15 @@ Cần TeX Live có gói tiếng Việt (vntex/T5).
   style IEEE. Ghi chú nội bộ (kiểu "VERIFY: cần kiểm venue") phải để dưới
   dạng comment `%` phía trên entry, không để trong `note` — đã bị lọt ra
   PDF một lần.
+- **`\documentclass[13pt]{extreport}` là một cái bẫy câm.** extsizes chỉ có
+  8/9/10/11/12/14/17/20pt; truyền `13pt` thì LaTeX chỉ ghi
+  `Unused global option(s): [13pt]` rồi rơi về **10pt** (đo thật: quyển ra
+  126 trang thay vì 207). Muốn 13pt thật thì dùng
+  `\usepackage[fontsize=13pt]{fontsize}` — có sẵn trong TeX Live 2026.
+  Quy định Khoa cho phép cả 13pt lẫn 14pt.
+- **Lề của `thesis_hsge_vi` đã đúng quy định** (top 30 / bottom 35 / left 35 /
+  right 20 mm) — ghi chú "template lệch lề" ở file 01 là nói về `thesis_v3`,
+  không áp cho quyển HSGE.
 - Máy này đọc file rời rạc giữa các lệnh shell hay dính **bản cache cũ**
   (`main.bbl` báo 0 byte dù vừa ghi 55 KB). Chạy build + kiểm tra trong
   **một script duy nhất**, và xác minh trên `pdftotext main.pdf` thay vì

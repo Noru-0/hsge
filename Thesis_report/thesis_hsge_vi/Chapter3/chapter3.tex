@@ -1135,100 +1135,42 @@ khớp với dữ liệu lúc huấn luyện - đó chính là phía triển kha
 \section{Ghi chú cài đặt}
 \label{sec:method-impl}
 
-HSGE được cài đặt bằng Python. Bảng~\ref{tab:modules} đối chiếu các giai
-đoạn của pipeline với module tương ứng trong hệ thống.
+HSGE được cài đặt bằng Python; Phụ lục~\ref{app:design-modules} đối chiếu từng
+giai đoạn của pipeline với module cài đặt tương ứng.
 
-Mỗi \emph{vai trò} - tức mỗi thành phần trong pipeline gọi một LLM riêng
-cho một việc cụ thể (site seeder, explorer, solver, solver riêng cho task
-ngữ nghĩa, bộ lập kế hoạch subgoal, bộ cắt đoạn, bộ trừu tượng hóa, bộ kiểm
-chứng, inducer và judge) - đều có thể được gán một mô hình riêng. Nhờ vậy,
-những thành phần bị gọi liên tục có thể dùng mô hình rẻ hơn, còn mô hình
-mạnh dành cho các bước đòi chất lượng cao như giải semantic task, quy nạp
-operator và chấm lại episode. Hai vai trò trực tiếp làm việc với trang, tức
-explorer và solver, còn bật được chế độ thị giác: prompt khi đó đính kèm
-ảnh chụp màn hình, có thể phủ thêm lớp đánh dấu Set-of-Marks vẽ khung quanh
-các phần tử theo đúng mã định danh trong accessibility tree. Vì một lời gọi
-có đính ảnh đôi khi bị nhà cung cấp trả về rỗng, cả hai vai trò đều thử lại
-một lần ở chế độ thuần văn bản trước khi bỏ qua lời gọi đó.
-
-Với những website có xác thực, hệ thống đăng nhập đúng một lần rồi lưu trạng
-thái phiên làm việc; các lượt chạy sau nạp lại trạng thái đó và bắt đầu khi đã
-đăng nhập sẵn, không phải chạy lại luồng đăng nhập. Đây cũng là lý do
-mọi task liên quan tới tài khoản đều bị cấm ở khâu đề xuất
-(Mục~\ref{sec:method-lowlevel}): tài khoản là tài nguyên dùng chung giữa các
-lượt chạy, và một thao tác đăng xuất hay đổi mật khẩu có thể khóa toàn bộ các
-lượt chạy sau ra ngoài.
+Mỗi \emph{vai trò} - tức mỗi thành phần trong pipeline gọi một LLM riêng cho
+một việc cụ thể (site seeder, explorer, solver, solver riêng cho task ngữ
+nghĩa, bộ lập kế hoạch subgoal, bộ cắt đoạn, bộ trừu tượng hóa, bộ kiểm chứng,
+inducer và judge) - đều có thể được gán một mô hình riêng. Nhờ vậy, những
+thành phần bị gọi liên tục có thể dùng mô hình rẻ hơn, còn mô hình mạnh dành
+cho các bước đòi chất lượng cao như giải semantic task, quy nạp operator và
+chấm lại episode. Hai vai trò trực tiếp làm việc với trang, tức explorer và
+solver, còn bật được chế độ thị giác: prompt khi đó đính kèm ảnh chụp màn
+hình, có thể phủ thêm lớp đánh dấu Set-of-Marks vẽ khung quanh các phần tử
+theo đúng mã định danh trong accessibility tree; vì một lời gọi có đính ảnh
+đôi khi bị nhà cung cấp trả về rỗng, cả hai vai trò đều thử lại một lần ở chế
+độ thuần văn bản trước khi bỏ qua lời gọi đó. Với những website có xác thực,
+hệ thống đăng nhập đúng một lần rồi lưu trạng thái phiên làm việc để các lượt
+chạy sau bắt đầu khi đã đăng nhập sẵn - đây cũng là lý do mọi task liên quan
+tới tài khoản đều bị cấm ở khâu đề xuất (Mục~\ref{sec:method-lowlevel}): tài
+khoản là tài nguyên dùng chung giữa các lượt chạy, và một thao tác đăng xuất
+hay đổi mật khẩu có thể khóa toàn bộ các lượt chạy sau ra ngoài.
 
 Để chạy tiếp được sau khi gián đoạn, các sản phẩm trung gian gồm skill,
 operator, đồ thị toán tử, kết quả khám phá của từng node và nhật ký sự kiện
-đều được ghi lại sau mỗi node. Ngoài những sản phẩm dạng đọc được đó, hệ thống
-còn ghi một checkpoint nhị phân chứa toàn bộ trạng thái vòng
-lặp: hàng đợi frontier, tập đã thăm, các bộ đếm và mọi đối tượng của khâu phát
-hiện. Checkpoint được thay mới theo cơ chế nguyên tử sau mỗi node -
-ghi đè xong toàn bộ file trong một bước duy nhất, không bao giờ để lại một
-bản ghi dở dang nếu tiến trình bị ngắt giữa chừng - nên một lần dừng đột
-ngột chỉ mất đúng node đang xử lý dở và lượt chạy nối tiếp được từ chỗ đã
-dừng thay vì làm lại từ đầu. Riêng các đối tượng backend, tức khách
-LLM và bộ nhúng, không tuần tự hóa được nên bị tháo ra trước khi ghi và gắn
-lại sau khi nạp.
-
-Mọi thao tác trình duyệt trong vòng lặp cũng đều theo hướng fail-soft: một node không tải được thì ghi log, ghi nhận kèm lỗi rồi bỏ qua,
-chứ không làm dừng cả một lượt chạy nhiều giờ. Ngược lại, một ngoại lệ thật sự
-bất ngờ ở bất kỳ chỗ nào khác vẫn được để lan lên và dừng hẳn lượt chạy, sau
-khi đã ghi lại trạng thái lỗi.
-
-\begin{table}[H]
-  \centering
-  \caption[Các giai đoạn pipeline và module cài đặt]{Các giai đoạn pipeline
-  và module cài đặt tương ứng.}
-  \label{tab:modules}
-  \begin{tabular}{@{}L{5.2cm} L{8.0cm}@{}}
-    \toprule
-    \textbf{Giai đoạn} & \textbf{Module} \\
-    \midrule
-    Vòng khám phá, frontier &
-    \texttt{webarena/runtime},
-    \texttt{webarena/browser} \\
-
-    Đề xuất và giải task &
-    \texttt{webarena/agents} \\
-
-    URL độc lập máy chủ &
-    \texttt{webarena/urls} \\
-
-    Đăng nhập và phiên đã lưu &
-    \texttt{webarena/auth} \\
-
-    Cắt đoạn &
-    \texttt{segmentation},
-    \texttt{discovery} \\
-
-    Gom cụm, thư viện skill &
-    \texttt{clustering},
-    \texttt{abstraction},
-    \texttt{library} \\
-
-    Operator và lập kế hoạch &
-    \texttt{operators},
-    \texttt{operator\_induction},
-    \texttt{predicate\_registry} \\
-
-    Chấm lại episode (trực tuyến và ngoại tuyến) &
-    \texttt{webarena/verify},
-    \texttt{judge\_episodes} \\
-
-    Dựng tập dữ liệu &
-    \texttt{build\_sft\_dataset} \\
-
-    Chia train/val, gộp nhiều website &
-    \texttt{training/prepare\_dataset},
-    \texttt{training/merge\_datasets} \\
-
-    Huấn luyện và serving &
-    cấu hình LLaMA-Factory, script vLLM \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+đều được ghi lại sau mỗi node, kèm một checkpoint nhị phân chứa toàn bộ trạng
+thái vòng lặp: hàng đợi frontier, tập đã thăm, các bộ đếm và mọi đối tượng của
+khâu phát hiện. Checkpoint được thay mới theo cơ chế nguyên tử sau mỗi node -
+ghi đè xong toàn bộ file trong một bước duy nhất, không bao giờ để lại một bản
+ghi dở dang nếu tiến trình bị ngắt giữa chừng - nên một lần dừng đột ngột chỉ
+mất đúng node đang xử lý dở và lượt chạy nối tiếp được từ chỗ đã dừng thay vì
+làm lại từ đầu. Riêng các đối tượng backend, tức khách LLM và bộ nhúng, không
+tuần tự hóa được nên bị tháo ra trước khi ghi và gắn lại sau khi nạp. Mọi thao
+tác trình duyệt trong vòng lặp cũng đều theo hướng fail-soft: một node không
+tải được thì ghi log, ghi nhận kèm lỗi rồi bỏ qua, chứ không làm dừng cả một
+lượt chạy nhiều giờ; ngược lại, một ngoại lệ thật sự bất ngờ ở bất kỳ chỗ nào
+khác vẫn được để lan lên và dừng hẳn lượt chạy, sau khi đã ghi lại trạng thái
+lỗi.
 
 \vspace{1em}
 \noindent

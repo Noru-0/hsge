@@ -30,25 +30,23 @@ Khóa luận tạo ra năm sản phẩm chính như sau.
 \begin{enumerate}
 
 \item \textbf{Pipeline HSGE.}
-Hệ thống hiện thực trọn quy trình khám phá có cấu trúc: khám phá website
-theo đồ thị, phát hiện và kiểm chứng skill, quy nạp operator kèm cơ chế chuẩn
-hóa mệnh đề, sinh semantic task từ đồ thị toán tử, và thu thập dữ liệu huấn
-luyện. Cùng một pipeline chạy được trên cả backend mô phỏng dùng để kiểm thử
-lẫn website thật qua trình duyệt.
+Hệ thống hiện thực trọn quy trình khám phá có cấu trúc - khám phá theo đồ thị,
+phát hiện và kiểm chứng skill, quy nạp operator kèm chuẩn hóa mệnh đề, sinh
+semantic task từ đồ thị toán tử - và chạy được trên cả backend mô phỏng dùng
+để kiểm thử lẫn website thật qua trình duyệt.
 
 \item \textbf{Pipeline tinh lọc và tập dữ liệu huấn luyện.}
-Khóa luận xây dựng đầy đủ pipeline tinh lọc dữ liệu gồm các cổng chất lượng
-chấm lại từng episode ngay trong vòng lặp thu thập và trình dựng dataset theo
-nguyên tắc prompt parity. Từ đó thu được tập dữ liệu fine-tuning được xây dựng hoàn
-toàn tự động trên bốn website WebArena tự triển khai: 1760 trajectory và
-8554 mẫu huấn luyện, sau khi các cổng chất lượng đã loại 801 lần tự tuyên bố
-thành công sai và các trajectory không có hành động hữu hiệu nào
+Các cổng chất lượng chấm lại từng episode ngay trong vòng lặp thu thập, và
+trình dựng dataset giữ nguyên tắc prompt parity. Kết quả là một tập dữ liệu
+fine-tuning xây dựng hoàn toàn tự động trên bốn website WebArena tự triển
+khai: 1760 trajectory và 8554 mẫu huấn luyện, sau khi đã loại 801 lần tự tuyên
+bố thành công sai cùng các trajectory không có hành động hữu hiệu nào
 (Mục~\ref{sec:exp-data}).
 
 \item \textbf{Mô hình web agent đã fine-tune.}
-Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập,
-rồi triển khai bằng vLLM. Cấu hình phục vụ tắt chế độ thinking đúng như lúc
-huấn luyện, nên hai giai đoạn dùng chung một dạng đầu vào và đầu ra.
+Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập rồi
+triển khai bằng vLLM, với cấu hình phục vụ tắt chế độ thinking đúng như lúc
+huấn luyện để hai giai đoạn dùng chung một dạng đầu vào và đầu ra.
 
 \item \textbf{Đánh giá trên benchmark WebArena.}
 Khóa luận xây dựng pipeline đánh giá sử dụng cùng prompt với agent triển khai
@@ -66,20 +64,19 @@ mới chỉ được đánh giá một lần
 (Mục~\ref{sec:disc-results}, \ref{sec:disc-validity}).
 
 \item \textbf{Báo cáo kinh nghiệm triển khai.}
-Quá trình xây dựng hệ thống để lại một tập kinh nghiệm và best practice về
-khám phá website, điều khiển agent, quy nạp operator, xây dựng dữ liệu và
-fine-tuning mô hình. Chúng được trình bày ở Chương~\ref{ch:discussion}, kèm
-hướng dẫn tái lập thực nghiệm ở Phụ lục~\ref{app:repro}.
+Quá trình xây dựng hệ thống để lại một tập kinh nghiệm và best practice trải
+trên năm mảng - khám phá website, điều khiển agent, quy nạp operator, xây dựng
+dữ liệu và fine-tuning - trình bày ở Chương~\ref{ch:discussion} kèm hướng dẫn
+tái lập ở Phụ lục~\ref{app:repro}.
 
 \end{enumerate}
 
-Bên cạnh các sản phẩm cụ thể, khóa luận cũng đề xuất một cách tổ chức quá
-trình thu thập dữ liệu cho web agent dựa trên biểu diễn đồ thị. Thay vì sinh thẳng task huấn luyện từ từng trang, phương pháp dựng trước
-một biểu diễn có cấu trúc về các skill đã kiểm chứng, rồi mới khai thác biểu
-diễn đó để tạo semantic task nhiều bước. Cách tiếp cận đó
-giúp tách biệt quá trình khám phá website với quá trình sinh dữ liệu huấn
-luyện, đồng thời mở rộng không gian các task có thể tạo ra từ cùng một tập
-trải nghiệm.
+Bên cạnh các sản phẩm cụ thể, đóng góp về mặt phương pháp là cách tổ chức quá
+trình thu thập dữ liệu quanh một biểu diễn đồ thị: thay vì sinh thẳng task
+huấn luyện từ từng trang, hệ thống dựng trước một biểu diễn có cấu trúc về các
+skill đã kiểm chứng rồi mới khai thác biểu diễn đó để tạo semantic task nhiều
+bước, qua đó tách quá trình khám phá website khỏi quá trình sinh dữ liệu và mở
+rộng không gian task tạo được từ cùng một tập trải nghiệm.
 
 \section{Đối chiếu mục tiêu và kết quả}
 \label{sec:conc-objectives}

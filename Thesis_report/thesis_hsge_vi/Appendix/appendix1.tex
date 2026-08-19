@@ -989,6 +989,35 @@ gồm mục tiêu, số bước, số lỗi hành động và hành động cu�
 nằm trong tạo phẩm đánh giá đi kèm khóa luận
 (Mục~\ref{app:repro-artifacts}).
 
+\section{Tần suất dấu hiệu trong các episode thất bại}
+\label{app:signals}
+
+Bảng~\ref{tab:app-signals} bổ sung cho phần phân loại nguyên nhân thất bại ở
+Mục~\ref{sec:exp-analysis}: thay vì gán cho mỗi episode một nguyên nhân chính,
+bảng này đếm tần suất mỗi \emph{dấu hiệu} xuất hiện tại bất kỳ vị trí nào
+trong một episode thất bại, nên các dòng chồng lấn nhau.
+
+\begin{table}[H]
+\centering
+\caption[Dấu hiệu xuất hiện trong episode thất bại]{Tần suất mỗi dấu hiệu
+xuất hiện ở bất kỳ đâu trong một episode thất bại, tính bằng phần trăm số
+episode thất bại của website đó. Các dòng chồng lấn nên không cộng thành
+100.}
+\label{tab:app-signals}
+\small
+\begin{tabular}{@{}L{4.6cm} R{2.1cm} R{2.1cm} R{2.1cm} R{2.1cm}@{}}
+\toprule
+\textbf{Dấu hiệu (\%)} & \textbf{Shopping} & \textbf{Reddit} &
+\textbf{GitLab} & \textbf{Sh.\ Admin} \\
+\midrule
+Có lỗi hành động & 85 & 96 & 95 & 93 \\
+Cạn ngân sách 15 bước & 35 & 40 & 45 & 47 \\
+Kẹt vòng lặp & 34 & 37 & 31 & 35 \\
+Tự báo bất khả thi & 26 & 31 & 31 & 27 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \chapter{Hướng dẫn quy trình tái lập thực nghiệm}
 \label{app:repro}
 
@@ -1159,6 +1188,79 @@ rất quan trọng vì hai lý do: (1) các máy chủ đám mây tạm thời k
 cố định sẽ xóa vĩnh viễn toàn bộ trace ngay khi tắt máy; và (2)
 mã thoát 0 của lệnh đồng bộ chỉ bảo đảm lệnh đã thực thi xong chứ chưa xác nhận
 dữ liệu thu về đã trùng khớp hoàn toàn.
+
+\section{Cạm bẫy khi huấn luyện và phục vụ mô hình ngôn ngữ nhỏ}
+\label{app:slm-pitfalls}
+
+Ba ghi chú vận hành dưới đây bổ sung cho phần tóm tắt ở
+Mục~\ref{sec:disc-slm}.
+
+\subsection*{Chat template là một thành phần cốt lõi của mô hình}
+
+Họ mô hình đích mặc định sinh ra các đoạn suy nghĩ tường minh, trong khi dữ liệu huấn luyện của hệ thống chỉ bao gồm các cặp suy nghĩ và hành động đã được chuẩn hóa. Chat template đúng vì vậy phải lấy thẳng từ kho mẫu của framework huấn luyện~\cite{zheng2024llamafactory} chứ không đoán theo tài liệu, và phải được áp y hệt trên từng yêu cầu lúc triển khai. Lệch một chút giữa hai giai đoạn là huấn luyện hoặc đánh giá trên một phân phối khác hẳn phân phối đã thiết kế.
+
+Bài học: \emph{chat template và các tham số giải mã là một phần của chính sản phẩm mô hình, không phải thứ phụ trợ}; cấu hình lúc huấn luyện và lúc serving phải được quản lý như một.
+
+\subsection*{Prompt dùng để kiểm tra cũng phải là prompt thật}
+
+Một lần tưởng là hỏng mô hình, hóa ra hỏng ở prompt đem đi kiểm tra. Trong một lượt thử nhanh sau khi fine-tune, chúng tôi dùng một prompt viết lại cho gần giống prompt của solver. Mô hình liên tục sinh ra những đoạn mô tả bằng lời thay vì hành động thực thi được, và kết luận đầu tiên của chúng tôi là bước fine-tuning đã thất bại. Thử lại bằng đúng prompt lấy thẳng từ mã nguồn của solver, mô hình sinh ra hành động chuẩn ngay.
+
+Đó là lý do nguyên tắc \emph{prompt parity} (Mục~\ref{sec:method-data}) phải được thi hành bằng \emph{import} chứ không bằng chép tay: system prompt gốc và các hàm phụ trợ được nạp thẳng vào cả bộ dựng tập dữ liệu lẫn bộ đánh giá. Bài học: prompt lúc đánh giá phải trùng prompt lúc chạy thật, nếu không kết quả đo được nói về prompt nhiều hơn nói về mô hình.
+
+
+\subsection*{Cách ly phụ thuộc môi trường}
+
+Chạy được một kiến trúc mô hình vừa phát hành thường đòi thư viện mô hình hóa bản mới, mà bản mới đó lại xung khắc với phiên bản mà engine serving~\cite{kwon2023vllm} cần. Chúng tôi tách thành ba môi trường riêng cho huấn luyện, serving và đánh giá, mỗi môi trường giữ bộ phiên bản hợp với việc của nó.
+
+Cách này tầm thường nhưng đáng nói, vì nó đổi bản chất công việc: thay vì đi tìm một bộ phiên bản duy nhất làm hài lòng mọi thành phần, chỉ còn ba lần cài đặt độc lập.
+
+\section{Bảng best practice đã chưng cất}
+\label{app:practices}
+
+Bảng~\ref{tab:app-practices} liệt kê đầy đủ các thực hành được tóm tắt ở
+Mục~\ref{sec:disc-practices}, kèm mục đã rút ra từng thực hành đó.
+
+\begin{table}[H]
+\centering
+\caption[Các best practice đã chưng cất]{Các best practice cho pipeline
+thu thập dữ liệu bằng agent LLM trên website thật.}
+\label{tab:app-practices}
+\small
+\begin{tabular}{@{}L{4.4cm} L{8.8cm}@{}}
+\toprule
+\textbf{Thực hành} & \textbf{Lý do (mục)} \\
+\midrule
+Kiểm chứng rồi mới thu nhận & Skill, operator, thành công đều là khoản nợ
+cho tới khi được kiểm độc lập (\ref{sec:disc-slm}, \ref{sec:disc-operators}) \\
+Prompt parity bằng import & Dữ liệu huấn luyện, agent thật, bộ đánh giá
+dùng chung một nguồn prompt; chép tay sẽ trôi dạt (\ref{sec:disc-slm}) \\
+Cấu trúc thay vì quy ước & Xin mô hình trường có kiểu; đừng bao giờ trích
+thông tin an toàn từ văn bản tự do (\ref{sec:disc-guardrails}) \\
+Cơ chế thay vì cảnh báo & Chuyển vi phạm lặp lại của mô hình thành ngân
+sách và lệnh dừng cứng, kiểm chứng trên run thật (\ref{sec:disc-guardrails}) \\
+Duyệt web fail-soft & Thao tác trang nào cũng có thể hỏng; bỏ qua và ghi
+log cục bộ, chỉ sập với điều thật sự bất ngờ (\ref{sec:disc-exploration}) \\
+Lưu bền theo từng node & Run bị ngắt phải để lại sản phẩm nhất quán, nối
+lại được (\ref{sec:disc-exploration}) \\
+An toàn fail-closed & Task không phân loại được tính là phá hoại; hành động
+phá hoại cấp tài khoản bị cấm thẳng (\ref{sec:disc-exploration}) \\
+Chia sẻ từ vựng lúc sinh & Sản phẩm ký hiệu phải khớp nhau về sau nên được
+sinh trên một bộ nhãn chung (\ref{sec:disc-operators}) \\
+Ghim template cùng mô hình & Chat template và cờ giải mã là một phần của
+sản phẩm, cho cả huấn luyện lẫn serving (\ref{sec:disc-slm}) \\
+Ghi mọi thứ thành sự kiện & Nhật ký sự kiện từng run là thứ khiến phân
+tích hậu kỳ (phần lớn chương này) khả thi (\ref{sec:disc-exploration}) \\
+Vị từ cơ học thì viết bằng mã & Bộ chấm ngữ nghĩa chỉ thấy trạng thái
+cuối; lỗi nằm trong lịch sử hành động phải bắt bằng mã (\ref{sec:disc-slm}) \\
+Cách ly theo tài nguyên trạng thái & Song song hóa theo cái tên website là
+chưa đủ; phải xác nhận trên hạ tầng thật (\ref{sec:disc-slm}) \\
+Kiểm tra trước, có cổng chặn & Một đợt chạy dài chỉ được khởi động sau khi
+mọi điều kiện hỏng-lặng-lẽ đã được thử thật (\ref{sec:disc-slm}) \\
+Khôi phục môi trường giữa hai lượt đo & Bộ chấm chỉ nhìn trạng thái cuối, nên
+việc lượt trước để lại sẽ được tính cho lượt sau (\ref{sec:disc-slm}) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Danh mục các tạo phẩm được lưu trữ và báo cáo}
 \label{app:repro-artifacts}
