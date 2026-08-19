@@ -4,60 +4,61 @@
 \section{Quá trình tạo và hoàn thiện báo cáo}
 %%% ============================================================
 
-\subsection{Năm giai đoạn \& phân vai công cụ AI}
-\begin{frame}{Quy trình viết báo cáo: 5 giai đoạn, phân vai rõ ràng}
-  \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
-      \footnotesize
-      \textbf{Năm giai đoạn tạo báo cáo}
-      \begin{enumerate}\scriptsize\setlength{\itemsep}{3pt}
-        \item \textbf{Dàn ý}: brainstorm từ chủ đề, hướng dẫn GVHD, bài báo chính $\rightarrow$ sinh viên chỉnh \& chốt.
-        \item \textbf{Nháp đầu tiên} (từng chương): dàn ý đã chốt $+$ tài liệu tham khảo $+$ dữ liệu thực nghiệm $+$ yêu cầu Khoa.
-        \item \textbf{Phản biện}: 2 pass đọc lại độc lập, đối chiếu với bản đã sửa.
-        \item \textbf{Chỉnh sửa}: thảo luận kế hoạch trước $\rightarrow$ thực thi $\rightarrow$ sinh viên soát PDF trực quan.
-        \item \textbf{Build \& lưu phiên bản}: build sạch, commit Git mô tả rõ từng đợt sửa.
-      \end{enumerate}
-    \end{column}
-    \begin{column}{0.46\textwidth}
-      \begin{block}{Phân vai công cụ}
-        \footnotesize
-        \begin{itemize}\setlength{\itemsep}{3pt}
-          \item \textbf{Công cụ phản biện}: phân tích nhận xét GVHD thành hướng dẫn chi tiết; đọc bản đã sửa để xác nhận + đề xuất thêm.
-          \item \textbf{Công cụ thực thi}: brainstorm dàn ý, viết nháp, sửa \texttt{.tex}, build PDF.
-          \item Tách vai \textit{Viết} vs. \textit{Phản biện} $\rightarrow$ không tự chấm bài mình.
-        \end{itemize}
-      \end{block}
-      \vspace{0.1cm}
-      {\scriptsize \kw{Sinh viên chắt lọc \& quyết định} ở mọi bước — không giao phó quyết định nội dung cho AI.}
-    \end{column}
-  \end{columns}
+\subsection{Năm giai đoạn viết báo cáo}
+\begin{frame}{Báo cáo được viết như thế nào: 5 giai đoạn}
+  \footnotesize
+  Nhóm dùng hai công cụ AI với hai vai trò tách biệt: \textbf{một công cụ để viết}
+  (brainstorm dàn ý, viết nháp, sửa file, build PDF) và \textbf{một công cụ khác để
+  đọc lại và phản biện} bản vừa viết ra --- giống như nhờ một người khác đọc bản
+  thảo thay vì tự mình vừa viết vừa tự chấm điểm cho chính mình. \textbf{Sinh viên
+  là người quyết định} ở mọi bước: chọn giữ ý nào, bỏ ý nào, viết lại câu chữ cuối
+  cùng bằng văn phong của mình.
+
+  \vspace{0.15cm}
+  \textbf{Ví dụ cụ thể — viết Chương 5 (Bàn luận)}:
+  \begin{enumerate}\scriptsize\setlength{\itemsep}{2pt}
+    \item \textbf{Dàn ý}: đưa cho công cụ viết bốn câu hỏi nghiên cứu (CH1--CH4) và
+      số liệu thực nghiệm đã có $\rightarrow$ nó đề xuất dàn ý 3 mục; sinh viên chốt lại.
+    \item \textbf{Viết nháp}: công cụ viết soạn từng mục theo dàn ý đã chốt, chỉ dùng
+      số liệu có thật trong file kết quả, không được tự suy diễn con số.
+    \item \textbf{Đọc lại phản biện}: công cụ đọc lại phát hiện mục CH4 chưa thực sự trả
+      lời câu hỏi đặt ra ở Chương 1 $\rightarrow$ chỉ ra chỗ thiếu, đề xuất hướng bổ sung.
+    \item \textbf{Sinh viên chỉnh sửa}: đọc góp ý, quyết định bổ sung đoạn nào, viết lại
+      bằng lời văn của mình, rồi mới đưa công cụ viết sửa file \texttt{.tex}.
+    \item \textbf{Build lại \& lưu}: build PDF kiểm tra không lỗi, rồi mới commit.
+  \end{enumerate}
 \end{frame}
 
-\subsection{Vòng chỉnh sửa \& kiểm soát chất lượng}
-\begin{frame}{Vòng chỉnh sửa và kiểm soát chất lượng nội dung}
+\subsection{Vòng chỉnh sửa theo nhận xét của GVHD}
+\begin{frame}{Một vòng chỉnh sửa diễn ra như thế nào}
   \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.52\textwidth}
       \footnotesize
-      \textbf{Vòng chỉnh sửa điển hình}
+      \textbf{Các bước, minh họa bằng một lần sửa thật}
       \begin{enumerate}\scriptsize\setlength{\itemsep}{2.5pt}
-        \item GVHD nhận xét định hướng.
-        \item Pass 1: đọc bản hiện tại + nhận xét $\rightarrow$ bản phân tích ưu tiên hóa.
-        \item Thực thi từng khuyến nghị trên \texttt{.tex}, build lại sau mỗi thay đổi.
-        \item Pass 2: \textbf{xác nhận trước} những gì đã cải thiện, rồi mới đề xuất thêm (ưu tiên A/B/C).
-        \item Còn điểm cần sửa $\rightarrow$ quay lại bước 3; đạt thì gửi GVHD.
+        \item GVHD nhận xét: "kết quả và bàn luận đang lẫn vào nhau, tách riêng ra".
+        \item Đọc bản hiện tại cùng nhận xét đó, liệt kê những chỗ cụ thể cần sửa
+          và xếp thứ tự quan trọng.
+        \item Sửa từng chỗ trong file \texttt{.tex}, build lại PDF sau mỗi lần sửa
+          để kiểm tra ngay, không dồn hết vào cuối.
+        \item Đọc lại lần hai: \textbf{xác nhận trước} chỗ nào đã ổn, rồi mới nêu
+          thêm điều còn thiếu, chia theo mức độ ưu tiên.
+        \item Còn điểm cần sửa thì quay lại bước 3; khi ổn thì gửi lại cho GVHD.
       \end{enumerate}
-      {\scriptsize Ví dụ sửa: đổi thuật ngữ toàn cục, thêm roadmap đầu chương, tách câu dài, sửa diagram, sửa lỗi build.}
     \end{column}
-    \begin{column}{0.46\textwidth}
-      \begin{alertblock}{Kiểm soát chất lượng}
+    \begin{column}{0.44\textwidth}
+      \begin{alertblock}{Những gì luôn được kiểm tra lại}
         \footnotesize
         \begin{itemize}\setlength{\itemsep}{2.5pt}
-          \item \textbf{Xác minh trích dẫn}: mọi citation đối chiếu Google Scholar/DOI; không tìm thấy hoặc nội dung không khớp $\rightarrow$ loại/sửa.
-          \item \textbf{Không bịa/chỉnh số liệu}: mọi con số chỉ lấy từ kết quả chạy thật.
-          \item \textbf{Đạo đức AI}: AI là công cụ, không phải tác giả; sinh viên chịu trách nhiệm toàn bộ nội dung, tự viết lại bằng giọng của mình.
+          \item \textbf{Trích dẫn}: mỗi nguồn được tra lại trên Google Scholar/DOI;
+            không tìm thấy, hoặc bài báo không nói đúng điều đang trích, thì bỏ hoặc sửa lại.
+          \item \textbf{Số liệu}: mọi con số trong báo cáo chỉ lấy từ kết quả chạy
+            thực tế, không được bịa hay chỉnh sửa cho đẹp.
+          \item \textbf{Vai trò của AI}: AI chỉ là công cụ hỗ trợ, không phải đồng
+            tác giả; sinh viên chịu trách nhiệm toàn bộ nội dung.
         \end{itemize}
       \end{alertblock}
-      {\scriptsize Build sạch trước mỗi lần nộp: 0 lỗi LaTeX, 0 undefined reference/citation, 0 overfull box.}
+      {\scriptsize Trước mỗi lần nộp: build lại toàn bộ, đảm bảo không còn lỗi biên dịch hay tham chiếu thiếu.}
     \end{column}
   \end{columns}
 \end{frame}

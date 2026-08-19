@@ -5,46 +5,46 @@
 %%% ============================================================
 
 \subsection{Pipeline thu thập dữ liệu}
-\begin{frame}{Pipeline HSGE: vòng lặp khám phá $\rightarrow$ thu thập dữ liệu}
+\begin{frame}{Pipeline HSGE: một vòng lặp khép kín để thu thập dữ liệu}
   \begin{center}
     \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{fig_pipeline.pdf}
   \end{center}
-  \figcap{Vòng lặp khép kín: Khám phá $\rightarrow$ Phát hiện skill $\rightarrow$ Quy nạp operator $\rightarrow$ Ghép semantic task $\rightarrow$ Tinh lọc dữ liệu.}
+  \figcap{Vòng lặp khép kín: khám phá website $\rightarrow$ phát hiện skill $\rightarrow$ quy nạp thành operator $\rightarrow$ ghép thành semantic task $\rightarrow$ lọc lại thành dữ liệu huấn luyện.}
 \end{frame}
 
-\subsection{Thiết lập \& phễu dữ liệu}
-\begin{frame}{Thiết lập thực nghiệm và phễu dữ liệu thu được}
+\subsection{Thiết lập \& dữ liệu qua từng bước lọc}
+\begin{frame}{Thiết lập thực nghiệm và dữ liệu thu được qua từng bước lọc}
   \begin{columns}[t]
     \begin{column}{0.46\textwidth}
       \footnotesize
       \textbf{Thiết lập}
       \begin{itemize}\setlength{\itemsep}{3pt}
         \item \textbf{Môi trường}: 4 website WebArena tự triển khai (Shopping, Shopping Admin, GitLab, Reddit).
-        \item \textbf{Khám phá}: 4 đợt ($\approx$21h/site), \kw{20\,808 lượt gọi LLM}.
-        \item \textbf{Đánh giá}: \kw{655 task chính thức}, chấm tự động, 15 bước/task, \texttt{temperature}$=0$.
-        \item \textbf{Huấn luyện}: Qwen3.5-9B $+$ LoRA, 1119 bước (5h09).
+        \item \textbf{Khám phá}: chạy 4 đợt, khoảng 21 giờ mỗi website, tổng cộng \kw{20\,808 lượt gọi LLM}.
+        \item \textbf{Đánh giá}: \kw{655 task chính thức} của benchmark, chấm tự động, tối đa 15 bước/task, \texttt{temperature}$=0$.
+        \item \textbf{Huấn luyện}: Qwen3.5-9B + LoRA, chạy 1119 bước, mất 5 giờ 09 phút.
       \end{itemize}
     \end{column}
     \begin{column}{0.52\textwidth}
       \footnotesize
-      \textbf{Phễu dữ liệu} (4 website)
+      \textbf{Dữ liệu còn lại sau mỗi bước lọc} (4 website)
       \vspace{0.03cm}
 
       \scriptsize
       \begin{tabular}{@{}L{4.2cm} R{1.4cm}@{}}
         \toprule
-        Node đã duyệt (71 trùng lặp) & \textbf{455} \\
-        Episode ghi nhận & \textbf{3981} \\
-        Episode hợp lệ sau kiểm chứng & \textbf{2117} (53,2\%) \\
+        Trang đã duyệt (bỏ 71 trang trùng nội dung) & \textbf{455} \\
+        Lượt thử ghi nhận & \textbf{3981} \\
+        Lượt thử hợp lệ sau kiểm chứng & \textbf{2117} (53,2\%) \\
         \midrule
-        Skill thu nhận / Operator quy nạp & \textbf{146 / 57} \\
+        Skill thu nhận / quy nạp thành operator & \textbf{146 / 57} \\
         Semantic task sinh ra & \textbf{142} \\
         \midrule
-        Trajectory vào dataset & \textbf{1760} \\
-        Mẫu huấn luyện (Train/Val) & \textbf{8554 / 453} \\
+        Trajectory đưa vào dataset & \textbf{1760} \\
+        Mẫu huấn luyện (Train / Validation) & \textbf{8554 / 453} \\
         \bottomrule
       \end{tabular}
-      {\scriptsize \kw{0} mục tiêu trùng train/val, \kw{0} nhãn từ con người. Chi phí API: \textbf{\$36,48}.}
+      {\scriptsize Toàn bộ dữ liệu tự sinh ra, \kw{không có nhãn nào do con người tạo}; tách train/validation theo cấp task nên \kw{không có task nào xuất hiện ở cả hai tập}. Chi phí API cho cả quá trình: \textbf{\$36,48}.}
     \end{column}
   \end{columns}
 \end{frame}
@@ -75,36 +75,17 @@
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \scriptsize
-      \textbf{Đánh giá công bằng, nghiêm ngặt}: cùng tập task, prompt, ngân sách bước, bộ chấm. McNemar theo cặp: \kw{100 task} chỉ mô hình fine-tune giải được (vs 26 task mô hình nền).
+      \textbf{Đánh giá công bằng, nghiêm ngặt}: mô hình nền và mô hình sau fine-tune
+      được chấm trên cùng bộ task, cùng prompt, cùng ngân sách bước và cùng bộ chấm.
+      Kiểm định McNemar theo cặp cho thấy \kw{100 task} chỉ mô hình sau fine-tune giải
+      được, so với chỉ 26 task ngược lại.
     \end{column}
     \begin{column}{0.48\textwidth}
       \scriptsize
-      \textbf{Diễn giải}: ý nghĩa thống kê trên \kw{toàn bộ 4/4 website} ($p \le 0{,}011$); lỗi định dạng đầu ra giảm từ 26,0\% xuống 0,6\% $\Rightarrow$ SLM làm chủ giao diện hành động.
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\subsection{Minh họa thực thi (Demo)}
-\begin{frame}{Demo: mô hình sau fine-tune giải một task WebArena}
-  \begin{columns}[c]
-    \begin{column}{0.42\textwidth}
-      \footnotesize
-      \textbf{Đặc điểm thực thi}
-      \begin{itemize}\setlength{\itemsep}{4pt}
-        \item \textbf{Đầu vào}: chỉ URL $+$ accessibility tree (không dùng ảnh).
-        \item \textbf{Định dạng chuẩn}: sinh \texttt{thought} và \texttt{action} chuẩn xác.
-        \item \textbf{Tự động chấm}: benchmark chính thức tự kiểm chứng hoàn thành task.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.56\textwidth}
-      \centering
-      \setbeamercolor{demoframe}{bg=structure.fg!8,fg=structure.fg}
-      \begin{beamercolorbox}[wd=\linewidth,ht=0.5\textheight,center]{demoframe}
-        \vfill
-        {\large \textbf{[\,DEMO TRỰC TIẾP / VIDEO\,]}}\\[0.3cm]
-        {\footnotesize Chạy trực tiếp một vòng khám phá + giải task, hoặc video quay sẵn}
-        \vfill
-      \end{beamercolorbox}
+      \textbf{Diễn giải}: mức tăng có ý nghĩa thống kê trên \kw{cả 4/4 website}
+      ($p \le 0{,}011$). Một tín hiệu rõ: tỷ lệ lỗi định dạng đầu ra giảm từ 26,0\%
+      xuống chỉ còn 0,6\% $\Rightarrow$ sau fine-tune, mô hình đã làm chủ được cách
+      thao tác đúng cú pháp trên trang web, không còn "nói sai ngôn ngữ" của agent.
     \end{column}
   \end{columns}
 \end{frame}
