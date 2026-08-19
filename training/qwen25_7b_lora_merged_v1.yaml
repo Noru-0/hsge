@@ -1,0 +1,73 @@
+# LLaMA-Factory LoRA SFT config for Qwen2.5-7B-Instruct on the HSGE
+# **total collected data** (training_data_merged_v1: the full union of the
+# original 4-domain run + the reddit/shopping_admin increment, dedup'd against
+# double-counted replay rows -- see training_data_merged_v1/README.md).
+#
+# Run from the repo root on the GPU box:
+#   /workspace/venvs/train/bin/llamafactory-cli train training/qwen25_7b_lora_merged_v1.yaml
+#
+# Unlike the Qwen3.5-9B configs in this directory, Qwen2.5-7B-Instruct is a
+# plain dense GQA transformer (no Gated DeltaNet, no vision tower), so none of
+# the flash-linear-attention / tilelang / causal-conv1d / AutoModelForImage-
+# TextToText workarounds elsewhere in this repo apply here -- standard
+# LLaMA-Factory + transformers handles it directly.
+#
+# cutoff_len is measured, not a guess: the Qwen2.5 tokenizer on
+# training/data/merged_v1/{train,val}.jsonl gives max 3829 / p99 3455 tokens
+# (2026-08-19), so 4096 has zero truncation risk (see training/README.md's
+# cutoff_len note for why that matters: silent truncation would drop the
+# assistant target).
+
+### model
+model_name_or_path: /workspace/models/Qwen2.5-7B-Instruct
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all
+
+### dataset
+dataset: hsge_merged_v1_train
+eval_dataset: hsge_merged_v1_val
+dataset_dir: training/data/merged_v1
+template: qwen
+cutoff_len: 4096
+overwrite_cache: true
+preprocessing_num_workers: 8
+
+### output
+output_dir: /workspace/saves/qwen25-7b-lora-merged-v1
+logging_steps: 10
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+report_to: none
+
+### train  (effective batch = 1 * 16 = 16)
+# Measured both ways on this dataset, not copied blind from qwen35_9b_lora_all.yaml:
+# batch 4 / accum 4 (that config's 80GB split) ran at ~23.5s/step on an 80GB
+# A100 -- SLOWER than batch 1 / accum 16 at ~19s/step on a 40GB A100, even
+# though both process the same 16 sequences per optimizer step and both hit
+# 100% GPU util. Root cause: this dataset's examples are long and
+# variable-length (mean ~2508 tokens, max 3829), so a micro-batch of 4 pads
+# every sequence in it up to the longest member -- padding waste that outweighs
+# the parallelism gain. Qwen3.5's case (where a bigger batch WAS faster) was a
+# genuinely GPU-starved small batch (0-46% util); that bottleneck doesn't apply
+# here, so batch 1 wins on this data. Re-measure before changing this again.
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 16
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+gradient_checkpointing: true
+
+### eval
+per_device_eval_batch_size: 1
+eval_strategy: epoch

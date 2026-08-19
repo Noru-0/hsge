@@ -1,0 +1,11 @@
+# Merge the Qwen2.5-7B-Instruct LoRA adapter (trained on training_data_merged_v1)
+# into a standalone checkpoint for vLLM serving.
+#   /workspace/venvs/train/bin/llamafactory-cli export training/merge_lora_qwen25_merged_v1.yaml
+model_name_or_path: /workspace/models/Qwen2.5-7B-Instruct
+adapter_name_or_path: /workspace/saves/qwen25-7b-lora-merged-v1
+template: qwen
+trust_remote_code: true
+export_dir: /workspace/models/Qwen2.5-7B-Instruct-merged-v1
+export_size: 5
+export_device: auto
+export_legacy_format: false
