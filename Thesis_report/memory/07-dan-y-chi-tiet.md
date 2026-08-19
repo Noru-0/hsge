@@ -537,3 +537,34 @@ giải pháp → bài học khái quát. Chi tiết dài đẩy xuống Appendix
 Checklist mỗi chương khi viết: roadmap đầu chương, transition cuối chương,
 không ký hiệu tự đặt chưa định nghĩa, mọi hình/bảng được tham chiếu, câu
 <35 từ, mỗi công trình liên quan có câu critique, mọi citation đã verify.
+
+## Cập nhật 2026-08-19: ba điểm cấu trúc học từ `Thesis_report/sample.pdf`
+
+`sample.pdf` (khóa luận mẫu về autoscaling microservices, cùng Khoa, build
+18-08-2026, 123 trang / thân bài 90) là bản mẫu cùng dạng "hướng nghiên cứu
+thực nghiệm" gần nhất hiện có. Ba điểm đã áp dụng:
+
+1. **CH1–CH4 nằm ở Chương 1** (§1.5 `sec:intro-rq`) kèm `tab:rqmap` ánh xạ
+   *Câu hỏi | Mục tiêu | Số liệu | Trả lời ở*. Mẫu đặt RQ ở §1.7 + Bảng 1.1.
+   §4.1 cũ đã bỏ, gộp vào lời mở đầu Chương 4.
+2. **C5 §5.3 "Đối chiếu với các công bố gốc"** (`sec:disc-related`) theo khuôn
+   của mẫu: *công bố gốc tuyên bố gì → ta đo được gì → vì sao lệch*, cho
+   Go-Browse / NNetNav / AWM, cộng một mục định vị định tính giải thích **vì
+   sao** không thực nghiệm nhóm RL, InSTA, ASI. Bảng số ở C4 chỉ nói *khác bao
+   nhiêu*, mục này nói *vì sao khác* — đây là chỗ rubric TC3 ăn điểm.
+3. **Đặt tên cho phát hiện chính** ở §1.6 (Phát hiện 1/2/3) rồi nhắc lại đúng
+   tên đó ở C5 §5.1, giống cách mẫu lặp "Phát hiện 1/2" qua C1/C5/C6.
+
+Hai điểm **không** lấy theo mẫu: tóm tắt của mẫu ~1210 từ / 3 trang (vượt xa
+quy định 200–300 từ — giữ bản 298 từ của ta), và thứ tự front matter của mẫu
+đặt Bảng thuật ngữ trước Mục lục (quy định của Khoa mới là chuẩn).
+
+**Một câu hỏi treo đã có lời giải:** mẫu cũng đặt "Tóm lược nội dung các
+chương" ngay sau Lời cảm ơn, trước Mục lục — đúng vị trí của ta. Giữ nguyên,
+không cần dời.
+
+**Hai điểm của mẫu còn để ngỏ** (chưa làm, cần user quyết vì đảo lại đánh đổi
+đã chốt): C6 "Khung khuyến nghị" dạng bảng (*khi nào nên dùng khám phá có đồ
+thị vs phẳng, ngân sách nào, website loại nào*), và kéo 1–1,5 trang bài học
+giá trị nhất từ Phụ lục E trở lại C5 (mẫu giữ 2 trang kinh nghiệm trong C5 vì
+chúng được đếm là sản phẩm kỹ thuật ở C1/C6).

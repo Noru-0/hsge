@@ -135,6 +135,68 @@ Bảng~\ref{tab:contrib} phân định rõ ranh giới giữa những tài nguy�
     \bottomrule
   \end{tabular}
 \end{table}
+\section{Câu hỏi nghiên cứu}
+\label{sec:intro-rq}
+
+Năm mục tiêu trên được cụ thể hóa thành bốn câu hỏi nghiên cứu. Toàn bộ phần
+thực nghiệm của khóa luận được tổ chức quanh bốn câu hỏi này; mỗi câu hỏi được
+trả lời ở đúng một mục của Chương~\ref{ch:discussion}, dựa trên số liệu của
+đúng một nhóm mục thuộc Chương~\ref{ch:experiments}.
+
+\begin{enumerate}
+  \item[\textbf{CH1.}] Pipeline khám phá thu được những gì khi chạy trên một
+    website thật chưa có nhãn task nào: bao nhiêu skill, bao nhiêu operator,
+    bao nhiêu semantic task, và bao nhiêu trong số đó sống sót qua các cổng
+    lọc chất lượng?
+  \item[\textbf{CH2.}] Dữ liệu đó có nâng được năng lực của một mô hình ngôn
+    ngữ nhỏ trên chính những website đã khám phá hay không, và phần nâng lên
+    thuộc về năng lực nào?
+  \item[\textbf{CH3.}] Kết quả thu được đứng ở đâu so với các hệ thống cùng
+    phân khúc dưới 10 tỷ tham số, và những khác biệt nào về điều kiện đo
+    khiến phép so sánh đó không phải một phép so sánh có kiểm soát?
+  \item[\textbf{CH4.}] Thành phần nào của pipeline đóng góp bao nhiêu vào kết
+    quả, và điểm nghẽn còn lại nằm ở đâu?
+\end{enumerate}
+
+\noindent
+Cần nói rõ ngay từ đầu: CH4 chỉ được trả lời \emph{một phần}. Các ablation có
+kiểm soát chưa được chạy (Mục~\ref{sec:exp-ablation}); phần trả lời được đến
+từ phân tích lỗi và từ đối chiếu liên-website, không từ một phép cô lập biến
+số. Bảng~\ref{tab:rqmap} chỉ ra nơi mỗi câu hỏi được đo và nơi nó được trả
+lời.
+
+\begin{table}[htbp]
+  \centering
+  \caption[Bảng ánh xạ câu hỏi nghiên cứu]{Ánh xạ giữa bốn câu hỏi nghiên
+  cứu, mục tiêu tương ứng, số liệu dùng để trả lời và mục trả lời.}
+  \label{tab:rqmap}
+  \small
+  \begin{tabular}{@{}l L{3.5cm} L{4.3cm} L{2.7cm}@{}}
+    \toprule
+    \textbf{Câu hỏi} & \textbf{Mục tiêu} & \textbf{Số liệu dùng để trả lời} &
+    \textbf{Trả lời ở} \\
+    \midrule
+    CH1 & O1, O2 &
+    Mục~\ref{sec:exp-data} (Bảng~\ref{tab:runs}, \ref{tab:dataset}) &
+    Mục~\ref{sec:disc-results} \\
+    \addlinespace
+    CH2 & O3, O4 &
+    Mục~\ref{sec:exp-main}, \ref{sec:exp-baseline}
+    (Bảng~\ref{tab:baseline}, \ref{tab:profile}) &
+    Mục~\ref{sec:disc-results} \\
+    \addlinespace
+    CH3 & O4 &
+    Mục~\ref{sec:exp-main} (Bảng~\ref{tab:related}) &
+    Mục~\ref{sec:disc-results}, \ref{sec:disc-related} \\
+    \addlinespace
+    CH4 & O1--O4 &
+    Mục~\ref{sec:exp-ablation}, \ref{sec:exp-analysis}
+    (Bảng~\ref{tab:crosssite}, \ref{tab:failures}) &
+    Mục~\ref{sec:disc-results} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \section{Phạm vi}
 \label{sec:intro-scope}
 
@@ -154,10 +216,13 @@ ngoài phạm vi của khóa luận.
 \label{sec:intro-results}
 
 Toàn bộ pipeline đã được cài đặt và chạy trọn vẹn trên bốn website WebArena.
-Mục này tóm tắt những kết quả chính; số liệu chi tiết và cách đo được trình
-bày ở Chương~\ref{ch:experiments}.
+Mục này phát biểu ba phát hiện chính dưới dạng cô đọng nhất; số liệu chi tiết
+và cách đo được trình bày ở Chương~\ref{ch:experiments}, còn phần diễn giải
+thuộc về Chương~\ref{ch:discussion}. Ba phát hiện này được nhắc lại nguyên
+văn khi trả lời các câu hỏi nghiên cứu và khi tổng kết ở
+Chương~\ref{ch:conclusion}.
 
-\textbf{Về khả năng thu thập dữ liệu.} Pipeline đã duyệt 455 node trên bốn
+\textbf{Về khối lượng dữ liệu thu được.} Pipeline đã duyệt 455 node trên bốn
 website, ghi nhận 3981 episode, thu nhận 146 skill đã kiểm chứng và quy nạp
 được 57 operator lập kế hoạch (Bảng~\ref{tab:runs}). Trên nền tri thức đó,
 142 semantic task nhiều bước đã được sinh và thực thi. Sau hai cổng lọc chất lượng tự
@@ -166,9 +231,10 @@ train và 453 mẫu validation không chia sẻ mục tiêu nào với nhau
 (Bảng~\ref{tab:dataset}). Không có bất kỳ mẫu nào trong tập này do con người
 gán nhãn.
 
-\textbf{Về hiệu năng của mô hình.} Qwen3.5-9B sau khi fine-tune bằng LoRA
-trên tập dữ liệu nói trên đạt tỷ lệ hoàn thành 24{,}6\% trên 655 task chính
-thức của bốn website, so với 13{,}3\% của chính mô hình đó khi chưa
+\textbf{Phát hiện 1: dữ liệu do agent tự thu từ website không nhãn là đủ để
+nâng năng lực của một mô hình ngôn ngữ nhỏ.} Qwen3.5-9B sau khi fine-tune
+bằng LoRA trên tập dữ liệu nói trên đạt tỷ lệ hoàn thành 24{,}6\% trên 655
+task chính thức của bốn website, so với 13{,}3\% của chính mô hình đó khi chưa
 fine-tune - chênh lệch 11{,}3 điểm phần trăm, có ý nghĩa thống kê theo kiểm
 định McNemar theo cặp ($p < 0{,}001$, Bảng~\ref{tab:baseline}), và đạt ý
 nghĩa trên cả bốn website. Đặt cạnh các công trình cùng phân khúc
@@ -176,6 +242,26 @@ dưới 10 tỷ tham số khi tính lại trên đúng bốn website này, kết
 NNetNav-7B (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang Go-Browse-7B
 (22{,}6\%) - chênh lệch giữa hai hệ thống nhỏ hơn khoảng tin cậy của phép đo
 nên không phải một khác biệt có ý nghĩa (Bảng~\ref{tab:related}).
+
+\textbf{Phát hiện 2: con số tổng gộp hai năng lực khác hẳn nhau, và tách ra
+thì cả hai đều được dạy.} Một phần mức tăng đến từ việc mô hình học được cách
+phát ra hành động đúng định dạng: 47 trong 74 task tăng thêm thuộc nhóm mà mô
+hình nền hỏng định dạng đầu ra và do đó không thể hoàn thành bất kỳ task nào.
+Phần còn lại thuộc về năng lực \emph{chọn} đúng hành động, và phần này vẫn đạt
+ý nghĩa thống kê: riêng trên nhóm 485 task mà mô hình nền chạy trọn vẹn,
+khoảng cách là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$
+(Mục~\ref{sec:exp-baseline}). Phát hiện này quan trọng vì nó ngăn hai cách đọc
+sai đối nghịch nhau: quy toàn bộ mức tăng cho năng lực suy luận, hoặc gạt bỏ
+toàn bộ mức tăng như một hiệu ứng định dạng.
+
+\textbf{Phát hiện 3: điểm nghẽn còn lại nằm ở tầng thực thi, không nằm ở
+lượng dữ liệu.} Từ 85\% đến 96\% số episode thất bại có ít nhất một hành động
+bị trình duyệt từ chối, phần lớn là lỗi quá hạn chờ thao tác ngay trên những
+phần tử mà accessibility tree \emph{có} hiển thị (Bảng~\ref{tab:failures}).
+Đồng thời, lượng dữ liệu không quyết định kết quả theo từng website: website
+chiếm phần lớn nhất trong tập huấn luyện (Shopping Admin, 41{,}9\%) chỉ xếp
+thứ ba về tỷ lệ thành công (Bảng~\ref{tab:crosssite}). Hai quan sát này cùng
+chỉ về một chỗ đầu tư tiếp theo, và đó không phải là thu thêm dữ liệu.
 
 \textbf{Về chi phí.} Chi phí API của giai đoạn khám phá vào khoảng 0{,}0358
 USD cho mỗi trajectory đưa vào tập huấn luyện, cộng thêm 24{,}4 USD chi phí
@@ -188,12 +274,11 @@ toàn bộ pipeline khám phá và dựng dữ liệu; tập dữ liệu 9007 m�
 của mô hình đã fine-tune; và một báo cáo kinh nghiệm vận hành
 (Mục~\ref{sec:disc-lessons}, Phụ lục~\ref{app:lessons}).
 
-\textbf{Một giới hạn cần nêu ngay cùng với kết quả.} Một phần mức
-tăng đến từ việc mô hình học được cách phát ra hành động đúng định dạng: 47
-trong 74 task tăng thêm thuộc nhóm mà mô hình nền hỏng định dạng đầu ra và do
-đó không thể hoàn thành bất kỳ task nào. Phần còn lại vẫn đạt ý nghĩa thống
-kê: riêng trên nhóm 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là
-17{,}9\% so với 23{,}5\% với $p = 0{,}003$ (Mục~\ref{sec:exp-baseline}).
+\textbf{Một giới hạn cần nêu ngay cùng với ba phát hiện trên.} Mỗi ô số liệu
+đối chứng đều đến từ \emph{một} lượt chạy cho mỗi website, và các ablation
+nhằm cô lập đóng góp của từng thành phần trong pipeline vẫn chưa được chạy
+(Mục~\ref{sec:exp-stats}, \ref{sec:exp-ablation}). Ba phát hiện trên vì vậy
+được phát biểu trong đúng phạm vi đó.
 
 \section{Bố cục khóa luận}
 \label{sec:intro-organization}

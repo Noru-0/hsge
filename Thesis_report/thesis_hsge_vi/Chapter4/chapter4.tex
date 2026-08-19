@@ -1,7 +1,7 @@
 \chapter{Thực nghiệm}
 \label{ch:experiments}
 
-Chương này gồm sáu phần: (1) bốn câu hỏi nghiên cứu mà toàn bộ phần thực nghiệm nhằm trả lời; (2) môi trường thực nghiệm và quy trình đánh giá; (3) kết quả thu thập dữ liệu; (4) kết quả fine-tuning; (5) đánh giá chính trên bộ task chính thức của bốn website WebArena; và (6) phân tích kết quả.
+Chương này gồm năm phần: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả fine-tuning; (4) đánh giá chính trên bộ task chính thức của bốn website WebArena; và (5) phân tích kết quả. Toàn bộ chương nhằm cung cấp số liệu cho bốn câu hỏi nghiên cứu CH1--CH4 đã phát biểu ở Mục~\ref{sec:intro-rq}; Bảng~\ref{tab:rqmap} chỉ ra mục nào của chương này phục vụ câu hỏi nào. Việc trả lời từng câu hỏi thuộc về Chương~\ref{ch:discussion}.
 
 Toàn bộ bảng số liệu trong chương tuân theo một quy ước đơn vị thống nhất.
 Khi mọi ô của một cột cùng đơn vị, đơn vị được ghi ở tiêu đề cột và các ô chỉ
@@ -10,35 +10,6 @@ của Bảng~\ref{tab:runs}, \ref{tab:failures} và \ref{tab:profile}, nơi mỗ
 dòng là một chỉ số khác nhau - tiêu đề cột không thể mang đơn vị, nên đơn vị
 được giữ ngay trong ô. Nguồn của mọi số liệu không do khóa luận tự đo được
 dẫn ngay tại dòng tương ứng chứ không chỉ ở phần chú thích bảng.
-
-\section{Câu hỏi nghiên cứu}
-\label{sec:exp-rq}
-
-Toàn bộ phần thực nghiệm được tổ chức quanh bốn câu hỏi. Mỗi câu hỏi được
-trả lời ở đúng một mục và câu trả lời được nhắc lại ngay đầu mục đó.
-
-\begin{enumerate}
-  \item[\textbf{CH1.}] Pipeline khám phá thu được những gì khi chạy trên một
-    website thật chưa có nhãn task nào: bao nhiêu skill, bao nhiêu operator,
-    bao nhiêu semantic task, và bao nhiêu trong số đó sống sót qua các cổng
-    lọc chất lượng? (Mục~\ref{sec:exp-data})
-  \item[\textbf{CH2.}] Dữ liệu đó có nâng được năng lực của một mô hình ngôn
-    ngữ nhỏ trên chính những website đã khám phá hay không, và phần nâng lên
-    thuộc về năng lực nào? (Mục~\ref{sec:exp-main},
-    \ref{sec:exp-baseline})
-  \item[\textbf{CH3.}] Kết quả thu được đứng ở đâu so với các hệ thống cùng
-    phân khúc dưới 10 tỷ tham số, và những khác biệt nào về điều kiện đo
-    khiến phép so sánh đó không phải một phép so sánh có kiểm soát?
-    (Mục~\ref{sec:exp-main})
-  \item[\textbf{CH4.}] Thành phần nào của pipeline đóng góp bao nhiêu vào kết
-    quả, và điểm nghẽn còn lại nằm ở đâu?
-    (Mục~\ref{sec:exp-ablation}, \ref{sec:exp-analysis})
-\end{enumerate}
-
-Cần nói rõ ngay từ đầu: CH4 chỉ được trả lời \emph{một phần}. Các ablation có
-kiểm soát chưa được chạy (Mục~\ref{sec:exp-ablation}); phần trả lời được đến
-từ phân tích lỗi và từ đối chiếu liên-website, không từ một phép cô lập biến
-số.
 
 \section{Môi trường thực nghiệm}
 \label{sec:exp-setup}
@@ -63,7 +34,7 @@ theo hóa đơn thanh toán chứ không lấy từ một nguồn công bố.}
 \small
 \begin{tabular}{@{}L{2.4cm} L{3.7cm} L{4.5cm} R{2.4cm}@{}}
 \toprule
-\textbf{Giai đoạn} & \textbf{Phần cứng} & \textbf{Thời gian} &
+\textbf{Giai đoạn} & \textbf{Phần cứng} & \textbf{Thời lượng} &
 \textbf{Chi phí GPU (USD)} \\
 \midrule
 Khám phá & Máy cá nhân điều khiển Chromium; LLM truy cập qua API &
@@ -122,7 +93,7 @@ không phân tích được.}
 \small
 \begin{tabular}{@{}L{4.6cm} L{3.2cm} R{2.4cm} R{2.6cm}@{}}
 \toprule
-\textbf{Vai trò} & \textbf{Mô hình} & \mbox{\textbf{Số lời gọi}} &
+\textbf{Vai trò} & \textbf{Mô hình} & \mbox{\textbf{Số lời gọi (lượt)}} &
 \mbox{\textbf{Tỷ trọng (\%)}} \\
 \midrule
 \texttt{solver} & GPT-5.6-luna / GPT-4o & 17\,785 & 85{,}5 \\
@@ -300,46 +271,46 @@ nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của we
 \footnotesize
 \begin{tabular}{@{}L{4.9cm} R{1.7cm} R{1.5cm} R{1.5cm} R{1.9cm} R{1.6cm}@{}}
 \toprule
-\textbf{Chỉ số} & \textbf{Shop.} & \textbf{Reddit} & \textbf{GitLab} &
+\textbf{Chỉ số / Nhóm tác vụ} & \textbf{Shop.} & \textbf{Reddit} & \textbf{GitLab} &
 \textbf{Sh.\ Admin} & \textbf{Tổng} \\
 \midrule
-\multicolumn{6}{@{}l}{\textit{Quy mô khám phá}} \\
+\multicolumn{6}{@{}l}{\textit{Quy mô khám phá (Số lượng / Count)}} \\
 \quad Node đã duyệt & 79 & 179 & 63 & 134 & \textbf{455} \\
 \quad Node trùng nội dung & 3 & 35 & 6 & 27 & \textbf{71} \\
 \quad Episode ghi nhận & 565 & 1623 & 563 & 1230 & \textbf{3981} \\
 \quad Episode hợp lệ & 311 & 954 & 229 & 623 & \textbf{2117} \\
-\quad \textit{Tỷ lệ hợp lệ} & \textit{55,0\%} & \textit{58,8\%} &
+\quad \textit{Tỷ lệ hợp lệ (\%)} & \textit{55,0\%} & \textit{58,8\%} &
 \textit{40,7\%} & \textit{50,7\%} & \textbf{53,2\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task LOCAL}} \\
 \quad Thành công & 192 & 623 & 160 & 392 & \textbf{1367} \\
 \quad Thất bại & 268 & 363 & 147 & 253 & \textbf{1031} \\
 \quad Bất khả thi & 73 & 111 & 101 & 190 & \textbf{475} \\
-\quad \textit{Tỷ lệ thành công} & \textit{36,0\%} & \textit{56,8\%} &
+\quad \textit{Tỷ lệ thành công (SR, \%)} & \textit{36,0\%} & \textit{56,8\%} &
 \textit{39,2\%} & \textit{46,9\%} & \textbf{47,6\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task UNPREFIXED}} \\
 \quad Thành công & 109 & 293 & 66 & 211 & \textbf{679} \\
 \quad Thất bại & 57 & 147 & 58 & 122 & \textbf{384} \\
 \quad Bất khả thi & 13 & 45 & 33 & 38 & \textbf{129} \\
-\quad \textit{Tỷ lệ thành công} & \textit{60,9\%} & \textit{60,4\%} &
+\quad \textit{Tỷ lệ thành công (SR, \%)} & \textit{60,9\%} & \textit{60,4\%} &
 \textit{42,0\%} & \textit{56,9\%} & \textbf{57,0\%} \\
 \addlinespace
 \multicolumn{6}{@{}l}{\textit{Task GOAL}} \\
 \quad Thành công & 10 & 38 & 3 & 20 & \textbf{71} \\
 \quad Thất bại & 6 & 16 & 6 & 10 & \textbf{38} \\
 \quad Bất khả thi & 3 & 7 & 5 & 18 & \textbf{33} \\
-\quad \textit{Tỷ lệ thành công} & \textit{52,6\%} & \textit{62,3\%} &
+\quad \textit{Tỷ lệ thành công (SR, \%)} & \textit{52,6\%} & \textit{62,3\%} &
 \textit{21,4\%} & \textit{41,7\%} & \textbf{50,0\%} \\
 \addlinespace
-\multicolumn{6}{@{}l}{\textit{Tri thức thu được}} \\
+\multicolumn{6}{@{}l}{\textit{Tri thức thu được (Số lượng / Count)}} \\
 \quad Skill được thu nhận & 14 & 56 & 16 & 60 & \textbf{146} \\
 \quad Operator được quy nạp & 8 & 21 & 8 & 20 & \textbf{57} \\
 \quad Chuỗi operator đã thử & 5 & 5 & 1 & 1 & \textbf{12} \\
 \quad Năng lực seed đã thử & 14 & 56 & 13 & 47 & \textbf{130} \\
 \midrule
 Episode bị hạ cấp & 127 & 328 & 119 & 227 & \textbf{801} \\
-\textit{Tỷ lệ bị hạ cấp} & \textit{29,0\%} & \textit{25,6\%} &
+\textit{Tỷ lệ bị hạ cấp (\%)} & \textit{29,0\%} & \textit{25,6\%} &
 \textit{34,2\%} & \textit{26,7\%} & \textbf{27,4\%} \\
 \bottomrule
 \end{tabular}
@@ -396,8 +367,8 @@ bước hợp nhất còn khử các mẫu trùng lặp.}
 \small
 \begin{tabular}{@{}L{3.4cm} R{2.4cm} R{2.4cm} R{2.4cm} R{2.4cm}@{}}
 \toprule
-\textbf{Website} & \textbf{Trajectory} & \textbf{Mẫu} &
-\textbf{Train} & \textbf{Validation} \\
+\textbf{Website} & \textbf{Số trajectory} & \textbf{Số mẫu (bước)} &
+\textbf{Tập train (mẫu)} & \textbf{Tập val (mẫu)} \\
 \midrule
 Shopping Admin & 563 & 3759 & 3585 & 174 \\
 Reddit & 719 & 3306 & 3135 & 171 \\
@@ -467,14 +438,14 @@ chạy trên hai loại GPU (H100-80GB rồi A100-40GB) nên thời gian mỗi b
 \small
 \begin{tabular}{@{}L{6.4cm} R{5.0cm}@{}}
 \toprule
-\textbf{Chỉ số} & \textbf{Giá trị} \\
+\textbf{Tham số / Chỉ số} & \textbf{Giá trị / Cấu hình} \\
 \midrule
-Mẫu huấn luyện & 8554 \\
+Số mẫu huấn luyện & 8554 mẫu \\
 Learning rate & $1{,}0 \times 10^{-4} \rightarrow 3{,}0 \times 10^{-5}$ \\
-Tổng số bước & 1119 \\
+Tổng số bước (step) & 1119 bước \\
 Thời gian huấn luyện & 5 giờ 09 phút \\
 \texttt{train\_loss} cuối & 0{,}4536 \\
-\texttt{eval\_loss} của checkpoint được chọn & 0{,}4219 \\
+\texttt{eval\_loss} (checkpoint tốt nhất) & 0{,}4219 \\
 Checkpoint được chọn & \texttt{checkpoint-315} \\
 \bottomrule
 \end{tabular}
@@ -528,7 +499,7 @@ task}~\cite{brown2001binomial}, phản ánh sai số lấy mẫu task chứ khô
 \small
 \begin{tabular}{@{}L{3.6cm} R{2.0cm} R{2.2cm} R{4.0cm}@{}}
 \toprule
-\textbf{Website} & \textbf{Số task} & \textbf{Thành công} & \textbf{Tỷ lệ hoàn thành (\%)} \\
+\textbf{Website} & \textbf{Tổng số task} & \textbf{Số task đạt} & \textbf{Tỷ lệ thành công -- SR (\%)} \\
 \midrule
 Shopping$^\dagger$ & 187 & 53 & 28{,}3 $\pm$ 6{,}5 \\
 Reddit & 106 & 36 & 34{,}0 $\pm$ 9{,}0 \\
@@ -564,8 +535,8 @@ Bảng~\ref{tab:main}.}
 \small
 \begin{tabular}{@{}L{2.9cm} R{2.7cm} R{2.7cm} R{2.0cm} R{2.2cm}@{}}
 \toprule
-\textbf{Website} & \textbf{Mô hình nền (\%)} & \textbf{Sau fine-tune (\%)} &
-\textbf{Chênh lệch (đpt)} & \textbf{$p$ (McNemar)} \\
+\textbf{Website} & \textbf{Mô hình nền (SR, \%)} & \textbf{Sau fine-tune (SR, \%)} &
+\textbf{$\Delta$ SR (đpt)} & \textbf{$p$ (McNemar)} \\
 \midrule
 Shopping$^\dagger$ & 37/187 $=$ 19{,}8 & 53/187 $=$ 28{,}3 & $+$8{,}6 & 0{,}011 \\
 Reddit & 7/106 $=$ 6{,}6 & 36/106 $=$ 34{,}0 & $+$27{,}4 & $<0{,}001$ \\
@@ -613,8 +584,8 @@ mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
 \caption[So sánh với các công trình liên quan]{So sánh trên đúng bốn website
 được đánh giá. Cột ``Tổng (4 site)'' được tính lại theo trung bình có trọng
 số của các tỷ lệ theo từng website, với trọng số là số task chính thức
-(Shopping 187, Sh.\ Admin 182, GitLab 180, Reddit 106). Mọi ô trong bảng là tỷ lệ hoàn thành,
-đơn vị phần trăm. Số liệu của tất cả các dòng tham chiếu lấy từ Bảng 3 của
+(Shopping 187, Sh.\ Admin 182, GitLab 180, Reddit 106). Mọi ô trong bảng là tỷ lệ hoàn thành (SR),
+đơn vị phần trăm (\%). Số liệu của tất cả các dòng tham chiếu lấy từ Bảng 3 của
 Go-Browse~\cite{gandhi2026gobrowse} và được dẫn nguồn ngay trên từng dòng;
 riêng dòng NNetNav-7B dẫn kèm công bố gốc~\cite{murty2024nnetnav}, vì con số
 được tính lại ở đây là con số Go-Browse đo lại chứ không phải con số nhóm
@@ -624,7 +595,9 @@ website này (Bảng~\ref{tab:baseline}).}
 \small
 \begin{tabular}{@{}L{4.4cm} R{2.5cm} R{1.3cm} R{1.8cm} R{1.5cm} R{1.5cm}@{}}
 \toprule
-\textbf{Mô hình} & \mbox{\textbf{Tổng (4 site)}} & \mbox{\textbf{Shop}} &
+\textbf{Mô hình} & \multicolumn{5}{c}{\textbf{Tỷ lệ thành công -- SR (\%)}} \\
+\cmidrule(lr){2-6}
+& \mbox{\textbf{Tổng (4 site)}} & \mbox{\textbf{Shop}} &
 \mbox{\textbf{Admin}} & \mbox{\textbf{Reddit}} & \mbox{\textbf{GitLab}} \\
 \midrule
 \multicolumn{6}{@{}l}{\textit{Mô hình đóng}} \\
@@ -728,12 +701,12 @@ với kết quả đánh giá trên chính website đó.
 \begin{table}[htbp]
 \centering
 \caption[Tỷ lệ dữ liệu so với điểm số theo website]{Tỷ lệ dữ liệu huấn
-luyện so với điểm số theo website. Thứ hạng hai cột không trùng nhau.}
+luyện so với tỷ lệ thành công (SR) theo website. Thứ hạng hai cột không trùng nhau.}
 \label{tab:crosssite}
 \small
 \begin{tabular}{@{}L{3.6cm} R{3.2cm} R{2.6cm} R{2.6cm}@{}}
 \toprule
-\textbf{Website} & \textbf{Tỷ lệ dữ liệu (\%)} & \textbf{Hạng dữ liệu} & \textbf{Điểm số (\%)} \\
+\textbf{Website} & \textbf{Tỷ lệ dữ liệu (\%)} & \textbf{Hạng dữ liệu} & \textbf{Thành công (SR, \%)} \\
 \midrule
 Shopping Admin & 41{,}9 & 1 & 21{,}4 \\
 Reddit & 36{,}6 & 2 & 34{,}0 \\
@@ -777,24 +750,24 @@ Bảng~\ref{tab:failures} bằng đúng số episode thất bại.
 \begin{table}[htbp]
 \centering
 \caption[Phân loại nguyên nhân thất bại]{Nguyên nhân chính của các episode
-thất bại (mỗi episode một nhãn). Mỗi ô ghi số episode kèm tỷ lệ phần trăm
+thất bại (mỗi episode một nhãn). Mỗi ô ghi số episode kèm tỷ lệ phần trăm (\%)
 tính trên số episode thất bại của website đó; đơn vị nằm trong ô vì cột trộn
 số đếm với tỷ lệ.}
 \label{tab:failures}
 \small
 \begin{tabular}{@{}L{4.6cm} R{2.1cm} R{2.1cm} R{2.1cm} R{2.1cm}@{}}
 \toprule
-\textbf{Nguyên nhân chính} & \textbf{Shopping} & \textbf{Reddit} &
-\textbf{GitLab} & \textbf{Sh.\ Admin} \\
+\textbf{Nguyên nhân chính} & \textbf{Shopping (số / \%)} & \textbf{Reddit (số / \%)} &
+\textbf{GitLab (số / \%)} & \textbf{Sh.\ Admin (số / \%)} \\
 \midrule
 Lỗi hành động & 60 (45\%) & 24 (34\%) & 66 (45\%) & 56 (39\%) \\
 Kẹt vòng lặp & 45 (34\%) & 26 (37\%) & 45 (31\%) & 50 (35\%) \\
 Tự báo bất khả thi & 19 (14\%) & 16 (23\%) & 29 (20\%) & 36 (25\%) \\
 Không phân loại được & 10 (7\%) & 1 (1\%) & 4 (3\%) & 1 (1\%) \\
-Tuyên bố xong mà không làm gì & 0 & 0 & 2 (1\%) & 0 \\
-Đầu ra không phân tích được & 0 & 3 (4\%) & 1 (1\%) & 0 \\
+Tuyên bố xong mà không làm gì & 0 (0\%) & 0 (0\%) & 2 (1\%) & 0 (0\%) \\
+Đầu ra không phân tích được & 0 (0\%) & 3 (4\%) & 1 (1\%) & 0 (0\%) \\
 \midrule
-\textbf{Episode thất bại} & \textbf{134} & \textbf{70} & \textbf{147} & \textbf{143} \\
+\textbf{Tổng episode thất bại} & \textbf{134 (100\%)} & \textbf{70 (100\%)} & \textbf{147 (100\%)} & \textbf{143 (100\%)} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -862,14 +835,14 @@ hành động.}
 \small
 \begin{tabular}{@{}L{6.2cm} R{3.0cm} R{3.0cm}@{}}
 \toprule
-\textbf{Chỉ số (655 task)} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} \\
+\textbf{Chỉ số hành vi (655 task)} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} \\
 \midrule
 Phiên hỏng định dạng & 170 (26{,}0\%) & 4 (0{,}6\%) \\
-Tổng số bước đã thực thi & 5424 & 6727 \\
-Tổng số lỗi hành động & 1940 & 2315 \\
-Trung vị số bước, episode thành công & 4 & 6 \\
-Trung vị số bước, episode thất bại & 8 & 13 \\
-Lỗi hành động trên mỗi bước & 0{,}358 & 0{,}344 \\
+Tổng số bước đã thực thi (bước) & 5424 & 6727 \\
+Tổng số lỗi hành động (lỗi) & 1940 & 2315 \\
+Trung vị số bước, episode thành công (bước) & 4 & 6 \\
+Trung vị số bước, episode thất bại (bước) & 8 & 13 \\
+Tỷ lệ lỗi hành động trên mỗi bước (lỗi/bước) & 0{,}358 & 0{,}344 \\
 \bottomrule
 \end{tabular}
 \end{table}
