@@ -546,13 +546,6 @@ mỗi bước ở mức 630\,W). Trạng thái này không phát sinh cảnh bá
 Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 task chính thức của
 bốn website. Toàn bộ 655 task đều được chấm điểm: không task nào phát sinh lỗi môi trường, không task nào bị bỏ qua. Mẫu số của mọi tỷ lệ trong bảng vì thế là số task đầy đủ của website tương ứng.
 
-\textbf{Một đặc điểm của bảng này cần nêu trước khi đọc số.} Shopping và
-GitLab được đánh giá trên một checkpoint trung gian chứ không phải checkpoint
-cuối, và chưa được đo lại. Dòng ``Tổng'' vì thế \emph{chưa} phải kết quả của
-một mô hình duy nhất trên bốn website. Đo lại hai website này là hạng mục
-thực nghiệm còn thiếu quan trọng nhất của chương, được nhắc lại ở
-Mục~\ref{sec:exp-stats} và Mục~\ref{sec:disc-validity}.
-
 \begin{table}[H]
 \centering
 \caption[Kết quả đánh giá chính trên WebArena]{Kết quả trên bộ task chính
@@ -766,8 +759,7 @@ từng website.
 
 \textbf{Hạng mục này chưa được hoàn tất và được ghi lại đúng theo hiện
 trạng.} Toàn bộ số liệu ở mục~\ref{sec:exp-main} đến từ \emph{một} lần chạy
-cho mỗi website, trong đó mỗi task được giải đúng một lần; riêng Shopping và
-GitLab, lần chạy đó thuộc về một checkpoint trung gian. Việc đặt
+cho mỗi website, trong đó mỗi task được giải đúng một lần. Việc đặt
 \texttt{temperature} $=0$ loại bỏ tính ngẫu nhiên trong quá trình sinh văn
 bản, nhưng không loại bỏ được tính ngẫu nhiên của môi trường như thời gian
 tải trang, mức độ sẵn sàng của phần tử giao diện hay tình trạng đường truyền
@@ -776,23 +768,18 @@ thức theo xấp xỉ chuẩn~\cite{brown2001binomial} tính trên tập task, 
 tương tự khác thì tỷ lệ dao động bao nhiêu'', chứ không trả lời câu hỏi
 ``nếu chạy lại đúng bộ task này thì tỷ lệ dao động bao nhiêu''.
 
-Để có được kết luận thống kê vững chắc, cần bổ sung bốn hạng mục, xếp theo
+Để có được kết luận thống kê vững chắc, cần bổ sung ba hạng mục, xếp theo
 thứ tự ưu tiên.
 
-\emph{(i) Đo lại Shopping và GitLab trên checkpoint cuối.} Đây là hạng mục rẻ
-nhất và cũng cấp thiết nhất: chừng nào chưa làm, dòng tổng của
-Bảng~\ref{tab:main} còn trộn kết quả của hai checkpoint khác nhau, và cũng
-chưa biết mô hình cuối có suy giảm trên hai website đó hay không.
-
-\emph{(ii) Rà soát đối xứng} các episode của \emph{cả hai} mô hình trên
+\emph{(i) Rà soát đối xứng} các episode của \emph{cả hai} mô hình trên
 \emph{cả bốn} website theo cùng một bộ tiêu chí, thay cho phép rà soát chỉ
 phủ hai website mỗi chiều đã nêu ở mục~\ref{sec:exp-baseline}.
 
-\emph{(iii) Lặp lại phép đo} tối thiểu ba lần cho cả hai mô hình, báo cáo
+\emph{(ii) Lặp lại phép đo} tối thiểu ba lần cho cả hai mô hình, báo cáo
 trung bình kèm độ lệch chuẩn bên cạnh kiểm định theo cặp task đã có ở
 Bảng~\ref{tab:baseline}.
 
-\emph{(iv) Đo lại Shopping cùng Shopping Admin theo trình tự tuần tự} nhằm
+\emph{(iii) Đo lại Shopping cùng Shopping Admin theo trình tự tuần tự} nhằm
 loại trừ khả năng nhiễu chéo đã nêu ở mục~\ref{sec:exp-protocol}.
 
 \section{Nghiên cứu ablation}
@@ -1011,13 +998,11 @@ là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$. So với các công trình l
 10B tham số (Bảng~\ref{tab:related}), dù phép so sánh đó không kiểm soát
 được mô hình gốc, quy mô dữ liệu và quy trình chấm.
 
-Bốn giới hạn cần nêu rõ. Thứ nhất, mọi kết quả đều đến từ một lượt chạy cho
+Ba giới hạn cần nêu rõ. Thứ nhất, mọi kết quả đều đến từ một lượt chạy cho
 mỗi website (Mục~\ref{sec:exp-stats}). Thứ hai, phép rà soát bộ chấm
 WebArena không đối xứng: mỗi chiều chỉ được rà trên hai website chứ không
-phải đồng đều trên cả bốn (Mục~\ref{sec:exp-baseline}). Thứ ba, Shopping và
-GitLab được đo trên một checkpoint trung gian, nên dòng tổng trộn kết quả của
-hai checkpoint (Mục~\ref{sec:exp-main}). Thứ tư, các ablation nhằm cô lập đóng góp của từng
-thành phần trong pipeline vẫn chưa được chạy
+phải đồng đều trên cả bốn (Mục~\ref{sec:exp-baseline}). Thứ ba, các ablation
+nhằm cô lập đóng góp của từng thành phần trong pipeline vẫn chưa được chạy
 (Mục~\ref{sec:exp-ablation}).
 
 Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những

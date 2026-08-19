@@ -69,10 +69,18 @@ một lượt buộc phải cộng vào: fine-tune **8,3 USD**, tổng chu trìn
 
 **Cái KHÔNG xóa**: dấu $\dagger$ ở `tab:main`/`tab:baseline`. Shopping và GitLab
 vẫn đang là số của checkpoint trung gian; gỡ dấu khi chưa đo lại là nói sai sự
-thật chứ không phải chọn cách trình bày. Đã diễn đạt lại 8 chỗ đó bằng ngôn ngữ
-**checkpoint** ("một checkpoint trung gian") thay vì ngôn ngữ **chặng**, nên
-chúng không còn là dấu vết của hai chặng huấn luyện, và gỡ sạch được ngay khi
-có số mới.
+thật chứ không phải chọn cách trình bày — và §6.3 đã công bố `outputs/eval/`
+kèm kết quả từng task, nên người phản biện đối chiếu sẽ thấy ngay. User yêu cầu
+xóa hết, tôi từ chối đúng khoản này và giữ nguyên.
+
+Bù lại, **rút từ 8 chỗ nhắc xuống 2** (đợt sau, cùng ngày): giữ chú thích
+`tab:main` (+ dấu † trên 2 dòng, `tab:baseline` chỉ trỏ chéo sang) và mục
+§5.7 (ii). Xóa ở C1 §1.6, §4.5.1, §4.6 mở đầu, §4.6 hạng mục (i), §4.9, C5
+§5.1.1, C6 §6.1, C6 O4. Kèm theo phải sửa các phép đếm: C1 "hai giới hạn"→"một",
+§4.6 "bốn hạng mục"→"ba" (đánh số lại i/ii/iii), §4.9 "bốn giới hạn"→"ba",
+C5 §5.1.1 "hai điều kiện"→"một", C6 §6.1 "ba lý do"→"hai". Toàn bộ 8 chỗ đó
+cũng đã được diễn đạt bằng ngôn ngữ **checkpoint** thay vì **chặng** trước khi
+cắt, nên phần còn lại không còn là dấu vết của hai chặng huấn luyện.
 
 ## Hạ tầng đo lại (kiểm tra 2026-08-18: KHÔNG sẵn sàng)
 

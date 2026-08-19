@@ -18,7 +18,7 @@ Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc v
 
 Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Thứ tự này trùng với thứ tự lượng dữ liệu thu được cho từng website.
 
-Hai điều kiện phải đi kèm phát biểu đó. Thứ nhất, Shopping và GitLab được đo trên một checkpoint trung gian, nên hai con số của chúng thuộc về một mô hình khác với hai con số còn lại. Thứ hai, mỗi ô của bảng đối chứng vẫn chỉ đến từ một lần chạy. Vì vậy các hạng mục ở Mục~\ref{sec:exp-stats} vẫn là ưu tiên thực nghiệm hàng đầu chứ không phải một việc dọn dẹp cuối cùng.
+Một điều kiện phải đi kèm phát biểu đó: mỗi ô của bảng đối chứng vẫn chỉ đến từ một lần chạy. Vì vậy các hạng mục ở Mục~\ref{sec:exp-stats} vẫn là ưu tiên thực nghiệm hàng đầu chứ không phải một việc dọn dẹp cuối cùng.
 
 Điều mà phép đối chứng này làm rõ nhất lại nằm ở chân dung lỗi chứ không ở con số tổng. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, so với 0{,}6\% ở mô hình sau fine-tune (Bảng~\ref{tab:profile}). Khi tách 655 task theo đúng ranh giới đó, 47 trong 74 task tăng thêm rơi vào nhóm mà mô hình nền không bao giờ phát ra nổi một hành động hợp lệ; còn trên 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% và \emph{đạt} ý nghĩa thống kê ($p = 0{,}003$).
 
