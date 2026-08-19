@@ -146,7 +146,7 @@ benchmark đánh giá chính thức.
 \subsection{Fine-tuning hiệu quả tham số (Parameter-Efficient Fine-Tuning)}
 
 Quá trình full fine-tuning một mô hình ngôn ngữ cỡ 9
-tỷ tham số (9B) vẫn đòi hỏi lượng bộ nhớ rất lớn. LoRA~\cite{hu2022lora} gỡ rào cản này bằng một thủ thuật đơn giản: đóng băng toàn bộ trọng số đã tiền huấn luyện, và chỉ huấn luyện những ma trận cập nhật hạng thấp được chèn thêm vào mô hình. Giải pháp này giúp giảm
+tỷ tham số (9B) vẫn đòi hỏi lượng bộ nhớ rất lớn. LoRA~\cite{hu2022lora} gỡ rào cản này bằng một thủ thuật đơn giản: đóng băng toàn bộ trọng số đã pretrain, và chỉ huấn luyện những ma trận cập nhật hạng thấp được chèn thêm vào mô hình. Giải pháp này giúp giảm
 thiểu số lượng tham số cần tối ưu hóa đi nhiều bậc độ lớn trong khi vẫn
 bảo toàn được hiệu năng tổng thể. Hơn nữa, adapter thu được sau huấn luyện có thể dễ dàng được merge trở lại vào
 trọng số gốc nhằm tối ưu hóa giai đoạn serving. Trong
@@ -174,18 +174,17 @@ sung những vòng phản hồi ở các mức khác nhau - tự phê bình trư
 cho lần thử sau (Reflexion~\cite{shinn2023reflexion}), sửa kế hoạch ngay giữa
 chừng theo phản hồi môi trường (AdaPlanner~\cite{sun2023adaplanner}) - và Sumers
 cùng cộng sự~\cite{sumers2024cognitive} hệ thống hóa chúng thành một khung kiến
-trúc nhận thức chung, phân tách bộ nhớ, quá trình ra quyết định và không gian
-hành động.
+trúc nhận thức chung, phân tách bộ nhớ, quá trình ra quyết định và action space.
 
 Riêng trên WebArena, SteP~\cite{sodhi2024step} dùng kiến trúc phân tầng gồm
 nhiều chính sách LLM chuyển đổi theo trạng thái, nâng tỷ lệ hoàn thành từ
 14{,}9\% lên 33{,}5\%; nhưng các chính sách con vẫn phải thiết kế thủ công cho
 từng họ website, nên chưa gỡ được sự phụ thuộc vào công sức con người.
 AgentOccam~\cite{yang2024agentoccam} đưa ra phản biện đáng chú ý cho cả nhóm:
-chỉ cần thiết kế cẩn thận không gian quan sát và hành động, không thêm cơ chế
+chỉ cần thiết kế cẩn thận observation và action space, không thêm cơ chế
 lập kế hoạch phức tạp nào, cũng đạt 43{,}1\% - vượt nhiều hệ thống đương thời,
 trong đó có chính SteP. Nói cách khác, phần lớn mức cải thiện đến từ cách biểu
-diễn giao diện và không gian hành động chứ không từ bản thân cơ chế lập kế
+diễn giao diện và action space chứ không từ bản thân cơ chế lập kế
 hoạch.
 
 \subsection{Nhóm 2: grounding hành động vào giao diện}
@@ -221,7 +220,7 @@ thuộc nhóm 3.
 \subsection{Nhóm 4: mở rộng ra ngoài trình duyệt}
 
 Cùng khuôn mẫu đã được áp dụng cho các nền tảng khác: điều khiển giao diện
-Android cho tự động hóa tác vụ hoặc kiểm thử (GPTDroid~\cite{liu2023gptdroid},
+Android cho tự động hóa task hoặc kiểm thử (GPTDroid~\cite{liu2023gptdroid},
 AutoDroid~\cite{wen2024autodroid}, DroidAgent~\cite{yoon2023droidagent}), và
 nối mô hình nền với API thay vì thao tác giao diện
 (TaskMatrix.AI~\cite{liang2023taskmatrix}) - ở chiều ngược lại, Song và cộng
@@ -307,18 +306,18 @@ STRIPS~\cite{fikes1971strips} đã cho thấy các năng lực của agent có t
 đặc tả qua precondition và effect,
 nhờ đó phục vụ được các thuật toán symbolic planning.
 Nhiều thập niên sau, khung lý thuyết options~\cite{sutton1999options} mô hình hóa
-một kỹ năng thành một bộ ba toán học gồm tập trạng thái khởi đầu, chính sách hành
-động và điều kiện kết thúc. Hai khung này được nối lại bởi các công trình sau đó. Konidaris và Barto~\cite{konidaris2009skillchaining} ghép chuỗi kỹ năng bằng cách khớp điều kiện kết thúc của kỹ năng trước với tập trạng thái khởi đầu của kỹ năng sau. Konidaris và cộng sự~\cite{konidaris2018skills2symbols} thì chứng minh options có thể được nâng thành toán tử ký hiệu dạng precondition/effect để lập kế hoạch trừu tượng. HSGE kế thừa trực tiếp nguyên lý từ cả bốn công trình này
+một skill thành một bộ ba toán học gồm tập trạng thái khởi đầu, chính sách hành
+động và điều kiện kết thúc. Hai khung này được nối lại bởi các công trình sau đó. Konidaris và Barto~\cite{konidaris2009skillchaining} ghép chuỗi skill bằng cách khớp điều kiện kết thúc của skill trước với tập trạng thái khởi đầu của skill sau. Konidaris và cộng sự~\cite{konidaris2018skills2symbols} thì chứng minh options có thể được nâng thành operator ký hiệu dạng precondition/effect để lập kế hoạch trừu tượng. HSGE kế thừa trực tiếp nguyên lý từ cả bốn công trình này
 (chi tiết tại Mục~\ref{sec:method-graph}).
 
 Trong kỷ nguyên của các mô hình ngôn ngữ lớn (LLM), Voyager~\cite{wang2024voyager}
-là minh chứng tiêu biểu cho khả năng học tập kỹ năng liên tục
-của agent trong môi trường Minecraft. Hệ thống này xây dựng một thư viện các kỹ
-năng dưới dạng mã thực thi có khả năng tự mở rộng, trong đó mỗi kỹ năng bắt buộc phải
+là minh chứng tiêu biểu cho khả năng học tập skill liên tục
+của agent trong môi trường Minecraft. Hệ thống này xây dựng một thư viện các skill
+dưới dạng mã thực thi có khả năng tự mở rộng, trong đó mỗi skill bắt buộc phải
  được kiểm chứng thông qua thực thi trước khi được tích hợp. Tuy nhiên, giới hạn của
  phương pháp này nằm ở chỗ môi trường giả lập cung cấp sẵn các trạng thái chân lý nền
  có thể truy xuất chính xác bằng mã nguồn, một đặc quyền không tồn tại
- trong môi trường website thực tế. Thêm vào đó, kỹ năng thu thập được chỉ đóng vai trò
+ trong môi trường website thực tế. Thêm vào đó, skill thu thập được chỉ đóng vai trò
  hỗ trợ runtime của agent, hoàn toàn không được tái sử dụng để
  xây dựng dữ liệu huấn luyện.
 
@@ -339,23 +338,23 @@ chúng chỉ được tiêu thụ dưới dạng tri thức bổ trợ ngữ c�
 khi mô hình đưa ra suy luận; do đó, năng lực cốt lõi của bản
 thân mô hình nền tảng không được cải thiện.
 
-Gần đây, phương pháp quy nạp kỹ năng dưới dạng lập trình~\cite{wang2025asi} nâng
+Gần đây, phương pháp quy nạp skill dưới dạng lập trình~\cite{wang2025asi} nâng
 các chuỗi hành động lặp lại thành những hàm có khả năng thực thi, tự động kiểm
 chứng lúc vận hành và gom các thao tác nguyên thủy thành các lệnh gọi hàm bậc cao.
 
 Tiến thêm một bước, SkillWeaver~\cite{zheng2025skillweaver} cho phép agent tự
-khám phá, tinh chỉnh và đóng gói kỹ năng thành những API độc lập qua nhiều vòng
+khám phá, tinh chỉnh và đóng gói skill thành những API độc lập qua nhiều vòng
 lặp, đồng thời chia sẻ chúng giữa các agent khác nhau.
 
-Điểm chung của tất cả các kiến trúc trên là kỹ năng sinh ra chỉ phục vụ giai đoạn
+Điểm chung của tất cả các kiến trúc trên là skill sinh ra chỉ phục vụ giai đoạn
 inference của những LLM cỡ lớn, không hề cập nhật tham số của mô hình.
-Ở chiều ngược lại, một số công trình có biến quá trình khám phá thành dữ liệu huấn luyện, chẳng hạn NNetNav~\cite{murty2024nnetnav} hay PAE~\cite{zhou2024pae} (Mục~\ref{sec:rel-datagen}). Nhưng chúng xuất phát từ những chuỗi thực thi đơn lẻ, hoặc từ task đề xuất theo ngữ cảnh tĩnh, chứ không từ các kỹ năng đã kiểm chứng và ghép chuỗi được. Theo khảo sát của chúng tôi, việc kiểm chứng kỹ năng, nâng
-chúng thành toán tử có precondition/effect rồi \emph{ghép chuỗi} các toán tử đó để
+Ở chiều ngược lại, một số công trình có biến quá trình khám phá thành dữ liệu huấn luyện, chẳng hạn NNetNav~\cite{murty2024nnetnav} hay PAE~\cite{zhou2024pae} (Mục~\ref{sec:rel-datagen}). Nhưng chúng xuất phát từ những chuỗi thực thi đơn lẻ, hoặc từ task đề xuất theo ngữ cảnh tĩnh, chứ không từ các skill đã kiểm chứng và ghép chuỗi được. Theo khảo sát của chúng tôi, việc kiểm chứng skill, nâng
+chúng thành operator có precondition/effect rồi \emph{ghép chuỗi} các operator đó để
 sinh \emph{dữ liệu huấn luyện} là hướng đi chưa được khai thác.
 
-Đây chính là khoảng trống mà HSGE nhắm tới. Kỹ năng vẫn trải qua các bước phát
+Đây chính là khoảng trống mà HSGE nhắm tới. Skill vẫn trải qua các bước phát
 hiện và kiểm chứng tương tự, nhưng thay vì dừng lại ở đó, chúng được nâng thành
-các planning operator. Từ các toán tử này, hệ thống ghép
+các planning operator. Từ các operator này, hệ thống ghép
 chuỗi để tổng hợp những semantic task dài hạn, và chính chúng mới là nguồn dữ
 liệu dùng để huấn luyện một mô hình ngôn ngữ nhỏ.
 
@@ -390,15 +389,15 @@ Công trình chia sẻ nhiều điểm giao thoa nhất với khóa luận là G
 trúc} cho chất lượng dữ liệu tốt hơn các chuỗi rollout thiếu cấu trúc.
 
 Tuy nhiên, đồ thị của Go-Browse chỉ có một tầng duy nhất --- node là URL, cạnh là
-trajectory --- và không tồn tại tầng trừu tượng nào phía trên: không có node kỹ năng đã
+trajectory --- và không tồn tại tầng trừu tượng nào phía trên: không có node skill đã
 kiểm chứng, không có precondition/effect chuẩn hóa, do đó không có cơ chế ghép chuỗi
 năng lực. Hệ quả là các task sinh ra bị ràng buộc ngữ nghĩa vào một trang đơn lẻ;
 bộ đề xuất task của Go-Browse được yêu cầu tường minh chỉ tìm những
 việc \emph{làm được ngay trên trang hiện tại mà không cần điều hướng sang trang
 khác}. Cần phân biệt điều này với trajectory giải task, vốn vẫn có thể đi qua nhiều
-trang. HSGE bổ sung một tầng đồ thị thứ hai để xử lý điểm này: các skill sau khi được kiểm chứng sẽ được nâng thành toán
-tử lập kế hoạch, kèm precondition và effect
-đã chuẩn hóa. Việc nối các toán tử này với nhau cho phép sinh ra những \emph{semantic
+trang. HSGE bổ sung một tầng đồ thị thứ hai để xử lý điểm này: các skill sau khi được kiểm chứng sẽ được nâng thành operator
+lập kế hoạch, kèm precondition và effect
+đã chuẩn hóa. Việc nối các operator này với nhau cho phép sinh ra những \emph{semantic
 task} trải dài qua nhiều năng lực thu thập từ các episode khác
 nhau --- khả năng mà cách sinh task theo từng trang đơn lẻ không cung cấp
 (Mục~\ref{sec:method-semantic}).
@@ -418,7 +417,7 @@ Tuy nhiên, điểm nghẽn cốt lõi xuyên suốt các nghiên cứu nói tr�
 Bảng~\ref{tab:positioning} định vị phương pháp HSGE dựa trên năm trục tiêu chí.
 Ba trục đầu xét cách hệ thống thu thập tri thức: dữ liệu có xuất phát từ tương tác
 thực tế trên website đích hay không; quá trình khám phá có được
-cấu trúc hóa bằng một cơ chế biểu diễn bền vững hay không; và các kỹ năng tái sử
+cấu trúc hóa bằng một cơ chế biểu diễn bền vững hay không; và các skill tái sử
 dụng có được kiểm chứng trước khi đưa vào dùng hay không. Hai trục còn lại xét cách
 hệ thống sử dụng tri thức đó: các task dài hạn có được sinh ra bằng cách
 \emph{ghép chuỗi} những năng lực đã khám phá hay không, và pipeline có phục vụ mục
@@ -462,7 +461,7 @@ Go-Browse~\cite{gandhi2026gobrowse} & \CIRCLE & \CIRCLE & - & - & \CIRCLE \\
 \end{tabular}
 \end{table}
 
-Tóm lại, các nghiên cứu hiện tại về kiến trúc agent chủ yếu tập trung vào việc cải thiện chiến lược prompt và cơ chế điều phối xoay quanh các mô hình ngôn ngữ lớn có sẵn. Các phương pháp khám phá kỹ năng dù có khả năng tích lũy tri thức có cấu trúc, nhưng đa số chỉ tận dụng những tri thức này trong giai đoạn inference. Ở chiều ngược lại, các phương pháp tự động sinh dữ liệu phục vụ huấn luyện mô hình nhỏ lại thường tiến hành khám phá một cách thiếu định hướng cấu trúc, hoặc chỉ dừng lại ở việc tổ chức thông tin ở cấp độ trang đơn lẻ. Theo khảo sát của chúng tôi, chưa có công trình nào đi trọn cả ba bước: kiểm chứng kỹ năng, ghép chúng thành semantic task dài hạn, rồi dùng chính các task đó làm dữ liệu huấn luyện cho một mô hình ngôn ngữ nhỏ. Đây chính là khoảng trống tri thức mà khóa luận này hướng đến giải quyết.
+Tóm lại, các nghiên cứu hiện tại về kiến trúc agent chủ yếu tập trung vào việc cải thiện chiến lược prompt và cơ chế điều phối xoay quanh các mô hình ngôn ngữ lớn có sẵn. Các phương pháp khám phá skill dù có khả năng tích lũy tri thức có cấu trúc, nhưng đa số chỉ tận dụng những tri thức này trong giai đoạn inference. Ở chiều ngược lại, các phương pháp tự động sinh dữ liệu phục vụ huấn luyện mô hình nhỏ lại thường tiến hành khám phá một cách thiếu định hướng cấu trúc, hoặc chỉ dừng lại ở việc tổ chức thông tin ở cấp độ trang đơn lẻ. Theo khảo sát của chúng tôi, chưa có công trình nào đi trọn cả ba bước: kiểm chứng skill, ghép chúng thành semantic task dài hạn, rồi dùng chính các task đó làm dữ liệu huấn luyện cho một mô hình ngôn ngữ nhỏ. Đây chính là khoảng trống tri thức mà khóa luận này hướng đến giải quyết.
 
 \vspace{1em}
 \noindent

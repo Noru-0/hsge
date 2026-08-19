@@ -570,15 +570,15 @@ bày: node bị bỏ vì lỗi, số lần khôi phục, và cơ cấu operator 
 
 \begin{table}[H]
 \centering
-\caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt thu thập chính thức. Trong đó, ``Lỗi tải'' đại diện cho các node trình duyệt không thể truy cập và được cơ chế fail-soft xử lý bỏ qua; ``Reset'' là số lần đưa trình duyệt về trang trước đó sau khi tác vụ thất bại. Hai cột cuối phân loại số operator bị từ chối theo từng lý do cụ thể.}
+\caption[Số liệu vận hành của bốn đợt thu thập]{Số liệu vận hành của bốn đợt thu thập chính thức (đơn vị: số lượng / count). Trong đó, ``Lỗi tải'' đại diện cho các node trình duyệt không thể truy cập và được cơ chế fail-soft xử lý bỏ qua; ``Reset'' là số lần đưa trình duyệt về trang trước đó sau khi tác vụ thất bại. Hai cột cuối phân loại số operator bị từ chối theo từng lý do cụ thể.}
 \label{tab:app-runs-final}
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-& & \multicolumn{2}{c}{\textbf{Sự cố}} & & & \multicolumn{2}{c}{\textbf{Operator bị loại}} \\
+& & \multicolumn{2}{c}{\textbf{Sự cố (\#)}} & & & \multicolumn{2}{c}{\textbf{Operator bị loại (\#)}} & \\
 \cmidrule(lr){3-4}\cmidrule(lr){7-8}
-\textbf{Website} & \textbf{Node} & \textbf{Lỗi tải} & \textbf{Reset} & \textbf{Khôi phục} & \textbf{Skill} & \textbf{Lặp trạng thái} & \textbf{Chưa xác minh} & \textbf{Op.} \\
+\textbf{Website} & \textbf{Node} & \textbf{Lỗi tải} & \textbf{Reset} & \textbf{Khôi phục} & \textbf{Skill} & \textbf{Lặp t.thái} & \textbf{Chưa x.minh} & \textbf{Op.} \\
 \midrule
 Shopping       & 79 & 38 & 166 & 1 & 14 &  1 &  5 &  8 \\
 Reddit         & 68 &  0 &   8 & 1 & 16 &  5 &  7 &  4 \\
@@ -787,16 +787,16 @@ dừng).
 
 \begin{table}[H]
 \centering
-\caption[Thống kê khám phá theo từng đợt chạy]{Thống kê khám phá theo từng đợt chạy. Cột
+\caption[Thống kê khám phá theo từng đợt chạy]{Thống kê khám phá theo từng đợt chạy (đơn vị: số lượng / count). Cột
 ``Task'' đếm mỗi task đúng một lần, theo kết cục cuối cùng.}
 \label{tab:app-runs}
 \small
 \begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-& & & \multicolumn{3}{c}{\textbf{Task}} & & & \\
+& & & \multicolumn{3}{c}{\textbf{Kết cục task (\#)}} & & & \\
 \cmidrule(lr){4-6}
-\textbf{Đợt chạy} & \textbf{Node} & \textbf{Ep.} & \textbf{đạt} & \textbf{hỏng} &
-\textbf{bất khả} & \textbf{Skill} & \textbf{Op.} & \textbf{Site} \\
+\textbf{Đợt chạy} & \textbf{Node} & \textbf{Ep.} & \textbf{Đạt} & \textbf{Hỏng} &
+\textbf{Bất khả} & \textbf{Skill} & \textbf{Op.} & \textbf{Website} \\
 \midrule
 1  &   1 &   6 &   3 &   3 &  0 &  1 &  1 & Reddit \\
 2  &   1 &   8 &   7 &   1 &  0 &  1 &  1 & Reddit \\
@@ -836,16 +836,16 @@ mà nó nhắc tới đã thay đổi kể từ lúc đồ thị được ghi).
 \begin{table}[H]
 \centering
 \caption[Sinh và kiểm chứng task theo loại]{Sinh và kiểm chứng task theo loại,
-các đợt chạy 4--6.}
+các đợt chạy 4--6 (đơn vị: số lượng task / count).}
 \label{tab:app-gen}
 \small
 \begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-& & \multicolumn{2}{c}{\textbf{INFO}} & \multicolumn{2}{c}{\textbf{NAV}} &
-\multicolumn{2}{c}{\textbf{MOD}} & \\
+& & \multicolumn{2}{c}{\textbf{INFO (\#)}} & \multicolumn{2}{c}{\textbf{NAV (\#)}} &
+\multicolumn{2}{c}{\textbf{MOD (\#)}} & \\
 \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
-\textbf{Đợt chạy} & \textbf{Thử} & \textbf{đạt} & \textbf{hỏng} & \textbf{đạt} &
-\textbf{hỏng} & \textbf{đạt} & \textbf{hỏng} & \textbf{Cũ} \\
+\textbf{Đợt chạy} & \textbf{Tổng thử} & \textbf{Đạt} & \textbf{Hỏng} & \textbf{Đạt} &
+\textbf{Hỏng} & \textbf{Đạt} & \textbf{Hỏng} & \textbf{Cũ (\#)} \\
 \midrule
 4 & 92 & 43 &  9 & 12 & 8 & 16 & 4 &  8 \\
 5 & 89 & 45 &  4 & 18 & 2 & 13 & 7 & 11 \\
@@ -891,8 +891,8 @@ là episode không mở được trang xuất phát, không phải agent thao t�
 \small
 \begin{tabular}{@{}lL{6.6cm}cr@{}}
 \toprule
-\textbf{Website} & \textbf{Chuỗi skill được ghép} & \textbf{Độ dài chuỗi} &
-\textbf{Kết quả} \\
+\textbf{Website} & \textbf{Chuỗi skill được ghép} & \textbf{Độ dài (bước)} &
+\textbf{Kết quả thực thi} \\
 \midrule
 Shopping & \texttt{navigate\_to\_product\_page} $\rightarrow$
 \texttt{add\_variant\_to\_cart} & 2 & đạt, 5 bước \\
@@ -945,15 +945,15 @@ theo cả hai kết cục.
 \begin{table}[H]
 \centering
 \caption[Đối chiếu theo cặp giữa mô hình nền và mô hình sau fine-tune]{Đối
-chiếu theo cặp trên cùng một tập task, cùng prompt và cùng bộ chấm. Hai
+chiếu theo cặp trên cùng một tập task, cùng prompt và cùng bộ chấm. Đơn vị: số lượng task (\#). Hai
 cột giữa là những ô mà phép kiểm định McNemar ở Mục~\ref{sec:exp-baseline}
 thực sự dùng tới.}
 \label{tab:app-mcnemar}
 \small
 \begin{tabular}{@{}lrrrrr@{}}
 \toprule
-\textbf{Website} & \textbf{Task} & \textbf{Cả hai đạt} &
-\textbf{Chỉ fine-tune} & \textbf{Chỉ mô hình nền} & \textbf{Cả hai hỏng} \\
+\textbf{Website} & \textbf{Tổng task (\#)} & \textbf{Cả hai đạt} &
+\textbf{Chỉ fine-tune} & \textbf{Chỉ nền} & \textbf{Cả hai hỏng} \\
 \midrule
 Shopping       & 187 & 27 & 26 & 10 & 124 \\
 Reddit         & 106 &  2 & 20 &  5 &  79 \\
@@ -1000,15 +1000,15 @@ trong một episode thất bại, nên các dòng chồng lấn nhau.
 \begin{table}[H]
 \centering
 \caption[Dấu hiệu xuất hiện trong episode thất bại]{Tần suất mỗi dấu hiệu
-xuất hiện ở bất kỳ đâu trong một episode thất bại, tính bằng phần trăm số
+xuất hiện ở bất kỳ đâu trong một episode thất bại, tính bằng phần trăm (\%) số
 episode thất bại của website đó. Các dòng chồng lấn nên không cộng thành
 100.}
 \label{tab:app-signals}
 \small
 \begin{tabular}{@{}L{4.6cm} R{2.1cm} R{2.1cm} R{2.1cm} R{2.1cm}@{}}
 \toprule
-\textbf{Dấu hiệu (\%)} & \textbf{Shopping} & \textbf{Reddit} &
-\textbf{GitLab} & \textbf{Sh.\ Admin} \\
+\textbf{Dấu hiệu nhận diện} & \textbf{Shopping (\%)} & \textbf{Reddit (\%)} &
+\textbf{GitLab (\%)} & \textbf{Sh.\ Admin (\%)} \\
 \midrule
 Có lỗi hành động & 85 & 96 & 95 & 93 \\
 Cạn ngân sách 15 bước & 35 & 40 & 45 & 47 \\

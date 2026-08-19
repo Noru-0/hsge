@@ -4,15 +4,16 @@
 \section{Kết luận}
 %%% ============================================================
 
+\subsection{Kết luận \& Hướng phát triển}
 \begin{frame}{Kết luận, hạn chế và hướng phát triển}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \footnotesize
       \textbf{Kết quả đạt được}
       \begin{itemize}\setlength{\itemsep}{3pt}
-        \item \textbf{Pipeline khép kín}: Khám phá tự động $\rightarrow$ Tinh lọc dữ liệu $\rightarrow$ Huấn luyện SLM hiệu quả không cần nhãn người.
-        \item \textbf{Hiệu năng thực nghiệm}: Tăng độ chính xác từ \kw{13,3\% $\rightarrow$ 20,8\%} ($p<0{,}001$), chi phí chỉ \kw{0,0355\$/mẫu}.
-        \item \textbf{Hiện vật bàn giao}: Mã nguồn, dataset SFT (4554 mẫu), mô hình fine-tune và tài liệu kỹ thuật.
+        \item \textbf{Pipeline khép kín}: Khám phá 4 website $\rightarrow$ Thu được 146 skill, 57 operator $\rightarrow$ Tạo dataset SFT \kw{1760 trajectory / 8554 mẫu}.
+        \item \textbf{Hiệu năng thực nghiệm}: Tăng độ chính xác từ \kw{13,3\% $\rightarrow$ 24,6\%} ($p<0{,}001$), dẫn đầu phân khúc SLM $<10$B trên WebArena 4 site.
+        \item \textbf{Hiện vật bàn giao}: Toàn bộ mã nguồn, dataset, checkpoint và tài liệu quy trình vận hành.
       \end{itemize}
     \end{column}
     \begin{column}{0.48\textwidth}
@@ -21,13 +22,13 @@
       \begin{itemize}\setlength{\itemsep}{3pt}
         \item \textbf{Hạn chế chính}:
           \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
-            \item Mức tăng chủ yếu ở việc tuân thủ định dạng giao diện hành động.
-            \item Cơ chế ghép chuỗi operator kích hoạt còn thưa (7/25).
+            \item Phụ thuộc vào chất lượng phân tích DOM/AXTree của website.
+            \item Chưa thực hiện ablation so sánh với khám phá phẳng hoàn chỉnh.
           \end{itemize}
         \item \textbf{Hướng phát triển}:
           \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
             \item Bổ sung trajectory phục hồi sau lỗi (error recovery).
-            \item Khai thác tín hiệu thất bại bằng RL / Preference tuning.
+            \item Khai thác tín hiệu thất bại bằng RL / DPO.
             \item Chưng cất tri thức xuống SLM siêu nhẹ 1--3B.
           \end{itemize}
       \end{itemize}

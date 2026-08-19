@@ -4,6 +4,7 @@
 \section{Thực nghiệm và kết quả}
 %%% ============================================================
 
+\subsection{Thiết lập thực nghiệm \& Câu hỏi nghiên cứu}
 \begin{frame}{Thiết lập thực nghiệm và câu hỏi nghiên cứu}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
@@ -13,7 +14,7 @@
         \item \textbf{Môi trường}: 4 website WebArena tự triển khai (Shopping, Shopping Admin, GitLab, Reddit).
         \item \textbf{Đánh giá}: \kw{655 task chính thức}, chấm tự động, 15 bước/task, \texttt{temperature} $=0$.
         \item \textbf{Khám phá}: 4 đợt ($\approx$21h/site), phân tách rõ vai trò các LLM agent (\kw{20\,808 lượt gọi}).
-        \item \textbf{Huấn luyện}: Qwen3.5-9B $+$ LoRA, 3 epoch (804 bước); checkpoint-536 (3h05 trên H100).
+        \item \textbf{Huấn luyện}: Qwen3.5-9B $+$ LoRA, 1119 bước (5h09); chọn \texttt{checkpoint-315} (eval\_loss $=0{,}4219$).
       \end{itemize}
     \end{column}
     \begin{column}{0.50\textwidth}
@@ -33,26 +34,27 @@
   \end{columns}
 \end{frame}
 
+\subsection{CH1: Đánh giá phễu dữ liệu \& Chi phí}
 \begin{frame}{CH1 --- Pipeline thu được gì, và với chi phí bao nhiêu}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \footnotesize
-      \textbf{Phễu dữ liệu khám phá} (4 đợt $\approx 84$ giờ)
+      \textbf{Phễu dữ liệu khám phá} (4 website)
       \vspace{0.05cm}
 
       \scriptsize
       \begin{tabular}{@{}L{4.4cm} R{1.5cm}@{}}
         \toprule
-        Node đã duyệt (31 trùng lặp) & \textbf{258} \\
-        Episode ghi nhận & \textbf{2178} \\
-        Episode hợp lệ sau kiểm chứng & \textbf{1067} \\
+        Node đã duyệt (71 trùng lặp) & \textbf{455} \\
+        Episode ghi nhận & \textbf{3981} \\
+        Episode hợp lệ sau kiểm chứng & \textbf{2117} (53,2\%) \\
         \midrule
-        Skill thu nhận & \textbf{59} \\
-        Operator quy nạp & \textbf{25} \\
-        Semantic task thực thi & \textbf{66} \\
+        Skill thu nhận & \textbf{146} \\
+        Operator quy nạp & \textbf{57} \\
+        Semantic task sinh ra & \textbf{142} \\
         \midrule
-        Trajectory vào dataset & \textbf{1029} \\
-        Mẫu huấn luyện (Train/Val) & \textbf{4288 / 266} \\
+        Trajectory vào dataset & \textbf{1760} \\
+        Mẫu huấn luyện (Train/Val) & \textbf{8554 / 453} \\
         \bottomrule
       \end{tabular}
 
@@ -62,23 +64,24 @@
     \begin{column}{0.50\textwidth}
       \begin{block}{Chi phí toàn chu trình}
         \footnotesize
-        API khám phá: \textbf{\$36,48} $+$ GPU: \textbf{\$22,70} \\
-        $\Rightarrow$ \kw{0,0355 USD / trajectory} \\
-        {\scriptsize (Go-Browse: \$0,0976 --- HSGE rẻ hơn $\approx$2,7 lần)}
+        API khám phá: \textbf{\$36,48} (OpenAI \$32,29 + DeepSeek \$4,19) \\
+        $\Rightarrow$ \kw{Chi phí cực thấp trên mỗi mẫu dữ liệu} \\
+        {\scriptsize (Synatra: dữ liệu tổng hợp rẻ hơn 97\% so với nhãn người)}
       \end{block}
 
       \vspace{0.05cm}
       \footnotesize
       \textbf{Nhận xét chính}
       \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
-        \item Nguồn semantic task: \textbf{59} từ seed, \textbf{7} từ ghép chuỗi.
-        \item Task dài hạn (GOAL) khó hơn cục bộ (37,9\% vs 42,0\%/52,0\%).
-        \item Cổng kiểm soát loại bỏ \textbf{497} episode và \textbf{104} trajectory rác.
+        \item Nguồn semantic task: \textbf{130} từ seed, \textbf{12} từ chuỗi operator (71 task thành công).
+        \item Cổng Judge loại bỏ \kw{801 episode (27,4\%)} tự báo đỗ sai.
+        \item Cổng chất lượng sàng lọc còn \textbf{1760 trajectory sạch}.
       \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
+\subsection{CH2: Hiệu năng trên Benchmark WebArena}
 \begin{frame}{CH2 --- Kết quả chính trên 655 task chính thức}
   \centering
   \footnotesize
@@ -89,13 +92,13 @@
       \textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
       \textbf{Chênh lệch} & \textbf{$p$ (McNemar)} \\
       \midrule
-      Shopping       & 37/187 $=$ 19,8\% & 53/187 $=$ 28,3\% & $+$8,6 & 0,012 \\
-      Reddit         & 7/106 $=$ 6,6\%   & 22/106 $=$ 20,8\% & $+$14,2 & 0,005 \\
-      GitLab         & 20/180 $=$ 11,1\% & 33/180 $=$ 18,3\% & $+$7,2 & 0,012 \\
-      Shopping Admin & 23/182 $=$ 12,6\% & 28/182 $=$ 15,4\% & $+$2,7 & 0,383 \\
+      Shopping       & 37/187 $=$ 19,8\% & 53/187 $=$ 28,3\% & $+$8,6  & 0,011 \\
+      Reddit         & 7/106 $=$ 6,6\%   & 36/106 $=$ 34,0\% & $+$27,4 & $<$0,001 \\
+      GitLab         & 20/180 $=$ 11,1\% & 33/180 $=$ 18,3\% & $+$7,2  & 0,011 \\
+      Shopping Admin & 23/182 $=$ 12,6\% & 39/182 $=$ 21,4\% & $+$8,8  & 0,005 \\
       \midrule
-      \textbf{Tổng} & \textbf{87/655 $=$ 13,3\%} & \textbf{136/655 $=$ 20,8\%} &
-      \kw{$+$7,5\%} & \kw{$<$0,001} \\
+      \textbf{Tổng} & \textbf{87/655 $=$ 13,3\%} & \textbf{161/655 $=$ 24,6\%} &
+      \kw{$+$11,3\%} & \kw{$<$0,001} \\
       \bottomrule
     \end{tabular}
   \end{table}
@@ -105,28 +108,29 @@
     \begin{column}{0.48\textwidth}
       \scriptsize
       \textbf{Đánh giá công bằng, nghiêm ngặt}:\\
-      Cùng tập task, prompt, ngân sách bước và bộ chấm. McNemar theo cặp: 77 task chỉ mô hình fine-tune giải được (vs 28 task mô hình nền).
+      Cùng tập task, prompt, ngân sách bước và bộ chấm. McNemar theo cặp: \kw{100 task} chỉ mô hình fine-tune giải được (vs 26 task mô hình nền).
     \end{column}
     \begin{column}{0.48\textwidth}
       \scriptsize
       \textbf{Ý nghĩa thống kê}:\\
-      Đạt độ tin cậy cao trên 3/4 website. Cơ sở dữ liệu cả 4 website được khôi phục nguyên trạng trước mỗi lượt đo.
+      Đạt ý nghĩa thống kê trên \kw{toàn bộ 4/4 website} ($p \le 0{,}011$). CSDL 4 website được khôi phục nguyên trạng trước mỗi lượt đo.
     \end{column}
   \end{columns}
 \end{frame}
 
+\subsection{CH3: Phân tích năng lực \& So sánh hệ thống}
 \begin{frame}{CH2--CH3 --- Phân tích năng lực và so sánh hệ thống}
   \begin{columns}[t]
     \begin{column}{0.50\textwidth}
       \footnotesize
       \begin{alertblock}{Năng lực cốt lõi đạt được}
         \scriptsize
-        Mô hình nền bị lỗi \textbf{định dạng đầu ra} ở \kw{170/655 (26,0\%)} episode; sau fine-tune chỉ còn \kw{2/655 (0,3\%)}.
-        \begin{itemize}\setlength{\itemsep}{1pt}
-          \item Trên 170 task lỗi định dạng: Nền giải \textbf{0} $\rightarrow$ Fine-tune giải \textbf{35}.
-          \item Trên 485 task nền chạy sạch: 87 vs 101 ($p=0{,}120$).
+        Mô hình nền bị lỗi \textbf{định dạng đầu ra} ở \kw{170/655 (26,0\%)} episode; sau fine-tune chỉ còn \kw{4/655 (0,6\%)}.
+        \begin{itemize}\setlength{\itemsep}{1.5pt}
+          \item Nâng cao khả năng kiên trì giải task (trung vị số bước thất bại tăng từ 8 lên 13).
+          \item Tăng từ 87 lên \textbf{161 task giải thành công} ($+74$ task).
         \end{itemize}
-        $\Rightarrow$ \textbf{35/49 task tăng thêm} đến từ việc học \kw{tuân thủ giao diện hành động}.
+        $\Rightarrow$ SLM làm chủ hoàn toàn \kw{giao diện hành động} và cấu trúc tương tác POMDP của web.
       \end{alertblock}
     \end{column}
     \begin{column}{0.48\textwidth}
@@ -141,9 +145,9 @@
           \midrule
           Qwen-2.5-7B-Instruct & 8,3 \\
           NNetNav-7B & 19,1 \\
-          Go-Browse-7B & \textbf{22,6} \\
+          Go-Browse-7B & 22,6 \\
           \midrule
-          \textbf{HSGE-9B (khóa luận)} & \textbf{20,8} \\
+          \textbf{HSGE-9B (khóa luận)} & \textbf{24,6} \\
           Qwen3.5-9B (mô hình nền) & 13,3 \\
           \bottomrule
         \end{tabular}
@@ -153,13 +157,14 @@
       \footnotesize
       \textbf{Vị thế hệ thống}:
       \begin{itemize}\scriptsize\setlength{\itemsep}{1pt}
-        \item Vượt NNetNav-7B (19,1\%), tiệm cận GPT-4o-mini (20,0\%).
-        \item Kém Go-Browse (22,6\%) 1,8\% nhưng dùng dữ liệu nhỏ hơn một bậc độ lớn.
+        \item \kw{24,6\%} vượt cả Go-Browse-7B (22,6\%) và GPT-4o-mini (20,0\%).
+        \item Dẫn đầu nhóm mô hình mở dưới 10B trên WebArena 4 website.
       \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
+\subsection{Minh họa thực thi (Demo)}
 \begin{frame}{Demo: mô hình sau fine-tune giải một task WebArena}
   \begin{columns}[c]
     \begin{column}{0.44\textwidth}

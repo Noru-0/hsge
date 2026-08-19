@@ -83,7 +83,7 @@ Ba nguyên tắc sau chi phối toàn bộ thiết kế của pipeline:
     lực đã kiểm chứng, theo hướng từ dưới lên; và seed năng lực của
     website, theo hướng từ trên xuống. Giữ song song hai nguồn là
     quyết định rút ra từ thực nghiệm, bởi nguồn từ dưới lên chỉ chạy
-    được khi đồ thị toán tử đã có cạnh - một điều kiện thưa hơn dự
+    được khi operator graph đã có cạnh - một điều kiện thưa hơn dự
     kiến rất nhiều (Phụ lục~\ref{sec:disc-operators}).
 \end{itemize}
 
@@ -120,7 +120,7 @@ các \emph{hệ thống} gần nhất, còn bảng dưới đây định vị n�
     STRIPS $\langle \mathit{pre}, \mathit{eff} \rangle$~\cite{fikes1971strips} &
     Mục~\ref{sec:method-graph} &
     Từ vựng mệnh đề \emph{không đóng}: LLM tự sinh mệnh đề, rồi một
-    sổ đăng ký quy
+    predicate registry quy
     chúng về các mã định danh ổn định. Bộ lập kế hoạch STRIPS cổ điển
     giả định từ
     vựng được cho trước và cố định \\
@@ -144,8 +144,7 @@ các \emph{hệ thống} gần nhất, còn bảng dưới đây định vị n�
     Mục~\ref{sec:method-skills} &
     Gom cụm chạy \emph{trực tuyến ngay trong vòng khám phá} thay vì theo lô sau
     khi thu xong dữ liệu, và ngưỡng độ chín của cụm trở thành cổng
-    thu nhận một kỹ
-    năng \\
+    thu nhận một skill \\
     \addlinespace
     Sentence embedding~\cite{reimers2019sbert} &
     Mục~\ref{sec:method-skills}, \ref{sec:method-semantic} &
@@ -163,7 +162,7 @@ sẵn. Thứ nhất là \emph{hai nguồn sinh semantic task chạy song song}: 
 chuỗi operator theo hướng từ dưới lên, và seed năng lực website theo hướng từ
 trên xuống, dùng chung một ngân sách (Mục~\ref{sec:method-semantic}). Thứ hai
 là \emph{bộ cổng chất lượng đặt bên trong vòng khám phá}: judge chấm lại mọi
-thành công tự tuyên bố trước khi phiên đó kịp nuôi khâu phát hiện kỹ năng,
+thành công tự tuyên bố trước khi phiên đó kịp nuôi khâu phát hiện skill,
 cổng hành động hữu hiệu, và cổng loại báo cáo bất khả thi kiểu biện minh
 (Mục~\ref{sec:method-success}, \ref{sec:method-data}).
 
@@ -211,7 +210,7 @@ Cách biểu diễn quan sát bằng axtree và việc quy mọi thao tác giao
 diện về một tập lệnh hữu hạn không phải là đóng góp của khóa luận: đó
 là quy ước sẵn có của WebArena~\cite{zhou2024webarena} và bộ công cụ
 BrowserGym~\cite{dechezelles2025browsergym} mà HSGE kế thừa. Trên nền
-đó, agent tương tác với môi trường qua một không gian hành động cố
+đó, agent tương tác với môi trường qua một action space cố
 định $\mathcal{A}$ (Bảng~\ref{tab:actions}), gồm các thao tác lên
 phần tử, điều hướng, quản lý tab và hai hành động kết thúc episode:
 trả lời người dùng hoặc tuyên bố task bất khả thi. Chuỗi $\tau =
@@ -220,11 +219,11 @@ một task chính là một \emph{trajectory tương tác}.
 
 \begin{table}[htbp]
   \centering
-  \caption[Action space của solver]{Không gian hành động của solver.
+  \caption[Action space của solver]{Action space của solver.
     Đối số phần tử là mã định danh xuất hiện trong accessibility tree.
     Ba hành động không làm đổi trạng thái trang được tách riêng vì
     chúng chỉ dùng để gỡ bế tắc thao tác; chính chỗ phân biệt này về
-  sau quyết định một cổng lọc dữ liệu (Mục~\ref{sec:method-data}).}
+    sau quyết định một cổng lọc dữ liệu (Mục~\ref{sec:method-data}).}
   \label{tab:actions}
   \small
   \begin{tabular}{@{}L{5.4cm} L{7.8cm}@{}}
@@ -265,7 +264,7 @@ liệu hành động, kèm một chỉ dẫn rõ ràng: một lỗi quá hạn c
 \emph{có tồn tại} nhưng chưa thao tác được ngay, chứ không phải mô hình đã
 chọn sai phần tử.
 
-Một chi tiết khác của không gian hành động là \texttt{goto} luôn nhận đường
+Một chi tiết khác của action space là \texttt{goto} luôn nhận đường
 dẫn tương đối. Địa chỉ máy chủ của một bản triển khai WebArena chỉ là ngẫu
 nhiên của nơi nó được dựng lên, trong khi dữ liệu của khóa luận được thu thập
 trên một máy chủ và được đánh giá trên một máy chủ hoàn toàn khác. Vì vậy, mọi
@@ -305,7 +304,7 @@ kiếm hay giá trị điền vào biểu mẫu), và các liên kết trỏ v�
 thấp bằng cạnh khởi đầu và cạnh effect, nối với nhau bằng cạnh ghép
 chuỗi; toàn bộ các node và cạnh đó hợp thành đồ thị tầng cao.
 
-\subsection{Toán tử lập kế hoạch: Precondition và Effect}
+\subsection{Planning operator: Precondition và Effect}
 
 Không thể lập kế hoạch trực tiếp trên skill thô, bởi điều kiện áp
 dụng của chúng chỉ tồn tại ở dạng ngầm định. Vì vậy mỗi skill đã qua
@@ -322,7 +321,7 @@ nhờ đó nhiều cách diễn đạt của cùng một điều kiện quy về
 mệnh đề. Trong \emph{operator graph}, có cạnh nối từ
 $\omega_1$ sang $\omega_2$ khi một effect của $\omega_1$ thỏa một
 precondition của $\omega_2$; mỗi đường đi trên đồ thị là một kế hoạch
-nhiều kỹ năng thực thi được.
+nhiều skill thực thi được.
 
 \subsection{Phân loại thuật ngữ task}
 
@@ -330,7 +329,7 @@ Khóa luận dùng hai hạng task tách bạch. \emph{Low-level task}
 là chỉ dẫn ngắn gắn với một trang cụ thể, do
 explorer đề xuất lúc thăm trang, chẳng hạn ``mở merge request được
 cập nhật gần nhất''. \emph{Semantic task} là mục tiêu
-dài hạn dựng từ đồ thị toán tử bằng cách ghép ít nhất hai operator;
+dài hạn dựng từ operator graph bằng cách ghép ít nhất hai operator;
 nó phụ thuộc hoàn toàn vào cấu trúc đồ thị và là sản phẩm cốt lõi của
 phương pháp đề xuất.
 
@@ -350,8 +349,8 @@ lần lượt cho frontier, explorer và solver.
   \caption[Quản lý frontier]{Quản lý frontier. Hai tầng ứng viên đi
     theo hai lối khác nhau: URL mà solver đã thực sự đi tới được đưa
     thẳng vào hàng đợi, còn các liên kết khai thác từ trang phải qua
-    giới hạn theo khuôn dạng URL. Hàng đợi xếp ứng viên theo tầng, rồi tới
-    độ mới của khuôn dạng, sau cùng là độ sâu. Một node lấy ra khỏi
+    giới hạn theo URL template. Hàng đợi xếp ứng viên theo tầng, rồi tới
+    độ mới của template, sau cùng là độ sâu. Một node lấy ra khỏi
     hàng đợi vẫn bị bỏ qua nếu nội dung trang có mã băm trùng với một
   trang đã thăm.}
   \label{fig:frontier}
@@ -433,7 +432,7 @@ tiêu tốn trọn một lô lời gọi LLM mà không mang lại phát hiện 
     \cup \{t\}$ \EndIf
     \State thêm các URL đạt tới trong $\tau$ vào $F$ ở tầng 0
     \EndFor
-    \For{task $t \in D$} \Comment{lấy mẫu không tiền tố,
+    \For{task $t \in D$} \Comment{unprefixed sampling,
     Mục~\ref{sec:method-unprefixed}}
     \State $\tau \gets \textsc{Solver}(r, t)$; ghi episode nhãn
     \texttt{UNPREFIXED}
@@ -468,7 +467,7 @@ trên website thật (Phụ lục~\ref{sec:disc-guardrails}).
 Nhóm \texttt{COMPOSITE} có vai trò riêng và được prompt yêu cầu đặt
 lên đầu danh sách: đây là nhóm duy nhất trong bốn nhóm mà một task
 đơn lẻ đã trải qua nhiều trạng thái trang, nên nó là nguồn sinh ra
-các kỹ năng có thể tái sử dụng và ghép chuỗi. Một quy tắc cụ thể đi
+các skill có thể tái sử dụng và ghép chuỗi. Một quy tắc cụ thể đi
 kèm là khi trang hiện tại có biểu mẫu nhiều trường, explorer không
 được đề xuất task chỉ điền một trường đơn lẻ, mà phải đề xuất một
 task hoàn tất trọn vẹn biểu mẫu đó theo đúng mục đích của nó. Ngoài
@@ -658,7 +657,7 @@ chín và trở thành skill.
 \label{sec:method-success}
 
 Kết quả của mỗi episode quyết định cả việc nó có được đưa vào khâu phát hiện
-kỹ năng hay không lẫn việc nó có trở thành dữ liệu huấn luyện hay không, nên
+skill hay không lẫn việc nó có trở thành dữ liệu huấn luyện hay không, nên
 mục này
 gom lại toàn bộ các cơ chế chấm thành công đã nhắc rải rác ở trên. Có ba cơ
 chế, xếp theo mức đáng tin giảm dần, và mỗi episode chỉ đi qua đúng một trong
@@ -693,8 +692,8 @@ kết quả của chúng vốn đã đáng tin.
 Điều đáng nói là bước chấm chạy \emph{ngay trong vòng lặp khám phá} chứ không
 phải sau khi lượt chạy kết thúc. Một phán quyết \textsc{Fail} có hiệu lực
 \emph{trước khi} bất kỳ khâu nào phía sau nhìn thấy episode đó: nó không được
-ghi là thành công, không đi vào khâu phát hiện kỹ năng, và không được chọn cho
-lượt lấy mẫu không tiền tố. Đặt bước chấm ở đây là quyết định có chủ đích, bởi
+ghi là thành công, không đi vào khâu phát hiện skill, và không được chọn cho
+lượt unprefixed sampling. Đặt bước chấm ở đây là quyết định có chủ đích, bởi
 một phán quyết ngoại tuyến là phán quyết mà lượt chạy \emph{không bao giờ hành
 động theo}: nó sửa được tập dữ liệu nhưng không sửa được những gì lượt chạy đã
 làm dựa trên một kết luận sai. Lời gọi judge cũng nằm bên trong hàm giải một
@@ -710,16 +709,16 @@ thức của WebArena quyết định, hoàn toàn độc lập với ba cơ ch�
 \section{Phát hiện skill}
 \label{sec:method-skills}
 
-Mỗi trajectory hoàn tất đi qua một pipeline phát hiện kỹ năng gồm bốn
+Mỗi trajectory hoàn tất đi qua một pipeline phát hiện skill gồm bốn
 giai đoạn: phân cắt, gom cụm, trừu tượng hóa và kiểm chứng
 (Hình~\ref{fig:discovery}).
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.48\textwidth]{Figures/fig_discovery.pdf}
-  \caption[Pipeline phát hiện skill]{Pipeline phát hiện kỹ năng. Một
+  \caption[Pipeline phát hiện skill]{Pipeline phát hiện skill. Một
     trajectory hoàn tất được cắt thành các trajectory con, gom cụm,
-    trừu tượng hóa thành thẻ kỹ năng, và chỉ vào thư viện nếu qua được
+    trừu tượng hóa thành skill card, và chỉ vào thư viện nếu qua được
   bước kiểm chứng; không qua thì bị loại.}
   \label{fig:discovery}
 \end{figure}
@@ -727,11 +726,11 @@ giai đoạn: phân cắt, gom cụm, trừu tượng hóa và kiểm chứng
 Thuật toán~\ref{alg:discovery} trình bày cả bốn giai đoạn dưới dạng mã giả;
 các mục tiếp theo giải thích từng giai đoạn. Cần lưu ý là pipeline chỉ chạy
 trên trajectory của những task đã giải thành công: một episode thất bại hoặc
-kết thúc bằng \texttt{report\_infeasible} không bao giờ tham gia phát hiện kỹ
-năng.
+kết thúc bằng \texttt{report\_infeasible} không bao giờ tham gia phát hiện
+skill.
 
 \begin{algorithm}[H]
-  \caption{Phát hiện kỹ năng từ một trajectory tương tác}
+  \caption{Phát hiện skill từ một trajectory tương tác}
   \label{alg:discovery}
   \begin{algorithmic}[1]
     \Require trajectory $\tau$ gồm $n$ bước của một task đã giải thành công, với
@@ -796,23 +795,23 @@ embedding~\cite{reimers2019sbert}, rồi xếp vào cụm bằng một thuật
 toán gom cụm phi tham số chạy trực tuyến thuộc họ
 DP-means~\cite{kulis2012dpmeans}: đoạn mới nhập vào cụm gần nhất nếu
 độ tương đồng cosine vượt một ngưỡng cho trước, không thì mở một cụm
-mới. Nhờ vậy, số kỹ năng không cần khai báo trước, và việc gom cụm
+mới. Nhờ vậy, số skill không cần khai báo trước, và việc gom cụm
 chạy xen ngay trong lúc khám phá thay vì tách thành một lượt xử lý
 theo lô riêng.
 
 \textbf{Trừu tượng hóa.} Khi một cụm đạt \emph{độ
 chín}, tức đã tái xuất hiện đủ số lần qua các trajectory độc lập, mặc
 định là hai lần (Phụ lục~\ref{app:design-params}), một LLM trừu tượng
-hóa cụm đó thành một thẻ kỹ năng. Thẻ gồm tên, mô tả, và các tham số
+hóa cụm đó thành một skill card. Thẻ gồm tên, mô tả, và các tham số
 có kiểu để tổng quát hóa những giá trị cụ thể nằm trong các
 trajectory thành phần, chẳng hạn một chuỗi tìm kiếm. Bản thân các
 đoạn trajectory thành phần vẫn được giữ lại làm minh chứng.
 
 \subsection{Kiểm chứng}
 
-Theo nguyên tắc P1, một kỹ năng chỉ vào thư viện sau khi đã qua kiểm
+Theo nguyên tắc P1, một skill chỉ vào thư viện sau khi đã qua kiểm
 chứng. Trong môi trường giả lập tất định dùng ở giai đoạn phát triển,
-bước kiểm chứng thực thi lại kỹ năng đó trong vài bối cảnh tách riêng
+bước kiểm chứng thực thi lại skill đó trong vài bối cảnh tách riêng
 và đòi hỏi mọi lần chạy đều thành công. Trên website thật thì không
 làm vậy được: thực thi lại vừa tốn tài nguyên, vừa có thể để lại tác
 động phụ làm đổi trạng thái website. Vì vậy quyết định thu nhận dựa
@@ -843,7 +842,7 @@ giữa các operator để dựng nên những mục tiêu nhiều bước
 \subsection{Quy nạp operator}
 
 Sau khi một skill được thu nhận, thành phần \emph{inducer} dùng LLM để suy ra
-\emph{precondition} và \emph{effect} của nó. Đầu vào là thẻ kỹ năng cùng quan
+\emph{precondition} và \emph{effect} của nó. Đầu vào là skill card cùng quan
 sát ở đầu và cuối của vài trajectory đại diện thuộc skill đó. Cả hai tập mệnh đề
 đều được sinh bằng ngôn ngữ tự nhiên.
 
@@ -881,7 +880,7 @@ Operator vừa sinh còn qua một cổng chặn \emph{tautology}. Effect nào t
 
 và skill nào không còn effect mới sau bước này thì không được nâng thành
 operator. Bước lọc gạt đi những operator không diễn tả một thay đổi trạng thái
-nào, bởi chúng không sinh được cạnh mới trên đồ thị toán tử nên cũng không
+nào, bởi chúng không sinh được cạnh mới trên operator graph nên cũng không
 ghép chuỗi được.
 
 Cổng lọc thứ hai kiểm tra một câu hỏi khác: mệnh đề vừa sinh ra có thực sự
@@ -915,7 +914,7 @@ mặc định 0{,}6 (Phụ lục~\ref{app:design-params}), nhưng không cho g�
 đã có, để một mã định danh khi đã cấp thì không đổi nữa.
 
 Mỗi mệnh đề mới hoặc rơi vào một cụm chuẩn đã có và mang mã định danh của cụm
-đó, hoặc mở một cụm mới nếu không có ứng viên nào đủ gần. Dần dần, sổ đăng ký
+đó, hoặc mở một cụm mới nếu không có ứng viên nào đủ gần. Dần dần, predicate registry
 hình thành một tập mệnh đề chung
 
 \[
@@ -928,7 +927,7 @@ mở rộng được nhờ LLM.
 
 \subsection{Ghép chuỗi operator thành semantic task}
 
-Đồ thị toán tử tạo một cạnh
+Operator graph tạo một cạnh
 $\omega_1 \rightarrow \omega_2$
 nếu một effect của
 $\omega_1$
@@ -960,7 +959,7 @@ lại \emph{ngay trong vòng lặp khám phá}, nên không semantic task nào
 được ghi thành công chỉ vì agent tự nói vậy
 (Mục~\ref{sec:method-data}, \ref{sec:disc-slm}).
 
-Ở giai đoạn đầu, khi đồ thị toán tử còn thưa và chưa có chuỗi hợp lệ nào, hệ
+Ở giai đoạn đầu, khi operator graph còn thưa và chưa có chuỗi hợp lệ nào, hệ
 thống tạm lập kế hoạch thẳng tới những trạng thái kết thúc đã biết, nếu
 website có. Nhờ đó việc thu thập dữ liệu vẫn chạy được trước khi đồ thị đủ dày
 để sinh semantic task.
@@ -968,8 +967,8 @@ website có. Nhờ đó việc thu thập dữ liệu vẫn chạy được trư
 \subsection{Seed năng lực website: nguồn mục tiêu từ trên xuống}
 \label{sec:method-seed}
 
-Cách ghép chuỗi ở trên đi \emph{từ dưới lên}: nó chỉ sinh được task khi đồ
-thị toán tử đã có cạnh, mà cạnh lại chỉ hình thành khi hai operator độc lập
+Cách ghép chuỗi ở trên đi \emph{từ dưới lên}: nó chỉ sinh được task khi operator
+graph đã có cạnh, mà cạnh lại chỉ hình thành khi hai operator độc lập
 tình cờ phát biểu trùng một mệnh đề. Trên thực tế, điều kiện này thưa hơn dự
 kiến rất nhiều (Phụ lục~\ref{sec:disc-operators}), khiến việc thu thập dữ liệu dài
 hạn bị treo vào đúng thứ khó xây dựng nhất của hệ thống.
@@ -996,7 +995,7 @@ không được suy diễn ra các tính năng không nhìn thấy.
 
 Ngân sách dành cho các mục tiêu này được phân bổ theo hai quy tắc.
 Một năng lực có thể được thử lại tối đa ba lần trong một lượt chạy,
-mỗi lần từ một \emph{loại} trang khác nhau theo khuôn dạng URL, bởi
+mỗi lần từ một \emph{loại} trang khác nhau theo URL template, bởi
 cùng một mục tiêu theo đuổi từ điểm xuất phát khác thực sự là một
 trajectory khác. Ràng buộc theo loại trang là thứ ngăn toàn bộ ngân
 sách bị tiêu hết trong vài node đầu.
@@ -1082,25 +1081,25 @@ sau gom lô theo trajectory. Cuối cùng, các mẫu được xếp theo độ 
 bằng độ dài chuỗi operator cho các mục tiêu ngữ nghĩa - tạo thành một
 curriculum cho bước fine-tuning, theo tinh thần curriculum learning~\cite{bengio2009curriculum}.
 
-\section{Tinh chỉnh mô hình ngôn ngữ nhỏ}
+\section{Fine-tuning mô hình ngôn ngữ nhỏ}
 \label{sec:method-sft}
 
 Mô hình đem fine-tune là Qwen3.5-9B~\cite{qwen2026qwen35}, huấn luyện bằng
 LoRA~\cite{hu2022lora} trên framework
 LLaMA-Factory~\cite{zheng2024llamafactory}.
 
-Tập huấn luyện và tập kiểm định được chia theo đơn vị \emph{task}, cụ thể là
+Tập train và tập validation được chia theo đơn vị \emph{task}, cụ thể là
 theo cặp (website, nội dung mục tiêu), chứ không theo từng bước và cũng không
 theo từng trajectory. Chia theo bước thì sai rõ ràng, vì các bước trong cùng một
 episode gắn chặt với nhau. Nhưng chia theo trajectory cũng chưa đủ,
-và đây là chỗ dễ bỏ sót. Cơ chế lấy mẫu không tiền tố
+và đây là chỗ dễ bỏ sót. Cơ chế unprefixed sampling
 (Mục~\ref{sec:method-unprefixed}) ghi lại mỗi task đã giải được
 \emph{hai} lần: một lần từ chính trang của nó, một lần từ trang chủ.
 Một mục tiêu vì thế sở hữu hai trajectory, và phép chia ở mức
-trajectory sẽ đặt bản sao này vào tập huấn luyện, bản sao kia vào tập
-kiểm định. Đo trên chính tập dữ liệu của
-khóa luận, cách chia đó làm rò rỉ 29 trên 56 trajectory kiểm định, tương đương
-một nửa số mẫu kiểm định: mô hình đã học đúng mục tiêu ấy, trên đúng website
+trajectory sẽ đặt bản sao này vào tập train, bản sao kia vào tập
+validation. Đo trên chính tập dữ liệu của
+khóa luận, cách chia đó làm rò rỉ 29 trên 56 trajectory validation, tương đương
+một nửa số mẫu validation: mô hình đã học đúng mục tiêu ấy, trên đúng website
 ấy, tới đúng trang đích ấy. Hệ quả là giá trị \texttt{eval\_loss} bị kéo
 xuống thấp hơn thực chất, và việc chọn checkpoint giữa các epoch dựa trên nó
 không còn phản ánh đúng khả năng khái quát hóa của mô hình.
@@ -1111,11 +1110,11 @@ tiêu có đúng một trajectory \texttt{LOCAL} và một trajectory
 cặp đúng như thiết kế và được giữ nguyên, nhưng hai trajectory
 \emph{cùng} mức độ
 khó cho cùng một mục tiêu, vốn phát sinh khi một năng lực seed được đề xuất
-lại ở node khác, chỉ giữ lại trajectory dài nhất. Thứ hai, tập kiểm
-định được lấy
+lại ở node khác, chỉ giữ lại trajectory dài nhất. Thứ hai, tập
+validation được lấy
 mẫu phân tầng theo từng website với cùng một tỷ lệ, thay vì lấy một lượt chung
 trên toàn bộ dữ liệu; nếu không, website nào sở hữu các trajectory dài nhất sẽ
-chiếm phần lớn hạn mức kiểm định và \texttt{eval\_loss} sẽ chủ yếu phản ánh
+chiếm phần lớn hạn mức validation và \texttt{eval\_loss} sẽ chủ yếu phản ánh
 riêng website đó.
 
 Một chi tiết khác: Qwen3.5-9B mặc định sinh các đoạn suy luận tường minh, trong khi dữ liệu của khóa luận chỉ có những cặp suy nghĩ - hành
@@ -1154,7 +1153,7 @@ khoản là tài nguyên dùng chung giữa các lượt chạy, và một thao 
 hay đổi mật khẩu có thể khóa toàn bộ các lượt chạy sau ra ngoài.
 
 Để chạy tiếp được sau khi gián đoạn, các sản phẩm trung gian gồm skill,
-operator, đồ thị toán tử, kết quả khám phá của từng node và nhật ký sự kiện
+operator, operator graph, kết quả khám phá của từng node và nhật ký sự kiện
 đều được ghi lại sau mỗi node, kèm một checkpoint nhị phân chứa toàn bộ trạng
 thái vòng lặp: hàng đợi frontier, tập đã thăm, các bộ đếm và mọi đối tượng của
 khâu phát hiện. Checkpoint được thay mới theo cơ chế nguyên tử sau mỗi node -

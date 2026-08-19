@@ -2,20 +2,20 @@
 
 Muốn làm web agent, một mô hình ngôn ngữ nhỏ cần được huấn luyện trên lượng lớn
 trajectory chất lượng cao, nhưng dữ liệu này vẫn phụ thuộc vào gán nhãn thủ
-công, còn các phương pháp khám phá web tự động chỉ sinh ra tác vụ đơn lẻ, rời
+công, còn các phương pháp khám phá web tự động chỉ sinh ra task đơn lẻ, rời
 rạc và khó tái sử dụng. Khóa luận xây dựng một pipeline tự động sinh dữ liệu
-tinh chỉnh cho mô hình ngôn ngữ nhỏ làm web agent, bằng cách tích lũy các hành
-động lặp lại lúc khám phá website thành kỹ năng tái sử dụng được. Giải pháp đề
+fine-tuning cho mô hình ngôn ngữ nhỏ làm web agent, bằng cách tích lũy các hành
+động lặp lại lúc khám phá website thành skill tái sử dụng được. Giải pháp đề
 xuất là HSGE (Hierarchical Skill-Graph Exploration): hệ thống vừa khám phá vừa
-dựng dần một đồ thị kỹ năng hai tầng, kiểm chứng các kỹ năng lặp lại rồi nâng
-mỗi kỹ năng thành một operator mô tả bằng precondition và effect. Các operator
-được ghép theo chuỗi effect - precondition để tự sinh tác vụ ngữ nghĩa nhiều
-bước, và mọi trajectory đều qua một mô hình chấm độc lập trước khi vào tập huấn
-luyện. Trên bốn website của bộ chuẩn WebArena, pipeline thu được 1760
-trajectory và 8554 mẫu huấn luyện không nhãn, dùng để tinh chỉnh LoRA cho
-Qwen3.5-9B. Trên toàn bộ 655 tác vụ chính thức, mô hình sau tinh chỉnh đạt
+dựng dần một skill graph hai tầng, kiểm chứng các skill lặp lại rồi nâng
+mỗi skill thành một operator mô tả bằng precondition và effect. Các operator
+được ghép theo chuỗi effect - precondition để tự sinh semantic task nhiều
+bước, và mọi trajectory đều qua một mô hình chấm độc lập trước khi vào tập
+train. Trên bốn website của bộ chuẩn WebArena, pipeline thu được 1760
+trajectory và 8554 mẫu huấn luyện không nhãn, dùng để fine-tune LoRA cho
+Qwen3.5-9B. Trên toàn bộ 655 task chính thức, mô hình sau fine-tune đạt
 24{,}6\% so với 13{,}3\% của mô hình nền đo cùng điều kiện, chênh lệch 11{,}3
 điểm phần trăm và đạt ý nghĩa thống kê theo kiểm định McNemar theo cặp. Kết quả
-cho thấy tổ chức dữ liệu khám phá thành đồ thị kỹ năng là hướng khả thi để nâng
+cho thấy tổ chức dữ liệu khám phá thành skill graph là hướng khả thi để nâng
 năng lực web agent của mô hình nhỏ; khóa luận để lại pipeline, bộ dữ liệu và mô
 hình đã huấn luyện làm nền cho đánh giá mở rộng.

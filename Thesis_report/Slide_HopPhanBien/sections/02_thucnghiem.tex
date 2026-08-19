@@ -25,7 +25,7 @@
         \item \textbf{Huấn luyện}: Qwen3.5-9B + LoRA, chạy 1119 bước, mất 5 giờ 09 phút.
       \end{itemize}
     \end{column}
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.54\textwidth}
       \footnotesize
       \textbf{Dữ liệu còn lại sau mỗi bước lọc} (4 website)
       \vspace{0.03cm}
@@ -43,8 +43,9 @@
         Trajectory đưa vào dataset & \textbf{1760} \\
         Mẫu huấn luyện (Train / Validation) & \textbf{8554 / 453} \\
         \bottomrule
-      \end{tabular}
-      {\scriptsize Toàn bộ dữ liệu tự sinh ra, \kw{không có nhãn nào do con người tạo}; tách train/validation theo cấp task nên \kw{không có task nào xuất hiện ở cả hai tập}. Chi phí API cho cả quá trình: \textbf{\$36,48}.}
+      \end{tabular}\par
+      \vspace{0.08cm}
+      {\scriptsize Toàn bộ dữ liệu tự sinh ra, \kw{không có nhãn do con người tạo}; tách train/validation theo cấp task nên \kw{không có task trùng giữa hai tập}. Chi phí API: \textbf{\$36,48}.}
     \end{column}
   \end{columns}
 \end{frame}
@@ -53,25 +54,23 @@
 \begin{frame}{Kết quả chính trên 655 task và diễn giải}
   \centering
   \footnotesize
-  \setlength{\tabcolsep}{4pt}
-  \begin{table}
-    \begin{tabular}{@{}L{2.6cm} R{2.5cm} R{2.5cm} R{1.6cm} R{2.0cm}@{}}
-      \toprule
-      \textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
-      \textbf{Chênh lệch} & \textbf{$p$ (McNemar)} \\
-      \midrule
-      Shopping       & 37/187 $=$ 19,8\% & 53/187 $=$ 28,3\% & $+$8,6  & 0,011 \\
-      Reddit         & 7/106 $=$ 6,6\%   & 36/106 $=$ 34,0\% & $+$27,4 & $<$0,001 \\
-      GitLab         & 20/180 $=$ 11,1\% & 33/180 $=$ 18,3\% & $+$7,2  & 0,011 \\
-      Shopping Admin & 23/182 $=$ 12,6\% & 39/182 $=$ 21,4\% & $+$8,8  & 0,005 \\
-      \midrule
-      \textbf{Tổng} & \textbf{87/655 $=$ 13,3\%} & \textbf{161/655 $=$ 24,6\%} &
-      \kw{$+$11,3\%} & \kw{$<$0,001} \\
-      \bottomrule
-    \end{tabular}
-  \end{table}
+  \setlength{\tabcolsep}{4.5pt}
+  \begin{tabular}{@{}L{2.5cm} C{2.9cm} C{2.9cm} C{1.8cm} C{1.8cm}@{}}
+    \toprule
+    \textbf{Website} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} &
+    \textbf{Chênh lệch} & \textbf{$p$ (McNemar)} \\
+    \midrule
+    Shopping       & 37/187 $=$ 19,8\% & 53/187 $=$ 28,3\% & $+$8,6\%  & 0,011 \\
+    Reddit         & 7/106 $=$ 6,6\%   & 36/106 $=$ 34,0\% & $+$27,4\% & $<$0,001 \\
+    GitLab         & 20/180 $=$ 11,1\% & 33/180 $=$ 18,3\% & $+$7,2\%  & 0,011 \\
+    Shopping Admin & 23/182 $=$ 12,6\% & 39/182 $=$ 21,4\% & $+$8,8\%  & 0,005 \\
+    \midrule
+    \textbf{Tổng} & \textbf{87/655 $=$ 13,3\%} & \textbf{161/655 $=$ 24,6\%} &
+    \kw{$+$11,3\%} & \kw{$<$0,001} \\
+    \bottomrule
+  \end{tabular}
 
-  \vspace{0.1cm}
+  \vspace{0.12cm}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \scriptsize
@@ -85,7 +84,7 @@
       \textbf{Diễn giải}: mức tăng có ý nghĩa thống kê trên \kw{cả 4/4 website}
       ($p \le 0{,}011$). Một tín hiệu rõ: tỷ lệ lỗi định dạng đầu ra giảm từ 26,0\%
       xuống chỉ còn 0,6\% $\Rightarrow$ sau fine-tune, mô hình đã làm chủ được cách
-      thao tác đúng cú pháp trên trang web, không còn "nói sai ngôn ngữ" của agent.
+      thao tác đúng cú pháp trên trang web, không còn ``nói sai ngôn ngữ'' của agent.
     \end{column}
   \end{columns}
 \end{frame}

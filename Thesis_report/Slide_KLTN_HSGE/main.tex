@@ -11,14 +11,32 @@
 
 % Outline frame
 \begin{frame}{Nội dung báo cáo}
-  \tableofcontents[hideallsubsections]
+  \footnotesize
+  \begin{columns}[t]
+    \begin{column}{0.48\textwidth}
+      \tableofcontents[sections={1-2}]
+    \end{column}
+    \hfill
+    \begin{column}{0.48\textwidth}
+      \tableofcontents[sections={3-4}]
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % Show outline before each section
 \AtBeginSection[]
 {
   \begin{frame}{Nội dung báo cáo}
-    \tableofcontents[currentsection,hideallsubsections]
+    \footnotesize
+    \begin{columns}[t]
+      \begin{column}{0.48\textwidth}
+        \tableofcontents[sections={1-2},currentsection,hideothersubsections]
+      \end{column}
+      \hfill
+      \begin{column}{0.48\textwidth}
+        \tableofcontents[sections={3-4},currentsection,hideothersubsections]
+      \end{column}
+    \end{columns}
   \end{frame}
 }
 

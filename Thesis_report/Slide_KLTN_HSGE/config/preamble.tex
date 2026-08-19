@@ -16,16 +16,27 @@
 \usepackage{xcolor}
 \graphicspath{{images/}}
 
-% Navigation symbols & clean headline (remove jammed navigation bar at top)
+\usepackage{etoolbox}
+
+% Navigation symbols & clean headline showing current section & subsection
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{mini frames}{}
-\setbeamertemplate{headline}{}
+\setbeamertemplate{headline}{%
+  \leavevmode%
+  \ifstrempty{\insertsectionhead}{}{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.1ex,leftskip=1.2em,rightskip=1.2em]{section in head/foot}%
+      \usebeamerfont{section in head/foot}\scriptsize\textbf{\insertsectionhead}%
+      \ifstrempty{\insertsubsectionhead}{}{%
+        {\color{structure.fg!40}\ \textbf{|}\ }\normalfont\textit{\insertsubsectionhead}%
+      }%
+    \end{beamercolorbox}%
+  }%
+}
 
-% A clean footline: reserves a bottom margin and gives slide numbers
+% A clean footline: reserves a bottom margin and gives slide numbers (without author)
 \setbeamertemplate{footline}{%
   \hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.2ex,dp=1.0ex,leftskip=1.2em,rightskip=1.2em]{section in head/foot}%
-    \usebeamerfont{footline}\scriptsize\insertshortauthor\hfill
-    \insertframenumber\,/\,\inserttotalframenumber%
+    \hfill\usebeamerfont{footline}\scriptsize\insertframenumber\,/\,\inserttotalframenumber%
   \end{beamercolorbox}}%
 }
 
