@@ -1,0 +1,62 @@
+% Preamble: document class, theme, Vietnamese support, shared macros.
+% Same look-and-feel as Slide_KLTN_HSGE (defense deck); this deck is the
+% shorter, working-meeting version for the phản biện.
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Antibes}
+\usecolortheme{whale}
+
+% Vietnamese: T5 encoding (vntex) + Latin Modern covers the beamer sans family.
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+% Reuse the figures already built for the defense deck instead of duplicating them.
+\graphicspath{{images/}{../Slide_KLTN_HSGE/images/}}
+
+\usepackage{etoolbox}
+
+% Navigation symbols & clean headline showing current section & subsection
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{mini frames}{}
+\setbeamertemplate{headline}{%
+  \leavevmode%
+  \ifstrempty{\insertsectionhead}{}{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.5ex,dp=1.1ex,leftskip=1.2em,rightskip=1.2em]{section in head/foot}%
+      \usebeamerfont{section in head/foot}\scriptsize\textbf{\insertsectionhead}%
+      \ifstrempty{\insertsubsectionhead}{}{%
+        {\color{structure.fg!40}\ \textbf{|}\ }\normalfont\textit{\insertsubsectionhead}%
+      }%
+    \end{beamercolorbox}%
+  }%
+}
+
+% A clean footline: reserves a bottom margin and gives slide numbers (without author)
+\setbeamertemplate{footline}{%
+  \hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.2ex,dp=1.0ex,leftskip=1.2em,rightskip=1.2em]{section in head/foot}%
+    \hfill\usebeamerfont{footline}\scriptsize\insertframenumber\,/\,\inserttotalframenumber%
+  \end{beamercolorbox}}%
+}
+
+\setbeamertemplate{caption}[numbered]
+\setbeamercolor{block title}{bg=structure.fg!15,fg=black}
+\setbeamercolor{block body}{bg=structure.fg!5}
+
+% Harvey balls for the positioning table (same notation as the thesis / defense deck).
+\usepackage[nointegrals]{wasysym}
+
+% Fixed-width column types reused by the result tables.
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+% Caption line under a figure on a slide.
+\newcommand{\figcap}[1]{\vspace{0.1cm}{\scriptsize\itshape #1}}
+
+% Highlight for the key number of a slide.
+\newcommand{\kw}[1]{\textbf{\color{structure.fg}#1}}

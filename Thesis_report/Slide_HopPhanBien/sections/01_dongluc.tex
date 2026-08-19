@@ -1,0 +1,79 @@
+% !TEX root = ../main.tex
+
+%%% ============================================================
+\section{Động lực và nền tảng bài toán}
+%%% ============================================================
+
+\begin{frame}{Động lực, bài toán và định vị nghiên cứu}
+  \begin{columns}[t]
+    \begin{column}{0.48\textwidth}
+      \footnotesize
+      \textbf{Động lực}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item \textbf{Web Agent \& LLM lớn}: phụ thuộc API đám mây $\rightarrow$ chi phí cao, độ trễ lớn, rủi ro riêng tư.
+        \item \textbf{SLM ($<10$B)}: chạy cục bộ, chi phí thấp $\rightarrow$ cần fine-tune để chuyên biệt hóa.
+        \item \kw{Nút thắt dữ liệu}: gán nhãn thủ công tốn kém (AutoWebGLM: \textbf{20 người $\times$ 1 tháng}); dữ liệu tổng hợp giảm $\approx$\textbf{97\%} chi phí/mẫu (Synatra).
+      \end{itemize}
+
+      \vspace{0.1cm}
+      \begin{block}{Phát biểu bài toán}
+        \footnotesize
+        Tự động khám phá website đang hoạt động và tinh chỉnh SLM hoàn thành task ngôn ngữ tự nhiên \textbf{không dùng dữ liệu do con người gán nhãn}.
+      \end{block}
+    \end{column}
+    \begin{column}{0.50\textwidth}
+      \footnotesize
+      \textbf{Định vị so với công trình liên quan}
+      \vspace{0.05cm}
+
+      \scriptsize
+      \setlength{\tabcolsep}{2.5pt}
+      \begin{table}
+        \begin{tabular}{@{}L{1.9cm} C{1.0cm} C{1.05cm} C{1.05cm} C{1.0cm}@{}}
+          \toprule
+          \textbf{Hệ thống} & \textbf{Khám phá} & \textbf{Skill kiểm chứng} & \textbf{Ghép task dài} & \textbf{Huấn luyện SLM} \\
+          \midrule
+          AWM & - & \LEFTcircle & - & - \\
+          SkillWeaver & - & \CIRCLE & \LEFTcircle & - \\
+          NNetNav & - & - & - & \CIRCLE \\
+          Go-Browse & \CIRCLE & - & - & \CIRCLE \\
+          \textbf{HSGE} & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      {\scriptsize \CIRCLE{} Có \quad \LEFTcircle{} Một phần \quad - Không.}
+
+      \vspace{0.08cm}
+      \textbf{Khoảng trống}: chưa công trình nào kết hợp trọn vẹn \textit{kiểm chứng skill $\rightarrow$ ghép task dài $\rightarrow$ huấn luyện SLM}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Mục tiêu nghiên cứu và câu hỏi trả lời}
+  \begin{columns}[t]
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      \textbf{Năm mục tiêu nghiên cứu}
+      \begin{itemize}\setlength{\itemsep}{3pt}
+        \item[\textbf{O1}] Khám phá tự động website chưa có nhãn.
+        \item[\textbf{O2}] Sinh \textbf{semantic task} dài hạn đã kiểm chứng.
+        \item[\textbf{O3}] Tinh lọc trajectory thành dataset SFT.
+        \item[\textbf{O4}] Fine-tune SLM \& đánh giá trên WebArena.
+        \item[\textbf{O5}] Đúc kết best practice vận hành.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \begin{block}{Bốn câu hỏi nghiên cứu (RQ)}
+        \footnotesize
+        \begin{itemize}\setlength{\itemsep}{2pt}
+          \item[\textbf{CH1.}] Pipeline thu được gì và chi phí bao nhiêu?
+          \item[\textbf{CH2.}] SLM cải thiện năng lực nào sau fine-tune?
+          \item[\textbf{CH3.}] Vị thế so với các hệ thống $<10$B hiện nay?
+          \item[\textbf{CH4.}] Đóng góp từng thành phần \& điểm nghẽn?
+        \end{itemize}
+      \end{block}
+      \vspace{0.1cm}
+      {\footnotesize Phần tiếp theo trình bày cách các RQ này được trả lời bằng thực nghiệm.}
+    \end{column}
+  \end{columns}
+\end{frame}
