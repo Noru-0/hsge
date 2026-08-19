@@ -13,7 +13,10 @@ hướng dẫn bảo vệ 2026, quy trình nộp đề tài 2025, đơn đăng k
 4. Tờ thuyết minh chỉnh sửa (sau bảo vệ, nếu hội đồng yêu cầu)
 5. Nhận xét GVHD, 6. Nhận xét GVPB (giáo vụ phát sau bảo vệ)
 7. Lời cám ơn
-8. **Đề cương chi tiết có chữ ký GVHD** (bắt buộc đóng vào quyển)
+8. **Đề cương chi tiết có chữ ký GVHD** (bắt buộc đóng vào quyển; checklist
+   nộp TRƯỚC bảo vệ cũng có mục này). ⚠️ **Không đánh số trang** cho đề cương —
+   số La Mã bắt đầu ở Lời cảm ơn (i) rồi *tiếp tục* từ Mục lục, tức đề cương
+   không tiêu tốn số trang nào.
 9. Mục lục
 10. Bảng hình vẽ, ký hiệu, chữ viết tắt (xếp theo bảng chữ cái; không lạm dụng viết tắt)
 11. Tóm tắt (1–2 trang)
@@ -30,9 +33,8 @@ TRIỂN → DANH MỤC TÀI LIỆU THAM KHẢO (chỉ tài liệu được tríc
 
 - Font Unicode **Times New Roman 13pt hoặc 14pt**; dãn dòng **1.5 lines**.
 - Lề: **trên 3cm, dưới 3.5cm, trái 3.5cm, phải 2cm**; số trang ở giữa, bên dưới.
-  ⚠️ Template thesis_v3 đang set `top=30mm, bottom=25mm, left=30mm, right=20mm`
-  — lệch quy định (dưới & trái); thesis mẫu đã nộp như vậy, nhưng nên cân nhắc
-  chỉnh lại geometry hoặc hỏi GVHD.
+  ⚠️ Chỉ `thesis_v3` lệch (`bottom=25mm, left=30mm`). `thesis_hsge_vi` **đã
+  đúng** — đo lại trên PDF: trái 35,0mm, trên 30,7mm, dưới 34,0mm.
 - Đánh số trang: phần đầu (cám ơn, mục lục, tóm tắt...) số La Mã i, ii, iii;
   phần nội dung số Ả Rập bắt đầu từ trang 1 ở Chương 1.
 - Chương/mục đánh số Ả Rập dạng 3.1, 3.1.1 (không La Mã); bảng ngang thì đầu
@@ -45,7 +47,8 @@ TRIỂN → DANH MỤC TÀI LIỆU THAM KHẢO (chỉ tài liệu được tríc
 - Tránh gạch đầu dòng, dùng câu hoàn chỉnh, có liên kết giữa các câu.
 - Mỗi chương có tóm tắt 2–5 câu (đầu/cuối chương); không để tiêu đề mục là dòng
   cuối trang.
-- Tóm tắt (Abstract) 100–300 từ: ngữ cảnh/vấn đề 1–2 câu, mục tiêu 1 câu,
+- Tóm tắt (Abstract) **200–300 từ** (bản quy định gốc trên Google Docs ghi
+  200–300; con số 100 trong ghi chú cũ là sai): ngữ cảnh/vấn đề 1–2 câu, mục tiêu 1 câu,
   phương pháp 1–2 câu, kết quả 1–2 câu, kết luận 1–2 câu.
 - Tiêu đề luận văn: rõ ràng, có từ khóa, có thể bỏ động từ "phát triển/xây dựng/
   nghiên cứu"; nên đặt tên phương pháp (VD: "HSGE: ...").
