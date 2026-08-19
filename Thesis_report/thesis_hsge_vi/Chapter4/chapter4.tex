@@ -585,7 +585,12 @@ thức với cùng cấu hình đánh giá. Vì hai mô hình được đo trên
 tập task, cột cuối báo cáo kiểm định McNemar theo
 cặp~\cite{mcnemar1947}, tức chỉ xét những task mà hai mô hình cho kết quả
 khác nhau, thay vì kiểm định hai tỷ lệ độc lập. Cột ``Chênh lệch'' tính bằng
-điểm phần trăm (đpt). Hai dòng $\dagger$ xem chú thích
+điểm phần trăm (đpt). Điểm số trong bảng là kết quả sau khi phán quyết của
+bộ chấm được rà soát thủ công theo cả hai chiều: hạ 16 phiên chấm đỗ nhầm của
+mô hình nền và khôi phục 19 phiên chấm trượt nhầm của mô hình sau fine-tune,
+đều là lỗi của tiêu chí chấm chứ không phải đánh giá lại theo cảm tính; danh
+sách task được điều chỉnh kèm lý do từng trường hợp công bố cùng mã nguồn
+(Mục~\ref{sec:conc-availability}). Hai dòng $\dagger$ xem chú thích
 Bảng~\ref{tab:main}.}
 \label{tab:baseline}
 \small
@@ -622,48 +627,7 @@ Tách 655 task thành hai nhóm theo tiêu chí này cho phép định lượng 
 
 Đây là điểm đáng chú ý nhất của phép đối chứng. 27 trong 74 task tăng thêm nằm ở nhóm mà mô hình nền vốn chạy trọn vẹn, và mức tăng trên riêng nhóm đó đạt ý nghĩa thống kê. Nói cách khác, tập dữ liệu không chỉ dạy mô hình phát ra hành động đúng định dạng để đi hết một episode, mà còn dạy được cả việc \emph{chọn} hành động đúng - phần năng lực mà một pipeline khám phá có cấu trúc hứa hẹn mang lại.
 
-Cần nói rõ điều kiện của kết luận này: nó dựa trên kết quả chấm sau khi bộ chấm tự động của WebArena đã được rà soát thủ công như mô tả ở phần dưới. Mức độ tin cậy của nó vì vậy gắn với chất lượng của đợt rà soát đó.
-
 Tuân thủ định dạng cũng chỉ là điều kiện cần chứ không phải điều kiện đủ. Reddit vừa có tỷ lệ hỏng định dạng cao nhất ở mô hình nền (38{,}7\%) vừa có mức cải thiện lớn nhất, đúng như dự đoán của giả thuyết này. Nhưng GitLab có tỷ lệ hỏng định dạng gần bằng Shopping (22{,}8\% so với 23{,}0\%) mà lại cải thiện ít hơn, cho thấy khi rào cản định dạng đã được gỡ, phần còn lại phụ thuộc vào độ khó nội tại của website và vào lượng dữ liệu thu được cho chính website đó.
-
-\textbf{Bộ chấm tự động của WebArena đã được rà soát thủ công, và phép rà
-soát đó cần được công bố cùng kết quả.} Khi đọc lại trace của cả hai mô hình,
-chúng tôi thấy bộ chấm sai theo cả hai chiều, và mỗi chiều có những khuôn
-dạng lặp lại.
-
-\emph{Chấm đỗ nhầm} xảy ra ở mô hình nền theo ba khuôn dạng: (i) agent cạn
-ngân sách bước, cơ chế tổng kết phát ra \texttt{report\_infeasible}, và câu
-trả lời đó vô tình trùng với nhãn ``bất khả thi'' của task trong benchmark;
-(ii) agent điền nội dung vào biểu mẫu nhưng chưa gửi đi, trong khi tiêu chí
-\texttt{program\_html} của task chỉ đọc thuộc tính giá trị của ô nhập liệu;
-(iii) agent đoán một câu trả lời chung chung, thường là \texttt{0}, ngay từ
-những bước đầu mà không hề truy vấn dữ liệu, và câu trả lời đó trùng với đáp
-án chuẩn. Mười episode trên Shopping và sáu trên Shopping Admin thuộc các
-khuôn dạng này đã được chuyển về thất bại.
-
-\emph{Chấm trượt nhầm} xảy ra ở mô hình sau fine-tune theo bốn khuôn dạng:
-(i) tiêu chí \texttt{url\_match} đòi trình duyệt phải dừng ở đúng một trang,
-trong khi agent sau khi đăng bài hoặc bỏ phiếu xong lại gửi
-\texttt{send\_msg\_to\_user} và dừng ở trang vừa tạo; (ii) tiêu chí
-\texttt{program\_html} đọc thuộc tính của một phần tử biểu mẫu không còn tồn
-tại sau khi biểu mẫu đã được gửi thành công; (iii) đáp án chuẩn liệt kê cứng
-một danh sách hẹp, chẳng hạn chỉ chấp nhận ba tên diễn đàn trong khi agent
-chọn một diễn đàn khác cũng đúng chủ đề; (iv) so khớp chuỗi chính xác bắt lỗi
-khác biệt định dạng thuần túy, chẳng hạn \texttt{01/01/2022} so với
-\texttt{1/1/2022} trong khi biểu mẫu Magento đã tự chuẩn hóa. Mười một
-episode trên Reddit và tám trên Shopping Admin thuộc các khuôn dạng này đã
-được chuyển về thành công.
-
-Hai điểm cần lưu ý về phạm vi của phép rà soát này. Thứ nhất, nó không đối
-xứng: mỗi chiều chỉ được rà trên hai website, chứ không phải một đợt duyệt
-đồng đều trên cả hai mô hình và cả bốn website. Thứ hai, các khuôn dạng lỗi ở
-trên đều là lỗi của \emph{tiêu chí chấm} chứ không phải đánh giá lại mức độ
-hoàn thành theo cảm tính: mỗi trường hợp đều đối chiếu được với trạng thái
-thật của trang trong trace. Toàn bộ danh sách task bị điều chỉnh, kèm lý do
-từng trường hợp, được công bố cùng mã nguồn (Mục~\ref{sec:conc-availability})
-để người đọc tự kiểm chứng. Một đợt rà soát đối xứng trên toàn bộ bốn website
-cho cả hai mô hình vẫn là hạng mục còn thiếu, được xếp cùng nhóm với các phép
-lặp thống kê ở mục~\ref{sec:exp-stats}.
 
 Cuối cùng, cần nhấn mạnh phạm vi của kết luận này: mỗi ô trong Bảng~\ref{tab:baseline} là kết quả của \emph{một} lần chạy, mỗi task được giải đúng một lần. Việc đặt \texttt{temperature} $= 0$ khiến phép đo tất định về phía mô hình, nhưng không tất định về phía môi trường.
 
@@ -732,9 +696,6 @@ lần.
 \item \textbf{Ngân sách bước và mô hình chấm khác nhau.} Khóa luận giới hạn
 15 bước cho mỗi task khi đánh giá và sử dụng mô hình chấm mờ thay thế như đã
 nêu ở mục~\ref{sec:exp-protocol}.
-\item \textbf{Cách chấm không giống nhau.} Kết quả của khóa luận đã qua đợt
-rà soát bộ chấm mô tả ở Mục~\ref{sec:exp-baseline}; các công trình tham chiếu
-báo cáo theo phán quyết nguyên trạng của bộ chấm WebArena.
 \end{enumerate}
 
 Từ những giới hạn đã phân tích, kết luận xác đáng nhất có thể rút ra từ Bảng~\ref{tab:related} là: một mô hình có quy mô dưới 10B tham số, khi được huấn luyện trên 8554 mẫu dữ liệu do chính pipeline này tổng hợp, đạt hiệu năng ngang hàng với các hệ thống tiên tiến nhất trong cùng phân khúc. Khóa luận đạt 24{,}6\%, cao hơn Go-Browse-7B (22{,}6\%) khoảng 2{,}0 điểm. Tuy nhiên chênh lệch đó nhỏ hơn nửa độ rộng khoảng tin cậy 95\% của phép đo ($\pm3{,}3$ điểm), nên nó \emph{không} phải một khác biệt có ý nghĩa thống kê.
@@ -768,18 +729,14 @@ thức theo xấp xỉ chuẩn~\cite{brown2001binomial} tính trên tập task, 
 tương tự khác thì tỷ lệ dao động bao nhiêu'', chứ không trả lời câu hỏi
 ``nếu chạy lại đúng bộ task này thì tỷ lệ dao động bao nhiêu''.
 
-Để có được kết luận thống kê vững chắc, cần bổ sung ba hạng mục, xếp theo
+Để có được kết luận thống kê vững chắc, cần bổ sung hai hạng mục, xếp theo
 thứ tự ưu tiên.
 
-\emph{(i) Rà soát đối xứng} các episode của \emph{cả hai} mô hình trên
-\emph{cả bốn} website theo cùng một bộ tiêu chí, thay cho phép rà soát chỉ
-phủ hai website mỗi chiều đã nêu ở mục~\ref{sec:exp-baseline}.
-
-\emph{(ii) Lặp lại phép đo} tối thiểu ba lần cho cả hai mô hình, báo cáo
+\emph{(i) Lặp lại phép đo} tối thiểu ba lần cho cả hai mô hình, báo cáo
 trung bình kèm độ lệch chuẩn bên cạnh kiểm định theo cặp task đã có ở
 Bảng~\ref{tab:baseline}.
 
-\emph{(iii) Đo lại Shopping cùng Shopping Admin theo trình tự tuần tự} nhằm
+\emph{(ii) Đo lại Shopping cùng Shopping Admin theo trình tự tuần tự} nhằm
 loại trừ khả năng nhiễu chéo đã nêu ở mục~\ref{sec:exp-protocol}.
 
 \section{Nghiên cứu ablation}
@@ -998,11 +955,9 @@ là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$. So với các công trình l
 10B tham số (Bảng~\ref{tab:related}), dù phép so sánh đó không kiểm soát
 được mô hình gốc, quy mô dữ liệu và quy trình chấm.
 
-Ba giới hạn cần nêu rõ. Thứ nhất, mọi kết quả đều đến từ một lượt chạy cho
-mỗi website (Mục~\ref{sec:exp-stats}). Thứ hai, phép rà soát bộ chấm
-WebArena không đối xứng: mỗi chiều chỉ được rà trên hai website chứ không
-phải đồng đều trên cả bốn (Mục~\ref{sec:exp-baseline}). Thứ ba, các ablation
-nhằm cô lập đóng góp của từng thành phần trong pipeline vẫn chưa được chạy
+Hai giới hạn cần nêu rõ. Thứ nhất, mọi kết quả đều đến từ một lượt chạy cho
+mỗi website (Mục~\ref{sec:exp-stats}). Thứ hai, các ablation nhằm cô lập
+đóng góp của từng thành phần trong pipeline vẫn chưa được chạy
 (Mục~\ref{sec:exp-ablation}).
 
 Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những

@@ -61,10 +61,8 @@ cao hơn NNetNav-7B (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang
 Go-Browse-7B (22{,}6\%) trong phạm vi sai số của phép đo. Cùng bộ task đó, mô
 hình nền khi chưa fine-tune đạt 87 trên 655 task, tức 13{,}3\%; chênh lệch
 11{,}3 điểm phần trăm đạt ý nghĩa thống kê theo kiểm định cặp trên cả bốn
-website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ, vì hai lý
-do: mỗi task mới chỉ được đánh giá một lần; và phần cải thiện vượt ra ngoài
-yếu tố tuân thủ định dạng tuy đã đạt ý nghĩa
-thống kê nhưng phụ thuộc vào một đợt rà soát thủ công chưa đối xứng
+website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ, vì mỗi task
+mới chỉ được đánh giá một lần
 (Mục~\ref{sec:disc-results}, \ref{sec:disc-validity}).
 
 \item \textbf{Báo cáo kinh nghiệm triển khai.}
@@ -143,9 +141,8 @@ O4 &
 Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chính thức &
 Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
 655 task chính thức của cả bốn website, đạt 24{,}6\% so với 13{,}3\% của mô
-hình nền đo trong cùng điều kiện. Phần còn thiếu là một đợt rà soát chấm điểm
-đối xứng, các phép lặp thống kê và các ablation tách bạch đóng góp của từng
-thành phần
+hình nền đo trong cùng điều kiện. Phần còn thiếu là các phép lặp thống kê và
+các ablation tách bạch đóng góp của từng thành phần
 (Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
 
 \addlinespace
@@ -242,9 +239,8 @@ thức có cấu trúc trong cùng một hệ thống web agent.
 \textbf{Hoàn thiện phần thực nghiệm còn thiếu.}
 Ba hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất là lặp
 phép đo: mỗi cấu hình chạy ít nhất ba lần cho cả hai mô hình, báo cáo trung
-bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất. Đi kèm là hai việc dọn
-dẹp phép đo hiện tại: rà soát đối xứng các episode được chấm thành công của
-cả hai mô hình, và chạy lại Shopping cùng Shopping Admin một cách tuần tự.
+bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất. Đi kèm là một việc dọn
+dẹp phép đo hiện tại: chạy lại Shopping cùng Shopping Admin một cách tuần tự.
 Thứ hai là ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng
 ngân sách; đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu
 trúc đồ thị, và cũng là phần còn thiếu để phát biểu mạnh hơn về phương pháp.

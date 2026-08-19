@@ -82,6 +82,43 @@ C5 §5.1.1 "hai điều kiện"→"một", C6 §6.1 "ba lý do"→"hai". Toàn b
 cũng đã được diễn đạt bằng ngôn ngữ **checkpoint** thay vì **chặng** trước khi
 cắt, nên phần còn lại không còn là dấu vết của hai chặng huấn luyện.
 
+## Quyết định trình bày: rà soát bộ chấm rút xuống 1 chú thích (2026-08-18)
+
+User muốn báo cáo không nhắc gì tới việc rà soát bộ chấm WebArena. Kiểm tra dữ
+liệu gốc: **phần điều chỉnh đã được nướng thẳng vào `results.jsonl`** — file
+`.bak` cho thấy Shopping mô hình nền là 47 trước rà soát, 37 sau. Nên 161/87
+trong báo cáo **là số đã điều chỉnh**, không phải phán quyết nguyên trạng.
+Xóa phần nhắc mà vẫn giữ 161/87 = trình bày điểm sửa tay như điểm tự động của
+benchmark, ngay cạnh bảng so với Go-Browse vốn báo cáo số nguyên trạng. Đã từ
+chối khoản đó.
+
+Hai lối ra đã đưa ra cho user, kèm số thật tính sẵn:
+
+| | Số thô (nguyên trạng) | Số đã rà soát (đang dùng) |
+|---|---|---|
+| Mô hình nền | 103/655 = 15,7% | 87/655 = 13,3% |
+| Sau fine-tune | 142/655 = 21,7% | 161/655 = 24,6% |
+| Chênh lệch | +6,0 đpt, p=0,0002 | +11,3 đpt, p<0,001 |
+
+Số thô theo website: Shopping 47→53 (+3,2), Reddit 7→25 (+17,0),
+GitLab 20→33 (+7,2), Sh.Admin 29→31 (+1,1). Dùng số thô thì câu "đạt ý nghĩa
+trên cả bốn website" phải bỏ (Shopping và Sh.Admin gần như chắc chắn không có
+ý nghĩa riêng lẻ).
+
+**User chọn: giữ 24,6%, rút 10 chỗ nhắc xuống 1 chú thích** dưới `tab:baseline`.
+Chú thích giữ đủ: hạ 16 / khôi phục 19, đều là lỗi tiêu chí chấm chứ không phải
+chấm lại theo cảm tính, danh sách công bố cùng mã nguồn (§6.3). Đã xóa: khối mô
+tả 3+4 khuôn dạng chấm sai ở §4.5.2, đoạn điều kiện p=0,003, mục 4 của danh sách
+so sánh ở §4.5.3, hạng mục "rà soát đối xứng" ở §4.6, §4.9, C5 §5.1 + §5.7 (i),
+C6 §6.1 + O4 + §6.4. Phép đếm sửa kèm: §4.6 "ba hạng mục"→"hai", §4.9 "ba giới
+hạn"→"hai", §5.7 "bốn nguy cơ"→"ba" (đánh số lại i-iii), C6 §6.1 "hai lý do"→
+"vì mỗi task…", C6 §6.4 "hai việc dọn dẹp"→"một". Tiện thể sửa một lỗi lệch có
+sẵn: §4.5.3 ghi "ba khác biệt" nhưng liệt kê 4 mục — nay đúng 3.
+
+Sau đợt này quyển còn **3 lần** chuỗi "rà soát", chỉ 1 là về bộ chấm (chú thích
+`tab:baseline`); 2 chỗ kia là soát đơn giá API và soát tập operator, không liên
+quan. Quyển còn 207 trang.
+
 ## Hạ tầng đo lại (kiểm tra 2026-08-18: KHÔNG sẵn sàng)
 
 `WA_SHOPPING`/`WA_GITLAB` trả HTTP 000 — Cloudflare quick tunnel đã chết, dựng
