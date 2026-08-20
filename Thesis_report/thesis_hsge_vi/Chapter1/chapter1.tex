@@ -1,7 +1,7 @@
 \chapter{Mở đầu}
 \label{ch:intro}
 
-Chương này gồm bảy phần: (1) động lực của việc dùng mô hình ngôn ngữ nhỏ làm web agent; (2) phát biểu bài toán; (3) các thách thức; (4) mục tiêu và đóng góp; (5) phạm vi; (6) kết quả đạt được; và (7) bố cục của khóa luận.
+Chương này gồm tám phần: (1) bối cảnh và động lực; (2) phát biểu bài toán; (3) các thách thức; (4) mục tiêu và đóng góp; (5) câu hỏi nghiên cứu; (6) phạm vi nghiên cứu; (7) kết quả đạt được; và (8) bố cục của khóa luận.
 
 \section{Bối cảnh và động lực}
 \label{sec:intro-context}
@@ -65,7 +65,7 @@ Chất lượng của phương pháp được đánh giá dựa trên kết qu�
 \section{Thách thức}
 \label{sec:intro-challenges}
 
-Quá trình tự động hóa việc thu thập dữ liệu và huấn luyện web agent phải đối mặt với năm thách thức kỹ thuật cốt lõi:
+Quá trình tự động hóa việc thu thập dữ liệu và huấn luyện web agent phải đối mặt với bốn thách thức kỹ thuật cốt lõi:
 
 \begin{enumerate}
   \item \textbf{Khó khăn trong việc thu thập dữ liệu chất lượng cao.} Việc huấn luyện web agent đòi hỏi tập dữ liệu trajectory tương tác có quy mô lớn và độ chính xác cao. Dữ liệu do con người trực tiếp thao tác và gán nhãn có thể đảm bảo tính chuẩn xác nhưng đòi hỏi chi phí nhân lực và thời gian rất lớn, khiến việc mở rộng tập dữ liệu cho từng website mới trở nên tốn kém và khó duy trì ở quy mô lớn.
@@ -81,42 +81,20 @@ Khóa luận theo đuổi năm mục tiêu:
 
 \begin{enumerate}
   \item[\textbf{O1.}] \textbf{Khám phá tự động:} Xây dựng cơ chế khám phá có cấu trúc dựa trên đồ thị nhằm tự động thu thập các trajectory tương tác từ các website thực tế mà không cần dữ liệu mẫu hay tri thức từ con người.
-  \item[\textbf{O2.}] \textbf{Sinh semantic task:} Phát triển phương pháp tự động phát hiện và trừu tượng hóa các skill có thể tái sử dụng thành các planning operator, từ đó ghép chuỗi chúng trên đồ thị để tạo ra các semantic task có ý nghĩa nghiệp vụ trên website đang khám phá.
-  \item[\textbf{O3.}] \textbf{Kiểm chứng và tinh lọc dữ liệu:} Thiết lập quy trình tinh lọc dữ liệu tự động với các chốt chặn kiểm tra tính đúng đắn đa tầng, đồng thời đảm bảo tính nhất quán giữa dữ liệu huấn luyện và suy luận theo nguyên tắc \emph{prompt parity}.
+  \item[\textbf{O2.}] \textbf{Sinh semantic task:} Phát triển phương pháp tự động tích lũy và kết hợp các hành vi tương tác đã khám phá được, từ đó sinh ra các semantic task đa bước, có ý nghĩa và phản ánh nghiệp vụ thực tế trên website.
+  \item[\textbf{O3.}] \textbf{Kiểm chứng và tinh lọc dữ liệu:} Thiết lập quy trình tinh lọc dữ liệu tự động với các chốt chặn để kiểm tra tính đúng đắn, đồng thời đảm bảo tính nhất quán giữa dữ liệu huấn luyện và suy luận theo nguyên tắc \emph{prompt parity}.
   \item[\textbf{O4.}] \textbf{Fine-tuning và đánh giá mô hình:} Fine-tune mô hình ngôn ngữ nhỏ (SLM) trên tập dữ liệu tương tác đã sinh từ luồng khám phá và đánh giá năng lực giải quyết task của mô hình đó trên bộ chuẩn WebArena.
   \item[\textbf{O5.}] \textbf{Tổng kết kinh nghiệm thực tiễn:} Phân tích những hạn chế thực tế (đặc biệt ở execution layer) và đúc kết các bài học kỹ thuật thành bộ hướng dẫn thực hành tốt (best practices) khi xây dựng web agent.
 \end{enumerate}
 
-Bảng~\ref{tab:contrib} phân định rõ ranh giới giữa những tài nguyên khóa luận kế thừa và những đóng góp mới. Nhìn chung, khóa luận mang lại năm đóng góp cốt lõi. Đầu tiên là phương pháp HSGE: một chu trình khám phá và ghép chuỗi dựa trên đồ thị với kiến trúc task hai tầng. Trong kiến trúc đó, các low-level task do LLM đề xuất dẫn dắt quá trình khám phá, còn các semantic task sinh ra từ operator graph cung cấp dữ liệu dài hạn. Thứ hai là bộ tinh lọc dữ liệu tự động, gồm các cổng chất lượng chấm lại từng episode ngay trong vòng lặp thu thập, được tích hợp vào một trình dựng dữ liệu tuân thủ nguyên tắc prompt parity. Ba đóng góp còn lại là: một mô hình web agent 9B đã fine-tune cùng tập dữ liệu đã thu; kết quả đánh giá mô hình đó trên bộ task WebArena chính thức; và một báo cáo kinh nghiệm vận hành các chu trình tương tự.
-
-\begin{table}[htbp]
-  \centering
-  \caption[Tài nguyên kế thừa và đóng góp của khóa luận]{Phân định tài nguyên kế thừa và các đóng góp cốt lõi của khóa luận.}
-  \label{tab:contrib}
-  \small
-  \begin{tabular}{@{}L{6.4cm} L{6.8cm}@{}}
-    \toprule
-    \textbf{Tài nguyên có sẵn (sử dụng nguyên bản)} & \textbf{Đóng góp của khóa luận} \\
-    \midrule
-    Các website, task và hệ thống đánh giá của WebArena~\cite{zhou2024webarena};
-    giao diện trình duyệt BrowserGym~\cite{dechezelles2025browsergym} &
-    Chu trình HSGE: đồ thị hai tầng, khám phá có định hướng, phát hiện và kiểm
-    chứng skill (Chương~\ref{ch:method}) \\
-    \addlinespace
-    Mô hình gốc Qwen3.5-9B~\cite{qwen2026qwen35}; LoRA~\cite{hu2022lora};
-    LLaMA-Factory~\cite{zheng2024llamafactory}; vLLM~\cite{kwon2023vllm} &
-    Sinh semantic task bằng cách ghép chuỗi operator, kết hợp cơ chế induction nhận thức từ vựng và cổng chặn tautology (Mục~\ref{sec:method-semantic}) \\
-    \addlinespace
-    Bộ mã hóa sentence embedding~\cite{reimers2019sbert};
-    khung hình thức options, STRIPS và các công trình nâng options thành operator
-    ký hiệu~\cite{sutton1999options,fikes1971strips,konidaris2009skillchaining,konidaris2018skills2symbols} &
-    Tinh lọc dữ liệu tự động (LLM judge, cấu trúc lại suy luận) và trình dựng dataset
-    prompt-parity (Mục~\ref{sec:method-data}); tập dữ liệu và mô hình
-    fine-tune (Chương~\ref{ch:experiments}); báo cáo kinh nghiệm kỹ thuật
-    (Mục~\ref{sec:disc-lessons}, Phụ lục~\ref{app:lessons}) \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+Tương ứng với các mục tiêu trên, khóa luận mang lại năm đóng góp cốt lõi:
+\begin{enumerate}
+  \item \textbf{Phương pháp HSGE:} Đề xuất chu trình khám phá và ghép chuỗi dựa trên đồ thị với kiến trúc task hai tầng, trong đó các low-level task do LLM đề xuất dẫn dắt quá trình khám phá cục bộ, còn các semantic task sinh ra từ operator graph cung cấp dữ liệu huấn luyện đa bước dài hạn (Chương~\ref{ch:method}).
+  \item \textbf{Cơ chế sinh semantic task tự động:} Đề xuất phương pháp mô hình hóa và liên kết các kỹ năng tương tác độc lập thành các chuỗi tác vụ hoàn chỉnh, giúp tự động tạo ra tập dữ liệu đa bước đa dạng và phản ánh nhu cầu sử dụng thực tế (Mục~\ref{sec:method-semantic}).
+  \item \textbf{Quy trình tinh lọc dữ liệu chuẩn prompt parity:} Thiết lập các cổng kiểm soát chất lượng đa tầng (LLM judge, tái cấu trúc chuỗi suy luận) và trình dựng dataset tuân thủ nghiêm ngặt nguyên tắc prompt parity giữa huấn luyện và suy luận (Mục~\ref{sec:method-data}).
+  \item \textbf{Mô hình và bộ dữ liệu thực nghiệm:} Bàn giao tập dữ liệu gồm 9007 mẫu tương tác tự sinh cùng checkpoint mô hình Qwen3.5-9B đã fine-tune đạt tỷ lệ hoàn thành 24,6\% trên benchmark WebArena chính thức (Chương~\ref{ch:experiments}).
+  \item \textbf{Đúc kết kinh nghiệm kỹ thuật thực tế:} Phân tích sâu các nguyên nhân thất bại tại tầng thực thi và tổng hợp bộ hướng dẫn thực hành tốt (best practices) khi xây dựng và vận hành web agent (Mục~\ref{sec:disc-lessons}, Phụ lục~\ref{app:lessons}).
+\end{enumerate}
 \section{Câu hỏi nghiên cứu}
 \label{sec:intro-rq}
 
