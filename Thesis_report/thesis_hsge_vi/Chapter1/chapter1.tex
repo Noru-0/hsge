@@ -98,13 +98,13 @@ Tương ứng với các mục tiêu trên, khóa luận mang lại năm đóng 
 \section{Câu hỏi nghiên cứu}
 \label{sec:intro-rq}
 
-Năm mục tiêu nghiên cứu trên được cụ thể hóa thành bốn câu hỏi nghiên cứu (Research Questions). Toàn bộ thiết kế thực nghiệm và phân tích ở Chương~\ref{ch:experiments} và Chương~\ref{ch:discussion} được xây dựng nhằm trả lời các câu hỏi này:
+Để định hướng cho quá trình thực nghiệm, đo lường định lượng và đánh giá mức độ đạt được của các mục tiêu trên, khóa luận đặt ra bốn câu hỏi nghiên cứu (Research Questions) cốt lõi:
 
 \begin{enumerate}
-  \item[\textbf{CH1.}] \textbf{Hiệu quả thu thập dữ liệu và chi phí khám phá:} Pipeline khám phá tự động thu thập được bao nhiêu dữ liệu và tri thức có cấu trúc (skill, operator, semantic task) khi vận hành trên các website thực tế, tỷ lệ dữ liệu hợp lệ vượt qua các cổng kiểm soát chất lượng là bao nhiêu, và mức chi phí API/tài nguyên tính toán trên mỗi trajectory đạt được lợi thế kinh tế như thế nào?
-  \item[\textbf{CH2.}] \textbf{Mức độ cải thiện năng lực của mô hình ngôn ngữ nhỏ:} Việc fine-tune trên tập dữ liệu tương tác tự sinh nâng cao hiệu năng của mô hình ngôn ngữ nhỏ (SLM) ở mức độ nào trên các website mục tiêu, và sự cải thiện này chủ yếu đến từ năng lực suy luận hành động hay khả năng tuân thủ định dạng tương tác?
-  \item[\textbf{CH3.}] \textbf{So sánh tương quan về hiệu năng và chi phí với các giải pháp hiện hành:} Hiệu năng của mô hình sau fine-tune định vị ở đâu so với các hệ thống mã nguồn mở dưới 10 tỷ tham số hiện nay trên bộ chuẩn WebArena, và pipeline HSGE đạt được lợi thế gì về mặt chi phí thu thập dữ liệu (với chi phí API chỉ khoảng 0{,}0358\,USD mỗi trajectory) khi so sánh với các công trình cùng hướng tiếp cận như Go-Browse?
-  \item[\textbf{CH4.}] \textbf{Phân tích nguyên nhân thất bại và điểm nghẽn hệ thống:} Những yếu tố nào chi phối chủ yếu đến các ca thất bại của agent, và đâu là các rào cản kỹ thuật cốt lõi (đặc biệt ở execution layer và cơ chế phục hồi lỗi) ảnh hưởng trực tiếp đến tỷ lệ hoàn thành task của web agent?
+  \item[\textbf{CH1.}] \textbf{Pipeline tự sinh dữ liệu đạt quy mô và hiệu quả chi phí ra sao?} Pipeline khám phá tự động thu thập được bao nhiêu dữ liệu và tri thức có cấu trúc (skill, operator, semantic task) khi vận hành trên các website thực tế, tỷ lệ dữ liệu hợp lệ vượt qua các cổng kiểm soát chất lượng là bao nhiêu, và mức chi phí API trên mỗi trajectory đạt được lợi thế kinh tế như thế nào?
+  \item[\textbf{CH2.}] \textbf{Năng lực của mô hình ngôn ngữ nhỏ được cải thiện ở mức độ nào?} Việc fine-tune trên tập dữ liệu tương tác tự sinh nâng cao hiệu năng của mô hình ngôn ngữ nhỏ (SLM) ở mức độ nào trên các website mục tiêu, và sự cải thiện này chủ yếu đến từ năng lực suy luận hành động hay khả năng tuân thủ định dạng tương tác?
+  \item[\textbf{CH3.}] \textbf{Hệ thống được định vị ở đâu về hiệu năng và chi phí so với các giải pháp hiện hành?} Hiệu năng của mô hình sau fine-tune được định vị ở đâu so với các hệ thống mã nguồn mở dưới 10 tỷ tham số hiện nay trên bộ chuẩn WebArena, và chu trình HSGE đạt được lợi thế gì về mặt chi phí thu thập dữ liệu khi so sánh với các công trình cùng hướng tiếp cận như Go-Browse?
+  \item[\textbf{CH4.}] \textbf{Đâu là những nguyên nhân thất bại và điểm nghẽn hệ thống cốt lõi?} Những yếu tố nào chi phối chủ yếu đến các thất bại của agent, và đâu là các rào cản kỹ thuật cốt lõi (đặc biệt ở execution layer và cơ chế phục hồi lỗi) ảnh hưởng trực tiếp đến tỷ lệ hoàn thành task của web agent?
 \end{enumerate}
 
 Bảng~\ref{tab:rqmap} chỉ ra nơi mỗi câu hỏi nghiên cứu được đo lường thực nghiệm và nơi được phân tích trả lời chi tiết.
@@ -147,9 +147,9 @@ Bảng~\ref{tab:rqmap} chỉ ra nơi mỗi câu hỏi nghiên cứu được đo
 
 \begin{enumerate}
   \item \textbf{Môi trường thực nghiệm và benchmark:} Nghiên cứu được tiến hành trên bốn website được nhóm tự triển khai (self-hosted) thuộc benchmark WebArena~\cite{zhou2024webarena} bao gồm: \emph{Shopping (Magento), Shopping Admin, GitLab} và \emph{Reddit (Postmill)}, với tổng cộng 655 task dùng để đánh giá mô hình và có bộ chấm tự động. Nghiên cứu loại trừ website \emph{Map} do đặc thù tương tác bản đồ đòi hỏi phải xử lý về mặt thị giác. Agent vận hành dựa trên các phiên đăng nhập chuẩn đã được cấu hình sẵn; việc giải CAPTCHA, vượt cơ chế chống bot hay tương tác với các dịch vụ web công cộng bên ngoài nằm ngoài phạm vi đề tài.
-  \item \textbf{Không gian quan sát và hành động:} Agent sử dụng không gian quan sát dựa trên cây tiếp cận (Accessibility Tree) đã làm phẳng của BrowserGym~\cite{dechezelles2025browsergym}, kết hợp với URL và lịch sử thao tác; không sử dụng ảnh chụp màn hình (screenshot) làm đầu vào cho mô hình ngôn ngữ trong quá trình fine-tuning và suy luận. Không gian hành động tuân thủ theo tiêu chuẩn của trình duyệt (\texttt{click}, \texttt{fill}, \texttt{press\_key}, \texttt{go\_back}, \dots).
-  \item \textbf{Mô hình và phương pháp huấn luyện:} Khóa luận tập trung vào phương pháp tinh chỉnh tham số hiệu quả (LoRA SFT) trên mô hình ngôn ngữ nhỏ (SLM) mã nguồn mở phân khúc dưới 10 tỷ tham số (cụ thể là Qwen3.5-9B), với ngôn ngữ là tiếng Anh. Các kỹ thuật học tăng cường (RL), tối ưu theo sở thích (DPO/PPO/GRPO) hay huấn luyện mô hình đa phương thái (VLM) không thuộc phạm vi nghiên cứu này.
-  \item \textbf{Ranh giới thực nghiệm:} Xuất phát từ giới hạn về ngân sách nghiên cứu và tài nguyên tính toán trong phạm vi một khóa luận ở bậc đại học, đề tài ưu tiên hoàn thành trọn vẹn chu trình thực nghiệm từ đầu đến cuối (HSGE) và đánh giá sự cải thiện năng lực của mô hình SLM sau fine-tune trên benchmark WebArena. Việc thực hiện các thực nghiệm ablation cô lập biến số quy mô lớn trên từng module độc lập (đòi hỏi lặp lại toàn bộ quá trình thu thập và nhân bội ngân sách API/GPU) nằm ngoài phạm vi khả thi của đề tài và được định hướng như công việc tương lai.
+  \item \textbf{Không gian quan sát và hành động:} Agent sử dụng không gian quan sát dựa trên Accessibility Tree đã làm phẳng của BrowserGym~\cite{dechezelles2025browsergym}, kết hợp với URL và lịch sử thao tác; không sử dụng ảnh chụp màn hình (screenshot) làm đầu vào cho mô hình ngôn ngữ trong quá trình fine-tuning và suy luận. Không gian hành động tuân thủ theo tiêu chuẩn của trình duyệt (\texttt{click}, \texttt{fill}, \texttt{press\_key}, \texttt{go\_back}, \dots).
+  \item \textbf{Mô hình và phương pháp huấn luyện:} Khóa luận tập trung vào phương pháp tinh chỉnh tham số hiệu quả (LoRA SFT) trên SLM mã nguồn mở phân khúc dưới 10 tỷ tham số (cụ thể là Qwen3.5-9B), với ngôn ngữ là tiếng Anh. Các kỹ thuật học tăng cường (RL), tối ưu theo sở thích (DPO/PPO/GRPO) hay huấn luyện mô hình đa phương thức (VLM) không thuộc phạm vi nghiên cứu này.
+  \item \textbf{Ranh giới thực nghiệm:} Xuất phát từ giới hạn về ngân sách nghiên cứu và tài nguyên tính toán, đề tài ưu tiên hoàn thành trọn vẹn chu trình thực nghiệm từ đầu đến cuối (HSGE) và đánh giá sự cải thiện năng lực của mô hình SLM sau fine-tune trên benchmark WebArena. Việc thực hiện các thực nghiệm ablation cô lập biến số quy mô lớn trên từng module độc lập (đòi hỏi lặp lại toàn bộ quá trình thu thập và nhân bội ngân sách API/GPU) nằm ngoài phạm vi khả thi của đề tài và được định hướng như công việc tương lai.
 \end{enumerate}
 
 \section{Kết quả đạt được}
@@ -158,7 +158,7 @@ Bảng~\ref{tab:rqmap} chỉ ra nơi mỗi câu hỏi nghiên cứu được đo
 Quá trình triển khai thực nghiệm agent HSGE trên bốn website thuộc benchmark WebArena đã mang lại các kết quả định lượng và phát hiện khoa học cốt lõi sau:
 
 \textbf{1. Khối lượng dữ liệu và tri thức tự động thu thập:}
-Pipeline khám phá đã duyệt qua 455 trang web (node), ghi nhận 3981 episode tương tác, từ đó phát hiện 146 skill có thể tái sử dụng và quy nạp thành công 57 operator (Bảng~\ref{tab:runs}). Trên cơ sở đó, hệ thống tự động sinh và giải 142 semantic task nhiều bước. Sau khi đi qua các cổng kiểm soát chất lượng tự động, 1760 trajectory hợp lệ được chuyển đổi thành 9007 mẫu dữ liệu (gồm 8554 mẫu train và 453 mẫu validation) mà không cần đến bất kỳ sự can thiệp hay gán nhãn thủ công nào từ con người (Bảng~\ref{tab:dataset}).
+Pipeline khám phá đã duyệt qua 455 URL, ghi nhận 3981 episode tương tác, từ đó phát hiện 146 skill có thể tái sử dụng và quy nạp thành công 57 operator (Bảng~\ref{tab:runs}). Trên cơ sở đó, hệ thống tự động sinh và giải 142 semantic task nhiều bước. Sau khi đi qua các cổng kiểm soát chất lượng tự động, 1760 trajectory hợp lệ được chuyển đổi thành 9007 mẫu dữ liệu (gồm 8554 mẫu train và 453 mẫu validation) mà không cần đến bất kỳ sự can thiệp hay gán nhãn thủ công nào từ con người (Bảng~\ref{tab:dataset}).
 
 \textbf{2. Cải thiện hiệu năng của mô hình ngôn ngữ nhỏ (Phát hiện 1):}
 Mô hình Qwen3.5-9B sau khi fine-tune bằng LoRA trên tập dữ liệu tự sinh đạt tỷ lệ hoàn thành tác vụ \textbf{24,6\%} trên toàn bộ 655 task chính thức của bốn website, tăng \textbf{+11,3 điểm phần trăm} so với mô hình gốc chưa fine-tune (13,3\%). Mức cải thiện này đạt ý nghĩa thống kê trên cả bốn website theo kiểm định McNemar theo cặp ($p < 0{,}001$, Bảng~\ref{tab:baseline}). Khi đối sánh với các mô hình cùng phân khúc dưới 10 tỷ tham số, kết quả này vượt qua NNetNav-7B (19,1\%), GPT-4o-mini (20,0\%) và đạt mức tương đương với Go-Browse-7B (22,6\%) (Bảng~\ref{tab:related}).
@@ -182,26 +182,12 @@ Toàn bộ giai đoạn khám phá và thu thập dữ liệu được thực hi
 \section{Bố cục khóa luận}
 \label{sec:intro-organization}
 
-Chương 1 tóm tắt lộ trình nghiên cứu và vị trí của từng
-chương trên lộ trình đó. Chương~\ref{ch:related} trình bày kiến thức nền và
-định vị khóa luận giữa các công trình liên quan. Chương~\ref{ch:method}
-trình bày trọn vẹn pipeline HSGE, từ khám phá đến mô hình đã fine-tune.
-Chương~\ref{ch:experiments} đánh giá pipeline: dữ liệu nó thu thập, mô hình
-nó tạo ra, và hiệu năng của mô hình đó trên benchmark chính thức.
-Chương~\ref{ch:discussion} trả lời lần lượt các câu hỏi nghiên cứu và tóm
-tắt các bài học kỹ thuật, phần đầy đủ nằm ở Phụ lục~\ref{app:lessons}. Chương~\ref{ch:conclusion} kết luận và nêu hướng phát triển.
-Hình~\ref{fig:bigpicture} tóm tắt lộ trình đó và vị trí của từng chương
-trên lộ trình.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{Figures/fig_roadmap.pdf}
-  \caption[Lộ trình nghiên cứu của khóa luận]{Lộ trình nghiên cứu: từ một
-    website không nhãn đến một mô hình ngôn ngữ nhỏ được đánh giá chính thức,
-  cùng các chương phụ trách từng giai đoạn.}
-  \label{fig:bigpicture}
-\end{figure}
-
-\vspace{0.5em}
-\noindent
-Ở chương~2, chúng tôi sẽ đặt lộ trình này vào bức tranh các nghiên cứu hiện có.
+Khóa luận được tổ chức thành sáu chương:
+\begin{itemize}
+  \item \textbf{Chương~\ref{ch:intro} (Mở đầu):} Trình bày bối cảnh, động lực, phát biểu bài toán, các thách thức kỹ thuật, mục tiêu nghiên cứu, phạm vi và tóm tắt các kết quả đạt được.
+  \item \textbf{Chương~\ref{ch:related} (Kiến thức nền và các công trình liên quan):} Tổng quan các hướng tiếp cận hiện nay về web agent, các phương pháp tự thu thập dữ liệu và định vị đóng góp của khóa luận.
+  \item \textbf{Chương~\ref{ch:method} (Phương pháp đề xuất):} Trình bày chi tiết chu trình HSGE, từ khám phá đồ thị, sinh semantic task bằng cách ghép chuỗi operator, đến quy trình tinh lọc dữ liệu tuân thủ prompt parity.
+  \item \textbf{Chương~\ref{ch:experiments} (Thực nghiệm và kết quả):} Đánh giá chi tiết về khối lượng và chi phí dữ liệu thu thập, quá trình fine-tune và hiệu năng của mô hình trên benchmark WebArena.
+  \item \textbf{Chương~\ref{ch:discussion} (Thảo luận):} Trả lời trực diện bốn câu hỏi nghiên cứu, phân tích các nguyên nhân thất bại và đúc kết kinh nghiệm kỹ thuật thực tiễn.
+  \item \textbf{Chương~\ref{ch:conclusion} (Kết luận và hướng phát triển):} Tổng kết toàn bộ đóng góp của đề tài và mở ra các định hướng phát triển tiếp theo.
+\end{itemize}
