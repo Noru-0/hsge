@@ -6,6 +6,47 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **13:05** — `Thesis_report/thesis_hsge_vi/{Chapter4,Chapter5}/*.tex`, `main.pdf`
+  — Applied the C4/C5 proposal after the user chose: keep the 7B out of
+  `tab:related` but explain it elsewhere, and state the data-supplementation
+  effect as a measured experiment on two domains while the main tables keep the
+  post-supplementation numbers.
+  - **New §4.6.1 `sec:exp-datascale` + `tab:datascale`** — the data-scaling
+    measurement, framed as *end of LR phase 1 vs end of phase 2*, which fits the
+    existing "one run, two-phase LR schedule" narrative exactly (phase 1 =
+    4,288 samples, phase 2 adds the reddit/shopping_admin increment) and needs no
+    "round 1/round 2" language. **Both endpoints are raw automatic scores**
+    (reddit 22->25, admin 28->31, +3 tasks each, +2.1 pp over the 288 tasks),
+    because the earlier endpoint was never false-negative-audited — using the
+    audited 34.0%/21.4% against an unaudited baseline would have attributed
+    11 audit-restored reddit tasks to the data. Caption says so explicitly, which
+    also explains why this table's numbers sit below `tab:main`.
+  - **New §4.6.2 `sec:exp-backbone`** — the Qwen2.5-7B run, reported at
+    **83/655 = 12.7% (raw)**, not the 16.5% in `docs/tong_hop_ket_qua_eval.md`:
+    verified there is **no 7B audit artifact anywhere in the repo**
+    (`results.jsonl.bak` is byte-identical to the live file, no `*7b*` anomaly
+    report), so 16.5% is not reproducible from repo data. The subsection's
+    substance is *why the number is unusable* as a matched-backbone comparison
+    (parser discards bare terminal actions; 10 vs 41 infeasible reports), which
+    is the stated reason it stays out of `tab:related`.
+  - §4.4.2: the "improvement ranking matches data ranking" claim was **false**
+    (top two swapped) and contradicted §4.6 two pages later — replaced, same in
+    C5 §5.1.2. C5 §5.1.4's "bác bỏ cách nghĩ đổ thêm dữ liệu vào website nào thì
+    website đó khá lên" would have been directly contradicted by the new
+    measurement, so it was rewritten as two measurements (direct + cross-site)
+    that agree on a narrower claim: data still works within a site, with sharply
+    decaying marginal return.
+  - §4.4.2 also gained the `max_tokens` defense (91 of the base model's 170
+    format failures are `finish_reason=length` with ~5,300-token runaway output,
+    no `max_tokens` set, 8192-token window) and `tab:crosssite` a
+    "Δ so với nền" column.
+  - Verified by clean rebuild (full `latexmk -C` then pdflatex/bibtex/pdflatex×2
+    — latexmk caches a failed bibtex run and will not retry): **0 undefined
+    refs, 0 undefined citations, 0 overfull boxes, 0 `??`**, 175 pages.
+  - ⚠️ **Body went 98 -> 102 pages, i.e. 2 over the Faculty's "should not exceed
+    100" guideline.** Flagged to the user rather than silently trimming other
+    content; §4.6.2 is the obvious ~1.5-page candidate to move to an appendix.
+
 - **12:40** — `Thesis_report/de_xuat_bo_sung_C4_C5.md` (new),
   `docs/phan_tich_ket_qua_eval.md` (§1.2b added) — Reviewed thesis C4/C5 against
   the two eval docs and wrote a 7-item change proposal (no .tex touched).

@@ -32,7 +32,9 @@ Có một điểm cần được phát biểu thật chính xác: \emph{khâu gh
 
 Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc về năng lực sẵn có của mô hình nền, đã được đo trực tiếp trên cả bốn website: cùng mô hình Qwen3.5-9B, cùng prompt và cùng bộ chấm, tỷ lệ hoàn thành đi từ 13{,}3\% lên 24{,}6\% sau khi fine-tune (Bảng~\ref{tab:baseline}). Vì hai đợt đo dùng chung một tập task, chênh lệch này được kiểm định McNemar theo cặp~\cite{mcnemar1947}: 100 task chỉ mô hình sau fine-tune giải được so với 26 task chỉ mô hình nền giải được, tức $p < 0{,}001$. Đây là bằng chứng trực tiếp nhất mà khóa luận có được cho luận điểm trung tâm, rằng dữ liệu do pipeline tự thu thập từ website không nhãn là đủ để nâng năng lực của một mô hình nhỏ trên chính những website đó - Phát hiện~1 ở Mục~\ref{sec:intro-results}.
 
-Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Thứ tự này trùng với thứ tự lượng dữ liệu thu được cho từng website.
+Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Hai website đứng đầu về mức cải thiện cũng là hai website thu được nhiều dữ liệu nhất, song thứ tự bên trong cặp thì ngược lại: Shopping Admin nhiều dữ liệu hơn Reddit mà cải thiện kém hơn ba lần. Quan hệ giữa lượng dữ liệu và mức cải thiện vì vậy chỉ đứng vững ở mức nhóm chứ không ở mức thứ hạng - một nhận định được kiểm chứng trực tiếp ở Mục~\ref{sec:disc-results} khi trả lời CH4.
+
+Tập dữ liệu này cũng không gắn với một kiến trúc cụ thể. Đúng 8554 mẫu đó, khi dùng để fine-tune một mô hình nền thứ hai là Qwen-2.5-7B-Instruct, vẫn nâng được mô hình ấy so với chính nó (Mục~\ref{sec:exp-backbone}). Phép đo đó không dùng để xếp hạng với các công trình liên quan được, vì bộ phân giải đầu ra loại bỏ phần lớn các lệnh kết thúc mà mô hình 7B phát ra không đúng định dạng, khiến điểm số thu được là một cận dưới do công cụ đo đặt ra; nhưng nó đủ để nói rằng giá trị của tập dữ liệu không nằm riêng ở sự tương hợp với Qwen3.5-9B.
 
 Một điều kiện phải đi kèm phát biểu đó: mỗi ô của bảng đối chứng vẫn chỉ đến từ một lần chạy. Vì vậy các hạng mục ở Mục~\ref{sec:exp-stats} vẫn là ưu tiên thực nghiệm hàng đầu chứ không phải một việc dọn dẹp cuối cùng.
 
@@ -51,14 +53,31 @@ Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết l
 \subsection{CH4 - Phân tích nguyên nhân thất bại và điểm nghẽn hệ thống}
 
 Trước khi có kết quả bốn website, giả thuyết mặc định là khối lượng dữ
-liệu: thêm dữ liệu thì điểm sẽ lên. Dữ liệu mới \emph{không} ủng hộ giả
-thuyết đó ở dạng đơn giản như vậy. Website có nhiều dữ liệu nhất (Shopping Admin, chiếm 41{,}9\% tập huấn luyện) chỉ xếp thứ ba về tỷ lệ thành công (21{,}4\%), trong khi website đứng thứ nhì về kết quả (Shopping, tỷ lệ thành công 28{,}3\%) lại chỉ đứng thứ ba về lượng dữ liệu (chiếm 11{,}4\% tập huấn luyện) (Bảng~\ref{tab:crosssite}). Với bốn điểm dữ liệu thì đây không phải một kết luận thống kê, nhưng nó đủ để bác bỏ cách nghĩ ``đổ thêm dữ liệu vào website nào thì website đó khá lên''.
+liệu: thêm dữ liệu thì điểm sẽ lên. Hai phép đo độc lập cho thấy giả thuyết đó
+đúng, nhưng đúng yếu hơn nhiều so với hình dung ban đầu.
+
+Phép đo thứ nhất là trực tiếp. Khi phần dữ liệu của Reddit và Shopping Admin
+được tăng thêm 4266 mẫu, tỷ lệ thành công trên 288 task của hai website đó đi
+từ 17{,}4\% lên 19{,}4\% (Bảng~\ref{tab:datascale}). Vậy thêm dữ liệu vào một
+website \emph{có} nâng điểm của chính website ấy. Nhưng hiệu suất thì thấp và
+lệch nhau: quy về đơn vị chung, Reddit đổi được khoảng 1{,}5 điểm phần trăm cho
+mỗi 1000 mẫu còn Shopping Admin chỉ 0{,}7 - website nhận nhiều mẫu hơn lại đổi
+được ít điểm hơn trên mỗi mẫu. Gần gấp ba lượng dữ liệu của hai website chỉ đổi
+lấy 2{,}1 điểm phần trăm.
+
+Phép đo thứ hai là gián tiếp và chỉ ra cùng một hướng. Website có nhiều dữ liệu nhất (Shopping Admin, chiếm 41{,}9\% tập huấn luyện) chỉ xếp thứ ba về tỷ lệ thành công (21{,}4\%), trong khi website đứng thứ nhì về kết quả (Shopping, tỷ lệ thành công 28{,}3\%) lại chỉ đứng thứ ba về lượng dữ liệu (chiếm 11{,}4\% tập huấn luyện) (Bảng~\ref{tab:crosssite}). Với bốn điểm dữ liệu thì đây không phải một kết luận thống kê, nhưng nó đủ để bác bỏ cách nghĩ rằng \emph{mức} điểm của một website được quyết định bởi riêng lượng dữ liệu thu được cho nó.
+
+Ghép hai phép đo lại, phát biểu chính xác là: lượng dữ liệu vẫn là một biến số
+có tác dụng \emph{trong phạm vi một website}, nhưng lợi ích cận biên của nó
+giảm nhanh, và giảm nhanh hơn ở website có chuỗi thao tác dài. Câu hỏi tiếp
+theo vì thế không phải ``thu thêm bao nhiêu'' mà ``điều gì đang chặn phần dữ
+liệu đã có phát huy tác dụng''.
 
 Bảng phân loại nguyên nhân thất bại ở Mục~\ref{sec:exp-analysis} chỉ ra một điểm nghẽn rất cụ thể: từ 85\% đến 96\% số episode thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi trên 655 episode. Phần lớn là lỗi quá hạn chờ thao tác, và xảy ra ngay trên những phần tử mà accessibility tree \emph{có} hiển thị. Nghĩa là mô hình đã chỉ đúng phần tử cần bấm, nhưng thao tác không đi trọn. Đây là giới hạn của \emph{execution layer}, không phải của dữ liệu huấn luyện.
 
 Đi kèm là hiện tượng kẹt vòng lặp: một episode thất bại kéo dài 13 bước tính theo trung vị, so với 6 bước ở episode thành công. Ngân sách bước đang bị tiêu vào những thao tác lặp lại chứ không vào tiến triển. Hai quan sát này cùng nói một điều, và đó là Phát hiện~3: \emph{nới ngân sách bước hay nhân đôi dữ liệu huấn luyện đều không phải chỗ đáng đầu tư tiếp theo}. Hai việc đáng làm hơn là dạy mô hình gượng dậy sau một hành động hỏng, và làm execution layer bớt sinh lỗi.
 
-Bên cạnh đó, hệ thống vẫn đối mặt với ba giới hạn chính. Thứ nhất là quy mô dữ liệu: tập dữ liệu 8.554 mẫu huấn luyện của nghiên cứu vẫn nhỏ hơn khoảng năm lần so với quy mô 40.000-45.000 mẫu của các hệ thống đối chuẩn như Go-Browse~\cite{gandhi2026gobrowse} hay NNetNav~\cite{murty2024nnetnav}. Thứ hai là độ phủ không gian trang: dữ liệu khám phá bao quát từ 63 đến 179 node mỗi website, trong khi bộ task đánh giá chuẩn của WebArena~\cite{zhou2024webarena} được phân bố trên toàn bộ không gian trang rộng lớn hơn nhiều. Thứ ba là giới hạn nội tại của mô hình nền: việc tinh chỉnh thuần giám sát (SFT) trên một mô hình 9B tham số khó có thể giúp tác tử tiếp thu đầy đủ các năng lực phức tạp như lập kế hoạch dài hạn hay tự phục hồi sau lỗi thao tác, nếu các dạng hành vi này chỉ xuất hiện thưa thớt trong tập trajectory. Sự hạn chế trong khả năng tự sửa lỗi này phản ánh chính xác các điểm nghẽn được chỉ ra tại bảng phân loại nguyên nhân thất bại (Bảng~\ref{tab:failures}).
+Bên cạnh đó, hệ thống vẫn đối mặt với ba giới hạn chính. Thứ nhất là quy mô dữ liệu: tập dữ liệu 8.554 mẫu huấn luyện của nghiên cứu vẫn nhỏ hơn khoảng năm lần so với quy mô 40.000-45.000 mẫu của các hệ thống đối chuẩn như Go-Browse~\cite{gandhi2026gobrowse} hay NNetNav~\cite{murty2024nnetnav}. Cần đọc giới hạn này cùng với phép đo ở đầu mục: khoảng cách quy mô là có thật, nhưng tốc độ đổi dữ liệu lấy điểm đo được ở Bảng~\ref{tab:datascale} cho thấy việc thu hẹp nó bằng cách thu thêm cùng loại dữ liệu sẽ tốn kém hơn nhiều so với những gì con số ``nhỏ hơn năm lần'' gợi ra. Thứ hai là độ phủ không gian trang: dữ liệu khám phá bao quát từ 63 đến 179 node mỗi website, trong khi bộ task đánh giá chuẩn của WebArena~\cite{zhou2024webarena} được phân bố trên toàn bộ không gian trang rộng lớn hơn nhiều. Thứ ba là giới hạn nội tại của mô hình nền: việc tinh chỉnh thuần giám sát (SFT) trên một mô hình 9B tham số khó có thể giúp tác tử tiếp thu đầy đủ các năng lực phức tạp như lập kế hoạch dài hạn hay tự phục hồi sau lỗi thao tác, nếu các dạng hành vi này chỉ xuất hiện thưa thớt trong tập trajectory. Sự hạn chế trong khả năng tự sửa lỗi này phản ánh chính xác các điểm nghẽn được chỉ ra tại bảng phân loại nguyên nhân thất bại (Bảng~\ref{tab:failures}).
 
 \section{Bài học kỹ thuật rút ra từ quá trình triển khai}
 \label{sec:disc-lessons}
