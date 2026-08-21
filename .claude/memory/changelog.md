@@ -6,6 +6,34 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **13:40** — `Thesis_report/thesis_hsge_vi/{Chapter4,Chapter5}/*.tex`, `main.pdf`
+  — Aligned C4/C5 to answer C1's research questions **as C1 actually words them**,
+  and tightened both (user: focus on C1's questions, expand a little, stay terse).
+  - **Two RQ halves were unanswered.** C1 §1.5 asks CH1 with an explicit cost
+    clause ("mức chi phí API trên mỗi trajectory đạt được lợi thế kinh tế như thế
+    nào") and CH3 with another ("chu trình HSGE đạt được lợi thế gì về mặt chi phí
+    ... so với Go-Browse"), and `tab:rqmap` routes both to `tab:apicost` — but C5
+    §5.1.1 and §5.1.3 never mentioned cost at all. Added one short paragraph to
+    each, reusing C4 §4.1.3's numbers, with the scope caveat that the 2.9x figure
+    is an operating-unit-price observation, not a controlled method comparison.
+  - **Number conflict fixed**: C4 §4.1.3 divided Go-Browse's 975.57 USD by
+    "khoảng 10 000" trajectories (0.0976 USD, 2.7x) while C1 §1.7 divides by the
+    exact 9,504 (0.1026 USD, 2.9x). C4 now matches C1, which is authoritative.
+  - **Trimmed the C4/C5 duplication** that the additions would otherwise have
+    compounded, enforcing C4 = measurement / C5 = interpretation: C4's
+    format-compliance interpretation paragraph (C5 §5.1.2 says the same thing
+    better) and §4.6.1's interpretive conclusion (C5 CH4 now covers it) became
+    one-line handoffs, and §4.6.2 was compressed ~40%. Net page change: zero —
+    body stays 102.
+  - Clean rebuild: 0 undefined refs/citations, 0 overfull boxes, 0 `??`, 175 pages.
+  - ⚠️ **Left for the user — an arithmetic error in C1 §1.7 item 5**, not touched
+    because C1 is declared finished: it pairs "36,48 USD ... thu được 1.760
+    trajectory" with "0,0358 USD mỗi trajectory", but 36.48/1760 = 0.0207.
+    0.0358 comes from **1,018** trajectories, which is what C4 §4.1.3 uses along
+    with the reason (the invoice only covers the separately-accounted exploration
+    portion). Either C1's count should read 1,018 or the sentence should drop the
+    count.
+
 - **13:05** — `Thesis_report/thesis_hsge_vi/{Chapter4,Chapter5}/*.tex`, `main.pdf`
   — Applied the C4/C5 proposal after the user chose: keep the 7B out of
   `tab:related` but explain it elsewhere, and state the data-supplementation

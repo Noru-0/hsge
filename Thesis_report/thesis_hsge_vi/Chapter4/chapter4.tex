@@ -165,8 +165,8 @@ khiển trình duyệt, đề xuất, giải và chấm lại task trên môi tr
 So với Go-Browse - công trình gần nhất về mặt phương pháp, cũng thu thập
 dữ liệu bằng cách tương tác trực tiếp với website - khoảng cách còn rõ hơn.
 Go-Browse báo cáo tổng chi phí 975{,}57\,USD (gồm cả rollout lẫn chấm lại
-bằng GPT-4o) cho khoảng 10\,000 trajectory thành công~\cite{gandhi2026gobrowse},
-tương đương 0{,}0976\,USD mỗi trajectory - cao hơn khoảng 2{,}7 lần chi phí
+bằng GPT-4o) cho 9504 trajectory thành công~\cite{gandhi2026gobrowse},
+tương đương 0{,}1026\,USD mỗi trajectory - cao hơn khoảng 2{,}9 lần chi phí
 của khóa luận. Một phần khác biệt đến từ việc Go-Browse dùng nhiều mô hình
 đề xuất/giải task đắt hơn (Claude-3.7-Sonnet, GPT-4o) cho phần lớn khối
 lượng rollout, trong khi khóa luận dồn phần lớn lời gọi tần suất cao (vai
@@ -568,7 +568,7 @@ Phân tích trace cho thấy một phần lớn khoảng cách này đến từ 
 
 Tách 655 task thành hai nhóm theo tiêu chí này cho phép định lượng đóng góp của yếu tố định dạng. Trên 170 task mà mô hình nền hỏng định dạng, mô hình nền không giải được task nào, còn mô hình sau fine-tune giải được 47 task. Trên 485 task còn lại, nơi mô hình nền chạy trọn vẹn, hai mô hình đạt 87 và 114 task, tức 17{,}9\% so với 23{,}5\%; kiểm định theo cặp riêng trên nhóm này cho 53 task chỉ mô hình sau fine-tune giải được so với 26 task ngược lại, $p = 0{,}003$.
 
-Đây là điểm đáng chú ý nhất của phép đối chứng. 27 trong 74 task tăng thêm nằm ở nhóm mà mô hình nền vốn chạy trọn vẹn, và mức tăng trên riêng nhóm đó đạt ý nghĩa thống kê. Nói cách khác, tập dữ liệu không chỉ dạy mô hình phát ra hành động đúng định dạng để đi hết một episode, mà còn dạy được cả việc \emph{chọn} hành động đúng - phần năng lực mà một pipeline khám phá có cấu trúc hứa hẹn mang lại.
+Phép tách này là căn cứ của Phát hiện~2; ý nghĩa của nó được bàn ở Mục~\ref{sec:disc-results}.
 
 Tuân thủ định dạng cũng chỉ là điều kiện cần chứ không phải điều kiện đủ. Reddit vừa có tỷ lệ hỏng định dạng cao nhất ở mô hình nền (38{,}7\%) vừa có mức cải thiện lớn nhất, đúng như dự đoán của giả thuyết này. Nhưng GitLab có tỷ lệ hỏng định dạng gần bằng Shopping (22{,}8\% so với 23{,}0\%) mà lại cải thiện ít hơn, cho thấy khi rào cản định dạng đã được gỡ, phần còn lại phụ thuộc vào độ khó nội tại của website và vào lượng dữ liệu thu được cho chính website đó.
 
@@ -737,69 +737,50 @@ Shopping Admin & $+$2410 & 28/182 $=$ 15{,}4 & 31/182 $=$ 17{,}0 & $+$1{,}6 \\
 \end{tabular}
 \end{table}
 
-Hai điều đọc được từ bảng này, và chúng kéo về hai hướng khác nhau.
-
-\textbf{Thứ nhất, bổ sung dữ liệu \emph{có} nâng được điểm.} Cả hai website đều
-tăng, mỗi website thêm đúng 3 task. Đây là bằng chứng trực tiếp nhất mà khóa
-luận có cho quan hệ giữa lượng dữ liệu và năng lực, vì nó đo trong cùng một
-website thay vì so chéo giữa các website có độ khó khác nhau.
-
-\textbf{Thứ hai, hiệu suất trên mỗi mẫu thấp và không đồng đều.} Quy về đơn vị
-chung, Reddit đạt khoảng 1{,}5 điểm phần trăm cho mỗi 1000 mẫu thêm vào, còn
-Shopping Admin chỉ đạt 0{,}7 - tức website nhận \emph{nhiều} mẫu hơn lại đổi
-được \emph{ít} điểm hơn trên mỗi mẫu. Tính gộp, phần dữ liệu của hai website
-này tăng từ 2454 lên 6720 mẫu, gần gấp ba, để đổi lấy 2{,}1 điểm phần trăm.
-
-Kết luận rút ra không phải ``dữ liệu không quan trọng'' mà là một phát biểu
-chặt hơn: \emph{lượng dữ liệu vẫn là một biến số có tác dụng, nhưng lợi ích cận
-biên của nó giảm nhanh, và giảm nhanh hơn ở website có chuỗi thao tác dài}. Đối
-chiếu với Mục~\ref{sec:exp-analysis}: Shopping Admin cũng chính là website có
-tỷ lệ episode cạn ngân sách bước hoặc kẹt vòng lặp cao nhất, nên phần dữ liệu
-thêm vào không chạm được đúng chỗ đang hỏng. Đây là căn cứ định lượng cho
-Phát hiện~3 ở Mục~\ref{sec:intro-results}.
+Hai điều đọc được từ bảng, và chúng kéo về hai hướng khác nhau. \textbf{Bổ sung
+dữ liệu \emph{có} nâng được điểm}: cả hai website đều tăng, mỗi website thêm
+đúng 3 task - và vì phép đo diễn ra trong cùng một website thay vì so chéo giữa
+các website có độ khó khác nhau, đây là bằng chứng trực tiếp nhất mà khóa luận
+có cho quan hệ giữa lượng dữ liệu và năng lực. Nhưng \textbf{hiệu suất trên mỗi
+mẫu thì thấp và không đồng đều}: quy về đơn vị chung, Reddit đạt khoảng 1{,}5
+điểm phần trăm cho mỗi 1000 mẫu thêm vào còn Shopping Admin chỉ đạt 0{,}7 - tức
+website nhận \emph{nhiều} mẫu hơn lại đổi được \emph{ít} điểm hơn trên mỗi mẫu.
+Tính gộp, phần dữ liệu của hai website này tăng gần gấp ba, từ 2454 lên 6720
+mẫu, để đổi lấy 2{,}1 điểm phần trăm. Đây là căn cứ định lượng cho Phát hiện~3;
+Mục~\ref{sec:disc-results} diễn giải nó khi trả lời CH4.
 
 \subsection{Thay mô hình nền, giữ nguyên tập dữ liệu}
 \label{sec:exp-backbone}
 
-Ở ba chỗ trong chương này và Chương~\ref{ch:discussion}, phần đóng góp thuộc về
-mô hình nền phải được ước lượng gián tiếp bằng cách đối chiếu hai con số đo
-trong hai điều kiện khác nhau. Để thu hẹp khoảng ước lượng đó, đúng tập dữ liệu
-8554 mẫu được dùng để fine-tune một mô hình nền thứ hai:
-Qwen-2.5-7B-Instruct~\cite{gandhi2026gobrowse} - chính mô hình nền mà Go-Browse
-và NNetNav sử dụng - rồi đánh giá trên đúng 655 task với cùng bộ chấm, cùng
-ngân sách 15 bước và cùng cấu hình giải mã.
+Phần đóng góp thuộc về mô hình nền, tách khỏi phần thuộc về tập dữ liệu, cho
+tới đây vẫn phải ước lượng gián tiếp (Mục~\ref{sec:exp-main}). Để thu hẹp
+khoảng ước lượng đó, đúng tập dữ liệu 8554 mẫu được dùng để fine-tune một mô
+hình nền thứ hai - Qwen-2.5-7B-Instruct, chính mô hình nền mà Go-Browse và
+NNetNav sử dụng - rồi đánh giá trên đúng 655 task với cùng bộ chấm, cùng ngân
+sách bước và cùng cấu hình giải mã. Kết quả chấm tự động là 83/655 $=$
+12{,}7\%, so với 8{,}3\% của chính mô hình nền đó theo số liệu công bố.
 
-Kết quả chấm tự động là 83/655 $=$ 12{,}7\%, so với 8{,}3\% của chính mô hình
-nền đó theo số liệu công bố. Tuy vậy, \textbf{con số này không được dùng như
-một phép so sánh cùng mô hình nền với Go-Browse-7B}, vì hai lý do đo lường
-được, và việc nêu rõ chúng có ích hơn con số.
+\textbf{Con số này không dùng làm phép so sánh cùng mô hình nền với
+Go-Browse-7B được}, và lý do mới là phần đáng ghi nhận. Toàn bộ 275 phản hồi
+không phân giải được của mô hình 7B đều kết thúc bình thường chứ không bị cắt,
+và 92--98\% trong số đó là một lệnh kết thúc \texttt{report\_infeasible} viết
+trần kèm lý do mạch lạc, chỉ thiếu lớp vỏ JSON mà bộ phân giải yêu cầu. Hệ quả
+đo được: mô hình 7B chỉ ghi nhận 10 trên 182 lần báo bất khả thi ở Shopping
+Admin so với 41 của mô hình 9B - không phải vì nó ít báo, mà vì phần lớn các
+lần báo bị loại bỏ và episode bị ghi nhận là cạn ngân sách. Vì bộ chấm WebArena
+\emph{cho điểm} khi agent báo bất khả thi đúng trên task mang nhãn không khả
+thi, một bộ phân giải khoan dung hơn nhiều khả năng sẽ nâng con số 12{,}7\%
+lên. Thêm nữa, kết quả 7B là điểm chấm tự động thuần túy trong khi
+Bảng~\ref{tab:main} đã qua đợt rà soát tiêu chí chấm. Vì hai lý do đó, kết quả
+này không xuất hiện trong Bảng~\ref{tab:related}.
 
-\emph{Thứ nhất, phép đo bị chặn bởi độ nghiêm của bộ phân giải đầu ra.} Trên ba
-website đã phân tích trace, toàn bộ 275 phản hồi không phân giải được của mô
-hình 7B đều kết thúc bình thường chứ không bị cắt, và 92--98\% trong số đó là
-một lệnh kết thúc \texttt{report\_infeasible} viết trần kèm lý do mạch lạc, chỉ
-thiếu lớp vỏ JSON mà bộ phân giải yêu cầu. Hệ quả đo được: mô hình 7B chỉ ghi
-nhận 10 trên 182 lần báo bất khả thi ở Shopping Admin, so với 41 của mô hình
-9B - không phải vì nó ít báo, mà vì phần lớn các lần báo bị bộ phân giải loại
-bỏ và episode bị ghi nhận là cạn ngân sách. Vì bộ chấm của WebArena \emph{cho
-điểm} khi agent báo bất khả thi đúng trên task mang nhãn không khả thi, một bộ
-phân giải khoan dung hơn nhiều khả năng sẽ nâng con số 12{,}7\% lên, ở mức chưa
-xác định. Nói cách khác đây là một cận dưới do công cụ đo đặt ra, không phải
-một phép đo chất lượng dữ liệu.
-
-\emph{Thứ hai, hai vế không cùng quy trình chấm.} Kết quả 7B là điểm chấm tự
-động thuần túy, trong khi các số liệu ở Bảng~\ref{tab:main} đã qua đợt rà soát
-tiêu chí chấm nêu ở chú thích Bảng~\ref{tab:baseline}.
-
-Vì hai lý do trên, kết quả này không xuất hiện trong Bảng~\ref{tab:related}.
-Điều nó cho phép kết luận hẹp hơn nhiều so với kỳ vọng ban đầu, nhưng vẫn có
-giá trị: tập dữ liệu do pipeline sinh ra nâng được năng lực của \emph{cả hai}
-mô hình nền so với chính chúng, nên nó không phải một tập dữ liệu chỉ hợp với
-một kiến trúc cụ thể. Đồng thời, phép đo này làm lộ một yếu tố mà thiết kế
-đánh giá ban đầu không tính tới: với mô hình nền nhỏ hơn, \emph{độ nghiêm của
-bộ phân giải đầu ra trở thành một thành phần của phép đo}. Muốn có một so sánh
-cùng mô hình nền dùng được, phải chạy lại với bộ phân giải chấp nhận lệnh viết
-trần; đây là hạng mục thực nghiệm được ghi vào Mục~\ref{sec:conc-future}.
+Điều rút ra được vì vậy hẹp hơn kỳ vọng ban đầu nhưng vẫn có giá trị theo hai
+hướng. Tập dữ liệu nâng được năng lực của \emph{cả hai} mô hình nền so với
+chính chúng, nên nó không gắn riêng với một kiến trúc. Và phép đo làm lộ một
+yếu tố mà thiết kế đánh giá ban đầu không tính tới: với mô hình nền nhỏ hơn,
+\emph{độ nghiêm của bộ phân giải đầu ra trở thành một thành phần của phép đo} -
+một so sánh cùng mô hình nền dùng được đòi hỏi chạy lại với bộ phân giải chấp
+nhận lệnh viết trần (Mục~\ref{sec:conc-future}).
 
 \subsection{Quan sát liên-website}
 
