@@ -97,6 +97,38 @@ Task ngắn/dễ có ít cơ hội hỏng định dạng hơn task dài, nên 21
 **thiên lệch lên**. Nó chứng minh được "phần lớn khoảng cách đến từ tuân thủ
 định dạng", nhưng không chứng minh được "7B mạnh ngang 9B".
 
+### 1.2b Hỏng định dạng ở đây nghĩa là gì — đọc thẳng từ trace
+
+Soi nội dung thô của 275 lời gọi hỏng trên ba miền của bản 7B cho thấy đây
+**không** phải chuỗi rác:
+
+| | 7B FT (3 miền) | 9B base (4 miền) |
+| :--- | :---: | :---: |
+| Tổng lời gọi hỏng | 275 | 170 |
+| `finish_reason = stop` (phản hồi hoàn chỉnh) | **275 (100%)** | 79 (46%) |
+| `finish_reason = length` (bị cắt vì chạm trần ngữ cảnh) | 0 | **91 (54%)** |
+| Là một lệnh `report_infeasible(...)` viết trần | **92–98%** | ~0 |
+| Là JSON dở dang / văn xuôi | ~1% | ~100% |
+
+Bản 7B **giữ đúng định dạng ở các hành động thường** và chỉ đánh rơi lớp vỏ JSON
+đúng lúc phát **lệnh kết thúc**, kèm lý do mạch lạc, ví dụ nguyên văn:
+`report_infeasible("The Period control is set to Day, while Quarter is
+explicitly unavailable as an option...")`.
+
+Hệ quả đo được: bản 7B chỉ ghi nhận **10/182** lần báo bất khả thi trên
+shopping_admin, so với **41/182** của bản 9B — không phải vì nó ít báo, mà vì bộ
+phân giải **vứt bỏ** phần lớn các lần báo đó và episode bị ghi thành
+`budget`/`stuck`. Vì WebArena **cho điểm** khi agent báo bất khả thi đúng trên
+task có nhãn `N/A`, một bộ phân giải khoan dung hơn gần như chắc chắn sẽ **nâng**
+điểm của bản 7B theo mức chưa xác định.
+
+**Do đó, con số của bản 7B là một cận dưới bị hạ thấp bởi độ nghiêm của bộ phân
+giải, không phải một phép đo chất lượng dữ liệu** — không được dùng nó để so
+cùng-backbone với Go-Browse-7B. Ngược lại, 170 phiên của mô hình nền 9B là hiện
+tượng **sinh tràn** thật (trung vị ~21.000 ký tự, ~5.300 token, trong khi lời gọi
+không đặt `max_tokens` và cửa sổ ngữ cảnh là 8192 token), nên không chịu cùng
+cách phản bác.
+
 ### 1.3 Vì sao riêng shopping_admin lộ rõ nhất
 
 Shopping_admin là miền dài hơi nhất trong bốn miền: 11,0 bước/task (9B) và
@@ -114,7 +146,10 @@ gần như nhau (60% vs 58%).
 > ít nhất một phản hồi không parse được và **không một task nào trong số đó
 > thành công**; loại trừ nhóm này, SR của 7B là 21,9%, ngang bản 9B. Không phải
 > vấn đề thiếu dữ liệu: bản 7B đã được huấn luyện trên tập shopping_admin lớn
-> gấp 3 lần tập mà bản 9B Đợt 1 dùng.
+> gấp 3 lần tập mà bản 9B Đợt 1 dùng. Lưu ý ở §1.2b: 92–98% các phản hồi hỏng đó
+> là lệnh `report_infeasible(...)` viết trần chứ không phải chuỗi rác, nên con số
+> của bản 7B là **cận dưới bị bộ phân giải hạ thấp**, không dùng để so
+> cùng-backbone với Go-Browse-7B được.
 
 ---
 

@@ -6,6 +6,36 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **12:40** — `Thesis_report/de_xuat_bo_sung_C4_C5.md` (new),
+  `docs/phan_tich_ket_qua_eval.md` (§1.2b added) — Reviewed thesis C4/C5 against
+  the two eval docs and wrote a 7-item change proposal (no .tex touched).
+  Two findings that came out of reading raw traces, both load-bearing:
+  - **The 7B's "format failures" are not garbage — they are bare
+    `report_infeasible(...)` calls.** All 275 unparsed calls have
+    `finish_reason=stop`, and 92–98% are a coherent terminal action written
+    without the JSON envelope. The parser discards them, so the episode is
+    recorded as `budget`/`stuck`: the 7B logs 10/182 infeasible reports on
+    shopping_admin vs the 9B's 41/182. Since WebArena *awards* a point for a
+    correct infeasible report on an `N/A`-labelled task, a lenient parser would
+    likely raise the 7B's score. **16.5% is therefore a parser-depressed lower
+    bound and must never be cited as a matched-backbone comparison against
+    Go-Browse-7B.** This corrects the framing in yesterday's analysis doc.
+  - **The 9B base's 170 format failures are a different mechanism** and survive
+    the obvious rebuttal: 91 are `finish_reason=length` with median ~21,000
+    chars (~5,300 tokens) of runaway generation, against a ~2,000-token prompt
+    in an 8192-token window with **no `max_tokens` set**. So Phát hiện 2 is not
+    an artifact of a stingy cap — worth stating in the thesis before a reviewer
+    asks (proposal P0-2).
+  Also caught a factual error in the thesis (P0-1): C4:559 and C5:35 claim the
+  improvement ranking matches the data-volume ranking. It does not — the top two
+  are swapped (data: Admin 41.9% > Reddit 36.6%; improvement: Reddit +27.4 >
+  Admin +8.8), and the claim contradicts §4.6/CH4 two pages later, which uses the
+  same table to reject exactly that reasoning.
+  Proposal P2 (data-scaling evidence from the two collection rounds) is flagged
+  as **conflicting with the 2026-08-20 19:44 and 20:41 decisions** to present one
+  collection campaign and one training run; three options given, decision left to
+  the user rather than assumed.
+
 - **11:15** — `docs/phan_tich_ket_qua_eval.md` (new) — Vietnamese analysis
   answering the four discussion questions at the end of
   `docs/tong_hop_ket_qua_eval.md`, grounded in the raw `results.jsonl` rather
