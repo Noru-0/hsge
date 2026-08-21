@@ -43,9 +43,11 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
   - Verified by clean rebuild (full `latexmk -C` then pdflatex/bibtex/pdflatex×2
     — latexmk caches a failed bibtex run and will not retry): **0 undefined
     refs, 0 undefined citations, 0 overfull boxes, 0 `??`**, 175 pages.
-  - ⚠️ **Body went 98 -> 102 pages, i.e. 2 over the Faculty's "should not exceed
-    100" guideline.** Flagged to the user rather than silently trimming other
-    content; §4.6.2 is the obvious ~1.5-page candidate to move to an appendix.
+  - **Body went 98 -> 102 pages, i.e. 2 over the Faculty's "should not exceed
+    100" guideline.** Raised with the user, who **decided to keep 102** rather
+    than move §4.6.2 to an appendix or compress C2/C3 — the guideline is worded
+    as a recommendation, not a hard rule. **Do not "fix" this in a later session:
+    the overage is a deliberate, informed choice.**
 
 - **12:40** — `Thesis_report/de_xuat_bo_sung_C4_C5.md` (new),
   `docs/phan_tich_ket_qua_eval.md` (§1.2b added) — Reviewed thesis C4/C5 against
