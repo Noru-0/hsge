@@ -139,8 +139,10 @@ O4 &
 Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chính thức &
 Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
 655 task chính thức của cả bốn website, đạt 24{,}6\% so với 13{,}3\% của mô
-hình nền đo trong cùng điều kiện. Phần còn thiếu là các phép lặp thống kê và
-các ablation tách bạch đóng góp của từng thành phần
+hình nền đo trong cùng điều kiện; hai phép đo bổ trợ đã chạy là hiệu ứng của
+việc bổ sung dữ liệu trên hai website và việc thay mô hình nền trong khi giữ
+nguyên tập dữ liệu. Phần còn thiếu là các phép lặp thống kê và các ablation
+tách bạch đóng góp của từng thành phần trong pipeline
 (Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
 
 \addlinespace
@@ -200,11 +202,15 @@ tác~\cite{murty2024nnetnav,gandhi2026gobrowse}. Do pipeline HSGE không phụ t
 cơ chế chuyển giao skill giữa các giao diện tương đồng, việc mở rộng sang
 nhiều nền tảng mới kết hợp tái sử dụng các skill đã tích lũy sẽ giúp gia tăng
 độ đa dạng của dữ liệu mà không cần thực thi lại toàn bộ quá trình khám phá.
-Tuy nhiên, kết quả đánh giá cross-website ở Mục~\ref{sec:exp-ablation} đưa ra
-một lưu ý quan trọng: khối lượng dữ liệu thu thập trên một website không tỉ
-lệ thuận với hiệu năng đạt được trên chính website đó. Do đó, định hướng
-mở rộng dữ liệu tiếp theo nên ưu tiên nâng cao \emph{độ phủ} và \emph{độ khó}
-của task, thay vì chỉ gia tăng đơn thuần về số lượng mẫu.
+Tuy nhiên, hai phép đo ở Mục~\ref{sec:exp-ablation} đặt ra một lưu ý quan
+trọng cho hướng này. Bổ sung dữ liệu cho một website \emph{có} nâng điểm của
+chính website đó, nhưng với hiệu suất thấp và giảm nhanh: gần gấp ba lượng dữ
+liệu của hai website chỉ đổi lấy 2{,}1 điểm phần trăm, và website nhận nhiều
+mẫu hơn lại đổi được ít điểm hơn trên mỗi mẫu (Bảng~\ref{tab:datascale}). So
+sánh chéo giữa bốn website cũng cho thấy \emph{mức} điểm của một website không
+do riêng lượng dữ liệu thu được cho nó quyết định. Do đó, định hướng mở rộng
+dữ liệu tiếp theo nên ưu tiên nâng cao \emph{độ phủ} và \emph{độ khó} của task,
+thay vì chỉ gia tăng đơn thuần về số lượng mẫu.
 
 \textbf{Giảm tỷ lệ hành động thất bại ở lớp thực thi.}
 Phân tích nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) cho thấy từ
@@ -235,14 +241,20 @@ cảnh cho mô hình, theo cách mà Synapse~\cite{zheng2024synapse}, AWM~\cite{
 thức có cấu trúc trong cùng một hệ thống web agent.
 
 \textbf{Hoàn thiện phần thực nghiệm còn thiếu.}
-Ba hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất là lặp
+Bốn hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất là lặp
 phép đo: mỗi cấu hình chạy ít nhất ba lần cho cả hai mô hình, báo cáo trung
 bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất. Đi kèm là một việc dọn
 dẹp phép đo hiện tại: chạy lại Shopping cùng Shopping Admin một cách tuần tự.
 Thứ hai là ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng
 ngân sách; đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu
 trúc đồ thị, và cũng là phần còn thiếu để phát biểu mạnh hơn về phương pháp.
-Thứ ba là mở rộng sang các benchmark khác - VisualWebArena~\cite{koh2024visualwebarena} cho các mục tiêu diễn đạt bằng hình ảnh, WorkArena~\cite{drouin2024workarena} cho miền công việc văn phòng, và Online-Mind2Web~\cite{xue2025illusion} cho điều kiện web mở - kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân, chẳng hạn như chỉ số tiến bộ từng phần.
+Thứ ba là hoàn tất phép so sánh cùng mô hình nền đã khởi động ở
+Mục~\ref{sec:exp-backbone}: fine-tune trên đúng tập dữ liệu này cho kết quả
+chưa dùng để đối chiếu với Go-Browse được, vì bộ phân giải đầu ra loại bỏ phần
+lớn các lệnh kết thúc mà mô hình 7B phát ra không đúng định dạng. Việc cần làm
+là chạy lại với bộ phân giải chấp nhận lệnh viết trần; đây là hạng mục rẻ nhất
+trong bốn hạng mục vì không phải thu thêm dữ liệu hay huấn luyện lại, chỉ đo
+lại. Thứ tư là mở rộng sang các benchmark khác - VisualWebArena~\cite{koh2024visualwebarena} cho các mục tiêu diễn đạt bằng hình ảnh, WorkArena~\cite{drouin2024workarena} cho miền công việc văn phòng, và Online-Mind2Web~\cite{xue2025illusion} cho điều kiện web mở - kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân, chẳng hạn như chỉ số tiến bộ từng phần.
 
 \vspace{1em}
 \noindent
@@ -253,7 +265,9 @@ cấu trúc. Thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ �
 các hệ thống mở tốt nhất cùng phân khúc dưới 10B, và cao hơn 11{,}3
 điểm phần trăm so với chính mô hình nền khi chưa fine-tune. Đáng nói hơn, kết quả đạt
 được chỉ với 8554 mẫu huấn luyện, ít hơn khoảng năm lần so với các
-công trình cùng hướng. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
+công trình cùng hướng, và trong một ngân sách vừa tầm một nhóm nghiên cứu nhỏ:
+36{,}48\,USD tiền gọi API cho toàn bộ giai đoạn thu thập, cộng 24{,}4\,USD
+tiền thuê GPU cho cả chu trình fine-tune và đánh giá. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
 giá ở quy mô lớn hơn. Nhưng chừng đó đã đủ để nói rằng đầu tư vào chất lượng
 và cấu trúc của dữ liệu huấn luyện là một hướng khả thi để nâng năng lực của
 web agent chạy trên mô hình ngôn ngữ nhỏ.

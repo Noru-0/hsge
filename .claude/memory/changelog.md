@@ -6,6 +6,30 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **14:05** — `Thesis_report/thesis_hsge_vi/Chapter6/chapter6.tex`, `main.pdf` —
+  Synced C6 with the C4/C5 changes. Four edits:
+  - **Closed a dangling forward promise**: §4.6.2 points at `sec:conc-future`
+    for the re-measurement that would make the matched-backbone comparison
+    usable, but C6 §6.4 had no such item. Added it as the third of now **four**
+    (was "Ba hạng mục") outstanding experiments — cheapest of the four, since it
+    needs no new data or training, only a re-run with a parser that accepts a
+    bare terminal action. Verified both directions resolve in the built PDF.
+  - **Fixed the same imprecision C5 had**: §6.4 said "khối lượng dữ liệu thu
+    thập trên một website không tỉ lệ thuận với hiệu năng đạt được trên chính
+    website đó", which §4.6.1 now directly contradicts (adding data to a site
+    *does* raise that site's score). Rewritten as the two separate findings —
+    within-site gain with sharply decaying return, and the cross-site
+    non-determination of the absolute level — which is what actually supports
+    §6.4's own conclusion (prioritise task coverage/difficulty over sample
+    count).
+  - O4 row in `tab:objectives` now names the two measurements that did run, and
+    scopes "ablation" to the pipeline-component ones still missing.
+  - Closing paragraph gained the cost figures (36.48 USD API + 24.4 USD GPU), so
+    C6 echoes C1 §1.7 item 5 and C5's new CH1/CH3 cost answers instead of
+    stopping at data efficiency.
+  - Clean rebuild: 0 undefined refs/citations, 0 overfull boxes, 0 `??`, 175
+    pages, body still 102.
+
 - **13:40** — `Thesis_report/thesis_hsge_vi/{Chapter4,Chapter5}/*.tex`, `main.pdf`
   — Aligned C4/C5 to answer C1's research questions **as C1 actually words them**,
   and tightened both (user: focus on C1's questions, expand a little, stay terse).
