@@ -1120,8 +1120,10 @@ python training/prepare_dataset.py training_data/train_all.jsonl \
 \end{lstlisting}
 
 \noindent
-Ba bước xử lý trên tương ứng với 3 cổng lọc đã được mô tả tại
-Mục~\ref{sec:method-data}. Cờ \texttt{-{}-require-judge} loại bỏ mọi episode tự
+Ba bước trên là xuất, ghép và chia tập dữ liệu; các cổng lọc mô tả ở
+Mục~\ref{sec:method-data} đều nằm bên trong bước thứ nhất. Cờ
+\texttt{-{}-require-judge} không gọi lại judge mà chỉ đọc phán quyết đã được
+ghi kèm episode từ trong vòng lặp khám phá: nó loại bỏ mọi episode tự
 nhận hoàn thành nhưng chưa được judge xác nhận hoặc bị judge đánh trượt, đồng
 thời vẫn giữ lại các episode mà agent báo là bất khả thi (do cơ chế đánh giá
 không áp dụng cho dạng này và chúng vẫn là mẫu huấn luyện hợp lệ). Ở bước ghép

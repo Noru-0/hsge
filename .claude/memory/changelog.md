@@ -6,6 +6,25 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **18:35** — `Thesis_report/thesis_hsge_vi/{Chapter1,Chapter3,Chapter4,Chapter6,
+  Appendix/appendix1}.tex` — **Made the report say plainly that there is no
+  post-exploration verification pass**: the LLM judge runs inside the discovery
+  loop, so a finished run's `episodes/` goes straight into `build_sft_dataset.py`.
+  - C1: dropped the contribution claim "tái cấu trúc chuỗi suy luận"
+    (`reannotate_thoughts.py` was **never run** on any collection run — 0 of 2876
+    episodes carry `thought_v2`), and reworded O3 + contribution 3 as
+    in-loop gates.
+  - C3: pipeline-figure caption and §3.1 overview now state the gates fire when
+    the episode is recorded; §3.9 (`sec:method-data`) opens by saying the stage
+    takes the run's episode directory directly, with no verification pass in
+    between — its own job is export + the three export-level filters.
+  - C4 §4.2.2: the "cổng chấm lại episode" bullet now says `--require-judge`
+    issues no new LLM call, it re-reads the in-loop verdict (safety latch).
+  - Appendix `app:repro-curate`: the three commands are export/merge/split, not
+    "3 cổng lọc"; same clarification about `--require-judge`.
+  - Build verified clean: `latexmk -C` + pdflatex/bibtex/pdflatex×2 — 0 undefined
+    refs/citations, 0 overfull boxes, 175 pages (unchanged).
+
 - **17:50** — `Thesis_report/Slide_KLTN_HSGE/{presentation_script.md (rewritten),
   sections/03_thucnghiem.tex,main.pdf}` — **Rewrote the defense script from
   scratch** and fixed two overclaims on the slide it narrates.

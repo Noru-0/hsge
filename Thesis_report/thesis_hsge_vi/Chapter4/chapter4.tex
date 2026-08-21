@@ -385,7 +385,11 @@ Con số cuối cùng được quyết định bởi hai cổng lọc chất lư
 \begin{itemize}
 \item \textbf{Cổng chấm lại episode}: chỉ giữ những episode đã được bộ chấm
 độc lập xác nhận. Một episode chưa từng được chấm sẽ bị loại chứ không được
-mặc nhiên coi là hợp lệ.
+mặc nhiên coi là hợp lệ. Cổng này không phát sinh thêm lời gọi LLM nào ở khâu
+dựng dữ liệu: nó chỉ \emph{đọc lại} phán quyết mà bộ chấm đã ghi kèm episode
+ngay trong vòng lặp khám phá (Mục~\ref{sec:method-success}), nên vai trò thực
+chất của nó là một chốt an toàn, bảo đảm không một episode chưa qua chấm nào
+lọt vào tập dữ liệu.
 \item \textbf{Cổng hành động hữu hiệu}: một episode được gắn nhãn
 \texttt{[MOD]}\slash\texttt{[NAV]}\slash\texttt{[COMPOSITE]} nhưng các bước
 được xuất ra lại không chứa bất kỳ hành động nào thực sự tác động lên trang

@@ -30,8 +30,9 @@ mô tả kiến trúc tổng thể.
     khám phá giải các low-level task do LLM đề xuất trên những trang
     thuộc frontier; skill phát hiện được nâng thành operator, rồi ghép
     chuỗi operator sinh ra các semantic task quay ngược lại nuôi vòng
-    khám phá. Mọi episode ghi nhận được đều phải qua các cổng chất
-  lượng tự động trước khi thành dữ liệu huấn luyện.}
+    khám phá. Các cổng chất lượng tự động nằm ngay bên trong vòng lặp,
+    nên episode đã được chấm xong lúc ghi và khâu dựng dữ liệu huấn
+  luyện không cần thêm một pha hậu kiểm nào.}
   \label{fig:pipeline}
 \end{figure}
 
@@ -47,9 +48,12 @@ Mỗi skill đã qua kiểm chứng được nâng thành một operator, mang
 precondition và effect tường minh. Ghép chuỗi các operator trên đồ
 thị cho ra những mục tiêu dài hạn, gọi là semantic task; chúng lại
 được giao cho chính solver, khép kín vòng lặp. Mọi task đã thử, dù ở
-mức thấp hay mức ngữ nghĩa, đều được ghi lại thành một episode. Các
-episode còn phải qua những cổng chất lượng tự động trước khi trở
-thành tập dữ liệu SFT dùng để fine-tune mô hình đích.
+mức thấp hay mức ngữ nghĩa, đều được ghi lại thành một episode, và
+đều đã đi qua các cổng chất lượng tự động \emph{ngay tại thời điểm
+được ghi} (Mục~\ref{sec:method-success}). Vì vậy, khi một lượt khám
+phá kết thúc, thư mục episode của nó được đưa thẳng vào khâu dựng tập
+dữ liệu SFT dùng để fine-tune mô hình đích, không xen giữa một pha
+kiểm chứng ngoại tuyến nào.
 
 Mỗi lượt chạy ghi ba loại episode và đánh dấu riêng từng loại, bởi chúng khác
 nhau ở điểm xuất phát chứ không chỉ ở nội dung task. Episode \texttt{LOCAL}
@@ -1022,11 +1026,15 @@ chỉ các thao tác cục bộ. Thứ hai, mỗi trajectory là một lần ph�
 \section{Tinh lọc dữ liệu}
 \label{sec:method-data}
 
-Các episode đã qua những cổng chất lượng ở Mục~\ref{sec:method-success} vẫn
-chưa dùng huấn luyện ngay được. Chúng còn phải trở thành mẫu huấn luyện theo
-nguyên tắc \emph{prompt parity}, và trên đường đi còn ba bộ lọc nữa ở mức
-episode mà chỉ khâu này làm được, bởi chúng xét chính những bước \emph{còn
-lại sau khi xuất ra} chứ không xét episode thô.
+Khâu này nhận thẳng thư mục episode của một lượt khám phá vừa kết thúc. Không
+có pha kiểm chứng nào chen vào giữa: tính đúng đắn của từng episode đã được
+quyết định xong ngay trong vòng lặp bởi các cổng ở
+Mục~\ref{sec:method-success}, mà cổng cuối trong số đó là một LLM judge độc
+lập chấm lại mọi lời tự tuyên bố hoàn thành. Việc còn lại của khâu này chỉ
+là \emph{xuất} episode thành mẫu huấn luyện theo nguyên tắc \emph{prompt
+parity} - và trên đường đi, áp thêm ba bộ lọc ở mức episode mà chỉ đúng khâu
+này làm được, bởi chúng xét chính những bước \emph{còn lại sau khi xuất ra}
+chứ không xét episode thô.
 
 Mỗi bước của một episode trở thành một mẫu instruction tuning. Nguyên tắc \emph{prompt parity} đòi cấu trúc prompt lúc
 huấn luyện phải trùng khớp với prompt solver nhận được lúc suy luận.

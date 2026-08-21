@@ -20,10 +20,11 @@ kiểm chứng chúng trước khi đưa vào thư viện skill, rồi trừu t�
 các operator có precondition và effect tường minh. Trên cơ sở các operator
 đã thu nhận, pipeline tiếp tục xây dựng đồ thị toán tử và ghép chuỗi các
 operator tương thích để sinh ra các semantic task nhiều bước. Nhờ vậy, mục tiêu huấn luyện mới được dựng trên các năng lực đã kiểm chứng,
-chứ không chỉ trên những task gắn với một trang riêng lẻ. Trước khi vào bước
-fine-tuning, mọi trajectory còn phải qua các cổng chấm và tinh lọc tự động, và
-toàn bộ đường đi đó giữ nguyên tắc \emph{prompt parity} giữa huấn luyện và
-suy luận.
+chứ không chỉ trên những task gắn với một trang riêng lẻ. Các cổng chấm và
+tinh lọc tự động nằm ngay trong vòng lặp thu thập, nên trajectory đã sạch từ
+lúc được ghi và đi thẳng vào khâu dựng dữ liệu rồi fine-tuning mà không cần
+một pha hậu kiểm tách rời; toàn bộ đường đi đó giữ nguyên tắc \emph{prompt
+parity} giữa huấn luyện và suy luận.
 
 Khóa luận tạo ra năm sản phẩm chính như sau.
 
