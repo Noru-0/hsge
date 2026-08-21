@@ -6,6 +6,46 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **16:10** — `Thesis_report/Slide_HopPhanBien/{main.tex,sections/01_dongluc.tex,
+  sections/02_thucnghiem.tex,sections/04_phanbien.tex (new),main.pdf}` —
+  **Reworked the phản-biện meeting deck around the six questions the reviewer
+  actually asked** (13 -> 18 pages). New §4 "Trả lời các câu hỏi phản biện" with
+  four frames, plus a scope sentence added to the problem-statement block in §1.
+  - **Q1 (benchmark legitimacy — "explore on their app then test on their app is
+    invalid, shouldn't you test a different app in the same domain?")** is the
+    load-bearing one. Answer built as three parts: what did NOT happen (the
+    pipeline never saw the 655 benchmark tasks; DB reset before each sweep; no
+    collected trajectory reused at scoring), what DID happen and is deliberate
+    (same-site training/eval is the standard protocol — Go-Browse explores 20
+    URLs/domain of WebArena then scores on WebArena's own 812 tasks), and why the
+    "different app" test is a *different* problem nobody has solved: on
+    Online-Mind2Web both in-domain specialists lose to GPT-4o-mini (Go-Browse-7B
+    5.33%, NNetNav-7B 4.00% vs 9.33%). Closing line: if the objection stands it
+    also invalidates Go-Browse and NNetNav, i.e. the entire baseline set.
+  - **Q2 (who is this for)** answered with the slogan **"thứ tổng quát hóa là
+    pipeline, không phải model"**, plus the economic argument now available from
+    the completed cost accounting: $54.21 API + $24.40 GPU = $78.61 for four
+    sites, i.e. **< $20/website with no human labelling** — which is what makes
+    per-site specialisation the rational choice over chasing one general model.
+  - **Q3/Q4/Q5** on one frame: feasibility proven by execution not assertion (637
+    tasks self-reported infeasible, 3981 -> 2117 valid); the step budget is a
+    cost decision (solver = 85.5% of 20,808 calls) but demonstrably not
+    distorting (median successful episode 6 steps, and no episode reached its
+    goal then got cut); and the three completion gates (self-declaration -> LLM
+    judge, 801 demoted -> code-level effective-action gate, 104 dropped, which
+    the judge structurally cannot catch), with the reminder that the 24.6% itself
+    is scored by WebArena's official grader, not the group's judge.
+  - **Q6** = RQ -> evidence -> status table, ending with the honest O2/O4
+    "hoàn thành một phần" including that the graph-vs-flat ablation is unrun.
+  - Also fixed the stale $36,48 -> $54,21 in §2.
+  - Build: 0 errors, **0 overfull/underfull boxes**, 18 pages. Three vbox
+    overflows introduced by the new frames were fixed properly (tightened cells,
+    demoted one alertblock to plain text) rather than left as warnings.
+  - Still stale, untouched: `Slide_KLTN_HSGE/sections/03_thucnghiem.tex`
+    ($36,48 = OpenAI $32,29 + DeepSeek $4,19) and
+    `Slide_KLTN_HSGE/presentation_script.md` ("36,48 USD API + 22,70 USD GPU" —
+    the GPU figure there is two revisions behind; current is 24,4).
+
 - **15:20** — `Thesis_report/thesis_hsge_vi/{Chapter1,Chapter4,Chapter5,Chapter6}/*.tex`,
   `main.pdf`, commit `ceffc73` — **API cost accounting is now complete.** The
   user supplied the missing second-round invoice (supplementary Reddit /

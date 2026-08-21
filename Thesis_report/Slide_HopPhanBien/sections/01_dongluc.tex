@@ -13,24 +13,27 @@
     mỗi lượt gọi đều tốn tiền, phản hồi chậm, và dữ liệu nội bộ phải gửi ra ngoài.
     Chuyển sang một mô hình nhỏ chạy ngay tại máy thì lại vấp bài toán khác: mô hình
     nhỏ chưa biết cách thao tác trên \emph{website cụ thể} của họ, mà để dạy nó thì cần
-    dữ liệu huấn luyện --- và việc ngồi thao tác mẫu, gán nhãn từng bước cho một website
-    thật (như AutoWebGLM: \textbf{20 người làm liên tục một tháng}) là điều một nhóm nhỏ
-    không kham nổi.
+    dữ liệu huấn luyện --- mà gán nhãn từng bước cho một website thật (AutoWebGLM:
+    \textbf{20 người làm liên tục một tháng}) là điều một nhóm nhỏ không kham nổi.
   \end{alertblock}
 
-  \vspace{0.12cm}
-  Đó cũng chính là hai vấn đề mà khóa luận này giải quyết: \textbf{chi phí/độ trễ/quyền
-  riêng tư} khi phụ thuộc mô hình lớn, và \textbf{nút thắt dữ liệu} khi muốn tự chủ quy trình với
-  mô hình nhỏ (SLM, ${<}10$B tham số) --- trong khi dữ liệu tự thu thập được
-  cho thấy có thể giảm tới $\approx$\textbf{97\%} chi phí mỗi mẫu so với thuê người gán
-  nhãn (Synatra).
+  \vspace{0.05cm}
+  Hai vấn đề khóa luận giải quyết: \textbf{chi phí/độ trễ/quyền riêng tư} khi phụ thuộc
+  mô hình lớn, và \textbf{nút thắt dữ liệu} khi tự chủ bằng mô hình nhỏ (SLM ${<}10$B)
+  --- trong khi dữ liệu tự thu có thể giảm tới $\approx$\textbf{97\%} chi phí mỗi mẫu
+  so với thuê người gán nhãn (Synatra).
 
-  \vspace{0.12cm}
-  \begin{block}{Phát biểu bài toán}
+  \vspace{0.05cm}
+  \begin{block}{Phát biểu bài toán --- và ranh giới của nó}
     \footnotesize
-    Tự động khám phá một website đang hoạt động và tinh chỉnh SLM để nó hoàn thành các
-    yêu cầu bằng ngôn ngữ tự nhiên trên chính website đó --- \textbf{không dùng bất kỳ
-    dữ liệu nào do con người gán nhãn}.
+    Tự động khám phá \emph{một} website đang hoạt động và tinh chỉnh SLM để nó hoàn
+    thành các yêu cầu bằng ngôn ngữ tự nhiên trên \textbf{chính website đó} --- không
+    dùng bất kỳ dữ liệu nào do con người gán nhãn.
+
+    \vspace{0.06cm}
+    {\scriptsize $\Rightarrow$ Đích nhắm là \kw{chuyên biệt hóa cho một website cụ thể},
+    \emph{không} phải một model tổng quát cho mọi website cùng lĩnh vực. Thứ tái sử
+    dụng được là \kw{pipeline}, không phải model (chi tiết ở mục 4).}
   \end{block}
 \end{frame}
 

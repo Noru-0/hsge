@@ -1,0 +1,170 @@
+% !TEX root = ../main.tex
+
+%%% ============================================================
+\section{Trả lời các câu hỏi phản biện}
+%%% ============================================================
+
+\subsection{Tính hợp lệ của phép đánh giá}
+\begin{frame}{Khám phá và đánh giá trên cùng website --- có hợp lệ không?}
+  \footnotesize
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \textbf{Cái \emph{không} xảy ra --- ranh giới train/test}
+      \scriptsize
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item Pipeline \kw{chưa từng nhìn thấy} 655 task của benchmark --- task huấn
+              luyện do agent tự đề xuất từ giao diện.
+        \item CSDL được \kw{khôi phục nguyên bản} trước mỗi đợt đo.
+        \item Không trajectory thu thập nào được dùng lại lúc chấm.
+      \end{itemize}
+      \vspace{0.04cm}
+      \textbf{Cái \emph{có} xảy ra --- và là chủ ý}
+      \scriptsize
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item Huấn luyện và đánh giá trên \emph{cùng} website --- đây là
+              \kw{giao thức chuẩn} của cả dòng nghiên cứu: Go-Browse khám phá 20 URL
+              mỗi domain của WebArena rồi chấm trên chính 812 task WebArena.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \textbf{Vì sao không đo trên ``app khác cùng lĩnh vực''?}
+      \scriptsize
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item Đó là một bài toán \emph{khác}: tổng quát hóa ngoài miền --- và số liệu
+              cho thấy \kw{chưa ai giải được}. Trên Online-Mind2Web (web mở):
+        \end{itemize}
+      \vspace{-0.05cm}
+      \centering
+      \begin{tabular}{@{}L{3.1cm} R{1.3cm}@{}}
+        \toprule
+        \textbf{Mô hình} & \textbf{SR} \\
+        \midrule
+        NNetNav-7B & 4,00\% \\
+        Go-Browse-7B (SOTA ${<}10$B) & 5,33\% \\
+        GPT-4o-mini & 9,33\% \\
+        \bottomrule
+      \end{tabular}\par
+      \vspace{0.08cm}
+      \raggedright
+      \scriptsize Hai hệ thống chuyên biệt hóa trong miền đều \emph{thua} GPT-4o-mini
+      khi ra web mở.
+    \end{column}
+  \end{columns}
+  \vspace{0.1cm}
+  {\scriptsize\textbf{Phát biểu đúng phạm vi.} Khóa luận \kw{không} tuyên bố mô hình
+  tổng quát sang website chưa từng thấy --- đã ghi rõ ở mục ``Hợp lệ ngoại vi''. Và nếu
+  phản đối ``cùng app thì không hợp lệ'' đứng vững, nó bác bỏ luôn Go-Browse lẫn
+  NNetNav --- toàn bộ đường cơ sở để so sánh.\par}
+\end{frame}
+
+\subsection{Định vị: tổng quát ở đâu?}
+\begin{frame}{Hướng đến ai --- và thứ gì mới là thứ tổng quát}
+  \footnotesize
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{Người dùng đích}
+      \scriptsize
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item Nhóm/doanh nghiệp vận hành \kw{một số website cố định} --- trang quản
+              trị nội bộ, CMS, diễn đàn riêng --- muốn một agent chạy tại chỗ.
+        \item Họ không cần một agent ``biết mọi trang thương mại điện tử''. Họ cần một
+              agent \emph{thạo đúng trang của họ}, rẻ và không gửi dữ liệu ra ngoài.
+      \end{itemize}
+      \vspace{0.12cm}
+      \begin{block}{Câu chốt}
+        \scriptsize
+        Thứ tổng quát hóa là \kw{pipeline}, không phải \kw{model}. Model là sản phẩm
+        dùng cho \emph{một} website; pipeline mới là đóng góp tái sử dụng được cho
+        website tiếp theo.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Vì sao định vị này là khả thi về kinh tế}
+      \scriptsize
+      \vspace{0.05cm}
+      \begin{tabular}{@{}L{3.4cm} R{1.5cm}@{}}
+        \toprule
+        Chi phí API (4 website) & \$54,21 \\
+        Chi phí GPU (fine-tune + đánh giá) & \$24,40 \\
+        \midrule
+        \textbf{Cả chu trình} & \textbf{\$78,61} \\
+        \textbf{Trung bình mỗi website} & \kw{$<$ \$20} \\
+        \bottomrule
+      \end{tabular}\par
+      \vspace{0.1cm}
+      \raggedright
+      Đối chiếu: AutoWebGLM cần \kw{20 người gán nhãn làm một tháng} cho một tập
+      $\approx$10.000 trajectory.
+      \vspace{0.08cm}
+
+      $\Rightarrow$ Ở mức dưới \$20 mỗi website và \kw{không cần người gán nhãn}, việc
+      dựng một model riêng cho \emph{từng} website trở thành lựa chọn hợp lý hơn hẳn
+      việc theo đuổi một model tổng quát.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\subsection{Kiểm soát chất lượng trong lúc thu thập}
+\begin{frame}{Task có thật không, đủ bước không, và dựa vào đâu nói đã xong?}
+  \scriptsize
+  \begin{block}{1. Làm sao biết task LLM đề xuất là hợp lý và làm được trên giao diện đó?}
+    Bộ đề xuất là một \emph{agent}, đọc trực tiếp cây trợ năng của trang thật và có thể
+    thao tác thử trước khi đề xuất --- không đề xuất từ trí nhớ. Quan trọng hơn:
+    \kw{tính khả thi được chứng minh bằng thực thi, không bằng lời}. Chỉ task có ít nhất
+    một lượt giải \emph{thành công và qua kiểm chứng} mới vào dataset.
+    $\Rightarrow$ 637 task bị chính agent báo bất khả thi; 3981 lượt thử chỉ còn
+    \kw{2117 hợp lệ (53,2\%)}.
+  \end{block}
+  \vspace{-0.1cm}
+  \begin{block}{2. Vì sao ngân sách 15 bước (task cục bộ) và 25 bước (semantic task)?}
+    Solver chiếm \kw{85,5\%} trong 20.808 lượt gọi LLM, nên ngân sách bước \emph{chính
+    là} ngân sách tiền --- đây trước hết là một quyết định chi phí. Nhưng dữ liệu cho
+    thấy nó \kw{không bóp méo phép đo}: episode thành công có trung vị \kw{6 bước}
+    (thất bại 13), và \kw{không episode nào} đạt được mục tiêu rồi mới bị cắt vì hết
+    bước. Ngân sách đang đóng vai trò \emph{thước đo}, không phải \emph{hình phạt}.
+  \end{block}
+  \vspace{-0.1cm}
+  \begin{block}{3. Dựa vào đâu để nói một task đã hoàn thành?}
+    Ba lớp, mỗi lớp bắt loại lỗi lớp trước không thấy:
+    \textbf{(i)} solver tự khai (\texttt{send\_msg\_to\_user}) hoặc vị từ tất định;
+    \textbf{(ii)} \kw{LLM-as-Judge} soi lại trạng thái trang cuối $\rightarrow$ hạ cấp
+    \kw{801 lượt} tự khai sai (27\%);
+    \textbf{(iii)} cổng ``hành động hữu hiệu'' bằng mã, loại \kw{104 trajectory} tuyên
+    bố xong mà không đổi gì trên trang --- nhóm lỗi mà judge \emph{về nguyên tắc} không
+    thấy được, vì trang cuối không hề thay đổi.
+    \vspace{0.04cm}
+
+    \kw{Lưu ý}: đó là kiểm chứng lúc \emph{thu thập}. Còn con số 24,6\% được chấm bằng
+    \kw{bộ chấm chính thức của WebArena}, không dùng judge của nhóm.
+  \end{block}
+\end{frame}
+
+\subsection{Mục tiêu thực nghiệm và mức độ trả lời}
+\begin{frame}{Thực nghiệm nhắm mục tiêu nào --- và đã trả lời tới đâu?}
+  \scriptsize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{@{}L{0.9cm} L{4.5cm} L{4.9cm} L{1.5cm}@{}}
+    \toprule
+    \textbf{Câu hỏi} & \textbf{Số liệu} & \textbf{Kết quả} & \textbf{Trạng thái} \\
+    \midrule
+    \textbf{CH1} & 455 trang; 3981 lượt thử; 146 skill / 57 operator &
+    1760 trajectory $\rightarrow$ 8554 mẫu; \$54,21 (0,0308\$/traj) & \kw{Đạt} \\
+    \textbf{CH2} & 655 task, cùng prompt/ngân sách/bộ chấm; McNemar &
+    13,3\% $\rightarrow$ 24,6\%; có ý nghĩa \emph{cả 4/4} website & \kw{Đạt} \\
+    \textbf{CH3} & Tính lại các công trình trên đúng 4 website &
+    Ngang Go-Browse-7B (2,0 $<$ CI $\pm$3,3); rẻ hơn 3,3$\times$ & \kw{Đạt} \\
+    \textbf{CH4} & Phân loại lỗi; đo hiệu ứng bổ sung dữ liệu &
+    85--96\% lỗi thực thi; gấp 3 dữ liệu chỉ $+$2,1 đpt & \kw{Đạt phần chẩn đoán} \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.12cm}
+  \begin{alertblock}{Phần thành thật phải nói kèm}
+    \scriptsize
+    \textbf{O2} hoàn thành một phần: chỉ 12/142 semantic task đến từ ghép chuỗi
+    operator, phần còn lại từ seed năng lực website. \textbf{O4} hoàn thành một phần:
+    mỗi task mới đo \emph{một} lần, và \kw{ablation đồ thị so với khám phá phẳng ---
+    phép đo duy nhất chứng minh trực tiếp giá trị của cấu trúc đồ thị --- vẫn chưa chạy}.
+  \end{alertblock}
+\end{frame}
