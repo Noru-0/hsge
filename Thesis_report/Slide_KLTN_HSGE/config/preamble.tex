@@ -57,3 +57,23 @@
 
 % Highlight for the key number of a slide.
 \newcommand{\kw}[1]{\textbf{\color{structure.fg}#1}}
+
+% ---------------------------------------------------------------
+% Phụ lục (backup slides cho phần hỏi đáp).
+% \backupbegin/\backupend giữ nguyên tổng số trang của phần nội dung
+% chính, để footer không hiển thị "5 / 29" khi deck chỉ có 20 trang nội dung.
+\newcommand{\backupbegin}{%
+  \newcounter{finalframe}%
+  \setcounter{finalframe}{\value{framenumber}}%
+}
+\newcommand{\backupend}{%
+  \setcounter{framenumber}{\value{finalframe}}%
+}
+% Tiêu đề trang phụ lục: đánh số riêng, không gộp vào tổng của phần chính.
+\newcommand{\plfoot}{%
+  \setbeamertemplate{footline}{%
+    \hbox{\begin{beamercolorbox}[wd=\paperwidth,ht=2.2ex,dp=1.0ex,leftskip=1.2em,rightskip=1.2em]{section in head/foot}%
+      \usebeamerfont{footline}\scriptsize\textit{Phụ lục --- slide dự phòng cho phần hỏi đáp}%
+    \end{beamercolorbox}}%
+  }%
+}

@@ -34,25 +34,6 @@
   \end{columns}
 \end{frame}
 
-\subsection{Khám phá định hướng: Frontier hai tầng}
-\begin{frame}{Khám phá có định hướng: frontier hai tầng}
-  \begin{columns}[c]
-    \begin{column}{0.58\textwidth}
-      \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_frontier.pdf}
-    \end{column}
-    \begin{column}{0.40\textwidth}
-      \footnotesize
-      \textbf{Cơ chế Frontier hai tầng}
-    \begin{itemize}\setlength{\itemsep}{4pt}
-        \item \textbf{Tier 0}: URL do solver ghé thăm thực tế $\rightarrow$ Ưu tiên hàng đầu.
-        \item \textbf{Tier 1}: URL trích từ DOM $\rightarrow$ Giới hạn $\le 3$ trang/khuôn dạng (chống tràn frontier).
-        \item \textbf{Lọc trùng cấu trúc}: Mã băm nội dung loại bỏ \kw{71/455} node trùng lặp.
-        \item \textbf{Solver Guard}: Dừng cứng khi lặp hành động mà trạng thái không đổi.
-      \end{itemize}
-    \end{column}
-  \end{columns}
-\end{frame}
-
 \subsection{Phát hiện Skill \& Quy nạp Operator}
 \begin{frame}{Phát hiện skill và quy nạp operator}
   \begin{columns}[c]

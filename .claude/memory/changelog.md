@@ -6,6 +6,34 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **17:05** — `Thesis_report/Slide_KLTN_HSGE/{main.tex,config/preamble.tex,
+  sections/{02_phuongphap,03_thucnghiem}.tex,sections/99_phuluc.tex (new),
+  presentation_script.md,main.pdf}` — **Defense deck: 20 content pages + an
+  8-slide appendix for Q&A**, per user request to keep the body at 15–20 pages.
+  - **Appendix mechanism**: `\appendix` + `\backupbegin`/`\backupend` so the
+    footer still reads "n / 20" instead of "n / 29", `\AtBeginSection[]{}` reset
+    so no outline frame is generated for it, and the TOC already restricted to
+    `sections={1-4}` so "Phụ lục" never appears. Appendix pages carry their own
+    footer ("Phụ lục — slide dự phòng cho phần hỏi đáp"). Verified in the PDF.
+  - **PL1–PL8**: the four phản-biện answers (validity / positioning / quality
+    gates / RQ status), plus cost detail, the frontier frame **moved out of the
+    body** (21 -> 20 pages), failure taxonomy + two-model behaviour profile, and
+    the two auxiliary measurements (data increment, 7B backbone swap).
+  - **Caught a serious hazard in `presentation_script.md`: the narration for
+    slides 10–12 still recited the round-1 numbers** (258 nodes, 2178 episodes,
+    59 skills, 66 semantic tasks, 20.8%, +7.5 pp, p=0.120, "1.8 points *below*
+    Go-Browse") while the slides themselves show the current ones. The presenter
+    would have read wrong figures aloud, including the sign of the Go-Browse
+    comparison. Rewritten to 455/3981/2117, 146 skills, 142 semantic tasks,
+    24.6% vs 13.3% (+11.3, significant on all four sites), 47/74 vs 27/74 with
+    p=0.003, and "ngang Go-Browse (2.0 < CI ±3.3)". Also fixed 497->801
+    demotions, 7/66->12/142 chains, and the cost line.
+  - Script also renumbered (15 -> 14 content slides, times redistributed to end
+    at 15:00), the presenter split moved to 1–8 / 9–14, and the Q&A section
+    rebuilt as two tables: the six questions the reviewer actually asked, each
+    with the PL slide to bring up, plus the general ones.
+  - Build: 0 errors, **0 overfull/underfull**, 29 pages (20 body + 9 appendix).
+
 - **16:10** — `Thesis_report/Slide_HopPhanBien/{main.tex,sections/01_dongluc.tex,
   sections/02_thucnghiem.tex,sections/04_phanbien.tex (new),main.pdf}` —
   **Reworked the phản-biện meeting deck around the six questions the reviewer

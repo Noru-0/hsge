@@ -45,4 +45,13 @@
 \input{sections/03_thucnghiem}
 \input{sections/04_ketluan}
 
+% --- Phụ lục: không hiện trong mục lục (mục lục chỉ liệt kê section 1-4),
+% không sinh frame outline, và không tính vào tổng số trang phần chính.
+\AtBeginSection[]{}
+\appendix
+\backupbegin
+\plfoot
+\input{sections/99_phuluc}
+\backupend
+
 \end{document}
