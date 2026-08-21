@@ -132,12 +132,9 @@ giữa các cấu hình khám phá thay vì chỉ so tổng.
 
 \begin{table}[htbp]
 \centering
-\caption[Chi phí API của giai đoạn khám phá]{Chi phí API thực tế của giai
-đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp. Hóa đơn chỉ bóc tách được
-cho phần khám phá đã hạch toán riêng, tương ứng 1018 trajectory thành công;
-các đợt thu bổ sung về sau không được hạch toán riêng nên không cộng vào bảng
-này. Đây vì vậy là chi phí của phần được hạch toán, không phải tổng chi phí API
-của toàn bộ quá trình thu thập.}
+\caption[Chi phí API của giai đoạn khám phá]{Chi phí API thực tế của toàn bộ
+giai đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp và cộng đủ cả phần thu
+thập bổ sung cho Reddit và Shopping Admin.}
 \label{tab:apicost}
 \small
 \begin{tabular}{@{}L{5.4cm} L{4.0cm} R{3.4cm}@{}}
@@ -145,31 +142,30 @@ của toàn bộ quá trình thu thập.}
 \textbf{Nhà cung cấp} & \textbf{Vai trò sử dụng} & \textbf{Chi phí (USD)} \\
 \midrule
 OpenAI & \texttt{solver}, \texttt{page\_explorer},
-\texttt{goal\_planner}, \texttt{site\_seeder} & 32{,}29 \\
+\texttt{goal\_planner}, \texttt{site\_seeder} & 42{,}29 \\
 DeepSeek & \texttt{episode\_judge}, pipeline phát hiện skill &
-4{,}19 \\
+11{,}92 \\
 \midrule
-\textbf{Tổng} & & \textbf{36{,}48} \\
+\textbf{Tổng} & & \textbf{54{,}21} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Hóa đơn ở Bảng~\ref{tab:apicost} chỉ bóc tách được cho phần khám phá đã hạch
-toán riêng, tương ứng 1018 trajectory thành công - nhỏ hơn tổng 1760 trajectory
-của tập dữ liệu cuối cùng (Bảng~\ref{tab:dataset}), vì các đợt thu bổ sung về
-sau không được hạch toán riêng. Đơn giá vì vậy được tính trên đúng phần tương
-ứng: 36{,}48 / 1018 $\approx$ 0{,}0358\,USD mỗi trajectory. Con số này cùng bậc độ
-lớn với 0{,}031\,USD mỗi mẫu mà Synatra báo cáo cho việc tổng hợp bản mẫu
-ngoại tuyến từ tài liệu hướng dẫn~\cite{ou2024synatra} (Mục~\ref{sec:rel-datagen}),
-dù hai quy trình khác hẳn nhau về bản chất: Synatra không hề tương tác với
-website thật, còn con số của khóa luận đã bao gồm toàn bộ chi phí điều
-khiển trình duyệt, đề xuất, giải và chấm lại task trên môi trường sống.
+Quy về mỗi trajectory thành công đưa vào tập dữ liệu huấn luyện (1760
+trajectory, Bảng~\ref{tab:dataset}), chi phí API của giai đoạn khám phá là
+54{,}21 / 1760 $\approx$ 0{,}0308\,USD mỗi trajectory. Con số này gần như trùng
+với 0{,}031\,USD mỗi mẫu mà Synatra báo cáo cho việc tổng hợp bản mẫu ngoại
+tuyến từ tài liệu hướng dẫn~\cite{ou2024synatra} (Mục~\ref{sec:rel-datagen}) -
+một sự trùng hợp đáng chú ý, vì hai quy trình khác hẳn nhau về bản chất:
+Synatra không hề tương tác với website thật, còn con số của khóa luận đã bao
+gồm toàn bộ chi phí điều khiển trình duyệt, đề xuất, giải và chấm lại task trên
+môi trường sống.
 
 So với Go-Browse - công trình gần nhất về mặt phương pháp, cũng thu thập
 dữ liệu bằng cách tương tác trực tiếp với website - khoảng cách còn rõ hơn.
 Go-Browse báo cáo tổng chi phí 975{,}57\,USD (gồm cả rollout lẫn chấm lại
 bằng GPT-4o) cho 9504 trajectory thành công~\cite{gandhi2026gobrowse},
-tương đương 0{,}1026\,USD mỗi trajectory - cao hơn khoảng 2{,}9 lần chi phí
+tương đương 0{,}1026\,USD mỗi trajectory - cao hơn khoảng 3{,}3 lần chi phí
 của khóa luận. Một phần khác biệt đến từ việc Go-Browse dùng nhiều mô hình
 đề xuất/giải task đắt hơn (Claude-3.7-Sonnet, GPT-4o) cho phần lớn khối
 lượng rollout, trong khi khóa luận dồn phần lớn lời gọi tần suất cao (vai
