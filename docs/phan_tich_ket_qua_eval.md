@@ -290,21 +290,34 @@ trong chính hai đợt thu bổ sung:
 
 ## 4. Câu hỏi 4 — Bổ sung bao nhiêu dữ liệu thì SR tăng bao nhiêu?
 
+**Phạm vi mục này:** chỉ hai miền thực sự được bổ sung dữ liệu —
+**reddit (106 task)** và **shopping_admin (182 task)**, tổng 288 task. Shopping
+và gitlab không nhận mẫu mới nào và cũng không được đánh giá lại ở Đợt 2, nên
+không có mặt ở đây; gộp chúng vào chỉ làm loãng con số cần đo.
+
 ### 4.1 Bảng đối chiếu trực tiếp
 
 Mô hình Đợt 2 là bản **continue-finetune** (`qwen35-9b-lora-continue-v1`), khởi
 động ấm từ `checkpoint-536`, huấn luyện 1 epoch, LR 3e-5, trên
 `training_data_continue_v1` = **4.266 mẫu mới + 760 mẫu replay** (15%
-shopping/gitlab, chỉ để chống quên thảm họa) = 5.026 mẫu.
+shopping/gitlab, chỉ để chống quên thảm họa, không nhằm cải thiện gì) = 5.026 mẫu.
 
-| Miền | Mẫu thêm | Quỹ đạo thêm | Δ SR (thô) | Δ SR (đã audit) | pp/1.000 mẫu (thô) | pp/1.000 mẫu (audit) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| 💬 reddit | +1.856 (×2,45) | +370 | +2,8 pp | +13,2 pp | **+1,5** | **+7,1** |
-| ⚙️ shopping_admin | +2.410 (×3,05) | +327 | +1,6 pp | +6,0 pp | **+0,7** | **+2,5** |
-| 🛒 shopping | 0 | 0 | — (không chạy lại) | — | — | — |
-| 🦊 gitlab | 0 | 0 | — (không chạy lại) | — | — | — |
-| **Hai miền được bổ sung** (n=288) | **+4.266** | **+697** | +2,1 pp (50→56 task) | **+8,7 pp** (50→75 task) | +0,5 | **+2,0** |
-| **Tổng 4 miền** (n=655) | +4.266 | +697 | +0,9 pp (136→142) | **+3,8 pp** (136→161) | +0,2 | +0,9 |
+| Miền | Mẫu thêm | Quỹ đạo thêm | SR Đợt 1 | SR Đợt 2 (thô) | SR Đợt 2 (đã audit) | Δ thô | Δ đã audit |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| 💬 **reddit** (n=106) | +1.856 (×2,45) | +370 | 22 (20,8%) | 25 (23,6%) | 36 (34,0%) | **+2,8 pp** | **+13,2 pp** |
+| ⚙️ **shopping_admin** (n=182) | +2.410 (×3,05) | +327 | 28 (15,4%) | 31 (17,0%) | 39 (21,4%) | **+1,6 pp** | **+6,0 pp** |
+| **Cộng hai miền** (n=288) | **+4.266** | **+697** | 50 (17,4%) | 56 (19,4%) | 75 (26,0%) | **+2,1 pp** | **+8,7 pp** |
+
+**Hiệu suất trên mỗi 1.000 mẫu bổ sung:**
+
+| Miền | pp / 1.000 mẫu (thô) | pp / 1.000 mẫu (đã audit) |
+| :--- | :---: | :---: |
+| 💬 reddit | +1,5 | **+7,1** |
+| ⚙️ shopping_admin | +0,7 | **+2,5** |
+| **Cộng hai miền** | +0,5 | **+2,0** |
+
+Đọc ngang hai dòng đầu: reddit cho hiệu suất trên mỗi mẫu **cao gấp khoảng 2,8
+lần** shopping_admin, dù nhận ít hơn 554 mẫu. Lý do đã phân tích ở §3.2.
 
 ### 4.2 Cách đọc hai cột Δ
 
@@ -315,21 +328,22 @@ shopping/gitlab, chỉ để chống quên thảm họa) = 5.026 mẫu.
   trên**. Giá trị thật nằm giữa hai cột.
 
 Khi trích dẫn ra ngoài (báo cáo, slide), nên nêu cả hai cùng lúc, ví dụ:
-*"tăng từ 20,8% lên 24,6% sau khi rà soát lỗi chấm; nếu chỉ so số chấm tự động
-chưa rà soát ở cả hai đợt thì mức tăng là 20,8% → 21,7%."*
+*"reddit tăng từ 20,8% lên 34,0% sau khi rà soát lỗi chấm; nếu chỉ so số chấm
+tự động chưa rà soát ở cả hai đợt thì mức tăng là 20,8% → 23,6%."*
 
-### 4.3 Ba cảnh báo bắt buộc kèm theo Bảng 3
+### 4.3 Ba cảnh báo bắt buộc kèm theo các con số này
 
-1. **Shopping và GitLab của Đợt 2 là số của Đợt 1 chép sang.** Hai miền này
-   *không được đánh giá lại* sau continue-finetune. Con số tổng 24,58% giả định
-   ngầm rằng lát replay 15% đã giữ được năng lực trên hai miền đó — **điều này
-   chưa được kiểm chứng** (ghi rõ trong `training_data_continue_v1/README.md`:
-   *"After training, evaluate all four domains"*). Nếu có suy giảm, tổng thật sẽ
-   thấp hơn.
+1. **Bất đối xứng audit** — như §3.2(b) và §4.2: Đợt 1 chưa từng được soi
+   false-negative, Đợt 2 thì có. Đây là lý do hai cột Δ chênh nhau nhiều.
 2. **Mô hình chấm bị thay.** `gpt-4-1106-preview` của WebArena gốc đã bị khai
    tử; toàn bộ các đợt chạy dùng `gpt-4-turbo` thay thế
    (`training/patch_webarena_judge.py`). Ghi nhận trong mọi `summary.json`.
-3. **Bất đối xứng audit** như đã nêu ở §3.2(b) và §4.2.
+3. **Chưa kiểm chứng tác dụng phụ lên hai miền không bổ sung.** Lát replay 15%
+   shopping/gitlab tồn tại để chống quên thảm họa, nhưng chưa ai chạy lại hai
+   miền đó sau continue-finetune (`training_data_continue_v1/README.md` ghi rõ:
+   *"After training, evaluate all four domains"*). Không ảnh hưởng đến các con
+   số reddit/shopping_admin ở trên, nhưng có nghĩa là **chi phí thật của đợt bổ
+   sung này chưa được biết đủ**.
 
 ### 4.4 Lợi ích cận biên đang giảm rõ rệt
 
@@ -354,14 +368,18 @@ Gần **gấp ba lượng dữ liệu** đổi lấy +8,7 pp (cận trên) hoặ
 
 ### 4.5 Trả lời gọn
 
-> Bổ sung **4.266 mẫu (697 quỹ đạo)** cho hai miền reddit + shopping_admin:
-> reddit +1.856 mẫu → **+2,8 pp** (thô) đến **+13,2 pp** (đã rà soát lỗi chấm);
-> shopping_admin +2.410 mẫu → **+1,6 pp** (thô) đến **+6,0 pp** (đã rà soát).
-> Trên toàn bộ 655 task, tổng SR đi từ 20,76% lên 24,58% (bản đã rà soát) hoặc
-> 21,68% (bản thô). Hiệu suất cận biên: khoảng **2,0 pp trên mỗi 1.000 mẫu** cho
-> hai miền được bổ sung, và đang giảm — gần gấp ba dữ liệu chỉ đổi được mức tăng
-> đó. Kèm theo: shopping/gitlab của Đợt 2 chưa được chạy lại nên tổng 24,58%
-> mang một giả định chưa kiểm chứng.
+> Bổ sung **4.266 mẫu (697 quỹ đạo)** cho hai miền:
+> - **reddit** +1.856 mẫu (×2,45): 20,8% → **23,6%** (thô) hoặc **34,0%** (đã
+>   rà soát lỗi chấm) — tức **+2,8 đến +13,2 pp**, ứng với **+1,5 đến +7,1 pp
+>   trên mỗi 1.000 mẫu**.
+> - **shopping_admin** +2.410 mẫu (×3,05): 15,4% → **17,0%** (thô) hoặc
+>   **21,4%** (đã rà soát) — tức **+1,6 đến +6,0 pp**, ứng với **+0,7 đến
+>   +2,5 pp trên mỗi 1.000 mẫu**.
+>
+> Cộng riêng 288 task của hai miền này: 17,4% → 19,4% (thô) hoặc 26,0% (đã rà
+> soát). Reddit hiệu quả trên mỗi mẫu **gấp ~2,8 lần** shopping_admin dù nhận ít
+> mẫu hơn. Và lợi ích cận biên đang giảm rõ: **gần gấp ba lượng dữ liệu** của
+> hai miền (2.454 → 6.720 mẫu) chỉ đổi được mức tăng nêu trên.
 
 ---
 

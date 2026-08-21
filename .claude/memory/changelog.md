@@ -27,12 +27,15 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
     60% of admin tasks die on `budget`/`stuck` vs 43% on reddit — admin's
     bottleneck is execution horizon, not data volume, and admin actually
     received *more* new data (+2.410 vs +1.856 examples).
-  - **Marginal return is measurably decaying**: 2.454 → 6.720 examples (×2,74)
-    on reddit+admin bought +8,7 pp adjusted / +2,1 pp raw on those 288 tasks,
-    i.e. ≈2,0 pp per 1.000 examples.
-  Also flags, for anyone quoting Table 3: round-2 shopping/gitlab numbers are
-  copied from round 1 (never re-evaluated after continue-finetune), so the
-  24,58% total silently assumes the 15% replay slice held.
+  - **Marginal return is measurably decaying, and uneven between the two
+    domains**: 2.454 → 6.720 examples (×2,74) on reddit+admin bought +8,7 pp
+    adjusted / +2,1 pp raw on those 288 tasks. Per 1.000 added examples reddit
+    returns +7,1 pp (adjusted) vs shopping_admin's +2,5 pp — ~2,8× better
+    despite receiving 554 fewer examples.
+  §4 is deliberately scoped to the two domains that actually received data
+  (288 tasks) — no 4-domain total, since shopping/gitlab got zero new examples
+  and were never re-evaluated after continue-finetune, so any total both
+  dilutes the measured effect and silently assumes the 15% replay slice held.
 
 ## 2026-08-20
 
