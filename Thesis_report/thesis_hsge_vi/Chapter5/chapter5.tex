@@ -26,7 +26,7 @@ dữ kiện đáng chú ý nhất của khâu thu thập.
 
 Quy trình thực nghiệm đầu cuối hoàn chỉnh (từ khâu khám phá tự động, phát hiện kỹ năng, quy nạp operator, tinh lọc dữ liệu đến huấn luyện, serving và đánh giá mô hình) đã vận hành thành công trên cả bốn website thực tế. Can thiệp thủ công duy nhất trong suốt quá trình này là 5 lần khởi chạy lại khi tài khoản API chạm hạn mức; cả 5 lần hệ thống đều tự động khôi phục và tiếp tục thực thi chính xác từ checkpoint gần nhất mà không cần chạy lại từ đầu. Bên cạnh đó, các cổng kiểm soát chất lượng đã phát huy hiệu quả thiết kế khi ngăn chặn triệt để các luồng dữ liệu lỗi trước khi chúng đi vào tập dữ liệu huấn luyện (Phụ lục~\ref{sec:disc-slm}).
 
-\emph{Về vế chi phí của CH1}, toàn bộ giai đoạn khám phá tiêu tốn 36{,}48\,USD tiền gọi API (Bảng~\ref{tab:apicost}), tương đương 0{,}0358\,USD cho mỗi trajectory thành công được hạch toán, và không tiêu tốn GPU vì các agent khám phá đều gọi mô hình đóng qua API. Toàn bộ chu trình còn lại - fine-tune rồi đánh giá 655 task - tốn 24{,}4\,USD tiền thuê GPU (Bảng~\ref{tab:infra}). Con số đáng chú ý không phải tổng chi phí mà là \emph{vị trí} của nó: rào cản tính toán của việc chuyên hóa một mô hình nhỏ cho một nhóm website không nằm ở khâu huấn luyện hay đánh giá, mà nằm ở khâu thu thập dữ liệu - vốn tiêu thời gian điều khiển trình duyệt và số lời gọi API chứ không tiêu GPU. Đây là điều kiện khiến toàn bộ chu trình khả thi trong điều kiện tài nguyên hạn chế, và cũng là lý do 85{,}5\% ngân sách lời gọi dồn vào riêng vai trò solver (Bảng~\ref{tab:calls}) là điểm tối ưu chi phí đáng giá nhất.
+\emph{Về vế chi phí của CH1}, phần khám phá được hạch toán riêng tiêu tốn 36{,}48\,USD tiền gọi API, tương đương 0{,}0358\,USD mỗi trajectory thành công (Bảng~\ref{tab:apicost}), và không tiêu tốn GPU vì các agent khám phá đều gọi mô hình đóng qua API; cả chu trình fine-tune rồi đánh giá 655 task tốn thêm 24{,}4\,USD tiền thuê GPU (Bảng~\ref{tab:infra}). Điều đáng chú ý không phải tổng chi phí mà là \emph{vị trí} của nó: rào cản tính toán của việc chuyên hóa một mô hình nhỏ cho một nhóm website không nằm ở khâu huấn luyện hay đánh giá, mà ở khâu thu thập dữ liệu - vốn tiêu thời gian điều khiển trình duyệt và số lời gọi API chứ không tiêu GPU. Đó cũng là lý do 85{,}5\% ngân sách lời gọi dồn vào riêng vai trò solver (Bảng~\ref{tab:calls}) là điểm tối ưu chi phí đáng giá nhất.
 
 Có một điểm cần được phát biểu thật chính xác: \emph{khâu ghép chuỗi operator vẫn là khâu hạn chế nhất}. Cơ chế sinh semantic task đã thực sự vận hành được trên website thật: 142 task GOAL với 71 lượt thành công, tỷ lệ 50{,}0\%. Tuy nhiên, nguồn sinh ra phần lớn số task đó vẫn là seed năng lực website (130 lượt thử), chứ không phải đồ thị operator (12 lượt thử trên tổng số 57 operator, phân bố rất lệch: Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nói cách khác, giả thuyết ``ghép chuỗi các skill đã kiểm chứng để sinh mục tiêu dài hạn'' mới được chứng minh là \emph{khả thi}, chưa được chứng minh là \emph{đủ dày} để làm nguồn dữ liệu chính; nguyên nhân kỹ thuật của độ thưa đó được phân tích ở Phụ lục~\ref{sec:disc-operators}. 
 
@@ -92,32 +92,25 @@ Vì chúng thuộc về kinh nghiệm triển khai chứ không phải bàn lu�
 toàn bộ phần này được trình bày đầy đủ ở Phụ lục~\ref{app:lessons}, kèm bảng
 mười bốn best practice đã chưng cất. Mục này chỉ tóm tắt bốn nhóm.
 
-\textbf{Khám phá website thật} (Phụ lục~\ref{sec:disc-exploration}). Khả năng
-tiếp cận trang không được phụ thuộc hoàn toàn vào hành vi giải task: một lượt
-chạy dừng sớm ở 57 trên 500 node vì frontier chỉ lớn lên nhờ những URL solver
-tình cờ đi tới. Độ đa dạng của tập task là thuộc tính toàn cục cấp lượt chạy
-chứ không phải cấp trang - 46\% đề xuất từng gần trùng nhau khi explorer không
-nhớ gì giữa các trang. Mọi thao tác trình duyệt phải fail-soft, và trên hạ tầng
-dùng chung thì an toàn phải fail-closed.
-
-\textbf{Chốt chặn cấu trúc thay vì nhắc nhở qua prompt}
-(Phụ lục~\ref{sec:disc-guardrails}). Quy ước định dạng chìm trong văn bản tự do
-không sống nổi: 89\% đề xuất không mang thẻ phân loại mà cổng an toàn đang dựa
-vào. Một cảnh báo trong prompt cũng không chặn được vòng lặp hành động vô hiệu;
-chỉ ngân sách kèm lệnh dừng cứng mới chặn được.
-
-\textbf{Quy nạp operator} (Phụ lục~\ref{sec:disc-operators}). Cổng kiểm chứng
-bằng thực thi lại phải tắt trên website sống, và cổng grounding thay thế cho
-thấy hai lớp còn lại để lọt những gì: 44 mệnh đề effect bị loại với độ chính
-xác đúng bằng 0,0. Tính hợp lệ của từng operator được canh chặt ở mức cục bộ
-nhưng khả năng nối giữa chúng thì không, nên đồ thị sạch mà rời.
-
-\textbf{Huấn luyện và phục vụ mô hình nhỏ} (Phụ lục~\ref{sec:disc-slm}). Một
-agent tự chấm bài mình là nguồn dữ liệu hỏng có hệ thống - cổng judge hạ cấp
-801 episode, khoảng 27\% số lần tự tuyên bố hoàn thành - và những lỗi mang tính
-cơ học thì phải bắt bằng mã chứ không giao cho bộ chấm ngữ nghĩa. Với bộ chấm
-chỉ nhìn trạng thái cuối, khôi phục môi trường giữa hai lượt đo là một thành
-phần bắt buộc của phép đo.
+Bốn nhóm đó là: \emph{khám phá website thật}
+(Phụ lục~\ref{sec:disc-exploration}) - khả năng tiếp cận trang không được phụ
+thuộc vào hành vi giải task, vì một lượt chạy đã dừng sớm ở 57 trên 500 node
+khi frontier chỉ lớn lên nhờ những URL solver tình cờ đi tới, và độ đa dạng của
+tập task là thuộc tính cấp lượt chạy chứ không cấp trang (46\% đề xuất gần
+trùng nhau khi explorer không nhớ gì giữa các trang); \emph{chốt chặn cấu trúc
+thay vì nhắc nhở qua prompt} (Phụ lục~\ref{sec:disc-guardrails}) - quy ước định
+dạng chìm trong văn bản tự do không sống nổi (89\% đề xuất không mang thẻ phân
+loại mà cổng an toàn đang dựa vào), và chỉ ngân sách kèm lệnh dừng cứng mới
+chặn được vòng lặp hành động vô hiệu; \emph{quy nạp operator}
+(Phụ lục~\ref{sec:disc-operators}) - tính hợp lệ của từng operator được canh
+chặt ở mức cục bộ nhưng khả năng nối giữa chúng thì không, nên đồ thị sạch mà
+rời, và cổng grounding cho thấy hai lớp trước để lọt 44 mệnh đề effect có độ
+chính xác đúng bằng 0{,}0; \emph{huấn luyện và phục vụ mô hình nhỏ}
+(Phụ lục~\ref{sec:disc-slm}) - một agent tự chấm bài mình là nguồn dữ liệu hỏng
+có hệ thống (cổng judge hạ cấp 801 episode, khoảng 27\% số lần tự tuyên bố hoàn
+thành), những lỗi mang tính cơ học phải bắt bằng mã chứ không giao cho bộ chấm
+ngữ nghĩa, và với bộ chấm chỉ nhìn trạng thái cuối thì khôi phục môi trường
+giữa hai lượt đo là một thành phần bắt buộc của phép đo.
 
 \section{Đối chiếu với các công bố gốc}
 \label{sec:disc-related}

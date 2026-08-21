@@ -6,6 +6,38 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **14:45** — `Thesis_report/thesis_hsge_vi/{Chapter1,Chapter4,Chapter5,Chapter6}/*.tex`,
+  `main.pdf` — Fixed the API-cost denominator across the thesis, and a
+  concision pass on C4/C5.
+  - **The cost fix went the opposite way from the user's initial instruction,
+    after evidence.** They asked to apply 36.48/1760 = 0.0207. Checked first:
+    1,018 is *exactly* the round-1 dataset trajectory count (train+val,
+    measured), and the **2026-08-14 06:19 changelog entry records tab:apicost
+    being filled with "36,48 USD ... 36,48/1029"** — i.e. the invoice predates
+    the wa_run_21/22 collection (16–17/08) and the merged 1,760-trajectory
+    dataset (20/08). So 36.48 covers **round 1 only**; dividing it by 1,760
+    would spread a partial bill over the whole dataset, understating cost 42%
+    and inflating the Go-Browse advantage from 2.9x to 5.0x — an error in the
+    flattering direction. Raised it; user confirmed round-1 only.
+    Fix applied: C1 §1.7.5 now reads 1,018 (not 1,760) and states the invoice
+    only covers the separately-accounted portion; `tab:apicost`'s caption says
+    the same; C4 §4.1.3 no longer cites `tab:dataset` for the 1,018 figure
+    (that table shows 1,760) and explains the gap; C5 §5.1.1 and C6's closing
+    were re-scoped from "toàn bộ giai đoạn khám phá" to "phần khám phá được
+    hạch toán riêng". **The true total API cost of collection is unknown and
+    higher than 36.48** — worth getting the real figure before submission.
+  - **Concision pass** (user: C4/C5/C6 should be just enough to answer C1):
+    deleted §4.8 "Độ dài trajectory" whole (its two numbers live in
+    `tab:profile` and its argument is made in C5 CH4 and C6 §6.4), cut the GDN
+    fast-path paragraph to one sentence pointing at Appendix E, removed the
+    interpretive tail of §4.7.2's action-error paragraph (near-verbatim with C5
+    CH4), and compressed C5 §5.2's four lesson paragraphs into one while
+    keeping every number. −136 words in C4, −77 in C5.
+  - Rendered page count did **not** move (175 total, body 102, C4 58–82 /
+    C5 83–95 / C6 96–102): the removals were absorbed by page slack around
+    tables. Reported as such rather than claimed as a page saving.
+  - Clean rebuild: 0 undefined refs/citations, 0 overfull boxes, 0 `??`.
+
 - **14:05** — `Thesis_report/thesis_hsge_vi/Chapter6/chapter6.tex`, `main.pdf` —
   Synced C6 with the C4/C5 changes. Four edits:
   - **Closed a dangling forward promise**: §4.6.2 points at `sec:conc-future`

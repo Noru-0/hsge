@@ -133,7 +133,11 @@ giữa các cấu hình khám phá thay vì chỉ so tổng.
 \begin{table}[htbp]
 \centering
 \caption[Chi phí API của giai đoạn khám phá]{Chi phí API thực tế của giai
-đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp.}
+đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp. Hóa đơn chỉ bóc tách được
+cho phần khám phá đã hạch toán riêng, tương ứng 1018 trajectory thành công;
+các đợt thu bổ sung về sau không được hạch toán riêng nên không cộng vào bảng
+này. Đây vì vậy là chi phí của phần được hạch toán, không phải tổng chi phí API
+của toàn bộ quá trình thu thập.}
 \label{tab:apicost}
 \small
 \begin{tabular}{@{}L{5.4cm} L{4.0cm} R{3.4cm}@{}}
@@ -150,12 +154,11 @@ DeepSeek & \texttt{episode\_judge}, pipeline phát hiện skill &
 \end{tabular}
 \end{table}
 
-Quy về mỗi trajectory thành công đưa vào tập dữ liệu huấn luyện (1018
-trajectory, Bảng~\ref{tab:dataset}), chi phí API của giai đoạn khám phá là
-36{,}48 / 1018 $\approx$ 0{,}0358\,USD mỗi trajectory. Số liệu hóa đơn ở
-Bảng~\ref{tab:apicost} chỉ bóc tách được cho phần khám phá đã hạch toán
-riêng, nên đơn giá này tính trên phần tương ứng chứ không trên toàn bộ tập
-dữ liệu. Con số này cùng bậc độ
+Hóa đơn ở Bảng~\ref{tab:apicost} chỉ bóc tách được cho phần khám phá đã hạch
+toán riêng, tương ứng 1018 trajectory thành công - nhỏ hơn tổng 1760 trajectory
+của tập dữ liệu cuối cùng (Bảng~\ref{tab:dataset}), vì các đợt thu bổ sung về
+sau không được hạch toán riêng. Đơn giá vì vậy được tính trên đúng phần tương
+ứng: 36{,}48 / 1018 $\approx$ 0{,}0358\,USD mỗi trajectory. Con số này cùng bậc độ
 lớn với 0{,}031\,USD mỗi mẫu mà Synatra báo cáo cho việc tổng hợp bản mẫu
 ngoại tuyến từ tài liệu hướng dẫn~\cite{ou2024synatra} (Mục~\ref{sec:rel-datagen}),
 dù hai quy trình khác hẳn nhau về bản chất: Synatra không hề tương tác với
@@ -469,11 +472,10 @@ và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị 
 mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở
 Phụ lục~\ref{sec:disc-slm}.
 
-Về mặt hiệu suất phần cứng, có một chi tiết môi trường đáng ghi nhận: đường
-đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa một cách âm thầm
-khi thiếu thư viện \texttt{causal-conv1d}, làm tốc độ huấn luyện chậm đi
-2{,}3 lần (30--33 giây mỗi bước ở mức tiêu thụ 130--200\,W, thay vì 13 giây
-mỗi bước ở mức 630\,W). Trạng thái này không phát sinh cảnh báo nào. Vì vậy quy trình cài đặt được bổ sung một bước in ra trạng thái của đường đi nhanh sau khi cài xong, để bắt sai lệch cấu hình trước khi bắt đầu huấn luyện.
+Một chi tiết môi trường đáng ghi nhận, tuy không ảnh hưởng tới kết quả: đường
+đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa âm thầm khi thiếu
+thư viện \texttt{causal-conv1d}, làm tốc độ huấn luyện chậm đi 2{,}3 lần mà
+không phát sinh cảnh báo nào (Phụ lục~\ref{sec:disc-slm}).
 
 \section{Đánh giá chính trên WebArena}
 \label{sec:exp-main}
@@ -880,9 +882,9 @@ suy luận.} Từ 85\% đến 96\% số episode thất bại có ít nhất mộ
 trình duyệt từ chối, tổng cộng 2315 lỗi thực thi trên 655 episode. Phần lớn
 là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử
 mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã
-chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác. Đây là giới hạn của execution layer, không phải của năng lực mô hình, nên khắc phục
-nó là hướng đáng đầu tư nhất (Mục~\ref{sec:disc-results},
-Phụ lục~\ref{sec:disc-guardrails}).
+chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác.
+Hệ quả của quan sát này đối với hướng cải thiện được bàn ở
+Mục~\ref{sec:disc-results}.
 
 \textbf{Chân dung lỗi khá đồng đều giữa bốn website.} Trên cả bốn, lỗi thực
 thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp xỉ nhau
@@ -944,17 +946,6 @@ Tỷ lệ lỗi hành động trên mỗi bước (lỗi/bước) & 0{,}358 & 0{
 \end{table}
 
 Chân dung này cho thấy fine-tuning không làm mô hình thao tác trình duyệt \emph{chính xác} hơn, mà làm nó \emph{bền bỉ} hơn. Tổng số lỗi hành động của mô hình sau fine-tune còn cao hơn mô hình nền về giá trị tuyệt đối (2315 so với 1940), trong khi tỷ lệ lỗi trên mỗi bước gần như không đổi (0{,}344 so với 0{,}358). Nói cách khác, mô hình mắc lỗi thao tác với cùng một tần suất, chỉ là nó sống sót đủ lâu để thực hiện nhiều thao tác hơn: mô hình nền thường tự loại mình khỏi cuộc chơi ngay khi phát ra một chuỗi không phân giải được, còn mô hình sau fine-tune luôn phát ra một hành động hợp lệ và vì thế dùng gần hết ngân sách bước. Quan sát này củng cố nhận định ở phần trên: rào cản còn lại nằm ở chất lượng của từng thao tác và ở khả năng gượng dậy sau một thao tác hỏng. Nó không còn nằm ở việc mô hình có phát ra được hành động đúng định dạng hay không - phần đó tập dữ liệu đã dạy được triệt để.
-
-\subsection{Độ dài trajectory}
-
-Episode thành công ngắn hơn đáng kể so với episode thất bại: trung vị 6 bước
-(trung bình 6{,}6) so với trung vị 13 bước (trung bình 11{,}5). Phân bố này
-nhất quán với kết quả phân loại lỗi ở trên: một episode thất bại điển hình
-không phải là episode dừng sớm vì mô hình bế tắc, mà là episode dùng gần hết
-ngân sách để lặp lại những thao tác không làm trạng thái trang tiến triển.
-Quan sát này cũng hàm ý rằng việc nới rộng ngân sách bước không phải là
-hướng cải thiện hiệu quả, bởi thời gian đang bị tiêu hao vào việc lặp lại
-chứ không vào việc tiến tới mục tiêu.
 
 \subsection{Tổng kết chương}
 
