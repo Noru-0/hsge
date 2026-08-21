@@ -6,6 +6,36 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **15:20** — `Thesis_report/thesis_hsge_vi/{Chapter1,Chapter4,Chapter5,Chapter6}/*.tex`,
+  `main.pdf`, commit `ceffc73` — **API cost accounting is now complete.** The
+  user supplied the missing second-round invoice (supplementary Reddit /
+  Shopping Admin collection, 697 tasks / 4,266 samples): OpenAI $10
+  (gpt-5.6-luna) + DeepSeek $7.73 (v4-pro) = **$17.73**.
+  - Totals: OpenAI 42.29 + DeepSeek 11.92 = **54.21 USD**, covering the whole
+    collection. The denominator becomes the full **1,760** trajectories =
+    **0.0308 USD each**, i.e. **3.3x** below Go-Browse's 0.1026 (was 2.9x on the
+    round-1-only figure). Round 2 was cheaper per trajectory (17.73/742 =
+    0.0239), which is why complete accounting *improves* the number rather than
+    worsening it.
+  - Consequence worth noting: the "hóa đơn chỉ bóc tách được cho phần đã hạch
+    toán riêng" caveat added earlier today is **deleted everywhere** — it is no
+    longer true. C1 §1.7.5 is back to "toàn bộ giai đoạn khám phá ... 1.760
+    trajectory", now arithmetically correct (54.21/1760 = 0.0308).
+  - Nice side effect: 0.0308 is within 0.0002 of Synatra's 0.031 USD/sample, so
+    C4 §4.1.3's comparison changed from "cùng bậc độ lớn" to "gần như trùng".
+  - **GPU: no change.** User confirmed `tab:infra`'s 24.4 USD already includes
+    the second round's 13.66 USD (3.48 training + 10.18 eval); do not add it
+    again in a later session.
+  - Verified in the built PDF: zero occurrences of 36,48 / 0,0358 / "2,9 lần"
+    remain. Clean rebuild, 0 undefined refs/citations, 0 overfull boxes, 175
+    pages.
+  - ⚠️ **Slides are now stale** and were left untouched (separate deliverable):
+    `Slide_HopPhanBien/sections/02_thucnghiem.tex` and
+    `Slide_KLTN_HSGE/sections/03_thucnghiem.tex` still say $36,48 (and the
+    latter's breakdown 32,29 + 4,19), and
+    `Slide_KLTN_HSGE/presentation_script.md` says "36,48 USD API + 22,70 USD
+    GPU" — the GPU figure there is stale twice over (24,4 now).
+
 - **14:45** — `Thesis_report/thesis_hsge_vi/{Chapter1,Chapter4,Chapter5,Chapter6}/*.tex`,
   `main.pdf` — Fixed the API-cost denominator across the thesis, and a
   concision pass on C4/C5.
