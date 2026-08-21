@@ -6,6 +6,30 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-21
 
+- **17:50** — `Thesis_report/Slide_KLTN_HSGE/{presentation_script.md (rewritten),
+  sections/03_thucnghiem.tex,main.pdf}` — **Rewrote the defense script from
+  scratch** and fixed two overclaims on the slide it narrates.
+  - **Slide CH2–CH3 contradicted the thesis.** It read "24,6% **vượt** cả
+    Go-Browse-7B" and "**Dẫn đầu** nhóm mô hình mở dưới 10B", while C4 §4.5.3 and
+    C5 §5.3.1 both state plainly that the correct claim is *ngang, không phải
+    vượt* (2.0 pp < the ±3.3 CI). A committee reading the report and hearing the
+    slide would have caught the inconsistency. Rewritten to "cao hơn NNetNav-7B
+    và GPT-4o-mini; **ngang** Go-Browse-7B (2,0 < CI ±3,3)". Also replaced the
+    unsupported "làm chủ hoàn toàn ... cấu trúc tương tác POMDP của web" with the
+    claim the data actually supports (both capabilities, p=0.003 on the 485-task
+    subset).
+  - **Script rebuilt** around what is actually on screen: every slide now carries
+    its real **PDF page number** (verified all 22 references against the built
+    deck), speakable Vietnamese narration, a one-line **"Câu chốt"**, and — new —
+    **"Tránh"** warnings at the three places where overclaiming is easy
+    (generalisation on slide 2, chain-generation density on slide 7, "vượt
+    Go-Browse" on slide 12).
+  - Added a **PL1–PL8 routing table** (which question opens which appendix page),
+    a **pre-talk checklist** naming the three numbers that must not be misspoken
+    and the two things that must not be overclaimed, and kept the two Q&A tables.
+  - Timing unchanged: 14 content slides, ends at 15:00.
+  - Build after the slide fix: 0 errors, 0 overfull/underfull, 29 pages.
+
 - **17:05** — `Thesis_report/Slide_KLTN_HSGE/{main.tex,config/preamble.tex,
   sections/{02_phuongphap,03_thucnghiem}.tex,sections/99_phuluc.tex (new),
   presentation_script.md,main.pdf}` — **Defense deck: 20 content pages + an

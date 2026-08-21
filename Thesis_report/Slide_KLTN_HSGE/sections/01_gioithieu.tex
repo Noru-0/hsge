@@ -7,30 +7,29 @@
 \subsection{Bối cảnh \& Phát biểu bài toán}
 \begin{frame}{Bối cảnh, bài toán và thách thức}
   \begin{columns}[t]
-    \begin{column}{0.48\textwidth}
-      \small
+    \begin{column}{0.49\textwidth}
+      \footnotesize
       \textbf{Bối cảnh \& Động lực}
-      \begin{itemize}\setlength{\itemsep}{4pt}
-        \item \textbf{Web Agent \& LLM lớn}: Phụ thuộc API đám mây $\rightarrow$ Chi phí cao, độ trễ lớn, rủi ro riêng tư dữ liệu.
-        \item \textbf{SLM (${<}10$B)}: Chạy cục bộ, chi phí thấp, kiểm soát trọng số $\rightarrow$ Cần fine-tune để chuyên biệt hóa.
-        \item \kw{Nút thắt dữ liệu}: Gán nhãn thủ công rất tốn kém (AutoWebGLM: \textbf{20 người} $\times$ \textbf{1 tháng}).
-        \item Dữ liệu tổng hợp giúp giảm \textbf{$\approx$97\%} chi phí mỗi mẫu (Synatra).
+      \begin{itemize}\setlength{\itemsep}{2.5pt}
+        \item \textbf{Web Agent \& LLM lớn}: Tự động hóa tác vụ web nhưng phụ thuộc API đám mây $\rightarrow$ Chi phí cao, độ trễ lớn, rủi ro bảo mật dữ liệu.
+        \item \textbf{SLM (${<}10$B)}: Chi phí thấp, chạy cục bộ $\rightarrow$ Cần fine-tune (SFT) để chuyên biệt hóa cho từng website.
+        \item \kw{Nút thắt dữ liệu}: Gán nhãn thủ công rất tốn kém (AutoWebGLM: \textbf{20 người} $\times$ \textbf{1 tháng}). Dữ liệu tổng hợp giúp giảm \textbf{$\approx$97\%} chi phí mỗi mẫu (Synatra).
+        \item $\Rightarrow$ \textbf{Giải pháp}: Tự động hóa quá trình tạo dữ liệu từ website mục tiêu.
       \end{itemize}
     \end{column}
-    \begin{column}{0.50\textwidth}
+    \begin{column}{0.49\textwidth}
       \begin{block}{Phát biểu bài toán}
-        \footnotesize
-        Tự động khám phá website đang hoạt động và tinh chỉnh SLM hoàn thành các task ngôn ngữ tự nhiên \textbf{không dùng dữ liệu do con người gán nhãn}.
+        \scriptsize
+        Cho website đang hoạt động và một pretrained SLM, tự động tạo dữ liệu để fine-tune SLM hoàn thành các tác vụ web bằng ngôn ngữ tự nhiên mà \textbf{không dùng dữ liệu gán nhãn thủ công}.
       \end{block}
 
-      \vspace{0.1cm}
-      {\footnotesize\textbf{Năm thách thức chính}}
-      \begin{enumerate}\scriptsize\setlength{\itemsep}{2pt}
-        \item \textbf{Khám phá thực tế}: Xử lý trang trùng cấu trúc, trang lỗi.
-        \item \textbf{Sinh task ý nghĩa}: Tránh duyệt ngẫu nhiên vô nghĩa.
-        \item \textbf{Tự kiểm chứng}: Đánh giá trajectory tự động, khách quan.
-        \item \textbf{Ghép task dài hạn}: Mở rộng qua chuỗi nhiều trang/thao tác.
-        \item \textbf{Prompt parity}: Đồng nhất giữa huấn luyện và suy luận.
+      \vspace{0.08cm}
+      {\footnotesize\textbf{Bốn thách thức cốt lõi}}
+      \begin{enumerate}\scriptsize\setlength{\itemsep}{1.5pt}
+        \item \textbf{Thu thập dữ liệu}: Chi phí gán nhãn thủ công quá lớn để mở rộng.
+        \item \textbf{Tri thức môi trường}: Khó chuyển giao giữa các website khác nhau.
+        \item \textbf{Kiểm chứng đúng đắn}: Ngăn chặn việc tự nhận hoàn thành ảo.
+        \item \textbf{Tác vụ có ngữ nghĩa}: Ghép nối thành chuỗi đa bước thực tế.
       \end{enumerate}
     \end{column}
   \end{columns}
@@ -39,26 +38,27 @@
 \subsection{Mục tiêu \& Định vị nghiên cứu}
 \begin{frame}{Mục tiêu và định vị so với công trình liên quan}
   \begin{columns}[t]
-    \begin{column}{0.38\textwidth}
+    \begin{column}{0.40\textwidth}
       \footnotesize
       \textbf{Năm mục tiêu nghiên cứu}
-      \begin{itemize}\setlength{\itemsep}{3pt}
+      \begin{itemize}\scriptsize\setlength{\itemsep}{2.5pt}
         \item[\textbf{O1}] Khám phá tự động website chưa có nhãn.
-        \item[\textbf{O2}] Sinh \textbf{semantic task} dài hạn đã kiểm chứng.
-        \item[\textbf{O3}] Tinh lọc trajectory thành dataset SFT.
+        \item[\textbf{O2}] Tích lũy tri thức \& sinh \textbf{semantic task} đa bước.
+        \item[\textbf{O3}] Kiểm chứng \& tinh lọc dữ liệu (prompt parity).
         \item[\textbf{O4}] Fine-tune SLM \& đánh giá trên WebArena.
-        \item[\textbf{O5}] Đúc kết best practice vận hành.
+        \item[\textbf{O5}] Đúc kết best practice vận hành thực tế.
       \end{itemize}
 
-      \vspace{0.15cm}
+      \vspace{0.1cm}
       \textbf{Khoảng trống nghiên cứu}:\\
-      Chưa công trình nào kết hợp trọn vẹn: \textit{kiểm chứng skill $\rightarrow$ ghép task dài $\rightarrow$ huấn luyện SLM}.
-    \end{column}
-    \begin{column}{0.60\textwidth}
       \scriptsize
-      \setlength{\tabcolsep}{2.5pt}
+      Chưa công trình nào kết hợp trọn vẹn: \textit{kiểm chứng kỹ năng $\rightarrow$ ghép nối tác vụ dài $\rightarrow$ huấn luyện SLM}.
+    \end{column}
+    \begin{column}{0.58\textwidth}
+      \scriptsize
+      \setlength{\tabcolsep}{2pt}
       \begin{table}
-        \begin{tabular}{@{}L{2.2cm} C{1.15cm} C{1.25cm} C{1.25cm} C{1.15cm}@{}}
+        \begin{tabular}{@{}L{2.0cm} C{1.2cm} C{1.2cm} C{1.2cm} C{1.1cm}@{}}
           \toprule
           \textbf{Hệ thống} & \textbf{Khám phá cấu trúc} & \textbf{Skill kiểm chứng} & \textbf{Ghép task dài} & \textbf{Huấn luyện SLM} \\
           \midrule
@@ -70,15 +70,15 @@
           \bottomrule
         \end{tabular}
       \end{table}
-      \vspace{0.05cm}
+      \vspace{0.03cm}
       {\scriptsize \CIRCLE{} Có \quad \LEFTcircle{} Một phần \quad - Không.}
 
-      \vspace{0.1cm}
-      \footnotesize
-      \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
-        \item \textbf{AWM, SkillWeaver}: Chỉ dùng skill ở pha suy luận (Inference-only).
-        \item \textbf{NNetNav, Go-Browse}: Sinh dữ liệu trang đơn, thiếu cấu trúc skill.
+      \vspace{0.08cm}
+      \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
+        \item \textbf{AWM, SkillWeaver}: Chỉ dùng kỹ năng ở pha suy luận (Inference-only).
+        \item \textbf{NNetNav, Go-Browse}: Sinh dữ liệu trang đơn, thiếu cấu trúc kỹ năng.
       \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
+

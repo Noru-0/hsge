@@ -23,11 +23,11 @@
       \textbf{Đồ thị hai tầng (Two-level Graph)}
     \begin{itemize}\setlength{\itemsep}{4pt}
         \item \textbf{Tầng thấp (State Graph)}:
-          Không gian POMDP gồm các trang đã thăm \& hành động chuyển trang.
+          Lưu vết duyệt web gồm các trang đã thăm \& hành động chuyển trang.
         \item \textbf{Tầng cao (Operator Graph)}:
-          Option $\langle I,\pi,\beta\rangle$ được nâng thành \textbf{Operator} mang \textit{Precondition} \& \textit{Effect} chuẩn hóa.
+          Chuẩn hóa kỹ năng thành \textbf{Operator} mang \textit{Precondition} (tiền điều kiện) \& \textit{Effect} (kết quả).
         \item \textbf{Liên kết ngữ nghĩa}:
-          $\text{Effect}_A \models \text{Precondition}_B \Rightarrow$ Ghép nối sinh task dài hạn.
+          $\text{Effect}_A \models \text{Precondition}_B \Rightarrow$ Ghép nối sinh chuỗi tác vụ dài hạn.
         \item \textbf{Ưu thế}: Tri thức được lưu dạng \kw{tái sử dụng \& tái tổ hợp}.
       \end{itemize}
     \end{column}
@@ -54,8 +54,8 @@
       \textbf{Quy nạp Operator \& Cổng chặn}:
     \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
         \item \textbf{Chống trùng lặp}: Loại operator có Effect chỉ lặp lại Precondition.
-        \item \textbf{Grounding}: Gỡ bỏ Effect không đúng trên $\ge 50\%$ thành viên cụm.
-        \item \textbf{Lexical-aware prompt}: Tái dùng nguyên văn mệnh đề có sẵn để tăng khả năng ghép chuỗi.
+        \item \textbf{Kiểm chứng thực tế (Grounding)}: Gỡ bỏ Effect không đúng trên $\ge 50\%$ thành viên cụm.
+        \item \textbf{Chuẩn hóa câu chữ}: Tái dùng thống nhất cú pháp điều kiện để tăng khả năng ghép chuỗi.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -97,9 +97,9 @@
       \footnotesize
       \textbf{Kiểm soát chất lượng nghiêm ngặt}
     \begin{itemize}\setlength{\itemsep}{2pt}
-        \item \textbf{Cổng Judge (LLM độc lập)}: Chấm lại khách quan trên trạng thái trang đích $\rightarrow$ Loại bỏ \kw{801 episode (27,4\%)} tự đánh giá là thành công.
+        \item \textbf{Cổng Judge (LLM độc lập)}: Chấm lại khách quan trên trạng thái trang đích $\rightarrow$ Loại bỏ \kw{801 episode (27,4\%)} báo đỗ ảo (false positive).
         \item \textbf{Cổng Effective Action}: Loại bỏ task không tạo thay đổi thực tế $\rightarrow$ Thu được \kw{1760 trajectory / 8554 mẫu SFT}.
-        \item \textbf{Viết lại suy nghĩ (CoT)}: Bổ sung chuỗi suy luận chuẩn hóa (State, Reflection, Subgoal).
+        \item \textbf{Chuỗi suy luận (CoT)}: Bổ sung lập luận chuẩn hóa từng bước (State, Reflection, Subgoal).
       \end{itemize}
 
       \vspace{0.1cm}

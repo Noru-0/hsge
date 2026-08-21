@@ -35,7 +35,7 @@
 \end{frame}
 
 \subsection{CH1: Đánh giá phễu dữ liệu \& Chi phí}
-\begin{frame}{CH1 --- Pipeline thu được gì, và với chi phí bao nhiêu}
+\begin{frame}{CH1 - Pipeline thu được gì và chi phí bao nhiêu}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
       \footnotesize
@@ -66,7 +66,7 @@
         \footnotesize
         API khám phá: \textbf{\$54,21} (OpenAI \$42,29 + DeepSeek \$11,92) \\
         GPU (fine-tune + đánh giá): \textbf{\$24,40} \\
-        $\Rightarrow$ \kw{0,0308 \$/trajectory} --- rẻ hơn Go-Browse \kw{3,3 lần}
+        $\Rightarrow$ \kw{0,0308 \$/trajectory} - rẻ hơn Go-Browse \kw{3,3 lần}
         (0,1026 \$)
       \end{block}
 
@@ -75,7 +75,7 @@
       \textbf{Nhận xét chính}
       \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
         \item Nguồn semantic task: \textbf{130} từ seed, \textbf{12} từ chuỗi operator (71 task thành công).
-        \item Cổng Judge loại bỏ \kw{801 episode (27,4\%)} tự báo đỗ sai.
+        \item Cổng Judge loại bỏ \kw{801 episode (27,4\%)} báo đỗ ảo (false positive).
         \item Cổng chất lượng sàng lọc còn \textbf{1760 trajectory sạch}.
       \end{itemize}
     \end{column}
@@ -83,7 +83,7 @@
 \end{frame}
 
 \subsection{CH2: Hiệu năng trên Benchmark WebArena}
-\begin{frame}{CH2 --- Kết quả chính trên 655 task chính thức}
+\begin{frame}{CH2 - Kết quả chính trên 655 task chính thức}
   \centering
   \footnotesize
   \setlength{\tabcolsep}{4pt}
@@ -109,7 +109,7 @@
     \begin{column}{0.48\textwidth}
       \scriptsize
       \textbf{Đánh giá công bằng, nghiêm ngặt}:\\
-      Cùng tập task, prompt, ngân sách bước và bộ chấm. McNemar theo cặp: \kw{100 task} chỉ mô hình fine-tune giải được (vs 26 task mô hình nền).
+      Cùng tập task, prompt, ngân sách bước và bộ chấm. McNemar theo cặp: \kw{100 task} chỉ mô hình fine-tune giải được (so với 26 task của mô hình nền).
     \end{column}
     \begin{column}{0.48\textwidth}
       \scriptsize
@@ -120,7 +120,7 @@
 \end{frame}
 
 \subsection{CH3: Phân tích năng lực \& So sánh hệ thống}
-\begin{frame}{CH2--CH3 --- Phân tích năng lực và so sánh hệ thống}
+\begin{frame}{CH2-CH3 - Phân tích năng lực và so sánh hệ thống}
   \begin{columns}[t]
     \begin{column}{0.50\textwidth}
       \footnotesize
@@ -131,7 +131,7 @@
           \item Nâng cao khả năng kiên trì giải task (trung vị số bước thất bại tăng từ 8 lên 13).
           \item Tăng từ 87 lên \textbf{161 task giải thành công} ($+74$ task).
         \end{itemize}
-        $\Rightarrow$ SLM làm chủ hoàn toàn \kw{giao diện hành động} và cấu trúc tương tác POMDP của web.
+        $\Rightarrow$ Dữ liệu dạy được \emph{cả hai}: kỷ luật \kw{giao diện hành động}, và năng lực \emph{chọn} hành động đúng ($p = 0{,}003$ trên 485 task mô hình nền chạy trọn vẹn).
       \end{alertblock}
     \end{column}
     \begin{column}{0.48\textwidth}
@@ -158,8 +158,9 @@
       \footnotesize
       \textbf{Vị thế hệ thống}:
       \begin{itemize}\scriptsize\setlength{\itemsep}{1pt}
-        \item \kw{24,6\%} vượt cả Go-Browse-7B (22,6\%) và GPT-4o-mini (20,0\%).
-        \item Dẫn đầu nhóm mô hình mở dưới 10B trên WebArena 4 website.
+        \item \kw{24,6\%} cao hơn NNetNav-7B (19,1\%) và GPT-4o-mini (20,0\%).
+        \item \kw{Ngang} Go-Browse-7B (22,6\%): chênh 2,0 điểm, nhỏ hơn nửa độ rộng
+              khoảng tin cậy 95\% ($\pm$3,3) nên \emph{không} phải khác biệt có ý nghĩa.
       \end{itemize}
     \end{column}
   \end{columns}

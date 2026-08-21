@@ -12,36 +12,36 @@
   \vfill
   \footnotesize
   \begin{tabular}{@{}ll@{}}
-    \textbf{PL1} & Đánh giá trên chính website đã khám phá --- có hợp lệ không? \\
+    \textbf{PL1} & Đánh giá trên chính website đã khám phá - có hợp lệ không? \\
     \textbf{PL2} & Hướng đến ai: thứ tổng quát hóa là pipeline, không phải model \\
-    \textbf{PL3} & Task có khả thi không, ngân sách bước, và ba lớp xác nhận hoàn thành \\
+    \textbf{PL3} & Tính khả thi của task, ngân sách bước và tiêu chuẩn hoàn thành \\
     \textbf{PL4} & Bốn câu hỏi nghiên cứu: số liệu và mức độ trả lời \\
     \textbf{PL5} & Chi phí chi tiết toàn chu trình \\
     \textbf{PL6} & Khám phá có định hướng: frontier hai tầng \\
-    \textbf{PL7} & Nguyên nhân thất bại và chân dung hai mô hình \\
+    \textbf{PL7} & Nguyên nhân thất bại và so sánh đặc tính hai mô hình \\
     \textbf{PL8} & Hai phép đo bổ trợ: thêm dữ liệu và đổi mô hình nền \\
   \end{tabular}
   \vfill
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL1 --- Đánh giá trên chính website đã khám phá: có hợp lệ không?}
+\begin{frame}{PL1 - Đánh giá trên chính website đã khám phá: có hợp lệ không?}
   \footnotesize
   \begin{columns}[t]
     \begin{column}{0.49\textwidth}
-      \textbf{Cái \emph{không} xảy ra --- ranh giới train/test}
+      \textbf{Điểm không vi phạm - ranh giới train/test}
       \scriptsize
       \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Pipeline \kw{chưa từng nhìn thấy} 655 task của benchmark --- task huấn
+        \item Pipeline \kw{chưa từng nhìn thấy} 655 task của benchmark - task huấn
               luyện do agent tự đề xuất từ giao diện.
         \item CSDL được \kw{khôi phục nguyên bản} trước mỗi đợt đo.
         \item Không trajectory thu thập nào được dùng lại lúc chấm.
       \end{itemize}
       \vspace{0.04cm}
-      \textbf{Cái \emph{có} xảy ra --- và là chủ ý}
+      \textbf{Đặc thù thiết kế có chủ đích}
       \scriptsize
       \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Huấn luyện và đánh giá trên \emph{cùng} website --- đây là
+        \item Huấn luyện và đánh giá trên \emph{cùng} website - đây là
               \kw{giao thức chuẩn} của cả dòng nghiên cứu: Go-Browse khám phá 20 URL
               mỗi domain của WebArena rồi chấm trên chính 812 task WebArena.
       \end{itemize}
@@ -50,7 +50,7 @@
       \textbf{Vì sao không đo trên ``app khác cùng lĩnh vực''?}
       \scriptsize
       \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Đó là bài toán \emph{khác}: tổng quát hóa ngoài miền --- và số liệu cho
+        \item Đó là bài toán \emph{khác}: tổng quát hóa ngoài miền - và số liệu cho
               thấy \kw{chưa ai giải được}. Trên Online-Mind2Web (web mở):
       \end{itemize}
       \vspace{-0.05cm}
@@ -72,21 +72,21 @@
   \end{columns}
   \vspace{0.1cm}
   {\scriptsize\textbf{Phát biểu đúng phạm vi.} Khóa luận \kw{không} tuyên bố mô hình
-  tổng quát sang website chưa từng thấy --- đã ghi rõ ở mục ``Hợp lệ ngoại vi''. Và nếu
-  phản đối ``cùng app thì không hợp lệ'' đứng vững, nó bác bỏ luôn Go-Browse lẫn
-  NNetNav --- toàn bộ đường cơ sở để so sánh.\par}
+  tổng quát sang website chưa từng thấy (đã nêu rõ ở mục ``Hợp lệ ngoại vi''). Và nếu
+  xem việc đánh giá trên cùng website là không hợp lệ thì cũng đồng thời bác bỏ Go-Browse
+  lẫn NNetNav - toàn bộ các phương pháp đối chứng.\par}
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL2 --- Hướng đến ai, và thứ gì mới là thứ tổng quát}
+\begin{frame}{PL2 - Hướng đến đối tượng nào và yếu tố tổng quát là gì}
   \footnotesize
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
       \textbf{Người dùng đích}
       \scriptsize
       \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Nhóm/doanh nghiệp vận hành \kw{một số website cố định} --- trang quản trị
-              nội bộ, CMS, diễn đàn riêng --- muốn một agent chạy tại chỗ.
+        \item Nhóm/doanh nghiệp vận hành \kw{một số website cố định} - trang quản trị
+              nội bộ, CMS, diễn đàn riêng - muốn một agent chạy tại chỗ.
         \item Họ không cần agent ``biết mọi trang thương mại điện tử''. Họ cần agent
               \emph{thạo đúng trang của họ}, rẻ, không gửi dữ liệu ra ngoài.
       \end{itemize}
@@ -124,12 +124,12 @@
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL3 --- Task có khả thi không, đủ bước không, dựa vào đâu nói đã xong?}
+\begin{frame}{PL3 - Tính khả thi của task, ngân sách bước và tiêu chuẩn hoàn thành}
   \scriptsize
   \begin{block}{1. Làm sao biết task do LLM đề xuất là hợp lý và làm được trên giao diện đó?}
     Bộ đề xuất là một \emph{agent}: đọc trực tiếp cây trợ năng của trang thật và có thể
-    thao tác thử trước khi đề xuất --- không đề xuất từ trí nhớ. Quan trọng hơn:
-    \kw{tính khả thi được chứng minh bằng thực thi, không bằng lời} --- chỉ task có ít
+    thao tác thử trước khi đề xuất - không đề xuất từ trí nhớ. Quan trọng hơn:
+    \kw{tính khả thi được chứng minh bằng thực thi, không bằng lời} - chỉ task có ít
     nhất một lượt giải \emph{thành công và qua kiểm chứng} mới vào dataset.
     $\Rightarrow$ 637 task bị chính agent báo bất khả thi; 3981 lượt thử còn
     \kw{2117 hợp lệ (53,2\%)}.
@@ -137,29 +137,29 @@
   \vspace{-0.1cm}
   \begin{block}{2. Vì sao ngân sách 15 bước (task cục bộ) và 25 bước (semantic task)?}
     Solver chiếm \kw{85,5\%} trong 20.808 lượt gọi LLM $\Rightarrow$ ngân sách bước
-    \emph{chính là} ngân sách tiền; đây trước hết là quyết định chi phí. Nhưng dữ liệu
-    cho thấy nó \kw{không bóp méo phép đo}: episode thành công có trung vị \kw{6 bước}
-    (thất bại 13), và \kw{không episode nào} đạt được mục tiêu rồi mới bị cắt vì hết
-    bước --- ngân sách đóng vai trò \emph{thước đo}, không phải \emph{hình phạt}.
+    \emph{chính là} ngân sách kinh phí. Nhưng dữ liệu cho thấy nó \kw{không bóp méo phép đo}:
+    episode thành công có trung vị \kw{6 bước} (thất bại 13), và \kw{không episode nào}
+    đạt được mục tiêu rồi mới bị cắt vì hết bước - ngân sách đóng vai trò \emph{thước đo},
+    không phải \emph{hình phạt}.
   \end{block}
   \vspace{-0.1cm}
   \begin{block}{3. Dựa vào đâu để nói một task đã hoàn thành?}
-    Ba lớp, mỗi lớp bắt loại lỗi lớp trước không thấy:
+    Ba lớp kiểm soát chất lượng:
     \textbf{(i)} solver tự khai (\texttt{send\_msg\_to\_user}) hoặc vị từ tất định;
-    \textbf{(ii)} \kw{LLM-as-Judge} soi lại trạng thái trang cuối $\rightarrow$ hạ cấp
-    \kw{801 lượt} tự khai sai (27\%);
+    \textbf{(ii)} \kw{LLM-as-Judge} soi lại trạng thái trang đích $\rightarrow$ loại bỏ
+    \kw{801 lượt} báo đỗ ảo (27,4\%);
     \textbf{(iii)} cổng ``hành động hữu hiệu'' bằng mã $\rightarrow$ loại
-    \kw{104 trajectory} tuyên bố xong mà không đổi gì trên trang --- nhóm lỗi mà judge
-    \emph{về nguyên tắc} không thấy được, vì trang cuối không hề thay đổi.
+    \kw{104 trajectory} tuyên bố xong mà không đổi gì trên trang - nhóm lỗi mà judge
+    \emph{về nguyên tắc} không thấy được do trạng thái trang không thay đổi.
     \vspace{0.04cm}
 
-    \kw{Lưu ý}: đó là kiểm chứng lúc \emph{thu thập}. Con số 24,6\% được chấm bằng
-    \kw{bộ chấm chính thức của WebArena}, không dùng judge của nhóm.
+    \kw{Lưu ý}: đó là kiểm chứng lúc \emph{thu thập}. Kết quả 24,6\% được chấm hoàn toàn bằng
+    \kw{bộ chấm tự động chính thức của WebArena}.
   \end{block}
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL4 --- Bốn câu hỏi nghiên cứu: số liệu và mức độ trả lời}
+\begin{frame}{PL4 - Bốn câu hỏi nghiên cứu: số liệu và mức độ trả lời}
   \scriptsize
   \setlength{\tabcolsep}{3pt}
   \renewcommand{\arraystretch}{1.15}
@@ -179,15 +179,14 @@
   \end{tabular}
 
   \vspace{0.12cm}
-  {\scriptsize\textbf{Phần thành thật phải nói kèm.} \textbf{O2} hoàn thành một phần:
+  {\scriptsize\textbf{Lưu ý và giới hạn thực tế.} \textbf{O2} hoàn thành một phần:
   chỉ 12/142 semantic task đến từ ghép chuỗi operator, phần còn lại từ seed năng lực
   website. \textbf{O4} hoàn thành một phần: mỗi task mới đo \emph{một} lần, và
-  \kw{ablation đồ thị so với khám phá phẳng --- phép đo duy nhất chứng minh trực tiếp
-  giá trị của cấu trúc đồ thị --- vẫn chưa chạy}.\par}
+  \kw{ablation đồ thị so với khám phá phẳng - phép đo chứng minh trực tiếp giá trị cấu trúc đồ thị - vẫn là hướng nghiên cứu tiếp theo}.\par}
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL5 --- Chi phí chi tiết toàn chu trình}
+\begin{frame}{PL5 - Chi phí chi tiết toàn chu trình}
   \footnotesize
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
@@ -225,23 +224,22 @@
         \item \kw{0,0308 USD} mỗi trajectory thành công (54,21 / 1760).
         \item Go-Browse: 975,57 USD / 9504 trajectory $=$ 0,1026 USD
               $\Rightarrow$ khóa luận \kw{rẻ hơn 3,3 lần}.
-        \item Synatra (tổng hợp \emph{ngoại tuyến} từ tài liệu, không hề chạm website
-              thật): 0,031 USD/mẫu --- \emph{gần như trùng}, dù HSGE đã gồm cả chi phí
+        \item Synatra (tổng hợp \emph{ngoại tuyến} từ tài liệu, không chạm website
+              thật): 0,031 USD/mẫu - \emph{tương đương}, dù HSGE đã bao gồm cả chi phí
               điều khiển trình duyệt, đề xuất, giải và chấm lại task trên môi trường sống.
       \end{itemize}
       \vspace{0.08cm}
-      \begin{block}{Điểm đáng chú ý không phải tổng chi phí, mà là \emph{vị trí} của nó}
+      \begin{block}{Điểm đáng chú ý về cơ cấu chi phí}
         \scriptsize
         Rào cản tính toán không nằm ở huấn luyện hay đánh giá, mà ở \kw{khâu thu thập
-        dữ liệu} --- vốn tiêu thời gian điều khiển trình duyệt và số lời gọi API chứ
-        không tiêu GPU.
+        dữ liệu} - vốn tiêu tốn thời gian điều khiển trình duyệt và số lượt gọi API hơn là GPU.
       \end{block}
     \end{column}
   \end{columns}
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL6 --- Khám phá có định hướng: frontier hai tầng}
+\begin{frame}{PL6 - Khám phá có định hướng: frontier hai tầng}
   \begin{columns}[c]
     \begin{column}{0.58\textwidth}
       \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_frontier.pdf}
@@ -260,7 +258,7 @@
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL7 --- Nguyên nhân thất bại và chân dung hai mô hình}
+\begin{frame}{PL7 - Nguyên nhân thất bại và so sánh đặc tính hai mô hình}
   \footnotesize
   \begin{columns}[t]
     \begin{column}{0.52\textwidth}
@@ -280,11 +278,11 @@
       \vspace{0.08cm}
       \raggedright
       \kw{85--96\%} episode thất bại có $\ge 1$ hành động bị trình duyệt từ chối
-      (2315 lỗi / 655 episode) --- phần lớn là quá hạn chờ thao tác trên phần tử
+      (2315 lỗi / 655 episode) - phần lớn là quá hạn chờ thao tác trên phần tử
       \emph{có} hiển thị trong cây trợ năng.
     \end{column}
     \begin{column}{0.46\textwidth}
-      \textbf{Fine-tune làm mô hình \emph{bền bỉ} hơn, không \emph{chính xác} hơn}
+      \textbf{Fine-tune giúp mô hình \emph{kiên trì} hơn, giảm triệt để lỗi định dạng}
       \scriptsize
       \vspace{0.05cm}
       \begin{tabular}{@{}L{2.7cm} C{1.05cm} C{1.05cm}@{}}
@@ -308,7 +306,7 @@
 \end{frame}
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL8 --- Hai phép đo bổ trợ: thêm dữ liệu và đổi mô hình nền}
+\begin{frame}{PL8 - Hai phép đo bổ trợ: thêm dữ liệu và đổi mô hình nền}
   \footnotesize
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
@@ -340,7 +338,7 @@
               \kw{83/655 $=$ 12,7\%} so với 8,3\% của chính nó khi chưa fine-tune.
         \item \kw{Không dùng con số này để so cùng mô hình nền với Go-Browse}: toàn bộ
               275 phản hồi ``hỏng định dạng'' đều là lệnh \texttt{report\_infeasible}
-              \emph{viết trần} (92--98\%), bị bộ phân giải loại bỏ --- bản 7B chỉ ghi
+              \emph{viết trần} (92--98\%), bị bộ phân giải loại bỏ - bản 7B chỉ ghi
               nhận 10/182 lần báo bất khả thi ở Shopping Admin so với 41 của bản 9B.
         \item $\Rightarrow$ 12,7\% là \kw{cận dưới do công cụ đo đặt ra}. Điều rút ra
               được: tập dữ liệu nâng được \emph{cả hai} mô hình nền, nên nó không gắn
