@@ -4,6 +4,36 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-21
+
+- **11:15** — `docs/phan_tich_ket_qua_eval.md` (new) — Vietnamese analysis
+  answering the four discussion questions at the end of
+  `docs/tong_hop_ket_qua_eval.md`, grounded in the raw `results.jsonl` rather
+  than the SR tables. Three findings worth remembering:
+  - **The 7B↔9B shopping_admin gap (11,5% vs 21,4%) is mostly format
+    compliance, not reasoning.** 109 of 182 Qwen2.5-7B admin tasks contain at
+    least one unparseable `{thought, action}` response and **0 of those 109
+    succeed**; on the 73 clean-output tasks the 7B scores 16/73 = 21,9%,
+    essentially the 9B's 21,4%. Same pattern on gitlab (23,7% vs 18,3%) and
+    reddit (34,1% vs 34,0%). The other ~5,5 pp is the pre-finetune base gap
+    (7,1% vs 12,6%). Data is not the explanation — the 7B trained on
+    `training_data_merged_v1`, whose admin slice (3,585) is 3× what the 9B
+    round-1 checkpoint saw. Caveat recorded in the doc: the clean-output subset
+    is not random, so 21,9% is biased upward.
+  - **Round 1 → round 2 added +3 tasks on reddit and +3 tasks on admin — the
+    same absolute gain.** The apparent "reddit exploded / admin stalled" is
+    (a) denominators 106 vs 182 (×1,7 on its own) and (b) the false-negative
+    audit being applied to round 2 only. The real technical difference is that
+    60% of admin tasks die on `budget`/`stuck` vs 43% on reddit — admin's
+    bottleneck is execution horizon, not data volume, and admin actually
+    received *more* new data (+2.410 vs +1.856 examples).
+  - **Marginal return is measurably decaying**: 2.454 → 6.720 examples (×2,74)
+    on reddit+admin bought +8,7 pp adjusted / +2,1 pp raw on those 288 tasks,
+    i.e. ≈2,0 pp per 1.000 examples.
+  Also flags, for anyone quoting Table 3: round-2 shopping/gitlab numbers are
+  copied from round 1 (never re-evaluated after continue-finetune), so the
+  24,58% total silently assumes the 15% replay slice held.
+
 ## 2026-08-20
 
 - **14:46** — `training/{merge_lora_peft_qwen25.py,serve_vllm_qwen25.sh,bootstrap_eval_box_qwen25.sh}` (new), `training/vast_setup_qwen25.sh` (added eval venv + `eval` mode), `outputs/eval/{reddit,gitlab}/finetuned/` (new results), commit `6f6082b` — Ran the Qwen2.5-7B-Instruct finetune (checkpoint-1605) against all four WebArena domains, one rented box per domain in parallel. Adapted the existing Qwen3.5-9B eval pipeline (`training/README.md`) for Qwen2.5's plain dense architecture — no vision-tower/thinking-mode workarounds needed. Judge model `gpt-4-turbo` (original `gpt-4-1106-preview` retired), disclosed in every `summary.json`. Results (pulled via `collect_eval_results.sh`, byte-verified): reddit 15/106 = 14.15%, gitlab 18/180 = 10.00%, shopping 34/187 = 18.18% (user pulled this one directly before its box went down unexpectedly), shopping_admin still running as of this entry. shopping_admin's given tunnel URL initially pointed at the storefront homepage instead of the Magento admin login — fixed by appending `/admin`. Two sweeps (shopping, shopping_admin) each hit a ~25-40min silent stall mid-run (a page stuck in a broken load loop, not a model/infra bug) recovered by `supervisorctl restart evalsweep`, which resumes from the last checkpoint.
