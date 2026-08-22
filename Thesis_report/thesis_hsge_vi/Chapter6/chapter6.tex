@@ -48,7 +48,11 @@ bố thành công sai cùng các trajectory không có hành động hữu hiệ
 \item \textbf{Mô hình web agent đã fine-tune.}
 Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập rồi
 triển khai bằng vLLM, với cấu hình phục vụ tắt chế độ thinking đúng như lúc
-huấn luyện để hai giai đoạn dùng chung một dạng đầu vào và đầu ra.
+huấn luyện để hai giai đoạn dùng chung một dạng đầu vào và đầu ra. Ngoài ra,
+cùng tập dữ liệu này được kiểm chứng tính độc lập kiến trúc trên mô hình nền
+thứ hai (Qwen-2.5-7B), đạt 16{,}5\% (tăng $+$8{,}2 đpt trên cả bốn website)
+với điểm số là một cận dưới do bộ phân giải đầu ra loại bỏ các lệnh kết thúc
+thiếu vỏ JSON (Mục~\ref{sec:exp-backbone}).
 
 \item \textbf{Đánh giá trên benchmark WebArena.}
 Khóa luận xây dựng pipeline đánh giá sử dụng cùng prompt với agent triển khai
@@ -145,7 +149,7 @@ hình nền đo trong cùng điều kiện; hai phép đo bổ trợ đã chạy
 việc bổ sung dữ liệu trên hai website và việc thay mô hình nền trong khi giữ
 nguyên tập dữ liệu. Phần còn thiếu là các phép lặp thống kê và các ablation
 tách bạch đóng góp của từng thành phần trong pipeline
-(Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}). \\
+(Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}, \ref{sec:exp-backbone}). \\
 
 \addlinespace
 
@@ -175,10 +179,11 @@ gồm bốn nhóm nội dung.
     website, ở đúng định dạng đã dùng để fine-tune
     (Bảng~\ref{tab:dataset}).
   \item \textbf{Kết quả đánh giá thô}: thư mục \texttt{outputs/eval/} chứa
-    kết quả từng task của cả hai lượt đo - mô hình nền và mô hình sau
-    fine-tune - trên đủ 655 task, đủ để người đọc tự tính lại mọi con số ở
-    Bảng~\ref{tab:main} và Bảng~\ref{tab:baseline}, bao gồm cả phép điều
-    chỉnh thủ công đã công bố ở Mục~\ref{sec:exp-baseline}.
+    kết quả từng task của cả ba lượt đo --- mô hình nền 9B, mô hình sau
+    fine-tune 9B, và mô hình 7B (\texttt{outputs/eval/eval-7B/}) --- trên đủ
+    655 task, đủ để người đọc tự tính lại mọi con số ở Bảng~\ref{tab:main},
+    Bảng~\ref{tab:baseline} và Bảng~\ref{tab:backbone7b}, bao gồm cả phép
+    điều chỉnh thủ công đã công bố ở Mục~\ref{sec:exp-baseline}.
   \item \textbf{Tài liệu vận hành}: hướng dẫn dựng lại môi trường WebArena,
     chạy pipeline, huấn luyện và đánh giá.
 \end{itemize}
@@ -193,7 +198,7 @@ tin xác thực sống.
 \section{Hướng phát triển}
 \label{sec:conc-future}
 
-Các mục tiêu chính của khóa luận đã đạt được. Phần dưới đây nêu những hướng
+Các mục tiêu của khóa luận đã đạt được ở mức đã đối chiếu trong Bảng~\ref{tab:objectives}. Phần dưới đây nêu những hướng
 còn có thể đi tiếp, cả về quy mô dữ liệu lẫn hiệu quả của mô hình.
 
 \textbf{Mở rộng quy mô thu thập dữ liệu.}
@@ -204,15 +209,17 @@ tác~\cite{murty2024nnetnav,gandhi2026gobrowse}. Do pipeline HSGE không phụ t
 cơ chế chuyển giao skill giữa các giao diện tương đồng, việc mở rộng sang
 nhiều nền tảng mới kết hợp tái sử dụng các skill đã tích lũy sẽ giúp gia tăng
 độ đa dạng của dữ liệu mà không cần thực thi lại toàn bộ quá trình khám phá.
-Tuy nhiên, hai phép đo ở Mục~\ref{sec:exp-ablation} đặt ra một lưu ý quan
+Tuy nhiên, phép đo ở Mục~\ref{sec:exp-datascale} đặt ra một lưu ý quan
 trọng cho hướng này. Bổ sung dữ liệu cho một website \emph{có} nâng điểm của
-chính website đó, nhưng với hiệu suất thấp và giảm nhanh: gần gấp ba lượng dữ
-liệu của hai website chỉ đổi lấy 2{,}1 điểm phần trăm, và website nhận nhiều
-mẫu hơn lại đổi được ít điểm hơn trên mỗi mẫu (Bảng~\ref{tab:datascale}). So
-sánh chéo giữa bốn website cũng cho thấy \emph{mức} điểm của một website không
-do riêng lượng dữ liệu thu được cho nó quyết định. Do đó, định hướng mở rộng
-dữ liệu tiếp theo nên ưu tiên nâng cao \emph{độ phủ} và \emph{độ khó} của task,
-thay vì chỉ gia tăng đơn thuần về số lượng mẫu.
+chính website đó, và nâng rõ rệt: 4266 mẫu thêm vào Reddit cùng Shopping Admin
+đưa hai website này từ 17{,}4\% lên 26{,}0\% ($+$8{,}7 đpt,
+Bảng~\ref{tab:datascale}). Điều cần lưu ý không phải mức tăng mà là \textbf{độ
+không đồng đều của nó}: $+$7{,}1 đpt trên mỗi 1000 mẫu ở Reddit so với $+$2{,}5
+ở Shopping Admin. So sánh chéo giữa bốn website (Mục~\ref{sec:exp-crosssite})
+cũng cho thấy \emph{mức} điểm của một website không do riêng lượng dữ liệu
+quyết định. Do đó, định hướng mở rộng dữ liệu tiếp theo nên ưu tiên nâng cao
+\emph{độ phủ} và \emph{độ khó} của task, thay vì chỉ gia tăng đơn thuần về số
+lượng mẫu.
 
 \textbf{Giảm tỷ lệ hành động thất bại ở lớp thực thi.}
 Phân tích nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) cho thấy từ
@@ -268,8 +275,8 @@ các hệ thống mở tốt nhất cùng phân khúc dưới 10B, và cao hơn 
 điểm phần trăm so với chính mô hình nền khi chưa fine-tune. Đáng nói hơn, kết quả đạt
 được chỉ với 8554 mẫu huấn luyện, ít hơn khoảng năm lần so với các
 công trình cùng hướng, và trong một ngân sách vừa tầm một nhóm nghiên cứu nhỏ:
-54{,}21\,USD tiền gọi API cho toàn bộ giai đoạn thu thập, cộng
-24{,}4\,USD tiền thuê GPU cho cả chu trình fine-tune và đánh giá. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
+54{,}21\,USD tiền gọi API (cho khoảng 65 triệu token) cho toàn bộ giai đoạn thu
+thập, cộng 24{,}4\,USD tiền thuê GPU cho cả chu trình fine-tune và đánh giá. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
 giá ở quy mô lớn hơn. Nhưng chừng đó đã đủ để nói rằng đầu tư vào chất lượng
 và cấu trúc của dữ liệu huấn luyện là một hướng khả thi để nâng năng lực của
 web agent chạy trên mô hình ngôn ngữ nhỏ.

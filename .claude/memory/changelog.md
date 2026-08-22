@@ -6,6 +6,15 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **03:36** — `Thesis_report/thesis_hsge_vi/{Chapter6/chapter6.tex, main.pdf}` — **Synchronized Chapter 6 (Conclusion) with Chapter 4 and Chapter 5 updates:**
+  - Updated data scaling discussion (§6.3) to match new `tab:datascale` metrics: 4266 added samples $\rightarrow$ 17,4\% to 26,0\% (+8,7 pp on 288 tasks: Reddit +7,1 đpt/1k samples vs Admin +2,5 đpt/1k samples), pointing to `sec:exp-datascale` and `sec:exp-crosssite`.
+  - Added Qwen-2.5-7B evaluation result (16,5\%, +8,2 pp, `sec:exp-backbone`) to Product 3 (*Mô hình web agent đã fine-tune*).
+  - Updated `tab:objectives` (O4) to include reference to `sec:exp-backbone`.
+  - Updated open artifacts list (§6.2) to include all three evaluation sets (including `eval-7B`).
+  - Added token count (≈65M tokens) to concluding remarks (§6.3).
+  - Softened §6.3 opening sentence to match partial completion statuses in `tab:objectives`.
+  - Verified clean LaTeX compilation: 0 undefined references, 0 errors (total 166 pages).
+
 - **03:30** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, Chapter6/chapter6.tex, main.pdf}` — **Removed Section 5.4 (Nguy cơ đối với tính hợp lệ):**
   - Removed Section 5.4 from Chapter 5 and updated the chapter introduction and closing text accordingly.
   - Re-routed internal cross-references to `Phụ lục~\ref{sec:disc-verify}` (in Chapter 5) and `Mục~\ref{sec:exp-stats}` (in Chapter 6).
