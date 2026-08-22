@@ -5,9 +5,8 @@
 Chương này diễn giải các kết quả thực nghiệm của Chương~\ref{ch:experiments}
 bằng cách trả lời lần lượt bốn câu hỏi nghiên cứu đặt ra ở
 Mục~\ref{sec:intro-rq}, tóm tắt các bài học kỹ thuật rút ra trong quá trình xây
-dựng và vận hành hệ thống, đối chiếu kết quả đo được với những gì các công bố
-gốc gần nhất đã tuyên bố, rồi phân tích những yếu tố có thể ảnh hưởng tới
-tính hợp lệ của các kết luận.
+dựng và vận hành hệ thống, và đối chiếu kết quả đo được với những gì các công bố
+gốc gần nhất đã tuyên bố.
 
 \section{Trả lời các câu hỏi nghiên cứu}
 \label{sec:disc-results}
@@ -203,7 +202,7 @@ những mệnh đề không đúng trên bất kỳ thành viên nào của cụ
 lớp trước đó (Phụ lục~\ref{sec:disc-operators}). Song phải nói nốt phần
 ngược lại: cổng kiểm chứng bằng thực thi lại của chính khóa luận đã phải tắt
 trên website sống để tránh tác dụng phụ, nên nhãn ``đã kiểm chứng'' ở đây
-cũng chưa mạnh bằng định nghĩa lý tưởng (Mục~\ref{sec:disc-validity}). Khóa
+cũng chưa mạnh bằng định nghĩa lý tưởng (Phụ lục~\ref{sec:disc-verify}). Khóa
 luận thu hẹp khoảng trống mà AWM để lại, chứ chưa khép được nó.
 
 \subsection{Định vị với các hướng chưa đưa vào thực nghiệm}
@@ -257,26 +256,6 @@ giữa các episode; và so với AWM, khóa luận chuyển tri thức trích �
 nằm trong prompt vào thẳng trọng số của một mô hình nhỏ, đồng thời đo được
 rằng khoảng trống kiểm chứng mà AWM để lại là có thật.
 
-\section{Nguy cơ đối với tính hợp lệ}
-\label{sec:disc-validity}
-
-Nhằm đảm bảo sự minh bạch và tính khách quan khoa học, phần này phân tích các nguy cơ tiềm ẩn có thể ảnh hưởng đến tính hợp lệ của nghiên cứu trên ba khía cạnh: hợp lệ nội tại, hợp lệ ngoại vi và hợp lệ cấu trúc.
-
-\textbf{Hợp lệ nội tại.} Đánh giá thực nghiệm chạy mỗi tác vụ trong bộ kiểm thử chuẩn một lần duy nhất cho mỗi mô hình trên môi trường website thực tế. Do tương tác trên hệ thống thực tồn tại nhiễu mạng và độ trễ ngẫu nhiên, khoảng cách hiệu năng thu được có thể có sự biến động nhỏ khi thực hiện lặp lại (Mục~\ref{sec:exp-stats}). Bên cạnh đó, ba nguy cơ kỹ thuật cụ thể đã được công bố tại Chương~\ref{ch:experiments}.
-
-\emph{(i) Dòng tổng trộn hai checkpoint.} Shopping và GitLab được đánh giá trên một checkpoint trung gian, Reddit và Shopping Admin trên checkpoint cuối. Vì phần cuối lịch huấn luyện cập nhật toàn bộ trọng số adapter, không thể loại trừ khả năng mô hình cuối đã suy giảm trên hai website không được đo lại. Con số 24{,}6\% vì vậy là một \emph{ước lượng lạc quan} nếu suy giảm có xảy ra.
-
-\emph{(ii)} Mô hình chấm mờ của bộ đánh giá chính thức ngừng hoạt động và được thay thế bằng mô hình tương đương, tác động đến 40 trên tổng số 655 tác vụ.
-
-\emph{(iii)} Nguy cơ dùng chung cơ sở dữ liệu giữa hai đợt chạy Shopping và Shopping Admin. Ngoài ra, cổng kiểm soát chất lượng quan trọng nhất (LLM Judge) bản chất là một mô hình ngôn ngữ lớn nên vẫn tiềm ẩn các thiên kiến nội tại; hệ thống đã giảm thiểu nguy cơ này bằng cách bắt buộc đối chiếu phán quyết của mô hình chấm với trạng thái đích thực tế thay vì chỉ dựa vào nhật ký hội thoại.
-
-Về phía dữ liệu thu thập, có một sự bất đối xứng về kênh thông tin giữa mô hình dạy và mô hình học: các quỹ đạo huấn luyện được sinh bởi mô hình dạy có năng lực thị giác (kèm ảnh chụp màn hình và lớp đánh dấu Set-of-Marks~\cite{yang2023som}), trong khi quá trình huấn luyện SFT và đánh giá mô hình 9B đều thực hiện thuần văn bản trên accessibility tree. Mặc dù phép đo hiệu năng vẫn đảm bảo tính công bằng do mô hình học dùng chung một định dạng đầu vào lúc huấn luyện và đánh giá (Mục~\ref{sec:exp-main}), hệ thống chưa thể xác định tỷ lệ các quyết định của mô hình dạy phụ thuộc vào kênh thị giác mà mô hình học không có đủ căn cứ để tái tạo.
-
-\textbf{Hợp lệ ngoại vi.} Toàn bộ dữ liệu huấn luyện và kết quả đánh giá đều được thực hiện trên bốn website thuộc bộ chuẩn WebArena~\cite{zhou2024webarena} với một mô hình 9B duy nhất. Các benchmark web agent khác được khảo sát ở Mục~\ref{sec:rel-benchmarks} - từ môi trường tự triển khai như VisualWebArena~\cite{koh2024visualwebarena} và WorkArena~\cite{drouin2024workarena} tới web mở như Online-Mind2Web~\cite{xue2025illusion} - đều chưa được thử. Do đó, các kết luận khoa học của khóa luận được phát biểu chính xác trong phạm vi: pipeline đóng góp cải thiện hiệu năng của mô hình 9B trên bốn website thực nghiệm. Quan hệ giữa lượng dữ liệu bổ sung và mức cải thiện, quan sát được trên hai website ở Mục~\ref{sec:disc-results}, cũng chỉ dựa trên hai điểm dữ liệu và một lần đo mỗi điểm; nó là một dấu hiệu nhất quán chứ chưa phải một quan hệ đã được kiểm định. Việc mở rộng phương pháp trên các họ kiến trúc khác hoặc các domain website phức tạp hơn thuộc về hướng phát triển tương lai. Ngoài ra, phép so sánh với các hệ thống liên quan (Bảng~\ref{tab:related}) được tính toán lại chính xác trên cùng bốn website để đảm bảo thống nhất mẫu số đánh giá; tuy nhiên, quy mô dữ liệu và mô hình nền của các hệ thống này chưa thể đồng nhất hồi tố.
-
-\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành tác vụ theo bộ chấm chuẩn WebArena là chỉ số nhị phân (thành công hoặc thất bại) dựa trên trạng thái đích cuối cùng, do đó chưa ghi nhận được mức độ tiến bộ từng phần trong chuỗi hành động của tác tử. Đây là hạn chế chung của thang đo nhị phân, và cũng là điều Xue và cộng sự~\cite{xue2025illusion} chỉ ra khi đo lại nhiều hệ thống web agent trong điều kiện trực tuyến. Bên cạnh đó, nhãn ``đã kiểm chứng'' của một kỹ năng trong nghiên cứu này \emph{không} đồng nghĩa với việc kỹ năng đó đã được thực thi lại thành công trên môi trường thực tế (do cổng thực thi lại $k=0$ bị tắt nhằm tránh tác dụng phụ trên website sống, Phụ lục~\ref{sec:disc-verify}); nhãn này chỉ đảm bảo rằng kỹ năng đã xuất hiện lặp lại qua nhiều quỹ đạo độc lập và tất cả các quỹ đạo nguồn đều đã qua cổng kiểm tra trạng thái mờ.
-
 \vspace{1em}
 \noindent
-Những phân tích về nguy cơ đối với tính hợp lệ trên đây đã khép lại toàn bộ phần thực nghiệm và thảo luận của khóa luận. 
-Chương tiếp theo sẽ tổng kết các kết quả đạt được, đóng góp chính và đề xuất các hướng nghiên cứu tiếp theo.
+Toàn bộ các phân tích thực nghiệm và đối chiếu trên đây đã khép lại phần thảo luận của khóa luận. Chương tiếp theo sẽ tổng kết các kết quả đạt được, đóng góp chính và đề xuất các hướng nghiên cứu tiếp theo.

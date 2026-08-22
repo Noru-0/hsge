@@ -6,6 +6,11 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **03:30** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, Chapter6/chapter6.tex, main.pdf}` — **Removed Section 5.4 (Nguy cơ đối với tính hợp lệ):**
+  - Removed Section 5.4 from Chapter 5 and updated the chapter introduction and closing text accordingly.
+  - Re-routed internal cross-references to `Phụ lục~\ref{sec:disc-verify}` (in Chapter 5) and `Mục~\ref{sec:exp-stats}` (in Chapter 6).
+  - Verified clean LaTeX compilation: 0 undefined references, 0 errors (total 166 pages).
+
 - **03:26** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, main.pdf}` — **Restructured and aligned Chapter 5 (Discussion) with Chapter 1 RQs and Chapter 4 metrics:**
   - Synchronized CH subsections in §5.1: §5.1.1 (CH1: Scope & Cost), §5.1.2 (CH2: SLM capability & data scale), §5.1.3 (CH3: SOTA benchmark & 7B backbone), §5.1.4 (CH4: Failure analysis & system bottlenecks).
   - Updated data scaling numbers in §5.1.2 (`tab:datascale`): Reddit 20,8\% $\rightarrow$ 34,0\%, Shopping Admin 15,4\% $\rightarrow$ 21,4\%, +8,7 pp overall on 288 tasks (17,4\% $\rightarrow$ 26,0\%).
