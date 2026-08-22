@@ -6,6 +6,14 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **03:26** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, main.pdf}` — **Restructured and aligned Chapter 5 (Discussion) with Chapter 1 RQs and Chapter 4 metrics:**
+  - Synchronized CH subsections in §5.1: §5.1.1 (CH1: Scope & Cost), §5.1.2 (CH2: SLM capability & data scale), §5.1.3 (CH3: SOTA benchmark & 7B backbone), §5.1.4 (CH4: Failure analysis & system bottlenecks).
+  - Updated data scaling numbers in §5.1.2 (`tab:datascale`): Reddit 20,8\% $\rightarrow$ 34,0\%, Shopping Admin 15,4\% $\rightarrow$ 21,4\%, +8,7 pp overall on 288 tasks (17,4\% $\rightarrow$ 26,0\%).
+  - Added token accounting to §5.1.1 (≈65M tokens, 0,0308 USD/traj) and solver cost lever (82,9\% calls, 88,9\% tokens; GPT-4o 13,6\% steps but 52,9\% cost).
+  - Added quantitative results for Qwen-2.5-7B backbone in §5.1.3 (8,3\% $\rightarrow$ 16,5\%, +8,2 pp, Table `tab:backbone7b`).
+  - Reformulated §5.1.4 around failure analysis (85--96\% action failures, 2315 errors, median 13 steps on failures) and Finding 3 without negating data scaling value.
+  - Verified clean LaTeX compilation: 0 undefined references, 0 errors.
+
 - **03:07** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` —
   **Added token accounting to §4.1.3's two cost tables**, reconstructed from
   artifacts rather than guessed, and corrected the call counts in `tab:calls`.
