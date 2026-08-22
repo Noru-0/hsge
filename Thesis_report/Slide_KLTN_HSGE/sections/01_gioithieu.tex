@@ -9,14 +9,15 @@
   \framesubtitle{Nút thắt nằm ở mô hình, hay ở dữ liệu?}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
-      \textbf{Bối cảnh}
+      \textbf{Bối cảnh \& Động lực}
       \begin{itemize}[<+->]\ilist
-        \item \textbf{Web agent}: tự động hóa trình duyệt.
+        \item \textbf{LLM phát triển} $\rightarrow$ Thúc đẩy \textbf{Web agent} tự động hóa.
         \item \textbf{LLM lớn qua API}: đắt, chậm, rủi ro riêng tư.
-        \item \textbf{SLM ${<}10$B}: chạy cục bộ $\rightarrow$ phải fine-tune.
+        \item \textbf{SLM ${<}10$B}: chạy cục bộ on-prem $\rightarrow$ phải fine-tune.
         \item \kw{Nút thắt}: nhãn tay --- AutoWebGLM \textbf{20 người $\times$ 1 tháng}.
       \end{itemize}
     \end{column}
+
     \hfill
     \begin{column}{0.48\textwidth}
       \uncover<5->{
@@ -34,11 +35,12 @@
         \begin{enumerate}\isub
           \item<6-> Chi phí gán nhãn.
           \item<7-> Tri thức môi trường.
-          \item<8-> Báo đỗ ảo (\textit{false positive}).
+          \item<8-> Dương tính giả khi tự đánh giá (\textit{false positive}).
           \item<9-> Tác vụ đa bước.
         \end{enumerate}
       }
     \end{column}
+
   \end{columns}
 \end{frame}
 

@@ -7,28 +7,35 @@
 \subsection{Tổng quan kiến trúc pipeline}
 \begin{frame}{Tổng quan pipeline HSGE}
   \begin{center}
-    \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{fig_pipeline.pdf}
+    \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{fig_pipeline.pdf}
   \end{center}
-  \figcap{Vòng lặp khép kín: Khám phá $\rightarrow$ Phát hiện skill $\rightarrow$ Quy nạp operator $\rightarrow$ Ghép semantic task $\rightarrow$ Tinh lọc dữ liệu.}
+  \vspace{-0.1cm}
+  \begin{center}
+    \footnotesize
+    \kw{Frontier} $\xrightarrow{\text{duyệt}}$ \textbf{Explorer/Solver} $\xrightarrow{\text{quy nạp}}$ \kw{Skill/Operator} $\xrightarrow{\text{ghép chuỗi}}$ \textbf{Semantic Task} $\xrightarrow{\text{lọc online}}$ \kw{Dataset SFT}
+  \end{center}
 \end{frame}
 
 \subsection{Biểu diễn tri thức: Đồ thị hai tầng}
 \begin{frame}{Biểu diễn: đồ thị hai tầng}
   \begin{columns}[c]
-    \begin{column}{0.58\textwidth}
+    \begin{column}{0.54\textwidth}
       \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{fig_twolevel.pdf}
     \end{column}
-    \begin{column}{0.40\textwidth}
-      \footnotesize
-      \textbf{Đồ thị hai tầng (Two-level Graph)}
-    \begin{itemize}\setlength{\itemsep}{4pt}
+    \hfill
+    \begin{column}{0.43\textwidth}
+      \begin{block}{Câu hỏi cốt lõi}
+        \textit{Lưu trữ tri thức duyệt web thế nào để tái sử dụng và ghép nối được?}
+      \end{block}
+      \vspace{0.08cm}
+      \begin{itemize}[<+->]\setlength{\itemsep}{3pt}
         \item \textbf{Tầng thấp (State Graph)}:
-          Lưu vết duyệt web gồm các trang đã thăm \& hành động chuyển trang.
+          Vết duyệt web (Trang web $\leftrightarrow$ Hành động).
         \item \textbf{Tầng cao (Operator Graph)}:
-          Chuẩn hóa kỹ năng thành \textbf{Operator} mang \textit{Precondition} (tiền điều kiện) \& \textit{Effect} (kết quả).
-        \item \textbf{Liên kết ngữ nghĩa}:
-          $\text{Effect}_A \models \text{Precondition}_B \Rightarrow$ Ghép nối sinh chuỗi tác vụ dài hạn.
-        \item \textbf{Ưu thế}: Tri thức được lưu dạng \kw{tái sử dụng \& tái tổ hợp}.
+          Kỹ năng có \kw{Precondition} \& \kw{Effect} chuẩn hóa.
+        \item \textbf{Ghép nối ngữ nghĩa}:
+          $\text{Effect}_A \models \text{Precondition}_B \Rightarrow$ Ghép tác vụ dài.
+        \item \textbf{Ưu thế}: Tri thức dạng \kw{tái sử dụng \& tái tổ hợp}.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -40,23 +47,26 @@
     \begin{column}{0.38\textwidth}
       \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_discovery.pdf}
     \end{column}
-    \begin{column}{0.60\textwidth}
-      \footnotesize
-      \textbf{4 bước phát hiện Skill (từ episode thành công)}:
-    \begin{enumerate}\scriptsize\setlength{\itemsep}{1.5pt}
-        \item \textbf{Phân cắt}: Cắt theo đổi URL và tụt tương đồng AXTree (LLM trọng tài).
-        \item \textbf{Gom cụm}: Clusterer phi tham số theo ngưỡng cosine.
+    \hfill
+    \begin{column}{0.58\textwidth}
+      \textbf{4 Bước phát hiện Skill (từ trajectory thành công)}:
+      \begin{enumerate}[<+->]\setlength{\itemsep}{2pt}
+        \item \textbf{Phân cắt}: Cắt theo đổi URL \& tụt tương đồng AXTree.
+        \item \textbf{Gom cụm}: Phân cụm phi tham số (ngưỡng cosine).
         \item \textbf{Trừu tượng hóa}: Tạo \textit{SkillCard} có tham số hóa.
-        \item \textbf{Kiểm chứng}: Thực thi kiểm chứng trong ngữ cảnh mới.
+        \item \textbf{Kiểm chứng}: Chạy thử lại trong ngữ cảnh mới.
       \end{enumerate}
 
-      \vspace{0.15cm}
-      \textbf{Quy nạp Operator \& Cổng chặn}:
-    \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
-        \item \textbf{Chống trùng lặp}: Loại operator có Effect chỉ lặp lại Precondition.
-        \item \textbf{Kiểm chứng thực tế (Grounding)}: Gỡ bỏ Effect không đúng trên $\ge 50\%$ thành viên cụm.
-        \item \textbf{Chuẩn hóa câu chữ}: Tái dùng thống nhất cú pháp điều kiện để tăng khả năng ghép chuỗi.
-      \end{itemize}
+      \vspace{0.1cm}
+      \uncover<5->{
+        \begin{block}{Quy nạp Operator \& Cổng chặn}
+          \begin{itemize}\setlength{\itemsep}{1.5pt}
+            \item \textbf{Chống trùng}: Loại effect chỉ lặp lại precondition.
+            \item \textbf{Grounding}: Gỡ effect sai trên $\ge 50\%$ thành viên cụm.
+            \item $\Rightarrow$ Thu được \kw{146 skill} $\rightarrow$ \kw{57 operator chuẩn xác}.
+          \end{itemize}
+        \end{block}
+      }
     \end{column}
   \end{columns}
 \end{frame}
@@ -64,49 +74,60 @@
 \subsection{Sinh Semantic Task từ chuỗi Operator}
 \begin{frame}{Sinh semantic task: ghép chuỗi operator}
   \begin{columns}[c]
-    \begin{column}{0.56\textwidth}
+    \begin{column}{0.52\textwidth}
       \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{fig_semantic.pdf}
     \end{column}
-    \begin{column}{0.42\textwidth}
-      \footnotesize
-      \textbf{Hai nguồn sinh Semantic Task}
-    \begin{itemize}\setlength{\itemsep}{4pt}
-        \item \textbf{Ghép chuỗi Operator (Bottom-up)}:
-          Duyệt DFS trên đồ thị operator; chuỗi $\ge 2$ bước $\rightarrow$ sinh task dài hạn kèm chỉ dẫn tự nhiên.
-        \item \textbf{Seed năng lực website (Top-down)}:
-          Sinh từ tổng quan năng lực khi đồ thị còn thưa.
-      \end{itemize}
-
-      \vspace{0.15cm}
-      \textbf{Kết quả thực thi}:
-    \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Đã sinh \kw{142 semantic task} (\textbf{130 từ seed} + \textbf{12 từ chuỗi operator}), đạt \kw{71 task thành công}.
-        \item Minh chứng cơ chế ghép chuỗi hoạt động đúng thiết kế.
-      \end{itemize}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\subsection{Tinh lọc dữ liệu \& Prompt Parity}
-\begin{frame}{Tinh lọc dữ liệu và nguyên tắc prompt parity}
-  \begin{columns}[c]
-    \begin{column}{0.32\textwidth}
-      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{fig_curation.pdf}
-    \end{column}
-    \begin{column}{0.66\textwidth}
-      \footnotesize
-      \textbf{Kiểm soát chất lượng nghiêm ngặt}
-    \begin{itemize}\setlength{\itemsep}{2pt}
-        \item \textbf{Cổng Judge (LLM độc lập)}: Chấm lại khách quan trên trạng thái trang đích $\rightarrow$ Loại bỏ \kw{801 episode (27,4\%)} báo đỗ ảo (false positive).
-        \item \textbf{Cổng Effective Action}: Loại bỏ task không tạo thay đổi thực tế $\rightarrow$ Thu được \kw{1760 trajectory / 8554 mẫu SFT}.
-        \item \textbf{Chuỗi suy luận (CoT)}: Bổ sung lập luận chuẩn hóa từng bước (State, Reflection, Subgoal).
-      \end{itemize}
-
-      \vspace{0.1cm}
-      \begin{block}{Nguyên tắc Prompt Parity}
-        \scriptsize
-        Prompt huấn luyện \kw{khớp từng byte} với prompt solver khi suy luận (kể cả ngưỡng cắt AXTree 6000 ký tự). Chia train/val theo cấp task $\rightarrow$ \kw{0} mục tiêu trùng lặp.
+    \hfill
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Mục tiêu}
+        \textit{Tự động sinh tác vụ nhiều bước có ý nghĩa thực tế.}
       \end{block}
+      \vspace{0.08cm}
+      \textbf{Hai cơ chế sinh}:
+      \begin{itemize}[<+->]\setlength{\itemsep}{3pt}
+        \item \textbf{Bottom-up (Ghép chuỗi)}:
+          Duyệt DFS đồ thị operator; chuỗi $\ge 2$ bước $\rightarrow$ sinh task dài.
+        \item \textbf{Top-down (Seed năng lực)}:
+          Gợi ý từ chức năng tổng quan website.
+      \end{itemize}
+
+      \vspace{0.08cm}
+      \uncover<3->{
+        \begin{alertblock}{Kết quả thực thi}
+          Sinh \kw{142 task} (\textbf{130 seed} + \textbf{12 chuỗi}) $\rightarrow$ \kw{71 task thành công}.
+        \end{alertblock}
+      }
     \end{column}
   \end{columns}
 \end{frame}
+
+\subsection{Kiểm định trực tuyến \& Đóng gói SFT}
+\begin{frame}{Kiểm định trực tuyến và đóng gói SFT}
+  \begin{columns}[c]
+    \begin{column}{0.34\textwidth}
+      \includegraphics[width=\linewidth,height=0.74\textheight,keepaspectratio]{fig_curation.pdf}
+    \end{column}
+    \hfill
+    \begin{column}{0.62\textwidth}
+      \textbf{Kiểm soát chất lượng trực tuyến (Online Gates)}
+      \begin{itemize}[<+->]\setlength{\itemsep}{2pt}
+        \item \textbf{Inline LLM Judge}: Chấm lại trạng thái trang đích $\rightarrow$ Loại \kw{801 episode (27,4\%)} dương tính giả khi tự đánh giá ngay runtime.
+        \item \textbf{Effective Action}: Loại task tự khai xong mà không đổi trạng thái trang $\rightarrow$ Còn \kw{1760 trajectory sạch}.
+      \end{itemize}
+
+
+      \vspace{0.08cm}
+      \uncover<3->{
+        \begin{block}{Đóng gói SFT \& Prompt Parity}
+          \begin{itemize}\setlength{\itemsep}{2pt}
+            \item \textbf{Build trực tiếp}: Dữ liệu sạch từ nguồn, không lọc ngoại tuyến.
+            \item \textbf{Prompt Parity}: Khớp từng byte câu lệnh train và suy luận.
+            \item $\Rightarrow$ Thu được \kw{8554 mẫu train / 453 mẫu val} (0 trùng lặp).
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+  \end{columns}
+\end{frame}
+
+

@@ -118,9 +118,10 @@
     \item \textbf{Vì sao ngân sách 15 bước (cục bộ) và 25 bước (semantic task)?} \newline
       Solver chiếm 85,5\% lượt gọi $\rightarrow$ Ngân sách bước là quyết định chi phí. Episode thành công có trung vị \kw{6 bước}; \kw{không episode nào} đạt mục tiêu rồi bị cắt vì hết bước.
     \item \textbf{Dựa vào đâu để nói một task đã hoàn thành?} \newline
-      Ba lớp kiểm soát: (i) Solver tự khai; (ii) \kw{LLM Judge} soi trạng thái đích $\rightarrow$ loại \kw{801 lượt} đỗ ảo; (iii) Cổng hành động hữu hiệu $\rightarrow$ loại \kw{104 trajectory} không đổi trạng thái. Đánh giá cuối dùng \kw{bộ chấm chính thức WebArena}.
+      Ba lớp kiểm soát: (i) Solver tự khai; (ii) \kw{LLM Judge} soi trạng thái đích $\rightarrow$ loại \kw{801 lượt} dương tính giả khi tự đánh giá; (iii) Cổng hành động hữu hiệu $\rightarrow$ loại \kw{104 trajectory} không đổi trạng thái. Đánh giá cuối dùng \kw{bộ chấm chính thức WebArena}.
   \end{enumerate}
 \end{frame}
+
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL4 - Bốn câu hỏi nghiên cứu: số liệu và mức độ trả lời}

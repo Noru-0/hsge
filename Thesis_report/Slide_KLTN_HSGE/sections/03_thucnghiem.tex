@@ -8,28 +8,26 @@
 \begin{frame}{Thiết lập thực nghiệm và câu hỏi nghiên cứu}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
-      \footnotesize
       \textbf{Thiết lập thực nghiệm}
-      \begin{itemize}\setlength{\itemsep}{3pt}
-        \item \textbf{Môi trường}: 4 website WebArena tự triển khai (Shopping, Shopping Admin, GitLab, Reddit).
-        \item \textbf{Đánh giá}: \kw{655 task chính thức}, chấm tự động, 15 bước/task, \texttt{temperature} $=0$.
-        \item \textbf{Khám phá}: 4 đợt ($\approx$21h/site), phân tách rõ vai trò các LLM agent (\kw{20\,808 lượt gọi}).
-        \item \textbf{Huấn luyện}: Qwen3.5-9B $+$ LoRA, 1119 bước (5h09); chọn \texttt{checkpoint-315} (eval\_loss $=0{,}4219$).
+      \begin{itemize}[<+->]\setlength{\itemsep}{3pt}
+        \item \textbf{Môi trường}: 4 website WebArena tự triển khai (Shopping, Admin, GitLab, Reddit).
+        \item \textbf{Đánh giá}: \kw{655 task chính thức}, 15 bước/task, \texttt{temp} $=0$, chấm tự động.
+        \item \textbf{Khám phá}: 4 đợt ($\approx$21h/site), \kw{20\,808 lượt gọi LLM}.
+        \item \textbf{Huấn luyện}: Qwen3.5-9B $+$ LoRA, 1119 bước (5h09).
       \end{itemize}
     \end{column}
-    \begin{column}{0.50\textwidth}
-      \begin{block}{Bốn câu hỏi nghiên cứu (RQ)}
-        \footnotesize
-        \begin{itemize}\setlength{\itemsep}{2pt}
-          \item[\textbf{CH1.}] Pipeline thu được gì và chi phí bao nhiêu?
-          \item[\textbf{CH2.}] SLM cải thiện năng lực nào sau fine-tune?
-          \item[\textbf{CH3.}] Vị thế so với các hệ thống $<10$B hiện nay?
-          \item[\textbf{CH4.}] Đóng góp từng thành phần \& điểm nghẽn?
-        \end{itemize}
-      \end{block}
-
-      \vspace{0.05cm}
-      {\scriptsize\textit{*CH4 được giải đáp qua phân tích lỗi và đối chiếu liên-website (ablation đầy đủ là hướng phát triển).}}
+    \hfill
+    \begin{column}{0.48\textwidth}
+      \uncover<5->{
+        \begin{block}{4 Câu hỏi nghiên cứu (RQ)}
+          \begin{itemize}\setlength{\itemsep}{2pt}
+            \item[\textbf{CH1.}] Pipeline thu được gì \& chi phí bao nhiêu?
+            \item[\textbf{CH2.}] SLM cải thiện năng lực nào sau fine-tune?
+            \item[\textbf{CH3.}] Vị thế so với các hệ thống $<10$B hiện nay?
+            \item[\textbf{CH4.}] Đâu là nguyên nhân thất bại và điểm nghẽn?
+          \end{itemize}
+        \end{block}
+      }
     \end{column}
   \end{columns}
 \end{frame}
@@ -38,46 +36,45 @@
 \begin{frame}{CH1 - Pipeline thu được gì và chi phí bao nhiêu}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
-      \footnotesize
       \textbf{Phễu dữ liệu khám phá} (4 website)
       \vspace{0.05cm}
 
-      \scriptsize
-      \begin{tabular}{@{}L{4.4cm} R{1.5cm}@{}}
-        \toprule
-        Node đã duyệt (71 trùng lặp) & \textbf{455} \\
-        Episode ghi nhận & \textbf{3981} \\
-        Episode hợp lệ sau kiểm chứng & \textbf{2117} (53,2\%) \\
-        \midrule
-        Skill thu nhận & \textbf{146} \\
-        Operator quy nạp & \textbf{57} \\
-        Semantic task sinh ra & \textbf{142} \\
-        \midrule
-        Trajectory vào dataset & \textbf{1760} \\
-        Mẫu huấn luyện (Train/Val) & \textbf{8554 / 453} \\
-        \bottomrule
-      \end{tabular}
+      \setlength{\tabcolsep}{3pt}
+      \begin{table}
+        \begin{tabular}{@{}L{4.4cm} R{1.5cm}@{}}
+          \toprule
+          Trang web đã duyệt & \textbf{455} \\
+          Lượt thử ghi nhận & \textbf{3981} \\
+          Lượt thử hợp lệ sau kiểm chứng & \textbf{2117} (53,2\%) \\
+          \midrule
+          Skill thu nhận & \textbf{146} \\
+          Operator quy nạp & \textbf{57} \\
+          Semantic task sinh ra & \textbf{142} \\
+          \midrule
+          Trajectory vào dataset & \kw{1760} \\
+          Mẫu huấn luyện (Train / Val) & \kw{8554 / 453} \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
 
-      \vspace{0.08cm}
-      {\scriptsize \kw{0} mục tiêu trùng train/val, \kw{0} nhãn từ con người.}
+      \vspace{-0.1cm}
+      {\scriptsize \kw{0} mục tiêu trùng lặp, \kw{0} nhãn từ con người.}
     \end{column}
-    \begin{column}{0.50\textwidth}
+    \hfill
+    \begin{column}{0.48\textwidth}
       \begin{block}{Chi phí toàn chu trình}
-        \footnotesize
-        API khám phá: \textbf{\$54,21} (OpenAI \$42,29 + DeepSeek \$11,92) \\
-        GPU (fine-tune + đánh giá): \textbf{\$24,40} \\
-        $\Rightarrow$ \kw{0,0308 \$/trajectory} - rẻ hơn Go-Browse \kw{3,3 lần}
-        (0,1026 \$)
+        API khám phá: \textbf{\$54,21} (OpenAI + DeepSeek) \\
+        GPU (Fine-tune + Đánh giá): \textbf{\$24,40} \\
+        $\Rightarrow$ \kw{0,0308 \$/trajectory} - rẻ hơn Go-Browse \kw{3,3 lần}.
       \end{block}
 
-      \vspace{0.05cm}
-      \footnotesize
-      \textbf{Nhận xét chính}
-      \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
-        \item Nguồn semantic task: \textbf{130} từ seed, \textbf{12} từ chuỗi operator (71 task thành công).
-        \item Cổng Judge loại bỏ \kw{801 episode (27,4\%)} báo đỗ ảo (false positive).
-        \item Cổng chất lượng sàng lọc còn \textbf{1760 trajectory sạch}.
+      \vspace{0.08cm}
+      \begin{itemize}[<+->]\setlength{\itemsep}{2.5pt}
+        \item Cổng Judge loại \kw{801 lượt (27,4\%)} dương tính giả khi tự đánh giá.
+        \item Sàng lọc thu được \kw{1760 trajectory sạch}.
+        \item Chi phí trung bình mỗi website \kw{$<$ \$20}.
       \end{itemize}
+
     \end{column}
   \end{columns}
 \end{frame}
@@ -85,7 +82,6 @@
 \subsection{CH2: Hiệu năng trên Benchmark WebArena}
 \begin{frame}{CH2 - Kết quả chính trên 655 task chính thức}
   \centering
-  \footnotesize
   \setlength{\tabcolsep}{4pt}
   \begin{table}
     \begin{tabular}{@{}L{2.6cm} R{2.7cm} R{2.7cm} R{1.8cm} R{2.2cm}@{}}
@@ -104,17 +100,22 @@
     \end{tabular}
   \end{table}
 
-  \vspace{0.1cm}
+  \vspace{0.05cm}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
-      \scriptsize
-      \textbf{Đánh giá công bằng, nghiêm ngặt}:\\
-      Cùng tập task, prompt, ngân sách bước và bộ chấm. McNemar theo cặp: \kw{100 task} chỉ mô hình fine-tune giải được (so với 26 task của mô hình nền).
+      \uncover<2->{
+        \begin{block}{Kiểm định theo cặp (McNemar)}
+          \kw{100 task} chỉ mô hình fine-tune giải được (so với 26 task của mô hình nền).
+        \end{block}
+      }
     \end{column}
+    \hfill
     \begin{column}{0.48\textwidth}
-      \scriptsize
-      \textbf{Ý nghĩa thống kê}:\\
-      Đạt ý nghĩa thống kê trên \kw{toàn bộ 4/4 website} ($p \le 0{,}011$). CSDL 4 website được khôi phục nguyên trạng trước mỗi lượt đo.
+      \uncover<3->{
+        \begin{block}{Ý nghĩa thống kê}
+          Đạt ý nghĩa thống kê trên \kw{cả 4/4 website} ($p \le 0{,}011$). CSDL khôi phục trước mỗi lượt đo.
+        \end{block}
+      }
     \end{column}
   \end{columns}
 \end{frame}
@@ -122,23 +123,25 @@
 \subsection{CH3: Phân tích năng lực \& So sánh hệ thống}
 \begin{frame}{CH2-CH3 - Phân tích năng lực và so sánh hệ thống}
   \begin{columns}[t]
-    \begin{column}{0.50\textwidth}
-      \footnotesize
-      \begin{alertblock}{Năng lực cốt lõi đạt được}
-        \scriptsize
-        Mô hình nền bị lỗi \textbf{định dạng đầu ra} ở \kw{170/655 (26,0\%)} episode; sau fine-tune chỉ còn \kw{4/655 (0,6\%)}.
-        \begin{itemize}\setlength{\itemsep}{1.5pt}
-          \item Nâng cao khả năng kiên trì giải task (trung vị số bước thất bại tăng từ 8 lên 13).
-          \item Tăng từ 87 lên \textbf{161 task giải thành công} ($+74$ task).
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Phần tăng thuộc về năng lực nào?}
+        \begin{itemize}[<+->]\setlength{\itemsep}{1pt}
+          \item \textbf{Lỗi định dạng}: Giảm từ 26,0\% (170 phiên) $\rightarrow$ \kw{0,6\% (4 phiên)}.
+          \item \textbf{Năng lực quyết định}: Trên 485 task không lỗi cú pháp, tỷ lệ giải thành công vẫn tăng từ \kw{17,9\% $\rightarrow$ 23,5\%} ($p=0{,}003$).
+          \item $\Rightarrow$ SLM làm chủ \kw{cả cú pháp lẫn tư duy chọn hành động}.
         \end{itemize}
-        $\Rightarrow$ Dữ liệu dạy được \emph{cả hai}: kỷ luật \kw{giao diện hành động}, và năng lực \emph{chọn} hành động đúng ($p = 0{,}003$ trên 485 task mô hình nền chạy trọn vẹn).
       \end{alertblock}
     \end{column}
+    \hfill
     \begin{column}{0.48\textwidth}
-      \scriptsize
-      \begin{table}
+      \uncover<4->{
+        \textbf{Vị thế trong nhóm SOTA $<10$B}
+        \vspace{0.01cm}
+
         \centering
-        \begin{tabular}{@{}L{3.6cm} R{2.2cm}@{}}
+        \setlength{\tabcolsep}{2.5pt}
+        \renewcommand{\arraystretch}{0.92}
+        \begin{tabular}{@{}L{3.3cm} R{2.0cm}@{}}
           \toprule
           \textbf{Mô hình} & \textbf{Tổng 4 site (\%)} \\
           \midrule
@@ -152,43 +155,14 @@
           Qwen3.5-9B (mô hình nền) & 13,3 \\
           \bottomrule
         \end{tabular}
-      \end{table}
+        \vspace{0.01cm}
 
-      \vspace{0.05cm}
-      \footnotesize
-      \textbf{Vị thế hệ thống}:
-      \begin{itemize}\scriptsize\setlength{\itemsep}{1pt}
-        \item \kw{24,6\%} cao hơn NNetNav-7B (19,1\%) và GPT-4o-mini (20,0\%).
-        \item \kw{Ngang} Go-Browse-7B (22,6\%): chênh 2,0 điểm, nhỏ hơn nửa độ rộng
-              khoảng tin cậy 95\% ($\pm$3,3) nên \emph{không} phải khác biệt có ý nghĩa.
-      \end{itemize}
+        \raggedright
+        {\scriptsize Vượt GPT-4o-mini, \kw{ngang ngửa} Go-Browse-7B (rẻ hơn 3,3 lần).}
+      }
     \end{column}
   \end{columns}
 \end{frame}
 
-\subsection{Minh họa thực thi (Demo)}
-\begin{frame}{Demo: mô hình sau fine-tune giải một task WebArena}
-  \begin{columns}[c]
-    \begin{column}{0.44\textwidth}
-      \footnotesize
-      \textbf{Đặc điểm thực thi của mô hình}
-      \begin{itemize}\setlength{\itemsep}{4pt}
-        \item \textbf{Đầu vào tinh gọn}: Chỉ nhận URL $+$ accessibility tree (không dùng ảnh).
-        \item \textbf{Định dạng chuẩn}: Sinh chuỗi suy luận \texttt{thought} và \texttt{action} chuẩn xác.
-        \item \textbf{Tự động chấm}: Benchmark chính thức tự kiểm chứng kết quả hoàn thành task.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.54\textwidth}
-      \centering
-      \setbeamercolor{demoframe}{bg=structure.fg!8,fg=structure.fg}
-      \begin{beamercolorbox}[wd=\linewidth,ht=0.52\textheight,center]{demoframe}
-        \vfill
-        {\large \textbf{[\,VIDEO DEMO\,]}}\\[0.3cm]
-        {\footnotesize Minh họa tác nhân thực thi task WebArena}
-        \vfill
-      \end{beamercolorbox}
-      \vspace{0.1cm}
-      {\scriptsize\itshape Video thực thi 60--90 giây quay sẵn.}
-    \end{column}
-  \end{columns}
-\end{frame}
+
+

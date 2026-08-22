@@ -1,11 +1,11 @@
 # Kịch bản trình bày — Bảo vệ KLTN HSGE
 
 **Ngân sách:** 15 phút trình bày + 15 phút hỏi đáp (thông báo bảo vệ đợt 04/2026).
-Deck có **20 trang phần nội dung** (14 slide phải nói + 1 bìa cảm ơn + 5 trang mục lục
+Deck có **19 trang phần nội dung** (13 slide phải nói + 1 bìa cảm ơn + 5 trang mục lục
 lướt qua) và **9 trang phụ lục PL1–PL8** đặt sau trang cảm ơn, chỉ bật khi được hỏi.
 
-**Chia hai người:** Người 1 slide 1–8 (đặt vấn đề + phương pháp), Người 2 slide 9–14
-(thực nghiệm + demo + kết luận). Điểm cắt sau slide 8, khi chuyển từ *"làm thế nào"*
+**Chia hai người:** Người 1 slide 1–8 (đặt vấn đề + phương pháp), Người 2 slide 9–13
+(thực nghiệm + kết luận). Điểm cắt sau slide 8, khi chuyển từ *"làm thế nào"*
 sang *"đo được gì"*.
 
 **Cách đọc kịch bản:**
@@ -13,8 +13,8 @@ sang *"đo được gì"*.
 - **Câu chốt** = câu duy nhất bắt buộc phải lọt tai Hội đồng ở slide đó.
 - **Tránh** = chỗ dễ nói quá; nói sai một chữ ở đây là mất điểm tin cậy.
 - `[lược nếu trễ]` = cắt được mà không gãy mạch.
-- Cột "Trang" là **số slide hiện ở footer** (`n / 20`), không phải số trang PDF: deck
-  dùng overlay nên `main.pdf` hiện có 74 trang. Nhảy nhanh thì dùng số footer.
+- Cột "Trang" là **số slide hiện ở footer** (`n / 19`), không phải số trang PDF: deck
+  dùng overlay nên `main.pdf` hiện có 71 trang. Nhảy nhanh thì dùng số footer.
 
 ---
 
@@ -30,18 +30,18 @@ sang *"đo được gì"*.
 | 6 | 9 | Phát hiện skill → quy nạp operator | 5:15 | 1:15 |
 | 7 | 10 | Sinh semantic task | 6:30 | 1:00 |
 | 8 | 11 | Tinh lọc dữ liệu *(chuyển người)* | 7:30 | 1:00 |
-| 9 | 13 | Thiết lập thực nghiệm | 8:30 | 0:45 |
-| 10 | 14 | CH1 — thu được gì, chi phí bao nhiêu | 9:15 | 1:00 |
-| 11 | 15 | CH2 — kết quả chính | 10:15 | 1:15 |
-| 12 | 16 | CH2–CH3 — phân tích và so sánh | 11:30 | 1:15 |
-| 13 | 17 | **Demo** | 12:45 | 1:15 |
-| 14 | 19 | Kết luận | 14:00 | 1:00 |
+| 9 | 13 | Thiết lập thực nghiệm | 8:30 | 1:00 |
+| 10 | 14 | CH1 — thu được gì, chi phí bao nhiêu | 9:30 | 1:15 |
+| 11 | 15 | CH2 — kết quả chính | 10:45 | 1:15 |
+| 12 | 16 | CH2–CH3 — phân tích và so sánh | 12:00 | 1:15 |
+| 13 | 18 | Kết luận | 13:15 | 1:15 |
 
 Slide 3 dài thêm ~15--20 giây so với bản cũ (khối phạm vi \& ứng dụng đích); nếu trễ
 thì lược đoạn ba nhóm ứng dụng.
 
-Trang 3, 6, 12, 18 là mục lục đầu mỗi chương — bấm lướt, không dừng nói.
-Trang 20 là trang cảm ơn; dừng ở đó và mời Hội đồng đặt câu hỏi.
+Trang 3, 6, 12, 17 là mục lục đầu mỗi chương — bấm lướt, không dừng nói.
+Trang 19 là trang cảm ơn; dừng ở đó và mời Hội đồng đặt câu hỏi.
+
 
 ---
 
@@ -58,41 +58,46 @@ Trang 20 là trang cảm ơn; dừng ở đó và mời Hội đồng đặt câ
 
 ## Slide 2 - Bối cảnh, bài toán, thách thức (0:30, trang 4)
 
-> **Web agent** là tác nhân AI nhận yêu cầu bằng ngôn ngữ tự nhiên rồi tự điều khiển
-> trình duyệt để hoàn thành — ví dụ: *"Vào trang quản trị kiểm tra đơn hàng và cập nhật
-> trạng thái"*. Muốn agent chạy được trong thực tế thì hiện nay phải gọi API của các mô
-> hình lớn — rất đắt đỏ theo từng bước thao tác, độ trễ cao, và dữ liệu nội bộ phải gửi
-> ra máy chủ bên ngoài.
+> Kính thưa Hội đồng, sự phát triển đột phá của các **Mô hình Ngôn ngữ Lớn (LLM)** trong
+> những năm gần đây đã tạo tiền đề chuyển đổi mạnh mẽ từ các chatbot trả lời thụ động sang
+> **AI Agent (Tác nhân AI tự hành)**. Trong đó, **Web Agent** là hướng ứng dụng nổi bật
+> nhất: tác nhân nhận lệnh bằng ngôn ngữ tự nhiên rồi tự điều khiển trình duyệt web để hoàn
+> thành công việc — ví dụ: *"Vào hệ thống nội bộ kiểm tra đơn hàng và xuất báo cáo"*.
 >
-> Hướng thay thế là dùng **mô hình ngôn ngữ nhỏ (SLM, dưới 10 tỷ tham số)**, chạy ngay
-> cục bộ trên máy tính. Nhưng mô hình nhỏ không tự biết cách dùng một website lạ; ta
-> phải fine-tune (tinh chỉnh) nó. Mà fine-tune thì cần dữ liệu **trajectory** — tức
-> toàn bộ chuỗi trạng thái trang web và các thao tác bấm chuột, gõ phím thành công trên
-> chính website đó. Dữ liệu này gần như không có sẵn. Gán nhãn thủ công bằng con người
-> thì cực kỳ tốn kém: AutoWebGLM cần tới **20 người làm việc liên tục trong một tháng**.
+> Tuy nhiên, đa số Web Agent hiện nay phụ thuộc vào việc gọi **API của các mô hình LLM lớn
+> thương mại** (như GPT-4). Cách làm này bộc lộ ba rào cản lớn khi triển khai thực tế: chi
+> phí API tích lũy theo từng bước thao tác rất đắt đỏ, độ trễ mạng cao, và quan trọng nhất
+> là **rủi ro bảo mật riêng tư** khi phải gửi dữ liệu nhạy cảm của tổ chức ra máy chủ bên ngoài.
 >
-> Vì vậy bài toán của khóa luận là: **tự động khám phá một website đang hoạt động và
-> tự sinh ra dữ liệu huấn luyện cho website đó, hoàn toàn không dùng dữ liệu do con người
-> gán nhãn.**
+> Giải pháp bền vững là sử dụng **mô hình ngôn ngữ nhỏ (SLM, dưới 10 tỷ tham số)**, có thể
+> chạy hoàn toàn cục bộ (*on-premise*) trên máy tính tổ chức. Nhưng mô hình nhỏ vốn dĩ không
+> biết cách vận hành trên một website mới lạ; ta bắt buộc phải **fine-tune (tinh chỉnh)** nó.
+> Muốn fine-tune thì cần dữ liệu tương tác thực tế (**trajectory** — chuỗi thao tác bấm, gõ,
+> chuyển trang thành công). Nút thắt lớn nhất hiện nay là **dữ liệu này không có sẵn**, còn
+> gán nhãn thủ công bằng con người thì vô cùng đắt đỏ: ví dụ hệ thống AutoWebGLM phải cần
+> tới **20 kỹ sư gán nhãn liên tục trong suốt 1 tháng**.
 >
-> Và xin nói rõ ngay phạm vi, như dòng thứ hai trong khung: đích nhắm là **một tập website
-> cố định của một tổ chức** — trang quản trị, CMS, diễn đàn nội bộ của họ — **chứ không
-> phải một model dùng chung cho mọi trang web**. Chuyện đó em sẽ nói kỹ hơn ở slide sau.
+> Xuất phát từ thực tế đó, bài toán của khóa luận là: **Làm sao tự động khám phá một website
+> đang hoạt động và tự sinh dữ liệu huấn luyện chất lượng cao cho website đó, mà hoàn toàn
+> không cần đến nhãn của con người?**
 >
-> `[lược nếu trễ]` Bốn thách thức kỹ thuật cốt lõi ở cột phải. Thứ nhất, **chi phí gán
-> nhãn** thủ công quá lớn như vừa nói. Thứ hai, **tri thức môi trường** — mỗi website có
-> luồng thao tác riêng, tri thức học được ở trang này không mang sang trang khác được.
-> Thứ ba, **báo đỗ ảo**: agent tự sinh dữ liệu thì cũng tự chấm điểm cho mình, rất dễ
-> tuyên bố xong trong khi chưa làm gì. Thứ tư, **tác vụ đa bước**: ghép các thao tác rời
-> rạc thành một nhiệm vụ dài có ý nghĩa nghiệp vụ.
+> **Về phạm vi nghiên cứu:** Khóa luận xác định rất rõ ràng ngay từ đầu — mục tiêu là **chuyên
+> biệt hóa tác nhân cho một tập website cố định** của một tổ chức (như ERP, CRM, trang quản
+> trị nội bộ) để đạt hiệu năng thực thi cao và an toàn dữ liệu — **hoàn toàn KHÔNG PHẢI là
+> xây dựng một General Agent (tác nhân vạn năng)** để giải quyết mọi trang web ngẫu nhiên trên
+> toàn bộ Internet.
+>
+> `[lược nếu trễ]` Để giải quyết bài toán này, nhóm đối mặt với **bốn thách thức cốt lõi** ở
+> cột phải: (1) Chi phí gán nhãn tay quá lớn; (2) Tri thức môi trường mang tính đặc thù cao
+> theo từng web; (3) Nguy cơ **dương tính giả khi tự đánh giá** (agent tự khai xong nhưng thực
+> tế làm sai); và (4) Làm sao ghép các hành động rời rạc thành tác vụ đa bước có ý nghĩa nghiệp vụ.
 
-**Câu chốt:** nút thắt không phải mô hình, mà là **dữ liệu tương tác cho từng website cụ thể**.
+**Câu chốt:** Nút thắt của Web Agent không nằm ở kiến trúc mô hình, mà nằm ở **dữ liệu tương tác thực tế cho từng website cụ thể**.
 
-**Câu chốt phụ (bắt buộc nói, đừng đợi bị hỏi):** phạm vi là **chuyên biệt hóa theo
-website**, không phải agent vạn năng. Nói chủ động ở slide 2 thì slide 3 và PL2 chỉ còn
-việc củng cố.
+**Câu chốt phụ (bắt buộc nói, đừng đợi bị hỏi):** Phạm vi của nghiên cứu là **chuyên biệt hóa theo website**, không phải agent vạn năng. Thứ tổng quát hóa ở đây là **pipeline khám phá tự động**, không phải là một mô hình duy nhất.
 
 ---
+
 
 ## Slide 3 - Mục tiêu và định vị (1:45, trang 5)
 
@@ -228,8 +233,9 @@ và Hội đồng có thể đã đọc Chương 5.
 > Điểm khác biệt quan trọng là toàn bộ việc kiểm soát chất lượng được thực hiện **trực tuyến
 > ngay trong vòng lặp khám phá**, không cần chờ đến khâu hậu kiểm ngoại tuyến:
 > 1. **Inline LLM Judge:** Mỗi khi agent tự tuyên bố xong, LLM Judge độc lập lập tức chấm
->    lại trên trạng thái trang đích, loại bỏ ngay **801 episode (khoảng 27,4%)** báo đỗ ảo
->    (false positive) từ nguồn.
+>    lại trên trạng thái trang đích, loại bỏ ngay **801 episode (khoảng 27,4%)** dương tính giả
+>    khi tự đánh giá (false positive) từ nguồn.
+
 > 2. **Cổng hành động hữu hiệu (Effective Action):** Viết bằng mã để chặn các trường hợp
 >    agent báo xong nhưng trang web không hề thay đổi trạng thái — điểm mù mà Judge không
 >    thấy được.
@@ -337,28 +343,8 @@ sạch nhất khóa luận có.
 
 ---
 
-## Slide 13 - Demo (12:45, trang 17)
+## Slide 13 - Kết luận (13:15, trang 18)
 
-> Đây là video minh họa mô hình sau fine-tune giải trực tiếp một task WebArena thật.
->
-> - **Đầu vào tinh gọn:** Mỗi bước mô hình chỉ nhận URL và cây trợ năng (AXTree) rút
->   gọn — **không dùng ảnh chụp màn hình**.
-> - **Suy luận chuẩn xác:** Mô hình sinh ra cặp suy nghĩ (*thought*) phân tích tình huống
->   và hành động (*action*) tương ứng để thực thi trên trình duyệt.
->
-> *(Chạy video. Chỉ tay vào màn hình: đây là bước agent đọc cây giao diện, suy luận tìm
-> nút bấm, thao tác điền form/chuyển trang, và bước kết thúc khi tác vụ hoàn thành.)*
->
-> Toàn bộ quá trình suy luận này chạy cục bộ trên một GPU, không gửi dữ liệu ra ngoài,
-> và kết quả được chính benchmark WebArena xác nhận thành công.
-
-**Cue kỹ thuật:** mở video trước ở tab riêng, **âm lượng = 0**. Chạy xong quay lại
-trang 19 (slide 14). Nếu video lỗi: mô tả bằng lời trong 20 giây rồi đi tiếp — đừng sửa
-trên bục.
-
----
-
-## Slide 14 - Kết luận (14:00, trang 19)
 
 > Tóm lại, khóa luận đã hoàn thành một pipeline khép kín từ khám phá website đến huấn
 > luyện mô hình, thu được 146 kỹ năng, 57 operator, tạo ra tập dữ liệu 1760 trajectory
@@ -409,7 +395,8 @@ và nhắc lại phạm vi để không ai hiểu nhầm là nhóm hứa một a
 | Động lực hướng đến ai? Có phải muốn một model generalize cho mọi trang cùng lĩnh vực? | **Slide 3** trước, **PL2** sau | **Không.** Đích nhắm là chuyên biệt hóa cho *một* website cụ thể. Câu chốt: **thứ tổng quát hóa là pipeline, không phải model**. Người dùng đích là nhóm vận hành vài website cố định, cần agent chạy tại chỗ. Khả thi vì **dưới 20 đô la mỗi website** và không cần người gán nhãn. |
 | Làm sao biết task do LLM đề xuất là hợp lý và làm được thật trên giao diện đó? | **PL3** khối 1 | Bộ đề xuất là một *agent* đọc trực tiếp cây trợ năng của trang thật, không đề xuất từ trí nhớ. Quan trọng hơn: **khả thi được chứng minh bằng thực thi, không bằng lời** — chỉ task có ít nhất một lượt giải thành công *và qua kiểm chứng* mới vào dataset. 637 task bị chính agent báo bất khả thi; 3981 lượt thử còn 2117 hợp lệ. |
 | Vì sao ngân sách bước là 25? | **PL3** khối 2 | Chính xác là **15 bước cho task cục bộ, 25 cho semantic task nhiều bước**. Solver chiếm 85,5% trong 20.808 lượt gọi nên ngân sách bước *chính là* ngân sách kinh phí — đây trước hết là quyết định chi phí. Nhưng dữ liệu cho thấy nó **không bóp méo phép đo**: episode thành công có trung vị 6 bước, và **không episode nào** đạt mục tiêu rồi mới bị cắt vì hết bước. |
-| Dựa vào đâu để biết task đã hoàn thành? | **PL3** khối 3 | **Ba lớp**, không phải hai: (i) solver tự khai hoặc vị từ tất định; (ii) LLM-as-Judge soi trạng thái trang đích → loại **801 lượt** báo đỗ ảo; (iii) cổng "hành động hữu hiệu" bằng mã → loại **104 trajectory**, nhóm lỗi mà judge *về nguyên tắc* không thấy được. Và 24,6% được chấm bằng **bộ chấm chính thức của WebArena**. |
+| Dựa vào đâu để biết task đã hoàn thành? | **PL3** khối 3 | **Ba lớp**, không phải hai: (i) solver tự khai hoặc vị từ tất định; (ii) LLM-as-Judge soi trạng thái trang đích → loại **801 lượt** dương tính giả khi tự đánh giá; (iii) cổng "hành động hữu hiệu" bằng mã → loại **104 trajectory**, nhóm lỗi mà judge *về nguyên tắc* không thấy được. Và 24,6% được chấm bằng **bộ chấm chính thức của WebArena**. |
+
 | Thực nghiệm nhắm mục tiêu nào, đã trả lời được chưa? | **PL4** | CH1–CH4 đều có số liệu trả lời. Phần phải nói thật: **O2 và O4 mới hoàn thành một phần** — chỉ 12/142 semantic task từ ghép chuỗi, và **ablation đồ thị so với khám phá phẳng chưa chạy**. |
 
 ### B. Các câu khác
