@@ -44,15 +44,13 @@ phân rã các quỹ đạo này thành những quỹ đạo con (sub-trajectory
 cụm theo độ tương đồng ngữ nghĩa và trừu tượng hóa thành kỹ năng (skill) khi cụm
 đạt ngưỡng tần suất xuất hiện $\tau$ (mặc định $\tau = 2$).
 
-Mỗi skill sau khi kiểm chứng được chuyển đổi thành một toán tử (operator) kèm theo các precondition và effect của operator đó, sau đó chúng sẽ được lưu trữ trên một đồ thị. Trên đồ thị đó, các operator được nối với nhau nếu effect của operator này chính là precondition của operator kia. Mỗi đường đi trên đồ thị qua nhiều operator sẽ tương ứng với một nhiệm vụ ngữ nghĩa (semantic task) nhiều bước và được đưa trở lại cho \textit{Solver} thực thi. Toàn bộ các task đã thực hiện bao gồm low-level task và semantic task đều được lưu trữ dưới dạng các episode và kiểm định qua cổng kiểm tra chất lượng tự động \emph{ngay tại thời điểm episode đó được ghi nhận} (Mục~\ref{sec:method-success}). Nhờ đó, sau khi kết thúc quá trình khám phá, tập hợp episode đó sẽ được sử dụng trực tiếp
+Mỗi skill sau khi kiểm chứng được chuyển đổi thành một toán tử (operator) kèm theo các precondition và effect của operator đó, sau đó chúng sẽ được lưu trữ trên một đồ thị. Trên đồ thị đó, các operator được nối với nhau nếu effect của operator này chính là precondition của operator kia. Mỗi đường đi trên đồ thị qua nhiều operator sẽ tương ứng với một nhiệm vụ ngữ nghĩa (semantic task) nhiều bước và được đưa trở lại cho \textit{Solver} thực thi. Toàn bộ các task đã thực hiện bao gồm low-level task và semantic task đều được lưu trữ dưới dạng các episode và kiểm định qua cổng kiểm tra chất lượng tự động \emph{ngay tại thời điểm episode đó được ghi nhận}. Nhờ đó, sau khi kết thúc quá trình khám phá, tập hợp episode đó sẽ được sử dụng trực tiếp
 để xây dựng tập dữ liệu SFT cho mô hình đích mà không cần thêm bước kiểm chứng ngoại tuyến.
 
 Dữ liệu thu thập từ mỗi lượt chạy được phân thành 3 loại episode dựa trên điều kiện khởi tạo và độ khó của tác vụ. Episode \texttt{LOCAL}
 là low-level task được giải trực tiếp ngay tại trang hiện tại. Episode \texttt{UNPREFIXED} là chính task đó
-nhưng được thực thi lại từ trang chủ, do đó trajectory sẽ bao gồm thêm chuỗi hành động điều hướng đến trang đích đến trang hiện tại cần thực hiện tác vụ
-(Mục~\ref{sec:method-unprefixed}). Episode \texttt{GOAL} là semantic task
-nhiều bước được sinh từ chuỗi operator hoặc từ seed năng lực của website
-(Mục~\ref{sec:method-semantic}). Ba nhãn này được duy trì để phân chia thành 3 mức độ khó trong dữ liệu huấn luyện.
+nhưng được thực thi lại từ trang chủ, do đó trajectory sẽ bao gồm thêm chuỗi hành động điều hướng đến trang đích đến trang hiện tại cần thực hiện tác vụ. Episode \texttt{GOAL} là semantic task
+nhiều bước được sinh từ chuỗi operator hoặc từ seed năng lực của website. Ba nhãn này được duy trì để phân chia thành 3 mức độ khó trong dữ liệu huấn luyện.
 
 Thiết kế của pipeline dựa trên 3 nguyên tắc sau:
 
@@ -61,13 +59,13 @@ Thiết kế của pipeline dựa trên 3 nguyên tắc sau:
     khi xuất hiện lặp lại tối thiểu 2 lần trên các trajectory khác nhau; episode do
     agent xác nhận thành công phải được judge agent kiểm tra lại; operator có effect rỗng hoặc thuộc bị trùng lặp với precondition đều bị loại bỏ.
   \item \textbf{P2: Cấu trúc đồ thị hai tầng.} Thay vì chỉ
-    lưu trữ các trang đã khám phá dưới dạng 1 danh sách không có cấu trúc, HSGE tổ chức chúng dưới dạng một đồ thị hai tầng (Mục~\ref{sec:method-graph}). Tầng thấp lưu trữ
+    lưu trữ các trang đã khám phá dưới dạng một danh sách không có cấu trúc, HSGE tổ chức chúng dưới dạng một đồ thị hai tầng. Tầng thấp lưu trữ
     không gian trạng thái của các trang web và liên kết để điều hướng tới trang web đó; tầng cao lưu trữ
-    các skill, operator và liên k giữa các operator.
+    các skill, operator và liên kết chuyển tiếp giữa các operator.
   \item \textbf{P3: Hệ thống task hai tầng.} Các low-level task do
-    LLM đề xuất (Mục~\ref{sec:method-exploration}) định hướng cho quá
+    LLM đề xuất định hướng cho quá
     trình khám phá và cung cấp dữ liệu cơ sở để phát hiện skill.
-    Các semantic task (Mục~\ref{sec:method-semantic}) biểu diễn
+    Các semantic task biểu diễn
     mục tiêu tương tác bao gồm nhiều bước vượt ngoài phạm vi của một trang đơn lẻ. Các tác vụ ngữ nghĩa được xây dựng từ 2 nguồn: ghép chuỗi operator theo hướng bottom-up; và seed năng lực của
     website theo hướng top-down. Việc kết hợp song song 2 nguồn là
     kết quả thực nghiệm, do phương pháp bottom-up phụ thuộc vào mật độ cạnh của operator graph (Phụ lục~\ref{sec:disc-operators}).
@@ -76,10 +74,7 @@ Thiết kế của pipeline dựa trên 3 nguyên tắc sau:
 \section{Nền tảng kế thừa và điểm mới của HSGE}
 \label{sec:method-novelty}
 
-HSGE được xây dựng dựa trên 6 nền tảng lý thuyết và kỹ thuật, đồng thời
-mở rộng các cơ chế xử lý nhằm giải quyết các giới hạn trong khám phá web agent tự trị.
-Bảng~\ref{tab:novelty} tổng hợp các thành phần kế thừa và những điểm đóng góp mới của khóa luận;
-mối liên hệ giữa HSGE và các hệ thống liên quan được trình bày chi tiết tại Chương~\ref{ch:related}.
+HSGE được xây dựng trên nền tảng của sáu cơ sở lý thuyết và kỹ thuật, đồng thời mở rộng một số cơ chế xử lý nhằm khắc phục những hạn chế còn tồn tại trong khám phá web tự trị cho web agent. Bảng~\ref{tab:novelty} tổng hợp các thành phần được kế thừa từ những nghiên cứu trước và các điểm đóng góp mới của khóa luận. Mối quan hệ giữa HSGE và các hệ thống liên quan được trình bày chi tiết tại Chương~\ref{ch:related}.
 
 \begin{table}[htbp]
   \centering
@@ -129,16 +124,16 @@ mối liên hệ giữa HSGE và các hệ thống liên quan được trình b�
 
 \noindent
 Bên cạnh 6 nền tảng trên, HSGE đề xuất 2 thành phần độc lập:
-(1) \emph{Cơ chế sinh semantic task song song} kết hợp giữa ghép chuỗi operator (bottom-up) và seed năng lực website (top-down) với ngân sách thực thi chung (Mục~\ref{sec:method-semantic});
-(2) \emph{Hệ thống cổng kiểm định chất lượng trực tuyến} bao gồm judge độc lập thẩm định episode trước khi chuyển sang khâu phát hiện skill, cổng lọc hành động hợp lệ, và cổng loại bỏ các báo cáo tác vụ bất khả thi không hợp lệ (Mục~\ref{sec:method-success}, \ref{sec:method-data}).
+(1) \emph{Cơ chế sinh semantic task song song} kết hợp giữa ghép chuỗi operator (bottom-up) và seed năng lực website (top-down) với ngân sách thực thi chung;
+(2) \emph{Hệ thống cổng kiểm định chất lượng trực tuyến} bao gồm judge độc lập thẩm định episode trước khi chuyển sang khâu phát hiện skill, cổng lọc hành động hợp lệ, và cổng loại bỏ các báo cáo tác vụ bất khả thi không hợp lệ.
 
-Các phân tích trên thể hiện đóng góp về mặt kiến trúc và thiết kế hệ thống. Trong Chương~\ref{ch:experiments}, hiệu quả tổng thể của pipeline được đánh giá thông qua chất lượng mô hình SLM sau fine-tuning (Mục~\ref{sec:exp-baseline}), đồng thời tác động của kiến trúc đồ thị hai tầng được kiểm chứng qua phân tích triệt tiêu (ablation study) so với phương pháp khám phá phẳng một tầng (Mục~\ref{sec:exp-ablation}).
+Các phân tích trên thể hiện đóng góp về mặt kiến trúc và thiết kế hệ thống. Trong Chương~\ref{ch:experiments}, hiệu quả tổng thể của pipeline được đánh giá thông qua chất lượng mô hình SLM sau fine-tuning, đồng thời tác động của kiến trúc đồ thị hai tầng được kiểm chứng qua phân tích triệt tiêu (ablation study) so với phương pháp khám phá phẳng một tầng.
 
 \section{Biểu diễn đồ thị hai tầng}
 \label{sec:method-graph}
 
 Cấu trúc biểu diễn đồ thị hai tầng của HSGE được mô tả trong Hình~\ref{fig:twolevel}. Tầng
-thấp lưu trữ không gian trạng thái các trang web đã duyệt và chuỗi hành động tương tác thực tế; tầng cao lưu trữ các skill và operator được trừu tượng hóa từ trajectory, cùng các cạnh biểu diễn quan hệ chuyển tiếp giữa các operator.
+thấp lưu trữ không gian trạng thái của các trang web đã duyệt và chuỗi hành động tương tác đã thu được; tầng cao lưu trữ các skill và operator được trừu tượng hóa từ trajectory, cùng các cạnh biểu diễn quan hệ chuyển tiếp giữa các operator.
 
 \begin{figure}[htbp]
   \centering
@@ -162,7 +157,7 @@ Kế thừa quy ước chuẩn từ WebArena~\cite{zhou2024webarena} và Browser
   \centering
   \caption[Action space của solver]{Action space của solver.
     Đối số phần tử là mã định danh trong accessibility tree.
-  Các hành động không làm thay đổi trạng thái trang được phân nhóm riêng để phục vụ cổng lọc dữ liệu (Mục~\ref{sec:method-data}).}
+  Các hành động không làm thay đổi trạng thái trang được phân nhóm riêng để phục vụ cổng lọc dữ liệu.}
   \label{tab:actions}
   \small
   \begin{tabular}{@{}L{5.4cm} L{7.8cm}@{}}
@@ -193,7 +188,7 @@ Kế thừa quy ước chuẩn từ WebArena~\cite{zhou2024webarena} và Browser
   \end{tabular}
 \end{table}
 
-Trong thiết kế ban đầu, 3 hành động \texttt{scroll}, \texttt{hover} và \texttt{noop} dù được tầng thực thi hỗ trợ nhưng không xuất hiện trong prompt định nghĩa action space, dẫn đến việc mô hình liên tục lặp lại thao tác nhấn trên phần tử chưa sẵn sàng. Phân tích lỗi thực nghiệm (Mục~\ref{sec:exp-analysis}) xác nhận đây là nguyên nhân gây thất bại phổ biến. Do đó, 3 hành động này được tích hợp trực tiếp vào prompt kèm chỉ dẫn xử lý khi gặp ngoại lệ timeout (chờ hoặc cuộn trang thay vì thao tác lại phần tử).
+Trong thiết kế ban đầu, 3 hành động \texttt{scroll}, \texttt{hover} và \texttt{noop} dù được tầng thực thi hỗ trợ nhưng không xuất hiện trong prompt định nghĩa action space, dẫn đến việc mô hình liên tục lặp lại thao tác nhấn trên phần tử chưa sẵn sàng. Phân tích lỗi thực nghiệm xác nhận đây là nguyên nhân gây thất bại phổ biến. Do đó, 3 hành động này được tích hợp trực tiếp vào prompt kèm chỉ dẫn xử lý khi gặp ngoại lệ timeout (chờ hoặc cuộn trang thay vì thao tác lại phần tử).
 
 Đối với hành động \texttt{goto}, hệ thống chỉ sử dụng đường dẫn tương đối thay vì URL tuyệt đối chứa tên miền máy chủ. Do môi trường thu thập dữ liệu và môi trường đánh giá có thể triển khai trên các địa chỉ IP/port khác nhau, toàn bộ URL trong prompt và đối số của \texttt{goto} đều được chuẩn hóa loại bỏ tiền tố tên miền (base URL). Tiền tố này chỉ được ghép lại tại tầng thực thi ngay trước khi gửi lệnh tới trình duyệt. Cơ chế chuyển đổi hai chiều này đảm bảo dữ liệu huấn luyện có tính tổng quát hóa trên các instance khác nhau của cùng một website.
 
@@ -201,15 +196,15 @@ Trong thiết kế ban đầu, 3 hành động \texttt{scroll}, \texttt{hover} v
 
 Tầng thấp của đồ thị biểu diễn không gian trạng thái tương tác: mỗi node đại diện cho một trạng thái trang web đã truy cập, được định danh duy nhất bởi cặp $\langle \text{URL}, \text{hash}(\text{axtree}) \rangle$; mỗi cạnh có hướng đại diện cho hành động $a \in \mathcal{A}$ chuyển trạng thái giữa hai trang. Việc kết hợp mã băm axtree cùng URL giúp phát hiện các trang có URL khác nhau nhưng cùng nội dung giao diện, tránh tiêu tốn ngân sách khám phá vào các trạng thái trùng lặp.
 
-\subsection{Tầng cao: Biểu diễn skill theo khung options}
+\subsection*{Tầng cao: Biểu diễn skill theo khung Options}
 
-Khái niệm \emph{skill} được định nghĩa là một hành vi tương tác có tham số và có thể tái sử dụng. Theo khung lý thuyết options~\cite{sutton1999options}, mỗi skill được hình thức hóa thành một bộ ba $\sigma = \langle I, \pi, \beta \rangle$, trong đó $I$ là tập điều kiện khởi đầu, $\pi$ là chính sách thực thi chuỗi hành động, và $\beta$ là điều kiện kết thúc. Trong hệ thống, mỗi skill được biểu diễn bằng một \emph{skill card} bao gồm: tên định danh, mô tả ngôn ngữ tự nhiên, danh sách tham số có kiểu dữ liệu, và liên kết tham chiếu tới các sub-trajectory gốc. Trên đồ thị tầng cao, mỗi node skill liên kết với các trạng thái tầng thấp thông qua cạnh khởi đầu và cạnh effect, đồng thời liên kết với các skill khác qua quan hệ tiền điều kiện và hệ quả.
+Khái niệm \emph{skill} được định nghĩa là một hành vi tương tác có tham số, có khả năng tái sử dụng và có thể được thực thi trong nhiều ngữ cảnh khác nhau. Dựa trên khung lý thuyết Options~\cite{sutton1999options}, mỗi skill được hình thức hóa dưới dạng bộ ba $\sigma = \langle I, \pi, \beta \rangle$, trong đó $I$ là tập điều kiện khởi đầu, $\pi$ là chính sách thực thi chuỗi hành động, và $\beta$ là điều kiện kết thúc. Trong hệ thống, mỗi skill được biểu diễn dưới dạng một \emph{skill card}, bao gồm tên định danh, mô tả bằng ngôn ngữ tự nhiên, danh sách tham số kèm kiểu dữ liệu và liên kết tham chiếu đến các sub-trajectory nguồn. Trên đồ thị tầng cao, mỗi node skill được liên kết với các trạng thái ở tầng thấp thông qua quan hệ khởi đầu và effect, đồng thời liên kết với các skill khác thông qua quan hệ precondition và effect.
 
 \subsection{Planning operator: Precondition và Effect}
 
 Nhằm phục vụ thuật toán lập kế hoạch ký hiệu, mỗi skill sau kiểm chứng được chuẩn hóa thành một operator theo mô hình STRIPS~\cite{fikes1971strips}: $\omega = \langle \mathit{pre}, \mathit{eff} \rangle$, trong đó $\mathit{pre}$ và $\mathit{eff}$ lần lượt là tập các mệnh đề điều kiện tiên quyết (precondition) và hiệu ứng trạng thái (effect) biểu diễn bằng ngôn ngữ tự nhiên (ví dụ: ``người dùng đang xem danh sách issue của dự án'').
 
-Không gian mệnh đề không bị cố định trước mà được LLM sinh tự động trong quá trình induction, sau đó được predicate registry chuẩn hóa về các mã định danh nhất quán (Mục~\ref{sec:method-semantic}). Trên \emph{operator graph}, một cạnh có hướng từ $\omega_1$ đến $\omega_2$ được thiết lập khi tồn tại $\mathit{eff}(\omega_1) \cap \mathit{pre}(\omega_2) \neq \emptyset$. Mỗi đường đi hợp lệ trên operator graph đại diện cho một chuỗi thực thi khả thi gồm nhiều skill liên tiếp.
+Không gian mệnh đề không bị cố định trước mà được LLM sinh tự động trong quá trình induction, sau đó được predicate registry chuẩn hóa về các mã định danh nhất quán. Trên \emph{operator graph}, một cạnh có hướng từ $\omega_1$ đến $\omega_2$ được thiết lập khi tồn tại $\mathit{eff}(\omega_1) \cap \mathit{pre}(\omega_2) \neq \emptyset$. Mỗi đường đi hợp lệ trên operator graph đại diện cho một chuỗi thực thi khả thi gồm nhiều skill liên tiếp.
 
 \subsection{Phân loại cấp độ task}
 
@@ -234,7 +229,7 @@ Quá trình khám phá website có định hướng trong HSGE được điều 
   \label{fig:frontier}
 \end{figure}
 
-Frontier là một hàng đợi ưu tiên chứa danh sách URL ứng viên được sắp xếp để mở rộng không gian khám phá, phân chia thành 2 tầng (Hình~\ref{fig:frontier}). \emph{Tầng 0} gồm các URL mà solver đã truy cập thành công trong quá trình thực thi task cùng các trang đang mở trên các tab trình duyệt; nhóm này có độ ưu tiên cao nhất trong hàng đợi. \emph{Tầng 1} gồm các siêu liên kết (hyperlinks) được trích xuất từ cấu trúc DOM của các trang đã duyệt. Việc khai thác siêu liên kết ở Tầng 1 giúp mở rộng biên khám phá vượt ngoài các thao tác điều hướng phát sinh từ việc giải task.
+Frontier là một hàng đợi ưu tiên chứa danh sách URL ứng viên được sắp xếp để mở rộng không gian khám phá, phân chia thành 2 tầng (Hình~\ref{fig:frontier}). \emph{Tầng 0} gồm các URL mà solver đã truy cập thành công trong quá trình thực thi task cùng các trang đang mở trên các tab trình duyệt, nhóm này sẽ có độ ưu tiên cao nhất trong hàng đợi. \emph{Tầng 1} gồm các siêu liên kết (hyperlinks) được trích xuất từ cấu trúc DOM của các trang đã duyệt. Việc khai thác siêu liên kết ở Tầng 1 giúp mở rộng biên khám phá vượt ngoài các thao tác điều hướng phát sinh trong quá trình việc giải task.
 
 Nhằm tránh hiện tượng bão hòa hàng đợi do các trang có cấu trúc tương đồng (ví dụ: các bài đăng hoặc bình luận trên diễn đàn dùng chung giao diện), mỗi URL được chuẩn hóa về một \emph{URL template} bằng cách loại bỏ query string, fragment và thay thế các định danh động (ID, slug) bằng ký tự đại diện:
 \begin{center}
@@ -263,20 +258,18 @@ Thuật toán~\ref{alg:frontier} mô tả chi tiết quy trình khám phá. Hệ
     \in V$} \textbf{continue} \EndIf
     \State $V \gets V \cup \{\textsc{Landed}(o), \textsc{Hash}(o)\}$
     \State $D \gets \emptyset$ \Comment{tập task giải thành công tại node}
-    \For{task $t \in \textsc{Explorer}(o)$} \Comment{low-level task,
-    Mục~\ref{sec:method-lowlevel}}
+    \For{task $t \in \textsc{Explorer}(o)$} \Comment{low-level task}
     \State $\tau \gets \textsc{Solver}(u, t)$; ghi nhận episode nhãn \texttt{LOCAL}
     \If{$\tau$ thành công} $\textsc{Discovery}(\tau)$; $D \gets D
     \cup \{t\}$ \EndIf
     \State thêm các URL đạt tới trong $\tau$ vào $F$ ở Tầng 0
     \EndFor
-    \For{task $t \in D$} \Comment{unprefixed sampling,
-    Mục~\ref{sec:method-unprefixed}}
+    \For{task $t \in D$} \Comment{unprefixed sampling}
     \State $\tau \gets \textsc{Solver}(r, t)$; ghi nhận episode nhãn
     \texttt{UNPREFIXED}
     \If{$\tau$ thành công} $\textsc{Discovery}(\tau)$ \EndIf
     \EndFor
-    \For{task $t \in \textsc{SemanticTasks}(u)$} \Comment{ghép chuỗi operator và seed, Mục~\ref{sec:method-semantic}}
+    \For{task $t \in \textsc{SemanticTasks}(u)$} \Comment{ghép chuỗi operator và seed}
     \State $\tau \gets \textsc{Solver}(u, t)$; ghi nhận episode nhãn \texttt{GOAL}
     \EndFor
     \State trích xuất hyperlinks của $u$; thêm vào Tầng 1 theo giới hạn template
@@ -288,13 +281,13 @@ Thuật toán~\ref{alg:frontier} mô tả chi tiết quy trình khám phá. Hệ
 \subsection{Đề xuất low-level task}
 \label{sec:method-lowlevel}
 
-Tại mỗi trang thuộc frontier, explorer kích hoạt LLM để đề xuất tối đa $k$ task ($k = 9$ trong các lượt thu thập dữ liệu chính; mặc định $k = 6$, chi tiết tại Phụ lục~\ref{app:design-params}) gắn liền với nội dung của trang. Mỗi đề xuất được định dạng dưới dạng dữ liệu có cấu trúc JSON kèm trường phân loại nhận một trong 4 giá trị:
+Tại mỗi trang thuộc frontier, explorer sử dụng LLM để đề xuất tối đa $k$ task ($k = 9$ trong các lượt thu thập dữ liệu chính; mặc định $k = 6$, chi tiết tại Phụ lục~\ref{app:design-params}) gắn liền với nội dung của trang. Mỗi đề xuất được định dạng dưới dạng dữ liệu có cấu trúc JSON kèm trường phân loại nhận một trong 4 giá trị:
 \texttt{INFO} (truy xuất thông tin),
 \texttt{NAV} (điều hướng tới trang cụ thể),
 \texttt{MOD} (thay đổi nội dung hoặc trạng thái hệ thống), và
 \texttt{COMPOSITE} (tác vụ phức hợp gồm chuỗi hành động liên tiếp, ví dụ: ``mua sản phẩm chuột không dây có giá thấp nhất'').
 
-Nhóm \texttt{COMPOSITE} được ưu tiên hàng đầu trong prompt hệ thống do đây là nguồn chính để khai phá các skill có khả năng tái sử dụng và ghép chuỗi. Đối với các biểu mẫu nhập liệu nhiều trường, explorer được chỉ dẫn sinh task hoàn tất trọn vẹn biểu mẫu theo đúng mục đích thay vì các thao tác điền từng trường riêng lẻ. Đồng thời, toàn bộ các tác vụ liên quan đến xác thực và quản lý tài khoản người dùng (đăng nhập, đăng ký, đổi mật khẩu, xóa tài khoản) bị loại trừ để bảo đảm an toàn phiên làm việc dùng chung.
+Nhóm \texttt{COMPOSITE} được ưu tiên hàng đầu trong prompt hệ thống do đây là nguồn chính để khai thác và tạo ra các skill có khả năng tái sử dụng và ghép chuỗi. Đối với các biểu mẫu nhập liệu nhiều trường, explorer được chỉ dẫn sinh task hoàn tất trọn vẹn biểu mẫu theo đúng mục đích thay vì các thao tác điền từng trường riêng lẻ. Đồng thời, toàn bộ các tác vụ liên quan đến xác thực và quản lý tài khoản người dùng (đăng nhập, đăng ký, đổi mật khẩu, xóa tài khoản) bị loại trừ để bảo đảm an toàn phiên làm việc dùng chung cho các task sau này.
 
 Trường phân loại task cho phép kích hoạt chế độ \emph{read-only} trên các website dùng chung: toàn bộ task thuộc nhóm \texttt{MOD} và các task không thể phân loại đều bị loại bỏ theo nguyên tắc fail-closed.
 
@@ -305,7 +298,7 @@ Trường phân loại task cho phép kích hoạt chế độ \emph{read-only} 
   \item \emph{Thứ tự ưu tiên cắt tỉa}: Khi danh sách đề xuất vượt quá ngân sách $k$, thứ tự ưu tiên giữ lại được xác định tuần tự: \texttt{COMPOSITE}, \texttt{MOD}, \texttt{INFO}, \texttt{NAV}, sau đó mới đến các task bổ sung khác.
 \end{enumerate}
 
-Khi seed năng lực của website đã được xác định (Mục~\ref{sec:method-seed}), mô tả website và danh sách năng lực được bổ sung vào prompt của explorer làm ngữ cảnh định hướng, giúp các low-level task bám sát chức năng cốt lõi của website.
+Khi seed năng lực của website đã được xác định, mô tả website và danh sách năng lực được bổ sung vào prompt của explorer làm ngữ cảnh định hướng, giúp các low-level task bám sát chức năng cốt lõi của website.
 
 \subsection{Solver}
 \label{sec:method-solver}
@@ -317,17 +310,17 @@ Khi seed năng lực của website đã được xác định (Mục~\ref{sec:me
   \label{fig:solver}
 \end{figure}
 
-Solver hoạt động theo kiến trúc ReAct~\cite{yao2023react} (Hình~\ref{fig:solver}). Tại mỗi bước thời gian, solver nhận: mục tiêu task, URL tương đối hiện tại, axtree được cắt gọn ở ngưỡng tối đa 6.000 ký tự (kèm dấu hiệu phân đoạn tường minh), trạng thái lỗi của hành động liền trước, và cửa sổ ngữ cảnh gồm 6 hành động gần nhất kèm kết quả phản hồi của môi trường (``đang ở $\langle\text{URL}\rangle$'', ``trang đã thay đổi'', ``không đổi'', hoặc thông báo lỗi cụ thể). Trường thông tin lỗi luôn hiện diện trong prompt (nhận giá trị ``(none)'' khi thao tác thành công) nhằm duy trì cấu trúc prompt đồng nhất (prompt parity). Dựa trên ngữ cảnh đó, solver sinh chuỗi suy luận (chain-of-thought) và phát ra hành động $a \in \mathcal{A}$.
+Solver hoạt động theo kiến trúc ReAct~\cite{yao2023react} (Hình~\ref{fig:solver}). Tại mỗi bước, solver nhận: mục tiêu task, URL tương đối hiện tại, axtree được cắt gọn ở ngưỡng tối đa 6.000 ký tự (kèm dấu hiệu phân đoạn tường minh), trạng thái lỗi của hành động liền trước, và cửa sổ ngữ cảnh gồm lịch sử các hành động gần nhất kèm kết quả phản hồi của môi trường (``đang ở $\langle\text{URL}\rangle$'', ``trang đã thay đổi'', ``không đổi'', hoặc thông báo lỗi cụ thể). Trường thông tin lỗi luôn hiện diện trong prompt (nhận giá trị ``(none)'' khi thao tác thành công) nhằm duy trì cấu trúc prompt đồng nhất (prompt parity). Dựa trên ngữ cảnh đó, solver sinh chuỗi suy luận (chain-of-thought) và phát ra hành động $a \in \mathcal{A}$.
 
 Mọi hành động bị tầng thực thi từ chối đều được ghi nhận vào lịch sử với trạng thái thất bại. Quá trình thực thi của solver được kiểm soát bởi 3 cơ chế:
 
 \begin{itemize}
-  \item \textbf{Kiểm soát theo đối tượng tương tác}: Solver theo dõi phần tử đích và phản hồi của quan sát. Khi ghi nhận chuỗi hành động liên tiếp tác động lên \emph{cùng một phần tử} nhưng \emph{quan sát không thay đổi}, hệ thống chèn cảnh báo trực tiếp vào prompt sau 2 bước và cưỡng chế dừng episode sau 4 bước lặp.
+  \item \textbf{Kiểm soát theo đối tượng tương tác}: Solver theo dõi phần tử đích và phản hồi của quan sát. Khi Solver ghi nhận chuỗi hành động liên tiếp tác động lên \emph{cùng một phần tử} nhưng \emph{quan sát không thay đổi}, hệ thống sẽ chèn cảnh báo trực tiếp vào prompt sau 2 bước và cưỡng chế dừng episode sau 4 bước lặp.
   \item \textbf{Kiểm soát theo độ mới của quan sát}: Nhằm phát hiện hiện tượng agent chuyển hướng qua lại giữa các trang mà không tạo ra tiến triển, solver đếm số bước liên tiếp không ghi nhận trạng thái trang mới; hệ thống phát cảnh báo yêu cầu đổi chiến lược sau 4 bước và dừng episode sau 8 bước.
   \item \textbf{Lời gọi kết thúc bắt buộc (wrap-up call)}: Khi vòng lặp dừng do hết ngân sách bước hoặc do các cơ chế kiểm soát kích hoạt mà agent chưa phát lệnh kết thúc, solver thực hiện một wrap-up call. Lời gọi này chỉ chấp nhận 2 hành động kết thúc: \texttt{send\_msg\_to\_user} (xác nhận hoàn thành) hoặc \texttt{report\_infeasible} (tuyên bố bất khả thi). Prompt của wrap-up call nêu rõ nguyên nhân dừng thực tế của episode.
 \end{itemize}
 
-Thông tin lý do dừng được lưu trữ cùng episode để phân loại dữ liệu huấn luyện: các kết luận bất khả thi do agent chủ động đưa ra trong quá trình thực thi được giữ lại làm dữ liệu huấn luyện nhận thức giới hạn, trong khi các báo cáo bất khả thi phát sinh từ wrap-up call sau khi bị cưỡng chế dừng sẽ bị loại bỏ khỏi tập dữ liệu SFT (Mục~\ref{sec:method-data}).
+Thông tin lý do dừng được lưu trữ cùng episode để phân loại dữ liệu huấn luyện: các kết luận bất khả thi do agent chủ động đưa ra trong quá trình thực thi được giữ lại làm dữ liệu huấn luyện nhận thức giới hạn, trong khi các báo cáo bất khả thi phát sinh từ wrap-up call sau khi bị cưỡng chế dừng sẽ bị loại bỏ khỏi tập dữ liệu SFT.
 
 Đối với nhóm task làm thay đổi trạng thái (\texttt{MOD} và \texttt{COMPOSITE}), một episode chỉ được công nhận thành công khi thỏa mãn điều kiện kiểm tra tự động: có tối thiểu 1 hành động tạo ra thay đổi trạng thái trang thực tế.
 
@@ -338,19 +331,22 @@ Thông tin lý do dừng được lưu trữ cùng episode để phân loại d�
 
 Các low-level task đề xuất bởi explorer ban đầu đều ở dạng có tiền tố (\emph{prefixed}), trong đó trình duyệt được mở sẵn tại trang chứa task. Thiết kế này giúp thu thập dữ liệu nhanh nhưng làm thiếu hụt chuỗi hành động điều hướng từ trang chủ đến trang chức năng.
 
-Do đó, sau khi hoàn tất các low-level task tại một node, hệ thống kích hoạt kỹ thuật \emph{unprefixed sampling}~\cite{gandhi2026gobrowse}: các task giải thành công tại node đó được thực thi lại từ đầu trên một phiên trình duyệt mới khởi tạo tại trang chủ (seed URL). Trajectory thu được bao gồm cả chuỗi điều hướng và chuỗi thao tác cục bộ, được gán nhãn \texttt{UNPREFIXED} với mức độ khó cấp 2 trong curriculum. Task không tiền tố sử dụng ngân sách bước tương đương nhóm semantic task nhằm đảm bảo đủ dung lượng cho quá trình tìm đường.
+Do đó, sau khi hoàn tất các low-level task tại một node, hệ thống kích hoạt kỹ thuật \emph{unprefixed sampling}~\cite{gandhi2026gobrowse}: các task giải thành công tại node đó được thực thi lại từ đầu trên một phiên trình duyệt mới khởi tạo tại trang chủ (seed URL). Trajectory thu được bao gồm cả chuỗi điều hướng và chuỗi thao tác cục bộ, được gán nhãn \texttt{UNPREFIXED} với mức độ khó cấp 2 trong curriculum. Task không có tiền tố sử dụng ngân sách bước tương đương nhóm semantic task nhằm đảm bảo đủ dung lượng cho quá trình tìm đường.
 
 Quy trình này chỉ áp dụng đối với các task đã giải thành công trước đó, đồng thời việc thực thi cùng một task từ 2 điểm khởi đầu khác nhau cung cấp dữ liệu đa dạng giúp các cụm trajectory đạt ngưỡng tần suất xuất hiện để hình thành skill.
 
 \subsection{Tiêu chuẩn đánh giá thành công của episode}
 \label{sec:method-success}
 
-Tính thành công của mỗi episode được xác định thông qua một trong 3 cơ chế sau:
+Kết quả thành công của mỗi episode được xác định dựa trên một trong ba cơ chế đánh giá sau:
 
 \begin{enumerate}
-  \item \textbf{Kiểm tra vị từ tất định (deterministic verification)}: Áp dụng cho các task có vị từ mục tiêu kiểm tra được bằng mã nguồn (ví dụ: so khớp URL xác nhận đơn hàng sau luồng thanh toán). Hàm kiểm tra đối chiếu trực tiếp URL và cấu trúc DOM sau mỗi bước; episode được ghi nhận thành công ngay khi điều kiện được thỏa mãn mà không phụ thuộc vào phán đoán của mô hình.
-  \item \textbf{Tự tuyên bố kèm cổng kiểm tra trạng thái}: Đối với các task không có vị từ tất định, episode được coi là thành công khi agent phát lệnh \texttt{send\_msg\_to\_user} và đồng thời thỏa mãn cổng thay đổi trạng thái đối với các nhóm task \texttt{MOD} và \texttt{COMPOSITE}.
-  \item \textbf{Thẩm định trực tuyến bằng judge độc lập}: Toàn bộ các episode tự tuyên bố thành công đều được kiểm tra lại bởi một LLM độc lập (judge)~\cite{zheng2023judge}. Judge đối chiếu mục tiêu task với trạng thái kết thúc của trang (URL và nội dung axtree); nếu nhận phán quyết \textsc{Fail}, episode sẽ bị chuyển thành thất bại. Quá trình thẩm định diễn ra trực tuyến ngay trong vòng lặp khám phá, đảm bảo các episode không đạt chuẩn bị loại trừ ngay trước khi chuyển sang khâu phát hiện skill hoặc unprefixed sampling.
+  \item \textbf{Kiểm tra tự động bằng mã nguồn (code-based verification)}: Áp dụng cho các task có điều kiện mục tiêu có thể được kiểm tra trực tiếp bằng mã nguồn (ví dụ: đối chiếu URL xác nhận đơn hàng sau khi hoàn tất luồng thanh toán). Hàm kiểm tra thực hiện đối chiếu URL và cấu trúc DOM sau mỗi bước; episode được ghi nhận thành công ngay khi điều kiện mục tiêu được thỏa mãn, không phụ thuộc vào phán đoán của mô hình.
+
+  \item \textbf{Tự tuyên bố kèm kiểm tra trạng thái}: Đối với các task không thể xác định thành công bằng kiểm tra trực tiếp từ mã nguồn, episode được coi là thành công khi agent phát lệnh \texttt{send\_msg\_to\_user} và đồng thời thỏa mãn điều kiện thay đổi trạng thái đối với các nhóm task \texttt{MOD} và \texttt{COMPOSITE}.
+
+  \item \textbf{Thẩm định trực tuyến bằng judge độc lập}: Các episode được Solver tự tuyên bố là thành công sẽ tiếp tục được kiểm tra bởi một LLM độc lập (judge)~\cite{zheng2023judge}. Judge đối chiếu mục tiêu của task với trạng thái cuối của trang, dựa trên URL và nội dung Axtree; nếu kết quả đánh giá là \textsc{Fail}, episode sẽ được chuyển thành thất bại. Quá trình thẩm định được thực hiện trực tuyến ngay trong vòng lặp khám phá, qua đó loại bỏ các episode không đạt yêu cầu trước khi chuyển sang các bước phát hiện skill hoặc unprefixed sampling.
+
 \end{enumerate}
 
 Các cơ chế đánh giá trên chỉ áp dụng trong quá trình tự động tạo dữ liệu huấn luyện. Kết quả đánh giá hiệu năng tại Chương~\ref{ch:experiments} được thực hiện độc lập bởi bộ đánh giá chuẩn của WebArena.
@@ -414,12 +410,12 @@ Thuật toán~\ref{alg:discovery} mô tả chi tiết quy trình phát hiện sk
 
 \subsection{Kiểm chứng skill}
 
-Để đảm bảo tính hợp lệ trước khi nạp vào thư viện theo nguyên tắc P1, mỗi skill card phải thỏa mãn 2 điều kiện kiểm chứng: (1) Đạt ngưỡng tần suất xuất hiện tối thiểu ($m \ge 2$) trên các trajectory độc lập; (2) Toàn bộ các episode nguồn của cụm đều được xác nhận thành công qua cổng đánh giá tự động và thẩm định bởi LLM judge (Mục~\ref{sec:method-success}).
+Để đảm bảo tính hợp lệ trước khi nạp vào thư viện theo nguyên tắc P1, mỗi skill card phải thỏa mãn 2 điều kiện kiểm chứng: (1) Đạt ngưỡng tần suất xuất hiện tối thiểu ($m \ge 2$) trên các trajectory độc lập; (2) Toàn bộ các episode nguồn của cụm đều được xác nhận thành công qua cổng đánh giá tự động và thẩm định bởi LLM judge.
 
 \section{Sinh semantic task bằng ghép chuỗi operator}
 \label{sec:method-semantic}
 
-Semantic task được xây dựng từ các operator đã qua kiểm chứng nhằm tạo ra các mục tiêu tương tác phức hợp đa bước vượt ngoài phạm vi của một trang đơn lẻ (Hình~\ref{fig:semantic}).
+Semantic task được xây dựng từ các operator đã được kiểm chứng nhằm tạo ra các mục tiêu tương tác phức tạp, bao gồm nhiều bước và có thể yêu cầu điều hướng qua nhiều trang, qua đó mở rộng phạm vi khám phá vượt ra ngoài một trang đơn lẻ (Hình~\ref{fig:semantic}).
 
 \begin{figure}[htbp]
   \centering
@@ -430,7 +426,7 @@ Semantic task được xây dựng từ các operator đã qua kiểm chứng nh
 
 \subsection{Quy nạp operator}
 
-Sau khi một skill được thu nhận, thành phần inducer sử dụng LLM để quy nạp tập \emph{precondition} ($\mathit{pre}$) và \emph{effect} ($\mathit{eff}$) dưới dạng các mệnh đề ngôn ngữ tự nhiên. Dữ liệu đầu vào gồm skill card và trạng thái quan sát đầu--cuối của 2 trajectory đại diện trong cụm.
+Sau khi một skill được thu nhận, thành phần inducer sử dụng LLM để suy ra tập \emph{precondition} ($\mathit{pre}$) và \emph{effect} ($\mathit{eff}$) dưới dạng các mệnh đề được viết bằng ngôn ngữ tự nhiên. Đầu vào của quá trình này gồm skill card và trạng thái quan sát tại thời điểm bắt đầu và kết thúc của hai trajectory đại diện trong cùng một cụm.
 
 Prompt quy nạp áp dụng các ràng buộc cấu trúc sau:
 \begin{itemize}
@@ -439,11 +435,11 @@ Prompt quy nạp áp dụng các ràng buộc cấu trúc sau:
   \item Đối với skill thao tác trong cùng một trang, mệnh đề effect phải mô tả trạng thái trang kèm kết quả cập nhật dữ liệu (ví dụ: ``trang chỉnh sửa thông tin đã lưu thay đổi'').
 \end{itemize}
 
-Nhằm hạn chế sự phân mảnh ngữ nghĩa khi LLM sinh mệnh đề tự do, prompt quy nạp cung cấp danh sách các mệnh đề hiện có trong predicate registry, yêu cầu LLM ưu tiên tái sử dụng các mệnh đề có sẵn.
+Nhằm hạn chế sự phân mảnh ngữ nghĩa do LLM tự do sinh các mệnh đề bằng ngôn ngữ tự nhiên, prompt quy nạp cung cấp danh sách các mệnh đề hiện có trong predicate registry và yêu cầu LLM ưu tiên tái sử dụng các mệnh đề này khi có thể.
 
 Operator sau khi sinh phải vượt qua 2 cổng kiểm định:
 \begin{enumerate}
-  \item \textbf{Cổng lọc tautology}: Loại bỏ toàn bộ các effect trùng lặp với precondition theo công thức:
+  \item \textbf{Cổng lọc sự trùng lặp}: Loại bỏ toàn bộ các effect trùng lặp với precondition theo công thức:
     \[
       \mathit{eff} \leftarrow \mathit{eff} \setminus \mathit{pre}.
     \]
@@ -455,13 +451,13 @@ Operator được gán nhãn \emph{terminal} khi có ít nhất 1 trajectory th�
 
 \subsection{Chuẩn hóa mệnh đề qua Predicate Registry}
 
-Predicate registry chuẩn hóa các mệnh đề tự nhiên về tập định danh duy nhất $P = \{p_0, p_1, \dots\}$ bằng phép so khớp tương đồng cosine trên vector nhúng (ngưỡng tương đồng mặc định 0,60, chi tiết tại Phụ lục~\ref{app:design-params}). Mã định danh sau khi cấp phát được giữ cố định. Việc so khớp effect và precondition trên operator graph được thực hiện trực tiếp thông qua các mã định danh $p_i$.
+Predicate registry chuẩn hóa các mệnh đề ngôn ngữ tự nhiên thành một tập định danh duy nhất $P = {p_0, p_1, \dots}$ bằng cách sử dụng phép so khớp độ tương đồng cosine trên các vector nhúng. Với ngưỡng tương đồng mặc định là 0,60 (chi tiết tại Phụ lục~\ref{app:design-params}), các mệnh đề có nội dung tương đồng được ánh xạ về cùng một định danh. Sau khi được cấp phát, mã định danh của mỗi mệnh đề được giữ cố định trong suốt quá trình xây dựng đồ thị. Nhờ đó, việc so khớp các \emph{effect} và \emph{precondition} trên operator graph được thực hiện trực tiếp thông qua các mã định danh $p_i$, thay vì dựa trên so sánh chuỗi văn bản hoặc ngôn ngữ tự nhiên.
 
 \subsection{Ghép chuỗi operator thành semantic task}
 
 Trên operator graph, một cạnh có hướng $\omega_1 \rightarrow \omega_2$ được thiết lập khi tồn tại mã định danh $p \in \mathit{eff}(\omega_1) \cap \mathit{pre}(\omega_2)$. Hệ thống áp dụng thuật toán tìm kiếm theo chiều sâu (DFS) có giới hạn để liệt kê các đường đi đơn có độ dài từ 2 operator trở lên (áp dụng ngưỡng giới hạn độ dài chuỗi và số lượng đường đi để tránh bùng nổ tổ hợp).
 
-Mỗi chuỗi operator được chuyển đổi thành một \emph{goal task}: nội dung nhiệm vụ được tổng hợp từ mô tả của các skill trong chuỗi, điểm khởi đầu là URL của operator đầu tiên. Mỗi chuỗi operator chỉ được thực thi 1 lần duy nhất trong một lượt chạy. Quá trình đánh giá kết quả áp dụng các tiêu chuẩn tại Mục~\ref{sec:method-success} và được thẩm định trực tuyến bởi LLM judge.
+Mỗi chuỗi operator được chuyển đổi thành một \emph{goal task}: nội dung nhiệm vụ được tổng hợp từ mô tả của các skill trong chuỗi, điểm khởi đầu là URL của operator đầu tiên. Mỗi chuỗi operator chỉ được thực thi 1 lần duy nhất trong một lượt chạy. Quá trình đánh giá kết quả được thẩm định trực tuyến bởi LLM judge.
 
 \subsection{Nguồn mục tiêu top-down từ Seed năng lực website}
 \label{sec:method-seed}
@@ -475,12 +471,12 @@ Prompt của site seeder áp dụng 3 nguyên tắc thiết kế:
   \item Năng lực được đề xuất phải dựa trên các tính năng hiển thị thực tế trên website.
 \end{enumerate}
 
-Ngân sách thực thi được phân bổ như sau: mỗi năng lực được thử nghiệm tối đa 3 lần trong một lượt chạy, mỗi lần khởi tạo từ một URL template khác nhau. Tác vụ dừng thử nghiệm khi liên tiếp thất bại hoặc khi agent xác nhận tính năng không khả thi trên instance hiện tại.
+Ngân sách thực thi cho các task từ site seeder được phân bổ như sau: mỗi năng lực được thử nghiệm tối đa 3 lần trong một lượt chạy, mỗi lần khởi tạo từ một URL template khác nhau. Tác vụ dừng thử nghiệm khi liên tiếp thất bại hoặc khi agent xác nhận tính năng không khả thi trên instance hiện tại.
 
 \section{Tinh lọc dữ liệu}
 \label{sec:method-data}
 
-Tập dữ liệu SFT được xây dựng trực tiếp từ các episode đã qua kiểm định trong vòng lặp khám phá (Mục~\ref{sec:method-success}) theo nguyên tắc \emph{prompt parity}, đảm bảo cấu trúc prompt trong dữ liệu huấn luyện đồng nhất với ngữ cảnh suy luận của solver.
+Tập dữ liệu SFT được xây dựng trực tiếp từ các episode đã qua kiểm định trong vòng lặp khám phá theo nguyên tắc \emph{prompt parity}, đảm bảo cấu trúc prompt trong dữ liệu huấn luyện đồng nhất với ngữ cảnh suy luận của solver.
 
 Mỗi bước tương tác trong episode được chuyển đổi thành một mẫu dữ liệu instruction tuning với các quy tắc tiền xử lý:
 \begin{itemize}
@@ -491,7 +487,9 @@ Mỗi bước tương tác trong episode được chuyển đổi thành một m
 Ngoài ra, hệ thống áp dụng 3 cổng lọc dữ liệu ở cấp độ episode:
 \begin{enumerate}
   \item \textbf{Cổng lọc hành động hữu hiệu (Effective Action Filter)}: Loại bỏ các episode thuộc nhóm \texttt{MOD}, \texttt{NAV}, \texttt{COMPOSITE} hoặc semantic task nếu toàn bộ chuỗi hành động không chứa bất kỳ thao tác nào làm biến đổi trạng thái trang (chỉ gồm các hành động \texttt{scroll}, \texttt{hover}, \texttt{noop}). Nhóm task \texttt{INFO} được miễn trừ điều kiện này do bản chất tác vụ truy vấn thông tin có thể hoàn tất tại trang hiện tại.
-  \item \textbf{Cổng loại bỏ báo cáo bất khả thi từ wrap-up call}: Chỉ giữ lại các mẫu \texttt{report\_infeasible} do agent chủ động phát ra trong quá trình thực thi để huấn luyện khả năng nhận biết giới hạn. Toàn bộ các báo cáo bất khả thi sinh ra từ wrap-up call sau khi bị cưỡng chế dừng đều bị loại bỏ khỏi tập dữ liệu SFT.
+
+  \item \textbf{Cổng loại bỏ báo cáo bất khả thi từ LLM sau khi kết thúc episode}: Chỉ giữ lại các mẫu \texttt{report\_infeasible} được agent chủ động phát ra trong quá trình thực thi nhằm phục vụ việc huấn luyện khả năng nhận biết giới hạn của tác vụ. Các báo cáo bất khả thi được sinh từ lần gọi LLM sau khi episode bị cưỡng chế dừng sẽ bị loại khỏi tập dữ liệu SFT.
+
   \item \textbf{Cổng loại bỏ hành động chuyển hướng ngoài miền (Out-of-Domain Filter)}: Loại bỏ các hành động \texttt{goto} trỏ ra ngoài tên miền của website đang xét nhằm ngăn chặn hành vi điều hướng không hợp lệ trên môi trường benchmark.
 \end{enumerate}
 
@@ -500,15 +498,21 @@ Dữ liệu sau khi tinh lọc được phân cấp theo curriculum learning~\ci
 \section{Fine-tuning mô hình ngôn ngữ nhỏ}
 \label{sec:method-sft}
 
-Mô hình được lựa chọn để fine-tune là Qwen3.5-9B~\cite{qwen2026qwen35}, áp dụng phương pháp LoRA~\cite{hu2022lora} trên framework LLaMA-Factory~\cite{zheng2024llamafactory}.
+Quá trình fine-tuning được thực nghiệm trên 2 mô hình ngôn ngữ nhỏ (SLM) thuộc phân khúc dưới 10 tỷ tham số:
+\begin{itemize}
+  \item \textbf{Qwen-2.5-7B-Instruct}~\cite{qwen2024qwen25}: Đóng vai trò mô hình nền đối sánh trực tiếp cùng phân khúc 7B với các công trình liên quan (như Go-Browse-7B và NNetNav-7B) nhằm kiểm chứng sự cải thiện hiệu năng của tập dữ liệu HSGE trên cùng quy mô tham số.
+  \item \textbf{Qwen3.5-9B}~\cite{qwen2026qwen35}: Đóng vai trò mô hình nền chính của nghiên cứu để khai thác năng lực suy luận và khả năng khái quát hóa trong các tác vụ tương tác web phức tạp.
+\end{itemize}
 
-Tập huấn luyện (train set) và tập kiểm định (validation set) được phân chia theo đơn vị \emph{task} (cặp $\langle \text{website}, \text{nội dung mục tiêu} \rangle$) thay vì phân chia theo từng bước hoặc theo từng trajectory riêng lẻ. Phương pháp này ngăn chặn triệt để hiện tượng rò rỉ dữ liệu (data leakage) giữa trajectory \texttt{LOCAL} và \texttt{UNPREFIXED} của cùng một task. Quá trình phân chia áp dụng 2 kỹ thuật bổ trợ:
+Cả hai mô hình đều được fine-tune bằng phương pháp LoRA~\cite{hu2022lora} trên framework LLaMA-Factory~\cite{zheng2024llamafactory}.
+
+Tập huấn luyện (train set) và tập kiểm định (validation set) được phân chia theo đơn vị \emph{task}  thay vì phân chia theo từng bước riêng lẻ. Phương pháp này ngăn chặn triệt để hiện tượng rò rỉ dữ liệu (data leakage) giữa trajectory \texttt{LOCAL} và \texttt{UNPREFIXED} của cùng một task. Quá trình phân chia áp dụng 2 kỹ thuật bổ trợ:
 \begin{itemize}
   \item \emph{Khử trùng lặp}: Đối với các trajectory có cùng mức độ khó cho cùng một task (phát sinh từ seed), chỉ giữ lại trajectory có độ dài lớn nhất.
   \item \emph{Lấy mẫu phân tầng (Stratified Sampling)}: Tập kiểm định được lấy mẫu phân tầng theo từng website với tỷ lệ đồng đều nhằm bảo đảm phân phối đánh giá không bị thiên lệch về các website có số lượng mẫu lớn.
 \end{itemize}
 
-Về cấu hình hội thoại, chat template được thiết lập ở chế độ tắt chuỗi suy luận hiển thị (nothink mode) trong cả giai đoạn huấn luyện và phục vụ suy luận (serving qua vLLM~\cite{kwon2023vllm}), bảo đảm tính tương thích tuyệt đối giữa dữ liệu huấn luyện và môi trường thực thi thực tế.
+Về cấu hình hội thoại, chat template được thiết lập ở chế độ tắt chuỗi suy luận hiển thị (nothink mode đối với Qwen3.5-9B và chuẩn hóa định dạng cặp suy nghĩ-hành động đối với Qwen-2.5-7B) trong cả giai đoạn huấn luyện và phục vụ suy luận (serving qua vLLM~\cite{kwon2023vllm}), bảo đảm tính tương thích tuyệt đối giữa dữ liệu huấn luyện và môi trường thực thi thực tế theo nguyên tắc prompt parity.
 
 \section{Ghi chú cài đặt}
 \label{sec:method-impl}
