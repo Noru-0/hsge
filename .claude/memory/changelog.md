@@ -4,6 +4,76 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-23
+
+- **03:36** — `Thesis_report/thesis_hsge_vi/{Chapter6/chapter6.tex, main.pdf}` — **Synchronized Chapter 6 (Conclusion) with Chapter 4 and Chapter 5 updates:**
+  - Updated data scaling discussion (§6.3) to match new `tab:datascale` metrics: 4266 added samples $\rightarrow$ 17,4\% to 26,0\% (+8,7 pp on 288 tasks: Reddit +7,1 đpt/1k samples vs Admin +2,5 đpt/1k samples), pointing to `sec:exp-datascale` and `sec:exp-crosssite`.
+  - Added Qwen-2.5-7B evaluation result (16,5\%, +8,2 pp, `sec:exp-backbone`) to Product 3 (*Mô hình web agent đã fine-tune*).
+  - Updated `tab:objectives` (O4) to include reference to `sec:exp-backbone`.
+  - Updated open artifacts list (§6.2) to include all three evaluation sets (including `eval-7B`).
+  - Added token count (≈65M tokens) to concluding remarks (§6.3).
+  - Softened §6.3 opening sentence to match partial completion statuses in `tab:objectives`.
+  - Verified clean LaTeX compilation: 0 undefined references, 0 errors (total 166 pages).
+
+- **03:30** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, Chapter6/chapter6.tex, main.pdf}` — **Removed Section 5.4 (Nguy cơ đối với tính hợp lệ):**
+  - Removed Section 5.4 from Chapter 5 and updated the chapter introduction and closing text accordingly.
+  - Re-routed internal cross-references to `Phụ lục~\ref{sec:disc-verify}` (in Chapter 5) and `Mục~\ref{sec:exp-stats}` (in Chapter 6).
+  - Verified clean LaTeX compilation: 0 undefined references, 0 errors (total 166 pages).
+
+- **03:26** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, main.pdf}` — **Restructured and aligned Chapter 5 (Discussion) with Chapter 1 RQs and Chapter 4 metrics:**
+  - Synchronized CH subsections in §5.1: §5.1.1 (CH1: Scope & Cost), §5.1.2 (CH2: SLM capability & data scale), §5.1.3 (CH3: SOTA benchmark & 7B backbone), §5.1.4 (CH4: Failure analysis & system bottlenecks).
+  - Updated data scaling numbers in §5.1.2 (`tab:datascale`): Reddit 20,8\% $\rightarrow$ 34,0\%, Shopping Admin 15,4\% $\rightarrow$ 21,4\%, +8,7 pp overall on 288 tasks (17,4\% $\rightarrow$ 26,0\%).
+  - Added token accounting to §5.1.1 (≈65M tokens, 0,0308 USD/traj) and solver cost lever (82,9\% calls, 88,9\% tokens; GPT-4o 13,6\% steps but 52,9\% cost).
+  - Added quantitative results for Qwen-2.5-7B backbone in §5.1.3 (8,3\% $\rightarrow$ 16,5\%, +8,2 pp, Table `tab:backbone7b`).
+  - Reformulated §5.1.4 around failure analysis (85--96\% action failures, 2315 errors, median 13 steps on failures) and Finding 3 without negating data scaling value.
+  - Verified clean LaTeX compilation: 0 undefined references, 0 errors.
+
+- **03:07** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` —
+  **Added token accounting to §4.1.3's two cost tables**, reconstructed from
+  artifacts rather than guessed, and corrected the call counts in `tab:calls`.
+  - **Method**: measured real prompt sizes on disk (28,466 axtrees, 28,384 steps
+    across `outputs/wa_run_2*`). Mean capped axtree = 4,228 chars (23.9% of
+    pages hit the 6000-char cap); solver prompt = `SOLVER_SYS` 2,472 + goal 113
+    + axtree + error/history/instruction ≈ 7,558 chars ≈ 1,889 tok, +85 tok for
+    the `detail=low` image ⇒ **1,974 tok in / 66 tok out per solver call**.
+    Per-model step counts come from `episode_meta.json`'s `metadata.model`
+    (recorded by `runtime.py::_record`).
+  - **`tab:calls` was substantially undercounted** and is now rebuilt: it said
+    solver = 17,785 of 20,808 calls. Actual, attributable per model: luna
+    22,857 + gpt-4o 3,864 + terra 1,663 = 28,384 solver calls; page_explorer 470
+    (was 263), goal_planner 142 (was 66), judge ~2,918 (was 1,564), segmenter
+    ~2,117 (was 1,067), operator_inducer ~217 (was 59). **Total 34,256 calls,
+    62.4M in + 2.7M out ≈ 65.1M tokens.** `run_log.jsonl` records 32,003 solver
+    steps, higher still — noted in the caption as a lower-bound caveat.
+  - **The estimate reconciles with the invoice**: token volume × listed prices
+    (from `config.yaml`: luna 0.20/1.20, terra 2/12, gpt-4o 2.50/10 per 1M)
+    gives **$40.84 vs the $42.29 OpenAI invoice — 3.4% off**. Two consequences
+    written into the prose: (a) reasoning tokens billed at `effort: medium` are
+    negligible, or the bill would be far higher; (b) **gpt-4o is 13.6% of steps
+    but 52.9% of cost**, which is the real justification for the mid-run switch
+    to luna. Solver share restated as 82.9% of calls / 88.9% of tokens (the old
+    "85.5% of calls" line was based on the undercount).
+  - `tab:apicost` gained a token column and a derived USD/1M column: OpenAI
+    59.3M @ $0.71/1M, DeepSeek 5.8M @ $2.07/1M, total 65.1M @ $0.83/1M. The
+    DeepSeek unit price is *derived*, not quoted — `deepseek-v4-pro`'s list
+    price was never recorded, and the caption says so. Also added "≈37 nghìn
+    token mỗi trajectory" alongside the existing $0.0308/trajectory.
+  - Build verified against a baseline compile of HEAD's `chapter4.tex` in a
+    scratch copy: **overfull boxes 8 → 7** (the new tables introduce none; the
+    7 remaining are pre-existing in other chapters), 0 undefined refs, 168 pages.
+
+- **02:56** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` — **Fixed bold formatting in Table 4.9 (`tab:related`):**
+  - In the GitLab column among open small models, moved bold formatting from HSGE-9B (18,3\%) to NNetNav-7B (\textbf{19,9}\%), which is the highest score in that column.
+
+- **02:51** — `Thesis_report/thesis_hsge_vi/{Chapter1/chapter1.tex, Chapter4/chapter4.tex, main.pdf}` — **Restructured and aligned Chapter 4 with Chapter 1's research questions (CH1–CH4):**
+  - Synchronized CH labels in Chapter 4 with `tab:rqmap` (Ch1 §1.5): §4.1.3 labeled for CH1/CH3, §4.6 labeled for CH2, §4.7 labeled for CH4, and new §4.8 labeled for CH2/CH3.
+  - Added `\ref{sec:exp-datascale}` to CH2 and `\ref{sec:exp-backbone}` to CH3 in `tab:rqmap` (`Chapter1/chapter1.tex`).
+  - Restructured §4.6 ("Ảnh hưởng của lượng dữ liệu"): rewritten §4.6.1 with clean 4-beat structure highlighting the isolated data-scaling effect (Reddit 20,8\% $\rightarrow$ 34,0\%, Shopping Admin 15,4\% $\rightarrow$ 21,4\%, $+$8,7 pp overall on 288 tasks); condensed §4.6.2 (unexecuted ablations) to ~5 lines.
+  - Moved cross-site observation (`tab:crosssite`) to §4.7 as the introductory analysis subsection (`sec:exp-crosssite`), resolving self-referencing links.
+  - Added dedicated Section §4.8 (`sec:exp-backbone`) presenting full 4-domain results for Qwen-2.5-7B (8,3\% $\rightarrow$ 16,5\%, $+$8,2 pp overall, Table `tab:backbone7b`), detailed format compliance analysis (58–60\% unparsed tasks, 92–98\% bare `report_infeasible` commands lowering the lower-bound score), and why 7B is excluded from head-to-head `tab:related`.
+  - Promoted Chapter Summary to `\section{Tổng kết chương}` and added summaries for data scaling and 7B backbone findings.
+  - Streamlined chapter prose by 15–20\% while preserving all empirical metrics and tables. Verified clean LaTeX build: 0 undefined references, 0 errors.
+
 ## 2026-08-22
 
 - **17:07** — `Thesis_report/Slide_KLTN_HSGE/{sections/01_gioithieu.tex, main.pdf,

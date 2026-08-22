@@ -163,40 +163,22 @@ giải quyết *một phần* của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 5 - Giải pháp HSGE và mục tiêu nghiên cứu (2:55, trang 7)
+## Slide 5 - Giải pháp HSGE và các đóng góp chính (2:55, trang 7)
 
-> Giải pháp của khóa luận, gọi tắt là **HSGE**, gồm bốn ý ở cột trái.
+> Để giải quyết bài toán trên, khóa luận đề xuất giải pháp **HSGE (Hierarchical Skill-Graph Exploration)** nhằm tự động hóa toàn chu trình từ website đến mô hình SLM cục bộ.
 >
-> Thứ nhất, kế thừa Go-Browse: **khám phá website mục tiêu như một bài toán tìm kiếm trên
-> đồ thị**, để tri thức về cấu trúc site được tích lũy giữa các episode.
+> Về **đóng góp khoa học (kiến trúc & thuật toán)** ở cột trái:
+> - Thứ nhất, đề xuất **mô hình biểu diễn đồ thị hai tầng**: kết hợp State Graph ghi vết duyệt web ở tầng thấp với Operator Graph biểu diễn kỹ năng ở tầng cao.
+> - Thứ hai, xây dựng **thuật toán quy nạp operator và ghép chuỗi đa bước**: tự động trích xuất các kỹ năng lặp lại, kiểm chứng và ghép chuỗi thành semantic task có ý nghĩa nghiệp vụ.
 >
-> Thứ hai — đóng góp chính — bổ sung **tầng đồ thị thứ hai** phía trên: các kỹ năng lặp lại
-> được phát hiện, **kiểm chứng bằng cách chạy lại**, rồi nâng thành **operator** có tiền
-> điều kiện và kết quả đã chuẩn hóa.
+> Về **đóng góp thực tiễn (sản phẩm & dữ liệu)** ở cột phải:
+> - Thứ nhất, thu hoạch **bộ dữ liệu 9.007 mẫu SFT sạch** trên 4 website WebArena mà hoàn toàn không cần nhãn người.
+> - Thứ hai, tạo ra **mô hình HSGE-9B chạy cục bộ đạt 24,6%**, vượt GPT-4o-mini và đạt SOTA phân khúc dưới 10 tỷ tham số.
+> - Thứ ba, chứng minh **tính khả thi kinh tế vượt trội**: chi phí API chỉ **0,0308 USD mỗi trajectory**, **rẻ hơn 3,3 lần so với Go-Browse** (hệ thống SOTA cùng phân khúc).
 >
-> Thứ ba, khi kết quả của operator này khớp tiền điều kiện của operator kia, ta **ghép chuỗi**
-> chúng lại để sinh **semantic task** nhiều bước — vượt khỏi phạm vi một trang, điều mà đồ
-> thị một tầng không làm được.
->
-> Thứ tư, trajectory giải chính các task đó, sau khi qua các cổng kiểm định, trở thành **tập
-> dữ liệu SFT** để fine-tune mô hình nhỏ chạy cục bộ.
->
-> Trên cơ sở đó, khóa luận đặt năm mục tiêu từ O1 đến O5: khám phá website chưa có nhãn;
-> sinh semantic task đã kiểm chứng; tinh lọc thành dataset kèm prompt parity; fine-tune và
-> đánh giá trên WebArena; và đúc kết kinh nghiệm vận hành.
->
-> Khung dưới bên phải trả lời câu hỏi ở tiêu đề slide. Đầu vào là **một website đang chạy**,
-> không cần một dòng nhãn nào của con người; đầu ra là **một agent chuyên biệt cho đúng
-> website đó**, chạy cục bộ. Nói cách khác, **thứ tổng quát hóa ở đây là pipeline, không
-> phải model** — pipeline chạy lại được trên website bất kỳ, còn model thì cố tình chuyên
-> biệt.
->
-> Ba nhóm ứng dụng nhóm em nhắm tới: **RPA cho hệ thống nội bộ hoặc legacy** — các quy
-> trình lặp trên ERP, CMS, trang quản trị vốn không có API để tích hợp; **trợ lý vận hành
-> on-prem** cho dữ liệu nhạy cảm, vì mô hình dưới 10 tỷ tham số chạy được ngay tại chỗ;
-> và **kiểm thử E2E** — đây em xin nhấn mạnh là hướng **tiềm năng**, chưa thực nghiệm
-> trong khóa luận, nhưng về cấu trúc thì operator có tiền điều kiện và kết quả chính là
-> một dạng mô hình kiểm thử, còn semantic task chính là kịch bản kiểm thử.
+> Khung dưới bên phải định vị rõ phạm vi đề tài: đầu vào là một website đang vận hành (chưa có nhãn); đầu ra là một agent chuyên biệt chạy cục bộ cho website đó. Nói cách khác, **thứ tổng quát hóa ở đây là pipeline, không phải model**. Pipeline có thể áp dụng cho website bất kỳ để sinh ra agent tương ứng.
+
+
 
 **Câu chốt:** đóng góp nằm ở **tầng trừu tượng thứ hai** — kỹ năng đã kiểm chứng, ghép
 chuỗi được — chứ không phải ở việc thu nhiều dữ liệu hơn.

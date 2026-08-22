@@ -3,16 +3,15 @@
 \label{ch:discussion}
 
 Chương này diễn giải các kết quả thực nghiệm của Chương~\ref{ch:experiments}
-bằng cách trả lời lần lượt ba câu hỏi nghiên cứu đặt ra ở
+bằng cách trả lời lần lượt bốn câu hỏi nghiên cứu đặt ra ở
 Mục~\ref{sec:intro-rq}, tóm tắt các bài học kỹ thuật rút ra trong quá trình xây
-dựng và vận hành hệ thống, đối chiếu kết quả đo được với những gì các công bố
-gốc gần nhất đã tuyên bố, rồi phân tích những yếu tố có thể ảnh hưởng tới
-tính hợp lệ của các kết luận.
+dựng và vận hành hệ thống, và đối chiếu kết quả đo được với những gì các công bố
+gốc gần nhất đã tuyên bố.
 
 \section{Trả lời các câu hỏi nghiên cứu}
 \label{sec:disc-results}
 
-\subsection{CH1 - Khả năng tự động tạo ra các tác vụ có ngữ nghĩa và hợp lệ}
+\subsection{CH1 - Quy mô và hiệu quả chi phí của pipeline tự sinh dữ liệu}
 
 Trên bốn website, pipeline duyệt 455 node và ghi nhận 3981 episode
 (Bảng~\ref{tab:runs}). Từ đó rút ra 146 kỹ năng đã kiểm chứng, nâng được 57
@@ -27,56 +26,43 @@ dữ kiện đáng chú ý nhất của khâu thu thập.
 
 Quy trình thực nghiệm đầu cuối hoàn chỉnh (từ khâu khám phá tự động, phát hiện kỹ năng, quy nạp operator, tinh lọc dữ liệu đến huấn luyện, serving và đánh giá mô hình) đã vận hành thành công trên cả bốn website thực tế. Can thiệp thủ công duy nhất trong suốt quá trình này là 5 lần khởi chạy lại khi tài khoản API chạm hạn mức; cả 5 lần hệ thống đều tự động khôi phục và tiếp tục thực thi chính xác từ checkpoint gần nhất mà không cần chạy lại từ đầu. Bên cạnh đó, các cổng kiểm soát chất lượng đã phát huy hiệu quả thiết kế khi ngăn chặn triệt để các luồng dữ liệu lỗi trước khi chúng đi vào tập dữ liệu huấn luyện (Phụ lục~\ref{sec:disc-slm}).
 
-Có một điểm cần được phát biểu thật chính xác: \emph{khâu ghép chuỗi operator vẫn là khâu hạn chế nhất}. Cơ chế sinh semantic task đã thực sự vận hành được trên website thật: 142 task GOAL với 71 lượt thành công, tỷ lệ 50{,}0\%. Tuy nhiên, nguồn sinh ra phần lớn số task đó vẫn là seed năng lực website (130 lượt thử), chứ không phải đồ thị operator (12 lượt thử trên tổng số 57 operator, phân bố rất lệch: Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nói cách khác, giả thuyết ``ghép chuỗi các skill đã kiểm chứng để sinh mục tiêu dài hạn'' mới được chứng minh là \emph{khả thi}, chưa được chứng minh là \emph{đủ dày} để làm nguồn dữ liệu chính; nguyên nhân kỹ thuật của độ thưa đó được phân tích ở Phụ lục~\ref{sec:disc-operators}. 
+Có một điểm cần được phát biểu thật chính xác: \emph{khâu ghép chuỗi operator vẫn là khâu hạn chế nhất}. Cơ chế sinh semantic task đã thực sự vận hành được trên website thật: 142 task GOAL với 71 lượt thành công, tỷ lệ 50{,}0\%. Tuy nhiên, nguồn sinh ra phần lớn số task đó vẫn là seed năng lực website (130 lượt thử), chứ không phải đồ thị operator (12 lượt thử trên tổng số 57 operator, phân bố rất lệch: Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nói cách khác, giả thuyết ``ghép chuỗi các skill đã kiểm chứng để sinh mục tiêu dài hạn'' mới được chứng minh là \emph{khả thi}, chưa được chứng minh là \emph{đủ dày} để làm nguồn dữ liệu chính; nguyên nhân kỹ thuật của độ thưa đó được phân tích ở Phụ lục~\ref{sec:disc-operators}.
 
-\subsection{CH2 - Năng lực của SLM sau fine-tuning và vị thế so với SOTA}
+Về chi phí, toàn bộ giai đoạn khám phá tiêu tốn 54{,}21\,USD cho khoảng 65 triệu token (Bảng~\ref{tab:calls}, \ref{tab:apicost}), tương đương 0{,}0308\,USD mỗi trajectory thành công và hoàn toàn không tiêu tốn tài nguyên GPU; chu trình fine-tune và đánh giá trên 655 task tốn thêm 24{,}4\,USD thuê GPU (Bảng~\ref{tab:infra}). Chi phí khám phá thực chất dồn vào một vai trò duy nhất: solver chiếm 82{,}9\% số lời gọi và 88{,}9\% lượng token. Đòn bẩy chi phí lớn nhất nằm ở việc định tuyến mô hình cho solver: việc chuyển từ GPT-4o sang GPT-5.6-luna giữa chừng đã kiểm soát ngân sách hiệu quả, bởi GPT-4o dù chỉ chiếm 13{,}6\% số bước nhưng chiếm tới 52{,}9\% tổng chi phí gọi OpenAI. Do đó, kiểm soát chi phí khám phá là bài toán lựa chọn mô hình và tối ưu ngữ cảnh cho solver, không phải bài toán cắt giảm quy mô khám phá.
+
+\subsection{CH2 - Mức cải thiện năng lực của mô hình ngôn ngữ nhỏ}
 
 Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc về năng lực sẵn có của mô hình nền, đã được đo trực tiếp trên cả bốn website: cùng mô hình Qwen3.5-9B, cùng prompt và cùng bộ chấm, tỷ lệ hoàn thành đi từ 13{,}3\% lên 24{,}6\% sau khi fine-tune (Bảng~\ref{tab:baseline}). Vì hai đợt đo dùng chung một tập task, chênh lệch này được kiểm định McNemar theo cặp~\cite{mcnemar1947}: 100 task chỉ mô hình sau fine-tune giải được so với 26 task chỉ mô hình nền giải được, tức $p < 0{,}001$. Đây là bằng chứng trực tiếp nhất mà khóa luận có được cho luận điểm trung tâm, rằng dữ liệu do pipeline tự thu thập từ website không nhãn là đủ để nâng năng lực của một mô hình nhỏ trên chính những website đó - Phát hiện~1 ở Mục~\ref{sec:intro-results}.
 
 Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Hai website đứng đầu về mức cải thiện cũng là hai website thu được nhiều dữ liệu nhất, song thứ tự bên trong cặp thì ngược lại: Shopping Admin nhiều dữ liệu hơn Reddit mà cải thiện kém hơn ba lần. Quan hệ giữa lượng dữ liệu và mức cải thiện vì vậy chỉ đứng vững ở mức nhóm chứ không ở mức thứ hạng.
 
-Tập dữ liệu này cũng không gắn với một kiến trúc cụ thể. Đúng 8554 mẫu đó, khi dùng để fine-tune một mô hình nền thứ hai là Qwen-2.5-7B-Instruct, vẫn nâng được mô hình ấy so với chính nó (Mục~\ref{sec:exp-backbone}). Phép đo đó không dùng để xếp hạng với các công trình liên quan được, vì bộ phân giải đầu ra loại bỏ phần lớn các lệnh kết thúc mà mô hình 7B phát ra không đúng định dạng, khiến điểm số thu được là một cận dưới do công cụ đo đặt ra; nhưng nó đủ để nói rằng giá trị của tập dữ liệu không nằm riêng ở sự tương hợp với Qwen3.5-9B.
-
-Điều mà phép đối chứng này làm rõ nhất lại nằm ở chân dung lỗi chứ không ở con số tổng. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, so với 0{,}6\% ở mô hình sau fine-tune (Bảng~\ref{tab:profile}). Khi tách 655 task theo đúng ranh giới đó, 47 trong 74 task tăng thêm rơi vào nhóm mà mô hình nền không bao giờ phát ra nổi một hành động hợp lệ; còn trên 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% và \emph{đạt} ý nghĩa thống kê ($p = 0{,}003$).
+Điều mà phép đối chứng này làm rõ nhất lại nằm ở chân dung lỗi chứ không ở con số tổng. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, so với 0{,}6\% ở mô hình sau fine-tune (Bảng~\ref{tab:profile}). Khi tách 655 task theo đúng ranh giới đó: 47 trong 100 task mà chỉ mô hình sau fine-tune giải được rơi vào nhóm mà mô hình nền không bao giờ phát ra nổi một hành động hợp lệ; còn trên 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% và \emph{đạt} ý nghĩa thống kê ($p = 0{,}003$).
 
 Phép tách này chính là Phát hiện~2, và nó quan trọng vì phân biệt được hai thứ rất khác nhau mà con số tổng gộp làm một. Thứ nhất là \emph{tính kỷ luật của giao diện hành động}: phát ra đúng thứ môi trường chấp nhận, đủ đều đặn để đi hết một phiên. Thứ hai là năng lực \emph{chọn} hành động đúng - phần mà một pipeline khám phá có cấu trúc hứa hẹn mang lại. Số liệu cho thấy tập dữ liệu dạy được cả hai.
 
-\emph{Về vị thế so với các hệ thống SOTA (CH2):} Kết quả 24{,}6\% vượt qua NNetNav-7B~\cite{murty2024nnetnav} (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang Go-Browse-7B~\cite{gandhi2026gobrowse} (22{,}6\%): chênh lệch giữa hai hệ thống nhỏ hơn nửa độ rộng khoảng tin cậy của phép đo nên không phải một khác biệt có ý nghĩa (Bảng~\ref{tab:related}). Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với các hệ thống đối chuẩn kể trên. Ba hệ thống này có sự khác biệt rõ rệt về mô hình nền, quy mô dữ liệu, cũng như cấu hình ngân sách bước và bộ chấm mờ; những khác biệt này hoàn toàn có thể khỏa lấp khoảng cách vài điểm phần trăm.
+Bên cạnh so sánh đối chứng với mô hình nền, phép đo bổ sung dữ liệu trên cùng website và cùng mô hình nền (Mục~\ref{sec:exp-datascale}) cung cấp bằng chứng trực tiếp cho quan hệ giữa lượng dữ liệu và năng lực. Khi bổ sung 4266 mẫu huấn luyện, tỷ lệ thành công của Reddit tăng từ 20{,}8\% lên 34{,}0\% ($+$13{,}2 đpt) và Shopping Admin tăng từ 15{,}4\% lên 21{,}4\% ($+$6{,}0 đpt), nâng tổng thể hai website từ 17{,}4\% lên 26{,}0\% trên 288 task (Bảng~\ref{tab:datascale}). Vì phép đo cô lập hoàn toàn biến số website và kiến trúc mô hình, đây là minh chứng vững chắc cho thấy dữ liệu tự sinh giúp cải thiện trực tiếp tỷ lệ hoàn thành tác vụ. Tuy nhiên, hiệu suất trên mỗi 1000 mẫu bổ sung rất không đồng đều ($+$7{,}1 đpt ở Reddit so với $+$2{,}5 đpt ở Shopping Admin), phản ánh các rào cản nội tại riêng biệt sẽ được làm rõ ở CH4.
 
-\subsection{CH3 - Hiệu quả chi phí trong quá trình tự động tạo dữ liệu}
+\subsection{CH3 - Vị thế về hiệu năng và chi phí so với các giải pháp hiện hành}
 
-Toàn bộ giai đoạn khám phá tiêu tốn 54{,}21\,USD tiền gọi API, tương đương 0{,}0308\,USD mỗi trajectory thành công (Bảng~\ref{tab:apicost}), và không tiêu tốn GPU vì các agent khám phá đều gọi mô hình đóng qua API; cả chu trình fine-tune rồi đánh giá 655 task tốn thêm 24{,}4\,USD tiền thuê GPU (Bảng~\ref{tab:infra}).
+\emph{Về vị thế hiệu năng:} Kết quả 24{,}6\% của HSGE-9B vượt qua NNetNav-7B~\cite{murty2024nnetnav} (19{,}1\%) và GPT-4o-mini (20{,}0\%), đồng thời đạt mức tương đương Go-Browse-7B~\cite{gandhi2026gobrowse} (22{,}6\%) trên cùng bốn website (Bảng~\ref{tab:related}). Khoảng cách 2{,}0 điểm phần trăm nhỏ hơn nửa độ rộng khoảng tin cậy của phép đo ($\pm 3{,}3$ điểm) nên không mang ý nghĩa thống kê. Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với Go-Browse: hai hệ thống có sự khác biệt rõ rệt về mô hình nền (Qwen3.5-9B so với Qwen-2.5-7B), quy mô dữ liệu (8554 mẫu so với $\approx 40$ nghìn bước), cũng như cấu hình ngân sách bước và bộ chấm mờ.
 
-Khi so sánh với các công trình tự sinh dữ liệu tương tự, Go-Browse công bố 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD mỗi trajectory, so với 0{,}0308\,USD của khóa luận - thấp hơn khoảng 3{,}3 lần (Mục~\ref{sec:exp-cost-explore}). Phần lớn khoảng cách này quy về một quyết định kỹ thuật chứ không về phương pháp: vai trò solver chiếm 85{,}5\% tổng số lời gọi, nên việc dồn nó sang một mô hình rẻ hơn quyết định gần như toàn bộ chi phí, trong khi Go-Browse dùng những mô hình đắt hơn cho phần lớn khối lượng rollout. Cần đọc con số này đúng phạm vi: hai quy trình khác nhau cả về cấu trúc khám phá lẫn tập website, nên đây là một quan sát về \emph{đơn giá vận hành}, không phải một phép so sánh hiệu quả phương pháp có kiểm soát. Điều nó cho phép kết luận là chu trình HSGE nằm trong tầm ngân sách của một nhóm nghiên cứu nhỏ - đúng ràng buộc mà Mục~\ref{sec:intro-scope} đặt ra - chứ không phải HSGE thu dữ liệu ``hiệu quả hơn'' Go-Browse.
+\emph{Về tính độc lập với kiến trúc mô hình nền:} Tập dữ liệu HSGE không bị ràng buộc riêng với Qwen3.5-9B. Khi chuyển toàn bộ 8554 mẫu sang fine-tune mô hình nền thứ hai là Qwen-2.5-7B-Instruct (chính mô hình nền của Go-Browse và NNetNav), tỷ lệ hoàn thành tăng từ 8{,}3\% lên \textbf{16{,}5\%} ($+$8{,}2 đpt), cải thiện trên \textbf{cả bốn website} (Bảng~\ref{tab:backbone7b}). Con số này chưa dùng để so sánh đối đầu cùng-mô-hình-nền với Go-Browse-7B được vì 58--60\% task của bản 7B gặp lỗi định dạng (chủ yếu do phát lệnh \texttt{report\_infeasible} viết trần thiếu vỏ JSON), khiến điểm số là một cận dưới bị hạ thấp bởi bộ phân giải đầu ra nghiêm ngặt; tuy nhiên, kết quả đủ để khẳng định giá trị khái quát hóa của tập dữ liệu trên các kiến trúc khác nhau.
 
-\subsection{Phân tích nguyên nhân thất bại và điểm nghẽn hệ thống}
+\emph{Về hiệu quả chi phí:} So với Go-Browse (công bố 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD mỗi trajectory), chi phí của HSGE là 0{,}0308\,USD mỗi trajectory thành công — thấp hơn khoảng \textbf{3{,}3 lần} (Mục~\ref{sec:exp-cost-explore}). Sự khác biệt này chủ yếu đến từ chiến lược phân bổ mô hình theo vai trò (định tuyến solver sang mô hình có chi phí thấp hơn) thay vì dùng các mô hình đắt tiền cho toàn bộ quá trình rollout. Đây là quan sát thực tế về đơn giá vận hành trong điều kiện tài nguyên hạn chế, không phải một phép so sánh hiệu quả phương pháp có kiểm soát.
 
-Trước khi có kết quả bốn website, giả thuyết mặc định là khối lượng dữ
-liệu: thêm dữ liệu thì điểm sẽ lên. Hai phép đo độc lập cho thấy giả thuyết đó
-đúng, nhưng đúng yếu hơn nhiều so với hình dung ban đầu.
+\subsection{CH4 - Nguyên nhân thất bại và điểm nghẽn hệ thống}
 
-Phép đo thứ nhất là trực tiếp. Khi phần dữ liệu của Reddit và Shopping Admin
-được tăng thêm 4266 mẫu, tỷ lệ thành công trên 288 task của hai website đó đi
-từ 17{,}4\% lên 19{,}4\% (Bảng~\ref{tab:datascale}). Vậy thêm dữ liệu vào một
-website \emph{có} nâng điểm của chính website ấy. Nhưng hiệu suất thì thấp và
-lệch nhau: quy về đơn vị chung, Reddit đổi được khoảng 1{,}5 điểm phần trăm cho
-mỗi 1000 mẫu còn Shopping Admin chỉ 0{,}7 - website nhận nhiều mẫu hơn lại đổi
-được ít điểm hơn trên mỗi mẫu. Gần gấp ba lượng dữ liệu của hai website chỉ đổi
-lấy 2{,}1 điểm phần trăm.
+Phép đo ở Mục~\ref{sec:exp-datascale} đã chứng minh việc bổ sung dữ liệu \emph{có} giúp nâng cao tỷ lệ hoàn thành tác vụ trong phạm vi từng website. Tuy nhiên, câu hỏi cốt lõi của CH4 là: \emph{điều gì đang cản trở phần dữ liệu đã thu thập phát huy tối đa hiệu quả, và đâu là điểm nghẽn thực sự của hệ thống?}
 
-Phép đo thứ hai là gián tiếp và chỉ ra cùng một hướng. Website có nhiều dữ liệu nhất (Shopping Admin, chiếm 41{,}9\% tập huấn luyện) chỉ xếp thứ ba về tỷ lệ thành công (21{,}4\%), trong khi website đứng thứ nhì về kết quả (Shopping, tỷ lệ thành công 28{,}3\%) lại chỉ đứng thứ ba về lượng dữ liệu (chiếm 11{,}4\% tập huấn luyện) (Bảng~\ref{tab:crosssite}). Với bốn điểm dữ liệu thì đây không phải một kết luận thống kê, nhưng nó đủ để bác bỏ cách nghĩ rằng \emph{mức} điểm của một website được quyết định bởi riêng lượng dữ liệu thu được cho nó.
+Bảng~\ref{tab:crosssite} chỉ ra rằng website có lượng dữ liệu huấn luyện lớn nhất (Shopping Admin, chiếm 41{,}9\% tập huấn luyện) chỉ xếp thứ ba về tỷ lệ thành công (21{,}4\%), trong khi website đứng thứ nhì về kết quả (Shopping, 28{,}3\%) lại chỉ chiếm 11{,}4\% dữ liệu. Với $n=4$ website thì đây chưa phải một kết luận thống kê, nhưng đủ để bác bỏ cách nghĩ rằng \emph{mức} điểm của một website được quyết định bởi riêng khối lượng dữ liệu thu được cho nó.
 
-Ghép hai phép đo lại, phát biểu chính xác là: lượng dữ liệu vẫn là một biến số
-có tác dụng \emph{trong phạm vi một website}, nhưng lợi ích cận biên của nó
-giảm nhanh, và giảm nhanh hơn ở website có chuỗi thao tác dài. Câu hỏi tiếp
-theo vì thế không phải ``thu thêm bao nhiêu'' mà ``điều gì đang chặn phần dữ
-liệu đã có phát huy tác dụng''.
+Cách diễn giải nhất quán là: độ khó nội tại của website đặt ra một mức trần khác nhau, còn lượng dữ liệu quyết định mô hình tiến gần mức trần đó tới đâu (Mục~\ref{sec:exp-analysis}). Trên những website có chuỗi thao tác dài và phức tạp như Shopping Admin, hiệu suất biên trên mỗi mẫu giảm nhanh do mô hình gặp phải rào cản thực thi: 60\% task ở miền này kết thúc do cạn ngân sách 15 bước hoặc bị kẹt lặp lại, khiến dữ liệu hành động chuẩn không thể chuyển hóa trọn vẹn thành điểm số.
 
-Bảng phân loại nguyên nhân thất bại ở Mục~\ref{sec:exp-analysis} chỉ ra một điểm nghẽn rất cụ thể: từ 85\% đến 96\% số episode thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi trên 655 episode. Phần lớn là lỗi quá hạn chờ thao tác, và xảy ra ngay trên những phần tử mà accessibility tree \emph{có} hiển thị. Nghĩa là mô hình đã chỉ đúng phần tử cần bấm, nhưng thao tác không đi trọn. Đây là giới hạn của \emph{execution layer}, không phải của dữ liệu huấn luyện.
+Bảng phân loại nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) chỉ ra điểm nghẽn thực sự: từ 85\% đến 96\% số episode thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi trên 655 episode. Phần lớn là lỗi quá hạn chờ thao tác Playwright trên các phần tử DOM mà accessibility tree \emph{có} hiển thị. Nghĩa là mô hình đã chọn đúng đối tượng tương tác, nhưng tương tác bị gián đoạn ở tầng thực thi (\emph{execution layer}). Đi kèm với đó là hiện tượng kẹt vòng lặp: episode thất bại kéo dài trung vị 13 bước so với 6 bước ở episode thành công.
 
-Đi kèm là hiện tượng kẹt vòng lặp: một episode thất bại kéo dài 13 bước tính theo trung vị, so với 6 bước ở episode thành công. Ngân sách bước đang bị tiêu vào những thao tác lặp lại chứ không vào tiến triển. Hai quan sát này cùng nói một điều, và đó là Phát hiện~3: \emph{nới ngân sách bước hay nhân đôi dữ liệu huấn luyện đều không phải chỗ đáng đầu tư tiếp theo}. Hai việc đáng làm hơn là dạy mô hình gượng dậy sau một hành động hỏng, và làm execution layer bớt sinh lỗi.
+Hai quan sát trên hợp thành \textbf{Phát hiện~3}: điểm nghẽn chi phối hiệu năng hiện tại nằm ở \emph{độ tin cậy của tầng thực thi và khả năng tự phục hồi sau lỗi thao tác}, chứ không phải ở việc thiếu hụt quy mô dữ liệu huấn luyện. Do đó, hướng đầu tư mang lại hiệu quả cao tiếp theo là cải thiện cơ chế đồng bộ DOM, làm giàu dữ liệu phục hồi lỗi (\emph{error recovery}) và bổ sung cơ chế chống lang thang, thay vì chỉ gia tăng đơn thuần số lượng trajectory mẫu.
 
-Bên cạnh đó, hệ thống vẫn đối mặt với ba giới hạn chính. Thứ nhất là quy mô dữ liệu: tập dữ liệu 8.554 mẫu huấn luyện của nghiên cứu vẫn nhỏ hơn khoảng năm lần so với quy mô 40.000-45.000 mẫu của các hệ thống đối chuẩn như Go-Browse~\cite{gandhi2026gobrowse} hay NNetNav~\cite{murty2024nnetnav}. Cần đọc giới hạn này cùng với phép đo ở đầu mục: khoảng cách quy mô là có thật, nhưng tốc độ đổi dữ liệu lấy điểm đo được ở Bảng~\ref{tab:datascale} cho thấy việc thu hẹp nó bằng cách thu thêm cùng loại dữ liệu sẽ tốn kém hơn nhiều so với những gì con số ``nhỏ hơn năm lần'' gợi ra. Thứ hai là độ phủ không gian trang: dữ liệu khám phá bao quát từ 63 đến 179 node mỗi website, trong khi bộ task đánh giá chuẩn của WebArena~\cite{zhou2024webarena} được phân bố trên toàn bộ không gian trang rộng lớn hơn nhiều. Thứ ba là giới hạn nội tại của mô hình nền: việc tinh chỉnh thuần giám sát (SFT) trên một mô hình 9B tham số khó có thể giúp tác tử tiếp thu đầy đủ các năng lực phức tạp như lập kế hoạch dài hạn hay tự phục hồi sau lỗi thao tác, nếu các dạng hành vi này chỉ xuất hiện thưa thớt trong tập trajectory. Sự hạn chế trong khả năng tự sửa lỗi này phản ánh chính xác các điểm nghẽn được chỉ ra tại bảng phân loại nguyên nhân thất bại (Bảng~\ref{tab:failures}).
+Bên cạnh đó, hệ thống vẫn đối mặt với ba giới hạn chính. Thứ nhất là quy mô dữ liệu: tập dữ liệu 8554 mẫu huấn luyện của nghiên cứu vẫn nhỏ hơn khoảng 5 lần so với quy mô 40.000--45.000 mẫu của các hệ thống đối chuẩn như Go-Browse~\cite{gandhi2026gobrowse} hay NNetNav~\cite{murty2024nnetnav}. Mặc dù dữ liệu bổ sung đem lại mức tăng rõ rệt ($+$8{,}7 đpt ở Bảng~\ref{tab:datascale}), sự chênh lệch lớn về hiệu suất biên giữa các website ($+$7{,}1 so với $+$2{,}5 đpt/1000 mẫu) cho thấy việc mở rộng quy mô cần đi liền với chiến lược chọn lọc tác vụ theo đặc thù miền thay vì thu thập dàn trải. Thứ hai là độ phủ không gian trang: dữ liệu khám phá bao quát từ 63 đến 179 node mỗi website, trong khi bộ task WebArena phân bố trên không gian rộng lớn hơn nhiều. Thứ ba là giới hạn nội tại của mô hình nền 9B khi tinh chỉnh thuần SFT: khó tiếp thu đầy đủ năng lực lập kế hoạch dài hạn hay tự sửa lỗi phức tạp nếu các hành vi này không xuất hiện dày đặc trong dữ liệu (Bảng~\ref{tab:failures}).
 
 \section{Bài học kỹ thuật rút ra từ quá trình triển khai}
 \label{sec:disc-lessons}
@@ -216,7 +202,7 @@ những mệnh đề không đúng trên bất kỳ thành viên nào của cụ
 lớp trước đó (Phụ lục~\ref{sec:disc-operators}). Song phải nói nốt phần
 ngược lại: cổng kiểm chứng bằng thực thi lại của chính khóa luận đã phải tắt
 trên website sống để tránh tác dụng phụ, nên nhãn ``đã kiểm chứng'' ở đây
-cũng chưa mạnh bằng định nghĩa lý tưởng (Mục~\ref{sec:disc-validity}). Khóa
+cũng chưa mạnh bằng định nghĩa lý tưởng (Phụ lục~\ref{sec:disc-verify}). Khóa
 luận thu hẹp khoảng trống mà AWM để lại, chứ chưa khép được nó.
 
 \subsection{Định vị với các hướng chưa đưa vào thực nghiệm}
@@ -270,26 +256,6 @@ giữa các episode; và so với AWM, khóa luận chuyển tri thức trích �
 nằm trong prompt vào thẳng trọng số của một mô hình nhỏ, đồng thời đo được
 rằng khoảng trống kiểm chứng mà AWM để lại là có thật.
 
-\section{Nguy cơ đối với tính hợp lệ}
-\label{sec:disc-validity}
-
-Nhằm đảm bảo sự minh bạch và tính khách quan khoa học, phần này phân tích các nguy cơ tiềm ẩn có thể ảnh hưởng đến tính hợp lệ của nghiên cứu trên ba khía cạnh: hợp lệ nội tại, hợp lệ ngoại vi và hợp lệ cấu trúc.
-
-\textbf{Hợp lệ nội tại.} Đánh giá thực nghiệm chạy mỗi tác vụ trong bộ kiểm thử chuẩn một lần duy nhất cho mỗi mô hình trên môi trường website thực tế. Do tương tác trên hệ thống thực tồn tại nhiễu mạng và độ trễ ngẫu nhiên, khoảng cách hiệu năng thu được có thể có sự biến động nhỏ khi thực hiện lặp lại (Mục~\ref{sec:exp-stats}). Bên cạnh đó, ba nguy cơ kỹ thuật cụ thể đã được công bố tại Chương~\ref{ch:experiments}.
-
-\emph{(i) Dòng tổng trộn hai checkpoint.} Shopping và GitLab được đánh giá trên một checkpoint trung gian, Reddit và Shopping Admin trên checkpoint cuối. Vì phần cuối lịch huấn luyện cập nhật toàn bộ trọng số adapter, không thể loại trừ khả năng mô hình cuối đã suy giảm trên hai website không được đo lại. Con số 24{,}6\% vì vậy là một \emph{ước lượng lạc quan} nếu suy giảm có xảy ra.
-
-\emph{(ii)} Mô hình chấm mờ của bộ đánh giá chính thức ngừng hoạt động và được thay thế bằng mô hình tương đương, tác động đến 40 trên tổng số 655 tác vụ.
-
-\emph{(iii)} Nguy cơ dùng chung cơ sở dữ liệu giữa hai đợt chạy Shopping và Shopping Admin. Ngoài ra, cổng kiểm soát chất lượng quan trọng nhất (LLM Judge) bản chất là một mô hình ngôn ngữ lớn nên vẫn tiềm ẩn các thiên kiến nội tại; hệ thống đã giảm thiểu nguy cơ này bằng cách bắt buộc đối chiếu phán quyết của mô hình chấm với trạng thái đích thực tế thay vì chỉ dựa vào nhật ký hội thoại.
-
-Về phía dữ liệu thu thập, có một sự bất đối xứng về kênh thông tin giữa mô hình dạy và mô hình học: các quỹ đạo huấn luyện được sinh bởi mô hình dạy có năng lực thị giác (kèm ảnh chụp màn hình và lớp đánh dấu Set-of-Marks~\cite{yang2023som}), trong khi quá trình huấn luyện SFT và đánh giá mô hình 9B đều thực hiện thuần văn bản trên accessibility tree. Mặc dù phép đo hiệu năng vẫn đảm bảo tính công bằng do mô hình học dùng chung một định dạng đầu vào lúc huấn luyện và đánh giá (Mục~\ref{sec:exp-main}), hệ thống chưa thể xác định tỷ lệ các quyết định của mô hình dạy phụ thuộc vào kênh thị giác mà mô hình học không có đủ căn cứ để tái tạo.
-
-\textbf{Hợp lệ ngoại vi.} Toàn bộ dữ liệu huấn luyện và kết quả đánh giá đều được thực hiện trên bốn website thuộc bộ chuẩn WebArena~\cite{zhou2024webarena} với một mô hình 9B duy nhất. Các benchmark web agent khác được khảo sát ở Mục~\ref{sec:rel-benchmarks} - từ môi trường tự triển khai như VisualWebArena~\cite{koh2024visualwebarena} và WorkArena~\cite{drouin2024workarena} tới web mở như Online-Mind2Web~\cite{xue2025illusion} - đều chưa được thử. Do đó, các kết luận khoa học của khóa luận được phát biểu chính xác trong phạm vi: pipeline đóng góp cải thiện hiệu năng của mô hình 9B trên bốn website thực nghiệm. Quan hệ giữa lượng dữ liệu bổ sung và mức cải thiện, quan sát được trên hai website ở Mục~\ref{sec:disc-results}, cũng chỉ dựa trên hai điểm dữ liệu và một lần đo mỗi điểm; nó là một dấu hiệu nhất quán chứ chưa phải một quan hệ đã được kiểm định. Việc mở rộng phương pháp trên các họ kiến trúc khác hoặc các domain website phức tạp hơn thuộc về hướng phát triển tương lai. Ngoài ra, phép so sánh với các hệ thống liên quan (Bảng~\ref{tab:related}) được tính toán lại chính xác trên cùng bốn website để đảm bảo thống nhất mẫu số đánh giá; tuy nhiên, quy mô dữ liệu và mô hình nền của các hệ thống này chưa thể đồng nhất hồi tố.
-
-\textbf{Hợp lệ cấu trúc.} Tỷ lệ hoàn thành tác vụ theo bộ chấm chuẩn WebArena là chỉ số nhị phân (thành công hoặc thất bại) dựa trên trạng thái đích cuối cùng, do đó chưa ghi nhận được mức độ tiến bộ từng phần trong chuỗi hành động của tác tử. Đây là hạn chế chung của thang đo nhị phân, và cũng là điều Xue và cộng sự~\cite{xue2025illusion} chỉ ra khi đo lại nhiều hệ thống web agent trong điều kiện trực tuyến. Bên cạnh đó, nhãn ``đã kiểm chứng'' của một kỹ năng trong nghiên cứu này \emph{không} đồng nghĩa với việc kỹ năng đó đã được thực thi lại thành công trên môi trường thực tế (do cổng thực thi lại $k=0$ bị tắt nhằm tránh tác dụng phụ trên website sống, Phụ lục~\ref{sec:disc-verify}); nhãn này chỉ đảm bảo rằng kỹ năng đã xuất hiện lặp lại qua nhiều quỹ đạo độc lập và tất cả các quỹ đạo nguồn đều đã qua cổng kiểm tra trạng thái mờ.
-
 \vspace{1em}
 \noindent
-Những phân tích về nguy cơ đối với tính hợp lệ trên đây đã khép lại toàn bộ phần thực nghiệm và thảo luận của khóa luận. 
-Chương tiếp theo sẽ tổng kết các kết quả đạt được, đóng góp chính và đề xuất các hướng nghiên cứu tiếp theo.
+Toàn bộ các phân tích thực nghiệm và đối chiếu trên đây đã khép lại phần thảo luận của khóa luận. Chương tiếp theo sẽ tổng kết các kết quả đạt được, đóng góp chính và đề xuất các hướng nghiên cứu tiếp theo.
