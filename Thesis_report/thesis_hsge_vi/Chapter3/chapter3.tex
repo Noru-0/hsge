@@ -1,3 +1,4 @@
+% !TEX root = ../main.tex
 \chapter{Phương pháp đề xuất}
 \label{ch:method}
 
@@ -17,8 +18,7 @@ chưa có nhãn task. Nội dung chương bao gồm 9 phần:
 \section{Tổng quan}
 \label{sec:method-overview}
 
-Đầu vào của HSGE là một website đang vận hành chưa có nhãn task,
-cùng một frontier khởi tạo từ tập hợp URL ban đầu (seed URLs).
+Đầu vào của HSGE là URL của một website đang vận hành và chưa có dữ liệu về task đã được gắn nhãn.
 Đầu ra là tập dữ liệu SFT gồm các
 trajectory kèm mục tiêu tương ứng; sản phẩm cuối cùng là một SLM
 đã fine-tune trên tập dữ liệu đó. Hình~\ref{fig:pipeline}
@@ -37,47 +37,38 @@ mô tả kiến trúc tổng thể.
   \label{fig:pipeline}
 \end{figure}
 
-Pipeline vận hành theo một vòng lặp khép kín. Tại mỗi trang truy cập,
-explorer đề xuất các task gắn với
-nội dung trang. Solver thực thi từng
-task trên trình duyệt và ghi nhận các trajectory tương ứng. Discovery module
-phân rã trajectory thành các sub-trajectory,
-gom cụm các đoạn lặp lại, và trừu tượng hóa các cụm đạt ngưỡng tần suất xuất hiện (tối thiểu $\ge 2$ lần) thành skill.
+Pipeline vận hành theo một vòng lặp khép kín. Tại mỗi trang đang truy cập,
+explorer đề xuất các tác vụ gắn liền với nội dung hiển thị. Solver thực thi từng
+tác vụ trên trình duyệt và ghi nhận quỹ đạo tương tác tương ứng. Phân hệ Discovery
+phân rã các quỹ đạo này thành những quỹ đạo con (sub-trajectory), tiến hành gom
+cụm theo độ tương đồng ngữ nghĩa và trừu tượng hóa thành kỹ năng (skill) khi cụm
+đạt ngưỡng tần suất xuất hiện $\tau$ (mặc định $\tau = 2$).
 
-Mỗi skill sau khi kiểm chứng được chuyển đổi thành một operator mang
-precondition và effect tường minh. Quá trình ghép chuỗi operator trên đồ
-thị tạo ra các semantic task nhiều bước; các task này tiếp tục
-được chuyển cho solver thực thi. Tất cả task đã thực thi, bao gồm
-low-level task và semantic task, đều được lưu trữ thành episode và
-được kiểm tra qua các cổng chất lượng tự động \emph{tại thời điểm
-ghi nhận} (Mục~\ref{sec:method-success}). Do đó, sau khi kết thúc quá trình khám
-phá, tập hợp episode được sử dụng trực tiếp để xây dựng tập
-dữ liệu SFT cho mô hình đích mà không cần bước kiểm chứng ngoại tuyến bổ sung.
+Mỗi skill sau khi kiểm chứng được chuyển đổi thành một toán tử (operator) kèm theo các precondition và effect của operator đó, sau đó chúng sẽ được lưu trữ trên một đồ thị. Trên đồ thị đó, các operator được nối với nhau nếu effect của operator này chính là precondition của operator kia. Mỗi đường đi trên đồ thị qua nhiều operator sẽ tương ứng với một nhiệm vụ ngữ nghĩa (semantic task) nhiều bước và được đưa trở lại cho \textit{Solver} thực thi. Toàn bộ các task đã thực hiện bao gồm low-level task và semantic task đều được lưu trữ dưới dạng các episode và kiểm định qua cổng kiểm tra chất lượng tự động \emph{ngay tại thời điểm episode đó được ghi nhận} (Mục~\ref{sec:method-success}). Nhờ đó, sau khi kết thúc quá trình khám phá, tập hợp episode đó sẽ được sử dụng trực tiếp
+để xây dựng tập dữ liệu SFT cho mô hình đích mà không cần thêm bước kiểm chứng ngoại tuyến.
 
-Mỗi lượt chạy ghi nhận 3 loại episode tương ứng với 3 điểm khởi đầu thực thi. Episode \texttt{LOCAL}
-là low-level task được giải trực tiếp tại trang hiện tại chứa phần tử tương tác. Episode \texttt{UNPREFIXED} là chính task đó
-nhưng được thực thi lại từ trang chủ, do đó trajectory bao gồm chuỗi hành động điều hướng đến trang đích
+Dữ liệu thu thập từ mỗi lượt chạy được phân thành 3 loại episode dựa trên điều kiện khởi tạo và độ khó của tác vụ. Episode \texttt{LOCAL}
+là low-level task được giải trực tiếp ngay tại trang hiện tại. Episode \texttt{UNPREFIXED} là chính task đó
+nhưng được thực thi lại từ trang chủ, do đó trajectory sẽ bao gồm thêm chuỗi hành động điều hướng đến trang đích đến trang hiện tại cần thực hiện tác vụ
 (Mục~\ref{sec:method-unprefixed}). Episode \texttt{GOAL} là semantic task
 nhiều bước được sinh từ chuỗi operator hoặc từ seed năng lực của website
-(Mục~\ref{sec:method-semantic}). Ba nhãn này được duy trì để phân chia thành 3 mức độ khó trong curriculum huấn luyện.
+(Mục~\ref{sec:method-semantic}). Ba nhãn này được duy trì để phân chia thành 3 mức độ khó trong dữ liệu huấn luyện.
 
 Thiết kế của pipeline dựa trên 3 nguyên tắc sau:
 
 \begin{itemize}
-  \item \textbf{P1: Kiểm chứng trước khi tái sử dụng.} Một skill chỉ được thu nhận
-    khi xuất hiện lặp lại tối thiểu 2 lần trên các trajectory độc lập; episode do
-    agent xác nhận thành công phải được judge độc
-    lập kiểm tra lại; operator có effect rỗng hoặc thuộc dạng tautology đều bị loại bỏ.
-  \item \textbf{P2: Cấu trúc đồ thị hai tầng.} Thay vì
-    lưu trữ danh sách trang hoặc bộ nhớ phẳng, HSGE duy
-    trì đồ thị hai tầng (Mục~\ref{sec:method-graph}). Tầng thấp lưu trữ
-    không gian trạng thái các trang web và liên kết điều hướng; tầng cao lưu trữ
-    các skill, operator và quan hệ chuyển tiếp giữa các operator.
+  \item \textbf{P1: Kiểm chứng trước khi tái sử dụng.} Một skill chỉ được ghi nhận
+    khi xuất hiện lặp lại tối thiểu 2 lần trên các trajectory khác nhau; episode do
+    agent xác nhận thành công phải được judge agent kiểm tra lại; operator có effect rỗng hoặc thuộc bị trùng lặp với precondition đều bị loại bỏ.
+  \item \textbf{P2: Cấu trúc đồ thị hai tầng.} Thay vì chỉ
+    lưu trữ các trang đã khám phá dưới dạng 1 danh sách không có cấu trúc, HSGE tổ chức chúng dưới dạng một đồ thị hai tầng (Mục~\ref{sec:method-graph}). Tầng thấp lưu trữ
+    không gian trạng thái của các trang web và liên kết để điều hướng tới trang web đó; tầng cao lưu trữ
+    các skill, operator và liên k giữa các operator.
   \item \textbf{P3: Hệ thống task hai tầng.} Các low-level task do
-    LLM đề xuất (Mục~\ref{sec:method-exploration}) định hướng quá
+    LLM đề xuất (Mục~\ref{sec:method-exploration}) định hướng cho quá
     trình khám phá và cung cấp dữ liệu cơ sở để phát hiện skill.
     Các semantic task (Mục~\ref{sec:method-semantic}) biểu diễn
-    mục tiêu tương tác nhiều bước vượt ngoài phạm vi của một trang đơn lẻ. Tầng ngữ nghĩa được xây dựng từ 2 nguồn: ghép chuỗi operator theo hướng bottom-up; và seed năng lực của
+    mục tiêu tương tác bao gồm nhiều bước vượt ngoài phạm vi của một trang đơn lẻ. Các tác vụ ngữ nghĩa được xây dựng từ 2 nguồn: ghép chuỗi operator theo hướng bottom-up; và seed năng lực của
     website theo hướng top-down. Việc kết hợp song song 2 nguồn là
     kết quả thực nghiệm, do phương pháp bottom-up phụ thuộc vào mật độ cạnh của operator graph (Phụ lục~\ref{sec:disc-operators}).
 \end{itemize}
@@ -171,7 +162,7 @@ Kế thừa quy ước chuẩn từ WebArena~\cite{zhou2024webarena} và Browser
   \centering
   \caption[Action space của solver]{Action space của solver.
     Đối số phần tử là mã định danh trong accessibility tree.
-    Các hành động không làm thay đổi trạng thái trang được phân nhóm riêng để phục vụ cổng lọc dữ liệu (Mục~\ref{sec:method-data}).}
+  Các hành động không làm thay đổi trạng thái trang được phân nhóm riêng để phục vụ cổng lọc dữ liệu (Mục~\ref{sec:method-data}).}
   \label{tab:actions}
   \small
   \begin{tabular}{@{}L{5.4cm} L{7.8cm}@{}}
@@ -453,10 +444,10 @@ Nhằm hạn chế sự phân mảnh ngữ nghĩa khi LLM sinh mệnh đề tự
 Operator sau khi sinh phải vượt qua 2 cổng kiểm định:
 \begin{enumerate}
   \item \textbf{Cổng lọc tautology}: Loại bỏ toàn bộ các effect trùng lặp với precondition theo công thức:
-  \[
-    \mathit{eff} \leftarrow \mathit{eff} \setminus \mathit{pre}.
-  \]
-  Skill không còn effect nào sau bước lọc này sẽ bị loại bỏ do không tạo ra biến đổi trạng thái.
+    \[
+      \mathit{eff} \leftarrow \mathit{eff} \setminus \mathit{pre}.
+    \]
+    Skill không còn effect nào sau bước lọc này sẽ bị loại bỏ do không tạo ra biến đổi trạng thái.
   \item \textbf{Cổng đối chiếu trạng thái thực tế (grounding)}: Đối chiếu từng effect với trạng thái trang trước và sau tương tác của toàn bộ các trajectory thành viên trong cụm. Effect chỉ được chấp nhận khi tỷ lệ xác thực thành công trên tập thành viên đạt tối thiểu 50\%; operator không còn effect hợp lệ sẽ bị từ chối.
 \end{enumerate}
 
