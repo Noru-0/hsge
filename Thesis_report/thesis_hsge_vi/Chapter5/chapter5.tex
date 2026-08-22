@@ -3,7 +3,7 @@
 \label{ch:discussion}
 
 Chương này diễn giải các kết quả thực nghiệm của Chương~\ref{ch:experiments}
-bằng cách trả lời lần lượt bốn câu hỏi nghiên cứu đặt ra ở
+bằng cách trả lời lần lượt ba câu hỏi nghiên cứu đặt ra ở
 Mục~\ref{sec:intro-rq}, tóm tắt các bài học kỹ thuật rút ra trong quá trình xây
 dựng và vận hành hệ thống, đối chiếu kết quả đo được với những gì các công bố
 gốc gần nhất đã tuyên bố, rồi phân tích những yếu tố có thể ảnh hưởng tới
@@ -12,7 +12,7 @@ tính hợp lệ của các kết luận.
 \section{Trả lời các câu hỏi nghiên cứu}
 \label{sec:disc-results}
 
-\subsection{CH1 - Pipeline khám phá thu được những gì trên website thật}
+\subsection{CH1 - Khả năng tự động tạo ra các tác vụ có ngữ nghĩa và hợp lệ}
 
 Trên bốn website, pipeline duyệt 455 node và ghi nhận 3981 episode
 (Bảng~\ref{tab:runs}). Từ đó rút ra 146 kỹ năng đã kiểm chứng, nâng được 57
@@ -27,35 +27,29 @@ dữ kiện đáng chú ý nhất của khâu thu thập.
 
 Quy trình thực nghiệm đầu cuối hoàn chỉnh (từ khâu khám phá tự động, phát hiện kỹ năng, quy nạp operator, tinh lọc dữ liệu đến huấn luyện, serving và đánh giá mô hình) đã vận hành thành công trên cả bốn website thực tế. Can thiệp thủ công duy nhất trong suốt quá trình này là 5 lần khởi chạy lại khi tài khoản API chạm hạn mức; cả 5 lần hệ thống đều tự động khôi phục và tiếp tục thực thi chính xác từ checkpoint gần nhất mà không cần chạy lại từ đầu. Bên cạnh đó, các cổng kiểm soát chất lượng đã phát huy hiệu quả thiết kế khi ngăn chặn triệt để các luồng dữ liệu lỗi trước khi chúng đi vào tập dữ liệu huấn luyện (Phụ lục~\ref{sec:disc-slm}).
 
-\emph{Về vế chi phí của CH1}, toàn bộ giai đoạn khám phá tiêu tốn 54{,}21\,USD tiền gọi API, tương đương 0{,}0308\,USD mỗi trajectory thành công (Bảng~\ref{tab:apicost}), và không tiêu tốn GPU vì các agent khám phá đều gọi mô hình đóng qua API; cả chu trình fine-tune rồi đánh giá 655 task tốn thêm 24{,}4\,USD tiền thuê GPU (Bảng~\ref{tab:infra}). Điều đáng chú ý không phải tổng chi phí mà là \emph{vị trí} của nó: rào cản tính toán của việc chuyên hóa một mô hình nhỏ cho một nhóm website không nằm ở khâu huấn luyện hay đánh giá, mà ở khâu thu thập dữ liệu - vốn tiêu thời gian điều khiển trình duyệt và số lời gọi API chứ không tiêu GPU. Đó cũng là lý do 85{,}5\% ngân sách lời gọi dồn vào riêng vai trò solver (Bảng~\ref{tab:calls}) là điểm tối ưu chi phí đáng giá nhất.
-
 Có một điểm cần được phát biểu thật chính xác: \emph{khâu ghép chuỗi operator vẫn là khâu hạn chế nhất}. Cơ chế sinh semantic task đã thực sự vận hành được trên website thật: 142 task GOAL với 71 lượt thành công, tỷ lệ 50{,}0\%. Tuy nhiên, nguồn sinh ra phần lớn số task đó vẫn là seed năng lực website (130 lượt thử), chứ không phải đồ thị operator (12 lượt thử trên tổng số 57 operator, phân bố rất lệch: Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nói cách khác, giả thuyết ``ghép chuỗi các skill đã kiểm chứng để sinh mục tiêu dài hạn'' mới được chứng minh là \emph{khả thi}, chưa được chứng minh là \emph{đủ dày} để làm nguồn dữ liệu chính; nguyên nhân kỹ thuật của độ thưa đó được phân tích ở Phụ lục~\ref{sec:disc-operators}. 
 
-\subsection{CH2 - Dữ liệu đó có nâng được năng lực của mô hình nhỏ hay không}
+\subsection{CH2 - Năng lực của SLM sau fine-tuning và vị thế so với SOTA}
 
 Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc về năng lực sẵn có của mô hình nền, đã được đo trực tiếp trên cả bốn website: cùng mô hình Qwen3.5-9B, cùng prompt và cùng bộ chấm, tỷ lệ hoàn thành đi từ 13{,}3\% lên 24{,}6\% sau khi fine-tune (Bảng~\ref{tab:baseline}). Vì hai đợt đo dùng chung một tập task, chênh lệch này được kiểm định McNemar theo cặp~\cite{mcnemar1947}: 100 task chỉ mô hình sau fine-tune giải được so với 26 task chỉ mô hình nền giải được, tức $p < 0{,}001$. Đây là bằng chứng trực tiếp nhất mà khóa luận có được cho luận điểm trung tâm, rằng dữ liệu do pipeline tự thu thập từ website không nhãn là đủ để nâng năng lực của một mô hình nhỏ trên chính những website đó - Phát hiện~1 ở Mục~\ref{sec:intro-results}.
 
-Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Hai website đứng đầu về mức cải thiện cũng là hai website thu được nhiều dữ liệu nhất, song thứ tự bên trong cặp thì ngược lại: Shopping Admin nhiều dữ liệu hơn Reddit mà cải thiện kém hơn ba lần. Quan hệ giữa lượng dữ liệu và mức cải thiện vì vậy chỉ đứng vững ở mức nhóm chứ không ở mức thứ hạng - một nhận định được kiểm chứng trực tiếp ở Mục~\ref{sec:disc-results} khi trả lời CH4.
+Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Hai website đứng đầu về mức cải thiện cũng là hai website thu được nhiều dữ liệu nhất, song thứ tự bên trong cặp thì ngược lại: Shopping Admin nhiều dữ liệu hơn Reddit mà cải thiện kém hơn ba lần. Quan hệ giữa lượng dữ liệu và mức cải thiện vì vậy chỉ đứng vững ở mức nhóm chứ không ở mức thứ hạng.
 
 Tập dữ liệu này cũng không gắn với một kiến trúc cụ thể. Đúng 8554 mẫu đó, khi dùng để fine-tune một mô hình nền thứ hai là Qwen-2.5-7B-Instruct, vẫn nâng được mô hình ấy so với chính nó (Mục~\ref{sec:exp-backbone}). Phép đo đó không dùng để xếp hạng với các công trình liên quan được, vì bộ phân giải đầu ra loại bỏ phần lớn các lệnh kết thúc mà mô hình 7B phát ra không đúng định dạng, khiến điểm số thu được là một cận dưới do công cụ đo đặt ra; nhưng nó đủ để nói rằng giá trị của tập dữ liệu không nằm riêng ở sự tương hợp với Qwen3.5-9B.
 
-Một điều kiện phải đi kèm phát biểu đó: mỗi ô của bảng đối chứng vẫn chỉ đến từ một lần chạy. Vì vậy các hạng mục ở Mục~\ref{sec:exp-stats} vẫn là ưu tiên thực nghiệm hàng đầu chứ không phải một việc dọn dẹp cuối cùng.
-
 Điều mà phép đối chứng này làm rõ nhất lại nằm ở chân dung lỗi chứ không ở con số tổng. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, so với 0{,}6\% ở mô hình sau fine-tune (Bảng~\ref{tab:profile}). Khi tách 655 task theo đúng ranh giới đó, 47 trong 74 task tăng thêm rơi vào nhóm mà mô hình nền không bao giờ phát ra nổi một hành động hợp lệ; còn trên 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% và \emph{đạt} ý nghĩa thống kê ($p = 0{,}003$).
 
-Phép tách này chính là Phát hiện~2, và nó quan trọng vì phân biệt được hai thứ rất khác nhau mà con số tổng gộp làm một. Thứ nhất là \emph{tính kỷ luật của giao diện hành động}: phát ra đúng thứ môi trường chấp nhận, đủ đều đặn để đi hết một phiên. Đó không phải kết quả tầm thường, vì trong một web agent thì một phản hồi không phân giải được cũng đồng nghĩa với hỏng toàn bộ phiên, bất kể suy luận bên trong đúng đến đâu. Thứ hai là năng lực \emph{chọn} hành động đúng - phần mà một pipeline khám phá có cấu trúc hứa hẹn mang lại. Số liệu cho thấy tập dữ liệu dạy được cả hai.
+Phép tách này chính là Phát hiện~2, và nó quan trọng vì phân biệt được hai thứ rất khác nhau mà con số tổng gộp làm một. Thứ nhất là \emph{tính kỷ luật của giao diện hành động}: phát ra đúng thứ môi trường chấp nhận, đủ đều đặn để đi hết một phiên. Thứ hai là năng lực \emph{chọn} hành động đúng - phần mà một pipeline khám phá có cấu trúc hứa hẹn mang lại. Số liệu cho thấy tập dữ liệu dạy được cả hai.
 
-Dù vậy, ablation so sánh khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách (Mục~\ref{sec:exp-ablation}) vẫn là phép đo không thể thay thế: nó là cách duy nhất để biết phần cải thiện này có thuộc về \emph{cấu trúc} của dữ liệu hay chỉ thuộc về việc có dữ liệu trong miền.
+\emph{Về vị thế so với các hệ thống SOTA (CH2):} Kết quả 24{,}6\% vượt qua NNetNav-7B~\cite{murty2024nnetnav} (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang Go-Browse-7B~\cite{gandhi2026gobrowse} (22{,}6\%): chênh lệch giữa hai hệ thống nhỏ hơn nửa độ rộng khoảng tin cậy của phép đo nên không phải một khác biệt có ý nghĩa (Bảng~\ref{tab:related}). Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với các hệ thống đối chuẩn kể trên. Ba hệ thống này có sự khác biệt rõ rệt về mô hình nền, quy mô dữ liệu, cũng như cấu hình ngân sách bước và bộ chấm mờ; những khác biệt này hoàn toàn có thể khỏa lấp khoảng cách vài điểm phần trăm.
 
-\subsection{CH3 - Kết quả đứng ở đâu so với các hệ thống cùng phân khúc}
+\subsection{CH3 - Hiệu quả chi phí trong quá trình tự động tạo dữ liệu}
 
-Kết quả đánh giá tổng thể của khóa luận ghi nhận 161/655 task được hoàn thành trên bốn website thuộc WebArena, tương đương tỷ lệ 24{,}6\%. Con số này chỉ có nghĩa khi đọc kèm phạm vi của nghiên cứu. Điều nó cho thấy là: một mô hình dưới 10B tham số, fine-tune trên 8554 mẫu do chính pipeline tự thu từ những website \emph{chưa hề được gán nhãn task}, đạt mức ngang hàng các hệ thống tốt nhất cùng cỡ. Cụ thể, mô hình đạt kết quả cao hơn NNetNav-7B~\cite{murty2024nnetnav} (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang Go-Browse-7B~\cite{gandhi2026gobrowse} (22{,}6\%): chênh lệch giữa hai hệ thống nhỏ hơn nửa độ rộng khoảng tin cậy của phép đo nên không phải một khác biệt có ý nghĩa (Bảng~\ref{tab:related}).
+Toàn bộ giai đoạn khám phá tiêu tốn 54{,}21\,USD tiền gọi API, tương đương 0{,}0308\,USD mỗi trajectory thành công (Bảng~\ref{tab:apicost}), và không tiêu tốn GPU vì các agent khám phá đều gọi mô hình đóng qua API; cả chu trình fine-tune rồi đánh giá 655 task tốn thêm 24{,}4\,USD tiền thuê GPU (Bảng~\ref{tab:infra}).
 
-Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với các hệ thống đối chuẩn kể trên. Ba hệ thống này có sự khác biệt rõ rệt về mô hình nền, quy mô dữ liệu, cũng như cấu hình ngân sách bước và bộ chấm mờ; những khác biệt này hoàn toàn có thể khỏa lấp khoảng cách vài điểm phần trăm.
+Khi so sánh với các công trình tự sinh dữ liệu tương tự, Go-Browse công bố 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD mỗi trajectory, so với 0{,}0308\,USD của khóa luận - thấp hơn khoảng 3{,}3 lần (Mục~\ref{sec:exp-cost-explore}). Phần lớn khoảng cách này quy về một quyết định kỹ thuật chứ không về phương pháp: vai trò solver chiếm 85{,}5\% tổng số lời gọi, nên việc dồn nó sang một mô hình rẻ hơn quyết định gần như toàn bộ chi phí, trong khi Go-Browse dùng những mô hình đắt hơn cho phần lớn khối lượng rollout. Cần đọc con số này đúng phạm vi: hai quy trình khác nhau cả về cấu trúc khám phá lẫn tập website, nên đây là một quan sát về \emph{đơn giá vận hành}, không phải một phép so sánh hiệu quả phương pháp có kiểm soát. Điều nó cho phép kết luận là chu trình HSGE nằm trong tầm ngân sách của một nhóm nghiên cứu nhỏ - đúng ràng buộc mà Mục~\ref{sec:intro-scope} đặt ra - chứ không phải HSGE thu dữ liệu ``hiệu quả hơn'' Go-Browse.
 
-Trục thứ hai của CH3 là chi phí, và ở trục này khoảng cách rõ hơn trục hiệu năng. Go-Browse công bố 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD mỗi trajectory, so với 0{,}0308\,USD của khóa luận - thấp hơn khoảng 3{,}3 lần (Mục~\ref{sec:exp-cost-explore}). Phần lớn khoảng cách này quy về một quyết định kỹ thuật chứ không về phương pháp: vai trò solver chiếm 85{,}5\% tổng số lời gọi, nên việc dồn nó sang một mô hình rẻ hơn quyết định gần như toàn bộ chi phí, trong khi Go-Browse dùng những mô hình đắt hơn cho phần lớn khối lượng rollout. Cần đọc con số này đúng phạm vi: hai quy trình khác nhau cả về cấu trúc khám phá lẫn tập website, nên đây là một quan sát về \emph{đơn giá vận hành}, không phải một phép so sánh hiệu quả phương pháp có kiểm soát. Điều nó cho phép kết luận là chu trình HSGE nằm trong tầm ngân sách của một nhóm nghiên cứu nhỏ - đúng ràng buộc mà Mục~\ref{sec:intro-scope} đặt ra - chứ không phải HSGE thu dữ liệu ``hiệu quả hơn'' Go-Browse.
-
-\subsection{CH4 - Phân tích nguyên nhân thất bại và điểm nghẽn hệ thống}
+\subsection{Phân tích nguyên nhân thất bại và điểm nghẽn hệ thống}
 
 Trước khi có kết quả bốn website, giả thuyết mặc định là khối lượng dữ
 liệu: thêm dữ liệu thì điểm sẽ lên. Hai phép đo độc lập cho thấy giả thuyết đó

@@ -2,7 +2,7 @@
 \chapter{Kiến thức nền tảng và công trình liên quan}
 \label{ch:related}
 
-Chương này mở đầu bằng (1) bài toán web agent và hạ tầng bộ chuẩn dùng xuyên suốt khóa luận. Bốn phần tiếp theo khảo sát các công trình liên quan: (2) web agent dựa trên LLM; (3) khám phá skill và workflow; (4) sinh dữ liệu huấn luyện tự động; và (5) mô hình ngôn ngữ nhỏ trong vai trò agent. Phần (6) định vị khóa luận so với các hướng đó. Trong mỗi
+Chương này mở đầu bằng (1) bài toán web agent và benchmark cùng môi trường đánh giá dùng xuyên suốt khóa luận. Bốn phần tiếp theo khảo sát các công trình liên quan: (2) web agent dựa trên LLM; (3) khám phá skill và workflow; (4) sinh dữ liệu huấn luyện tự động; và (5) mô hình ngôn ngữ nhỏ trong vai trò agent. Phần (6) định vị khóa luận so với các hướng đó. Trong mỗi
 chủ đề, các công trình được trình bày từ cũ đến mới.
 
 
@@ -19,7 +19,7 @@ hệ thống là bản biểu diễn tuần tự hóa từ accessibility tree.
 Action space là một tập hữu hạn
 các thao tác giao diện đi kèm tham số; chi tiết cấu trúc này trong nghiên cứu
 của chúng tôi được trình bày tại Mục~\ref{sec:method-graph}.
-Policy của các agent này thường được thiết kế dựa trên
+Chính sách của các agent này thường được thiết kế dựa trên
 kiến trúc ReAct~\cite{yao2023react}. Kiến trúc này xen kẽ suy luận bằng ngôn ngữ với thực thi hành động, nên mỗi quyết định đều có một dòng suy nghĩ tường minh đứng sau, dựa trên trạng thái hiện tại của môi trường.
 
 \subsection{Benchmark và môi trường}
@@ -32,12 +32,12 @@ theo bốn nhóm này.
 
 \textbf{Thế hệ thứ nhất: môi trường mô phỏng.}
 MiniWoB++~\cite{liu2018miniwob} gồm hàng trăm màn hình giao diện thu nhỏ,
-mỗi màn hình một thao tác nguyên tử như chọn hộp kiểm hay kéo thanh trượt.
-Ưu điểm là tất định và chấm được bằng mã, nhưng khoảng cách với một website
+mỗi màn hình một thao tác nguyên tử như tích vào ô chọn hoặc điều chỉnh thanh trượt.
+Ưu điểm là môi trường có trạng thái và kết quả thực thi có thể được xác định nhất quán, đồng thời việc chấm điểm có thể thực hiện tự động bằng mã, nhưng khoảng cách với một website
 thật là rất lớn. WebShop~\cite{yao2022webshop} tiến gần hơn một bước với
 website thương mại điện tử mô phỏng chứa hơn một triệu sản phẩm thật cùng
 các yêu cầu mua sắm thu thập từ cộng đồng; dẫu vậy nó vẫn chỉ là một website
-đơn giản hóa và chỉ hỗ trợ một loại task.
+đơn giản hóa và chỉ hỗ trợ những tác vụ liên quan đến mua sắm.
 
 \textbf{Thế hệ thứ hai: bản chụp tĩnh của website thật.}
 Mind2Web~\cite{deng2023mind2web} mở rộng quy mô lên hơn 2{.}000 task trên

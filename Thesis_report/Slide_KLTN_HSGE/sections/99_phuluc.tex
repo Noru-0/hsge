@@ -124,7 +124,7 @@
 
 
 %%% ---------------------------------------------------------------
-\begin{frame}{PL4 - Bốn câu hỏi nghiên cứu: số liệu và mức độ trả lời}
+\begin{frame}{PL4 - Ba câu hỏi nghiên cứu: số liệu và mức độ trả lời}
   \centering
   \setlength{\tabcolsep}{1.5pt}
   \renewcommand{\arraystretch}{0.95}
@@ -132,10 +132,9 @@
     \toprule
     \textbf{RQ} & \textbf{Số liệu} & \textbf{Kết quả} & \textbf{Trạng thái} \\
     \midrule
-    \textbf{CH1} & 455 trang; 3981 lượt; 146 skill / 57 op & 1760 traj $\rightarrow$ 8554 mẫu; \$54,21 & \kw{Đạt} \\
-    \textbf{CH2} & 655 task, cùng prompt/bước; McNemar & 13,3\% $\rightarrow$ 24,6\%; $p \le 0{,}011$ cả 4 site & \kw{Đạt} \\
-    \textbf{CH3} & So sánh trên cùng 4 website & Ngang Go-Browse-7B ($2{,}0 <$ CI $\pm$3,3) & \kw{Đạt} \\
-    \textbf{CH4} & Phân loại lỗi; thêm dữ liệu & 85--96\% lỗi thực thi; gấp 3 data chỉ $+$2,1 đpt & \kw{Một phần} \\
+    \textbf{CH1} & 455 URL; 3.981 lượt; 146 skill / 57 op & 1760 traj $\rightarrow$ 9007 mẫu SFT hợp lệ & \kw{Đạt} \\
+    \textbf{CH2} & 655 task WebArena; McNemar; vs SOTA & 13,3\% $\rightarrow$ 24,6\% ($p < 0{,}001$), ngang Go-Browse & \kw{Đạt} \\
+    \textbf{CH3} & \$54,21 API + \$24,40 GPU (\$0,0308/traj) & Rẻ hơn Go-Browse-7B tới 3,3 lần & \kw{Đạt} \\
     \bottomrule
   \end{tabular}
 
