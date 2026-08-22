@@ -81,55 +81,96 @@ từ các sản phẩm mà hệ thống ghi lại.
 
 \begin{table}[htbp]
 \centering
-\caption[Ngân sách lời gọi LLM của giai đoạn khám phá]{Ngân sách lời gọi LLM
-của cả bốn đợt khám phá, đếm từ nhật ký sự kiện và các tệp episode. Số lời
-gọi của solver được lấy bằng số bước hành động đã ghi, nên là một cận dưới:
-nó chưa tính các lời gọi kết thúc episode và các lần gọi lại khi phản hồi
-không phân tích được.}
+\caption[Ngân sách lời gọi và token của giai đoạn khám phá]{Ngân sách lời gọi
+LLM và lượng token của cả bốn đợt khám phá. Số lời gọi solver lấy bằng số bước
+hành động đã ghi, nên là cận dưới: nhật ký sự kiện ghi 32\,003 bước, cao hơn
+con số quy được về từng mô hình ở đây. Token ước lượng bằng cách đo trực tiếp
+prompt đã dựng --- mỗi lời gọi solver mang trung bình 1\,974 token vào (trong
+đó cây truy cập trung bình 4\,228 ký tự sau khi cắt ở ngưỡng 6000, cộng 85
+token ảnh ở chế độ \texttt{detail=low}) và 66 token ra, quy đổi 4 ký tự mỗi
+token. Cột chi phí dùng đơn giá niêm yết lúc thực nghiệm (GPT-5.6-luna
+0{,}20/1{,}20, GPT-5.6-terra 2/12, GPT-4o 2{,}50/10 USD mỗi triệu token
+vào/ra); phần DeepSeek không tách được vì đơn giá không được ghi lại.}
 \label{tab:calls}
-\small
-\begin{tabular}{@{}L{4.6cm} L{3.2cm} R{2.4cm} R{2.6cm}@{}}
+\footnotesize
+\begin{tabular}{@{}L{3.9cm} L{2.4cm} R{1.5cm} R{1.5cm} R{1.5cm} R{1.5cm}@{}}
 \toprule
-\textbf{Vai trò} & \textbf{Mô hình} & \mbox{\textbf{Số lời gọi (lượt)}} &
-\mbox{\textbf{Tỷ trọng (\%)}} \\
+\textbf{Vai trò} & \textbf{Mô hình} &
+\textbf{Lời gọi\newline (lượt)} &
+\textbf{Token vào\newline (triệu)} &
+\textbf{Token ra\newline (triệu)} &
+\textbf{Chi phí\newline (\%)} \\
 \midrule
-\texttt{solver} & GPT-5.6-luna / GPT-4o & 17\,785 & 85{,}5 \\
-\texttt{episode\_judge} & DeepSeek-chat & 1\,564 & 7{,}5 \\
-\texttt{trajectory\_segmenter} & DeepSeek-chat & 1\,067 & 5{,}1 \\
-\texttt{page\_explorer} & GPT-5.6-luna & 263 & 1{,}3 \\
-\texttt{goal\_planner} & GPT-5.6-luna & 66 & 0{,}3 \\
-\texttt{operator\_inducer} & DeepSeek-chat & 59 & 0{,}3 \\
-\texttt{site\_seeder} & GPT-5.6-luna & 4 & $<0{,}1$ \\
+\multicolumn{6}{@{}l}{\textit{OpenAI}} \\
+\quad \texttt{solver} & GPT-5.6-luna & 22\,857 & 45{,}1 & 1{,}5 & 26{,}5 \\
+\quad \texttt{solver} & GPT-4o & 3\,864 & 7{,}6 & 0{,}3 & 52{,}9 \\
+\quad \texttt{solver\_goal} & GPT-5.6-terra & 1\,663 & 3{,}3 & 0{,}1 & 19{,}3 \\
+\quad \texttt{page\_explorer} & GPT-5.6-luna & 470 & 1{,}0 & 0{,}2 & 1{,}1 \\
+\quad \texttt{goal\_planner} & GPT-5.6-luna & 142 & 0{,}2 & $<0{,}1$ & 0{,}2 \\
+\quad \texttt{site\_seeder} & GPT-5.6-luna & 8 & $<0{,}1$ & $<0{,}1$ & $<0{,}1$ \\
+\quad \textit{Cộng} & & \textit{29\,004} & \textit{57{,}3} & \textit{2{,}1} &
+\textit{100{,}0} \\
+\addlinespace
+\multicolumn{6}{@{}l}{\textit{DeepSeek}} \\
+\quad \texttt{episode\_judge} & DeepSeek-v4-pro & 2\,918 & 3{,}4 & 0{,}2 & --- \\
+\quad \texttt{trajectory\_}\linebreak[0]\texttt{segmenter} & DeepSeek-v4-pro &
+2\,117 & 1{,}1 & 0{,}4 & --- \\
+\quad \texttt{operator\_inducer} & DeepSeek-v4-pro & 217 & 0{,}7 & $<0{,}1$ & --- \\
+\quad \textit{Cộng} & & \textit{5\,252} & \textit{5{,}1} & \textit{0{,}7} & --- \\
 \midrule
-\textbf{Tổng} & & \textbf{20\,808} & \textbf{100{,}0} \\
+\textbf{Tổng} & & \textbf{34\,256} & \textbf{62{,}4} & \textbf{2{,}7} & \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Phân bố này cho thấy \textbf{85{,}5\% số lời gọi thuộc về solver} do nằm trong vòng lặp hành động từng bước. Vì vậy, chi phí khám phá chủ yếu phụ thuộc vào việc lựa chọn mô hình cho solver (vai trò này được chuyển từ GPT-4o sang GPT-5.6-luna giữa chừng khi nhận thấy đơn giá token của GPT-4o cao hơn đáng kể). Do hệ thống chưa ghi nhận số token chi tiết cho từng lời gọi, chi phí API thực tế được tổng hợp trực tiếp từ hóa đơn của nhà cung cấp (Bảng~\ref{tab:apicost}). Việc ghi nhận token ở cấp độ chi tiết hơn sẽ cho phép phân tích hiệu quả chi phí theo từng website và tác vụ trong tương lai.
+Phân bố này cho thấy \textbf{82{,}9\% số lời gọi và 88{,}9\% lượng token thuộc
+về solver}, do đây là vai trò duy nhất nằm trong vòng lặp hành động từng bước
+và cũng là vai trò phải mang toàn bộ accessibility tree vào mỗi prompt. Hai tỷ
+lệ này giải thích vì sao chi phí khám phá thực chất là một quyết định về
+solver: \textbf{GPT-4o chỉ chiếm 13{,}6\% số bước nhưng chiếm 52{,}9\% chi
+phí}, vì đơn giá token vào của nó cao gấp 12{,}5 lần GPT-5.6-luna --- đây
+chính là lý do vai trò này được chuyển sang GPT-5.6-luna giữa chừng các đợt
+chạy.
+
+Hệ thống không ghi số token của mỗi lời gọi, nên lượng token trong
+Bảng~\ref{tab:calls} là ước lượng dựng lại từ prompt đã lưu, còn chi phí thực
+tế lấy từ hóa đơn của nhà cung cấp (Bảng~\ref{tab:apicost}). Hai nguồn này
+kiểm chứng lẫn nhau: nhân lượng token ước lượng với đơn giá niêm yết cho
+40{,}84\,USD, so với 42{,}29\,USD trên hóa đơn OpenAI, tức sai lệch 3{,}4\%.
+Mức khớp đó vừa xác nhận cách ước lượng, vừa cho thấy phần token suy luận
+(\emph{reasoning}) bị tính tiền là không đáng kể ở mức
+\texttt{reasoning\_effort} trung bình --- nếu không, hóa đơn đã phải cao hơn
+hẳn. Ghi token ngay tại lớp gọi API vẫn là việc nên làm, vì khi đó chi phí quy
+được về từng website và từng task thay vì chỉ so tổng.
 
 \begin{table}[htbp]
 \centering
-\caption[Chi phí API của giai đoạn khám phá]{Chi phí API thực tế của toàn bộ
-giai đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp và cộng đủ cả phần thu
-thập bổ sung cho Reddit và Shopping Admin.}
+\caption[Chi phí API và lượng token của giai đoạn khám phá]{Chi phí API thực
+tế của toàn bộ giai đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp và
+cộng đủ cả phần thu thập bổ sung cho Reddit và Shopping Admin. Cột token là
+tổng token vào và ra ước lượng theo Bảng~\ref{tab:calls}. Cột cuối là đơn giá
+pha trộn suy ra từ hai cột trước; với DeepSeek đây là cách duy nhất định giá
+được, vì đơn giá niêm yết của \texttt{deepseek-v4-pro} không được ghi lại tại
+thời điểm thực nghiệm.}
 \label{tab:apicost}
 \small
-\begin{tabular}{@{}L{5.4cm} L{4.0cm} R{3.4cm}@{}}
+\begin{tabular}{@{}L{2.5cm} L{4.4cm} R{1.8cm} R{1.9cm} R{2.0cm}@{}}
 \toprule
-\textbf{Nhà cung cấp} & \textbf{Vai trò sử dụng} & \textbf{Chi phí (USD)} \\
+\textbf{Nhà cung cấp} & \textbf{Vai trò sử dụng} &
+\textbf{Token (triệu)} & \textbf{Chi phí (USD)} &
+\textbf{USD/1M token} \\
 \midrule
-OpenAI & \texttt{solver}, \texttt{page\_explorer},
-\texttt{goal\_planner}, \texttt{site\_seeder} & 42{,}29 \\
+OpenAI & \texttt{solver}, \texttt{page\_explorer}, \texttt{goal\_planner},
+\texttt{site\_seeder} & 59{,}3 & 42{,}29 & 0{,}71 \\
 DeepSeek & \texttt{episode\_judge}, pipeline phát hiện skill &
-11{,}92 \\
+5{,}8 & 11{,}92 & 2{,}07 \\
 \midrule
-\textbf{Tổng} & & \textbf{54{,}21} \\
+\textbf{Tổng} & & \textbf{65{,}1} & \textbf{54{,}21} & \textbf{0{,}83} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Tính trên 1760 trajectory thành công (Bảng~\ref{tab:dataset}), chi phí API trung bình là $54{,}21 / 1760 \approx \mathbf{0{,}0308}$\,USD mỗi trajectory. Con số này tương đương mức 0{,}031\,USD mỗi mẫu tổng hợp ngoại tuyến của Synatra~\cite{ou2024synatra}, dù HSGE vận hành trực tiếp trên môi trường web sống.
+Tính trên 1760 trajectory thành công (Bảng~\ref{tab:dataset}), chi phí API trung bình là $54{,}21 / 1760 \approx \mathbf{0{,}0308}$\,USD mỗi trajectory, tương ứng khoảng \textbf{37 nghìn token} mỗi trajectory. Con số này tương đương mức 0{,}031\,USD mỗi mẫu tổng hợp ngoại tuyến của Synatra~\cite{ou2024synatra}, dù HSGE vận hành trực tiếp trên môi trường web sống.
 
 So với Go-Browse~\cite{gandhi2026gobrowse} (thu thập qua tương tác web với tổng chi phí 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD/trajectory), chi phí trung bình trên mỗi trajectory thành công của HSGE thấp hơn khoảng \textbf{3{,}3 lần}. Sự khác biệt này chủ yếu đến từ việc HSGE định tuyến các lời gọi tần suất cao của solver sang mô hình có chi phí thấp hơn, thay vì dùng các mô hình đắt tiền (Claude-3.7-Sonnet, GPT-4o) cho toàn bộ quá trình rollout.
 

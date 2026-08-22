@@ -6,6 +6,40 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **03:07** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` —
+  **Added token accounting to §4.1.3's two cost tables**, reconstructed from
+  artifacts rather than guessed, and corrected the call counts in `tab:calls`.
+  - **Method**: measured real prompt sizes on disk (28,466 axtrees, 28,384 steps
+    across `outputs/wa_run_2*`). Mean capped axtree = 4,228 chars (23.9% of
+    pages hit the 6000-char cap); solver prompt = `SOLVER_SYS` 2,472 + goal 113
+    + axtree + error/history/instruction ≈ 7,558 chars ≈ 1,889 tok, +85 tok for
+    the `detail=low` image ⇒ **1,974 tok in / 66 tok out per solver call**.
+    Per-model step counts come from `episode_meta.json`'s `metadata.model`
+    (recorded by `runtime.py::_record`).
+  - **`tab:calls` was substantially undercounted** and is now rebuilt: it said
+    solver = 17,785 of 20,808 calls. Actual, attributable per model: luna
+    22,857 + gpt-4o 3,864 + terra 1,663 = 28,384 solver calls; page_explorer 470
+    (was 263), goal_planner 142 (was 66), judge ~2,918 (was 1,564), segmenter
+    ~2,117 (was 1,067), operator_inducer ~217 (was 59). **Total 34,256 calls,
+    62.4M in + 2.7M out ≈ 65.1M tokens.** `run_log.jsonl` records 32,003 solver
+    steps, higher still — noted in the caption as a lower-bound caveat.
+  - **The estimate reconciles with the invoice**: token volume × listed prices
+    (from `config.yaml`: luna 0.20/1.20, terra 2/12, gpt-4o 2.50/10 per 1M)
+    gives **$40.84 vs the $42.29 OpenAI invoice — 3.4% off**. Two consequences
+    written into the prose: (a) reasoning tokens billed at `effort: medium` are
+    negligible, or the bill would be far higher; (b) **gpt-4o is 13.6% of steps
+    but 52.9% of cost**, which is the real justification for the mid-run switch
+    to luna. Solver share restated as 82.9% of calls / 88.9% of tokens (the old
+    "85.5% of calls" line was based on the undercount).
+  - `tab:apicost` gained a token column and a derived USD/1M column: OpenAI
+    59.3M @ $0.71/1M, DeepSeek 5.8M @ $2.07/1M, total 65.1M @ $0.83/1M. The
+    DeepSeek unit price is *derived*, not quoted — `deepseek-v4-pro`'s list
+    price was never recorded, and the caption says so. Also added "≈37 nghìn
+    token mỗi trajectory" alongside the existing $0.0308/trajectory.
+  - Build verified against a baseline compile of HEAD's `chapter4.tex` in a
+    scratch copy: **overfull boxes 8 → 7** (the new tables introduce none; the
+    7 remaining are pre-existing in other chapters), 0 undefined refs, 168 pages.
+
 - **02:56** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` — **Fixed bold formatting in Table 4.9 (`tab:related`):**
   - In the GitLab column among open small models, moved bold formatting from HSGE-9B (18,3\%) to NNetNav-7B (\textbf{19,9}\%), which is the highest score in that column.
 
