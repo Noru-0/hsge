@@ -9,17 +9,19 @@
   \framesubtitle{Mô hình càng lớn càng tốt --- nhưng tốt tới đâu, và trả giá bằng gì?}
   \begin{columns}[t]
     \begin{column}{0.52\textwidth}
-      \textbf{Web agent: kỳ vọng và thực tế}
-      \begin{itemize}[<+->]\ilist
-        \item \textbf{LLM phát triển} $\rightarrow$ thúc đẩy \textbf{web agent} tự động hóa thao tác trên trình duyệt.
-        \item Trên \textbf{WebArena} (benchmark website thực): agent dùng \textbf{GPT-4} chỉ đạt \kw{14,41\%}, trong khi con người đạt \kw{78,24\%}.
-        \item $\Rightarrow$ Năng lực tổng quát của LLM \kw{chưa đủ}; cần \kw{chuyên biệt hóa} theo môi trường triển khai.
-      \end{itemize}
+      \uncover<1->{
+        \textbf{Web agent: kỳ vọng và thực tế}
+        \begin{itemize}\ilist
+          \item \textbf{LLM phát triển} $\rightarrow$ thúc đẩy \textbf{web agent} tự động hóa thao tác trên trình duyệt.
+          \item Trên \textbf{WebArena} (benchmark website thực): agent dùng \textbf{GPT-4} chỉ đạt \kw{14,41\%}, trong khi con người đạt \kw{78,24\%}.
+          \item $\Rightarrow$ Năng lực tổng quát của LLM \kw{chưa đủ}; cần \kw{chuyên biệt hóa} theo môi trường triển khai.
+        \end{itemize}
+      }
     \end{column}
 
     \hfill
     \begin{column}{0.44\textwidth}
-      \uncover<4->{
+      \uncover<2->{
         \begin{block}{Vì sao không chỉ gọi LLM lớn qua API?}
           \begin{itemize}\isub
             \item \textbf{Chi phí} cao, \textbf{độ trễ} lớn khi chạy hàng loạt.
@@ -29,7 +31,7 @@
       }
 
       \gap
-      \uncover<5->{
+      \uncover<3->{
         \begin{block}{Hướng đi: SLM ${<}10$B chạy cục bộ}
           \begin{itemize}\isub
             \item Rẻ, chủ động, dữ liệu không ra ngoài; nhưng năng lực gốc yếu $\rightarrow$ \kw{bắt buộc fine-tune}.
@@ -46,32 +48,34 @@
   \framesubtitle{Lấy đâu ra trajectory để huấn luyện, khi không có người gán nhãn?}
   \begin{columns}[t]
     \begin{column}{0.40\textwidth}
-      \textbf{Thách thức: chi phí dữ liệu}
-      \begin{itemize}[<+->]\ilist
-        \item Gán nhãn tay: \textbf{AutoWebGLM} cần \kw{20 người $\times$ 1 tháng} cho ${\sim}10.000$ trajectory.
-        \item Mẫu tổng hợp rẻ hơn: \textbf{Synatra} chỉ tốn \kw{${\sim}3\%$} chi phí mỗi mẫu.
-        \item Nhưng dữ liệu \textbf{ngoại tuyến} không bám môi trường thật: \kw{6\%} (Synatra) so với \kw{16\%} (NNetNav) trên WebArena.
-      \end{itemize}
+      \uncover<1->{
+        \textbf{Thách thức: chi phí dữ liệu}
+        \begin{itemize}\ilist
+          \item Gán nhãn tay: \textbf{AutoWebGLM} cần \kw{20 người $\times$ 1 tháng} cho ${\sim}10.000$ trajectory.
+          \item Mẫu tổng hợp rẻ hơn: \textbf{Synatra} chỉ tốn \kw{${\sim}3\%$} chi phí mỗi mẫu.
+          \item Nhưng dữ liệu \textbf{ngoại tuyến} không bám môi trường thật: \kw{6\%} (Synatra) so với \kw{16\%} (NNetNav) trên WebArena.
+        \end{itemize}
+      }
     \end{column}
 
     \hfill
     \begin{column}{0.57\textwidth}
-      \uncover<4->{\textbf{Ba hướng nghiên cứu trước đây}}
+      \uncover<2->{\textbf{Ba hướng nghiên cứu trước đây}}
 
       \gap
-      \uncover<4->{
+      \uncover<2->{
         \begin{block}{(A) Tri thức gián tiếp $\rightarrow$ trajectory}
           \scriptsize \textbf{Synatra}, \textbf{AgentTrek}: chuyển bài hướng dẫn / tài liệu trên Internet thành mẫu huấn luyện, replay trên trình duyệt thật.
         \end{block}
       }
 
-      \uncover<5->{
+      \uncover<3->{
         \begin{block}{(B) Bộ nhớ \& skill cho lúc suy luận}
           \scriptsize \textbf{AWM}: trích workflow lặp lại, nhét vào prompt --- WebArena \kw{23,5\% $\rightarrow$ 35,5\%}. \textbf{SkillWeaver}: agent tự khám phá, đóng gói skill thành API tái sử dụng.
         \end{block}
       }
 
-      \uncover<6->{
+      \uncover<4->{
         \begin{block}{(C) Tự khám phá $\rightarrow$ dữ liệu huấn luyện SLM}
           \scriptsize \textbf{NNetNav}: khám phá rồi gán nhãn hồi tố, 8B đạt \kw{16,3\%}. \textbf{Go-Browse}: khám phá như \textbf{tìm kiếm trên đồ thị} website, 7B đạt \kw{21,7\%} --- SOTA phân khúc ${<}10$B.
         \end{block}
@@ -85,17 +89,19 @@
   \framesubtitle{Khám phá được, nhưng tri thức thu về có tái sử dụng và ghép nối được không?}
   \begin{columns}[t]
     \begin{column}{0.51\textwidth}
-      \textbf{Hạn chế theo từng hướng}
-      \begin{itemize}[<+->]\ilist
-        \item \textbf{(A) Tri thức gián tiếp}: độ phủ bị chặn bởi tài liệu sẵn có --- quy trình nội bộ chưa ai viết ra thì \kw{ngoài tầm với}.
-        \item \textbf{(B) Skill cho suy luận}: chỉ nằm trong prompt của \textbf{LLM lớn}, \kw{không cập nhật tham số}; workflow tuyến tính, thiếu precondition/effect nên \kw{không ghép chuỗi} được; kiểm chứng chỉ xét kết quả episode, \kw{không chạy lại} skill.
-        \item \textbf{(C) Tự khám phá}: NNetNav \kw{không tích lũy} tri thức giữa các episode; Go-Browse có đồ thị nhưng \kw{chỉ một tầng} (node = URL) $\rightarrow$ task bị bó \kw{trong một trang}.
-      \end{itemize}
+      \uncover<1->{
+        \textbf{Hạn chế theo từng hướng}
+        \begin{itemize}\ilist
+          \item \textbf{(A) Tri thức gián tiếp}: độ phủ bị chặn bởi tài liệu sẵn có --- quy trình nội bộ chưa ai viết ra thì \kw{ngoài tầm với}.
+          \item \textbf{(B) Skill cho suy luận}: chỉ nằm trong prompt của \textbf{LLM lớn}, \kw{không cập nhật tham số}; workflow tuyến tính, thiếu precondition/effect nên \kw{không ghép chuỗi} được; kiểm chứng chỉ xét kết quả episode, \kw{không chạy lại} skill.
+          \item \textbf{(C) Tự khám phá}: NNetNav \kw{không tích lũy} tri thức giữa các episode; Go-Browse có đồ thị nhưng \kw{chỉ một tầng} (node = URL) $\rightarrow$ task bị bó \kw{trong một trang}.
+        \end{itemize}
+      }
     \end{column}
 
     \hfill
     \begin{column}{0.46\textwidth}
-      \uncover<4->{
+      \uncover<2->{
         \begin{block}{Câu hỏi bài toán}
           \begin{itemize}\isub
             \item \textbf{LLM tự sinh dữ liệu} trên \kw{web mục tiêu} (0 nhãn người)?
@@ -104,26 +110,26 @@
         \end{block}
       }
 
-      \uncover<5->{
+      \uncover<3->{
         \textbf{4 thách thức cốt lõi}
         \begin{columns}[t]
           \begin{column}{0.5\textwidth}
             \begin{enumerate}\setlength{\itemsep}{0pt}
-              \item<5-> \textbf{Gán nhãn tay}
-              \item<6-> \textbf{Tri thức web}
+              \item \textbf{Gán nhãn tay}
+              \item \textbf{Tri thức web}
             \end{enumerate}
           \end{column}
           \begin{column}{0.5\textwidth}
             \begin{enumerate}\setlength{\itemsep}{0pt}\setcounter{enumi}{2}
-              \item<7-> \textbf{Tự đánh giá}
-              \item<8-> \textbf{Tác vụ dài}
+              \item \textbf{Tự đánh giá}
+              \item \textbf{Tác vụ dài}
             \end{enumerate}
           \end{column}
         \end{columns}
       }
 
       \gap
-      \uncover<9->{
+      \uncover<4->{
         \begin{alertblock}{Khoảng trống nghiên cứu}
           \kw{Kiểm chứng $\rightarrow$ Ghép $\rightarrow$ Train SLM}
         \end{alertblock}
@@ -132,42 +138,42 @@
   \end{columns}
 \end{frame}
 
-\subsection{Giải pháp HSGE: mục tiêu \& định vị}
-\begin{frame}{Giải pháp HSGE và mục tiêu nghiên cứu}
-  \framesubtitle{Đầu ra là một agent chuyên biệt, hay một model vạn năng?}
+\subsection{Giải pháp HSGE: đóng góp \& định vị}
+\begin{frame}{Giải pháp HSGE và các đóng góp chính}
+  \framesubtitle{Tự động hóa toàn chu trình từ website đến mô hình SLM cục bộ}
   \begin{columns}[t]
-    \begin{column}{0.50\textwidth}
-      \textbf{Ý tưởng HSGE}
-      \begin{itemize}[<+->]\ilist
-        \item Khám phá website mục tiêu như \kw{tìm kiếm trên đồ thị} --- kế thừa từ Go-Browse.
-        \item Bổ sung \kw{tầng đồ thị thứ hai}: skill đã \textbf{kiểm chứng} $\rightarrow$ \textbf{operator} có precondition/effect.
-        \item \kw{Ghép chuỗi operator} $\rightarrow$ sinh \textbf{semantic task} nhiều bước, vượt khỏi phạm vi một trang.
-        \item Trajectory giải các task đó $\rightarrow$ \kw{dữ liệu SFT} để fine-tune SLM cục bộ.
-      \end{itemize}
+    \begin{column}{0.49\textwidth}
+      \uncover<1->{
+        \textbf{Đóng góp Khoa học (Kiến trúc \& Thuật toán)}
+        \begin{itemize}\ilist
+          \item \textbf{Đồ thị hai tầng}: Kết hợp State Graph (POMDP) $\leftrightarrow$ Operator Graph (Options/STRIPS).
+          \item \textbf{Quy nạp \& Ghép chuỗi}: Tự động phát hiện skill, quy nạp operator và ghép chuỗi sinh task đa bước.
+        \end{itemize}
+      }
     \end{column}
     \hfill
-    \begin{column}{0.46\textwidth}
-      \uncover<5->{
-        \textbf{5 mục tiêu nghiên cứu}
+    \begin{column}{0.47\textwidth}
+      \uncover<2->{
+        \textbf{Đóng góp Thực tiễn (Sản phẩm \& Dữ liệu)}
         \begin{itemize}\isub
-          \item[\textbf{O1}] Khám phá website chưa có nhãn.
-          \item[\textbf{O2}] Sinh semantic task đã kiểm chứng.
-          \item[\textbf{O3}] Tinh lọc dataset \& prompt parity.
-          \item[\textbf{O4}] Fine-tune SLM \& đánh giá WebArena.
-          \item[\textbf{O5}] Đúc kết best practice vận hành.
+          \item \textbf{Dataset SFT}: 9.007 mẫu sạch trên 4 website ($0$ nhãn người).
+          \item \textbf{Mô hình HSGE-9B}: Đạt \kw{24,6\%} (vượt GPT-4o-mini).
+          \item \textbf{Kinh tế}: Chi phí chỉ \kw{\$0,0308}/trajectory (\kw{rẻ hơn 3,3$\times$} so với Go-Browse).
         \end{itemize}
       }
 
       \gap
-      \uncover<6->{
+      \uncover<3->{
         \begin{block}{Phạm vi \& ứng dụng đích}
           \begin{itemize}\isub
-            \item 1 website $\rightarrow$ 1 agent chuyên biệt, cục bộ.
+            \item 1 website $\rightarrow$ 1 agent chuyên biệt, on-premise.
             \item Tổng quát hóa: \kw{pipeline}, không phải \kw{model}.
-            \item RPA nội bộ, trợ lý on-prem, kiểm thử E2E \textit{(tiềm năng)}.
           \end{itemize}
         \end{block}
       }
     \end{column}
   \end{columns}
 \end{frame}
+
+
+

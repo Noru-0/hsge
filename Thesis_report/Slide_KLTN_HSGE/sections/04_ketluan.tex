@@ -8,28 +8,34 @@
 \begin{frame}{Đóng góp chính và hướng phát triển}
   \begin{columns}[t,onlytextwidth]
     \begin{column}{0.49\textwidth}
-      \begin{block}{Đóng góp chính của khóa luận}
-        \begin{itemize}\scriptsize\setlength{\itemsep}{3.5pt}
-          \item \textbf{Quy trình HSGE tự động}: Tự sinh \kw{146 skill}, \kw{57 operator} $\rightarrow$ \kw{1.760 trajectory sạch} (\kw{9.007 mẫu SFT}), không cần gán nhãn thủ công.
-          \item \textbf{Cải thiện hiệu năng}: Đẩy Task SR từ \kw{13,3\% $\rightarrow$ 24,6\%} ($p < 0{,}001$).
-          \item \textbf{Hiệu quả chi phí API}: Chi phí tự tạo dữ liệu chỉ \kw{\$0,0308/trajectory} (tiết kiệm \kw{3,3 lần} so với Go-Browse).
-          \item \textbf{Đóng góp tài nguyên}: Mã nguồn pipeline, dữ liệu huấn luyện và trọng số mô hình HSGE-9B.
-        \end{itemize}
-      \end{block}
+      \uncover<1->{
+        \begin{block}{Đóng góp chính của khóa luận}
+          \begin{itemize}\scriptsize\setlength{\itemsep}{3pt}
+            \item \textbf{Về Khoa học}: Đề xuất kiến trúc đồ thị 2 tầng (State Graph $\leftrightarrow$ Operator Graph), thuật toán phát hiện skill, quy nạp operator và ghép chuỗi sinh semantic task đa bước.
+            \item \textbf{Về Thực tiễn}: Cung cấp pipeline tự động hóa hoàn chỉnh, bộ dataset \kw{9.007 mẫu SFT} và mô hình HSGE-9B đạt \kw{24,6\%} Task SR với chi phí chỉ \kw{\$0,0308/trajectory} (\kw{rẻ hơn 3,3 lần} so với Go-Browse).
+            \item \textbf{Tài nguyên mở}: Mã nguồn pipeline, dữ liệu huấn luyện và trọng số mô hình HSGE-9B.
+          \end{itemize}
+        \end{block}
+      }
+
+
     \end{column}
     \hfill
     \begin{column}{0.49\textwidth}
-      \begin{block}{Hướng phát triển tương lai}
-        \begin{itemize}\scriptsize\setlength{\itemsep}{3.5pt}
-          \item \textbf{Khôi phục lỗi tự động}: Tự sửa lỗi và thử lại khi gặp sự cố giao diện (timeout, kẹt trang DOM).
-          \item \textbf{Tối ưu khám phá với RL}: Kết hợp Học tăng cường (RL) giúp Explorer tự học chiến lược duyệt web tối ưu.
-          \item \textbf{Học từ thất bại}: Khai thác trajectory thất bại thông qua DPO / Preference Learning.
-          \item \textbf{Tổng quát hóa}: Mở rộng pipeline khám phá cho các ứng dụng ngoài miền (cross-domain).
-        \end{itemize}
-      \end{block}
+      \uncover<2->{
+        \begin{block}{Hướng phát triển tương lai}
+          \begin{itemize}\scriptsize\setlength{\itemsep}{3.5pt}
+            \item \textbf{Khôi phục lỗi tự động}: Tự sửa lỗi và thử lại khi gặp sự cố giao diện (timeout, kẹt trang DOM).
+            \item \textbf{Tối ưu khám phá với RL}: Kết hợp Học tăng cường (RL) giúp Explorer tự học chiến lược duyệt web tối ưu.
+            \item \textbf{Học từ thất bại}: Khai thác trajectory thất bại thông qua DPO / Preference Learning.
+            \item \textbf{Tổng quát hóa}: Mở rộng pipeline khám phá cho các ứng dụng ngoài miền (cross-domain).
+          \end{itemize}
+        \end{block}
+      }
     \end{column}
   \end{columns}
 \end{frame}
+
 
 \begin{frame}[plain]
   \centering

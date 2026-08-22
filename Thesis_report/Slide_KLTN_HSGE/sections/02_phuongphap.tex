@@ -24,19 +24,23 @@
     \end{column}
     \hfill
     \begin{column}{0.43\textwidth}
-      \begin{block}{Câu hỏi cốt lõi}
-        \textit{Lưu trữ tri thức duyệt web thế nào để tái sử dụng và ghép nối được?}
-      \end{block}
+      \uncover<1->{
+        \begin{block}{Câu hỏi cốt lõi}
+          \textit{Lưu trữ tri thức duyệt web thế nào để tái sử dụng và ghép nối được?}
+        \end{block}
+      }
       \vspace{0.08cm}
-    \begin{itemize}[<+->]\setlength{\itemsep}{3pt}
-        \item \textbf{Tầng thấp (State Graph)}:
-          Vết duyệt web (Trang web $\leftrightarrow$ Hành động).
-        \item \textbf{Tầng cao (Operator Graph)}:
-          Kỹ năng có \kw{Precondition} \& \kw{Effect} chuẩn hóa.
-        \item \textbf{Ghép nối ngữ nghĩa}:
-          $\text{Effect}_A \models \text{Precondition}_B \Rightarrow$ Ghép tác vụ dài.
-        \item \textbf{Ưu thế}: Tri thức dạng \kw{tái sử dụng \& tái tổ hợp}.
-      \end{itemize}
+      \uncover<2->{
+        \begin{itemize}\setlength{\itemsep}{3pt}
+          \item \textbf{Tầng thấp (State Graph)}:
+            Vết duyệt web (Trang web $\leftrightarrow$ Hành động).
+          \item \textbf{Tầng cao (Operator Graph)}:
+            Kỹ năng có \kw{Precondition} \& \kw{Effect} chuẩn hóa.
+          \item \textbf{Ghép nối ngữ nghĩa}:
+            $\text{Effect}_A \models \text{Precondition}_B \Rightarrow$ Ghép tác vụ dài.
+          \item \textbf{Ưu thế}: Tri thức dạng \kw{tái sử dụng \& tái tổ hợp}.
+        \end{itemize}
+      }
     \end{column}
   \end{columns}
 \end{frame}
@@ -49,18 +53,20 @@
     \end{column}
     \hfill
     \begin{column}{0.58\textwidth}
-      \textbf{4 Bước phát hiện Skill (từ trajectory thành công)}:
-    \begin{enumerate}[<+->]\setlength{\itemsep}{2pt}
-        \item \textbf{Phân cắt}: Cắt theo đổi URL \& tụt tương đồng AXTree.
-        \item \textbf{Gom cụm}: Phân cụm phi tham số (ngưỡng cosine).
-        \item \textbf{Trừu tượng hóa}: Tạo \textit{SkillCard} có tham số hóa.
-        \item \textbf{Kiểm chứng}: Chạy thử lại trong ngữ cảnh mới.
-      \end{enumerate}
+      \uncover<1->{
+        \textbf{4 Bước phát hiện Skill (từ trajectory thành công)}:
+        \begin{enumerate}\setlength{\itemsep}{2pt}
+          \item \textbf{Phân cắt}: Cắt theo đổi URL \& tụt tương đồng AXTree.
+          \item \textbf{Gom cụm}: Phân cụm phi tham số (ngưỡng cosine).
+          \item \textbf{Trừu tượng hóa}: Tạo \textit{SkillCard} có tham số hóa.
+          \item \textbf{Kiểm chứng}: Chạy thử lại trong ngữ cảnh mới.
+        \end{enumerate}
+      }
 
       \vspace{0.1cm}
-      \uncover<5->{
+      \uncover<2->{
         \begin{block}{Quy nạp Operator \& Cổng chặn}
-        \begin{itemize}\setlength{\itemsep}{1.5pt}
+          \begin{itemize}\setlength{\itemsep}{1.5pt}
             \item \textbf{Chống trùng}: Loại effect chỉ lặp lại precondition.
             \item \textbf{Grounding}: Gỡ effect sai trên $\ge 50\%$ thành viên cụm.
             \item $\Rightarrow$ Thu được \kw{146 skill} $\rightarrow$ \kw{57 operator chuẩn xác}.
@@ -79,20 +85,22 @@
     \end{column}
     \hfill
     \begin{column}{0.45\textwidth}
-      \begin{block}{Mục tiêu}
-        \textit{Tự động sinh tác vụ nhiều bước có ý nghĩa thực tế.}
-      \end{block}
-      \vspace{0.08cm}
-      \textbf{Hai cơ chế sinh}:
-    \begin{itemize}[<+->]\setlength{\itemsep}{3pt}
-        \item \textbf{Bottom-up (Ghép chuỗi)}:
-          Duyệt DFS đồ thị operator; chuỗi $\ge 2$ bước $\rightarrow$ sinh task dài.
-        \item \textbf{Top-down (Seed năng lực)}:
-          Gợi ý từ chức năng tổng quan website.
-      \end{itemize}
+      \uncover<1->{
+        \begin{block}{Mục tiêu}
+          \textit{Tự động sinh tác vụ nhiều bước có ý nghĩa thực tế.}
+        \end{block}
+        \vspace{0.08cm}
+        \textbf{Hai cơ chế sinh}:
+        \begin{itemize}\setlength{\itemsep}{3pt}
+          \item \textbf{Bottom-up (Ghép chuỗi)}:
+            Duyệt DFS đồ thị operator; chuỗi $\ge 2$ bước $\rightarrow$ sinh task dài.
+          \item \textbf{Top-down (Seed năng lực)}:
+            Gợi ý từ chức năng tổng quan website.
+        \end{itemize}
+      }
 
       \vspace{0.08cm}
-      \uncover<3->{
+      \uncover<2->{
         \begin{alertblock}{Kết quả thực thi}
           Sinh \kw{142 task} (\textbf{130 seed} + \textbf{12 chuỗi}) $\rightarrow$ \kw{71 task thành công}.
         \end{alertblock}
@@ -109,16 +117,18 @@
     \end{column}
     \hfill
     \begin{column}{0.62\textwidth}
-      \textbf{Kiểm soát chất lượng trực tuyến (Online Gates)}
-    \begin{itemize}[<+->]\setlength{\itemsep}{2pt}
-        \item \textbf{Online LLM Judge}: Chấm lại trạng thái trang đích $\rightarrow$ Loại \kw{801 episode (27,4\%)} dương tính giả khi tự đánh giá ngay runtime.
-        \item \textbf{Effective Action}: Loại task tự khai xong mà không đổi trạng thái trang $\rightarrow$ Còn \kw{1760 trajectory sạch}.
-      \end{itemize}
+      \uncover<1->{
+        \textbf{Kiểm soát chất lượng trực tuyến (Online Gates)}
+        \begin{itemize}\setlength{\itemsep}{2pt}
+          \item \textbf{Online LLM Judge}: Chấm lại trạng thái trang đích $\rightarrow$ Loại \kw{801 episode (27,4\%)} dương tính giả khi tự đánh giá ngay runtime.
+          \item \textbf{Effective Action}: Loại task tự khai xong mà không đổi trạng thái trang $\rightarrow$ Còn \kw{1760 trajectory sạch}.
+        \end{itemize}
+      }
 
       \vspace{0.08cm}
-      \uncover<3->{
+      \uncover<2->{
         \begin{block}{Đóng gói SFT \& Prompt Parity}
-        \begin{itemize}\setlength{\itemsep}{2pt}
+          \begin{itemize}\setlength{\itemsep}{2pt}
             \item \textbf{Build trực tiếp}: Dữ liệu sạch từ nguồn, không lọc ngoại tuyến.
             \item \textbf{Prompt Parity}: Khớp từng byte câu lệnh train và suy luận.
             \item $\Rightarrow$ Thu được \kw{8554 mẫu train / 453 mẫu val} (0 trùng lặp).
@@ -128,3 +138,4 @@
     \end{column}
   \end{columns}
 \end{frame}
+
