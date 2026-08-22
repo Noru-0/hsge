@@ -169,50 +169,38 @@ giải quyết *một phần* của bài toán, và ba khâu đó chưa được
 >
 > Về **đóng góp khoa học (kiến trúc & thuật toán)** ở cột trái:
 > - Thứ nhất, đề xuất **mô hình biểu diễn đồ thị hai tầng**: kết hợp State Graph ghi vết duyệt web ở tầng thấp với Operator Graph biểu diễn kỹ năng ở tầng cao.
-> - Thứ hai, xây dựng **thuật toán quy nạp operator và ghép chuỗi đa bước**: tự động trích xuất các kỹ năng lặp lại, kiểm chứng và ghép chuỗi thành semantic task có ý nghĩa nghiệp vụ.
+> - Thứ hai, xây dựng **thuật toán quy nạp operator và ghép chuỗi đa bước**: tự động trích xuất các kỹ năng lặp lại, kiểm chứng và ghép chuỗi thành tác vụ có ngữ nghĩa.
 >
-> Về **đóng góp thực tiễn (sản phẩm & dữ liệu)** ở cột phải:
-> - Thứ nhất, thu hoạch **bộ dữ liệu 9.007 mẫu SFT sạch** trên 4 website WebArena mà hoàn toàn không cần nhãn người.
-> - Thứ hai, tạo ra **mô hình HSGE-9B chạy cục bộ đạt 24,6%**, vượt GPT-4o-mini và đạt SOTA phân khúc dưới 10 tỷ tham số.
-> - Thứ ba, chứng minh **tính khả thi kinh tế vượt trội**: chi phí API chỉ **0,0308 USD mỗi trajectory**, **rẻ hơn 3,3 lần so với Go-Browse** (hệ thống SOTA cùng phân khúc).
+> Về **đóng góp thực tiễn (sản phẩm & dữ liệu)** ở cột phải, đề tài bàn giao **năm sản phẩm chính**:
+> - Thứ nhất, **Pipeline HSGE**: hệ thống tự động khám phá, quy nạp operator và sinh tác vụ có ngữ nghĩa trên website thật.
+> - Thứ hai, **Bộ dữ liệu 9.007 mẫu SFT sạch** (từ 1.760 trajectory hợp lệ) trên 4 website WebArena mà hoàn toàn không cần nhãn người.
+> - Thứ ba, **Mô hình HSGE-9B chạy cục bộ đạt 24,6%** (vượt GPT-4o-mini và đạt SOTA phân khúc dưới 10B) cùng kiểm chứng độc lập trên mô hình nền Qwen-2.5-7B.
+> - Thứ tư, **Pipeline đánh giá trên benchmark WebArena**: dùng chung cấu hình prompt và bộ chấm chính thức của benchmark.
+> - Thứ năm, **Báo cáo các bài học kinh nghiệm**: đúc kết 14 thực hành kỹ thuật thực tiễn trải trên 5 mảng triển khai.
+>
+> Về **tính khả thi kinh tế**: chi phí gọi API khám phá chỉ **0,0308 USD mỗi trajectory thành công**, **rẻ hơn 3,3 lần so với Go-Browse** (hệ thống SOTA cùng phân khúc).
 >
 > Khung dưới bên phải định vị rõ phạm vi đề tài: đầu vào là một website đang vận hành (chưa có nhãn); đầu ra là một agent chuyên biệt chạy cục bộ cho website đó. Nói cách khác, **thứ tổng quát hóa ở đây là pipeline, không phải model**. Pipeline có thể áp dụng cho website bất kỳ để sinh ra agent tương ứng.
 
+**Câu chốt:** đóng góp nằm ở **tầng trừu tượng thứ hai** — kỹ năng đã kiểm chứng, ghép chuỗi được — chứ không phải ở việc thu nhiều dữ liệu hơn.
 
+**Câu chốt phụ (bắt buộc nói, đừng đợi bị hỏi):** Phạm vi của nghiên cứu là **chuyên biệt hóa theo website**, không phải agent vạn năng. Thứ tổng quát hóa ở đây là **pipeline khám phá tự động**, không phải là một mô hình duy nhất.
 
-**Câu chốt:** đóng góp nằm ở **tầng trừu tượng thứ hai** — kỹ năng đã kiểm chứng, ghép
-chuỗi được — chứ không phải ở việc thu nhiều dữ liệu hơn.
+**Tránh:** **không nói "khóa luận làm công cụ kiểm thử tự động"**. Bắt buộc có chữ *"tiềm năng, chưa thực nghiệm"* trong cùng một câu — quyển báo cáo không có phần kiểm thử.
 
-**Câu chốt phụ (bắt buộc nói, đừng đợi bị hỏi):** Phạm vi của nghiên cứu là **chuyên biệt
-hóa theo website**, không phải agent vạn năng. Thứ tổng quát hóa ở đây là **pipeline khám
-phá tự động**, không phải là một mô hình duy nhất.
-
-**Tránh:** **không nói "khóa luận làm công cụ kiểm thử tự động"**. Bắt buộc có chữ
-*"tiềm năng, chưa thực nghiệm"* trong cùng một câu — quyển báo cáo không có phần kiểm thử.
-
-`[lược nếu trễ]` Bỏ đoạn ba nhóm ứng dụng, chỉ giữ câu "tổng quát hóa là pipeline, không
-phải model".
+`[lược nếu trễ]` Bỏ đoạn ba nhóm ứng dụng, chỉ giữ câu "tổng quát hóa là pipeline, không phải model".
 
 ---
 
 ## Slide 6 - Tổng quan pipeline HSGE (3:45, trang 9)
 
-> Đây là toàn bộ phương pháp HSGE trên một hình, vận hành như một vòng lặp khép kín, tự
-> động hoàn toàn.
+> Đây là toàn bộ phương pháp HSGE trên một hình, vận hành như một vòng lặp khép kín, tự động hoàn toàn.
 >
-> Bắt đầu từ **Frontier** — hàng đợi lưu các trang web cần khám phá. Chọn một trang, một
-> agent đề xuất các tác vụ làm được ngay trên trang đó, rồi solver thử thao tác trên trình
-> duyệt thật. Những trajectory giải thành công được đưa vào khâu phát hiện kỹ năng: cắt
-> thành đoạn nhỏ, gom cụm các thao tác tương đồng, trừu tượng hóa thành thẻ kỹ năng, rồi
-> quy nạp thành **Operator** có tiền điều kiện (Precondition) và kết quả (Effect).
+> Bắt đầu từ **Frontier** — hàng đợi lưu các trang web cần khám phá. Chọn một trang, một agent đề xuất các tác vụ làm được ngay trên trang đó, rồi solver thử thao tác trên trình duyệt thật. Những trajectory giải thành công được đưa vào khâu phát hiện kỹ năng: cắt thành đoạn nhỏ, gom cụm các thao tác tương đồng, trừu tượng hóa thành thẻ kỹ năng, rồi quy nạp thành **Operator** có tiền điều kiện (Precondition) và kết quả (Effect).
 >
-> Các operator này được ghép chuỗi với nhau để sinh ra các **Semantic task** — tức tác vụ
-> nhiều bước có ý nghĩa thực tế. Toàn bộ dữ liệu thu được đi qua hai cổng lọc chất lượng
-> trước khi trở thành tập huấn luyện SFT. Và mỗi trang mới phát hiện lại quay về
-> frontier để tiếp tục mở rộng.
+> Các operator này được ghép chuỗi với nhau để sinh ra các **Tác vụ có ngữ nghĩa (Semantic Task)** — tức tác vụ nhiều bước có ý nghĩa nghiệp vụ thực tế. Toàn bộ dữ liệu thu được đi qua hai cổng lọc chất lượng trực tuyến trước khi trở thành tập huấn luyện SFT. Và mỗi trang mới phát hiện lại quay về frontier để tiếp tục mở rộng.
 
-**Câu chốt:** không phải thu thập rời rạc, mà **tích lũy tri thức có cấu trúc rồi
-mới khai thác lại**.
+**Câu chốt:** không phải thu thập rời rạc, mà **tích lũy tri thức có cấu trúc rồi mới khai thác lại**.
 
 ---
 
@@ -220,18 +208,12 @@ mới khai thác lại**.
 
 > Tri thức khám phá được lưu trữ trong một đồ thị hai tầng.
 >
-> - **Tầng thấp (State Graph):** Lưu vết duyệt web thực tế gồm các trang đã ghé thăm và
->   hành động chuyển giữa chúng.
-> - **Tầng cao (Operator Graph):** Mỗi operator là một kỹ năng chuẩn hóa với điều kiện
->   đầu vào và kết quả đầu ra. Hai operator được nối với nhau khi **kết quả của bước
->   trước thỏa mãn điều kiện đầu vào của bước sau**.
+> - **Tầng thấp (State Graph):** Lưu vết duyệt web thực tế gồm các trang đã ghé thăm và hành động chuyển giữa chúng.
+> - **Tầng cao (Operator Graph):** Mỗi operator là một kỹ năng chuẩn hóa với điều kiện đầu vào (Precondition) và kết quả đầu ra (Effect). Hai operator được nối với nhau khi **kết quả của bước trước thỏa mãn điều kiện đầu vào của bước sau**.
 >
-> *Ví dụ trực quan:* Kỹ năng "Tìm kiếm sản phẩm" sinh ra kết quả "Đang ở trang chi tiết".
-> Kết quả này khớp đúng điều kiện cần của kỹ năng "Thêm vào giỏ hàng" $\rightarrow$ Hệ
-> thống tự động ghép nối thành tác vụ mua hàng hoàn chỉnh.
+> *Ví dụ trực quan:* Kỹ năng "Tìm kiếm sản phẩm" sinh ra kết quả "Đang ở trang chi tiết". Kết quả này khớp đúng điều kiện cần của kỹ năng "Thêm vào giỏ hàng" $\rightarrow$ Hệ thống tự động ghép nối thành tác vụ mua hàng hoàn chỉnh.
 >
-> Nhờ cấu trúc này, tri thức thu được có tính **tái sử dụng và tái tổ hợp**, giúp sinh
-> ra vô số tác vụ dài hạn mà không cần người viết kịch bản.
+> Nhờ cấu trúc này, tri thức thu được có tính **tái sử dụng và tái tổ hợp**, giúp sinh ra vô số tác vụ dài hạn có ngữ nghĩa mà không cần người viết kịch bản.
 
 **Câu chốt:** tầng cao là thứ phân biệt HSGE với Go-Browse — bên đó chỉ có tầng thấp.
 
@@ -239,74 +221,47 @@ mới khai thác lại**.
 
 ## Slide 8 - Phát hiện skill và quy nạp operator (5:55, trang 11)
 
-> Khâu phát hiện kỹ năng chỉ chạy trên trajectory của các tác vụ **đã giải thành công**,
-> qua bốn bước:
-> 1. **Phân cắt:** Cắt chuỗi thao tác dựa trên thay đổi URL và sự biến động của **cây
->    trợ năng (AXTree)** — tức bản rút gọn văn bản của giao diện web chỉ chứa các nút
->    bấm, ô nhập liệu có thể tương tác.
+> Khâu phát hiện kỹ năng chỉ chạy trên trajectory của các tác vụ **đã giải thành công**, qua bốn bước:
+> 1. **Phân cắt:** Cắt chuỗi thao tác dựa trên thay đổi URL và sự biến động của **cây trợ năng (AXTree)** — tức bản rút gọn văn bản của giao diện web chỉ chứa các nút bấm, ô nhập liệu có thể tương tác.
 > 2. **Gom cụm:** Gom các đoạn thao tác có chức năng tương tự nhau.
 > 3. **Trừu tượng hóa:** Rút trích thành thẻ kỹ năng có tham số hóa (như từ khóa tìm kiếm).
 > 4. **Kiểm chứng:** Cho chạy thử lại trong ngữ cảnh mới để xác nhận tính dùng lại được.
 >
-> Để nâng kỹ năng lên thành Operator, hệ thống áp dụng hai cổng chặn: **cổng chống trùng
-> lặp** loại bỏ các mệnh đề vô nghĩa, và **cổng kiểm chứng thực tế** gỡ bỏ các kết quả
-> không đúng trên phần lớn các lần chạy.
+> Để nâng kỹ năng lên thành Operator, hệ thống áp dụng hai cổng chặn: **cổng chống trùng lặp** loại bỏ các mệnh đề vô nghĩa, và **cổng kiểm chứng thực tế (grounding)** gỡ bỏ các kết quả không đúng trên phần lớn các lần chạy.
 >
-> `[lược nếu trễ]` Nhờ sự khắt khe này, từ 146 kỹ năng phát hiện được, hệ thống chắt lọc
-> ra 57 operator thực sự chuẩn xác.
+> `[lược nếu trễ]` Nhờ sự khắt khe này, từ 146 kỹ năng phát hiện được, hệ thống chắt lọc ra 57 operator thực sự chuẩn xác.
 
-**Câu chốt:** "đã kiểm chứng" ở đây là **có cổng chặn đo được**, không phải nhãn tự
-phong.
+**Câu chốt:** "đã kiểm chứng" ở đây là **có cổng chặn đo được**, không phải nhãn tự phong.
 
 ---
 
-## Slide 9 - Sinh semantic task (7:05, trang 12)
+## Slide 9 - Sinh tác vụ có ngữ nghĩa (7:05, trang 12)
 
-> **Semantic task** — tức tác vụ nhiều bước có ngữ nghĩa nghiệp vụ hoàn chỉnh — được
-> sinh từ hai nguồn:
-> - **Từ dưới lên (Bottom-up):** Ghép chuỗi operator bằng duyệt đồ thị, mỗi chuỗi từ
->   hai operator trở lên sẽ tạo thành một nhiệm vụ dài kèm câu lệnh ngôn ngữ tự nhiên.
-> - **Từ trên xuống (Top-down):** Gợi ý từ năng lực tổng quan của website (như chức năng
->   quản trị, đăng bài, mua sắm) khi đồ thị còn thưa.
+> **Tác vụ có ngữ nghĩa (Semantic Task)** — tức tác vụ nhiều bước có ngữ nghĩa nghiệp vụ hoàn chỉnh — được sinh từ hai nguồn:
+> - **Từ dưới lên (Bottom-up):** Ghép chuỗi operator bằng duyệt đồ thị, mỗi chuỗi từ hai operator trở lên sẽ tạo thành một nhiệm vụ dài kèm câu lệnh ngôn ngữ tự nhiên.
+> - **Từ trên xuống (Top-down):** Gợi ý từ năng lực tổng quan của website (như chức năng quản trị, đăng bài, mua sắm) khi đồ thị còn thưa.
 >
-> Về số liệu thực tế: trong **142 semantic task** đã thực thi, **130 tác vụ đến từ seed
-> và 12 tác vụ đến từ ghép chuỗi operator**, đạt 71 tác vụ giải thành công. Kết quả này
-> chứng minh cơ chế ghép chuỗi hoạt động đúng thiết kế, dù ở giai đoạn đầu tần suất ghép
-> còn thưa.
+> Về số liệu thực tế: trong **142 tác vụ có ngữ nghĩa** đã thực thi, **130 tác vụ đến từ seed và 12 tác vụ đến từ ghép chuỗi operator**, đạt 71 tác vụ giải thành công (tỷ lệ 50,0%, xấp xỉ mức 47,6% của nhóm tác vụ LOCAL đơn trang). Kết quả này chứng minh cơ chế ghép chuỗi hoạt động đúng thiết kế, dù ở giai đoạn đầu tần suất ghép còn thưa.
 
-**Câu chốt:** cơ chế ghép chuỗi được chứng minh là **khả thi**, chưa chứng minh được là
-**đủ dày** để làm nguồn dữ liệu chính.
+**Câu chốt:** cơ chế ghép chuỗi được chứng minh là **khả thi**, chưa chứng minh được là **đủ dày** để làm nguồn dữ liệu chính.
 
-**Tránh:** đừng nói "semantic task chủ yếu sinh từ đồ thị operator" — số liệu ngược lại,
-và Hội đồng có thể đã đọc Chương 5.
+**Tránh:** đừng nói "tác vụ có ngữ nghĩa chủ yếu sinh từ đồ thị operator" — số liệu ngược lại, và Hội đồng có thể đã đọc Chương 5.
 
 ---
 
 ## Slide 10 - Kiểm định trực tuyến & Đóng gói SFT (8:05, trang 13) — *điểm chuyển người trình bày*
 
-> Nguyên tắc chất lượng cốt lõi: **không bao giờ tin vào lời tự khai hoàn thành của
-> agent.**
+> Nguyên tắc chất lượng cốt lõi: **không bao giờ tin vào lời tự khai hoàn thành của agent.**
 >
-> Điểm khác biệt quan trọng là toàn bộ việc kiểm soát chất lượng được thực hiện **trực tuyến
-> ngay trong vòng lặp khám phá**, không cần chờ đến khâu hậu kiểm ngoại tuyến:
-> 1. **Inline LLM Judge:** Mỗi khi agent tự tuyên bố xong, LLM Judge độc lập lập tức chấm
->    lại trên trạng thái trang đích, loại bỏ ngay **801 episode (khoảng 27,4%)** dương tính giả
->    khi tự đánh giá (false positive) từ nguồn.
+> Điểm khác biệt quan trọng là toàn bộ việc kiểm soát chất lượng được thực hiện **trực tuyến ngay trong vòng lặp khám phá**, không cần chờ đến khâu hậu kiểm ngoại tuyến:
+> 1. **Inline LLM Judge:** Mỗi khi agent tự tuyên bố xong, LLM Judge độc lập lập tức chấm lại trên trạng thái trang đích, loại bỏ ngay **801 episode (chiếm $\approx 27\%$)** dương tính giả khi tự đánh giá (false positive) từ nguồn.
+> 2. **Cổng hành động hữu hiệu (Effective Action):** Viết bằng mã để chặn các trường hợp agent báo xong nhưng trang web không hề thay đổi trạng thái — loại bỏ thêm 104 trajectory không tạo ra thay đổi trạng thái (tương ứng 279 mẫu) mà Judge không thấy được.
+>
+> Nhờ dữ liệu trong kho `episodes/` đã hoàn toàn sạch từ quá trình khám phá, hệ thống tiến hành **đóng gói trực tiếp (Direct Build)** thành 1.760 trajectory sạch, tương ứng **8.554 mẫu train và 453 mẫu val** (tổng cộng 9.007 mẫu SFT) mà không cần thêm bất kỳ khâu lọc hậu kỳ nào.
+>
+> Dữ liệu được đóng gói theo nguyên tắc **Prompt Parity**: mẫu câu lệnh lúc huấn luyện trùng khớp từng byte với câu lệnh solver nhìn thấy lúc chạy thật, chia train/val theo cấp task đảm bảo **0 mục tiêu trùng lặp**.
 
-> 2. **Cổng hành động hữu hiệu (Effective Action):** Viết bằng mã để chặn các trường hợp
->    agent báo xong nhưng trang web không hề thay đổi trạng thái — điểm mù mà Judge không
->    thấy được.
->
-> Nhờ dữ liệu trong kho `episodes/` đã hoàn toàn sạch từ quá trình khám phá, hệ thống tiến
-> hành **đóng gói trực tiếp (Direct Build)** thành tập dữ liệu SFT mà không cần thêm bất kỳ
-> khâu lọc hậu kỳ nào.
->
-> Dữ liệu được đóng gói theo nguyên tắc **Prompt Parity**: mẫu câu lệnh lúc huấn luyện trùng
-> khớp từng byte với câu lệnh solver nhìn thấy lúc chạy thật, chia train/val theo cấp task
-> đảm bảo **0 mục tiêu trùng lặp**.
-
-**Câu chốt:** kiểm định trực tuyến ngay từ nguồn giúp dữ liệu sạch tuyệt đối, cho phép đóng
-gói trực tiếp tập SFT để huấn luyện mô hình.
+**Câu chốt:** kiểm định trực tuyến ngay từ nguồn giúp dữ liệu sạch tuyệt đối, cho phép đóng gói trực tiếp tập SFT để huấn luyện mô hình.
 
 ---
 

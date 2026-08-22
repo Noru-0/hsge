@@ -6,6 +6,11 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **04:25** — `Thesis_report/Slide_KLTN_HSGE/{presentation_script.md, main.pdf}` — **Updated presentation script for Part 1 (Slides 1--5) and Part 2 (Slides 6--10):**
+  - **Slide 5**: Aligned deliverables list with the **5 main deliverables** established in Chapters 1 & 6 (HSGE Pipeline, 9,007-sample/1,760-trajectory SFT dataset, HSGE-9B fine-tuned model + 7B backbone test, WebArena evaluation pipeline, Lessons learned report). Updated terminology ("best practice" $\rightarrow$ "bài học kinh nghiệm", O2 $\rightarrow$ "Sinh tác vụ có ngữ nghĩa").
+  - **Slides 8--10**: Updated exact metrics (146 skills, 57 operators, 142 semantic tasks / 71 success at 50.0%, 801 self-declaration false-positives demoted (~27%), 104 zero-effect trajectories dropped by effective action gate, 1,760 clean trajectories $\rightarrow$ 8,554 train / 453 val SFT samples, API cost $0.0308/traj).
+  - **Verification**: Compiled slides cleanly with `latexmk` / `pdflatex` (0 errors, 47 pages).
+
 - **04:22** — `Thesis_report/thesis_hsge_vi/{Chapter6/chapter6.tex, Chapter1/chapter1.tex, main.pdf}` — **Aligned Chapter 6 and Chapter 1 deliverables count and terminology:**
   - **Chapter 1 (`chapter1.tex:168`)**: Updated deliverables count from four to five ("năm sản phẩm chính"), adding the WebArena evaluation benchmark pipeline to match Chapter 6 §6.1.
   - **Chapter 6 (`chapter6.tex`)**: Replaced "best practice" with "bài học kinh nghiệm" in Deliverable 5 (L73) and objective O5 (L158). Updated objective O2 title in `tab:objectives` (L122) to "Sinh tác vụ có ngữ nghĩa".
