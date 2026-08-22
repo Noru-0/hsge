@@ -6,6 +6,32 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **04:28** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` — **Added direct in-table citations for external baselines:**
+  - Added `\cite{gandhi2026gobrowse}` directly into the header of `tab:backbone7b` (`Chapter4/chapter4.tex:891`).
+  - Verified all comparative tables (`tab:related` L593, `tab:baseline` L530, `tab:novelty` L79, `tab:positioning` L429) have explicit `\cite{...}` tags directly on baseline rows and column headers.
+  - **Verification**: `grep -c "??" main.log` = 0; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
+- **04:25** — `Thesis_report/Slide_KLTN_HSGE/{presentation_script.md, main.pdf}` — **Updated presentation script for Part 1 (Slides 1--5) and Part 2 (Slides 6--10):**
+  - **Slide 5**: Aligned deliverables list with the **5 main deliverables** established in Chapters 1 & 6 (HSGE Pipeline, 9,007-sample/1,760-trajectory SFT dataset, HSGE-9B fine-tuned model + 7B backbone test, WebArena evaluation pipeline, Lessons learned report). Updated terminology ("best practice" $\rightarrow$ "bài học kinh nghiệm", O2 $\rightarrow$ "Sinh tác vụ có ngữ nghĩa").
+  - **Slides 8--10**: Updated exact metrics (146 skills, 57 operators, 142 semantic tasks / 71 success at 50.0%, 801 self-declaration false-positives demoted (~27%), 104 zero-effect trajectories dropped by effective action gate, 1,760 clean trajectories $\rightarrow$ 8,554 train / 453 val SFT samples, API cost $0.0308/traj).
+  - **Verification**: Compiled slides cleanly with `latexmk` / `pdflatex` (0 errors, 47 pages).
+
+- **04:22** — `Thesis_report/thesis_hsge_vi/{Chapter6/chapter6.tex, Chapter1/chapter1.tex, main.pdf}` — **Aligned Chapter 6 and Chapter 1 deliverables count and terminology:**
+  - **Chapter 1 (`chapter1.tex:168`)**: Updated deliverables count from four to five ("năm sản phẩm chính"), adding the WebArena evaluation benchmark pipeline to match Chapter 6 §6.1.
+  - **Chapter 6 (`chapter6.tex`)**: Replaced "best practice" with "bài học kinh nghiệm" in Deliverable 5 (L73) and objective O5 (L158). Updated objective O2 title in `tab:objectives` (L122) to "Sinh tác vụ có ngữ nghĩa".
+  - **Verification**: Both chapters state "năm sản phẩm chính"; `grep "best practice" Chapter6/chapter6.tex` returned 0 matches; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
+- **04:21** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, main.pdf}` — **Restructured Chapter 5 (Discussion) to align with 3 RQs framework:**
+  - Updated opening sentence (L6: "ba câu hỏi nghiên cứu").
+  - Restructured §5.1 into 3 subsections: §5.1.1 (CH1: Task generation feasibility with bridging lead sentence), §5.1.2 (CH2: Capacity gain & SOTA positioning, incorporating failure analysis & bottlenecks with italicized lead markers), §5.1.3 (CH3: Cost efficiency, combining absolute and comparative costs). Deleted orphaned §5.1.4 header.
+  - Updated cross-reference in §5.3 (L153: CH4 $\rightarrow$ CH2).
+  - **Verification**: `grep CH4 Chapter5/chapter5.tex` and `grep CH4 Chapter*/*.tex Appendix/*.tex` returned 0 matches; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
+- **04:15** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, Chapter1/chapter1.tex, main.pdf}` — **Restructured Chapter 4 and Chapter 1 to align with 3 RQs (CH1--CH3) framework:**
+  - **Chapter 4 (`chapter4.tex`)**: Updated opening sentence (L5: "ba câu hỏi nghiên cứu CH1--CH3"), corrected section tags for `sec:exp-cost-explore` (CH3), `sec:exp-main` (CH2), `sec:exp-analysis` (CH2: supplementary evidence), and `sec:exp-backbone` (CH2). Added bridging paragraph after `sec:exp-data` (L234) mapping the 4 criteria of CH1 (Validity, Diversity, Semantics, Executability) to quantitative data (`tab:runs`, `tab:dataset`). Removed all stale CH4 labels from Chapter 4.
+  - **Chapter 1 (`chapter1.tex`)**: Rebuilt `tab:rqmap` (L105--134) to remove duplicate CH3 row, moved SOTA comparison (`tab:related`) and 7B backbone (`tab:backbone7b`) to CH2, and added `sec:exp-analysis` to CH2.
+  - **Verification**: `grep CH4 Chapter4/chapter4.tex` returned 0 matches; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
 - **03:36** — `Thesis_report/thesis_hsge_vi/{Chapter6/chapter6.tex, main.pdf}` — **Synchronized Chapter 6 (Conclusion) with Chapter 4 and Chapter 5 updates:**
   - Updated data scaling discussion (§6.3) to match new `tab:datascale` metrics: 4266 added samples $\rightarrow$ 17,4\% to 26,0\% (+8,7 pp on 288 tasks: Reddit +7,1 đpt/1k samples vs Admin +2,5 đpt/1k samples), pointing to `sec:exp-datascale` and `sec:exp-crosssite`.
   - Added Qwen-2.5-7B evaluation result (16,5\%, +8,2 pp, `sec:exp-backbone`) to Product 3 (*Mô hình web agent đã fine-tune*).
