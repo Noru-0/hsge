@@ -77,20 +77,20 @@ Trang 19 là trang cảm ơn; dừng ở đó và mời Hội đồng đặt câ
 > gán nhãn thủ công bằng con người thì vô cùng đắt đỏ: ví dụ hệ thống AutoWebGLM phải cần
 > tới **20 kỹ sư gán nhãn liên tục trong suốt 1 tháng**.
 >
-> Xuất phát từ thực tế đó, bài toán của khóa luận là: **Làm sao tự động khám phá một website
-> đang hoạt động và tự sinh dữ liệu huấn luyện chất lượng cao cho website đó, mà hoàn toàn
-> không cần đến nhãn của con người?**
+> Xuất phát từ thực tế đó, câu hỏi bài toán của khóa luận là: **Làm sao tận dụng LLM để tự
+> động sinh dữ liệu huấn luyện trên một tập website mục tiêu (hoàn toàn không cần nhãn con người),
+> nhằm giúp mô hình nhỏ (SLM) chạy cục bộ đạt được hiệu năng tiệm cận hoặc vượt cả LLM lớn trên
+> chính các trang web đó?**
 >
-> **Về phạm vi nghiên cứu:** Khóa luận xác định rất rõ ràng ngay từ đầu — mục tiêu là **chuyên
-> biệt hóa tác nhân cho một tập website cố định** của một tổ chức (như ERP, CRM, trang quản
-> trị nội bộ) để đạt hiệu năng thực thi cao và an toàn dữ liệu — **hoàn toàn KHÔNG PHẢI là
-> xây dựng một General Agent (tác nhân vạn năng)** để giải quyết mọi trang web ngẫu nhiên trên
-> toàn bộ Internet.
+> Ở đây, phạm vi được xác định rất rõ ràng: **chuyên biệt hóa tác nhân cho một tập website cố
+> định** của một tổ chức (như ERP, CRM, trang quản trị nội bộ) để tối ưu hiệu năng và bảo mật —
+> **chứ không phải xây dựng một General Agent (tác nhân vạn năng)** cho toàn bộ Internet.
 >
 > `[lược nếu trễ]` Để giải quyết bài toán này, nhóm đối mặt với **bốn thách thức cốt lõi** ở
 > cột phải: (1) Chi phí gán nhãn tay quá lớn; (2) Tri thức môi trường mang tính đặc thù cao
 > theo từng web; (3) Nguy cơ **dương tính giả khi tự đánh giá** (agent tự khai xong nhưng thực
 > tế làm sai); và (4) Làm sao ghép các hành động rời rạc thành tác vụ đa bước có ý nghĩa nghiệp vụ.
+
 
 **Câu chốt:** Nút thắt của Web Agent không nằm ở kiến trúc mô hình, mà nằm ở **dữ liệu tương tác thực tế cho từng website cụ thể**.
 
@@ -412,7 +412,93 @@ và nhắc lại phạm vi để không ai hiểu nhầm là nhóm hứa một a
 | Vì sao chọn Qwen3.5-9B mà không nhỏ hơn? | Slide 14, PL8 | Ngưỡng "chạy được trên máy phổ thông" là dưới 10B; chưng cất xuống 1–3B là hướng phát triển. PL8 có sẵn phép đo đổi mô hình nền sang Qwen-2.5-7B trên **cùng** tập dữ liệu. |
 | Hệ thống này dùng để kiểm thử phần mềm được không? | PL2 | Về cấu trúc thì rất khớp: operator có **precondition/effect** chính là một dạng *test model*, semantic task là *test scenario*, trajectory đã kiểm chứng là *test script*. Nhưng phải nói rõ: khóa luận **chưa thực nghiệm** hướng này — đây là ứng dụng tiềm năng, không phải kết quả. |
 | Điểm nghẽn còn lại ở đâu? | PL7 | Tầng thực thi: 85–96% episode thất bại có ít nhất một hành động bị trình duyệt từ chối. Fine-tune làm mô hình **bền bỉ** hơn chứ không **chính xác** hơn — tỷ lệ lỗi trên mỗi bước gần như không đổi. |
+| Sao train từng bước mà không train nguyên trajectory? Train từng bước thì làm sao model làm được task dài? | Không có slide — xem **mục C** | Mẫu là một bước **nhưng không rời khỏi trajectory**: prompt mỗi bước có `# Goal` (câu lệnh task dài, giữ nguyên ở mọi bước) và `# History of Past Actions` (6 hành động gần nhất kèm kết quả). Không gộp cả chuỗi vì lúc chạy thật agent sinh **một** hành động rồi mới thấy trang tiếp theo — gộp là phá **prompt parity**. |
 | Thêm dữ liệu nữa có tốt hơn không? | PL8 | Có, nhưng hiệu suất giảm nhanh: gần **gấp ba** dữ liệu của hai website chỉ đổi lấy **+2,1 điểm**. Nên hướng tiếp theo là sửa tầng thực thi, không phải nhân đôi dữ liệu. |
+
+---
+
+### C. Câu trả lời dài: "sao train từng bước, không train nguyên trajectory?"
+
+**Câu trả lời ngắn (đọc thẳng được):**
+
+> Thưa Thầy, hai cái đó không đối lập nhau. Một mẫu huấn luyện của nhóm em **là một bước,
+> nhưng không phải một bước bị cắt rời khỏi trajectory**. Trong prompt của mỗi bước luôn
+> có khối `# Goal` giữ nguyên câu lệnh của task dài, và khối `# History of Past Actions`
+> liệt kê các hành động đã làm cùng kết quả của chúng. Nên cái model học là ánh xạ
+> *(mục tiêu dài + tiến độ đã đi được + trang hiện tại) → hành động kế tiếp*, chứ không
+> phải *(trang hiện tại) → hành động*.
+>
+> Còn lý do không gộp cả trajectory thành một mẫu là vì **lúc chạy thật không ai chạy như
+> vậy**. Agent chạy theo vòng lặp: quan sát trang → sinh **một** hành động → trình duyệt
+> trả về trang mới. Hành động thứ hai phụ thuộc vào trang do hành động thứ nhất tạo ra,
+> mà trang đó chưa tồn tại tại thời điểm sinh. Bắt model sinh cả chuỗi một lượt là vi phạm
+> đúng nguyên tắc **prompt parity** mà nhóm em vừa trình bày ở slide 8.
+
+**Ví dụ cụ thể — nếu Hội đồng muốn thấy tận mắt.** Lấy task *"Tìm sản phẩm yoga mat rồi
+thêm vào giỏ hàng"*. Trajectory này dài 4 bước, và nó tạo ra 4 mẫu huấn luyện. So sánh
+mẫu **bước 1** với mẫu **bước 4**:
+
+```
+--- MẪU BƯỚC 1 -----------------      --- MẪU BƯỚC 4 -----------------
+# Goal                                # Goal
+Tìm sản phẩm "yoga mat" rồi           Tìm sản phẩm "yoga mat" rồi
+thêm vào giỏ hàng                     thêm vào giỏ hàng        <-- Y HỆT
+
+# Current Page                        # Current Page
+URL: /                                URL: /yoga-mat-premium.html
+<axtree trang chủ>                    <axtree trang chi tiết sản phẩm>
+
+# Error Message from Last Action      # Error Message from Last Action
+(none)                                (none)
+
+# History of Past Actions             # History of Past Actions
+(none)                                - fill('204', 'yoga mat') -> no change
+                                      - press('204', 'Enter')
+                                          -> now at /catalogsearch/result/?q=yoga+mat
+                                      - click('619') -> now at /yoga-mat-premium.html
+
+# Next Action ...                     # Next Action ...
+--------------------------------      --------------------------------
+Đáp án: fill('204','yoga mat')        Đáp án: click('842')   [nút Add to Cart]
+```
+
+**Điểm mấu chốt nằm ở mẫu bước 4.** Trang chi tiết sản phẩm đó xuất hiện trong rất nhiều
+task khác nhau: có task chỉ hỏi giá, có task kiểm tra tồn kho, có task so sánh hai sản
+phẩm. **Nhìn riêng cái trang thì không thể quyết định được phải bấm gì.** Thứ quyết định
+là hai khối kia: `# Goal` nói mục tiêu cuối là *thêm vào giỏ*, còn `# History` nói *đã tìm
+xong và đã mở đúng sản phẩm rồi* — nên việc còn lại đúng là bấm Add to Cart. Model buộc
+phải đọc cả ba khối mới sinh đúng hành động, và đó chính là cách nó học tính trạng thái
+của một task dài.
+
+Ba chi tiết kỹ thuật cần nói chính xác nếu bị hỏi tiếp:
+
+- **`# History` hiển thị 6 hành động gần nhất**, không phải toàn bộ lịch sử (hằng số
+  `_HISTORY_WINDOW` trong `hsge/webarena/agents.py`) — nói "toàn bộ" là nói sai.
+- Mỗi dòng history có **kết quả thật của hành động** (`now at <url>` / `page changed` /
+  `no change`), sinh bởi cùng một hàm `step_outcome()` mà solver lúc chạy thật dùng.
+  Nhờ vậy model thấy được hành động nào vừa rồi **không làm gì cả**.
+- Hành động bị trình duyệt từ chối vẫn nằm trong history (kèm lỗi) nhưng **không được
+  dùng làm đáp án** — nó là cái sai, không phải cái cần bắt chước.
+
+**Năng lực task dài đến từ dữ liệu, không từ định dạng mẫu:**
+
+1. **Semantic task** ghép chuỗi operator — đây chính là nguồn sinh ra trajectory nhiều bước.
+2. **Unprefixed sampling**: giải lại task từ trang gốc của site, nên trajectory chứa cả
+   phần điều hướng. Không có cơ chế này thì 287 trong 465 trajectory chỉ dài đúng **một**
+   bước.
+3. **Curriculum**: mẫu sắp theo `difficulty` (LOCAL → UNPREFIXED → GOAL) — task ngắn trước,
+   task dài sau.
+
+Và phép đo cuối không phải bài toán một bước: 655 task WebArena đều đa bước, chấm bằng bộ
+chấm của benchmark, episode thành công có trung vị 6 bước.
+
+**Chỗ phải tự nhận, đừng để bị bắt:** khóa luận **không có hàm mục tiêu ở cấp trajectory**
+— không RL, không reward tính trên cả chuỗi, không phạt riêng việc đi sai ở bước 2 làm hỏng
+cả task. Model học bắt chước từng bước; tín hiệu "cả trajectory này thành công" vào dataset
+**gián tiếp qua khâu lọc** (chỉ trajectory đã kiểm chứng mới được xuất). Đó đúng là hạn chế
+và là lý do hướng phát triển là RL/DPO. Nhóm em đã lưu sẵn `trajectory_id`, `step_index`,
+`total_steps` trong từng mẫu để bước sau gom batch theo trajectory mà không phải thu thập
+lại dữ liệu.
 
 ---
 

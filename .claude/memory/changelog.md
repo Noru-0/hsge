@@ -6,6 +6,16 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-22
 
+- **16:12** — `Thesis_report/Slide_KLTN_HSGE/presentation_script.md` — **Added Q&A
+  section C: "why train per step instead of per trajectory?"** A step example is not a
+  step severed from its trajectory — every prompt carries `# Goal` (the long task,
+  unchanged at every step) and `# History of Past Actions` (the last 6 actions with their
+  real outcomes). Section C shows a side-by-side of the step-1 and step-4 prompt of one
+  "search yoga mat, add to cart" trajectory: the step-4 product page appears in many
+  different tasks, so the page alone cannot decide the action — Goal + History can. Also
+  states the honest limit: there is no trajectory-level objective (no RL, no whole-chain
+  reward); success enters the dataset only via the verification filter.
+
 - **15:01** — `Thesis_report/Slide_KLTN_HSGE/{config/preamble.tex,
   sections/01_gioithieu.tex, sections/04_ketluan.tex, sections/99_phuluc.tex,
   presentation_script.md}` — **Stated the problem scope on the main slides instead of
