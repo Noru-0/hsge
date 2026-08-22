@@ -6,6 +6,9 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **02:56** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` — **Fixed bold formatting in Table 4.9 (`tab:related`):**
+  - In the GitLab column among open small models, moved bold formatting from HSGE-9B (18,3\%) to NNetNav-7B (\textbf{19,9}\%), which is the highest score in that column.
+
 - **02:51** — `Thesis_report/thesis_hsge_vi/{Chapter1/chapter1.tex, Chapter4/chapter4.tex, main.pdf}` — **Restructured and aligned Chapter 4 with Chapter 1's research questions (CH1–CH4):**
   - Synchronized CH labels in Chapter 4 with `tab:rqmap` (Ch1 §1.5): §4.1.3 labeled for CH1/CH3, §4.6 labeled for CH2, §4.7 labeled for CH4, and new §4.8 labeled for CH2/CH3.
   - Added `\ref{sec:exp-datascale}` to CH2 and `\ref{sec:exp-backbone}` to CH3 in `tab:rqmap` (`Chapter1/chapter1.tex`).
