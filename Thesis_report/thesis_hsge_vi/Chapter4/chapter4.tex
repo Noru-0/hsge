@@ -2,7 +2,7 @@
 \chapter{Thực nghiệm}
 \label{ch:experiments}
 
-Chương 4 bao gồm các nội dung: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả fine-tuning; (4) đánh giá chính trên bốn website WebArena; (5) ảnh hưởng của lượng dữ liệu; (6) phân tích nguyên nhân lỗi; và (7) kết quả bổ sung trên mô hình nền Qwen-2.5-7B. Toàn bộ chương cung cấp số liệu cho bốn câu hỏi nghiên cứu CH1--CH4 (Mục~\ref{sec:intro-rq}, Bảng~\ref{tab:rqmap}). Việc thảo luận và trả lời chi tiết từng câu hỏi thuộc về Chương~\ref{ch:discussion}.
+Chương 4 bao gồm các nội dung: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả fine-tuning; (4) đánh giá chính trên bốn website WebArena; (5) ảnh hưởng của lượng dữ liệu; (6) phân tích nguyên nhân lỗi; và (7) kết quả bổ sung trên mô hình nền Qwen-2.5-7B. Toàn bộ chương cung cấp số liệu cho ba câu hỏi nghiên cứu CH1--CH3 (Mục~\ref{sec:intro-rq}, Bảng~\ref{tab:rqmap}). Việc thảo luận và trả lời chi tiết từng câu hỏi thuộc về Chương~\ref{ch:discussion}.
 
 Các bảng số liệu tuân theo quy ước: đơn vị đặt ở tiêu đề cột khi đồng nhất, hoặc đặt trực tiếp trong ô khi cột kết hợp số đếm và tỷ lệ (Bảng~\ref{tab:runs}, \ref{tab:failures}, \ref{tab:profile}). Mọi số liệu ngoại suy hoặc từ công trình khác đều được dẫn nguồn ngay trên dòng tương ứng.
 
@@ -71,7 +71,7 @@ mỗi đợt chạy - thành phần này quyết định phần lớn tổng chi
 \subsection{Chi phí của giai đoạn khám phá}
 \label{sec:exp-cost-explore}
 
-\noindent\emph{Mục này góp số liệu cho CH1 và CH3.}
+\noindent\emph{Mục này góp số liệu cho CH3.}
 
 Khác với hai giai đoạn còn lại, giai đoạn khám phá không thuê GPU mà trả
 tiền theo số token gửi tới API của các mô hình đóng, nên chi phí của nó tỷ
@@ -232,6 +232,14 @@ mục~\ref{sec:exp-main}:}
 \label{sec:exp-data}
 
 \noindent\emph{Mục này trả lời CH1.}
+
+Các tác vụ được HSGE tự động tạo ra đáp ứng bốn tiêu chí về tính hợp lệ, tính đa dạng, tính ngữ nghĩa và khả năng thực thi:
+\begin{itemize}
+  \item \textbf{Tính hợp lệ:} Cổng kiểm chứng đã hạ cấp 801 episode tự tuyên bố thành công sai (chiếm $\approx 27\%$), và cổng hành động hữu hiệu loại bỏ thêm 104 trajectory không tạo ra thay đổi trạng thái; bộ dữ liệu huấn luyện thu được gồm 1760 trajectory hợp lệ (Bảng~\ref{tab:runs}, Bảng~\ref{tab:dataset}).
+  \item \textbf{Tính đa dạng:} Quá trình khám phá bao phủ 455 node giao diện, 146 skill được phát hiện và 130 năng lực seed trên bốn website, trải rộng trên cả ba nhóm tác vụ (LOCAL, UNPREFIXED và GOAL).
+  \item \textbf{Tính ngữ nghĩa:} 142 tác vụ GOAL nhiều bước được sinh tự động từ chuỗi operator (12 tác vụ) và từ bộ seed năng lực của website (130 tác vụ), thể hiện đúng ý định người dùng trong môi trường thực tế.
+  \item \textbf{Khả năng thực thi:} Nhóm tác vụ GOAL đạt tỷ lệ hoàn thành 50{,}0\% (71/142 episode), xấp xỉ tỷ lệ của nhóm tác vụ LOCAL (47{,}6\%), khẳng định các tác vụ phức tạp được sinh ra hoàn toàn có thể giải được bởi agent.
+\end{itemize}
 
 \subsection{Kết quả khám phá}
 
@@ -481,7 +489,7 @@ không phát sinh cảnh báo nào (Phụ lục~\ref{sec:disc-slm}).
 \section{Đánh giá chính trên WebArena}
 \label{sec:exp-main}
 
-\noindent\emph{Mục này trả lời CH2 và CH3.}
+\noindent\emph{Mục này trả lời CH2.}
 
 \subsection{Kết quả tổng hợp}
 
@@ -721,7 +729,7 @@ Ba thực nghiệm ablation có kiểm soát đã được thiết kế nhằm c
 \section{Phân tích}
 \label{sec:exp-analysis}
 
-\noindent\emph{Mục này trả lời CH4.}
+\noindent\emph{Mục này bổ sung cho CH2.}
 
 \subsection{Quan sát liên-website}
 \label{sec:exp-crosssite}
@@ -869,7 +877,7 @@ Chân dung hành vi cho thấy fine-tuning không làm giảm tỷ lệ lỗi th
 \section{Kết quả bổ sung: chuyển tập dữ liệu sang mô hình nền Qwen-2.5-7B}
 \label{sec:exp-backbone}
 
-\noindent\emph{Mục này bổ sung cho CH2 và CH3.}
+\noindent\emph{Mục này bổ sung cho CH2.}
 
 Để tách phần đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ tập dữ liệu 8554 mẫu được dùng để fine-tune mô hình nền thứ hai: Qwen-2.5-7B-Instruct~\cite{qwen2024qwen25} — đây chính là mô hình nền mà Go-Browse~\cite{gandhi2026gobrowse} và NNetNav~\cite{murty2024nnetnav} sử dụng. Quá trình fine-tuning áp dụng cấu hình LoRA tương tự và được đánh giá trên đúng 655 task với cùng bộ chấm, ngân sách 15 bước và cấu hình giải mã.
 

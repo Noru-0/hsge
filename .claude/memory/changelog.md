@@ -6,6 +6,11 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **04:15** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, Chapter1/chapter1.tex, main.pdf}` — **Restructured Chapter 4 and Chapter 1 to align with 3 RQs (CH1--CH3) framework:**
+  - **Chapter 4 (`chapter4.tex`)**: Updated opening sentence (L5: "ba câu hỏi nghiên cứu CH1--CH3"), corrected section tags for `sec:exp-cost-explore` (CH3), `sec:exp-main` (CH2), `sec:exp-analysis` (CH2: supplementary evidence), and `sec:exp-backbone` (CH2). Added bridging paragraph after `sec:exp-data` (L234) mapping the 4 criteria of CH1 (Validity, Diversity, Semantics, Executability) to quantitative data (`tab:runs`, `tab:dataset`). Removed all stale CH4 labels from Chapter 4.
+  - **Chapter 1 (`chapter1.tex`)**: Rebuilt `tab:rqmap` (L105--134) to remove duplicate CH3 row, moved SOTA comparison (`tab:related`) and 7B backbone (`tab:backbone7b`) to CH2, and added `sec:exp-analysis` to CH2.
+  - **Verification**: `grep CH4 Chapter4/chapter4.tex` returned 0 matches; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
 - **03:36** — `Thesis_report/thesis_hsge_vi/{Chapter6/chapter6.tex, main.pdf}` — **Synchronized Chapter 6 (Conclusion) with Chapter 4 and Chapter 5 updates:**
   - Updated data scaling discussion (§6.3) to match new `tab:datascale` metrics: 4266 added samples $\rightarrow$ 17,4\% to 26,0\% (+8,7 pp on 288 tasks: Reddit +7,1 đpt/1k samples vs Admin +2,5 đpt/1k samples), pointing to `sec:exp-datascale` and `sec:exp-crosssite`.
   - Added Qwen-2.5-7B evaluation result (16,5\%, +8,2 pp, `sec:exp-backbone`) to Product 3 (*Mô hình web agent đã fine-tune*).
