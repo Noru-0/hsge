@@ -288,12 +288,13 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 > _(Bấm Click 2 — hiện Cột phải: Thiết lập thực nghiệm)_
 > Để trả lời 3 câu hỏi này, thiết lập thực nghiệm được chuẩn hóa như sau:
 >
-> - **Môi trường**: Đánh giá trên benchmark **WebArena** với 655 tác vụ chính thức thuộc 4 website (Shopping, Admin, Reddit, GitLab).
-> - **Mô hình**: Tinh chỉnh từ mô hình nền **Qwen3.5-9B** tạo thành **HSGE-9B**.
-> - **Fine-tuning**: Kỹ thuật LoRA / QLoRA qua 3 epoch (1.119 bước huấn luyện).
-> - **Tiêu chí**: Tỷ lệ hoàn thành tác vụ (**Task Success Rate - Task SR**).
+> - **Môi trường**: Đánh giá trên benchmark **WebArena** với **655 tác vụ chính thức** thuộc 4 website (Shopping, Admin, Reddit, GitLab).
+> - **Lý do loại trừ miền Map**: Benchmark WebArena gốc có 812 task trên 5 website. Nhóm quyết định **bỏ miền Map (OpenStreetMap, 157 task)** vì Map là giao diện bản đồ tương tác dạng Canvas / tọa độ pixel, không có cấu trúc cây DOM / Accessibility Tree tiêu chuẩn và không có các thao tác form / nhập liệu truyền thống. 4 website còn lại đại diện cho 4 miền dịch vụ web tiêu chuẩn sống động và phức tạp nhất.
+> - **Hạ tầng & Vận hành**: 4 website được self-host bằng Docker container trên máy chủ nội bộ và mở tunnel qua Cloudflare quick tunnel. Do môi trường có *trạng thái dùng chung và bị biến đổi*, mọi lượt khám phá/đánh giá đều chạy đơn luồng và CSDL được khôi phục nguyên bản trước mỗi lượt đo.
+> - **Mô hình & Huấn luyện**: Tinh chỉnh mô hình nền **Qwen3.5-9B** bằng LoRA / QLoRA qua 3 epoch (1.119 bước huấn luyện trên GPU A100/H100 thuê từ vast.ai), tạo thành **HSGE-9B**.
+> - **Tiêu chí đánh giá**: Sử dụng **bộ chấm tự động chính thức của WebArena** (kiểm tra trạng thái CSDL hoặc chuỗi trả về) với ngân sách 15 bước để đo **Task Success Rate (Task SR)** hoàn toàn khách quan.
 
-**Câu chốt:** Phép đo sử dụng bộ đề xuất và **bộ chấm chính thức của WebArena** để đảm bảo tính khách quan hoàn toàn.
+**Câu chốt:** Phép đo sử dụng bộ đề xuất và **bộ chấm chính thức của WebArena** trên 4 website tiêu chuẩn để đảm bảo tính khách quan hoàn toàn.
 
 ---
 
@@ -301,12 +302,12 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 > Trả lời **CH1**, phễu khám phá tự động của HSGE mang lại các kết quả quy mô ấn tượng:
 >
-> - **Quy mô khám phá & Tri thức**: Khám phá **4 website, 455 URL**, thực hiện **3.981 lượt tương tác thử**, thu hoạch **146 skills** và quy nạp **57 operators**.
-> - **Sinh tác vụ**: Tự động tạo và kiểm chứng **142 semantic task** đa bước.
-> - **Cổng lọc chất lượng**:
->   1. **LLM-as-Judge** loại bỏ **801 lượt (27,4%)** dương tính giả (agent tự báo hoàn thành nhưng chưa làm đúng).
->   2. **Effective Action Gate** loại **104 trajectory** không làm biến đổi trang DOM.
-> - **Kết quả thu hoạch**: Thu được **1.760 trajectory sạch** (đạt tỷ lệ hợp lệ 53,2%), đóng gói thành **9.007 mẫu SFT** (8.554 train / 453 validation) hoàn toàn tự động mà **không cần 1 giờ gán nhãn thủ công nào**.
+> - **Quy mô khám phá & Tri thức**: Hệ thống tự động duyệt **4 website, 455 URL**, thực hiện **3.981 lượt tương tác thử** (khoảng 21 giờ / website), thu hoạch **146 skills** và quy nạp **57 operators**.
+> - **Sinh tác vụ**: Tự động tạo và kiểm chứng **142 semantic task** đa bước bằng cách ghép chuỗi operator.
+> - **Cổng lọc chất lượng (Bài học thực nghiệm cốt lõi)**: Khi chạy thực nghiệm thực tế, nhóm phát hiện LLM có xu hướng "nói dối" hoặc tưởng mình đã làm xong (dương tính giả). HSGE thiết lập 2 chốt chặn nghiêm ngặt:
+>   1. **LLM-as-Judge**: Kiểm tra điều kiện tiền/hậu đề xuất, loại bỏ **801 lượt (27,4%)** dương tính giả.
+>   2. **Effective Action Gate**: Loại bỏ **104 trajectory** thực thi lệnh nhưng không làm biến đổi trang DOM.
+> - **Kết quả thu hoạch**: Thu được **1.760 trajectory sạch** (đạt tỷ lệ hợp lệ 53,2%), đóng gói thành **9.007 mẫu SFT** (8.554 train / 453 validation) hoàn toàn tự động mà **không cần 1 giờ gán nhãn thủ công nào từ con người**.
 
 **Câu chốt:** HSGE tự động sinh tác vụ có ý nghĩa và thu hoạch 9.007 mẫu SFT sạch hoàn toàn không cần nhãn người.
 
@@ -314,17 +315,19 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ## Slide 13 - CH2: So sánh hiệu năng với các hệ thống SOTA (11:10, trang 17)
 
-> Trả lời **CH2 (phần 1)**, Bảng 2 so sánh hiệu năng của HSGE-9B và HSGE-7B với các mô hình đóng và mở:
+> Trả lời **CH2 (phần 1)**, Bảng 2 đối chiếu kết quả của HSGE với các mô hình SOTA trên 655 tác vụ chính thức của WebArena:
 >
-> - **Vị thế tổng thể**: HSGE-9B đạt tỷ lệ hoàn thành **24,6%** trên toàn bộ 655 task của WebArena, tăng **+11,3 điểm phần trăm** so với mức **13,3%** của mô hình nền Qwen3.5-9B.
-> - **Chuyển giao tập dữ liệu sang mô hình 7B (Bảng 4.14)**: Cùng tập dữ liệu 8.554 mẫu HSGE nâng **Qwen-2.5-7B từ 8,3% lên 16,5%** (+8,2 đpt, tăng gần gấp đôi), chứng minh tri thức không phụ thuộc kiến trúc đơn lẻ.
-> - **Vượt mô hình thương mại đóng**: Kết quả 24,6% của HSGE-9B vượt qua **GPT-4o-mini (20,0%)**.
-> - **Vượt các SLM cùng phân khúc (<10B)**: HSGE-9B vượt xa **Qwen-2.5-7B-Instruct (8,3%)** và **NNetNav-7B (19,1%)**, đồng thời đạt mức **tương đương SOTA Go-Browse-7B (22,6%)**.
-> - **Ưu thế trên từng website**: HSGE-9B dẫn đầu ở phân khúc <10B trên website Shopping (**28,3%**) và Reddit (**34,0%**).
+> - **Mô hình thương mại đóng (để tham chiếu)**: GPT-4o-mini đạt **20,0%**, GPT-4o đạt **37,5%**.
+> - **Các mô hình mở cùng phân khúc (<10B)**: Mô hình nền Qwen-2.5-7B chỉ đạt **8,3%**; hai hệ thống SOTA công bố gần đây là NNetNav-7B đạt **19,1%** và Go-Browse-7B đạt **22,6%**.
+> - **Phân tích bản chất khác biệt về Mô hình nền (Base Model)**:
+>   1. *Tính chất không kiểm soát của phép so sánh*: So sánh 24,6% của HSGE-9B với 22,6% của Go-Browse-7B **không phải là phép so sánh có kiểm soát tuyệt đối**, vì hai hệ thống dùng mô hình nền gốc khác nhau. Qwen3.5-9B có Base SR là **13,3%** (cao hơn 5 đpt so với Qwen-2.5-7B Base 8,3%). Một phần khoảng cách chắc chắn thuộc về năng lực sẵn có của mô hình nền 9B thế hệ mới hơn.
+>   2. *Thực nghiệm chứng minh giá trị tập dữ liệu (HSGE-7B)*: Để tách biệt đóng góp của dữ liệu, nhóm đem đúng 8.554 mẫu HSGE fine-tune trên **Qwen-2.5-7B** (được dòng dưới cùng Bảng 2). Kết quả nâng Qwen-2.5-7B từ 8,3% lên **16,5%** (+8,2 đpt, tăng gần gấp đôi).
+>   3. *Trích xuất nguyên nhân từ Trace thực nghiệm*: Trace cho thấy 58–60% phiên trượt của bản 7B chứa phản hồi `report_infeasible` viết trần (thiếu JSON wrapper) bị bộ phân giải loại bỏ. Do đó con số 16,5% là một **cận dưới bị hạ thấp bởi parser**.
+> - **Kết luận về hiệu năng**: Tập dữ liệu HSGE chứng minh hiệu quả cải thiện trên **cả hai mô hình nền** (7B và 9B). Mô hình HSGE-9B đạt **24,6%**, tăng **+11,3 đpt** so với nền 9B gốc, đạt hiệu năng **ngang hàng SOTA phân khúc mở <10B** (dẫn đầu ở Shopping 28,3% và Reddit 34,0%) dù quy mô dữ liệu nhỏ hơn 5 lần so với Go-Browse (8,5k mẫu vs 40k mẫu).
 
-**Câu chốt:** Fine-tuning giúp SLM 9B vượt GPT-4o-mini và đạt SOTA phân khúc mở dưới 10 tỷ tham số.
+**Câu chốt:** Tập dữ liệu HSGE nâng cao năng lực cho cả hai mô hình nền, giúp HSGE-9B đạt **24,6%** (ngang hàng SOTA phân khúc <10B) với dung lượng dữ liệu tinh gọn hơn 5 lần.
 
-**Tránh:** Không nói "vượt Go-Browse" — con số 24,6% so với 22,6% nằm trong khoảng biến động thống kê, phát biểu chuẩn xác là _tương đương SOTA Go-Browse-7B_.
+**Tránh phát biểu:** Không dùng từ "vượt trội tuyệt đối" so với Go-Browse — quyển báo cáo nêu rõ hai mô hình gốc khác nhau (Qwen3.5-9B vs Qwen-2.5-7B) và quy mô dữ liệu chênh lệch, phát biểu chuẩn xác là *ngang hàng / tương đương SOTA*.
 
 ---
 
@@ -332,13 +335,13 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 > Trả lời **CH2 (phần 2)**, slide này bóc tách bản chất cải thiện năng lực của mô hình sau fine-tune:
 >
-> - **Độ tăng theo từng Website**: Cả 4/4 website đều ghi nhận mức tăng trưởng vượt trội có ý nghĩa thống kê theo **kiểm định McNemar** ($p \le 0{,}011$), đặc biệt Reddit tăng từ 6,6% lên **34,0%** ($p < 0{,}001$).
-> - **Ý nghĩa thống kê McNemar**: Có **100 task độc quyền** chỉ HSGE-9B mới giải được (so với 26 task Base giải được), đạt ý nghĩa thống kê cao trên toàn bộ 4 website ($p < 0{,}001$).
-> - **Bóc tách 2 nguồn cải thiện năng lực**:
->   1. **Kỷ luật cú pháp**: Lỗi định dạng đầu ra giảm triệt để từ **26,0% down còn 0,6%**.
->   2. **Năng lực ra quyết định**: Trên tập 485 task mà mô hình nền đã xuất đúng cú pháp, Task SR của HSGE-9B vẫn tăng từ **17,9% lên 23,5% ($p = 0{,}003$)**.
+> - **Hiệu quả theo từng Website & Kiểm định McNemar**: Cả 4/4 website đều ghi nhận mức tăng trưởng vượt trội có ý nghĩa thống kê ($p \le 0{,}011$), đặc biệt Reddit tăng từ 6,6% lên **34,0%** ($p < 0{,}001$). Có **100 task độc quyền** chỉ HSGE-9B mới giải được (so với 26 task Base giải được).
+> - **Bóc tách 2 nguồn cải thiện năng lực (Câu chuyện thực nghiệm cốt lõi)**:
+>   *Khi nhìn số liệu tăng từ 13,3% lên 24,6%, câu hỏi đặt ra là: Mô hình giỏi hơn thật hay chỉ vì nó bớt vô kỷ luật cú pháp?*
+>   1. **Kỷ luật cú pháp**: Mô hình nền Base bị lỗi định dạng đầu ra (sinh câu vần vè lan man hoặc sai lệnh Python) ở **170/655 phiên (26,0%)**. Fine-tune giúp triệt tiêu lỗi này xuống còn **4 phiên (0,6%)**.
+>   2. **Năng lực ra quyết định (Bằng chứng thuyết phục)**: Để loại trừ yếu tố cú pháp, nhóm bóc tách riêng **485 task mà mô hình nền vốn đã xuất đúng cú pháp**. Trên tập này, Task SR của HSGE-9B vẫn tăng từ **17,9% lên 23,5% ($p = 0{,}003$)**.
 >
-> Điều này chứng minh fine-tuning không chỉ giúp mô hình học đúng cú pháp lệnh, mà thực sự nâng cao **năng lực ra quyết định hành động**.
+> Điều này chứng minh fine-tuning bằng dữ liệu tự sinh không chỉ dạy mô hình học thuộc cú pháp lệnh, mà thực sự nâng cao **khả năng suy luận và lựa chọn đúng hành động**.
 
 **Câu chốt:** Fine-tuning làm chủ cả kỷ luật cú pháp lẫn năng lực lựa chọn hành động ($p = 0{,}003$).
 
@@ -348,10 +351,11 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 > Trả lời **CH3**, slide này phân tích hiệu quả kinh tế trong quá trình tự động sinh dữ liệu:
 >
-> - **Chi phí API toàn chu trình**: Tổng chi phí API gọi LLM đóng (OpenAI + DeepSeek) cho cả 4 website chỉ tốn **54,21 USD** (chưa tới **14 USD / website**).
-> - **Đơn giá / Trajectory**: Trung bình mỗi trajectory thành công sạch chỉ tốn **0,0308 USD** (khoảng 3,1 cent).
-> - **Phân bổ lời gọi API**: Tổng cộng 20.808 lượt gọi LLM, trong đó Solver chiếm **85,5%**. Việc dồn Solver sang mô hình chi phí thấp (GPT-5.6-luna) giúp giảm đơn giá token đầu vào **~12 lần** so với GPT-4o.
-> - **So sánh kinh tế với Go-Browse**: Đơn giá **0,0308 USD/trajectory** của HSGE **rẻ hơn 3,3 lần** so với Go-Browse-7B ($0,1026 USD/trajectory).
+> - **Câu chuyện tối ưu chi phí thực tế**: Ban đầu nếu dùng hoàn toàn GPT-4o cho mọi vai trò, chi phí sẽ hàng trăm USD. Nhóm đã phân tách vai trò thông minh: Solver (gợi ý bước hành động — chiếm **85,5%** trong tổng 20.808 lời gọi LLM) được dồn sang mô hình chi phí thấp **GPT-5.6-luna** (0,20 USD/triệu token vào, rẻ hơn 12 lần so với GPT-4o).
+> - **Chi phí API toàn chu trình**: Tổng chi phí gọi API LLM đóng cho cả 4 website chỉ tốn **54,21 USD** (chưa tới **14 USD / website**).
+> - **Đơn giá / Trajectory**: Trung bình mỗi trajectory thành công sạch chỉ tốn **0,0308 USD** (khoảng 3,1 cent, tương đương ~750 VNĐ).
+> - **Chi phí GPU fine-tune**: Tốn **8,3 USD** (5 giờ 09 phút trên vast.ai H100/A100).
+> - **So sánh kinh tế với Go-Browse**: Đơn giá **0,0308 USD/trajectory** của HSGE **rẻ hơn 3,3 lần** so với Go-Browse-7B ($0,1026 USD/trajectory), chứng minh tính khả thi cho các phòng thí nghiệm và tổ chức nhỏ.
 
 **Câu chốt:** Tự động sinh dữ liệu với đơn giá 0,0308 USD/trajectory chứng minh tính khả thi kinh tế vượt trội cho các nhóm nghiên cứu và tổ chức nhỏ.
 
@@ -367,11 +371,11 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 > - **Tài nguyên mở**: Bàn giao toàn bộ mã nguồn, bộ dataset và trọng số mô hình HSGE-9B.
 >
 > _(Bấm Click 2 — hiện Cột phải: Hướng phát triển tương lai)_
-> Hướng phát triển tương lai tập trung vào 4 điểm:
+> Hướng phát triển tương lai tập trung vào 4 điểm rút ra từ thực nghiệm:
 >
-> 1. **Khôi phục lỗi tự động**: Tự sửa lỗi và thử lại khi gặp sự cố giao diện (timeout, kẹt trang DOM).
-> 2. **Tối ưu khám phá với RL**: Kết hợp Học tăng cường (RL) giúp Explorer tự học chiến lược duyệt web tối ưu.
-> 3. **Học từ thất bại**: Khai thác các trajectory thất bại thông qua DPO / Preference Learning.
+> 1. **Khôi phục lỗi tự động**: Thực nghiệm chỉ ra 58-60% lỗi xuất phát từ việc trang web bị DOM timeout hoặc kẹt giao diện; hệ thống cần cơ chế tự sửa lỗi và retry khi gặp sự cố DOM.
+> 2. **Tối ưu khám phá với RL**: Kết hợp Học tăng cường (RL) giúp Explorer tự học chiến lược duyệt web tối ưu thay vì chỉ tìm kiếm theo phỏng đoán.
+> 3. **Học từ thất bại**: Khai thác các trajectory thất bại bị loại bỏ thông qua DPO / Preference Learning.
 > 4. **Tổng quát hóa**: Mở rộng pipeline khám phá cho các ứng dụng ngoài miền (cross-domain).
 >
 > Em xin chân thành cảm ơn Thầy Cô trong Hội đồng đã chú ý lắng nghe và xin nhận câu hỏi góp ý!
