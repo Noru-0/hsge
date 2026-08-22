@@ -6,6 +6,11 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **04:22** — `Thesis_report/thesis_hsge_vi/{Chapter6/chapter6.tex, Chapter1/chapter1.tex, main.pdf}` — **Aligned Chapter 6 and Chapter 1 deliverables count and terminology:**
+  - **Chapter 1 (`chapter1.tex:168`)**: Updated deliverables count from four to five ("năm sản phẩm chính"), adding the WebArena evaluation benchmark pipeline to match Chapter 6 §6.1.
+  - **Chapter 6 (`chapter6.tex`)**: Replaced "best practice" with "bài học kinh nghiệm" in Deliverable 5 (L73) and objective O5 (L158). Updated objective O2 title in `tab:objectives` (L122) to "Sinh tác vụ có ngữ nghĩa".
+  - **Verification**: Both chapters state "năm sản phẩm chính"; `grep "best practice" Chapter6/chapter6.tex` returned 0 matches; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
 - **04:21** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, main.pdf}` — **Restructured Chapter 5 (Discussion) to align with 3 RQs framework:**
   - Updated opening sentence (L6: "ba câu hỏi nghiên cứu").
   - Restructured §5.1 into 3 subsections: §5.1.1 (CH1: Task generation feasibility with bridging lead sentence), §5.1.2 (CH2: Capacity gain & SOTA positioning, incorporating failure analysis & bottlenecks with italicized lead markers), §5.1.3 (CH3: Cost efficiency, combining absolute and comparative costs). Deleted orphaned §5.1.4 header.
