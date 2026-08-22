@@ -13,7 +13,8 @@ sang *"đo được gì"*.
 - **Câu chốt** = câu duy nhất bắt buộc phải lọt tai Hội đồng ở slide đó.
 - **Tránh** = chỗ dễ nói quá; nói sai một chữ ở đây là mất điểm tin cậy.
 - `[lược nếu trễ]` = cắt được mà không gãy mạch.
-- Cột "Trang" là số trang PDF thật, để nhảy nhanh khi hỏi đáp.
+- Cột "Trang" là **số slide hiện ở footer** (`n / 20`), không phải số trang PDF: deck
+  dùng overlay nên `main.pdf` hiện có 74 trang. Nhảy nhanh thì dùng số footer.
 
 ---
 
@@ -36,12 +37,15 @@ sang *"đo được gì"*.
 | 13 | 17 | **Demo** | 12:45 | 1:15 |
 | 14 | 19 | Kết luận | 14:00 | 1:00 |
 
+Slide 3 dài thêm ~15--20 giây so với bản cũ (khối phạm vi \& ứng dụng đích); nếu trễ
+thì lược đoạn ba nhóm ứng dụng.
+
 Trang 3, 6, 12, 18 là mục lục đầu mỗi chương — bấm lướt, không dừng nói.
 Trang 20 là trang cảm ơn; dừng ở đó và mời Hội đồng đặt câu hỏi.
 
 ---
 
-## Slide 1 — Bìa (0:00, trang 1)
+## Slide 1 - Bìa (0:00, trang 1)
 
 > Kính thưa Hội đồng. Em là Trương Bảo Kiệt, cùng bạn Hồ Tiến Phát, trình bày khóa
 > luận *"Khám phá theo đồ thị kỹ năng phân cấp để tự động sinh dữ liệu huấn luyện cho
@@ -52,121 +56,161 @@ Trang 20 là trang cảm ơn; dừng ở đó và mời Hội đồng đặt câ
 
 ---
 
-## Slide 2 — Bối cảnh, bài toán, thách thức (0:30, trang 4)
+## Slide 2 - Bối cảnh, bài toán, thách thức (0:30, trang 4)
 
-> Web agent là tác nhân nhận yêu cầu bằng ngôn ngữ tự nhiên rồi tự thao tác trên trình
-> duyệt để hoàn thành. Muốn dùng nó trong thực tế thì hiện phải gọi API của các mô hình
-> lớn — tốn tiền theo từng bước, độ trễ cao, và dữ liệu nội bộ phải gửi ra ngoài.
+> **Web agent** là tác nhân AI nhận yêu cầu bằng ngôn ngữ tự nhiên rồi tự điều khiển
+> trình duyệt để hoàn thành — ví dụ: *"Vào trang quản trị kiểm tra đơn hàng và cập nhật
+> trạng thái"*. Muốn agent chạy được trong thực tế thì hiện nay phải gọi API của các mô
+> hình lớn — rất đắt đỏ theo từng bước thao tác, độ trễ cao, và dữ liệu nội bộ phải gửi
+> ra máy chủ bên ngoài.
 >
-> Hướng thay thế là dùng mô hình ngôn ngữ nhỏ, dưới 10 tỷ tham số, chạy ngay tại chỗ.
-> Nhưng mô hình nhỏ không tự biết thao tác trên một website cụ thể; phải fine-tune nó,
-> mà fine-tune thì cần dữ liệu trajectory của chính website đó — thứ gần như không có
-> sẵn. Gán nhãn tay thì rất đắt: AutoWebGLM cần **20 người làm liên tục một tháng**.
+> Hướng thay thế là dùng **mô hình ngôn ngữ nhỏ (SLM, dưới 10 tỷ tham số)**, chạy ngay
+> cục bộ trên máy tính. Nhưng mô hình nhỏ không tự biết cách dùng một website lạ; ta
+> phải fine-tune (tinh chỉnh) nó. Mà fine-tune thì cần dữ liệu **trajectory** — tức
+> toàn bộ chuỗi trạng thái trang web và các thao tác bấm chuột, gõ phím thành công trên
+> chính website đó. Dữ liệu này gần như không có sẵn. Gán nhãn thủ công bằng con người
+> thì cực kỳ tốn kém: AutoWebGLM cần tới **20 người làm việc liên tục trong một tháng**.
 >
 > Vì vậy bài toán của khóa luận là: **tự động khám phá một website đang hoạt động và
-> sinh ra dữ liệu huấn luyện cho website đó, không dùng bất kỳ nhãn nào do con người
-> tạo.**
+> tự sinh ra dữ liệu huấn luyện cho website đó, hoàn toàn không dùng dữ liệu do con người
+> gán nhãn.**
 >
-> `[lược nếu trễ]` Năm thách thức kỹ thuật ở cột phải: khám phá không bị lạc, sinh task
-> có ý nghĩa, tự kiểm chứng, ghép được task dài, và giữ prompt đồng nhất giữa huấn
-> luyện với suy luận.
+> Và xin nói rõ ngay phạm vi, như dòng thứ hai trong khung: đích nhắm là **một tập website
+> cố định của một tổ chức** — trang quản trị, CMS, diễn đàn nội bộ của họ — **chứ không
+> phải một model dùng chung cho mọi trang web**. Chuyện đó em sẽ nói kỹ hơn ở slide sau.
+>
+> `[lược nếu trễ]` Bốn thách thức kỹ thuật cốt lõi ở cột phải. Thứ nhất, **chi phí gán
+> nhãn** thủ công quá lớn như vừa nói. Thứ hai, **tri thức môi trường** — mỗi website có
+> luồng thao tác riêng, tri thức học được ở trang này không mang sang trang khác được.
+> Thứ ba, **báo đỗ ảo**: agent tự sinh dữ liệu thì cũng tự chấm điểm cho mình, rất dễ
+> tuyên bố xong trong khi chưa làm gì. Thứ tư, **tác vụ đa bước**: ghép các thao tác rời
+> rạc thành một nhiệm vụ dài có ý nghĩa nghiệp vụ.
 
-**Câu chốt:** nút thắt không phải mô hình, mà là **dữ liệu cho từng website cụ thể**.
+**Câu chốt:** nút thắt không phải mô hình, mà là **dữ liệu tương tác cho từng website cụ thể**.
 
-**Tránh:** đừng nói "làm agent tổng quát cho mọi website" — đó chính là hiểu nhầm mà
-slide 3 và PL2 phải chặn.
+**Câu chốt phụ (bắt buộc nói, đừng đợi bị hỏi):** phạm vi là **chuyên biệt hóa theo
+website**, không phải agent vạn năng. Nói chủ động ở slide 2 thì slide 3 và PL2 chỉ còn
+việc củng cố.
 
 ---
 
-## Slide 3 — Mục tiêu và định vị (1:45, trang 5)
+## Slide 3 - Mục tiêu và định vị (1:45, trang 5)
 
-> Khóa luận đặt năm mục tiêu: khám phá tự động, sinh semantic task đã kiểm chứng, tinh
-> lọc thành dataset, fine-tune và đánh giá trên WebArena, và đúc kết kinh nghiệm vận
-> hành.
+> Khóa luận đặt năm mục tiêu từ O1 đến O5: khám phá tự động, sinh semantic task đã kiểm
+> chứng, tinh lọc thành dataset, fine-tune và đánh giá trên WebArena, và đúc kết kinh
+> nghiệm vận hành.
 >
-> Bảng bên phải là định vị so với bốn công trình gần nhất. AWM và SkillWeaver có khai
-> thác kỹ năng, nhưng chỉ dùng ở thời điểm suy luận — không huấn luyện lại mô hình.
-> NNetNav và Go-Browse có huấn luyện mô hình nhỏ, nhưng dữ liệu dừng ở mức từng trang
-> đơn, không có tầng kỹ năng được kiểm chứng.
+> Bảng bên phải là định vị so với bốn công trình tiêu biểu gần nhất. AWM và SkillWeaver
+> có khai thác kỹ năng, nhưng chỉ dùng ở thời điểm suy luận cho mô hình lớn — không
+> huấn luyện lại mô hình nhỏ. NNetNav và Go-Browse có huấn luyện mô hình nhỏ, nhưng dữ
+> liệu chỉ dừng ở mức từng trang đơn lẻ, thiếu cấu trúc kỹ năng được kiểm chứng.
 >
-> Khoảng trống là ở chỗ chưa công trình nào nối trọn ba khâu: **kiểm chứng kỹ năng →
-> ghép thành task dài → huấn luyện mô hình nhỏ**. Đó là phần khóa luận làm.
+> Khoảng trống nghiên cứu — khung đỏ dưới bảng — là chưa công trình nào kết hợp trọn vẹn
+> ba khâu: **kiểm chứng kỹ năng → ghép thành tác vụ dài hạn → dùng chính dữ liệu đó huấn
+> luyện mô hình nhỏ**. Đó là đóng góp mà khóa luận hướng tới.
+>
+> Khung dưới bên trái trả lời câu hỏi ở tiêu đề slide. Đầu vào là **một website đang chạy**,
+> không cần một dòng nhãn nào của con người; đầu ra là **một agent chuyên biệt cho đúng
+> website đó**, chạy cục bộ. Nói cách khác, **thứ tổng quát hóa ở đây là pipeline, không
+> phải model** — pipeline chạy lại được trên website bất kỳ, còn model thì cố tình chuyên
+> biệt.
+>
+> Ba nhóm ứng dụng nhóm em nhắm tới: **RPA cho hệ thống nội bộ hoặc legacy** — các quy
+> trình lặp trên ERP, CMS, trang quản trị vốn không có API để tích hợp; **trợ lý vận hành
+> on-prem** cho dữ liệu nhạy cảm, vì mô hình dưới 10 tỷ tham số chạy được ngay tại chỗ;
+> và **kiểm thử E2E** — đây em xin nhấn mạnh là hướng **tiềm năng**, chưa thực nghiệm
+> trong khóa luận, nhưng về cấu trúc thì operator có tiền điều kiện và kết quả chính là
+> một dạng mô hình kiểm thử, còn semantic task chính là kịch bản kiểm thử.
 
 **Câu chốt:** đóng góp nằm ở **tầng trừu tượng thứ hai** — kỹ năng đã kiểm chứng — chứ
 không phải ở việc thu nhiều dữ liệu hơn.
 
+**Tránh:** **không nói "khóa luận làm công cụ kiểm thử tự động"**. Bắt buộc có chữ
+*"tiềm năng, chưa thực nghiệm"* trong cùng một câu — quyển báo cáo không có phần kiểm thử.
+
+`[lược nếu trễ]` Bỏ đoạn ba nhóm ứng dụng, chỉ giữ câu "tổng quát hóa là pipeline, không
+phải model".
+
 ---
 
-## Slide 4 — Tổng quan pipeline HSGE (3:00, trang 7)
+## Slide 4 - Tổng quan pipeline HSGE (3:00, trang 7)
 
-> Đây là toàn bộ phương pháp trên một hình. Vòng lặp khép kín, chạy hoàn toàn tự động.
+> Đây là toàn bộ phương pháp HSGE trên một hình, vận hành như một vòng lặp khép kín, tự
+> động hoàn toàn.
 >
-> Bắt đầu từ frontier — hàng đợi các trang cần khám phá. Chọn một trang, một agent đề
-> xuất các task làm được ngay trên trang đó, rồi solver thử giải từng task trên trình
+> Bắt đầu từ **Frontier** — hàng đợi lưu các trang web cần khám phá. Chọn một trang, một
+> agent đề xuất các tác vụ làm được ngay trên trang đó, rồi solver thử thao tác trên trình
 > duyệt thật. Những trajectory giải thành công được đưa vào khâu phát hiện kỹ năng: cắt
-> thành đoạn, gom cụm, trừu tượng hóa thành thẻ kỹ năng, rồi quy nạp thành operator có
-> tiền điều kiện và kết quả.
+> thành đoạn nhỏ, gom cụm các thao tác tương đồng, trừu tượng hóa thành thẻ kỹ năng, rồi
+> quy nạp thành **Operator** có tiền điều kiện (Precondition) và kết quả (Effect).
 >
-> Các operator này ghép chuỗi với nhau để sinh ra task nhiều bước. Toàn bộ trajectory
-> thu được đi qua hai cổng lọc chất lượng trước khi trở thành dữ liệu huấn luyện. Và
-> mỗi trang mới phát hiện lại quay về frontier — vòng lặp đóng lại ở đó.
+> Các operator này được ghép chuỗi với nhau để sinh ra các **Semantic task** — tức tác vụ
+> nhiều bước có ý nghĩa thực tế. Toàn bộ dữ liệu thu được đi qua hai cổng lọc chất lượng
+> trước khi trở thành tập huấn luyện SFT. Và mỗi trang mới phát hiện lại quay về
+> frontier để tiếp tục mở rộng.
 
-**Câu chốt:** không phải thu trajectory rời rạc, mà **tích lũy tri thức có cấu trúc rồi
+**Câu chốt:** không phải thu thập rời rạc, mà **tích lũy tri thức có cấu trúc rồi
 mới khai thác lại**.
 
 ---
 
-## Slide 5 — Đồ thị hai tầng (4:15, trang 8)
+## Slide 5 - Đồ thị hai tầng (4:15, trang 8)
 
-> Tri thức được lưu trong một đồ thị hai tầng.
+> Tri thức khám phá được lưu trữ trong một đồ thị hai tầng.
 >
-> Tầng thấp là đồ thị trạng thái: các trang đã thăm và hành động chuyển giữa chúng —
-> đây là vết duyệt web thô.
+> - **Tầng thấp (State Graph):** Lưu vết duyệt web thực tế gồm các trang đã ghé thăm và
+>   hành động chuyển giữa chúng.
+> - **Tầng cao (Operator Graph):** Mỗi operator là một kỹ năng chuẩn hóa với điều kiện
+>   đầu vào và kết quả đầu ra. Hai operator được nối với nhau khi **kết quả của bước
+>   trước thỏa mãn điều kiện đầu vào của bước sau**.
 >
-> Tầng cao là đồ thị operator. Mỗi operator là một kỹ năng đã được chuẩn hóa, mang tiền
-> điều kiện và kết quả tường minh. Hai operator nối được với nhau khi **kết quả của cái
-> trước thỏa tiền điều kiện của cái sau** — và chính quan hệ đó cho phép ghép thành
-> chuỗi thao tác dài.
+> *Ví dụ trực quan:* Kỹ năng "Tìm kiếm sản phẩm" sinh ra kết quả "Đang ở trang chi tiết".
+> Kết quả này khớp đúng điều kiện cần của kỹ năng "Thêm vào giỏ hàng" $\rightarrow$ Hệ
+> thống tự động ghép nối thành tác vụ mua hàng hoàn chỉnh.
 >
-> Điểm cần nhấn: nhờ biểu diễn này, thứ pipeline tích lũy được không phải một đống
-> trajectory rời rạc, mà là tri thức **tái sử dụng và tái tổ hợp được**.
+> Nhờ cấu trúc này, tri thức thu được có tính **tái sử dụng và tái tổ hợp**, giúp sinh
+> ra vô số tác vụ dài hạn mà không cần người viết kịch bản.
 
 **Câu chốt:** tầng cao là thứ phân biệt HSGE với Go-Browse — bên đó chỉ có tầng thấp.
 
 ---
 
-## Slide 6 — Phát hiện skill và quy nạp operator (5:15, trang 9)
+## Slide 6 - Phát hiện skill và quy nạp operator (5:15, trang 9)
 
-> Khâu phát hiện kỹ năng chỉ chạy trên trajectory của task **đã giải thành công**, qua
-> bốn bước: phân cắt trajectory theo đổi URL và tụt tương đồng cây trợ năng; gom cụm
-> các đoạn giống nhau; trừu tượng hóa mỗi cụm thành một thẻ kỹ năng có tham số; và kiểm
-> chứng bằng cách thực thi lại trong ngữ cảnh mới.
+> Khâu phát hiện kỹ năng chỉ chạy trên trajectory của các tác vụ **đã giải thành công**,
+> qua bốn bước:
+> 1. **Phân cắt:** Cắt chuỗi thao tác dựa trên thay đổi URL và sự biến động của **cây
+>    trợ năng (AXTree)** — tức bản rút gọn văn bản của giao diện web chỉ chứa các nút
+>    bấm, ô nhập liệu có thể tương tác.
+> 2. **Gom cụm:** Gom các đoạn thao tác có chức năng tương tự nhau.
+> 3. **Trừu tượng hóa:** Rút trích thành thẻ kỹ năng có tham số hóa (như từ khóa tìm kiếm).
+> 4. **Kiểm chứng:** Cho chạy thử lại trong ngữ cảnh mới để xác nhận tính dùng lại được.
 >
-> Từ kỹ năng lên operator còn hai cổng chặn nữa. Cổng chống trùng lặp loại các operator
-> mà kết quả chỉ chép lại tiền điều kiện — tức không phát biểu được điều gì mới. Cổng
-> kiểm chứng thực tế gỡ bỏ những kết quả không đúng trên quá nửa số thành viên trong
-> cụm.
+> Để nâng kỹ năng lên thành Operator, hệ thống áp dụng hai cổng chặn: **cổng chống trùng
+> lặp** loại bỏ các mệnh đề vô nghĩa, và **cổng kiểm chứng thực tế** gỡ bỏ các kết quả
+> không đúng trên phần lớn các lần chạy.
 >
-> `[lược nếu trễ]` Hai cổng này khắt khe có chủ đích: trong 146 kỹ năng thu được, chỉ
-> 57 vượt qua để thành operator.
+> `[lược nếu trễ]` Nhờ sự khắt khe này, từ 146 kỹ năng phát hiện được, hệ thống chắt lọc
+> ra 57 operator thực sự chuẩn xác.
 
 **Câu chốt:** "đã kiểm chứng" ở đây là **có cổng chặn đo được**, không phải nhãn tự
 phong.
 
 ---
 
-## Slide 7 — Sinh semantic task (6:30, trang 10)
+## Slide 7 - Sinh semantic task (6:30, trang 10)
 
-> Semantic task — task nhiều bước, có ngữ nghĩa hoàn chỉnh — được sinh từ hai nguồn.
+> **Semantic task** — tức tác vụ nhiều bước có ngữ nghĩa nghiệp vụ hoàn chỉnh — được
+> sinh từ hai nguồn:
+> - **Từ dưới lên (Bottom-up):** Ghép chuỗi operator bằng duyệt đồ thị, mỗi chuỗi từ
+>   hai operator trở lên sẽ tạo thành một nhiệm vụ dài kèm câu lệnh ngôn ngữ tự nhiên.
+> - **Từ trên xuống (Top-down):** Gợi ý từ năng lực tổng quan của website (như chức năng
+>   quản trị, đăng bài, mua sắm) khi đồ thị còn thưa.
 >
-> Nguồn từ dưới lên là ghép chuỗi operator: duyệt trên đồ thị operator, mỗi chuỗi từ hai
-> operator trở lên thành một task dài kèm chỉ dẫn ngôn ngữ tự nhiên. Nguồn từ trên
-> xuống là seed năng lực website, dùng khi đồ thị còn quá thưa để ghép.
->
-> Số liệu thực tế em xin nói thẳng: trong **142 semantic task** đã thực thi, **130 đến
-> từ seed và chỉ 12 đến từ ghép chuỗi operator**, đạt 71 task thành công. Cơ chế từ dưới
-> lên chạy đúng thiết kế nhưng kích hoạt còn thưa — đây là hạn chế chúng em nêu lại ở
-> slide kết luận.
+> Về số liệu thực tế: trong **142 semantic task** đã thực thi, **130 tác vụ đến từ seed
+> và 12 tác vụ đến từ ghép chuỗi operator**, đạt 71 tác vụ giải thành công. Kết quả này
+> chứng minh cơ chế ghép chuỗi hoạt động đúng thiết kế, dù ở giai đoạn đầu tần suất ghép
+> còn thưa.
 
 **Câu chốt:** cơ chế ghép chuỗi được chứng minh là **khả thi**, chưa chứng minh được là
 **đủ dày** để làm nguồn dữ liệu chính.
@@ -176,104 +220,114 @@ và Hội đồng có thể đã đọc Chương 5.
 
 ---
 
-## Slide 8 — Tinh lọc dữ liệu (7:30, trang 11) — *điểm chuyển người trình bày*
+## Slide 8 - Kiểm định trực tuyến & Đóng gói SFT (7:30, trang 11) — *điểm chuyển người trình bày*
 
-> Nguyên tắc xuyên suốt: **không episode nào được tính là thành công bằng lời khai của
-> chính agent.**
+> Nguyên tắc chất lượng cốt lõi: **không bao giờ tin vào lời tự khai hoàn thành của
+> agent.**
 >
-> Cổng thứ nhất — mọi lần agent tự tuyên bố hoàn thành đều được một mô hình độc lập chấm
-> lại trên chính trạng thái trang cuối. Cổng này đã hạ cấp **801 episode, khoảng 27%**
-> số lần tự tuyên bố.
+> Điểm khác biệt quan trọng là toàn bộ việc kiểm soát chất lượng được thực hiện **trực tuyến
+> ngay trong vòng lặp khám phá**, không cần chờ đến khâu hậu kiểm ngoại tuyến:
+> 1. **Inline LLM Judge:** Mỗi khi agent tự tuyên bố xong, LLM Judge độc lập lập tức chấm
+>    lại trên trạng thái trang đích, loại bỏ ngay **801 episode (khoảng 27,4%)** báo đỗ ảo
+>    (false positive) từ nguồn.
+> 2. **Cổng hành động hữu hiệu (Effective Action):** Viết bằng mã để chặn các trường hợp
+>    agent báo xong nhưng trang web không hề thay đổi trạng thái — điểm mù mà Judge không
+>    thấy được.
 >
-> Cổng thứ hai bắt đúng nhóm mà cổng thứ nhất **về nguyên tắc** không thấy được: task
-> gắn nhãn sửa đổi nhưng không có hành động nào thực sự thay đổi trang. Judge chỉ nhìn
-> trang cuối, mà trang cuối thì không đổi. Cổng này viết bằng mã, loại thêm **104
-> trajectory**.
+> Nhờ dữ liệu trong kho `episodes/` đã hoàn toàn sạch từ quá trình khám phá, hệ thống tiến
+> hành **đóng gói trực tiếp (Direct Build)** thành tập dữ liệu SFT mà không cần thêm bất kỳ
+> khâu lọc hậu kỳ nào.
 >
-> Cuối cùng là prompt parity: prompt lúc huấn luyện trùng từng byte với prompt solver
-> dùng lúc chạy thật, kể cả ngưỡng cắt cây trợ năng ở 6000 ký tự. Train và validation
-> chia ở cấp task, nên **không mục tiêu nào xuất hiện ở cả hai tập**.
+> Dữ liệu được đóng gói theo nguyên tắc **Prompt Parity**: mẫu câu lệnh lúc huấn luyện trùng
+> khớp từng byte với câu lệnh solver nhìn thấy lúc chạy thật, chia train/val theo cấp task
+> đảm bảo **0 mục tiêu trùng lặp**.
 
-**Câu chốt:** ba lớp kiểm soát, và lớp thứ ba tồn tại vì lớp thứ hai có điểm mù cấu
-trúc.
+**Câu chốt:** kiểm định trực tuyến ngay từ nguồn giúp dữ liệu sạch tuyệt đối, cho phép đóng
+gói trực tiếp tập SFT để huấn luyện mô hình.
 
 ---
 
-## Slide 9 — Thiết lập thực nghiệm (8:30, trang 13)
+## Slide 9 - Thiết lập thực nghiệm (8:30, trang 13)
 
-> Môi trường là bốn website WebArena nhóm tự triển khai: Shopping, Shopping Admin,
-> GitLab và Reddit. Đánh giá trên **655 task chính thức** của benchmark, chấm hoàn toàn
-> tự động bằng bộ chấm của WebArena, giới hạn 15 bước mỗi task, nhiệt độ bằng 0.
+> Thực nghiệm được tiến hành trên bốn website thuộc benchmark chuẩn quốc tế **WebArena**
+> do nhóm tự triển khai (self-hosted): Shopping, Shopping Admin, GitLab và Reddit.
 >
-> Khám phá chạy bốn đợt, khoảng 21 giờ mỗi website, tổng cộng hơn 20 nghìn lượt gọi mô
-> hình. Huấn luyện dùng Qwen3.5-9B với LoRA, 1119 bước trong 5 giờ 09 phút.
+> Đánh giá mô hình trên **655 task chính thức**, chấm điểm tự động bằng bộ chấm của
+> WebArena, giới hạn 15 bước mỗi task, nhiệt độ bằng 0 (temperature = 0 để đảm bảo tính
+> tất định và công bằng).
 >
-> Bốn câu hỏi nghiên cứu ở cột phải sẽ được trả lời lần lượt trong ba slide tiếp theo.
+> Quá trình khám phá gồm bốn đợt, khoảng 21 giờ mỗi website. Mô hình đích là **Qwen3.5-9B**
+> được tinh chỉnh bằng kỹ thuật LoRA trong 1119 bước (khoảng 5 giờ tính toán).
+>
+> Bốn câu hỏi nghiên cứu (CH1 đến CH4) ở cột phải sẽ được giải đáp chi tiết trong các
+> slide tiếp theo.
 
 **Câu chốt:** đánh giá dùng **bộ chấm chính thức của benchmark**, không phải cơ chế kiểm
 chứng nội bộ của nhóm.
 
 ---
 
-## Slide 10 — CH1: thu được gì, chi phí bao nhiêu (9:15, trang 14)
+## Slide 10 - CH1: thu được gì, chi phí bao nhiêu (9:15, trang 14)
 
-> Phễu khám phá: duyệt **455 trang**, ghi nhận **3981 lượt thử**, trong đó **2117 hợp lệ
-> sau kiểm chứng** — tức 53%. Từ đó thu được **146 kỹ năng**, quy nạp **57 operator**,
-> thực thi **142 semantic task**. Sau hai cổng lọc còn **1760 trajectory**, xuất ra
-> **9007 mẫu** huấn luyện — không mẫu nào do con người gán nhãn.
+> **Về quy mô dữ liệu (CH1):** Phễu khám phá duyệt qua **455 trang web**, ghi nhận **3981
+> lượt thử**, trong đó **2117 lượt hợp lệ sau kiểm chứng** (đạt 53,2%). Từ đó thu được
+> **146 kỹ năng**, quy nạp **57 operator**, và thực thi **142 semantic task**.
 >
-> Về chi phí: **54,21 đô la** tiền gọi API cho toàn bộ giai đoạn khám phá, cộng **24,40
-> đô la** tiền thuê GPU cho fine-tune và đánh giá. Quy về mỗi trajectory thành công là
-> **3,1 cent** — rẻ hơn Go-Browse khoảng **3,3 lần**.
+> Sau các cổng lọc chất lượng, hệ thống thu được **1760 trajectory sạch**, xuất ra
+> **9007 mẫu huấn luyện SFT** hoàn toàn không tốn một giờ gán nhãn thủ công nào.
 >
-> `[lược nếu trễ]` Con số đáng chú ý không phải tổng chi phí mà là vị trí của nó: rào
-> cản không nằm ở khâu huấn luyện hay đánh giá, mà ở khâu thu thập dữ liệu.
+> **Về hiệu quả kinh tế:** Toàn bộ quá trình gọi API khám phá tốn **54,21 USD**, cộng
+> **24,40 USD** tiền thuê GPU để fine-tune và đánh giá. Tính trung bình, mỗi trajectory
+> thành công chỉ tốn **0,0308 USD (khoảng 3,1 cent)** — rẻ hơn công trình Go-Browse tới
+> **3,3 lần**.
+>
+> `[lược nếu trễ]` Điểm đáng chú ý: rào cản chi phí không nằm ở khâu GPU huấn luyện hay
+> đánh giá, mà nằm ở thời gian điều khiển trình duyệt lúc thu thập.
 
 **Câu chốt:** cả chu trình cho bốn website tốn **dưới 80 đô la** và **không cần người gán
 nhãn**.
 
 ---
 
-## Slide 11 — CH2: kết quả chính (10:15, trang 15)
+## Slide 11 - CH2: kết quả chính (10:15, trang 15)
 
-> Trên 655 task chính thức, mô hình sau fine-tune đạt **24,6%**, so với **13,3%** của
-> chính mô hình đó khi chưa fine-tune — chênh **11,3 điểm phần trăm**.
+> **Về hiệu năng mô hình (CH2):** Trên 655 task chính thức của WebArena, mô hình sau
+> fine-tune đạt tỷ lệ thành công **24,6%**, tăng **+11,3 điểm phần trăm** so với mức
+> **13,3%** của chính mô hình nền chưa fine-tune.
 >
-> Vì hai mô hình được đo trên cùng một tập task, cùng prompt, cùng ngân sách bước và
-> cùng bộ chấm, phép kiểm định phù hợp là McNemar theo cặp: **100 task chỉ mô hình
-> fine-tune giải được**, so với 26 task chỉ mô hình nền giải được, cho p nhỏ hơn 0,001.
+> Vì hai mô hình được đo trên cùng tập đề thi và cùng bộ chấm, chúng em dùng **kiểm
+> định thống kê McNemar theo cặp**: có tới **100 task chỉ mô hình sau fine-tune giải được**
+> (so với 26 task của mô hình nền), đạt ý nghĩa thống kê cao với $p < 0{,}001$.
 >
-> Mức tăng đạt ý nghĩa thống kê trên **cả bốn website**, p không quá 0,011 ở website
-> yếu nhất. Reddit tăng mạnh nhất, từ 6,6% lên 34%.
+> Mức tăng này đạt ý nghĩa thống kê trên **toàn bộ 4/4 website** ($p \le 0{,}011$), trong
+> đó Reddit có mức tăng ấn tượng nhất từ 6,6% lên 34,0%.
 >
-> `[lược nếu trễ]` Một chi tiết về quy trình đo: cơ sở dữ liệu cả bốn website được khôi
-> phục nguyên trạng trước mỗi lượt đo, vì một đợt đo trước đó cho thấy thay đổi của lượt
-> trước bị bộ chấm ghi nhận cho lượt sau.
+> `[lược nếu trễ]` Cơ sở dữ liệu của cả bốn website đều được khôi phục nguyên trạng trước
+> mỗi lượt đo để đảm bảo không bị ảnh hưởng chéo giữa các lần chạy.
 
 **Câu chốt:** so sánh với **chính mô hình nền trong cùng điều kiện** — đây là phép đo
 sạch nhất khóa luận có.
 
 ---
 
-## Slide 12 — CH2–CH3: phần tăng thuộc về năng lực nào (11:30, trang 16)
+## Slide 12 - CH2-CH3: phần tăng thuộc về năng lực nào (11:30, trang 16)
 
-> Slide này là giới hạn diễn giải quan trọng nhất, và chúng em muốn nêu chủ động thay vì
-> để Hội đồng phải hỏi.
+> Slide này trả lời câu hỏi cốt lõi: *Mô hình tiến bộ nhờ học đúng cú pháp hay thực sự
+> biết cách suy luận hành động?*
 >
-> Mô hình nền hỏng định dạng đầu ra ở **170 trên 655** phiên — hơn một phần tư số phiên
-> kết thúc vì phản hồi không phân giải được thành hành động hợp lệ. Ở mô hình sau
-> fine-tune con số đó chỉ còn **4**.
+> Trước hết, mô hình nền bị lỗi **hỏng định dạng đầu ra** (sinh câu chữ lan man hoặc sai
+> cú pháp lệnh Python) ở **170 trên 655 phiên (26,0%)**. Sau khi fine-tune, tỷ lệ này
+> giảm triệt để xuống chỉ còn **4 phiên (0,6%)**.
 >
-> Tách 655 task theo đúng ranh giới đó. Trên 170 task mà mô hình nền hỏng định dạng, nó
-> được 0, mô hình fine-tune được 47. Trên **485 task còn lại** — nơi mô hình nền vẫn
-> chạy trọn vẹn — hai bên là **17,9% và 23,5%, với p bằng 0,003**, tức **vẫn đạt** ý
-> nghĩa thống kê.
+> Để đánh giá khách quan, chúng em bóc tách riêng trên **485 task mà mô hình nền không bị
+> lỗi cú pháp**: tỷ lệ giải thành công của mô hình sau fine-tune vẫn tăng từ **17,9% lên
+> 23,5% ($p = 0{,}003$)**. Điều này chứng minh tập dữ liệu tự sinh giúp mô hình cải thiện
+> **cả hai năng lực**: vừa làm chủ giao diện hành động, vừa nâng cao khả năng lựa chọn
+> đúng quyết định.
 >
-> Nghĩa là tập dữ liệu dạy được **cả hai thứ**: vừa kỷ luật của giao diện hành động,
-> vừa năng lực *chọn* đúng hành động.
->
-> Đặt cạnh nhóm dưới 10B: kết quả cao hơn NNetNav-7B và GPT-4o-mini, và **ngang**
-> Go-Browse-7B — chênh 2,0 điểm, nhỏ hơn khoảng tin cậy ±3,3 điểm.
+> **Định vị hệ thống (CH3):** Kết quả 24,6% vượt qua NNetNav-7B (19,1%), GPT-4o-mini
+> (20,0%) và đạt mức **tương đương** với công trình SOTA Go-Browse-7B (22,6%, trong khoảng
+> tin cậy $\pm 3{,}3\%$), nhưng với chi phí thu thập rẻ hơn 3,3 lần.
 
 **Câu chốt:** phần tăng **không chỉ** là học đúng cú pháp; nhóm 485 task đã chứng minh
 điều đó với p = 0,003.
@@ -283,18 +337,20 @@ sạch nhất khóa luận có.
 
 ---
 
-## Slide 13 — Demo (12:45, trang 17)
+## Slide 13 - Demo (12:45, trang 17)
 
-> Đây là mô hình sau fine-tune giải một task WebArena thật.
+> Đây là video minh họa mô hình sau fine-tune giải trực tiếp một task WebArena thật.
 >
-> Đầu vào chỉ gồm URL và cây trợ năng của trang — **không dùng ảnh chụp màn hình**. Mỗi
-> bước mô hình sinh ra một cặp suy nghĩ và hành động, hành động được thực thi thẳng
-> trên trình duyệt.
+> - **Đầu vào tinh gọn:** Mỗi bước mô hình chỉ nhận URL và cây trợ năng (AXTree) rút
+>   gọn — **không dùng ảnh chụp màn hình**.
+> - **Suy luận chuẩn xác:** Mô hình sinh ra cặp suy nghĩ (*thought*) phân tích tình huống
+>   và hành động (*action*) tương ứng để thực thi trên trình duyệt.
 >
-> *(Chạy video. Vừa chạy vừa chỉ: đây là bước đọc trang, đây là hành động, đây là trạng
-> thái trang sau hành động, và đây là bước kết thúc khi mô hình tự tuyên bố hoàn thành.)*
+> *(Chạy video. Chỉ tay vào màn hình: đây là bước agent đọc cây giao diện, suy luận tìm
+> nút bấm, thao tác điền form/chuyển trang, và bước kết thúc khi tác vụ hoàn thành.)*
 >
-> Toàn bộ chuỗi này chạy cục bộ trên một GPU, không gọi ra dịch vụ bên ngoài.
+> Toàn bộ quá trình suy luận này chạy cục bộ trên một GPU, không gửi dữ liệu ra ngoài,
+> và kết quả được chính benchmark WebArena xác nhận thành công.
 
 **Cue kỹ thuật:** mở video trước ở tab riêng, **âm lượng = 0**. Chạy xong quay lại
 trang 19 (slide 14). Nếu video lỗi: mô tả bằng lời trong 20 giây rồi đi tiếp — đừng sửa
@@ -302,24 +358,29 @@ trên bục.
 
 ---
 
-## Slide 14 — Kết luận (14:00, trang 19)
+## Slide 14 - Kết luận (14:00, trang 19)
 
-> Tóm lại, khóa luận đã dựng được một pipeline khép kín chạy trên bốn website thật, thu
-> 146 kỹ năng và 57 operator, tạo ra tập dữ liệu 1760 trajectory và 8554 mẫu huấn luyện
-> hoàn toàn tự động; fine-tune một mô hình 9B lên **24,6%** trên 655 task chính thức của
-> WebArena, so với 13,3% của chính nó khi chưa fine-tune.
+> Tóm lại, khóa luận đã hoàn thành một pipeline khép kín từ khám phá website đến huấn
+> luyện mô hình, thu được 146 kỹ năng, 57 operator, tạo ra tập dữ liệu 1760 trajectory
+> sạch và nâng tỷ lệ thành công của mô hình 9B từ **13,3% lên 24,6%** trên WebArena hoàn
+> toàn tự động với chi phí dưới 80 USD.
 >
-> Hai hạn chế chúng em nêu rõ. Thứ nhất, cơ chế ghép chuỗi operator mới chứng minh được
-> là khả thi chứ chưa đủ dày — chỉ 12 trên 142 semantic task đến từ nó. Thứ hai, và
-> quan trọng hơn: **ablation so sánh khám phá theo đồ thị với khám phá phẳng vẫn chưa
-> chạy** — đó là phép đo duy nhất chứng minh trực tiếp giá trị của cấu trúc đồ thị.
+> Nhóm cũng thẳng thắn nhìn nhận hai hạn chế:
+> 1. Tần suất ghép chuỗi operator sinh semantic task còn thưa (12/142 task).
+> 2. **Thực nghiệm bóc tách (ablation study)** so sánh trực tiếp khám phá theo đồ thị
+>    với khám phá phẳng vẫn là hướng cần thực hiện tiếp theo do giới hạn tài nguyên.
+> 3. Về **phạm vi**: đóng góp là chuyên biệt hóa theo từng website; tổng quát hóa sang
+>    ứng dụng khác (cross-app) nằm ngoài phạm vi khóa luận — và như PL1 cho thấy, đó là
+>    bài toán hiện chưa ai giải được.
 >
-> Hướng phát triển gồm bổ sung trajectory phục hồi sau lỗi, khai thác tín hiệu thất bại
-> bằng học tăng cường, và chưng cất xuống mô hình 1–3B.
+> Hướng phát triển tiếp theo gồm: bổ sung cơ chế tự phục hồi sau lỗi tương tác, khai thác
+> dữ liệu thất bại bằng học tăng cường (RL/DPO), và chưng cất tri thức xuống các SLM siêu
+> nhẹ 1–3B.
 >
-> Em xin hết phần trình bày. Kính mong nhận được góp ý của Hội đồng.
+> Em xin kết thúc phần trình bày tại đây và kính mong nhận được câu hỏi, góp ý từ Hội đồng.
 
-**Câu chốt:** chủ động nêu hạn chế trước khi bị hỏi — đặc biệt là ablation chưa chạy.
+**Câu chốt:** chủ động nêu hạn chế trước khi bị hỏi — đặc biệt là ablation chưa chạy,
+và nhắc lại phạm vi để không ai hiểu nhầm là nhóm hứa một agent vạn năng.
 
 ---
 
@@ -345,7 +406,7 @@ trên bục.
 | Câu hỏi | Bật | Hướng trả lời |
 |---|---|---|
 | Explore trên app của họ rồi test bằng bộ test của họ trên chính app đó có hợp lệ không? Phải test app khác cùng lĩnh vực chứ? | **PL1** | Pipeline **chưa từng nhìn thấy** 655 task benchmark — task huấn luyện do agent tự đề xuất từ giao diện; CSDL khôi phục nguyên bản trước mỗi đợt đo; không trajectory nào được dùng lại lúc chấm. Cùng-website là **giao thức chuẩn** của cả dòng nghiên cứu: Go-Browse cũng khám phá 20 URL mỗi domain của WebArena rồi chấm trên chính 812 task WebArena. Còn test "app khác" là bài toán **ngoài miền** — chưa ai giải được: trên Online-Mind2Web, Go-Browse-7B chỉ 5,33% và NNetNav-7B 4,00%, đều thua GPT-4o-mini 9,33%. |
-| Động lực hướng đến ai? Có phải muốn một model generalize cho mọi trang cùng lĩnh vực? | **PL2** | **Không.** Đích nhắm là chuyên biệt hóa cho *một* website cụ thể. Câu chốt: **thứ tổng quát hóa là pipeline, không phải model**. Người dùng đích là nhóm vận hành vài website cố định, cần agent chạy tại chỗ. Khả thi vì **dưới 20 đô la mỗi website** và không cần người gán nhãn. |
+| Động lực hướng đến ai? Có phải muốn một model generalize cho mọi trang cùng lĩnh vực? | **Slide 3** trước, **PL2** sau | **Không.** Đích nhắm là chuyên biệt hóa cho *một* website cụ thể. Câu chốt: **thứ tổng quát hóa là pipeline, không phải model**. Người dùng đích là nhóm vận hành vài website cố định, cần agent chạy tại chỗ. Khả thi vì **dưới 20 đô la mỗi website** và không cần người gán nhãn. |
 | Làm sao biết task do LLM đề xuất là hợp lý và làm được thật trên giao diện đó? | **PL3** khối 1 | Bộ đề xuất là một *agent* đọc trực tiếp cây trợ năng của trang thật, không đề xuất từ trí nhớ. Quan trọng hơn: **khả thi được chứng minh bằng thực thi, không bằng lời** — chỉ task có ít nhất một lượt giải thành công *và qua kiểm chứng* mới vào dataset. 637 task bị chính agent báo bất khả thi; 3981 lượt thử còn 2117 hợp lệ. |
 | Vì sao ngân sách bước là 25? | **PL3** khối 2 | Chính xác là **15 bước cho task cục bộ, 25 cho semantic task nhiều bước**. Solver chiếm 85,5% trong 20.808 lượt gọi nên ngân sách bước *chính là* ngân sách kinh phí — đây trước hết là quyết định chi phí. Nhưng dữ liệu cho thấy nó **không bóp méo phép đo**: episode thành công có trung vị 6 bước, và **không episode nào** đạt mục tiêu rồi mới bị cắt vì hết bước. |
 | Dựa vào đâu để biết task đã hoàn thành? | **PL3** khối 3 | **Ba lớp**, không phải hai: (i) solver tự khai hoặc vị từ tất định; (ii) LLM-as-Judge soi trạng thái trang đích → loại **801 lượt** báo đỗ ảo; (iii) cổng "hành động hữu hiệu" bằng mã → loại **104 trajectory**, nhóm lỗi mà judge *về nguyên tắc* không thấy được. Và 24,6% được chấm bằng **bộ chấm chính thức của WebArena**. |
@@ -362,6 +423,7 @@ trên bục.
 | Vì sao tin số liệu khi agent tự chấm? | PL3 | Không tin — ba lớp kiểm chứng; và phần đánh giá cuối dùng bộ chấm tự động của WebArena, không phải agent. |
 | Chi phí đã tính đủ chưa? | PL5 | **54,21 API + 24,40 GPU = 78,61 đô la** cho cả bốn website; chưa tính hạ tầng WebArena tự host và công vận hành. Mỗi trajectory 0,0308 đô — rẻ hơn Go-Browse 3,3 lần. |
 | Vì sao chọn Qwen3.5-9B mà không nhỏ hơn? | Slide 14, PL8 | Ngưỡng "chạy được trên máy phổ thông" là dưới 10B; chưng cất xuống 1–3B là hướng phát triển. PL8 có sẵn phép đo đổi mô hình nền sang Qwen-2.5-7B trên **cùng** tập dữ liệu. |
+| Hệ thống này dùng để kiểm thử phần mềm được không? | PL2 | Về cấu trúc thì rất khớp: operator có **precondition/effect** chính là một dạng *test model*, semantic task là *test scenario*, trajectory đã kiểm chứng là *test script*. Nhưng phải nói rõ: khóa luận **chưa thực nghiệm** hướng này — đây là ứng dụng tiềm năng, không phải kết quả. |
 | Điểm nghẽn còn lại ở đâu? | PL7 | Tầng thực thi: 85–96% episode thất bại có ít nhất một hành động bị trình duyệt từ chối. Fine-tune làm mô hình **bền bỉ** hơn chứ không **chính xác** hơn — tỷ lệ lỗi trên mỗi bước gần như không đổi. |
 | Thêm dữ liệu nữa có tốt hơn không? | PL8 | Có, nhưng hiệu suất giảm nhanh: gần **gấp ba** dữ liệu của hai website chỉ đổi lấy **+2,1 điểm**. Nên hướng tiếp theo là sửa tầng thực thi, không phải nhân đôi dữ liệu. |
 
@@ -372,6 +434,8 @@ trên bục.
 - [ ] Mở sẵn `main.pdf` ở chế độ toàn màn hình, kiểm tra nhảy được tới trang 22–29.
 - [ ] Video demo mở sẵn ở tab riêng, **âm lượng 0**, đã thử phát một lần.
 - [ ] Nhớ ba con số không được nói sai: **24,6% / 13,3% / +11,3 điểm**.
+- [ ] Slide 2 phải nói ra chữ **"một tập website cố định"**; slide 3 phải nói chữ
+      **"tiềm năng"** khi nhắc kiểm thử E2E.
 - [ ] Nhớ hai chỗ **không được nói quá**: "ngang Go-Browse" (không phải *vượt*), và
       "ghép chuỗi mới khả thi" (không phải *đã đủ dày*).
 - [ ] Người 2 nắm chắc mốc 8:30 — nếu người 1 trễ quá 1 phút thì lược

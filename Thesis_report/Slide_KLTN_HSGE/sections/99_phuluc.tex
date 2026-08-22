@@ -26,213 +26,171 @@
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL1 - Đánh giá trên chính website đã khám phá: có hợp lệ không?}
-  \footnotesize
   \begin{columns}[t]
-    \begin{column}{0.49\textwidth}
-      \textbf{Điểm không vi phạm - ranh giới train/test}
-      \scriptsize
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Pipeline \kw{chưa từng nhìn thấy} 655 task của benchmark - task huấn
-              luyện do agent tự đề xuất từ giao diện.
+    \begin{column}{0.48\textwidth}
+      \textbf{Ranh giới Train/Test rõ ràng}
+      \begin{itemize}\setlength{\itemsep}{2.5pt}
+        \item Pipeline \kw{chưa từng nhìn thấy} 655 task của benchmark - task huấn luyện do agent tự đề xuất từ giao diện.
         \item CSDL được \kw{khôi phục nguyên bản} trước mỗi đợt đo.
         \item Không trajectory thu thập nào được dùng lại lúc chấm.
       \end{itemize}
-      \vspace{0.04cm}
-      \textbf{Đặc thù thiết kế có chủ đích}
-      \scriptsize
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Huấn luyện và đánh giá trên \emph{cùng} website - đây là
-              \kw{giao thức chuẩn} của cả dòng nghiên cứu: Go-Browse khám phá 20 URL
-              mỗi domain của WebArena rồi chấm trên chính 812 task WebArena.
+
+      \vspace{0.06cm}
+      \textbf{Giao thức chuẩn của nghiên cứu}
+      \begin{itemize}\setlength{\itemsep}{2.5pt}
+        \item Huấn luyện và đánh giá trên \emph{cùng} website là \kw{giao thức chuẩn}: Go-Browse khám phá 20 URL mỗi domain rồi chấm trên chính 812 task WebArena.
       \end{itemize}
     \end{column}
-    \begin{column}{0.49\textwidth}
+    \hfill
+    \begin{column}{0.48\textwidth}
       \textbf{Vì sao không đo trên ``app khác cùng lĩnh vực''?}
-      \scriptsize
       \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Đó là bài toán \emph{khác}: tổng quát hóa ngoài miền - và số liệu cho
-              thấy \kw{chưa ai giải được}. Trên Online-Mind2Web (web mở):
+        \item Tổng quát hóa ngoài miền là bài toán \kw{chưa ai giải được}. Trên Online-Mind2Web:
       \end{itemize}
+
       \vspace{-0.05cm}
-      \centering
-      \begin{tabular}{@{}L{3.1cm} R{1.3cm}@{}}
-        \toprule
-        \textbf{Mô hình} & \textbf{SR} \\
-        \midrule
-        NNetNav-7B & 4,00\% \\
-        Go-Browse-7B (SOTA ${<}10$B) & 5,33\% \\
-        GPT-4o-mini & 9,33\% \\
-        \bottomrule
-      \end{tabular}\par
-      \vspace{0.08cm}
-      \raggedright
-      \scriptsize Hai hệ thống chuyên biệt hóa trong miền đều \emph{thua} GPT-4o-mini
-      khi ra web mở.
+      \setlength{\tabcolsep}{3pt}
+      \begin{table}
+        \begin{tabular}{@{}L{3.1cm} R{1.3cm}@{}}
+          \toprule
+          \textbf{Mô hình} & \textbf{SR} \\
+          \midrule
+          NNetNav-7B & 4,00\% \\
+          Go-Browse-7B (SOTA ${<}10$B) & 5,33\% \\
+          GPT-4o-mini & 9,33\% \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+      \vspace{-0.1cm}
+      {\scriptsize Cả hai hệ thống chuyên biệt đều thua GPT-4o-mini ở web mở.}
     \end{column}
   \end{columns}
-  \vspace{0.1cm}
-  {\scriptsize\textbf{Phát biểu đúng phạm vi.} Khóa luận \kw{không} tuyên bố mô hình
-  tổng quát sang website chưa từng thấy (đã nêu rõ ở mục ``Hợp lệ ngoại vi''). Và nếu
-  xem việc đánh giá trên cùng website là không hợp lệ thì cũng đồng thời bác bỏ Go-Browse
-  lẫn NNetNav - toàn bộ các phương pháp đối chứng.\par}
 \end{frame}
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL2 - Hướng đến đối tượng nào và yếu tố tổng quát là gì}
-  \footnotesize
+  \framesubtitle{Hướng đến ai, và cái gì mới là thứ tổng quát hóa?}
   \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
-      \textbf{Người dùng đích}
-      \scriptsize
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item Nhóm/doanh nghiệp vận hành \kw{một số website cố định} - trang quản trị
-              nội bộ, CMS, diễn đàn riêng - muốn một agent chạy tại chỗ.
-        \item Họ không cần agent ``biết mọi trang thương mại điện tử''. Họ cần agent
-              \emph{thạo đúng trang của họ}, rẻ, không gửi dữ liệu ra ngoài.
+    \begin{column}{0.48\textwidth}
+      \textbf{Ba ứng dụng đích}
+      \begin{itemize}\isub
+        \item \textbf{RPA nội bộ / legacy}: quy trình lặp trên ERP, CMS, trang quản trị \kw{không có API}.
+        \item \textbf{Trợ lý vận hành on-prem}: SLM ${<}10$B chạy cục bộ, dữ liệu \kw{không rời hạ tầng}.
+        \item \textbf{Kiểm thử E2E} \textit{(tiềm năng)}: Precondition/Effect $\approx$ test model --- \kw{chưa thực nghiệm}.
       \end{itemize}
-      \vspace{0.1cm}
-      \begin{block}{Câu chốt}
-        \scriptsize
-        Thứ tổng quát hóa là \kw{pipeline}, không phải \kw{model}. Model là sản phẩm
-        cho \emph{một} website; pipeline mới là đóng góp tái sử dụng được cho website
-        tiếp theo.
+
+      \gap
+      \begin{block}{Thông điệp cốt lõi}
+        Thứ tổng quát hóa là \kw{pipeline}, không phải \kw{model}. Model chuyên biệt cho \emph{một} website; pipeline mới là thứ tái sử dụng.
       \end{block}
     \end{column}
+    \hfill
     \begin{column}{0.48\textwidth}
-      \textbf{Vì sao định vị này khả thi về kinh tế}
-      \scriptsize
-      \vspace{0.05cm}
-      \begin{tabular}{@{}L{3.4cm} R{1.5cm}@{}}
-        \toprule
-        Chi phí API (4 website) & \$54,21 \\
-        Chi phí GPU (fine-tune + đánh giá) & \$24,40 \\
-        \midrule
-        \textbf{Cả chu trình} & \textbf{\$78,61} \\
-        \textbf{Trung bình mỗi website} & \kw{$<$ \$20} \\
-        \bottomrule
-      \end{tabular}\par
-      \vspace{0.1cm}
-      \raggedright
-      Đối chiếu: AutoWebGLM cần \kw{20 người gán nhãn làm một tháng} cho tập
-      $\approx$10.000 trajectory.
-      \vspace{0.06cm}
+      \textbf{Khả thi về kinh tế}
 
-      $\Rightarrow$ Dưới \$20 mỗi website và \kw{không cần người gán nhãn}, dựng model
-      riêng cho \emph{từng} website hợp lý hơn hẳn việc đuổi theo một model tổng quát.
+      \gap
+      \tsep
+      \begin{table}
+        \begin{tabular}{@{}L{3.7cm} R{1.4cm}@{}}
+          \toprule
+          Chi phí API (4 site) & \$54,21 \\
+          Chi phí GPU (FT + eval) & \$24,40 \\
+          \midrule
+          \textbf{Toàn chu trình} & \textbf{\$78,61} \\
+          \textbf{Trung bình / website} & \kw{$<$ \$20} \\
+          \bottomrule
+        \end{tabular}
+      \end{table}
+
+      {\scriptsize AutoWebGLM: \kw{20 người $\times$ 1 tháng} / 10.000 mẫu.}
+
+      \gap
+      $\Rightarrow$ \kw{$<$\$20}/website, \kw{0 nhãn người}: dựng model riêng khả thi hơn model vạn năng.
     \end{column}
   \end{columns}
 \end{frame}
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL3 - Tính khả thi của task, ngân sách bước và tiêu chuẩn hoàn thành}
-  \scriptsize
-  \begin{block}{1. Làm sao biết task do LLM đề xuất là hợp lý và làm được trên giao diện đó?}
-    Bộ đề xuất là một \emph{agent}: đọc trực tiếp cây trợ năng của trang thật và có thể
-    thao tác thử trước khi đề xuất - không đề xuất từ trí nhớ. Quan trọng hơn:
-    \kw{tính khả thi được chứng minh bằng thực thi, không bằng lời} - chỉ task có ít
-    nhất một lượt giải \emph{thành công và qua kiểm chứng} mới vào dataset.
-    $\Rightarrow$ 637 task bị chính agent báo bất khả thi; 3981 lượt thử còn
-    \kw{2117 hợp lệ (53,2\%)}.
-  \end{block}
-  \vspace{-0.1cm}
-  \begin{block}{2. Vì sao ngân sách 15 bước (task cục bộ) và 25 bước (semantic task)?}
-    Solver chiếm \kw{85,5\%} trong 20.808 lượt gọi LLM $\Rightarrow$ ngân sách bước
-    \emph{chính là} ngân sách kinh phí. Nhưng dữ liệu cho thấy nó \kw{không bóp méo phép đo}:
-    episode thành công có trung vị \kw{6 bước} (thất bại 13), và \kw{không episode nào}
-    đạt được mục tiêu rồi mới bị cắt vì hết bước - ngân sách đóng vai trò \emph{thước đo},
-    không phải \emph{hình phạt}.
-  \end{block}
-  \vspace{-0.1cm}
-  \begin{block}{3. Dựa vào đâu để nói một task đã hoàn thành?}
-    Ba lớp kiểm soát chất lượng:
-    \textbf{(i)} solver tự khai (\texttt{send\_msg\_to\_user}) hoặc vị từ tất định;
-    \textbf{(ii)} \kw{LLM-as-Judge} soi lại trạng thái trang đích $\rightarrow$ loại bỏ
-    \kw{801 lượt} báo đỗ ảo (27,4\%);
-    \textbf{(iii)} cổng ``hành động hữu hiệu'' bằng mã $\rightarrow$ loại
-    \kw{104 trajectory} tuyên bố xong mà không đổi gì trên trang - nhóm lỗi mà judge
-    \emph{về nguyên tắc} không thấy được do trạng thái trang không thay đổi.
-    \vspace{0.04cm}
-
-    \kw{Lưu ý}: đó là kiểm chứng lúc \emph{thu thập}. Kết quả 24,6\% được chấm hoàn toàn bằng
-    \kw{bộ chấm tự động chính thức của WebArena}.
-  \end{block}
+  \begin{enumerate}\setlength{\itemsep}{3pt}
+    \item \textbf{Làm sao biết task do LLM đề xuất là hợp lý và làm được thật?} \newline
+      Agent đọc trực tiếp cây trợ năng $\rightarrow$ \kw{Khả thi chứng minh bằng thực thi}: Chỉ task có $\ge 1$ lượt giải thành công và qua kiểm chứng mới vào dataset (637 task bị loại).
+    \item \textbf{Vì sao ngân sách 15 bước (cục bộ) và 25 bước (semantic task)?} \newline
+      Solver chiếm 85,5\% lượt gọi $\rightarrow$ Ngân sách bước là quyết định chi phí. Episode thành công có trung vị \kw{6 bước}; \kw{không episode nào} đạt mục tiêu rồi bị cắt vì hết bước.
+    \item \textbf{Dựa vào đâu để nói một task đã hoàn thành?} \newline
+      Ba lớp kiểm soát: (i) Solver tự khai; (ii) \kw{LLM Judge} soi trạng thái đích $\rightarrow$ loại \kw{801 lượt} đỗ ảo; (iii) Cổng hành động hữu hiệu $\rightarrow$ loại \kw{104 trajectory} không đổi trạng thái. Đánh giá cuối dùng \kw{bộ chấm chính thức WebArena}.
+  \end{enumerate}
 \end{frame}
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL4 - Bốn câu hỏi nghiên cứu: số liệu và mức độ trả lời}
-  \scriptsize
-  \setlength{\tabcolsep}{3pt}
-  \renewcommand{\arraystretch}{1.15}
-  \begin{tabular}{@{}L{0.9cm} L{4.5cm} L{4.9cm} L{1.5cm}@{}}
+  \centering
+  \setlength{\tabcolsep}{1.5pt}
+  \renewcommand{\arraystretch}{0.95}
+  \begin{tabular}{@{}L{0.8cm} L{4.6cm} L{4.8cm} L{1.4cm}@{}}
     \toprule
-    \textbf{Câu hỏi} & \textbf{Số liệu} & \textbf{Kết quả} & \textbf{Trạng thái} \\
+    \textbf{RQ} & \textbf{Số liệu} & \textbf{Kết quả} & \textbf{Trạng thái} \\
     \midrule
-    \textbf{CH1} & 455 trang; 3981 lượt thử; 146 skill / 57 operator &
-    1760 trajectory $\rightarrow$ 8554 mẫu; \$54,21 (0,0308\$/traj) & \kw{Đạt} \\
-    \textbf{CH2} & 655 task, cùng prompt/ngân sách/bộ chấm; McNemar &
-    13,3\% $\rightarrow$ 24,6\%; có ý nghĩa \emph{cả 4/4} website & \kw{Đạt} \\
-    \textbf{CH3} & Tính lại các công trình trên đúng 4 website &
-    Ngang Go-Browse-7B (2,0 $<$ CI $\pm$3,3); rẻ hơn 3,3$\times$ & \kw{Đạt} \\
-    \textbf{CH4} & Phân loại lỗi; đo hiệu ứng bổ sung dữ liệu &
-    85--96\% lỗi thực thi; gấp 3 dữ liệu chỉ $+$2,1 đpt & \kw{Đạt phần chẩn đoán} \\
+    \textbf{CH1} & 455 trang; 3981 lượt; 146 skill / 57 op & 1760 traj $\rightarrow$ 8554 mẫu; \$54,21 & \kw{Đạt} \\
+    \textbf{CH2} & 655 task, cùng prompt/bước; McNemar & 13,3\% $\rightarrow$ 24,6\%; $p \le 0{,}011$ cả 4 site & \kw{Đạt} \\
+    \textbf{CH3} & So sánh trên cùng 4 website & Ngang Go-Browse-7B ($2{,}0 <$ CI $\pm$3,3) & \kw{Đạt} \\
+    \textbf{CH4} & Phân loại lỗi; thêm dữ liệu & 85--96\% lỗi thực thi; gấp 3 data chỉ $+$2,1 đpt & \kw{Một phần} \\
     \bottomrule
   \end{tabular}
 
-  \vspace{0.12cm}
-  {\scriptsize\textbf{Lưu ý và giới hạn thực tế.} \textbf{O2} hoàn thành một phần:
-  chỉ 12/142 semantic task đến từ ghép chuỗi operator, phần còn lại từ seed năng lực
-  website. \textbf{O4} hoàn thành một phần: mỗi task mới đo \emph{một} lần, và
-  \kw{ablation đồ thị so với khám phá phẳng - phép đo chứng minh trực tiếp giá trị cấu trúc đồ thị - vẫn là hướng nghiên cứu tiếp theo}.\par}
+  \vspace{0.04cm}
+  \raggedright
+  \begin{block}{Giới hạn thực tế}
+    \textbf{O2}: 12/142 task từ ghép chuỗi operator. \textbf{O4}: Ablation so sánh trực tiếp đồ thị với khám phá phẳng là hướng nghiên cứu tiếp theo.
+  \end{block}
 \end{frame}
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL5 - Chi phí chi tiết toàn chu trình}
-  \footnotesize
   \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
-      \textbf{Chi phí API (giai đoạn khám phá)}
-      \scriptsize
-      \vspace{0.05cm}
-      \begin{tabular}{@{}L{2.6cm} R{1.5cm}@{}}
+    \begin{column}{0.48\textwidth}
+      \textbf{Chi phí API (Khám phá)}
+      \vspace{0.04cm}
+      \centering
+      \setlength{\tabcolsep}{3pt}
+      \begin{tabular}{@{}L{2.4cm} R{1.4cm}@{}}
         \toprule
         \textbf{Nhà cung cấp} & \textbf{USD} \\
         \midrule
         OpenAI & 42,29 \\
         DeepSeek & 11,92 \\
         \midrule
-        \textbf{Tổng} & \textbf{54,21} \\
+        \textbf{Tổng API} & \textbf{54,21} \\
         \bottomrule
-      \end{tabular}\par
-      \vspace{0.12cm}
-      \textbf{Chi phí GPU (thuê theo giờ)}
-      \vspace{0.05cm}
-      \begin{tabular}{@{}L{2.6cm} R{1.5cm}@{}}
+      \end{tabular}
+      \vspace{0.06cm}
+
+      \raggedright
+      \textbf{Chi phí GPU}
+      \vspace{0.04cm}
+      \centering
+      \begin{tabular}{@{}L{2.4cm} R{1.4cm}@{}}
         \toprule
         \textbf{Giai đoạn} & \textbf{USD} \\
         \midrule
         Fine-tuning & 8,30 \\
         Đánh giá 655 task & 16,10 \\
         \midrule
-        \textbf{Tổng} & \textbf{24,40} \\
+        \textbf{Tổng GPU} & \textbf{24,40} \\
         \bottomrule
       \end{tabular}
     \end{column}
+    \hfill
     \begin{column}{0.48\textwidth}
-      \textbf{Đơn giá và đối chiếu}
-      \scriptsize
+      \textbf{Đơn giá \& Đối chiếu}
       \begin{itemize}\setlength{\itemsep}{3pt}
-        \item \kw{0,0308 USD} mỗi trajectory thành công (54,21 / 1760).
-        \item Go-Browse: 975,57 USD / 9504 trajectory $=$ 0,1026 USD
-              $\Rightarrow$ khóa luận \kw{rẻ hơn 3,3 lần}.
-        \item Synatra (tổng hợp \emph{ngoại tuyến} từ tài liệu, không chạm website
-              thật): 0,031 USD/mẫu - \emph{tương đương}, dù HSGE đã bao gồm cả chi phí
-              điều khiển trình duyệt, đề xuất, giải và chấm lại task trên môi trường sống.
+        \item \kw{0,0308 USD} / trajectory thành công (54,21 / 1760).
+        \item Go-Browse: 0,1026 USD $\Rightarrow$ HSGE \kw{rẻ hơn 3,3 lần}.
+        \item Synatra: 0,031 USD/mẫu (chỉ tạo text offline, không chạy website thật).
       \end{itemize}
-      \vspace{0.08cm}
-      \begin{block}{Điểm đáng chú ý về cơ cấu chi phí}
-        \scriptsize
-        Rào cản tính toán không nằm ở huấn luyện hay đánh giá, mà ở \kw{khâu thu thập
-        dữ liệu} - vốn tiêu tốn thời gian điều khiển trình duyệt và số lượt gọi API hơn là GPU.
+      \vspace{0.06cm}
+      \begin{block}{Cơ cấu chi phí}
+        Rào cản tính toán nằm ở \kw{khâu thu thập dữ liệu} (thời gian điều khiển browser) hơn là chi phí GPU huấn luyện.
       \end{block}
     \end{column}
   \end{columns}
@@ -241,17 +199,17 @@
 %%% ---------------------------------------------------------------
 \begin{frame}{PL6 - Khám phá có định hướng: frontier hai tầng}
   \begin{columns}[c]
-    \begin{column}{0.58\textwidth}
+    \begin{column}{0.54\textwidth}
       \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_frontier.pdf}
     \end{column}
-    \begin{column}{0.40\textwidth}
-      \footnotesize
+    \hfill
+    \begin{column}{0.43\textwidth}
       \textbf{Cơ chế Frontier hai tầng}
-      \begin{itemize}\setlength{\itemsep}{4pt}
+      \begin{itemize}\setlength{\itemsep}{3.5pt}
         \item \textbf{Tier 0}: URL do solver ghé thăm thực tế $\rightarrow$ ưu tiên hàng đầu.
         \item \textbf{Tier 1}: URL trích từ DOM $\rightarrow$ giới hạn $\le 3$ trang/khuôn dạng (chống tràn frontier).
-        \item \textbf{Lọc trùng cấu trúc}: mã băm nội dung loại \kw{71/455} node trùng lặp.
-        \item \textbf{Solver Guard}: dừng cứng khi lặp hành động mà trạng thái không đổi.
+        \item \textbf{Lọc trùng}: Mã băm nội dung loại \kw{71/455} node trùng lặp.
+        \item \textbf{Solver Guard}: Dừng cứng khi lặp thao tác mà trang không đổi.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -259,91 +217,86 @@
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL7 - Nguyên nhân thất bại và so sánh đặc tính hai mô hình}
-  \footnotesize
   \begin{columns}[t]
-    \begin{column}{0.52\textwidth}
-      \textbf{Nguyên nhân chính của episode thất bại}
-      \scriptsize
-      \vspace{0.05cm}
-      \setlength{\tabcolsep}{3pt}
-      \begin{tabular}{@{}L{2.3cm} C{0.85cm} C{0.85cm} C{0.85cm} C{0.9cm}@{}}
+    \begin{column}{0.48\textwidth}
+      \textbf{Nguyên nhân thất bại (655 episode)}
+      \vspace{0.04cm}
+      \centering
+      \setlength{\tabcolsep}{1pt}
+      \begin{tabular}{@{}L{1.3cm} C{1.1cm} C{1.15cm} C{1.2cm} C{1.15cm}@{}}
         \toprule
         & \textbf{Shop} & \textbf{Reddit} & \textbf{GitLab} & \textbf{Admin} \\
         \midrule
         Lỗi hành động & 45\% & 34\% & 45\% & 39\% \\
         Kẹt vòng lặp & 34\% & 37\% & 31\% & 35\% \\
-        Tự báo bất khả thi & 14\% & 23\% & 20\% & 25\% \\
+        Báo bất khả thi & 14\% & 23\% & 20\% & 25\% \\
         \bottomrule
-      \end{tabular}\par
-      \vspace{0.08cm}
+      \end{tabular}
+      \vspace{0.04cm}
+
+
       \raggedright
-      \kw{85--96\%} episode thất bại có $\ge 1$ hành động bị trình duyệt từ chối
-      (2315 lỗi / 655 episode) - phần lớn là quá hạn chờ thao tác trên phần tử
-      \emph{có} hiển thị trong cây trợ năng.
+      {\scriptsize \kw{85--96\%} episode thất bại có $\ge 1$ thao tác bị từ chối (timeout phần tử).}
     \end{column}
-    \begin{column}{0.46\textwidth}
-      \textbf{Fine-tune giúp mô hình \emph{kiên trì} hơn, giảm triệt để lỗi định dạng}
-      \scriptsize
-      \vspace{0.05cm}
-      \begin{tabular}{@{}L{2.7cm} C{1.05cm} C{1.05cm}@{}}
+    \hfill
+    \begin{column}{0.48\textwidth}
+      \textbf{Mô hình sau FT kiên trì hơn}
+      \vspace{0.04cm}
+      \centering
+      \setlength{\tabcolsep}{2pt}
+      \begin{tabular}{@{}L{2.5cm} C{1.0cm} C{1.0cm}@{}}
         \toprule
         & \textbf{Nền} & \textbf{Sau FT} \\
         \midrule
-        Phiên hỏng định dạng & 26,0\% & \kw{0,6\%} \\
+        Hỏng định dạng & 26,0\% & \kw{0,6\%} \\
         Tổng số bước & 5424 & 6727 \\
         Lỗi hành động / bước & 0,358 & 0,344 \\
-        Trung vị bước (đỗ) & 4 & 6 \\
-        Trung vị bước (trượt) & 8 & 13 \\
+        Trung vị bước (đỗ/trượt) & 4 / 8 & 6 / 13 \\
         \bottomrule
-      \end{tabular}\par
-      \vspace{0.08cm}
+      \end{tabular}
+      \vspace{0.04cm}
+
       \raggedright
-      Tỷ lệ lỗi trên mỗi bước gần như \emph{không đổi}: mô hình mắc lỗi thao tác với
-      cùng tần suất, chỉ là nó \kw{sống sót đủ lâu} để thao tác nhiều hơn.
-      $\Rightarrow$ điểm nghẽn còn lại nằm ở \kw{tầng thực thi}.
+      {\scriptsize Tỷ lệ lỗi/bước không đổi; FT giúp mô hình sống sót lâu hơn.}
     \end{column}
   \end{columns}
 \end{frame}
 
 %%% ---------------------------------------------------------------
 \begin{frame}{PL8 - Hai phép đo bổ trợ: thêm dữ liệu và đổi mô hình nền}
-  \footnotesize
   \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \textbf{(a) Thêm dữ liệu thì được gì?}
-      \scriptsize
-      \vspace{0.05cm}
-      \setlength{\tabcolsep}{3pt}
-      \begin{tabular}{@{}L{1.9cm} C{1.1cm} C{1.0cm} C{1.0cm}@{}}
+      \vspace{0.04cm}
+      \centering
+      \setlength{\tabcolsep}{1pt}
+      \begin{tabular}{@{}L{1.4cm} C{1.15cm} C{1.15cm} C{1.15cm}@{}}
         \toprule
-        \textbf{Website} & \textbf{Mẫu thêm} & \textbf{Trước} & \textbf{Sau} \\
+        \textbf{Website} & \textbf{Thêm} & \textbf{Trước} & \textbf{Sau} \\
         \midrule
         Reddit & $+$1856 & 20,8\% & 23,6\% \\
-        Shopping Admin & $+$2410 & 15,4\% & 17,0\% \\
+        Admin & $+$2410 & 15,4\% & 17,0\% \\
         \midrule
-        \textbf{Cộng (288 task)} & \textbf{$+$4266} & \textbf{17,4\%} & \textbf{19,4\%} \\
+        \textbf{Cộng} & \textbf{$+$4266} & \textbf{17,4\%} & \textbf{19,4\%} \\
         \bottomrule
-      \end{tabular}\par
-      \vspace{0.08cm}
+      \end{tabular}
+      \vspace{0.04cm}
+
       \raggedright
-      Thêm dữ liệu \emph{có} nâng điểm, nhưng hiệu suất thấp và giảm nhanh: gần
-      \kw{gấp ba} lượng dữ liệu chỉ đổi lấy \kw{$+$2,1 đpt}. Website nhận
-      \emph{nhiều} mẫu hơn lại đổi được \emph{ít} điểm hơn trên mỗi mẫu.
+      {\scriptsize Gần \kw{gấp ba} dữ liệu chỉ đổi lấy \kw{$+$2,1 đpt} (hiệu suất giảm nhanh).}
     \end{column}
+    \hfill
     \begin{column}{0.48\textwidth}
-      \textbf{(b) Đổi mô hình nền, giữ nguyên tập dữ liệu}
-      \scriptsize
+      \textbf{(b) Đổi mô hình nền (Qwen-2.5-7B)}
       \begin{itemize}\setlength{\itemsep}{2.5pt}
-        \item Cùng 8554 mẫu, fine-tune Qwen-2.5-7B (đúng mô hình nền Go-Browse dùng):
-              \kw{83/655 $=$ 12,7\%} so với 8,3\% của chính nó khi chưa fine-tune.
-        \item \kw{Không dùng con số này để so cùng mô hình nền với Go-Browse}: toàn bộ
-              275 phản hồi ``hỏng định dạng'' đều là lệnh \texttt{report\_infeasible}
-              \emph{viết trần} (92--98\%), bị bộ phân giải loại bỏ - bản 7B chỉ ghi
-              nhận 10/182 lần báo bất khả thi ở Shopping Admin so với 41 của bản 9B.
-        \item $\Rightarrow$ 12,7\% là \kw{cận dưới do công cụ đo đặt ra}. Điều rút ra
-              được: tập dữ liệu nâng được \emph{cả hai} mô hình nền, nên nó không gắn
-              riêng với một kiến trúc.
+        \item Cùng 8554 mẫu, FT Qwen-2.5-7B: \kw{12,7\%} (so với 8,3\% gốc).
+        \item 275 phản hồi lỗi là lệnh \texttt{report\_infeasible} viết trần bị bộ phân giải loại.
+        \item $\Rightarrow$ Dữ liệu nâng được \emph{cả hai} mô hình nền, không phụ thuộc kiến trúc đơn lẻ.
       \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
+
+
+
+

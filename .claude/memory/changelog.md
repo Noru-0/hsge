@@ -4,6 +4,25 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-22
+
+- **15:01** — `Thesis_report/Slide_KLTN_HSGE/{config/preamble.tex,
+  sections/01_gioithieu.tex, sections/04_ketluan.tex, sections/99_phuluc.tex,
+  presentation_script.md}` — **Stated the problem scope on the main slides instead of
+  only in a backup slide.** "The model is specialized for one website; the pipeline is
+  what generalizes" lived only in appendix PL2, which fires only if the committee asks;
+  slide 2's script handled the risk passively ("avoid saying general-purpose agent").
+  Slide 2 now carries a one-line scope statement, slide 3 a `Phạm vi & ứng dụng đích`
+  block naming three target applications (internal/legacy RPA, on-prem operations
+  assistant, and E2E testing marked *tiềm năng* — the thesis ran no testing experiment,
+  so the hedge is load-bearing), slide 14 a scope limitation, and PL2 the three
+  applications spelled out. Same four slides were cut to keywords with a question as
+  `\framesubtitle` (answers moved into the script, which grew accordingly), and now use
+  new preamble macros `\ilist`/`\isub`/`\gap`/`\tsep`/`\tsepc` — the deck had 7
+  different `itemsep`, 8 `vspace` and 5 `tabcolsep` values. Verified: `latexmk` clean,
+  no overfull boxes, 20 content frames + 9 appendix unchanged. The other 10 slides still
+  use ad-hoc spacing (out of the agreed scope).
+
 ## 2026-08-21
 
 - **18:35** — `Thesis_report/thesis_hsge_vi/{Chapter1,Chapter3,Chapter4,Chapter6,

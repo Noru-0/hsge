@@ -6,61 +6,77 @@
 
 \subsection{Bối cảnh \& Phát biểu bài toán}
 \begin{frame}{Bối cảnh, bài toán và thách thức}
+  \framesubtitle{Nút thắt nằm ở mô hình, hay ở dữ liệu?}
   \begin{columns}[t]
-    \begin{column}{0.49\textwidth}
-      \footnotesize
-      \textbf{Bối cảnh \& Động lực}
-      \begin{itemize}\setlength{\itemsep}{2.5pt}
-        \item \textbf{Web Agent \& LLM lớn}: Tự động hóa tác vụ web nhưng phụ thuộc API đám mây $\rightarrow$ Chi phí cao, độ trễ lớn, rủi ro bảo mật dữ liệu.
-        \item \textbf{SLM (${<}10$B)}: Chi phí thấp, chạy cục bộ $\rightarrow$ Cần fine-tune (SFT) để chuyên biệt hóa cho từng website.
-        \item \kw{Nút thắt dữ liệu}: Gán nhãn thủ công rất tốn kém (AutoWebGLM: \textbf{20 người} $\times$ \textbf{1 tháng}). Dữ liệu tổng hợp giúp giảm \textbf{$\approx$97\%} chi phí mỗi mẫu (Synatra).
-        \item $\Rightarrow$ \textbf{Giải pháp}: Tự động hóa quá trình tạo dữ liệu từ website mục tiêu.
+    \begin{column}{0.48\textwidth}
+      \textbf{Bối cảnh}
+      \begin{itemize}[<+->]\ilist
+        \item \textbf{Web agent}: tự động hóa trình duyệt.
+        \item \textbf{LLM lớn qua API}: đắt, chậm, rủi ro riêng tư.
+        \item \textbf{SLM ${<}10$B}: chạy cục bộ $\rightarrow$ phải fine-tune.
+        \item \kw{Nút thắt}: nhãn tay --- AutoWebGLM \textbf{20 người $\times$ 1 tháng}.
       \end{itemize}
     \end{column}
-    \begin{column}{0.49\textwidth}
-      \begin{block}{Phát biểu bài toán}
-        \scriptsize
-        Cho website đang hoạt động và một pretrained SLM, tự động tạo dữ liệu để fine-tune SLM hoàn thành các tác vụ web bằng ngôn ngữ tự nhiên mà \textbf{không dùng dữ liệu gán nhãn thủ công}.
-      \end{block}
+    \hfill
+    \begin{column}{0.48\textwidth}
+      \uncover<5->{
+        \begin{block}{Câu hỏi bài toán}
+          \begin{itemize}\isub
+            \item Tinh chỉnh SLM cho \textbf{một website đang chạy}, \kw{0 nhãn người}?
+            \item \textit{Phạm vi}: một tập website cố định --- \textbf{không} phải agent vạn năng.
+          \end{itemize}
+        \end{block}
+      }
 
-      \vspace{0.08cm}
-      {\footnotesize\textbf{Bốn thách thức cốt lõi}}
-      \begin{enumerate}\scriptsize\setlength{\itemsep}{1.5pt}
-        \item \textbf{Thu thập dữ liệu}: Chi phí gán nhãn thủ công quá lớn để mở rộng.
-        \item \textbf{Tri thức môi trường}: Khó chuyển giao giữa các website khác nhau.
-        \item \textbf{Kiểm chứng đúng đắn}: Ngăn chặn việc tự nhận hoàn thành ảo.
-        \item \textbf{Tác vụ có ngữ nghĩa}: Ghép nối thành chuỗi đa bước thực tế.
-      \end{enumerate}
+      \gap
+      \uncover<6->{
+        \textbf{4 thách thức}
+        \begin{enumerate}\isub
+          \item<6-> Chi phí gán nhãn.
+          \item<7-> Tri thức môi trường.
+          \item<8-> Báo đỗ ảo (\textit{false positive}).
+          \item<9-> Tác vụ đa bước.
+        \end{enumerate}
+      }
     \end{column}
   \end{columns}
 \end{frame}
 
 \subsection{Mục tiêu \& Định vị nghiên cứu}
 \begin{frame}{Mục tiêu và định vị so với công trình liên quan}
+  \framesubtitle{Đầu ra là một agent chuyên biệt, hay một model vạn năng?}
   \begin{columns}[t]
-    \begin{column}{0.40\textwidth}
-      \footnotesize
-      \textbf{Năm mục tiêu nghiên cứu}
-      \begin{itemize}\scriptsize\setlength{\itemsep}{2.5pt}
-        \item[\textbf{O1}] Khám phá tự động website chưa có nhãn.
-        \item[\textbf{O2}] Tích lũy tri thức \& sinh \textbf{semantic task} đa bước.
-        \item[\textbf{O3}] Kiểm chứng \& tinh lọc dữ liệu (prompt parity).
-        \item[\textbf{O4}] Fine-tune SLM \& đánh giá trên WebArena.
-        \item[\textbf{O5}] Đúc kết best practice vận hành thực tế.
+    \begin{column}{0.44\textwidth}
+      \textbf{5 mục tiêu nghiên cứu}
+      \begin{itemize}[<+->]\isub
+        \item[\textbf{O1}] Khám phá website chưa có nhãn.
+        \item[\textbf{O2}] Sinh semantic task đã kiểm chứng.
+        \item[\textbf{O3}] Tinh lọc dataset \& prompt parity.
+        \item[\textbf{O4}] Fine-tune SLM \& đánh giá WebArena.
+        \item[\textbf{O5}] Đúc kết best practice vận hành.
       \end{itemize}
 
-      \vspace{0.1cm}
-      \textbf{Khoảng trống nghiên cứu}:\\
-      \scriptsize
-      Chưa công trình nào kết hợp trọn vẹn: \textit{kiểm chứng kỹ năng $\rightarrow$ ghép nối tác vụ dài $\rightarrow$ huấn luyện SLM}.
+      \uncover<6->{
+        \begin{block}{Phạm vi \& ứng dụng đích}
+          \begin{itemize}\isub
+            \item 1 website $\rightarrow$ 1 agent chuyên biệt, cục bộ.
+            \item Tổng quát hóa: \kw{pipeline}, không phải \kw{model}.
+            \item RPA nội bộ, trợ lý on-prem, kiểm thử E2E \textit{(tiềm năng)}.
+          \end{itemize}
+        \end{block}
+      }
     \end{column}
-    \begin{column}{0.58\textwidth}
-      \scriptsize
-      \setlength{\tabcolsep}{2pt}
-      \begin{table}
-        \begin{tabular}{@{}L{2.0cm} C{1.2cm} C{1.2cm} C{1.2cm} C{1.1cm}@{}}
+    \hfill
+    \begin{column}{0.52\textwidth}
+      \uncover<7->{
+        \textbf{Định vị so với công trình liên quan}
+
+        \gap
+        \centering
+        \tsepc
+        \begin{tabular}{@{}L{1.9cm} C{1.05cm} C{1.05cm} C{1.1cm} C{1.1cm}@{}}
           \toprule
-          \textbf{Hệ thống} & \textbf{Khám phá cấu trúc} & \textbf{Skill kiểm chứng} & \textbf{Ghép task dài} & \textbf{Huấn luyện SLM} \\
+          \textbf{Hệ thống} & \textbf{Khám phá} & \textbf{Kỹ năng} & \textbf{Ghép task} & \textbf{Train SLM} \\
           \midrule
           AWM & - & \LEFTcircle & - & - \\
           SkillWeaver & - & \CIRCLE & \LEFTcircle & - \\
@@ -69,16 +85,14 @@
           \textbf{HSGE} & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE \\
           \bottomrule
         \end{tabular}
-      \end{table}
-      \vspace{0.03cm}
-      {\scriptsize \CIRCLE{} Có \quad \LEFTcircle{} Một phần \quad - Không.}
 
-      \vspace{0.08cm}
-      \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
-        \item \textbf{AWM, SkillWeaver}: Chỉ dùng kỹ năng ở pha suy luận (Inference-only).
-        \item \textbf{NNetNav, Go-Browse}: Sinh dữ liệu trang đơn, thiếu cấu trúc kỹ năng.
-      \end{itemize}
+        {\scriptsize \CIRCLE{} Có \quad \LEFTcircle{} Một phần \quad - Không.}
+
+        \raggedright
+        \begin{alertblock}{Khoảng trống nghiên cứu}
+          \kw{Kiểm chứng $\rightarrow$ Ghép task $\rightarrow$ Train SLM}
+        \end{alertblock}
+      }
     \end{column}
   \end{columns}
 \end{frame}
-

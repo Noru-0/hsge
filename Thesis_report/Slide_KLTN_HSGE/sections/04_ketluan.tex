@@ -6,32 +6,35 @@
 
 \subsection{Kết luận \& Hướng phát triển}
 \begin{frame}{Kết luận, hạn chế và hướng phát triển}
+  \framesubtitle{Đã làm được gì, và chưa làm được gì?}
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
-      \footnotesize
       \textbf{Kết quả đạt được}
-      \begin{itemize}\setlength{\itemsep}{3pt}
-        \item \textbf{Pipeline khép kín}: Khám phá 4 website $\rightarrow$ Thu được 146 skill, 57 operator $\rightarrow$ Tạo dataset SFT \kw{1760 trajectory / 8554 mẫu}.
-        \item \textbf{Hiệu năng thực nghiệm}: Tăng độ chính xác từ \kw{13,3\% $\rightarrow$ 24,6\%} ($p<0{,}001$), dẫn đầu phân khúc SLM $<10$B trên WebArena 4 site.
-        \item \textbf{Sản phẩm bàn giao}: Toàn bộ mã nguồn, dataset, checkpoint và tài liệu quy trình vận hành.
+      \begin{itemize}[<+->]\ilist
+        \item \kw{146 skill}, \kw{57 operator} $\rightarrow$ \kw{1760 trajectory} / \kw{9007 mẫu SFT}, 0 nhãn người.
+        \item \kw{13,3\% $\rightarrow$ 24,6\%} ($p<0{,}001$), ngang SOTA ${<}10$B.
+        \item \kw{0,0308 \$/trajectory} --- rẻ hơn 3,3 lần.
+        \item Bàn giao mã nguồn, dataset, checkpoint.
       \end{itemize}
     \end{column}
+    \hfill
     \begin{column}{0.48\textwidth}
-      \footnotesize
-      \textbf{Hạn chế \& Hướng phát triển}
-      \begin{itemize}\setlength{\itemsep}{3pt}
-        \item \textbf{Hạn chế chính}:
-          \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
-            \item Phụ thuộc vào chất lượng phân tích DOM/AXTree của website.
-            \item Chưa thực hiện thực nghiệm bóc tách (ablation) so sánh với khám phá phẳng.
-          \end{itemize}
-        \item \textbf{Hướng phát triển}:
-          \begin{itemize}\scriptsize\setlength{\itemsep}{1.5pt}
-            \item Bổ sung trajectory phục hồi sau lỗi (error recovery).
-            \item Khai thác tín hiệu thất bại bằng RL / DPO.
-            \item Chưng cất tri thức xuống SLM siêu nhẹ 1--3B.
-          \end{itemize}
+      \textbf{Hạn chế}
+      \begin{itemize}[<+->]\isub
+        \item Điểm nghẽn ở tầng thực thi (timeout DOM).
+        \item Chưa chạy ablation so với khám phá phẳng.
+        \item \textit{Phạm vi}: chuyên biệt theo website; cross-app ngoài phạm vi (PL1).
       \end{itemize}
+
+      \gap
+      \uncover<8->{
+        \textbf{Hướng phát triển}
+        \begin{itemize}\isub
+          \item Tự phục hồi sau lỗi (\textit{error recovery}).
+          \item Khai thác tín hiệu thất bại bằng RL / DPO.
+          \item Chưng cất xuống SLM 1--3B.
+        \end{itemize}
+      }
     \end{column}
   \end{columns}
 \end{frame}
@@ -50,3 +53,5 @@
   \end{tabular}
   \vfill
 \end{frame}
+
+

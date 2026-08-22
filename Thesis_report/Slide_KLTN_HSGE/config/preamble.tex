@@ -41,8 +41,25 @@
 }
 
 \setbeamertemplate{caption}[numbered]
-\setbeamercolor{block title}{bg=structure.fg!15,fg=black}
+
+% Chuẩn hóa màu sắc và font chữ của Block
+\setbeamercolor{block title}{bg=structure.fg!15,fg=structure.fg!80!black}
 \setbeamercolor{block body}{bg=structure.fg!5}
+\setbeamerfont{block title}{size=\footnotesize,series=\bfseries}
+\setbeamerfont{block body}{size=\scriptsize}
+
+% Chuẩn hóa font chữ chung của Beamer
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamerfont{framesubtitle}{size=\small,series=\mdseries,shape=\itshape}
+\setbeamerfont{itemize/enumerate body}{size=\footnotesize}
+\setbeamerfont{itemize/enumerate subbody}{size=\scriptsize}
+
+% Khoảng cách danh sách chuẩn
+\setlength{\leftmargini}{1.2em}
+\setlength{\leftmarginii}{1.0em}
+
+% Làm sáng phần đang trình bày và che mờ (25% opacity) các phần còn lại
+\setbeamercovered{transparent=25}
 
 % Harvey balls for the positioning table (same notation as the thesis).
 \usepackage[nointegrals]{wasysym}
@@ -53,10 +70,11 @@
 \newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
 
 % Caption line under a figure on a slide.
-\newcommand{\figcap}[1]{\vspace{0.1cm}{\scriptsize\itshape #1}}
+\newcommand{\figcap}[1]{\vspace{0.08cm}{\scriptsize\itshape #1}}
 
 % Highlight for the key number of a slide.
 \newcommand{\kw}[1]{\textbf{\color{structure.fg}#1}}
+
 
 % ---------------------------------------------------------------
 % Phụ lục (backup slides cho phần hỏi đáp).
@@ -77,3 +95,12 @@
     \end{beamercolorbox}}%
   }%
 }
+
+% ---------------------------------------------------------------
+% Layout primitives. Exactly two values per kind: use these instead of
+% ad-hoc \vspace / \setlength so spacing stays identical across frames.
+\newcommand{\ilist}{\setlength{\itemsep}{3pt}}   % top-level list
+\newcommand{\isub}{\setlength{\itemsep}{2pt}}    % nested list
+\newcommand{\gap}{\vspace{0.08cm}}               % the only vertical gap between blocks
+\newcommand{\tsep}{\setlength{\tabcolsep}{3pt}}    % normal table
+\newcommand{\tsepc}{\setlength{\tabcolsep}{1.5pt}} % narrow table (5-column positioning table)
