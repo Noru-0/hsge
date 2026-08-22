@@ -6,6 +6,12 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **04:21** — `Thesis_report/thesis_hsge_vi/{Chapter5/chapter5.tex, main.pdf}` — **Restructured Chapter 5 (Discussion) to align with 3 RQs framework:**
+  - Updated opening sentence (L6: "ba câu hỏi nghiên cứu").
+  - Restructured §5.1 into 3 subsections: §5.1.1 (CH1: Task generation feasibility with bridging lead sentence), §5.1.2 (CH2: Capacity gain & SOTA positioning, incorporating failure analysis & bottlenecks with italicized lead markers), §5.1.3 (CH3: Cost efficiency, combining absolute and comparative costs). Deleted orphaned §5.1.4 header.
+  - Updated cross-reference in §5.3 (L153: CH4 $\rightarrow$ CH2).
+  - **Verification**: `grep CH4 Chapter5/chapter5.tex` and `grep CH4 Chapter*/*.tex Appendix/*.tex` returned 0 matches; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
 - **04:15** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, Chapter1/chapter1.tex, main.pdf}` — **Restructured Chapter 4 and Chapter 1 to align with 3 RQs (CH1--CH3) framework:**
   - **Chapter 4 (`chapter4.tex`)**: Updated opening sentence (L5: "ba câu hỏi nghiên cứu CH1--CH3"), corrected section tags for `sec:exp-cost-explore` (CH3), `sec:exp-main` (CH2), `sec:exp-analysis` (CH2: supplementary evidence), and `sec:exp-backbone` (CH2). Added bridging paragraph after `sec:exp-data` (L234) mapping the 4 criteria of CH1 (Validity, Diversity, Semantics, Executability) to quantitative data (`tab:runs`, `tab:dataset`). Removed all stale CH4 labels from Chapter 4.
   - **Chapter 1 (`chapter1.tex`)**: Rebuilt `tab:rqmap` (L105--134) to remove duplicate CH3 row, moved SOTA comparison (`tab:related`) and 7B backbone (`tab:backbone7b`) to CH2, and added `sec:exp-analysis` to CH2.
