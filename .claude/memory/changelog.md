@@ -6,6 +6,11 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **04:28** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` — **Added direct in-table citations for external baselines:**
+  - Added `\cite{gandhi2026gobrowse}` directly into the header of `tab:backbone7b` (`Chapter4/chapter4.tex:891`).
+  - Verified all comparative tables (`tab:related` L593, `tab:baseline` L530, `tab:novelty` L79, `tab:positioning` L429) have explicit `\cite{...}` tags directly on baseline rows and column headers.
+  - **Verification**: `grep -c "??" main.log` = 0; compiled clean with `pdflatex` (0 undefined references, 0 errors, 167 pages).
+
 - **04:25** — `Thesis_report/Slide_KLTN_HSGE/{presentation_script.md, main.pdf}` — **Updated presentation script for Part 1 (Slides 1--5) and Part 2 (Slides 6--10):**
   - **Slide 5**: Aligned deliverables list with the **5 main deliverables** established in Chapters 1 & 6 (HSGE Pipeline, 9,007-sample/1,760-trajectory SFT dataset, HSGE-9B fine-tuned model + 7B backbone test, WebArena evaluation pipeline, Lessons learned report). Updated terminology ("best practice" $\rightarrow$ "bài học kinh nghiệm", O2 $\rightarrow$ "Sinh tác vụ có ngữ nghĩa").
   - **Slides 8--10**: Updated exact metrics (146 skills, 57 operators, 142 semantic tasks / 71 success at 50.0%, 801 self-declaration false-positives demoted (~27%), 104 zero-effect trajectories dropped by effective action gate, 1,760 clean trajectories $\rightarrow$ 8,554 train / 453 val SFT samples, API cost $0.0308/traj).

@@ -2,7 +2,7 @@
 \chapter{Thực nghiệm}
 \label{ch:experiments}
 
-Chương 4 bao gồm các nội dung: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả fine-tuning; (4) đánh giá chính trên bốn website WebArena; (5) ảnh hưởng của lượng dữ liệu; (6) phân tích nguyên nhân lỗi; và (7) kết quả bổ sung trên mô hình nền Qwen-2.5-7B. Toàn bộ chương cung cấp số liệu cho ba câu hỏi nghiên cứu CH1--CH3 (Mục~\ref{sec:intro-rq}, Bảng~\ref{tab:rqmap}). Việc thảo luận và trả lời chi tiết từng câu hỏi thuộc về Chương~\ref{ch:discussion}.
+Chương 4 bao gồm các nội dung: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả fine-tuning; (4) đánh giá chính trên bốn website WebArena; (5) ảnh hưởng của lượng dữ liệu; (6) phân tích nguyên nhân lỗi; và (7) kết quả bổ sung trên mô hình nền Qwen-2.5-7B. Toàn bộ chương cung cấp số liệu cho ba câu hỏi nghiên cứu CH1-CH3 (Mục~\ref{sec:intro-rq}, Bảng~\ref{tab:rqmap}). Việc thảo luận và trả lời chi tiết từng câu hỏi thuộc về Chương~\ref{ch:discussion}.
 
 Các bảng số liệu tuân theo quy ước: đơn vị đặt ở tiêu đề cột khi đồng nhất, hoặc đặt trực tiếp trong ô khi cột kết hợp số đếm và tỷ lệ (Bảng~\ref{tab:runs}, \ref{tab:failures}, \ref{tab:profile}). Mọi số liệu ngoại suy hoặc từ công trình khác đều được dẫn nguồn ngay trên dòng tương ứng.
 
@@ -85,7 +85,7 @@ từ các sản phẩm mà hệ thống ghi lại.
     LLM và lượng token của cả bốn đợt khám phá. Số lời gọi solver lấy bằng số bước
     hành động đã ghi, nên là cận dưới: nhật ký sự kiện ghi 32\,003 bước, cao hơn
     con số quy được về từng mô hình ở đây. Token ước lượng bằng cách đo trực tiếp
-    prompt đã dựng --- mỗi lời gọi solver mang trung bình 1\,974 token vào (trong
+    prompt đã dựng - mỗi lời gọi solver mang trung bình 1\,974 token vào (trong
       đó cây truy cập trung bình 4\,228 ký tự sau khi cắt ở ngưỡng 6000, cộng 85
     token ảnh ở chế độ \texttt{detail=low}) và 66 token ra, quy đổi 4 ký tự mỗi
     token. Cột chi phí dùng đơn giá niêm yết lúc thực nghiệm (GPT-5.6-luna
@@ -128,7 +128,7 @@ về solver}, do đây là vai trò duy nhất nằm trong vòng lặp hành đ�
 và cũng là vai trò phải mang toàn bộ accessibility tree vào mỗi prompt. Hai tỷ
 lệ này giải thích vì sao chi phí khám phá thực chất là một quyết định về
 solver: \textbf{GPT-4o chỉ chiếm 13{,}6\% số bước nhưng chiếm 52{,}9\% chi
-phí}, vì đơn giá token vào của nó cao gấp 12{,}5 lần GPT-5.6-luna --- đây
+phí}, vì đơn giá token vào của nó cao gấp 12{,}5 lần GPT-5.6-luna - đây
 chính là lý do vai trò này được chuyển sang GPT-5.6-luna giữa chừng các đợt
 chạy.
 
@@ -139,7 +139,7 @@ kiểm chứng lẫn nhau: nhân lượng token ước lượng với đơn giá
 40{,}84\,USD, so với 42{,}29\,USD trên hóa đơn OpenAI, tức sai lệch 3{,}4\%.
 Mức khớp đó vừa xác nhận cách ước lượng, vừa cho thấy phần token suy luận
 (\emph{reasoning}) bị tính tiền là không đáng kể ở mức
-\texttt{reasoning\_effort} trung bình --- nếu không, hóa đơn đã phải cao hơn
+\texttt{reasoning\_effort} trung bình - nếu không, hóa đơn đã phải cao hơn
 hẳn. Ghi token ngay tại lớp gọi API vẫn là việc nên làm, vì khi đó chi phí quy
 được về từng website và từng task thay vì chỉ so tổng.
 
@@ -888,7 +888,7 @@ Chân dung hành vi cho thấy fine-tuning không làm giảm tỷ lệ lỗi th
   \small
   \begin{tabular}{@{}L{3.6cm} R{3.0cm} R{3.0cm} R{2.8cm}@{}}
     \toprule
-    \textbf{Miền / Website} & \textbf{Mô hình nền 7B (SR, \%)} & \textbf{Sau fine-tune (SR, \%)} & \textbf{$\Delta$ SR (đpt)} \\
+    \textbf{Miền / Website} & \textbf{Mô hình nền 7B~\cite{gandhi2026gobrowse} (SR, \%)} & \textbf{Sau fine-tune (SR, \%)} & \textbf{$\Delta$ SR (đpt)} \\
     \midrule
     Shopping & 9{,}4 & \textbf{21{,}4} & $+$12{,}0 \\
     Shopping Admin & 7{,}1 & \textbf{11{,}5} & $+$4{,}4 \\
@@ -902,9 +902,9 @@ Chân dung hành vi cho thấy fine-tuning không làm giảm tỷ lệ lỗi th
 
 Bảng~\ref{tab:backbone7b} cho thấy tập dữ liệu HSGE cải thiện tỷ lệ thành công trên \textbf{cả bốn website}, nâng tổng thể từ 8{,}3\% lên \textbf{16{,}5\%} ($+$8{,}2 đpt, gần gấp đôi). Mức tăng mạnh nhất xuất hiện ở Reddit ($+$15{,}7 đpt) và Shopping ($+$12{,}0 đpt).
 
-Tuy nhiên, phân tích trace cho thấy 58--60\% task của bản 7B chứa ít nhất một phản hồi không phân giải được, và \textbf{không task nào trong nhóm đó thành công}. Khi loại trừ nhóm lỗi định dạng và chỉ xét các task có đầu ra sạch, tỷ lệ thành công của 7B đạt 21{,}9\% ở Shopping Admin, 23{,}7\% ở GitLab và 34{,}1\% ở Reddit — xấp xỉ mức của bản 9B trên cùng miền. Cần lưu ý rằng nhóm đầu ra sạch không phải mẫu phân bố ngẫu nhiên (các task ngắn có ít rủi ro hỏng định dạng hơn), nên đây là ước lượng \emph{thiên lệch lên}: nó chứng minh phần lớn khoảng cách xuất phát từ lỗi tuân thủ định dạng chứ không chứng minh 7B mạnh ngang 9B.
+Tuy nhiên, phân tích trace cho thấy 58-60\% task của bản 7B chứa ít nhất một phản hồi không phân giải được, và \textbf{không task nào trong nhóm đó thành công}. Khi loại trừ nhóm lỗi định dạng và chỉ xét các task có đầu ra sạch, tỷ lệ thành công của 7B đạt 21{,}9\% ở Shopping Admin, 23{,}7\% ở GitLab và 34{,}1\% ở Reddit — xấp xỉ mức của bản 9B trên cùng miền. Cần lưu ý rằng nhóm đầu ra sạch không phải mẫu phân bố ngẫu nhiên (các task ngắn có ít rủi ro hỏng định dạng hơn), nên đây là ước lượng \emph{thiên lệch lên}: nó chứng minh phần lớn khoảng cách xuất phát từ lỗi tuân thủ định dạng chứ không chứng minh 7B mạnh ngang 9B.
 
-Đáng chú ý, 92--98\% phản hồi hỏng của bản 7B là các lệnh \texttt{report\_infeasible} viết trần kết thúc bình thường kèm lý do mạch lạc (chỉ thiếu lớp vỏ JSON). Hệ quả là 7B chỉ ghi nhận 10/182 lần báo bất khả thi ở Shopping Admin so với 41/182 của bản 9B. Vì WebArena cho điểm khi agent báo bất khả thi chính xác, con số 16{,}5\% thực chất là một \textbf{cận dưới bị hạ thấp bởi bộ phân giải đầu ra nghiêm ngặt}. Do sai lệch này, kết quả của bản 7B không được đưa vào Bảng~\ref{tab:related} để so sánh đối đầu cùng-mô-hình-nền với Go-Browse-7B.
+Đáng chú ý, 92-98\% phản hồi hỏng của bản 7B là các lệnh \texttt{report\_infeasible} viết trần kết thúc bình thường kèm lý do mạch lạc (chỉ thiếu lớp vỏ JSON). Hệ quả là 7B chỉ ghi nhận 10/182 lần báo bất khả thi ở Shopping Admin so với 41/182 của bản 9B. Vì WebArena cho điểm khi agent báo bất khả thi chính xác, con số 16{,}5\% thực chất là một \textbf{cận dưới bị hạ thấp bởi bộ phân giải đầu ra nghiêm ngặt}. Do sai lệch này, kết quả của bản 7B không được đưa vào Bảng~\ref{tab:related} để so sánh đối đầu cùng-mô-hình-nền với Go-Browse-7B.
 
 Kết quả này khẳng định hai điểm quan trọng: (1) tập dữ liệu HSGE nâng cao năng lực cho \textbf{cả hai} mô hình nền so với chính chúng, chứng minh tri thức thu thập không bị phụ thuộc vào một kiến trúc duy nhất; và (2) đối với các mô hình nền nhỏ hơn, độ nghiêm của bộ phân giải đầu ra trở thành một thành phần chi phối kết quả đo lường (Mục~\ref{sec:conc-future}).
 
