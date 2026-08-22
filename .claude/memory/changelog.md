@@ -6,6 +6,22 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-22
 
+- **17:07** — `Thesis_report/Slide_KLTN_HSGE/{sections/01_gioithieu.tex, main.pdf,
+  presentation_script.md}` — **Restructured the Introduction into a four-beat narrative
+  and dropped the Harvey-ball related-work table.** The old two frames covered related
+  work only as a 5-row/4-column comparison table, which read as a checklist rather than
+  an argument. New frames: (1) context — the WebArena performance gap (GPT-4 14,41% vs
+  human 78,24%) and why API-served LLMs push toward local SLMs; (2) the data-collection
+  challenge plus the three prior research directions (A indirect knowledge — Synatra /
+  AgentTrek, B inference-time skills — AWM / SkillWeaver, C self-exploration for SLM
+  training data — NNetNav / Go-Browse) with their reported numbers; (3) the limitation of
+  each direction mapped onto the four core challenges plus the research question and the
+  research gap; (4) the HSGE solution (graph search + second abstraction layer of
+  verified skills → operators → chained semantic tasks → SFT), the five objectives O1–O5
+  and the scope block. Main deck grew 19 → 21 frames; the presentation script was
+  renumbered (slides 2–3 → 2–5, later slides +2, footer pages +2, appendix PL1–PL8 now
+  pages 24–31) with new speaker text and timings for the four intro slides.
+
 - **16:12** — `Thesis_report/Slide_KLTN_HSGE/presentation_script.md` — **Added Q&A
   section C: "why train per step instead of per trajectory?"** A step example is not a
   step severed from its trajectory — every prompt carries `# Goal` (the long task,
