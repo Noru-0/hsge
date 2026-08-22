@@ -166,8 +166,8 @@ Mô hình Qwen3.5-9B sau khi fine-tune bằng LoRA trên tập dữ liệu tự 
 \textbf{3. Cải thiện cả độ chính xác cú pháp lẫn khả năng lựa chọn hành động:}
 Phân tích chi tiết các lỗi cho thấy sự cải thiện hiệu năng của mô hình đến từ hai khía cạnh rõ rệt:
 \begin{itemize}
-  \emph{Tuân thủ định dạng và cú pháp hành động:} Mô hình học được cách xuất ra câu lệnh Python hợp lệ mà trình duyệt có thể thực thi được, giảm tỷ lệ phiên bị hủy do lỗi cú pháp từ 26,0\% ở mô hình gốc xuống chỉ còn 0,6\% sau khi fine-tune.
-  \emph{Năng lực suy luận và lựa chọn hành động:} Trên tập 485 task mà mô hình gốc đã xuất đúng cú pháp, tỷ lệ giải thành công của mô hình sau fine-tune vẫn tăng từ 17,9\% lên 23,5\%. Kết quả này cho thấy dữ liệu huấn luyện không chỉ giúp mô hình tuân thủ cú pháp, mà còn cải thiện khả năng ra quyết định khi tương tác với website.
+  \item \emph{Tuân thủ định dạng và cú pháp hành động:} Mô hình học được cách xuất ra câu lệnh Python hợp lệ mà trình duyệt có thể thực thi được, giảm tỷ lệ phiên bị hủy do lỗi cú pháp từ 26,0\% ở mô hình gốc xuống chỉ còn 0,6\% sau khi fine-tune.
+  \item \emph{Năng lực suy luận và lựa chọn hành động:} Trên tập 485 task mà mô hình gốc đã xuất đúng cú pháp, tỷ lệ giải thành công của mô hình sau fine-tune vẫn tăng từ 17,9\% lên 23,5\%. Kết quả này cho thấy dữ liệu huấn luyện không chỉ giúp mô hình tuân thủ cú pháp, mà còn cải thiện khả năng ra quyết định khi tương tác với website.
 \end{itemize}
 
 \textbf{4. Rào cản cốt lõi nằm ở tầng thực thi thay vì quy mô dữ liệu:}
