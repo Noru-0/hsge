@@ -287,12 +287,26 @@
     \end{column}
     \hfill
     \begin{column}{0.48\textwidth}
-      \textbf{(b) Đổi mô hình nền (Qwen-2.5-7B)}
-      \begin{itemize}\setlength{\itemsep}{2.5pt}
-        \item Cùng 8554 mẫu, FT Qwen-2.5-7B: \kw{12,7\%} (so với 8,3\% gốc).
-        \item 275 phản hồi lỗi là lệnh \texttt{report\_infeasible} viết trần bị bộ phân giải loại.
-        \item $\Rightarrow$ Dữ liệu nâng được \emph{cả hai} mô hình nền, không phụ thuộc kiến trúc đơn lẻ.
-      \end{itemize}
+      \textbf{(b) Đổi mô hình nền Qwen-2.5-7B (Bảng 4.14)}
+      \vspace{0.04cm}
+      \scriptsize
+      \setlength{\tabcolsep}{1pt}
+      \begin{tabular}{@{}L{1.4cm} C{1.0cm} C{1.0cm} C{0.9cm}@{}}
+        \toprule
+        \textbf{Website} & \textbf{Base} & \textbf{Sau FT} & \textbf{$\Delta$ SR} \\
+        \midrule
+        Shopping & 9,4\% & \textbf{21,4\%} & $+$12,0 \\
+        Admin & 7,1\% & \textbf{11,5\%} & $+$4,4 \\
+        GitLab & 8,7\% & \textbf{12,2\%} & $+$3,5 \\
+        Reddit & 7,9\% & \textbf{23,6\%} & $+$15,7 \\
+        \midrule
+        \textbf{Tổng 7B} & \textbf{8,3\%} & \textbf{16,5\%} & \kw{$+$8,2} \\
+        \bottomrule
+      \end{tabular}
+      \vspace{0.04cm}
+
+      \raggedright
+      {\scriptsize Đạt \kw{16,5\%} (tăng gần gấp đôi); nâng cả 2 mô hình nền.}
     \end{column}
   \end{columns}
 \end{frame}
