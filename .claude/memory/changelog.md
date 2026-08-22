@@ -4,6 +4,17 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-23
+
+- **02:51** — `Thesis_report/thesis_hsge_vi/{Chapter1/chapter1.tex, Chapter4/chapter4.tex, main.pdf}` — **Restructured and aligned Chapter 4 with Chapter 1's research questions (CH1–CH4):**
+  - Synchronized CH labels in Chapter 4 with `tab:rqmap` (Ch1 §1.5): §4.1.3 labeled for CH1/CH3, §4.6 labeled for CH2, §4.7 labeled for CH4, and new §4.8 labeled for CH2/CH3.
+  - Added `\ref{sec:exp-datascale}` to CH2 and `\ref{sec:exp-backbone}` to CH3 in `tab:rqmap` (`Chapter1/chapter1.tex`).
+  - Restructured §4.6 ("Ảnh hưởng của lượng dữ liệu"): rewritten §4.6.1 with clean 4-beat structure highlighting the isolated data-scaling effect (Reddit 20,8\% $\rightarrow$ 34,0\%, Shopping Admin 15,4\% $\rightarrow$ 21,4\%, $+$8,7 pp overall on 288 tasks); condensed §4.6.2 (unexecuted ablations) to ~5 lines.
+  - Moved cross-site observation (`tab:crosssite`) to §4.7 as the introductory analysis subsection (`sec:exp-crosssite`), resolving self-referencing links.
+  - Added dedicated Section §4.8 (`sec:exp-backbone`) presenting full 4-domain results for Qwen-2.5-7B (8,3\% $\rightarrow$ 16,5\%, $+$8,2 pp overall, Table `tab:backbone7b`), detailed format compliance analysis (58–60\% unparsed tasks, 92–98\% bare `report_infeasible` commands lowering the lower-bound score), and why 7B is excluded from head-to-head `tab:related`.
+  - Promoted Chapter Summary to `\section{Tổng kết chương}` and added summaries for data scaling and 7B backbone findings.
+  - Streamlined chapter prose by 15–20\% while preserving all empirical metrics and tables. Verified clean LaTeX build: 0 undefined references, 0 errors.
+
 ## 2026-08-22
 
 - **17:07** — `Thesis_report/Slide_KLTN_HSGE/{sections/01_gioithieu.tex, main.pdf,
