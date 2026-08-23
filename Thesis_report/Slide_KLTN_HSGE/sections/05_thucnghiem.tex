@@ -7,31 +7,32 @@
 \subsection{Thiết lập \& Câu hỏi nghiên cứu}
 \begin{frame}{Câu hỏi nghiên cứu và thiết lập thực nghiệm}
   \begin{columns}[t]
-    \begin{column}{0.485\textwidth}
+    \begin{column}{0.44\textwidth}
       \uncover<1->{
         \begin{block}{3 Câu hỏi nghiên cứu (RQ)}
-          \begin{itemize}\scriptsize\setlength{\itemsep}{5pt}
-            \item \textbf{CH1.} Khả năng tự động tạo tác vụ có ý nghĩa và quy mô tập dữ liệu thu được?
-            \item \textbf{CH2.} Năng lực của SLM sau fine-tuning so với mô hình nền và các SOTA?
-            \item \textbf{CH3.} Hiệu quả chi phí kinh tế của chu trình tự động sinh dữ liệu?
+          \begin{itemize}\scriptsize\setlength{\itemsep}{4pt}
+            \item \textbf{CH1.} Có thể tự động tạo ra các tác vụ có ý nghĩa hay không?
+            \item \textbf{CH2.} Năng lực của SLM sau khi fine-tune được cải thiện như thế nào?
+            \item \textbf{CH3.} Hệ thống đạt hiệu quả chi phí như thế nào trong quá trình tự động tạo dữ liệu?
           \end{itemize}
         \end{block}
       }
     \end{column}
     \hfill
-    \begin{column}{0.485\textwidth}
+    \begin{column}{0.53\textwidth}
       \uncover<2->{
-        \begin{block}{Thiết lập thực nghiệm}
-          \begin{itemize}\scriptsize\setlength{\itemsep}{3.5pt}
-            \item \textbf{Mô hình}: Base Qwen3.5-9B $\rightarrow$ HSGE-9B.
-            \item \textbf{Fine-tuning}: LoRA / QLoRA (3 epoch, 1119 bước).
-            \item \textbf{Đánh giá}: WebArena 655 task / 4 site, chấm bằng Task SR benchmark.
-            \item \textbf{Đối chứng}: cùng prompt, cùng ngân sách bước với mô hình nền.
+        \begin{block}{Thiết lập thực nghiệm chi tiết}
+          \begin{itemize}\scriptsize\setlength{\itemsep}{2.0pt}
+            \item \textbf{Môi trường khám phá}: Playwright / BrowserGym, Chromium.
+            \item \textbf{Website}: 4 site - Shopping, Admin, GitLab, Reddit.
+            \item \textbf{Benchmark}: WebArena - 655 task.
+            \item \textbf{Mô hình}: Qwen3.5-9B-Instruct $\rightarrow$ HSGE-9B.
+            \item \textbf{Fine-tuning}: LoRA (3 epochs).
+            \item \textbf{Tiêu chí}: Task Success Rate (SR).
           \end{itemize}
         \end{block}
       }
     \end{column}
-
   \end{columns}
 \end{frame}
 
@@ -89,17 +90,16 @@
 \end{frame}
 
 \subsection{CH2: Năng lực của SLM sau fine-tuning}
-\begin{frame}{CH2 - So sánh hiệu năng với các hệ thống SOTA}
+\begin{frame}{CH2 - So sánh hiệu năng với các hệ thống liên quan}
   \centering
-  \vspace{-0.1cm}
+  \vspace{-0.05cm}
   \setlength{\tabcolsep}{4pt}
   \begin{table}
     \scriptsize
     \begin{tabular}{@{}L{4.8cm} R{1.7cm} R{1.2cm} R{1.2cm} R{1.2cm} R{1.2cm}@{}}
       \toprule
-      \textbf{Mô hình} & \multicolumn{5}{c}{\textbf{Tỷ lệ thành công Task SR (\%)}} \\
+      \textbf{Mô hình} & \multicolumn{5}{c}{\textbf{Tỷ lệ thành công -- SR (\%)}} \\
       \cmidrule(lr){2-6}
-
       & \textbf{Tổng (4 site)} & \textbf{Shopping} & \textbf{Admin} & \textbf{Reddit} & \textbf{GitLab} \\
       \midrule
       \multicolumn{6}{@{}l}{\textit{Mô hình đóng}} \\
@@ -116,114 +116,117 @@
       \textbf{HSGE-9B (Khóa luận)} & \textbf{24{,}6} & \textbf{28{,}3} & 21{,}4 & \textbf{34{,}0} & 18{,}3 \\
       \bottomrule
     \end{tabular}
-    \vspace{0.08cm}
+    \vspace{0.06cm}
     \centering
-    \\ \scriptsize \textbf{Bảng 2: So sánh tỷ lệ thành công Task SR (\%) với các hệ thống SOTA trên WebArena}
+    \\ \scriptsize \textbf{Bảng 2: So sánh tỷ lệ thành công Task SR (\%) với các hệ thống liên quan trên WebArena}
   \end{table}
 \end{frame}
 
 \begin{frame}{CH2 - So sánh mô hình nền (Base) và fine-tuning theo Website}
   \centering
-  \vspace{-0.25cm}
-  \setlength{\tabcolsep}{3pt}
+  \vspace{-0.20cm}
+  \renewcommand{\arraystretch}{0.88}
+  \setlength{\tabcolsep}{2.5pt}
   \begin{table}
     \scriptsize
-    \begin{tabular}{@{}L{2.3cm} R{2.4cm} R{2.7cm} R{1.9cm} R{2.1cm}@{}}
+    \begin{tabular}{@{}L{2.3cm} C{1.6cm} C{1.6cm} C{1.5cm} C{1.6cm} C{1.3cm} C{1.5cm}@{}}
       \toprule
-      \textbf{Website} & \textbf{Base (SR, \%)} & \textbf{Fine-tuned (SR, \%)} &
-      \textbf{$\Delta$ SR (đpt)} & \textbf{$p$ (McNemar)} \\
+      \textbf{Website} & \textbf{Base (SR)} & \textbf{Pha 1 (SR)} & \textbf{Thêm mẫu} & \textbf{Pha 2 (SR)} & \textbf{$\Delta$ SR} & \textbf{$p$ (McNemar)} \\
       \midrule
-      Shopping       & 37/187 $=$ 19,8 & 53/187 $=$ 28,3 & $+$8,6  & 0,011 \\
-      Reddit         & 7/106 $=$ 6,6   & 36/106 $=$ 34,0 & $+$27,4 & $<$0,001 \\
-      GitLab         & 20/180 $=$ 11,1 & 33/180 $=$ 18,3 & $+$7,2  & 0,011 \\
-      Shopping Admin & 23/182 $=$ 12,6 & 39/182 $=$ 21,4 & $+$8,8  & 0,005 \\
+      Shopping       & 19,8\% & 28,3\% & -- & 28,3\% & $+$8,6 & 0,011 \\
+      Reddit         & 6,6\%  & 20,8\% & $+$1856 & \textbf{34,0\%} & $+$27,4 & $<$0,001 \\
+      GitLab         & 11,1\% & 18,3\% & -- & 18,3\% & $+$7,2 & 0,011 \\
+      Shopping Admin & 12,6\% & 15,4\% & $+$2410 & \textbf{21,4\%} & $+$8,8 & 0,005 \\
       \midrule
-      \textbf{Tổng} & \textbf{87/655 $=$ 13,3} & \textbf{161/655 $=$ 24,6} &
-      \kw{$+$11,3} & \kw{$<$0,001} \\
+      \textbf{Tổng (655 task)} & \textbf{13,3\%} & \textbf{19,4\%} & \textbf{$+$4266} & \textbf{24,6\%} & \kw{$+$11,3} & \kw{$<$0,001} \\
       \bottomrule
     \end{tabular}
-    \vspace{0.02cm}
+    \vspace{0.01cm}
     \centering
-    \\ \scriptsize \textbf{Bảng 3: Đối chứng mô hình nền Qwen3.5-9B và mô hình sau Fine-tune theo 4 Website}
+    \\ \scriptsize \textbf{Bảng 3: Hiệu năng Fine-tune theo 4 Website, bổ sung dữ liệu (Pha 1 $\rightarrow$ 2) và kiểm định McNemar}
   \end{table}
 
-  \vspace{-0.45cm}
+  \vspace{-0.35cm}
   \begin{columns}[t,onlytextwidth]
     \begin{column}{0.49\textwidth}
-      \begin{alertblock}{Phân tích kết quả}
+      \begin{block}{Kỷ luật cú pháp}
         \begin{itemize}\scriptsize\setlength{\itemsep}{0pt}
-          \item \textbf{Cú pháp}: Lỗi định dạng giảm từ 26,0\% $\rightarrow$ \kw{0,6\%}.
-          \item \textbf{Ra quyết định}: SR chuẩn cú pháp tăng \kw{17,9\% $\rightarrow$ 23,5\%} ($p=0{,}003$).
+          \item Lỗi định dạng giảm triệt để \kw{26,0\% $\rightarrow$ 0,6\%}.
+          \item Mô hình tuân thủ tuyệt đối cấu trúc lệnh Python.
         \end{itemize}
-      \end{alertblock}
+      \end{block}
     \end{column}
     \hfill
     \begin{column}{0.49\textwidth}
-      \begin{block}{Ý nghĩa thống kê McNemar}
+      \begin{block}{Năng lực ra quyết định}
         \begin{itemize}\scriptsize\setlength{\itemsep}{0pt}
-          \item \textbf{Vượt trội Base}: \kw{100 task độc quyền} HSGE giải được (Base chỉ 26 task).
-          \item \textbf{Ý nghĩa thống kê}: Đạt \kw{$p < 0{,}001$} trên toàn bộ 4 website.
+          \item Trên 485 task đúng cú pháp, SR tăng \kw{17,9\% $\rightarrow$ 23,5\%}.
+          \item Giai đoạn fine-tune giải thêm \kw{100 task độc quyền}.
         \end{itemize}
       \end{block}
     \end{column}
   \end{columns}
 
-  \vspace{-0.15cm}
-  \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
-    \scriptsize \kw{Kết luận CH2}: Fine-tuning nâng Task SR lên 24,6\% ($+11,3\%$, $p < 0{,}001$), làm chủ cả cú pháp lẫn ra quyết định, đạt mức SOTA $<10$B.
+  \vspace{0.02cm}
+  \begin{beamercolorbox}[wd=\textwidth,sep=2pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
+    \scriptsize \kw{Kết luận CH2}: Fine-tuning nâng Task SR lên 24,6\% ($+11,3\%$, $p < 0{,}001$), làm chủ cả cú pháp lẫn ra quyết định, mở rộng dữ liệu giúp liên tục nâng mức trần hiệu năng.
   \end{beamercolorbox}
 \end{frame}
 
 \subsection{CH3: Hiệu quả chi phí trong tự động tạo dữ liệu}
-\begin{frame}{CH3 - Hiệu quả chi phí trong quá trình tự động tạo dữ liệu}
-  \vspace{-0.15cm}
+\begin{frame}{CH3 - Phân bổ mô hình và chi phí tự động tạo dữ liệu}
+  \vspace{-0.25cm}
   \begin{columns}[t,onlytextwidth]
-    \begin{column}{0.49\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Chi phí API toàn chu trình \& Token}
-        \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
-          \item \textbf{OpenAI API}: \$42,29 (\texttt{solver}, \texttt{explorer}).
-          \item \textbf{DeepSeek API}: \$11,92 (\texttt{judge}, pipeline skill).
+        \begin{itemize}\scriptsize\setlength{\itemsep}{1pt}
+          \item \textbf{OpenAI API}: \$42,29 (Solver, Explorer).
+          \item \textbf{DeepSeek API}: \$11,92 (Judge, Skill).
           \item \textbf{Tổng chi phí API}: \kw{\$54,21} ($<$ \$14 / site).
-          \item \textbf{Đơn giá / trajectory}: \kw{\$0,0308} / trajectory.
-          \item \textbf{Lời gọi API}: \kw{20.808 lượt} LLM (Solver \kw{85,5\%}).
-          \item \textbf{Tối ưu token}: Chuyển sang GPT-5.6-luna giúp giảm đơn giá token đầu vào \kw{$\sim$12 lần} so với GPT-4o.
+          \item \textbf{Đơn giá / trajectory}: \kw{\$0,0308} (tối ưu token \kw{$\sim$12 lần} nhờ GPT-5.6-luna).
         \end{itemize}
       \end{block}
     \end{column}
     \hfill
-    \begin{column}{0.48\textwidth}
-      \begin{block}{So sánh hiệu quả chi phí với Go-Browse}
+    \begin{column}{0.50\textwidth}
+      \begin{block}{Phân bổ mô hình theo vai trò Agent}
         \centering
-        \vspace{-0.1cm}
-        \setlength{\tabcolsep}{3pt}
+        \vspace{-0.05cm}
+        \setlength{\tabcolsep}{1.5pt}
         \scriptsize
-        \begin{tabular}{@{}L{2.3cm} R{3.3cm}@{}}
+        \begin{tabular}{@{}L{2.8cm} L{2.8cm}@{}}
           \toprule
-          \textbf{Phương pháp} & \textbf{Chi phí API / Trajectory} \\
+          \textbf{Vai trò Agent} & \textbf{Mô hình sử dụng} \\
           \midrule
-          Go-Browse-7B & \$0,1026 \\
-          \textbf{HSGE (Khóa luận)} & \kw{\$0,0308} \\
-          \midrule
-          \textbf{Tỷ lệ tiết kiệm} & \kw{Rẻ hơn 3,3 lần} \\
+          Seeder / Explorer / Solver & GPT-5.6-luna (Vision) \\
+          Goal Solver (Đa bước) & GPT-5.6-terra \\
+          Detector / Evaluator & DeepSeek-chat \\
           \bottomrule
         \end{tabular}
-
-        \vspace{0.02cm}
-        \scriptsize \textbf{Bảng 4: So sánh đơn giá API trajectory tự động tạo}
-      \end{block}
-
-      \vspace{-0.25cm}
-      \begin{block}{Ý nghĩa kinh tế}
-        \begin{itemize}\scriptsize\setlength{\itemsep}{1pt}
-          \item Khẳng định tính khả thi với tài nguyên giới hạn.
-          \item Chu trình HSGE nằm trong ngân sách nhóm nhỏ.
-        \end{itemize}
+        \vspace{0.01cm}
       \end{block}
     \end{column}
   \end{columns}
 
-  \vspace{0.05cm}
-  \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
-    \scriptsize \kw{Kết luận CH3}: Chi phí API tự tạo dữ liệu \$0,0308/trajectory (rẻ hơn Go-Browse 3,3 lần), chứng minh tính khả thi kinh tế vượt trội cho nhóm nhỏ.
+  \vspace{-0.05cm}
+  \begin{block}{So sánh hiệu quả chi phí với Go-Browse}
+    \centering
+    \vspace{-0.05cm}
+    \setlength{\tabcolsep}{8pt}
+    \scriptsize
+    \begin{tabular}{@{}L{3.2cm} C{4.0cm} R{2.6cm}@{}}
+      \toprule
+      \textbf{Phương pháp} & \textbf{Chi phí API / Trajectory} & \textbf{Tỷ lệ tiết kiệm} \\
+      \midrule
+      Go-Browse-7B & \$0,1026 & Baseline \\
+      \textbf{HSGE (Khóa luận)} & \kw{\$0,0308} & \kw{Rẻ hơn 3,3 lần} \\
+      \bottomrule
+    \end{tabular}
+    \vspace{0.01cm}
+  \end{block}
+
+  \vspace{0.02cm}
+  \begin{beamercolorbox}[wd=\textwidth,sep=2pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
+    \scriptsize \kw{Kết luận CH3}: Chi phí API tự tạo dữ liệu \$0,0308/trajectory (rẻ hơn Go-Browse 3,3 lần), chứng minh tính khả thi kỹ thuật và tài nguyên cho các nhóm nghiên cứu nhỏ.
   \end{beamercolorbox}
 \end{frame}
