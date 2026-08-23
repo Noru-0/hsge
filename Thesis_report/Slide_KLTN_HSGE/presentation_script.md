@@ -1,743 +1,264 @@
 # Kịch bản trình bày — Bảo vệ KLTN HSGE
 
-**Ngân sách:** 15 phút trình bày + 15 phút hỏi đáp (thông báo bảo vệ đợt 04/2026).
-Deck có **25 trang phần nội dung** (18 slide phải nói + 1 trang cảm ơn/Q&A + 1 trang mục
-lục đầu bài + 5 trang mục lục chương lướt qua) và **8 trang phụ lục PL1–PL8** đặt sau
-trang cảm ơn, chỉ bật khi được hỏi.
-
-**Bố cục sáu mục** (theo góp ý của Hội đồng): _Giới thiệu (động lực) → Phát biểu bài toán
-→ Nghiên cứu liên quan → Phương pháp → Thực nghiệm → Kết luận & Hỏi đáp_. Mạch kể là
-**bài toán trước, thách thức, tình trạng hiện tại, rồi mới tới lời giải** — không nói
-chi tiết phương pháp nào trước mục 4.
-
-**Chia hai người:** Người 1 slide 1–12 (đặt vấn đề + phương pháp), Người 2 slide 13–18
-(thực nghiệm + kết luận). Điểm cắt ở **10:00**, sau slide 12, khi chuyển từ _"làm thế nào"_
-sang _"đo được gì"_.
-
-**Cách đọc kịch bản:**
-
-- **Nói** = lời thoại, viết theo văn nói, đọc thẳng được.
-- **Câu chốt** = câu duy nhất bắt buộc phải lọt tai Hội đồng ở slide đó.
-- **Tránh** = chỗ dễ nói quá; nói sai một chữ ở đây là mất điểm tin cậy.
-- `[lược nếu trễ]` = cắt được mà không gãy mạch.
-- **▶ Bản nói** (slide 2–6) = bản **đúng ngân sách thời gian**, là bản để học thuộc và
-  nói trên sân khấu. **Bản đầy đủ** ngay dưới nó là văn bản nền: đọc để nắm mạch lập
-  luận và để có sẵn câu chữ khi Hội đồng hỏi sâu vào một ý — **không đọc hết khi trình
-  bày**, nó dài gấp ba ngân sách.
-- Cột "Trang" là **số slide hiện ở footer** (`n / 25`), không phải số trang PDF: deck
-  dùng overlay nên `main.pdf` hiện có 53 trang. Nhảy nhanh thì dùng số footer.
-  Riêng phụ lục không có số footer — dùng **số trang PDF 46–53**.
+**Thời lượng:** 15 phút trình bày + 15 phút hỏi đáp.
+**Cấu trúc deck:** 25 trang nội dung (18 slide thuyết trình chính + 1 slide cảm ơn/Q&A + mục lục) và 8 slide phụ lục (chỉ mở khi Hội đồng hỏi sâu).
+**Phân chia:** 
+- **Người 1 (Slide 1–12):** Giới thiệu, Động lực, Phát biểu bài toán, Nghiên cứu liên quan, Phương pháp HSGE.
+- **Người 2 (Slide 13–18):** Thiết lập thực nghiệm, Kết quả 3 Câu hỏi nghiên cứu (CH1, CH2, CH3), Kết luận & Hướng phát triển.
+- **Điểm chuyển giao:** Sau Slide 12 (kết thúc phần Phương pháp, chuyển sang Thực nghiệm).
 
 ---
 
-## Bảng thời lượng
+## Slide 1 — Bìa
 
-| Slide | Trang | Nội dung                                       | Mốc   | Thời lượng |
-| ----- | ----- | ---------------------------------------------- | ----- | ---------- |
-| 1     | 1     | Bìa                                            | 0:00  | 0:30       |
-| 2     | 4     | _M1_ Động lực của khóa luận                    | 0:30  | 0:50       |
-| 3     | 6     | _M2_ Phát biểu bài toán và phạm vi             | 1:20  | 0:50       |
-| 4     | 7     | _M2_ Bốn thách thức cốt lõi                    | 2:10  | 0:50       |
-| 5     | 9     | _M3_ Ba hướng tiếp cận hiện nay                | 3:00  | 0:50       |
-| 6     | 10    | _M3_ Hạn chế và khoảng trống nghiên cứu        | 3:50  | 0:55       |
-| 7     | 12    | _M4_ Giải pháp HSGE & các đóng góp chính       | 4:45  | 0:50       |
-| 8     | 13    | _M4_ Tổng quan pipeline HSGE                   | 5:35  | 0:55       |
-| 9     | 14    | _M4_ Đồ thị hai tầng                           | 6:30  | 0:50       |
-| 10    | 15    | _M4_ Phát hiện skill → quy nạp operator        | 7:20  | 0:55       |
-| 11    | 16    | _M4_ Sinh semantic task                        | 8:15  | 0:50       |
-| 12    | 17    | _M4_ Tinh lọc dữ liệu _(chuyển người)_         | 9:05  | 0:55       |
-| 13    | 19    | _M5_ Thiết lập & Câu hỏi nghiên cứu            | 10:00 | 0:45       |
-| 14    | 20    | _M5_ CH1 — Tự động tạo tác vụ & Quy mô dữ liệu | 10:45 | 0:50       |
-| 15    | 21    | _M5_ CH2 — So sánh hiệu năng SOTA              | 11:35 | 0:50       |
-| 16    | 22    | _M5_ CH2 — So sánh Base và Fine-tuning         | 12:25 | 0:50       |
-| 17    | 23    | _M5_ CH3 — Hiệu quả chi phí tự sinh dữ liệu    | 13:15 | 0:40       |
-| 18    | 24    | _M6_ Kết luận & Hướng phát triển               | 13:55 | 1:00       |
+Kính thưa Thầy Cô trong Hội đồng. Em là Trương Bảo Kiệt, cùng bạn Hồ Tiến Phát, xin phép được báo cáo khóa luận tốt nghiệp với đề tài: **“Khám phá theo đồ thị kỹ năng phân cấp để tự động sinh dữ liệu huấn luyện cho tác nhân trí tuệ nhân tạo trên web”**, dưới sự hướng dẫn của PGS.TS. Nguyễn Văn Vũ.
 
-Kết thúc ở **14:55**. Bảng này khớp với các **"▶ Bản nói"** (đo ở tốc độ ~190 tiếng/phút),
-không khớp với bản đầy đủ — bản đầy đủ dài gấp khoảng ba lần và chỉ dùng để nắm ý.
+Bài trình bày của nhóm gồm sáu nội dung chính:
+1. Động lực của khóa luận
+2. Phát biểu bài toán và thách thức
+3. Nghiên cứu liên quan và khoảng trống
+4. Phương pháp đề xuất HSGE
+5. Kết quả thực nghiệm và đánh giá
+6. Kết luận và hướng phát triển
 
-Phần đặt vấn đề trải trên **năm** slide (2–6), mỗi slide đúng một nhịp: động lực → bài
-toán → thách thức → công trình liên quan → khoảng trống. Tổng phần này ~4:15; nếu trễ thì
-lược nhóm (A) ở slide 5 và gộp T1–T2 ở slide 4 thành một câu.
-
-Trang 2 là mục lục đầu bài; trang 4, 7, 10, 17 là mục lục đầu mục — bấm lướt, không dừng
-nói. Trang 24 là trang cảm ơn / Hỏi & Đáp; dừng ở đó và mời Hội đồng đặt câu hỏi.
+**Sau đây, em xin bắt đầu với động lực thúc đẩy nghiên cứu.**
 
 ---
 
-## Slide 1 - Bìa (0:00, trang 1)
+## Slide 2 — Động lực của khóa luận
 
-> Kính thưa Hội đồng. Em là Trương Bảo Kiệt, cùng bạn Hồ Tiến Phát, trình bày khóa
-> luận _"Khám phá theo đồ thị kỹ năng phân cấp để tự động sinh dữ liệu huấn luyện cho
-> tác nhân trí tuệ nhân tạo trên web"_, dưới sự hướng dẫn của PGS.TS. Nguyễn Văn Vũ.
->
-> Bài trình bày gồm sáu phần: giới thiệu và động lực, phát biểu bài toán, các nghiên cứu
-> liên quan, phương pháp HSGE, kết quả thực nghiệm, và cuối cùng là kết luận cùng phần
-> hỏi đáp.
+Kính thưa Hội đồng. Sự phát triển của các **Mô hình Ngôn ngữ Lớn (LLM)** đã mở ra bước chuyển quan trọng: từ chatbot hỏi-đáp thông thường sang các **tác nhân tự hành (Web Agent)** có khả năng nhận chỉ thị bằng ngôn ngữ tự nhiên để tự động điều khiển trình duyệt.
 
----
+Tuy nhiên, khi đưa agent vào một website thực tế chưa từng thấy, agent lập tức gặp khó khăn. Mặc dù nắm vững kiến thức ngôn ngữ chung, agent lại **hoàn toàn thiếu hiểu biết về cấu trúc và luồng nghiệp vụ của chính website mục tiêu**.
 
-## Slide 2 - Động lực của khóa luận (0:30, trang 4)
+Con số thực nghiệm trên bộ chuẩn **WebArena** chỉ rõ khoảng cách này: trong khi **con người đạt 78,24%**, thì agent dùng **GPT-4 chỉ đạt 14,41%**. Rõ ràng, mô hình tổng quát là **chưa đủ**, mà bắt buộc phải được **chuyên biệt hóa** cho từng môi trường cụ thể.
 
-**▶ Bản nói — đúng ngân sách 0:50 (đây là bản học thuộc):**
+Mặt khác, việc dựa vào API của các LLM thương mại lớn gặp 3 rào cản lớn: **chi phí cộng dồn cao, độ trễ mạng, và rủi ro rò rỉ dữ liệu riêng tư**. Do đó, hướng tiếp cận bền vững là triển khai các **mô hình nhỏ dưới 10 tỷ tham số (SLM <10B) chạy cục bộ**. Và đối với mô hình nhỏ, **fine-tuning là bắt buộc**.
 
-> Kính thưa Hội đồng. LLM đã đưa chúng ta từ chatbot sang **tác nhân tự hành**, và Web
-> Agent là hướng nổi bật nhất. Nhưng đặt một agent vào website nó **chưa từng thấy** thì nó
-> lúng túng ngay: biết "mua hàng trên mạng" nói chung, không biết trong **hệ thống này** nút
-> đó ở đâu. Trên WebArena, **con người 78,24%**, agent dùng **GPT-4 chỉ 14,41%**. Điều đáng
-> nói là khoảng cách này **không đóng lại bằng mô hình to hơn** — thứ thiếu là **hiểu biết
-> về chính môi trường triển khai**.
->
-> Mà cách phổ biến hiện nay, gọi API mô hình lớn, lại vướng ba rào cản: chi phí cộng dồn,
-> độ trễ, và **rủi ro riêng tư** vì dữ liệu nội bộ phải gửi ra ngoài. Nên hướng bền vững là
-> **mô hình nhỏ dưới 10B chạy cục bộ** — và mô hình nhỏ thì **bắt buộc phải fine-tune**.
-> Nút thắt vì thế dịch từ _mô hình_ sang **dữ liệu**: lấy dữ liệu ở đâu cho một website
-> cụ thể?
-
-**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
-
-> Kính thưa Hội đồng. Sự phát triển của các **Mô hình Ngôn ngữ Lớn** đã đưa chúng ta từ
-> chatbot trả lời thụ động sang **tác nhân tự hành**, và **Web Agent** là hướng nổi bật
-> nhất: người dùng ra lệnh bằng ngôn ngữ tự nhiên, tác nhân tự điều khiển trình duyệt để
-> làm xong việc — chẳng hạn _"vào hệ thống nội bộ kiểm tra đơn hàng tồn và xuất báo cáo"_.
->
-> Nhưng có một điều rất dễ quan sát trong thực tế: đặt một agent vào một website nó **chưa
-> từng thấy**, nó sẽ lúng túng. Nó biết "mua hàng trên mạng" nói chung là làm gì, nhưng
-> không biết trong **hệ thống này** thì nút đó nằm ở đâu, phải đi qua những trang nào. Nó
-> giống một nhân viên mới ngày đầu đi làm: kiến thức chung thì có, hiểu biết về đúng phần
-> mềm của công ty thì chưa.
->
-> Con số nói đúng điều đó. Trên **WebArena** — bộ chuẩn dựng lại các website thật — **con
-> người đạt 78,24%**, còn agent dùng **GPT-4 chỉ đạt 14,41%** tại thời điểm bộ chuẩn được
-> công bố. Và điểm đáng chú ý là: khoảng cách này **không đóng lại chỉ bằng cách dùng mô
-> hình to hơn**. Thứ đang thiếu không phải là tham số, mà là **hiểu biết về chính môi
-> trường sẽ triển khai** — thứ chỉ có được từ dữ liệu tương tác trên đúng website đó.
->
-> _(Click 2)_ Cách làm phổ biến hiện nay là gọi thẳng **API của LLM lớn thương mại**. Cách
-> này vướng ba rào cản khi đưa vào vận hành thật: chi phí cộng dồn theo từng bước thao tác,
-> độ trễ mạng khi chạy hàng loạt, và quan trọng nhất là **rủi ro riêng tư** — mọi màn hình
-> nội bộ đều phải gửi ra ngoài tổ chức.
->
-> _(Click 3)_ Vì vậy hướng bền vững là **mô hình ngôn ngữ nhỏ, dưới 10 tỷ tham số, chạy cục
-> bộ**. Nhưng mô hình nhỏ càng không biết gì về website lạ, nên **bắt buộc phải fine-tune**.
-> Và đến đây nút thắt dịch chuyển: từ chỗ _thiếu mô hình đủ mạnh_ sang chỗ **thiếu dữ liệu
-> tương tác của đúng website đó**.
->
-> Nếu nút thắt là dữ liệu, thì bài toán cần giải chính là: **lấy dữ liệu huấn luyện ở đâu
-> cho một website cụ thể?**
-
-**Câu chốt:** Nút thắt của Web Agent không nằm ở kích thước mô hình, mà nằm ở **hiểu biết
-về chính môi trường triển khai** — tức ở **dữ liệu tương tác của từng website cụ thể**.
-
-**Tránh:** không nói "LLM không làm được web" — con số đúng là _14,41% so với 78,24% của
-con người_, tức làm được nhưng còn xa mức dùng được. Cũng đừng nói "mô hình lớn hơn thì sẽ
-giải quyết được" — đó là điều slide này đang phản bác.
-
-`[lược nếu trễ]` Bỏ hình ảnh "nhân viên mới ngày đầu", vào thẳng con số 14,41% / 78,24%.
+Như vậy, nút thắt cốt lõi đã dịch chuyển từ *năng lực mô hình* sang **dữ liệu huấn luyện**: *Lấy dữ liệu huấn luyện ở đâu cho từng website cụ thể?*
 
 ---
 
-## Slide 3 - Phát biểu bài toán và phạm vi (1:20, trang 5)
+## Slide 3 — Phát biểu bài toán và phạm vi
 
-**▶ Bản nói — đúng ngân sách 0:50:**
+Từ động lực trên, nhóm xin phát biểu bài toán một cách chặt chẽ:
 
-> Em xin phát biểu bài toán thật chính xác trước khi nói tới giải pháp.
->
-> **Đầu vào**: một website đang vận hành — chỉ có URL gốc và quyền truy cập, **không một
-> nhãn người nào**, không có bộ tác vụ mẫu. **Đầu ra**: một bộ trajectory huấn luyện, và một
-> **mô hình dưới 10B** đã fine-tune thành agent chuyên biệt cho đúng website đó.
->
-> Hai **ràng buộc** thực tế siết bài toán lại: ngân sách API ở mức nhóm nhỏ, và mô hình phải
-> chạy **tại chỗ**. Hai ràng buộc này loại thẳng phương án thuê người gán nhãn và phương án
-> gọi API mô hình lớn mỗi lần chạy.
->
-> **Đo lường**: 655 tác vụ chính thức của WebArena trên 4 website, chấm bằng **bộ chấm của
-> benchmark**, chỉ số chính là **Task Success Rate**, chỉ số phụ là **chi phí API mỗi
-> trajectory**.
->
-> Và xin nói rõ ngay **phạm vi**: một website cho ra một agent chuyên biệt. Thứ tổng quát
-> hóa ở đây là **pipeline, không phải model**.
+- **Về bài toán đặt ra:**
+  - **Đầu vào:** Một website mục tiêu đang vận hành, với **0 nhãn con người** và không có sẵn kịch bản mẫu.
+  - **Mục tiêu:** Tự động khám phá website và tổng hợp dữ liệu huấn luyện chất lượng cao.
+  - **Đầu ra:** Một tập dữ liệu SFT sạch cùng một mô hình **SLM <10B chuyên biệt** cho chính website đó.
 
-**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
+- **Về phạm vi & ứng dụng đích:**
+  - Mỗi website sẽ tạo ra một tác nhân chuyên biệt chạy **tại chỗ (on-premise)** nhằm bảo mật dữ liệu.
+  - Ngân sách gọi API phục vụ khám phá được giới hạn ở mức **nhóm nghiên cứu nhỏ**.
+  - Khóa luận hướng đến việc **tổng quát hóa ở mức pipeline (quy trình)** chứ không tạo ra một mô hình đơn lẻ dùng chung cho mọi website.
 
-> Em xin phát biểu bài toán thật chính xác, trước khi nói tới bất kỳ giải pháp nào.
->
-> _(Click 1 — Bài toán)_ **Đầu vào** là một **website mục tiêu đang vận hành**: nhóm chỉ có
-> URL gốc và quyền truy cập. **Không có một nhãn người nào**, và cũng không có sẵn bộ tác vụ
-> mẫu để học theo — đây là điều kiện của một tổ chức thật, chứ không phải của một bộ dữ liệu
-> đã được dọn sẵn. **Đầu ra** cần đạt gồm hai thứ: một bộ trajectory dùng để huấn luyện, và
-> một **mô hình dưới 10 tỷ tham số** đã fine-tune thành agent chuyên biệt cho đúng website
-> đó.
->
-> _(Click 2 — Ràng buộc)_ Bài toán bị siết bởi hai ràng buộc thực tế: ngân sách gọi API ở
-> mức một **nhóm nghiên cứu nhỏ**, và mô hình phải chạy được **tại chỗ**, để dữ liệu không
-> rời khỏi tổ chức. Hai ràng buộc này không phải chi tiết phụ — chúng loại thẳng phương án
-> "thuê người gán nhãn" và phương án "gọi API mô hình lớn mỗi lần chạy".
->
-> _(Click 3 — Tiêu chí đánh giá)_ Về đo lường, nhóm dùng **WebArena** với **655 tác vụ chính
-> thức trên 4 website thật**, chấm bằng **bộ chấm của chính benchmark** chứ không phải bằng
-> đánh giá của nhóm, chỉ số chính là **tỷ lệ hoàn thành tác vụ — Task Success Rate**. Chỉ số
-> phụ là **chi phí API trên mỗi trajectory**, vì với ràng buộc ở trên thì chi phí là một
-> phần của bài toán chứ không phải chuyện bên lề.
->
-> _(Click 4 — Phạm vi)_ Và đây là chỗ em xin nói rõ ngay từ đầu để tránh hiểu nhầm: phạm vi
-> là **một website cho ra một agent chuyên biệt**, không phải một agent vạn năng. Thứ tổng
-> quát hóa ở đây là **quy trình**, không phải **mô hình**: cùng một pipeline đem sang website
-> khác thì sinh ra agent của website đó.
-
-**Câu chốt:** Bài toán là _sinh dữ liệu và huấn luyện agent cho **một** website cụ thể, với **0 nhãn con người**_ — và thứ tổng quát hóa là **pipeline, không phải model**.
-
-**Câu chốt phụ (bắt buộc nói, đừng đợi bị hỏi):** người dùng đích là nhóm vận hành một tập
-website cố định, cần agent chạy tại chỗ — không phải người cần một model dùng cho mọi trang.
-
-**Tránh:** đừng hứa "agent tổng quát cho mọi website cùng lĩnh vực" — đó là bài toán ngoài
-miền, khóa luận **không** giải và **không** đo.
+- **Định hướng giải pháp:** Tự động khám phá chính website mục tiêu để sinh dữ liệu fine-tune SLM cục bộ.
 
 ---
 
-## Slide 4 - Bốn thách thức cốt lõi (2:10, trang 6)
+## Slide 4 — Bốn thách thức cốt lõi của bài toán
 
-**▶ Bản nói — đúng ngân sách 0:50:**
+Để hiện thực hóa định hướng trên mà không cần con người can thiệp, hệ thống phải đối mặt với **bốn thách thức cốt lõi (T1 đến T4)**:
 
-> Bài toán này vướng bốn thách thức, em xin đánh số **T1 đến T4** vì phần sau sẽ đối chiếu
-> lại đúng bốn mục này.
->
-> **T1 — chi phí nhãn.** Người thật gán nhãn là nguồn tốt nhất và đắt nhất: AutoWebGLM cần
-> **20 người ròng rã một tháng**. Sinh từ tài liệu Internet rẻ hơn nhiều — chỉ **3%** chi phí
-> mỗi mẫu — nhưng không bám môi trường thật thì chỉ đạt **6%**, so với **16%** của cách học
-> trực tiếp từ website đích. Đọc hướng dẫn hủy đơn trên Shopee không giúp gì khi phải hủy đơn
-> trên hệ thống nội bộ của doanh nghiệp.
->
-> **T2 — tri thức phân mảnh**: trajectory thô không có đơn vị kỹ năng nào để tái dùng.
-> **T3 — dương tính giả**: không có nhãn người thì agent tự khai xong, và dữ liệu bẩn **dạy
-> mô hình khai gian**. **T4 — khó ghép tác vụ dài**: thiếu cơ chế biết _làm xong A mới làm
-> được B_ thì task luôn bó trong một trang.
-
-**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
-
-> Bài toán vừa nêu vướng bốn thách thức. Bốn thách thức này sẽ được nhắc lại xuyên suốt
-> phần sau nên em xin đánh số **T1 đến T4**.
->
-> _(Click 1 — T1)_ **T1 — chi phí gán nhãn.** Nguồn dữ liệu chất lượng nhất vẫn là người
-> thật ngồi thao tác, và cũng là nguồn đắt nhất: AutoWebGLM cần **20 người làm ròng rã một
-> tháng** cho khoảng mười nghìn trajectory. Hướng rẻ hơn là sinh dữ liệu từ tri thức có sẵn
-> trên Internet — Synatra chỉ tốn khoảng **3%** chi phí mỗi mẫu. Nhưng rẻ mà **không bám môi
-> trường thật thì không dùng được**: cách này chỉ đạt **6%** trên WebArena, trong khi cách
-> học trực tiếp từ chính website đích đạt **16%**.
->
-> Con số 6 so với 16 chính là bằng chứng cho nhận định ở slide đầu: đọc một bài hướng dẫn
-> cách hủy đơn hàng trên Shopee gần như **không chuyển giao** được sang việc hủy đơn trên hệ
-> thống nội bộ của một doanh nghiệp — nút khác, luồng khác, thuật ngữ khác. Muốn agent làm
-> được trên môi trường nào thì phải cho nó học từ **chính môi trường đó**.
->
-> _(Click 2 — T2)_ **T2 — tri thức bị phân mảnh.** Nhưng học trực tiếp từ môi trường lại
-> sinh ra vấn đề khác. Trajectory thô chỉ là chuỗi thao tác rời rạc, không có **đơn vị kỹ
-> năng** nào để tái sử dụng. Cùng một thao tác "tìm kiếm rồi mở chi tiết" lặp lại ở mười
-> trang khác nhau vẫn bị coi là mười mẩu dữ liệu mới, không đúc kết được thành gì cả — nên
-> càng khám phá lâu càng tốn, chứ không càng khôn.
->
-> _(Click 3 — T3)_ **T3 — dương tính giả.** Vì không có nhãn người, agent phải **tự khai
-> báo đã hoàn thành**. Lời tự khai thường sai, và dữ liệu bẩn ở đây tệ hơn thiếu dữ liệu:
-> nó **dạy mô hình khai gian** — học đúng cái hành vi tuyên bố xong trong khi chưa làm gì.
->
-> _(Click 4 — T4)_ **T4 — khó ghép thành tác vụ dài.** Tác vụ tự sinh thường bó hẹp trong
-> một trang: tra cứu, điều hướng. Trong khi công việc thật gần như luôn nhiều bước và bắc
-> cầu qua nhiều trang. Thiếu cơ chế biết được _làm xong A thì mới làm được B_ thì không sinh
-> ra được tác vụ nhiều bước có ý nghĩa nghiệp vụ.
->
-> Bốn thách thức này đã được cộng đồng tấn công tới đâu — đó là nội dung phần tiếp theo.
-
-**Câu chốt:** T1–T4 là **khung để chấm điểm mọi phương pháp**, kể cả HSGE — phần sau sẽ đối chiếu lại đúng bốn mục này.
-
-**Tránh:** đừng nói dữ liệu ngoại tuyến là "vô dụng" — nó rẻ và có giá trị, vấn đề là **không chuyển giao** sang website đích.
-
-`[lược nếu trễ]` Bỏ ví dụ Shopee và gộp T1–T2 vào một câu; giữ nguyên T3 và T4 — đây là hai chỗ HSGE khác biệt nhất.
+1. **T1 — Thu thập dữ liệu chất lượng cao:** Dữ liệu do agent tự do khám phá rất dễ bị **lặp lại, vô nghĩa hoặc không hợp lệ**. Thách thức là làm sao tự sinh được các mẫu vừa hợp lệ về mặt kỹ thuật, vừa phong phú, đa dạng cho quá trình SFT.
+2. **T2 — Thiếu tri thức về môi trường:** Việc lấy tri thức từ tài liệu ngoài Internet dễ bị **lệch môi trường** (chỉ đạt 6% so với 16% khi học trực tiếp). Do đó, agent bắt buộc phải **tự động khám phá và tích lũy tri thức trực tiếp trên website thật**.
+3. **T3 — Sàng lọc trajectory tự sinh:** Khi không có con người giám sát, agent vừa thực hiện vừa tự chấm điểm nên rất dễ bị **dương tính giả (tự nhận hoàn thành khi chưa xong)**. Dữ liệu sai này sẽ dạy cho mô hình hành vi gian dối, vì vậy cần cơ chế sàng lọc bằng **tín hiệu khách quan**.
+4. **T4 — Tạo tác vụ có ngữ nghĩa:** Các tác vụ tự sinh đơn lẻ thường chỉ dừng lại ở thao tác 1 trang. Trong khi đó, nghiệp vụ thực tế đòi hỏi chuỗi hành động dài qua nhiều trang, đòi hỏi hệ thống phải có khả năng **tự động ghép chuỗi thành tác vụ đa bước có ngữ nghĩa**.
 
 ---
 
-## Slide 5 - Ba hướng tiếp cận hiện nay (3:00, trang 8)
+## Slide 5 — Ba hướng tiếp cận hiện nay
 
-**▶ Bản nói — đúng ngân sách 0:50:**
+Cộng đồng nghiên cứu hiện nay đã tiếp cận bài toán theo ba hướng chính:
 
-> Cộng đồng đã tấn công bài toán này theo ba hướng, xếp theo **nguồn tri thức** mà mỗi hướng
-> khai thác.
->
-> **Nhóm (A) lấy tri thức từ Internet**: Synatra, AgentTrek chuyển tài liệu hướng dẫn thành
-> mẫu huấn luyện, AgentTrek còn replay lại trên trình duyệt thật.
->
-> **Nhóm (B) lấy từ lịch sử chạy, dùng lại lúc suy luận**: AWM trích workflow lặp lại nhét
-> vào prompt, nâng WebArena từ **23,5% lên 35,5%**; SkillWeaver để agent tự đóng gói kỹ năng
-> thành API.
->
-> **Nhóm (C) lấy từ chính môi trường, để huấn luyện mô hình nhỏ** — gần khóa luận nhất.
-> NNetNav khám phá rồi gán nhãn hồi tố, 8B đạt **16,3%**. Go-Browse coi khám phá là **tìm
-> kiếm trên đồ thị** website, tái sử dụng thông tin giữa các lượt thay vì mỗi lượt bắt đầu
-> lại, 7B đạt **21,7%** — tốt nhất phân khúc dưới 10B, và củng cố đúng tiền đề của nhóm em:
-> **khám phá có cấu trúc cho dữ liệu tốt hơn các lượt chạy rời rạc**.
+1. **Hướng (A) — Tri thức từ Internet (như Synatra, AgentTrek):** Sử dụng video, tài liệu hướng dẫn trên mạng để tổng hợp trajectory. Hạn chế là dữ liệu dễ bị lệch so với website thực tế và không áp dụng được cho hệ thống nội bộ.
+2. **Hướng (B) — Skill dùng lúc suy luận (như AWM, SkillWeaver, ASI):** Trích xuất các workflow lặp lại rồi nhồi vào context prompt cho LLM lớn. Hướng này giúp tăng hiệu năng nhưng **không cập nhật trọng số cho mô hình nhỏ (SLM)**.
+3. **Hướng (C) — Tự sinh từ môi trường (như NNetNav, Go-Browse):** Cho agent tự tương tác trên website thật để lấy dữ liệu train SLM. Tiêu biểu là **Go-Browse** đạt 21,7% (SOTA phân khúc <10B) nhờ mô hình hóa khám phá bằng tìm kiếm trên đồ thị.
 
-**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
-
-> Cộng đồng đã tấn công bài toán dữ liệu theo ba hướng, và cách dễ nhớ nhất là xếp chúng
-> theo **nguồn tri thức** mà mỗi hướng khai thác.
->
-> _(Click 1)_ **Nhóm (A) lấy tri thức từ Internet.** Synatra và AgentTrek chuyển các bài
-> hướng dẫn, tài liệu sẵn có thành mẫu huấn luyện; AgentTrek còn replay lại trên trình duyệt
-> thật để lấy trajectory chứ không chỉ sinh văn bản.
->
-> _(Click 2)_ **Nhóm (B) lấy tri thức từ chính lịch sử chạy, nhưng dùng lại lúc suy luận.**
-> AWM trích các workflow lặp đi lặp lại rồi nhét vào prompt, nâng tỷ lệ hoàn thành trên
-> WebArena từ **23,5% lên 35,5%** — một mức tăng rất đáng kể mà không đụng gì tới trọng số.
-> SkillWeaver đi xa hơn: để agent tự khám phá và đóng gói kỹ năng thành các API tái sử dụng
-> được.
->
-> _(Click 3)_ **Nhóm (C) lấy tri thức từ chính môi trường, và dùng để huấn luyện mô hình
-> nhỏ** — đây là nhóm gần khóa luận nhất. NNetNav cho agent khám phá website rồi gán nhãn
-> hồi tố, mô hình 8B đạt **16,3%**. Go-Browse mô hình hóa việc khám phá thành **bài toán tìm
-> kiếm trên đồ thị** website: duy trì một biên khám phá gồm các trang đã phát hiện nhưng
-> chưa khai thác hết, và **tái sử dụng thông tin giữa các lượt** thay vì mỗi lượt lại bắt
-> đầu lại từ trang chủ. Mô hình 7B đạt **21,7%** — tốt nhất phân khúc dưới 10 tỷ tham số tại
-> thời điểm công bố.
->
-> Kết quả của Go-Browse củng cố đúng tiền đề của khóa luận: **khám phá có cấu trúc cho dữ
-> liệu tốt hơn các lượt chạy rời rạc**. Đây cũng là mốc so sánh chính của nhóm em.
-
-**Câu chốt:** Ba hướng trước đã chứng minh **tự động sinh dữ liệu là khả thi**, và **khám phá có cấu trúc trên chính môi trường** là hướng cho kết quả tốt nhất.
-
-**Tránh:** đừng gọi Go-Browse là "đối thủ" — cách nói đúng là _công trình nền tảng gần nhất và là mốc so sánh_.
-
-`[lược nếu trễ]` Bỏ nhóm (A), vào thẳng (B) và (C).
+Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục tiêu khóa luận nhất** và được nhóm chọn làm mốc so sánh chính.
 
 ---
 
-## Slide 6 - Hạn chế và khoảng trống nghiên cứu (3:50, trang 9)
+## Slide 6 — Hạn chế và khoảng trống nghiên cứu
 
-**▶ Bản nói — đúng ngân sách 0:55:**
+Đối chiếu lại 3 hướng tiếp cận với 4 thách thức T1–T4:
 
-> Ba hướng đó đều đã tiến rất xa, nhưng đối chiếu lại T1–T4 thì mỗi hướng còn đúng một mảng
-> bỏ trống.
->
-> **(A)** bị chặn bởi lượng tài liệu sẵn có — quy trình nội bộ chưa ai viết ra thì nằm ngoài
-> tầm với: **T1 chưa giải triệt để**. **(B)** — kỹ năng chỉ sống trong prompt, **không cập
-> nhật tham số**, nên không giúp gì cho mô hình nhỏ chạy cục bộ; workflow lại tuyến tính,
-> không có tiền điều kiện và kết quả tường minh nên không ghép chuỗi được: còn **T2, T4**.
-> **(C)** — Go-Browse có đồ thị nhưng **chỉ một tầng**, node là URL, phía trên không có tầng
-> trừu tượng, nên task đề xuất bị bó trong trang hiện tại: **T4 vẫn còn**. Và cả (B) lẫn (C)
-> đều tin vào **lời tự khai của agent**: **T3 còn nguyên**.
->
-> Gom lại: từng mắt xích đều có người làm, nhưng **chưa công trình nào nối trọn cả ba** —
-> **kiểm chứng kỹ năng → ghép tác vụ dài → huấn luyện mô hình nhỏ**. Từ đó câu hỏi của khóa
-> luận là: làm sao tự sinh dữ liệu ngay trên website mục tiêu, **0 nhãn con người**, để mô hình
-> nhỏ chạy cục bộ đạt hiệu năng tiệm cận hoặc vượt LLM lớn trên chính các trang đó?
+- **Hạn chế của hướng (A) & (B):** Hướng (A) vướng **T1, T2** do phụ thuộc tài liệu ngoài. Hướng (B) chỉ nạp prompt cho LLM lớn, không giải quyết bài toán train SLM cục bộ.
+- **Hạn chế của hướng (C):** Go-Browse có đồ thị nhưng **chỉ dừng ở 1 tầng (State Graph)**, các task đề xuất bị bó hẹp trong từng trang riêng lẻ $\rightarrow$ vướng **T4**. Đồng thời, cả (B) và (C) vẫn tin vào lời tự khai của agent $\rightarrow$ vấn đề dương tính giả **T3** vẫn còn nguyên.
 
-**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
+- **Khoảng trống nghiên cứu:** Chưa có công trình nào kết nối trọn vẹn chu trình 3 mắt xích:
+  $$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longrightarrow \text{Huấn luyện SLM}$$
 
-> Ba hướng đó đều đã tiến rất xa. Nhưng khi đối chiếu lại với bốn thách thức T1–T4 thì mỗi
-> hướng vẫn còn đúng một mảng bỏ trống.
->
-> **Nhóm (A)** bị chặn bởi đúng một thứ: lượng tài liệu hướng dẫn sẵn có. Quy trình nội bộ
-> chưa ai viết thành bài, hay website vừa mới triển khai, thì nằm ngoài tầm với — nên **T1
-> chưa được giải triệt để**.
->
-> **Nhóm (B)** — kỹ năng chỉ sống trong prompt của một mô hình lớn, **không cập nhật tham
-> số**, nên không giúp gì cho bài toán mô hình nhỏ chạy cục bộ của nhóm em. Thêm nữa,
-> workflow của AWM là chuỗi bước tuyến tính, **không có tiền điều kiện và kết quả tường
-> minh**, nên không thể ghép chuỗi bằng thuật toán lập kế hoạch — tức còn **T2 và T4**.
->
-> **Nhóm (C)** — NNetNav **không tích lũy** tri thức giữa các episode. Go-Browse thì có đồ
-> thị, nhưng đồ thị đó **chỉ một tầng**: node là URL, cạnh là trajectory, phía trên không có
-> tầng trừu tượng nào. Hệ quả kéo theo rất cụ thể: bộ đề xuất task của Go-Browse được yêu
-> cầu tường minh là chỉ tìm những việc **làm được ngay trên trang hiện tại**, nên task sinh
-> ra bị bó trong một trang — **T4 vẫn còn**.
->
-> Và cả **(B) lẫn (C)** đều ghi nhận thành công chủ yếu dựa trên **lời tự khai của agent**,
-> không chạy lại để kiểm chứng — tức **T3 còn nguyên**.
->
-> _(Click 2)_ Gom lại, khung bên phải là khoảng trống nghiên cứu: từng mắt xích đều đã có
-> người làm, nhưng **chưa công trình nào nối trọn cả ba**: **kiểm chứng kỹ năng → ghép thành
-> tác vụ dài → dùng chính dữ liệu đó huấn luyện mô hình nhỏ**.
->
-> _(Click 3)_ Từ đó, câu hỏi khóa luận đặt ra là: **Làm sao tận dụng LLM để tự động sinh dữ
-> liệu huấn luyện ngay trên website mục tiêu, hoàn toàn không cần nhãn con người, để một mô
-> hình nhỏ chạy cục bộ đạt hiệu năng tiệm cận hoặc vượt LLM lớn trên chính các trang đó?**
-
-**Câu chốt:** Khoảng trống không phải là "thu được nhiều dữ liệu hơn", mà là **thiếu một
-tầng kỹ năng đã kiểm chứng và ghép chuỗi được**.
-
-**Tránh:** không nói các công trình trước "sai" hay "kém" — cách nói đúng là mỗi hướng giải
-quyết _một phần_ của bài toán, và ba mắt xích đó chưa được nối liền.
+- **Câu hỏi nghiên cứu của khóa luận:**
+  *Làm thế nào để tự động sinh dữ liệu huấn luyện ngay trên website mục tiêu với **0 nhãn con người**, giúp một **SLM cục bộ đạt hiệu năng tiệm cận hoặc vượt LLM lớn** trên chính các trang đó?*
 
 ---
 
-## Slide 7 - Giải pháp HSGE và các đóng góp chính (4:45, trang 11)
+## Slide 7 — Giải pháp HSGE và các đóng góp chính
 
-> Để lấp khoảng trống đó, khóa luận đề xuất **HSGE (Hierarchical Skill-Graph Exploration)**,
-> tự động hóa toàn chu trình từ website đến mô hình SLM cục bộ.
->
-> _(Click 1)_ Về **đóng góp khoa học (kiến trúc & thuật toán)**:
->
-> - Thứ nhất, **mô hình biểu diễn đồ thị hai tầng**: kết hợp State Graph ghi vết duyệt web ở tầng thấp với Operator Graph biểu diễn kỹ năng ở tầng cao — nhắm **T2**.
-> - Thứ hai, **thuật toán quy nạp operator và ghép chuỗi đa bước**: tự động trích xuất các kỹ năng lặp lại, kiểm chứng và ghép chuỗi thành tác vụ có ngữ nghĩa — nhắm **T4**.
-> - Thứ ba, **kiểm định trực tuyến ngay trong vòng lặp khám phá**, loại dương tính giả trước khi dữ liệu vào dataset — nhắm **T3**.
->
-> _(Click 2)_ Về **đóng góp thực tiễn (sản phẩm & dữ liệu)**, đề tài bàn giao **năm sản phẩm chính**:
->
-> - Thứ nhất, **Pipeline HSGE**: hệ thống tự động khám phá, quy nạp operator và sinh tác vụ có ngữ nghĩa trên website thật.
-> - Thứ hai, **Bộ dữ liệu 9.007 mẫu SFT sạch** (từ 1.760 trajectory hợp lệ) trên 4 website WebArena mà hoàn toàn không cần nhãn người — nhắm **T1**.
-> - Thứ ba, **Mô hình HSGE-9B chạy cục bộ đạt 24,6%** (vượt GPT-4o-mini và đạt SOTA phân khúc dưới 10B) cùng kiểm chứng độc lập trên mô hình nền Qwen-2.5-7B.
-> - Thứ tư, **Pipeline đánh giá trên benchmark WebArena**: dùng chung cấu hình prompt và bộ chấm chính thức của benchmark.
-> - Thứ năm, **Báo cáo các bài học kinh nghiệm**: đúc kết 14 thực hành kỹ thuật thực tiễn trải trên 5 mảng triển khai.
->
-> Về **tính khả thi kinh tế**: chi phí gọi API khám phá chỉ **0,0308 USD mỗi trajectory
-> thành công**, **rẻ hơn 3,3 lần so với Go-Browse**.
->
-> Phần còn lại của mục này sẽ trình bày cách bốn thách thức T1–T4 được giải quyết trong một
-> quy trình khép kín.
+Để lấp đầy khoảng trống nghiên cứu trên, khóa luận đề xuất phương pháp **HSGE (Hierarchical Skill-Graph Exploration)** với các đóng góp trọng tâm:
 
-**Câu chốt:** đóng góp nằm ở **tầng trừu tượng thứ hai** — kỹ năng đã kiểm chứng, ghép chuỗi được — chứ không phải ở việc thu nhiều dữ liệu hơn.
+- **Về mặt Khoa học:**
+  - Đề xuất mô hình **Đồ thị hai tầng**: kết hợp State Graph (tầng thấp) và Operator Graph (tầng cao) để giải quyết **T2**.
+  - Cơ chế **Quy nạp operator & Ghép chuỗi đa bước**: tự động chuyển đổi skill thành tác vụ nghiệp vụ dài hạn nhằm giải quyết **T4**.
+  - Cơ chế **Kiểm định trực tuyến (Online Gates)**: loại bỏ triệt để dương tính giả ngay trong vòng lặp khám phá để giải quyết **T3**.
 
-**Tránh:** **không nói "khóa luận làm công cụ kiểm thử tự động"**. Bắt buộc có chữ _"tiềm năng, chưa thực nghiệm"_ trong cùng một câu — quyển báo cáo không có phần kiểm thử.
-
-`[lược nếu trễ]` Bỏ sản phẩm thứ tư và thứ năm, chỉ giữ pipeline / dataset / mô hình.
+- **Về mặt Thực tiễn:**
+  - Xây dựng bộ dataset SFT sạch gồm **9.007 mẫu trên 4 website** hoàn toàn không cần nhãn người (**T1**).
+  - Huấn luyện mô hình **HSGE-9B đạt 24,6% Task Success Rate**, vượt GPT-4o-mini và đạt SOTA phân khúc <10B.
+  - Tối ưu chi phí API xuống mức **0,0308 USD/trajectory** (rẻ hơn 3,3 lần so với Go-Browse).
 
 ---
 
-## Slide 8 - Tổng quan pipeline HSGE (5:35, trang 12)
+## Slide 8 — Tổng quan pipeline HSGE
 
-> Đây là toàn bộ phương pháp HSGE trên một hình, vận hành như một vòng lặp khép kín, tự động hoàn toàn.
->
-> Bắt đầu từ **Frontier** — hàng đợi lưu các trang web cần khám phá. Chọn một trang, một agent đề xuất các tác vụ làm được ngay trên trang đó, rồi solver thử thao tác trên trình duyệt thật. Những trajectory giải thành công được đưa vào khâu phát hiện kỹ năng: cắt thành đoạn nhỏ, gom cụm các thao tác tương đồng, trừu tượng hóa thành thẻ kỹ năng, rồi quy nạp thành **Operator** có tiền điều kiện (Precondition) và kết quả (Effect).
->
-> Các operator này được ghép chuỗi với nhau để sinh ra các **Tác vụ có ngữ nghĩa (Semantic Task)** — tức tác vụ nhiều bước có ý nghĩa nghiệp vụ thực tế. Toàn bộ dữ liệu thu được đi qua hai cổng lọc chất lượng trực tuyến trước khi trở thành tập huấn luyện SFT. Và mỗi trang mới phát hiện lại quay về frontier để tiếp tục mở rộng.
+Toàn bộ phương pháp HSGE vận hành như một quy trình tự động hóa khép kín:
 
-**Câu chốt:** không phải thu thập rời rạc, mà **tích lũy tri thức có cấu trúc rồi mới khai thác lại**.
+1. **Frontier:** Duy trì hàng đợi các trang web đã phát hiện để điều phối agent đi khám phá.
+2. **Explorer & Solver:** Thực hiện tương tác trực tiếp trên trình duyệt thật (Playwright/Chromium) để thu thập các trajectory thô.
+3. **Skill Discovery & Operator Induction:** Cắt nhỏ trajectory, gom cụm, trừu tượng hóa và quy nạp thành các **Operator** có Precondition và Effect tường minh.
+4. **Semantic Task Generation:** Ghép chuỗi các operator để sinh ra các tác vụ đa bước có ngữ nghĩa nghiệp vụ.
+5. **Online Curation & SFT Packaging:** Dữ liệu được lọc trực tuyến qua 2 cổng chất lượng trước khi đóng gói chuẩn xác thành tập huấn luyện SFT.
 
----
-
-## Slide 9 - Đồ thị hai tầng (6:30, trang 13)
-
-> Tri thức khám phá được lưu trữ trong một đồ thị hai tầng.
->
-> - **Tầng thấp (State Graph):** Lưu vết duyệt web thực tế gồm các trang đã ghé thăm và hành động chuyển giữa chúng.
-> - **Tầng cao (Operator Graph):** Mỗi operator là một kỹ năng chuẩn hóa với điều kiện đầu vào (Precondition) và kết quả đầu ra (Effect). Hai operator được nối với nhau khi **kết quả của bước trước thỏa mãn điều kiện đầu vào của bước sau**.
->
-> _Ví dụ trực quan:_ Kỹ năng "Tìm kiếm sản phẩm" sinh ra kết quả "Đang ở trang chi tiết". Kết quả này khớp đúng điều kiện cần của kỹ năng "Thêm vào giỏ hàng" $\rightarrow$ Hệ thống tự động ghép nối thành tác vụ mua hàng hoàn chỉnh.
->
-> Nhờ cấu trúc này, tri thức thu được có tính **tái sử dụng và tái tổ hợp**, giúp sinh ra vô số tác vụ dài hạn có ngữ nghĩa mà không cần người viết kịch bản.
-
-**Câu chốt:** tầng cao là thứ phân biệt HSGE với Go-Browse — bên đó chỉ có tầng thấp.
+Các trang web mới phát hiện lại được quay vòng nạp vào Frontier, tạo thành một vòng lặp liên tục mở rộng tri thức.
 
 ---
 
-## Slide 10 - Phát hiện skill và quy nạp operator (7:20, trang 14)
+## Slide 9 — Đồ thị hai tầng
 
-> Khâu phát hiện kỹ năng chỉ chạy trên trajectory của các tác vụ **đã giải thành công**, qua bốn bước:
->
-> 1. **Phân cắt:** Cắt chuỗi thao tác dựa trên thay đổi URL và sự biến động của **cây trợ năng (AXTree)** — tức bản rút gọn văn bản của giao diện web chỉ chứa các nút bấm, ô nhập liệu có thể tương tác.
-> 2. **Gom cụm:** Gom các đoạn thao tác có chức năng tương tự nhau.
-> 3. **Trừu tượng hóa:** Rút trích thành thẻ kỹ năng có tham số hóa (như từ khóa tìm kiếm).
-> 4. **Kiểm chứng:** Cho chạy thử lại trong ngữ cảnh mới để xác nhận tính dùng lại được.
->
-> Để nâng kỹ năng lên thành Operator, hệ thống áp dụng hai cổng chặn: **cổng chống trùng lặp** loại bỏ các mệnh đề vô nghĩa, và **cổng kiểm chứng thực tế (grounding)** gỡ bỏ các kết quả không đúng trên phần lớn các lần chạy.
->
-> `[lược nếu trễ]` Nhờ sự khắt khe này, từ 146 kỹ năng phát hiện được, hệ thống chắt lọc ra 57 operator thực sự chuẩn xác.
+Cốt lõi biểu diễn tri thức của HSGE là **cấu trúc đồ thị hai tầng**:
 
-**Câu chốt:** "đã kiểm chứng" ở đây là **có cổng chặn đo được**, không phải nhãn tự phong.
+- **Tầng thấp — State Graph:** Lưu vết duyệt web thực tế, với node là trạng thái trang DOM/URL và cạnh là các hành động điều hướng.
+- **Tầng cao — Operator Graph:** Mỗi node là một Operator đại diện cho một kỹ năng chuẩn hóa gồm **Điều kiện đầu vào (Precondition)** và **Kết quả đạt được (Effect)**.
+
+**Nguyên lý ghép nối:** Khi Effect của Operator A thỏa mãn Precondition của Operator B ($\text{Effect}_A \models \text{Pre}_B$), hệ thống tự động tạo một cạnh chuyển tiếp.
+*Ví dụ:* Kỹ năng "Tìm kiếm sản phẩm" sinh ra kết quả "Đang ở trang chi tiết". Kết quả này thỏa mãn điều kiện cần của kỹ năng "Thêm vào giỏ hàng" $\rightarrow$ Hệ thống tự động ghép thành tác vụ mua hàng hoàn chỉnh.
+
+Nhờ đó, tri thức thu được mang tính **tái sử dụng và tái tổ hợp** vượt bậc.
 
 ---
 
-## Slide 11 - Sinh tác vụ có ngữ nghĩa (8:15, trang 15)
+## Slide 10 — Phát hiện skill và quy nạp operator
 
-> **Tác vụ có ngữ nghĩa (Semantic Task)** — tức tác vụ nhiều bước có ngữ nghĩa nghiệp vụ hoàn chỉnh — được sinh từ hai nguồn:
->
-> - **Từ dưới lên (Bottom-up):** Ghép chuỗi operator bằng duyệt đồ thị, mỗi chuỗi từ hai operator trở lên sẽ tạo thành một nhiệm vụ dài kèm câu lệnh ngôn ngữ tự nhiên.
-> - **Từ trên xuống (Top-down):** Gợi ý từ năng lực tổng quan của website (như chức năng quản trị, đăng bài, mua sắm) khi đồ thị còn thưa.
->
-> Về số liệu thực tế: trong **142 tác vụ có ngữ nghĩa** đã thực thi, **130 tác vụ đến từ seed và 12 tác vụ đến từ ghép chuỗi operator**, đạt 71 tác vụ giải thành công (tỷ lệ 50,0%, xấp xỉ mức 47,6% của nhóm tác vụ LOCAL đơn trang). Kết quả này chứng minh cơ chế ghép chuỗi hoạt động đúng thiết kế, dù ở giai đoạn đầu tần suất ghép còn thưa.
+Khâu quy nạp tri thức chỉ thực hiện trên các trajectory đã chạy thành công, qua 4 bước:
 
-**Câu chốt:** cơ chế ghép chuỗi được chứng minh là **khả thi**, chưa chứng minh được là **đủ dày** để làm nguồn dữ liệu chính.
+1. **Phân cắt (Segmentation):** Cắt chuỗi hành động dựa trên sự thay đổi URL và độ biến động cây trợ năng (AXTree).
+2. **Gom cụm (Clustering):** Gom cụm phi tham số dựa trên độ tương đồng ngữ nghĩa.
+3. **Trừu tượng hóa (Abstraction):** Rút trích thành thẻ kỹ năng (SkillCard) có tham số hóa.
+4. **Kiểm chứng (Verification):** Chạy thử nghiệm lại skill trong ngữ cảnh mới để xác thực tính ổn định.
 
-**Tránh:** đừng nói "tác vụ có ngữ nghĩa chủ yếu sinh từ đồ thị operator" — số liệu ngược lại, và Hội đồng có thể đã đọc Chương 5.
+Để nâng cấp Skill thành Operator, hệ thống áp dụng 2 cổng chặn nghiêm ngặt:
+- **Cổng chống trùng lặp:** Loại bỏ các effect lặp lại precondition vô nghĩa.
+- **Cổng Grounding:** Gỡ bỏ các effect sai trên $\ge 50\%$ số lần chạy.
 
----
-
-## Slide 12 - Kiểm định trực tuyến & Đóng gói SFT (9:05, trang 16) — _điểm chuyển người trình bày_
-
-> Nguyên tắc chất lượng cốt lõi: **không bao giờ tin vào lời tự khai hoàn thành của agent.**
->
-> Điểm khác biệt quan trọng là toàn bộ việc kiểm soát chất lượng được thực hiện **trực tuyến ngay trong vòng lặp khám phá**, không cần chờ đến khâu hậu kiểm ngoại tuyến:
->
-> 1. **Inline LLM Judge:** Mỗi khi agent tự tuyên bố xong, LLM Judge độc lập lập tức chấm lại trên trạng thái trang đích, loại bỏ ngay **801 episode (chiếm $\approx 27\%$)** dương tính giả khi tự đánh giá (false positive) từ nguồn.
-> 2. **Cổng hành động hữu hiệu (Effective Action):** Viết bằng mã để chặn các trường hợp agent báo xong nhưng trang web không hề thay đổi trạng thái — loại bỏ thêm 104 trajectory không tạo ra thay đổi trạng thái (tương ứng 279 mẫu) mà Judge không thấy được.
->
-> Nhờ dữ liệu trong kho `episodes/` đã hoàn toàn sạch từ quá trình khám phá, hệ thống tiến hành **đóng gói trực tiếp (Direct Build)** thành 1.760 trajectory sạch, tương ứng **8.554 mẫu train và 453 mẫu val** (tổng cộng 9.007 mẫu SFT) mà không cần thêm bất kỳ khâu lọc hậu kỳ nào.
->
-> Dữ liệu được đóng gói theo nguyên tắc **Prompt Parity**: mẫu câu lệnh lúc huấn luyện trùng khớp từng byte với câu lệnh solver nhìn thấy lúc chạy thật, chia train/val theo cấp task đảm bảo **0 mục tiêu trùng lặp**.
-
-**Câu chốt:** kiểm định trực tuyến ngay từ nguồn giúp dữ liệu sạch tuyệt đối, cho phép đóng gói trực tiếp tập SFT để huấn luyện mô hình.
+Kết quả: từ **146 skill** phát hiện được, hệ thống tinh lọc thành **57 operator** thực sự chuẩn xác và đáng tin cậy.
 
 ---
 
-## Slide 13 - Thiết lập & Câu hỏi nghiên cứu (10:00, trang 18)
+## Slide 11 — Sinh Semantic Task từ chuỗi Operator
 
-Kính thưa Hội đồng, sau khi đã đi qua bức tranh tổng thể về kiến trúc đồ thị và thuật toán sinh dữ liệu của HSGE, câu hỏi đặt ra là: Liệu trên thực tế, quy trình này mang lại hiệu quả ra sao? Để làm rõ điều này, em xin phép bước sang phần trọng tâm tiếp theo: Thực nghiệm và kết quả.
+Để tạo ra các tác vụ dài hạn có ý nghĩa nghiệp vụ, HSGE kết hợp 2 cơ chế:
 
-> _(Bấm Click 1 — hiện Cột trái: 3 Câu hỏi nghiên cứu)_
-> Đi vào phần thực nghiệm, nghiên cứu tập trung giải đáp **3 câu hỏi cốt lõi (RQ)**:
->
-> - **CH1:** Hệ thống có tự động sinh ra các tác vụ có ý nghĩa và quy mô dữ liệu chất lượng hay không?
-> - **CH2:** Năng lực của SLM sau khi fine-tune được cải thiện thế nào so với mô hình nền và các công trình SOTA?
-> - **CH3:** Chu trình tự động sinh dữ liệu đạt hiệu quả chi phí kinh tế ra sao?
->
-> _(Bấm Click 2 — hiện Cột phải: Thiết lập thực nghiệm)_
-> Để trả lời 3 câu hỏi này, thiết lập thực nghiệm được chuẩn hóa như sau:
->
-> - **Mô hình**: Tinh chỉnh từ mô hình nền **Qwen3.5-9B** tạo thành **HSGE-9B**.
-> - **Fine-tuning**: Kỹ thuật LoRA / QLoRA qua 3 epoch (1.119 bước huấn luyện).
-> - **Đánh giá**: 655 tác vụ chính thức của **WebArena** trên 4 website do nhóm **tự triển khai (self-hosted)** — Shopping, Shopping Admin, GitLab, Reddit — chấm bằng Task SR của benchmark.
-> - **Đối chứng**: cùng prompt, cùng ngân sách bước với mô hình nền.
->
-> _(Phạm vi và tiêu chí đã nêu ở slide 3 — ở đây chỉ nhắc lại phần cấu hình huấn luyện.)_
+- **Bottom-up (Từ dưới lên):** Duyệt đồ thị Operator Graph bằng thuật toán tìm kiếm, tự động ghép các chuỗi $\ge 2$ operator thành một nhiệm vụ hoàn chỉnh kèm câu lệnh ngôn ngữ tự nhiên.
+- **Top-down (Từ trên xuống):** Khởi tạo nhiệm vụ từ các chức năng hạt giống (seed) tổng quan của website khi đồ thị còn thưa.
 
-**Câu chốt:** Phép đo sử dụng bộ đề xuất và **bộ chấm chính thức của WebArena** để đảm bảo tính khách quan hoàn toàn.
-
-"Vậy quá trình tự hành khám phá đã thu hoạch được khối lượng dữ liệu như thế nào? Xin mời Hội đồng cùng xem kết quả của Câu hỏi nghiên cứu thứ nhất."
+**Kết quả thực thi:** Hệ thống sinh ra **142 tác vụ có ngữ nghĩa** (130 từ seed + 12 từ ghép chuỗi), đạt **71 tác vụ thành công** (tỷ lệ 50,0%). Kết quả này chứng minh cơ chế ghép chuỗi operator hoạt động hoàn toàn đúng thiết kế và khả thi trong thực tế.
 
 ---
 
-## Slide 14 - CH1: Tự động tạo tác vụ & Quy mô dữ liệu (10:45, trang 19)
+## Slide 12 — Kiểm định trực tuyến & Đóng gói SFT
 
-Đây là bảng thống kê quá trình thu hoạch dữ liệu của HSGE trên 4 website.
-Chỉ qua **3.981 lượt tương tác** thử trên **4 website**, hệ thống đã tự động thu hoạch được **146 kỹ năng** và quy nạp thành **57 toán tử cốt lõi**. Từ các toán tử này, thuật toán ghép chuỗi đã sinh ra **142 semantic task đa bước**.
+*(Điểm chuyển giao người trình bày)*
 
-> Trả lời **CH1**, phễu khám phá tự động của HSGE mang lại các kết quả quy mô ấn tượng:
->
-> - **Quy mô khám phá & Tri thức**: Khám phá **4 website, 455 URL**, thực hiện **3.981 lượt tương tác thử**, thu hoạch **146 skills** và quy nạp **57 operators**.
-> - **Sinh tác vụ**: Tự động tạo và kiểm chứng **142 semantic task** đa bước.
-> - **Cổng lọc chất lượng**:
->   1. **LLM-as-Judge** loại bỏ **801 lượt (27,4%)** dương tính giả (agent tự báo hoàn thành nhưng chưa làm đúng).
->   2. **Effective Action Gate** loại **104 trajectory** không làm biến đổi trang DOM.
-> - **Kết quả thu hoạch**: Thu được **1.760 trajectory sạch** (đạt tỷ lệ hợp lệ 53,2%), đóng gói thành **9.007 mẫu SFT** (8.554 train / 453 validation) hoàn toàn tự động mà **không cần 1 giờ gán nhãn thủ công nào**.
+Nguyên tắc chất lượng của HSGE: **Tuyệt đối không tin vào lời tự khai của agent.**
 
-**Câu chốt:** HSGE tự động sinh tác vụ có ý nghĩa và thu hoạch 9.007 mẫu SFT sạch hoàn toàn không cần nhãn người.
+Hệ thống thiết lập 2 cổng kiểm soát trực tuyến (Online Gates) ngay trong quá trình thu thập:
+1. **Online LLM Judge:** Mỗi khi agent tuyên bố xong, LLM Judge độc lập lập tức thẩm định lại trên trạng thái DOM thực tế, loại bỏ ngay **801 lượt (27,4%)** dương tính giả từ nguồn.
+2. **Effective Action Gate:** Kiểm tra bằng mã để loại bỏ các trường hợp agent báo xong nhưng trang web không hề có thay đổi trạng thái DOM (loại 104 trajectory).
 
-"Với bộ dữ liệu thu được, chúng ta sẽ xem xét sự thay đổi về năng lực của các mô hình nhỏ (Small Language Models) trong Câu hỏi nghiên cứu thứ hai."
+Nhờ dữ liệu đã sạch từ gốc, hệ thống tiến hành **Build trực tiếp** thành **9.007 mẫu SFT** (8.554 train / 453 validation) mà không cần lọc hậu kỳ. Quá trình đóng gói đảm bảo nghiêm ngặt nguyên tắc **Prompt Parity** (khớp từng byte giữa lúc train và lúc suy luận) và **0 trùng lặp mục tiêu** giữa train và validation.
 
 ---
 
-## Slide 15 - CH2: So sánh hiệu năng với các hệ thống SOTA (11:35, trang 20)
+## Slide 13 — Thiết lập & Câu hỏi nghiên cứu
 
-> Trả lời **CH2 (phần 1)**, Bảng 2 so sánh hiệu năng của HSGE-9B và HSGE-7B với các mô hình đóng và mở:
->
-> - **Vị thế tổng thể**: HSGE-9B đạt tỷ lệ hoàn thành **24,6%** trên toàn bộ 655 task của WebArena, tăng **+11,3 điểm phần trăm** so với mức **13,3%** của mô hình nền Qwen3.5-9B.
-> - **Chuyển giao tập dữ liệu sang mô hình 7B (Bảng 4.14)**: Cùng tập dữ liệu 8.554 mẫu HSGE nâng **Qwen-2.5-7B từ 8,3% lên 16,5%** (+8,2 đpt, tăng gần gấp đôi), chứng minh tri thức không phụ thuộc kiến trúc đơn lẻ.
-> - **Vượt mô hình thương mại đóng**: Kết quả 24,6% của HSGE-9B vượt qua **GPT-4o-mini (20,0%)**.
-> - **Vượt các SLM cùng phân khúc (<10B)**: HSGE-9B vượt xa **Qwen-2.5-7B-Instruct (8,3%)** và **NNetNav-7B (19,1%)**, đồng thời đạt mức **tương đương SOTA Go-Browse-7B (22,6%)**.
-> - **Ưu thế trên từng website**: HSGE-9B dẫn đầu ở phân khúc <10B trên website Shopping (**28,3%**) và Reddit (**34,0%**).
+*(Người thứ 2 bắt đầu phần Thực nghiệm)*
 
-**Câu chốt:** Fine-tuning giúp SLM 9B vượt GPT-4o-mini và đạt SOTA phân khúc mở dưới 10 tỷ tham số.
+Kính thưa Hội đồng, để đánh giá toàn diện hiệu quả của HSGE, phần thực nghiệm tập trung giải đáp **3 câu hỏi nghiên cứu cốt lõi**:
+- **CH1:** Hệ thống có tự động sinh ra các tác vụ có ý nghĩa và quy mô dữ liệu chất lượng hay không?
+- **CH2:** Năng lực của SLM sau khi fine-tune được cải thiện thế nào so với mô hình nền và các SOTA?
+- **CH3:** Quá trình tự động sinh dữ liệu đạt hiệu quả chi phí kinh tế ra sao?
 
-**Tránh:** Không nói "vượt Go-Browse" — con số 24,6% so với 22,6% nằm trong khoảng biến động thống kê, phát biểu chuẩn xác là _tương đương SOTA Go-Browse-7B_.
-
-Sự tăng trưởng này đến từ việc mô hình học được cú pháp lệnh, hay thực sự học được cách tư duy? Slide tiếp theo sẽ bóc tách bản chất của sự cải thiện này
+**Thiết lập thực nghiệm:**
+- **Môi trường & Benchmark:** 655 tác vụ chính thức trên 4 website tự triển khai (self-hosted) của **WebArena** (Shopping, Shopping Admin, GitLab, Reddit).
+- **Mô hình & Huấn luyện:** Mô hình nền **Qwen3.5-9B-Instruct** được tinh chỉnh bằng LoRA qua 3 epoch để tạo ra **HSGE-9B**.
+- **Đánh giá:** Sử dụng bộ chấm Task Success Rate (SR) chính thức của WebArena với cùng prompt và cùng ngân sách bước.
 
 ---
 
-## Slide 16 - CH2: So sánh mô hình nền (Base) và fine-tuning theo Website (12:25, trang 21)
+## Slide 14 — CH1: Tự động tạo tác vụ & Quy mô dữ liệu
 
-"Chuyển sang phân tích bản chất của sự cải thiện này tại Slide 16. Dựa vào kết quả kiểm định McNemar trên Bảng 3, mức tăng trưởng hiệu năng trên cả 4 website đều có ý nghĩa thống kê rất cao (p < 0,011). Để bóc tách xem mô hình thực sự học được gì, chúng em nhận thấy sự cải thiện đến từ hai khía cạnh:
-Thứ nhất là kỷ luật cú pháp: Lỗi định dạng đầu ra của mô hình giảm triệt để từ mức 26,0% xuống chỉ còn 0,6%.
-Thứ hai, và là cốt lõi của bài toán, đó là sự gia tăng mạnh mẽ về năng lực ra quyết định. Để chứng minh mô hình thực sự 'thông minh hơn' chứ không chỉ 'gõ đúng lệnh hơn', chúng em đã thực hiện quá trình tinh chỉnh (fine-tuning) chia làm 2 pha. Ở Pha 2, chúng em chủ động tăng cường thêm dữ liệu chuyên biệt cho 2 tên miền khó nhất: cụ thể là bổ sung 1.856 mẫu cho website Reddit và 2.410 mẫu cho Shopping Admin. Kết quả thu được vô cùng rõ rệt: Tại diễn đàn Reddit, tỷ lệ thành công nhảy vọt từ 20,8% ở Pha 1 lên tới 34,0% ở Pha 2. Tương tự, hiệu năng trên Shopping Admin cũng tăng từ 15,4% lên 21,4%. Sự bổ sung dữ liệu này đã giúp mô hình ở giai đoạn fine-tune giải quyết thành công thêm 100 tác vụ độc quyền mà mô hình nền hoàn toàn bất lực. Hơn thế nữa, một phép thử minh chứng tính quyết định là: ngay cả trên tập 485 tác vụ mà mô hình gốc ban đầu vốn dĩ đã xuất đúng cú pháp lệnh, tỷ lệ thành công sau fine-tune vẫn tiếp tục tăng từ 17,9% lên 23,5%. Câu chốt: Phép thử chia 2 pha này là minh chứng rõ ràng cho việc mở rộng dữ liệu fine-tuning không chỉ dừng lại ở việc rèn kỷ luật cú pháp, mà thực sự liên tục nâng cao mức trần hiệu năng và năng lực tư duy, lựa chọn hành động của tác nhân."
+Để trả lời **CH1**, Bảng 1 tổng hợp toàn bộ quy mô dữ liệu tự sinh của HSGE:
 
----
+- **Quy mô khám phá:** Hệ thống duyệt qua **4 website, 455 URL**, thực hiện **3.981 lượt tương tác thử**.
+- **Tri thức tích lũy:** Tự động thu hoạch **146 skill**, quy nạp thành **57 operator**, và sinh thành công **142 semantic task**.
+- **Hiệu quả cổng lọc:** LLM Judge loại bỏ **801 lượt (27,4%)** dương tính giả và Effective Action Gate loại **104 trajectory** không đổi trạng thái.
+- **Thu hoạch SFT:** Thu được **1.760 trajectory sạch** (tỷ lệ hợp lệ 53,2%), đóng gói thành **9.007 mẫu SFT** hoàn chỉnh.
 
-## Slide 17 - CH3: Hiệu quả chi phí trong tự động tạo dữ liệu (13:15, trang 22)
-
-"Cuối cùng, một hệ thống mạnh chỉ thực sự thực tiễn nếu nó có chi phí hợp lý. Chúng ta cùng xem xét Câu hỏi nghiên cứu thứ 3 về bài toán kinh tế."
-
-Thay vì sử dụng các LLM đắt đỏ nhất cho toàn bộ pipeline, hệ thống định tuyến các tác vụ chuyên biệt dựa trên độ phức tạp và yêu cầu của từng bước. Cụ thể, việc phân tích thông tin đầu vào dạng hỗn hợp văn bản và hình ảnh trong quá trình duyệt web được giao cho mô hình GPT-5.6-luna (Vision) đảm nhiệm ở các vai trò Seeder, Explorer và Goal Solver đa bước. Trong khi đó, các tác vụ thực thi hành động (Solver) được phân bổ cho GPT-5.6-terra, và công tác đánh giá, kiểm định độc lập (Detector / Evaluator) được giao cho DeepSeek-chat. Chiến lược phân lớp này mang lại sự tối ưu đáng kinh ngạc về mặt kinh phí. Cụ thể, chi phí cho OpenAI API ở các cụm Solver và Explorer là 42,29 USD, và chi phí cho DeepSeek API ở khâu Judge và Skill chỉ tốn 11,92 USD. Tổng cộng, toàn bộ quá trình tự động sinh dữ liệu khép kín trên cả 4 website thực tế chỉ tiêu tốn 54,21 USD, tương đương chưa tới 14 USD cho mỗi website. Bằng cách dồn phần lớn tải lượng xử lý sang các mô hình tối ưu chi phí, đơn giá trung bình để thu hoạch được một trajectory thành công, sạch sẽ chỉ là 0,0308 USD. Phương pháp này giúp hệ thống giảm mức tiêu hao token tới khoảng 12 lần. Nếu đặt lên bàn cân so sánh với công trình SOTA hiện nay là Go-Browse-7B – vốn tiêu tốn 0,1026 USD/trajectory – thì hệ thống HSGE đạt mức chi phí rẻ hơn đến 3,3 lần.  
-Câu chốt: Với đơn giá đột phá chỉ 0,0308 USD/trajectory, kết quả này chứng minh một cách thuyết phục tính khả thi về mặt kỹ thuật và tài nguyên, cho phép các nhóm nghiên cứu và tổ chức nhỏ hoàn toàn có thể tự xây dựng dữ liệu và tinh chỉnh các tác nhân tự hành cục bộ chuyên biệt."
+**Kết luận CH1:** HSGE tự động sinh tác vụ có ý nghĩa và thu hoạch 9.007 mẫu SFT sạch hoàn toàn không cần nhãn con người.
 
 ---
 
-## Slide 18 - Kết luận: Đóng góp chính & Hướng phát triển (13:55, trang 23)
+## Slide 15 — CH2: So sánh hiệu năng với các hệ thống SOTA
 
-> _(Bấm Click 1 — hiện Cột trái: Đóng góp chính)_
-> Tổng kết lại, khóa luận đóng góp 3 giá trị cốt lõi:
->
-> - **Về Khoa học**: Đề xuất biểu diễn đồ thị 2 tầng (State Graph $\leftrightarrow$ Operator Graph) và thuật toán phát hiện skill, quy nạp operator và ghép chuỗi đa bước.
-> - **Về Thực tiễn**: Cung cấp pipeline tự động hóa hoàn chỉnh, sinh **9.007 mẫu SFT**, huấn luyện **HSGE-9B đạt 24,6% Task SR** với chi phí rẻ hơn **3,3 lần** so với Go-Browse.
-> - **Tài nguyên mở**: Bàn giao toàn bộ mã nguồn, bộ dataset và trọng số mô hình HSGE-9B.
->
-> _(Bấm Click 2 — hiện Cột phải: Hướng phát triển tương lai)_
-> Hướng phát triển tương lai tập trung vào 4 điểm:
->
-> 1. **Khôi phục lỗi tự động**: Tự sửa lỗi và thử lại khi gặp sự cố giao diện (timeout, kẹt trang DOM).
-> 2. **Tối ưu khám phá với RL**: Kết hợp Học tăng cường (RL) giúp Explorer tự học chiến lược duyệt web tối ưu.
-> 3. **Học từ thất bại**: Khai thác các trajectory thất bại thông qua DPO / Preference Learning.
-> 4. **Tổng quát hóa**: Mở rộng pipeline khám phá cho các ứng dụng ngoài miền (cross-domain).
->
-> Em xin chân thành cảm ơn Thầy Cô trong Hội đồng đã chú ý lắng nghe và xin nhận câu hỏi góp ý!
+Để trả lời **CH2**, Bảng 2 so sánh hiệu năng của HSGE với các mô hình thương mại và mô hình mã nguồn mở:
 
-**Câu chốt:** Khóa luận chứng minh tính khả thi của việc tự sinh dữ liệu và fine-tune SLM chạy cục bộ với chi phí tối ưu.
+- **Hiệu năng tổng thể:** HSGE-9B đạt **24,6% Task SR** trên toàn bộ 655 task của WebArena, tăng **+11,3 điểm phần trăm** so với mức 13,3% của mô hình nền Qwen3.5-9B.
+- **Vượt mô hình thương mại:** Kết quả 24,6% của HSGE-9B vượt qua mô hình đóng **GPT-4o-mini (20,0%)**.
+- **Vượt trội phân khúc <10B:** HSGE-9B vượt xa Qwen-2.5-7B-Instruct (8,3%) và NNetNav-7B (19,1%), đồng thời đạt mức **tương đương SOTA Go-Browse-7B (22,6%)**.
+- **Khả năng chuyển giao dữ liệu:** Dùng tập dữ liệu HSGE để fine-tune mô hình **Qwen-2.5-7B** giúp nâng hiệu năng từ **8,3% lên 16,5%** (tăng gần gấp đôi), chứng minh giá trị độc lập của bộ dữ liệu tự sinh.
 
 ---
 
-## Phụ lục PL1–PL8: câu hỏi nào bật trang nào
+## Slide 16 — CH2: So sánh Base và Fine-tuning theo Website
 
-Phụ lục không có số footer — cột "Trang" dưới đây là **số trang PDF** trong `main.pdf`.
+Bóc tách sâu hơn về sự cải thiện trong CH2 qua Bảng 3:
 
-| Slide | Trang | Nội dung                                            | Bật khi được hỏi về                                                    |
-| ----- | ----- | --------------------------------------------------- | ---------------------------------------------------------------------- |
-| PL1   | 45    | Tính hợp lệ của phép đánh giá                       | "Explore rồi test trên cùng app thì có hợp lệ không?"                  |
-| PL2   | 46    | Hướng đến ai; pipeline mới là thứ tổng quát         | "Có phải muốn model generalize cho mọi trang không?"                   |
-| PL3   | 47    | Task khả thi, ngân sách bước, tiêu chuẩn hoàn thành | "Task LLM đề xuất có thật không?", "Sao 25 bước?", "Sao biết đã xong?" |
-| PL4   | 48    | Ba CH: số liệu và mức độ trả lời                    | "Thực nghiệm trả lời được mục tiêu chưa?"                              |
-| PL5   | 49    | Chi phí chi tiết                                    | "Chi phí đã tính đủ chưa?"                                             |
-| PL6   | 50    | Frontier hai tầng                                   | "Khám phá không bị lạc bằng cách nào?"                                 |
-| PL7   | 51    | Nguyên nhân thất bại; đặc tính hai mô hình          | "Điểm nghẽn còn lại ở đâu?"                                            |
-| PL8   | 52    | Thêm dữ liệu; đổi mô hình nền                       | "Thêm dữ liệu nữa có tốt hơn không?", "Sao không dùng mô hình khác?"   |
+- **Tăng trưởng toàn diện:** Cả 4 website đều ghi nhận mức tăng trưởng vượt bậc có ý nghĩa thống kê rất cao theo kiểm định McNemar ($p < 0,011$), tiêu biểu như Reddit tăng từ 6,6% lên **34,0%** ($p < 0,001$).
+- **Kỷ luật cú pháp:** Lỗi định dạng lệnh giảm triệt để từ **26,0% xuống chỉ còn 0,6%**.
+- **Nâng cao năng lực ra quyết định:** Ngay cả trên tập 485 task mà mô hình gốc vốn đã xuất đúng cú pháp, tỷ lệ thành công sau fine-tune vẫn tiếp tục tăng từ **17,9% lên 23,5%** ($p = 0,003$), đồng thời giải thành công thêm **100 task độc quyền** mà mô hình nền bất lực.
+- **Mở rộng dữ liệu Pha 2:** Bổ sung dữ liệu chuyên biệt ở Pha 2 giúp Reddit tăng từ 20,8% lên 34,0% và Shopping Admin tăng từ 15,4% lên 21,4%.
+
+**Kết luận CH2:** Fine-tuning giúp SLM làm chủ cả kỷ luật cú pháp lẫn năng lực ra quyết định, và việc mở rộng dữ liệu giúp liên tục nâng cao mức trần hiệu năng.
 
 ---
 
-## Câu hỏi dự kiến và hướng trả lời
+## Slide 17 — CH3: Hiệu quả chi phí trong tự động tạo dữ liệu
 
-### A. Sáu câu thầy phản biện đã hỏi
+Trả lời **CH3** về tính khả thi kinh tế:
 
-| Câu hỏi                                                                                                                       | Bật                            | Hướng trả lời                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Explore trên app của họ rồi test bằng bộ test của họ trên chính app đó có hợp lệ không? Phải test app khác cùng lĩnh vực chứ? | **PL1**                        | Pipeline **chưa từng nhìn thấy** 655 task benchmark — task huấn luyện do agent tự đề xuất từ giao diện; CSDL khôi phục nguyên bản trước mỗi đợt đo; không trajectory nào được dùng lại lúc chấm. Cùng-website là **giao thức chuẩn** của cả dòng nghiên cứu: Go-Browse cũng khám phá 20 URL mỗi domain của WebArena rồi chấm trên chính 812 task WebArena. Còn test "app khác" là bài toán **ngoài miền** — chưa ai giải được: trên Online-Mind2Web, Go-Browse-7B chỉ 5,33% và NNetNav-7B 4,00%, đều thua GPT-4o-mini 9,33%. |
-| Động lực hướng đến ai? Có phải muốn một model generalize cho mọi trang cùng lĩnh vực?                                         | **Slide 3** trước, **PL2** sau | **Không.** Đích nhắm là chuyên biệt hóa cho _một_ website cụ thể. Câu chốt: **thứ tổng quát hóa là pipeline, không phải model**. Người dùng đích là nhóm vận hành vài website cố định, cần agent chạy tại chỗ. Khả thi vì **dưới 20 đô la mỗi website** và không cần người gán nhãn.                                                                                                                                                                                                                                         |
-| Làm sao biết task do LLM đề xuất là hợp lý và làm được thật trên giao diện đó?                                                | **PL3** khối 1                 | Bộ đề xuất là một _agent_ đọc trực tiếp cây trợ năng của trang thật, không đề xuất từ trí nhớ. Quan trọng hơn: **khả thi được chứng minh bằng thực thi, không bằng lời** — chỉ task có ít nhất một lượt giải thành công _và qua kiểm chứng_ mới vào dataset. 637 task bị chính agent báo bất khả thi; 3981 lượt thử còn 2117 hợp lệ.                                                                                                                                                                                         |
-| Vì sao ngân sách bước là 25?                                                                                                  | **PL3** khối 2                 | Chính xác là **15 bước cho task cục bộ, 25 cho semantic task nhiều bước**. Solver chiếm 85,5% trong 20.808 lượt gọi nên ngân sách bước _chính là_ ngân sách kinh phí — đây trước hết là quyết định chi phí. Nhưng dữ liệu cho thấy nó **không bóp méo phép đo**: episode thành công có trung vị 6 bước, và **không episode nào** đạt mục tiêu rồi mới bị cắt vì hết bước.                                                                                                                                                    |
-| Dựa vào đâu để biết task đã hoàn thành?                                                                                       | **PL3** khối 3                 | **Ba lớp**, không phải hai: (i) solver tự khai hoặc vị từ tất định; (ii) LLM-as-Judge soi trạng thái trang đích → loại **801 lượt** dương tính giả khi tự đánh giá; (iii) cổng "hành động hữu hiệu" bằng mã → loại **104 trajectory**, nhóm lỗi mà judge _về nguyên tắc_ không thấy được. Và 24,6% được chấm bằng **bộ chấm chính thức của WebArena**.                                                                                                                                                                       |
+- **Chiến lược định tuyến mô hình:** HSGE tối ưu chi phí bằng cách phân bổ mô hình theo vai trò: dùng mô hình thị giác GPT-5.6-luna cho Explorer/Solver, GPT-5.6-terra cho Goal Solver, và DeepSeek-chat cho Evaluator/Judge.
+- **Tổng chi phí:** Toàn bộ quá trình khám phá trên 4 website chỉ tiêu tốn **54,21 USD** (chưa tới 14 USD cho mỗi website).
+- **Đơn giá trên mẫu thành công:** Chi phí chỉ **0,0308 USD cho mỗi trajectory sạch**, giảm tiêu hao token khoảng 12 lần.
+- **So sánh với SOTA:** So với mức 0,1026 USD/trajectory của Go-Browse-7B, HSGE **rẻ hơn 3,3 lần**.
 
-| Thực nghiệm nhắm mục tiêu nào, đã trả lời được chưa? | **PL4** | CH1–CH3 đều có số liệu trả lời. Phần phải nói thật: **O2 và O4 mới hoàn thành một phần** — chỉ 12/142 semantic task từ ghép chuỗi, và **ablation đồ thị so với khám phá phẳng chưa chạy**. |
-
-### B. Các câu khác
-
-| Câu hỏi                                                                                                    | Bật                            | Hướng trả lời                                                                                                                                                                                                                                                                                                                |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Đóng góp mới so với Go-Browse / NNetNav là gì?                                                             | Slide 6–7                      | Kỹ năng được **kiểm chứng**, nâng thành operator có tiền điều kiện/kết quả, rồi **ghép chuỗi** thành task dài — hai cột mà cả hai công trình kia đều trống. Cộng thêm hai cổng chất lượng và prompt parity.                                                                                                                  |
-| Sao không chứng minh được đồ thị tốt hơn khám phá phẳng?                                                   | Slide 18, PL4                  | Đúng, đó là ablation quan trọng nhất và chưa chạy. Thiết kế đã có sẵn: cùng ngân sách episode và lượt gọi, chỉ đổi chiến lược khám phá.                                                                                                                                                                                      |
-| Vì sao ghép chuỗi chỉ sinh 12/142 task?                                                                    | Slide 11                       | Cạnh operator cần kết quả khớp tiền điều kiện; sau hai cổng chống trùng lặp và kiểm chứng thực tế, đồ thị còn thưa. Hạn chế đã ghi trong Chương 5.                                                                                                                                                                           |
-| 24,6% có thấp quá không?                                                                                   | Slide 15                       | So với chính mô hình nền cùng điều kiện là **+11,3 điểm, p<0,001, có ý nghĩa trên cả 4/4 website**. Benchmark này GPT-4 chỉ đạt ~14% khi công bố, người đạt 78%. 24,6% ngang nhóm mô hình mở tốt nhất dưới 10B.                                                                                                              |
-| Vì sao tin số liệu khi agent tự chấm?                                                                      | PL3                            | Không tin — ba lớp kiểm chứng; và phần đánh giá cuối dùng bộ chấm tự động của WebArena, không phải agent.                                                                                                                                                                                                                    |
-| Chi phí đã tính đủ chưa?                                                                                   | PL5                            | **54,21 API + 24,40 GPU = 78,61 đô la** cho cả bốn website; chưa tính hạ tầng WebArena tự host và công vận hành. Mỗi trajectory 0,0308 đô — rẻ hơn Go-Browse 3,3 lần.                                                                                                                                                        |
-| Vì sao chọn Qwen3.5-9B mà không nhỏ hơn?                                                                   | Slide 18, PL8                  | Ngưỡng "chạy được trên máy phổ thông" là dưới 10B; chưng cất xuống 1–3B là hướng phát triển. PL8 có sẵn phép đo đổi mô hình nền sang Qwen-2.5-7B trên **cùng** tập dữ liệu.                                                                                                                                                  |
-| Hệ thống này dùng để kiểm thử phần mềm được không?                                                         | PL2                            | Về cấu trúc thì rất khớp: operator có **precondition/effect** chính là một dạng _test model_, semantic task là _test scenario_, trajectory đã kiểm chứng là _test script_. Nhưng phải nói rõ: khóa luận **chưa thực nghiệm** hướng này — đây là ứng dụng tiềm năng, không phải kết quả.                                      |
-| Điểm nghẽn còn lại ở đâu?                                                                                  | PL7                            | Tầng thực thi: 85–96% episode thất bại có ít nhất một hành động bị trình duyệt từ chối. Fine-tune làm mô hình **bền bỉ** hơn chứ không **chính xác** hơn — tỷ lệ lỗi trên mỗi bước gần như không đổi.                                                                                                                        |
-| Sao train từng bước mà không train nguyên trajectory? Train từng bước thì làm sao model làm được task dài? | Không có slide — xem **mục C** | Mẫu là một bước **nhưng không rời khỏi trajectory**: prompt mỗi bước có `# Goal` (câu lệnh task dài, giữ nguyên ở mọi bước) và `# History of Past Actions` (6 hành động gần nhất kèm kết quả). Không gộp cả chuỗi vì lúc chạy thật agent sinh **một** hành động rồi mới thấy trang tiếp theo — gộp là phá **prompt parity**. |
-| Thêm dữ liệu nữa có tốt hơn không?                                                                         | PL8                            | Có, nhưng hiệu suất giảm nhanh: gần **gấp ba** dữ liệu của hai website chỉ đổi lấy **+2,1 điểm**. Nên hướng tiếp theo là sửa tầng thực thi, không phải nhân đôi dữ liệu.                                                                                                                                                     |
+**Kết luận CH3:** Chi phí 0,0308 USD/trajectory chứng minh tính khả thi cao về mặt kỹ thuật và tài nguyên cho các nhóm nghiên cứu và tổ chức nhỏ.
 
 ---
 
-### C. Câu trả lời dài: "sao train từng bước, không train nguyên trajectory?"
+## Slide 18 — Kết luận: Đóng góp chính & Hướng phát triển
 
-**Câu trả lời ngắn (đọc thẳng được):**
+Tổng kết lại, khóa luận mang lại 3 giá trị cốt lõi:
 
-> Thưa Thầy, hai cái đó không đối lập nhau. Một mẫu huấn luyện của nhóm em **là một bước,
-> nhưng không phải một bước bị cắt rời khỏi trajectory**. Trong prompt của mỗi bước luôn
-> có khối `# Goal` giữ nguyên câu lệnh của task dài, và khối `# History of Past Actions`
-> liệt kê các hành động đã làm cùng kết quả của chúng. Nên cái model học là ánh xạ
-> _(mục tiêu dài + tiến độ đã đi được + trang hiện tại) → hành động kế tiếp_, chứ không
-> phải _(trang hiện tại) → hành động_.
->
-> Còn lý do không gộp cả trajectory thành một mẫu là vì **lúc chạy thật không ai chạy như
-> vậy**. Agent chạy theo vòng lặp: quan sát trang → sinh **một** hành động → trình duyệt
-> trả về trang mới. Hành động thứ hai phụ thuộc vào trang do hành động thứ nhất tạo ra,
-> mà trang đó chưa tồn tại tại thời điểm sinh. Bắt model sinh cả chuỗi một lượt là vi phạm
-> đúng nguyên tắc **prompt parity** mà nhóm em vừa trình bày ở slide 12.
+1. **Về Khoa học:** Đề xuất kiến trúc đồ thị 2 tầng (State Graph $\leftrightarrow$ Operator Graph), thuật toán phát hiện skill, quy nạp operator và cơ chế ghép chuỗi semantic task.
+2. **Về Thực tiễn:** Xây dựng pipeline tự động hóa hoàn chỉnh, sinh **9.007 mẫu SFT sạch**, huấn luyện **HSGE-9B đạt 24,6% Task SR** với chi phí **rẻ hơn 3,3 lần** so với Go-Browse.
+3. **Về Tài nguyên mở:** Công khai toàn bộ mã nguồn pipeline, bộ dataset SFT và trọng số mô hình HSGE-9B.
 
-**Ví dụ cụ thể — nếu Hội đồng muốn thấy tận mắt.** Lấy task _"Tìm sản phẩm yoga mat rồi
-thêm vào giỏ hàng"_. Trajectory này dài 4 bước, và nó tạo ra 4 mẫu huấn luyện. So sánh
-mẫu **bước 1** với mẫu **bước 4**:
+**Bốn hướng phát triển tiếp theo:**
+- **Khôi phục lỗi tự động:** Tự sửa lỗi và thử lại khi gặp sự cố giao diện (timeout, kẹt DOM).
+- **Tối ưu khám phá với RL:** Áp dụng Học tăng cường giúp Explorer tự học chiến lược duyệt web tối ưu.
+- **Học từ thất bại:** Tận dụng các trajectory lỗi thông qua DPO hoặc Preference Learning.
+- **Tổng quát hóa ngoài miền:** Mở rộng pipeline sang các website phức tạp hơn ngoài WebArena.
 
-```
---- MẪU BƯỚC 1 -----------------      --- MẪU BƯỚC 4 -----------------
-# Goal                                # Goal
-Tìm sản phẩm "yoga mat" rồi           Tìm sản phẩm "yoga mat" rồi
-thêm vào giỏ hàng                     thêm vào giỏ hàng        <-- Y HỆT
-
-# Current Page                        # Current Page
-URL: /                                URL: /yoga-mat-premium.html
-<axtree trang chủ>                    <axtree trang chi tiết sản phẩm>
-
-# Error Message from Last Action      # Error Message from Last Action
-(none)                                (none)
-
-# History of Past Actions             # History of Past Actions
-(none)                                - fill('204', 'yoga mat') -> no change
-                                      - press('204', 'Enter')
-                                          -> now at /catalogsearch/result/?q=yoga+mat
-                                      - click('619') -> now at /yoga-mat-premium.html
-
-# Next Action ...                     # Next Action ...
---------------------------------      --------------------------------
-Đáp án: fill('204','yoga mat')        Đáp án: click('842')   [nút Add to Cart]
-```
-
-**Điểm mấu chốt nằm ở mẫu bước 4.** Trang chi tiết sản phẩm đó xuất hiện trong rất nhiều
-task khác nhau: có task chỉ hỏi giá, có task kiểm tra tồn kho, có task so sánh hai sản
-phẩm. **Nhìn riêng cái trang thì không thể quyết định được phải bấm gì.** Thứ quyết định
-là hai khối kia: `# Goal` nói mục tiêu cuối là _thêm vào giỏ_, còn `# History` nói _đã tìm
-xong và đã mở đúng sản phẩm rồi_ — nên việc còn lại đúng là bấm Add to Cart. Model buộc
-phải đọc cả ba khối mới sinh đúng hành động, và đó chính là cách nó học tính trạng thái
-của một task dài.
-
-Ba chi tiết kỹ thuật cần nói chính xác nếu bị hỏi tiếp:
-
-- **`# History` hiển thị 6 hành động gần nhất**, không phải toàn bộ lịch sử (hằng số
-  `_HISTORY_WINDOW` trong `hsge/webarena/agents.py`) — nói "toàn bộ" là nói sai.
-- Mỗi dòng history có **kết quả thật của hành động** (`now at <url>` / `page changed` /
-  `no change`), sinh bởi cùng một hàm `step_outcome()` mà solver lúc chạy thật dùng.
-  Nhờ vậy model thấy được hành động nào vừa rồi **không làm gì cả**.
-- Hành động bị trình duyệt từ chối vẫn nằm trong history (kèm lỗi) nhưng **không được
-  dùng làm đáp án** — nó là cái sai, không phải cái cần bắt chước.
-
-**Năng lực task dài đến từ dữ liệu, không từ định dạng mẫu:**
-
-1. **Semantic task** ghép chuỗi operator — đây chính là nguồn sinh ra trajectory nhiều bước.
-2. **Unprefixed sampling**: giải lại task từ trang gốc của site, nên trajectory chứa cả
-   phần điều hướng. Không có cơ chế này thì 287 trong 465 trajectory chỉ dài đúng **một**
-   bước.
-3. **Curriculum**: mẫu sắp theo `difficulty` (LOCAL → UNPREFIXED → GOAL) — task ngắn trước,
-   task dài sau.
-
-Và phép đo cuối không phải bài toán một bước: 655 task WebArena đều đa bước, chấm bằng bộ
-chấm của benchmark, episode thành công có trung vị 6 bước.
-
-**Chỗ phải tự nhận, đừng để bị bắt:** khóa luận **không có hàm mục tiêu ở cấp trajectory**
-— không RL, không reward tính trên cả chuỗi, không phạt riêng việc đi sai ở bước 2 làm hỏng
-cả task. Model học bắt chước từng bước; tín hiệu "cả trajectory này thành công" vào dataset
-**gián tiếp qua khâu lọc** (chỉ trajectory đã kiểm chứng mới được xuất). Đó đúng là hạn chế
-và là lý do hướng phát triển là RL/DPO. Nhóm em đã lưu sẵn `trajectory_id`, `step_index`,
-`total_steps` trong từng mẫu để bước sau gom batch theo trajectory mà không phải thu thập
-lại dữ liệu.
-
----
-
-## Checklist trước khi lên
-
-- [ ] Mở sẵn `main.pdf` ở chế độ toàn màn hình, kiểm tra nhảy được tới **trang PDF 45–52** (phụ lục PL1–PL8).
-- [ ] Video demo mở sẵn ở tab riêng, **âm lượng 0**, đã thử phát một lần.
-- [ ] Nhớ ba con số không được nói sai: **24,6% / 13,3% / +11,3 điểm**.
-- [ ] Slide 3 phải nói ra chữ **"một tập website cố định"**; slide 7 phải có chữ
-      **"tiềm năng"** khi nhắc kiểm thử E2E.
-- [ ] Nhớ hai chỗ **không được nói quá**: "ngang Go-Browse" (không phải _vượt_), và
-      "ghép chuỗi mới khả thi" (không phải _đã đủ dày_).
-- [ ] Người 2 nắm chắc mốc 10:00 — nếu người 1 trễ quá 1 phút thì lược
-      `[lược nếu trễ]` ở slide 4 và 5.
-
----
-
-## Nếu được 20 phút
-
-Thêm bốn slide, theo thứ tự ưu tiên:
-
-1. **Kéo PL7 (nguyên nhân thất bại) và PL6 (frontier hai tầng) vào phần nội dung** —
-   cả hai đã dựng sẵn trong phụ lục, chỉ cần đổi chỗ.
-2. **Ví dụ một semantic task** sinh từ chuỗi operator, kèm chuỗi tiền điều kiện/kết quả.
-3. **Lộ trình nghiên cứu** (`fig_roadmap.pdf`, đã có trong `images/`), đặt ngay sau
-   slide 7 (giải pháp & đóng góp).
-4. **Bài học vận hành** (Phụ lục E của quyển): chat template, prompt parity, chạy song
-   song hai máy trên site sống.
+Em xin chân thành cảm ơn Quý Thầy Cô trong Hội đồng đã chú ý lắng nghe. Nhóm chúng em rất mong nhận được những câu hỏi và ý kiến đóng góp quý báu từ Hội đồng!

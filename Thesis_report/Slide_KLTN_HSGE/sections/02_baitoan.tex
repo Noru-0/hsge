@@ -9,26 +9,26 @@
   \begin{columns}[onlytextwidth,t]
     \begin{column}{0.485\textwidth}
       \uncover<1->{
-        \begin{block}{Bài toán đặt ra}
+        \begin{hblock}{Bài toán đặt ra}{\bhB}
           \begin{itemize}\ilist
             \item \textbf{Đầu vào}: $1$ website mục tiêu, \kw{0 nhãn người}.
             \item \textbf{Mục tiêu}: tự sinh dữ liệu và fine-tune agent.
             \item \textbf{Đầu ra}: tập SFT $+$ \kw{SLM ${<}10$B} chuyên biệt.
           \end{itemize}
-        \end{block}
+        \end{hblock}
       }
     \end{column}
 
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{block}{Phạm vi \& ứng dụng đích}
+        \begin{hblock}{Phạm vi \& ứng dụng đích}{\bhB}
           \begin{itemize}\ilist
             \item $1$ website $\rightarrow$ $1$ agent chuyên biệt, tại chỗ.
             \item Ngân sách API ở mức \kw{nhóm nghiên cứu nhỏ}.
             \item Tổng quát hóa \kw{pipeline}, không phải mô hình.
           \end{itemize}
-        \end{block}
+        \end{hblock}
       }
     \end{column}
   \end{columns}
@@ -48,24 +48,24 @@
   \begin{columns}[onlytextwidth,t]
     \begin{column}{0.485\textwidth}
       \uncover<1->{
-        \begin{block}{1. Thu thập dữ liệu chất lượng cao}
+        \begin{hblock}{1. Thu thập dữ liệu chất lượng cao}{\bhC}
           \begin{itemize}\ilist
             \item Dữ liệu tự sinh dễ \kw{lặp lại, không hợp lệ}.
             \item $\rightarrow$ Cần tự sinh mẫu \kw{vừa hợp lệ, vừa đa dạng}.
           \end{itemize}
-        \end{block}
+        \end{hblock}
       }
     \end{column}
 
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{block}{2. Thiếu tri thức về môi trường}
+        \begin{hblock}{2. Thiếu tri thức về môi trường}{\bhC}
           \begin{itemize}\ilist
             \item Tri thức ngoài dễ \kw{lệch môi trường} ($6\%$ vs $16\%$).
             \item $\rightarrow$ Cần \kw{tự động khám phá} trên web thật.
           \end{itemize}
-        \end{block}
+        \end{hblock}
       }
     \end{column}
   \end{columns}
@@ -74,24 +74,24 @@
   \begin{columns}[onlytextwidth,t]
     \begin{column}{0.485\textwidth}
       \uncover<3->{
-        \begin{block}{3. Sàng lọc trajectory tự sinh}
+        \begin{hblock}{3. Sàng lọc trajectory tự sinh}{\bhC}
           \begin{itemize}\ilist
             \item Agent tự sinh tự chạy $\rightarrow$ dễ \kw{tự khai xong giả}.
             \item $\rightarrow$ Cần sàng lọc bằng \kw{tín hiệu khách quan}.
           \end{itemize}
-        \end{block}
+        \end{hblock}
       }
     \end{column}
 
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<4->{
-        \begin{block}{4. Tạo tác vụ có ngữ nghĩa}
+        \begin{hblock}{4. Tạo tác vụ có ngữ nghĩa}{\bhC}
           \begin{itemize}\ilist
             \item Task tự sinh cần mạch lạc, đúng luồng nghiệp vụ.
             \item $\rightarrow$ Cần \kw{ghép chuỗi} thành task đa bước.
           \end{itemize}
-        \end{block}
+        \end{hblock}
       }
     \end{column}
   \end{columns}
