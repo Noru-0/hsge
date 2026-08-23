@@ -1,7 +1,9 @@
-% Slide bảo vệ khóa luận tốt nghiệp — HSGE.
+% Slide bảo vệ khóa luận tốt nghiệp — HSGE (Phiên bản trình chiếu / Deck đầy đủ kèm phụ lục).
 % Build: latexmk -pdf main.tex   (pdflatex, tiếng Việt qua T5 fontenc)
+\documentclass[aspectratio=169]{beamer}
 \input{config/preamble}
 \input{config/metadata}
+
 
 \begin{document}
 
@@ -9,23 +11,21 @@
   \titlepage
 \end{frame}
 
-% Outline frame
+% Outline frame: chỉ hiển thị 6 đề mục chính, ẩn toàn bộ mục con
 \begin{frame}{Nội dung báo cáo}
-  \footnotesize
+  \small
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
-      \tableofcontents[sections={1-3}]
+      \tableofcontents[sections={1-3},hideallsubsections]
     \end{column}
     \hfill
     \begin{column}{0.48\textwidth}
-      \tableofcontents[sections={4-6}]
+      \tableofcontents[sections={4-6},hideallsubsections]
     \end{column}
   \end{columns}
 \end{frame}
 
-\input{sections/01_gioithieu}
-
-% Show outline before each section
+% Show outline before each section (áp dụng cho tất cả các mục từ 1 đến 5)
 \AtBeginSection[]
 {
   \begin{frame}{Nội dung báo cáo}
@@ -42,10 +42,12 @@
   \end{frame}
 }
 
+\input{sections/01_gioithieu}
 \input{sections/02_baitoan}
 \input{sections/03_lienquan}
 \input{sections/04_phuongphap}
 \input{sections/05_thucnghiem}
+
 
 % Kết luận & Hỏi đáp: mục ngắn (2 frame) -- không chèn frame outline riêng.
 \AtBeginSection[]{}

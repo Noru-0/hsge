@@ -1,8 +1,7 @@
-% Preamble: document class, theme, Vietnamese support, shared macros.
-\documentclass[aspectratio=169]{beamer}
-
+% Preamble: theme, Vietnamese support, shared macros.
 \usetheme{Antibes}
 \usecolortheme{whale}
+
 
 % Vietnamese: T5 encoding (vntex) + Latin Modern covers the beamer sans family.
 \usepackage[utf8]{inputenc}
@@ -63,8 +62,14 @@
 \setlength{\leftmargini}{1.2em}
 \setlength{\leftmarginii}{1.0em}
 
-% Làm sáng phần đang trình bày và che mờ (25% opacity) các phần còn lại
-\setbeamercovered{transparent=25}
+% Làm sáng phần đang trình bày và che mờ (25% opacity) các phần còn lại khi trình chiếu (tắt khi in/handout)
+\mode<beamer>{%
+  \setbeamercovered{transparent=25}%
+}
+\mode<handout>{%
+  \setbeamercovered{invisible}%
+}
+
 
 % Harvey balls for the positioning table (same notation as the thesis).
 \usepackage[nointegrals]{wasysym}

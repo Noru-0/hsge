@@ -1,8 +1,8 @@
 # Kịch bản trình bày — Bảo vệ KLTN HSGE
 
 **Ngân sách:** 15 phút trình bày + 15 phút hỏi đáp (thông báo bảo vệ đợt 04/2026).
-Deck có **24 trang phần nội dung** (18 slide phải nói + 1 trang cảm ơn/Q&A + 1 trang mục
-lục đầu bài + 4 trang mục lục chương lướt qua) và **8 trang phụ lục PL1–PL8** đặt sau
+Deck có **25 trang phần nội dung** (18 slide phải nói + 1 trang cảm ơn/Q&A + 1 trang mục
+lục đầu bài + 5 trang mục lục chương lướt qua) và **8 trang phụ lục PL1–PL8** đặt sau
 trang cảm ơn, chỉ bật khi được hỏi.
 
 **Bố cục sáu mục** (theo góp ý của Hội đồng): _Giới thiệu (động lực) → Phát biểu bài toán
@@ -24,9 +24,9 @@ sang _"đo được gì"_.
   nói trên sân khấu. **Bản đầy đủ** ngay dưới nó là văn bản nền: đọc để nắm mạch lập
   luận và để có sẵn câu chữ khi Hội đồng hỏi sâu vào một ý — **không đọc hết khi trình
   bày**, nó dài gấp ba ngân sách.
-- Cột "Trang" là **số slide hiện ở footer** (`n / 24`), không phải số trang PDF: deck
-  dùng overlay nên `main.pdf` hiện có 52 trang. Nhảy nhanh thì dùng số footer.
-  Riêng phụ lục không có số footer — dùng **số trang PDF 45–52**.
+- Cột "Trang" là **số slide hiện ở footer** (`n / 25`), không phải số trang PDF: deck
+  dùng overlay nên `main.pdf` hiện có 53 trang. Nhảy nhanh thì dùng số footer.
+  Riêng phụ lục không có số footer — dùng **số trang PDF 46–53**.
 
 ---
 
@@ -35,23 +35,24 @@ sang _"đo được gì"_.
 | Slide | Trang | Nội dung                                       | Mốc   | Thời lượng |
 | ----- | ----- | ---------------------------------------------- | ----- | ---------- |
 | 1     | 1     | Bìa                                            | 0:00  | 0:30       |
-| 2     | 3     | _M1_ Động lực — khoảng cách hiệu năng trên web | 0:30  | 0:50       |
-| 3     | 5     | _M2_ Phát biểu bài toán và phạm vi             | 1:20  | 0:50       |
-| 4     | 6     | _M2_ Bốn thách thức cốt lõi                    | 2:10  | 0:50       |
-| 5     | 8     | _M3_ Ba hướng tiếp cận hiện nay                | 3:00  | 0:50       |
-| 6     | 9     | _M3_ Hạn chế và khoảng trống nghiên cứu        | 3:50  | 0:55       |
-| 7     | 11    | _M4_ Giải pháp HSGE & các đóng góp chính       | 4:45  | 0:50       |
-| 8     | 12    | _M4_ Tổng quan pipeline HSGE                   | 5:35  | 0:55       |
-| 9     | 13    | _M4_ Đồ thị hai tầng                           | 6:30  | 0:50       |
-| 10    | 14    | _M4_ Phát hiện skill → quy nạp operator        | 7:20  | 0:55       |
-| 11    | 15    | _M4_ Sinh semantic task                        | 8:15  | 0:50       |
-| 12    | 16    | _M4_ Tinh lọc dữ liệu _(chuyển người)_         | 9:05  | 0:55       |
-| 13    | 18    | _M5_ Thiết lập & Câu hỏi nghiên cứu            | 10:00 | 0:45       |
-| 14    | 19    | _M5_ CH1 — Tự động tạo tác vụ & Quy mô dữ liệu | 10:45 | 0:50       |
-| 15    | 20    | _M5_ CH2 — So sánh hiệu năng SOTA              | 11:35 | 0:50       |
-| 16    | 21    | _M5_ CH2 — So sánh Base và Fine-tuning         | 12:25 | 0:50       |
-| 17    | 22    | _M5_ CH3 — Hiệu quả chi phí tự sinh dữ liệu    | 13:15 | 0:40       |
-| 18    | 23    | _M6_ Kết luận & Hướng phát triển               | 13:55 | 1:00       |
+| 2     | 4     | _M1_ Động lực của khóa luận                    | 0:30  | 0:50       |
+| 3     | 6     | _M2_ Phát biểu bài toán và phạm vi             | 1:20  | 0:50       |
+| 4     | 7     | _M2_ Bốn thách thức cốt lõi                    | 2:10  | 0:50       |
+| 5     | 9     | _M3_ Ba hướng tiếp cận hiện nay                | 3:00  | 0:50       |
+| 6     | 10    | _M3_ Hạn chế và khoảng trống nghiên cứu        | 3:50  | 0:55       |
+| 7     | 12    | _M4_ Giải pháp HSGE & các đóng góp chính       | 4:45  | 0:50       |
+| 8     | 13    | _M4_ Tổng quan pipeline HSGE                   | 5:35  | 0:55       |
+| 9     | 14    | _M4_ Đồ thị hai tầng                           | 6:30  | 0:50       |
+| 10    | 15    | _M4_ Phát hiện skill → quy nạp operator        | 7:20  | 0:55       |
+| 11    | 16    | _M4_ Sinh semantic task                        | 8:15  | 0:50       |
+| 12    | 17    | _M4_ Tinh lọc dữ liệu _(chuyển người)_         | 9:05  | 0:55       |
+| 13    | 19    | _M5_ Thiết lập & Câu hỏi nghiên cứu            | 10:00 | 0:45       |
+| 14    | 20    | _M5_ CH1 — Tự động tạo tác vụ & Quy mô dữ liệu | 10:45 | 0:50       |
+| 15    | 21    | _M5_ CH2 — So sánh hiệu năng SOTA              | 11:35 | 0:50       |
+| 16    | 22    | _M5_ CH2 — So sánh Base và Fine-tuning         | 12:25 | 0:50       |
+| 17    | 23    | _M5_ CH3 — Hiệu quả chi phí tự sinh dữ liệu    | 13:15 | 0:40       |
+| 18    | 24    | _M6_ Kết luận & Hướng phát triển               | 13:55 | 1:00       |
+
 
 Kết thúc ở **14:55**. Bảng này khớp với các **"▶ Bản nói"** (đo ở tốc độ ~190 tiếng/phút),
 không khớp với bản đầy đủ — bản đầy đủ dài gấp khoảng ba lần và chỉ dùng để nắm ý.
@@ -77,7 +78,8 @@ nói. Trang 24 là trang cảm ơn / Hỏi & Đáp; dừng ở đó và mời H�
 
 ---
 
-## Slide 2 - Động lực: khoảng cách hiệu năng trên tác vụ web (0:30, trang 3)
+## Slide 2 - Động lực của khóa luận (0:30, trang 4)
+
 
 **▶ Bản nói — đúng ngân sách 0:50 (đây là bản học thuộc):**
 
