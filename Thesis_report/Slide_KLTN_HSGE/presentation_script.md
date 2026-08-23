@@ -27,15 +27,17 @@ Bài trình bày của nhóm gồm sáu nội dung chính:
 
 ## Slide 2 — Động lực của khóa luận
 
-Kính thưa Hội đồng. Sự phát triển của các **Mô hình Ngôn ngữ Lớn (LLM)** đã mở ra bước chuyển quan trọng: từ chatbot hỏi-đáp thông thường sang các **tác nhân tự hành (Web Agent)** có khả năng nhận chỉ thị bằng ngôn ngữ tự nhiên để tự động điều khiển trình duyệt.
+Kính thưa Hội đồng. Những năm gần đây, sự bùng nổ của các **Mô hình Ngôn ngữ Lớn (LLM)** đã tạo ra bước ngoặt lớn về năng lực hiểu ngôn ngữ và suy luận logic.
 
-Tuy nhiên, khi đưa agent vào một website thực tế chưa từng thấy, agent lập tức gặp khó khăn. Mặc dù nắm vững kiến thức ngôn ngữ chung, agent lại **hoàn toàn thiếu hiểu biết về cấu trúc và luồng nghiệp vụ của chính website mục tiêu**.
+Dựa trên nền tảng đó, cộng đồng nghiên cứu đã phát triển các **tác nhân tự hành (LLM-based Agent)**, nổi bật nhất là **Web Agent** — có khả năng nhận chỉ thị bằng ngôn ngữ tự nhiên từ người dùng, tự động lập kế hoạch và tương tác với trình duyệt để hoàn thành các tác vụ thực tế.
 
-Con số thực nghiệm trên bộ chuẩn **WebArena** chỉ rõ khoảng cách này: trong khi **con người đạt 78,24%**, thì agent dùng **GPT-4 chỉ đạt 14,41%**. Rõ ràng, mô hình tổng quát là **chưa đủ**, mà bắt buộc phải được **chuyên biệt hóa** cho từng môi trường cụ thể.
+Tuy nhiên, việc sử dụng LLM làm Web Agent bộc lộ những hạn chế rõ rệt:
+- **Về mặt hiệu năng:** Đặt một LLM tổng quát vào một website cụ thể chưa từng thấy, mô hình lập tức lúng túng vì thiếu tri thức về cấu trúc và luồng nghiệp vụ của trang đích. Minh chứng là trên bộ chuẩn **WebArena**, trong khi **con người đạt 78,24%**, thì agent dùng **GPT-4 chỉ đạt 14,41%**.
+- **Về mặt triển khai thực tế:** Việc liên tục gọi API các LLM thương mại lớn gặp phải ba rào cản nghiêm ngặt: **chi phí cộng dồn rất cao, độ trễ mạng lớn, và rủi ro rò rỉ dữ liệu riêng tư** khi phải gửi thông tin nội bộ ra máy chủ bên ngoài.
 
-Mặt khác, việc dựa vào API của các LLM thương mại lớn gặp 3 rào cản lớn: **chi phí cộng dồn cao, độ trễ mạng, và rủi ro rò rỉ dữ liệu riêng tư**. Do đó, hướng tiếp cận bền vững là triển khai các **mô hình nhỏ dưới 10 tỷ tham số (SLM <10B) chạy cục bộ**. Và đối với mô hình nhỏ, **fine-tuning là bắt buộc**.
+Để giải quyết triệt để các rào cản trên, hướng đi bền vững là sử dụng các **Mô hình Ngôn ngữ Nhỏ (SLM <10B) chạy cục bộ (on-premise)**: vừa bảo mật dữ liệu, vừa tiết kiệm chi phí và phản hồi nhanh. Thế nhưng, do giới hạn tham số, SLM lại càng không thể tự hiểu môi trường nếu không được huấn luyện $\rightarrow$ vì vậy, **fine-tune chuyên biệt hóa cho từng website là yêu cầu bắt buộc**.
 
-Như vậy, nút thắt cốt lõi đã dịch chuyển từ *năng lực mô hình* sang **dữ liệu huấn luyện**: *Lấy dữ liệu huấn luyện ở đâu cho từng website cụ thể?*
+Từ đó, nút thắt cốt lõi của bài toán dịch chuyển từ *kích thước mô hình* sang **dữ liệu huấn luyện**: *Lấy dữ liệu tương tác ở đâu để fine-tune SLM cho từng website cụ thể mà không tốn chi phí gán nhãn thủ công?*
 
 ---
 
