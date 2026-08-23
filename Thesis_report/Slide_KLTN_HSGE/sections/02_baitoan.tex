@@ -11,9 +11,9 @@
       \uncover<1->{
         \begin{block}{Bài toán đặt ra}
           \begin{itemize}\ilist
-            \item \textbf{Đầu vào}: $1$ website mục tiêu, \kw{0 nhãn con người}.
-            \item \textbf{Mục tiêu}: tự động khám phá và tổng hợp dữ liệu.
-            \item \textbf{Đầu ra}: tập dữ liệu SFT $+$ \kw{SLM ${<}10$B} chuyên biệt.
+            \item \textbf{Đầu vào}: $1$ website mục tiêu, \kw{0 nhãn người}.
+            \item \textbf{Mục tiêu}: tự sinh dữ liệu và fine-tune agent.
+            \item \textbf{Đầu ra}: tập SFT $+$ \kw{SLM ${<}10$B} chuyên biệt.
           \end{itemize}
         \end{block}
       }
@@ -26,7 +26,7 @@
           \begin{itemize}\ilist
             \item $1$ website $\rightarrow$ $1$ agent chuyên biệt, tại chỗ.
             \item Ngân sách API ở mức \kw{nhóm nghiên cứu nhỏ}.
-            \item Tổng quát hóa ở mức \kw{pipeline}, không phải mô hình.
+            \item Tổng quát hóa \kw{pipeline}, không phải mô hình.
           \end{itemize}
         \end{block}
       }
@@ -60,10 +60,10 @@
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{block}{2. Thiếu hiểu biết trước về môi trường}
+        \begin{block}{2. Thiếu tri thức về môi trường}
           \begin{itemize}\ilist
             \item Tri thức ngoài dễ \kw{lệch môi trường} ($6\%$ vs $16\%$).
-            \item $\rightarrow$ Cần \kw{tự động khám phá} trực tiếp trên web thật.
+            \item $\rightarrow$ Cần \kw{tự động khám phá} trên web thật.
           \end{itemize}
         \end{block}
       }
@@ -89,7 +89,7 @@
         \begin{block}{4. Tạo tác vụ có ngữ nghĩa}
           \begin{itemize}\ilist
             \item Task tự sinh cần mạch lạc, đúng luồng nghiệp vụ.
-            \item $\rightarrow$ Cần \kw{tự động ghép chuỗi} thành task đa bước.
+            \item $\rightarrow$ Cần \kw{ghép chuỗi} thành task đa bước.
           \end{itemize}
         \end{block}
       }

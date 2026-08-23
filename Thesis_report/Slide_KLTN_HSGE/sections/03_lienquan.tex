@@ -9,10 +9,10 @@
   \begin{columns}[onlytextwidth,t]
     \begin{column}{0.32\textwidth}
       \uncover<1->{
-        \begin{block}{(A) Tri thức từ Internet}
+        \begin{block}{(A) Tri thức Internet}
           \begin{itemize}\ilist
             \item \textbf{Synatra}, \textbf{AgentTrek}.
-            \item Dùng tài liệu/video ngoài để sinh trajectory mẫu.
+            \item Dùng tài liệu ngoài sinh trajectory.
             \item Lệch môi trường mục tiêu.
           \end{itemize}
         \end{block}
@@ -22,11 +22,11 @@
     \hfill
     \begin{column}{0.32\textwidth}
       \uncover<2->{
-        \begin{block}{(B) Skill dùng lúc suy luận}
+        \begin{block}{(B) Skill lúc suy luận}
           \begin{itemize}\ilist
             \item \textbf{AWM}, \textbf{SkillWeaver}, \textbf{ASI}.
-            \item Trích workflow/API nhúng prompt cho LLM lớn.
-            \item Không cập nhật trọng số.
+            \item Trích workflow nhúng vào prompt.
+            \item \kw{Không cập nhật trọng số} SLM.
           \end{itemize}
         \end{block}
       }
@@ -35,11 +35,11 @@
     \hfill
     \begin{column}{0.32\textwidth}
       \uncover<3->{
-        \begin{block}{(C) Tự sinh từ môi trường}
+        \begin{block}{(C) Tự sinh môi trường}
           \begin{itemize}\ilist
             \item \textbf{NNetNav}, \textbf{Go-Browse}.
-            \item Khám phá trực tiếp trên website để train SLM.
-            \item Go-Browse đạt \kw{21,7\%} (SOTA ${<}10$B).
+            \item Khám phá web thật để train SLM.
+            \item Go-Browse \kw{21,7\%} (SOTA ${<}10$B).
           \end{itemize}
         \end{block}
       }
@@ -61,8 +61,8 @@
       \uncover<1->{
         \begin{block}{Hạn chế hướng (A) và (B)}
           \begin{itemize}\ilist
-            \item \textbf{(A)} Lệch môi trường thật, không tự chủ $\rightarrow$ vướng \kw{T1, T2}.
-            \item \textbf{(B)} Chỉ nạp prompt cho LLM lớn $\rightarrow$ không train SLM.
+            \item \textbf{(A)} Lệch web thật, không tự chủ $\rightarrow$ vướng \kw{T1, T2}.
+            \item \textbf{(B)} Chỉ nạp prompt cho LLM $\rightarrow$ không train SLM.
           \end{itemize}
         \end{block}
       }
@@ -73,7 +73,7 @@
       \uncover<3->{
         \begin{alertblock}{Khoảng trống nghiên cứu}
           \centering \vspace{0.03cm}
-          {\footnotesize Chưa công trình nào nối trọn chu trình:}\\[0.08cm]
+          {\footnotesize Chưa công trình nào nối trọn chu trình:}\\[0.06cm]
           {\footnotesize \kw{Khám phá} $\rightarrow$ \kw{Kiểm chứng / Ghép chuỗi} $\rightarrow$ \kw{Train SLM}}
           \vspace{0.03cm}
         \end{alertblock}
@@ -87,8 +87,8 @@
       \uncover<2->{
         \begin{block}{Hạn chế hướng (C)}
           \begin{itemize}\ilist
-            \item \textbf{Đồ thị 1 tầng}: sinh task bó trong một trang $\rightarrow$ vướng \kw{T4}.
-            \item \textbf{Tự khai báo}: dương tính giả dạy sai mô hình $\rightarrow$ vướng \kw{T3}.
+            \item \textbf{Đồ thị 1 tầng}: task bó trong 1 trang $\rightarrow$ vướng \kw{T4}.
+            \item \textbf{Tự khai báo}: dương tính giả dạy sai $\rightarrow$ vướng \kw{T3}.
           \end{itemize}
         \end{block}
       }
@@ -99,7 +99,7 @@
       \uncover<4->{
         \begin{block}{Câu hỏi khóa luận đặt ra}
           \begin{itemize}\ilist
-            \item Tự sinh dữ liệu trên \kw{web mục tiêu}, \kw{0 nhãn con người}?
+            \item Tự sinh dữ liệu trên \kw{web mục tiêu, 0 nhãn người}?
             \item SLM cục bộ \kw{tiệm cận hoặc vượt LLM lớn}?
           \end{itemize}
         \end{block}
