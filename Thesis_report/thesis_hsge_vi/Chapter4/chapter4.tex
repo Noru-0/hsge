@@ -705,8 +705,8 @@ Lịch huấn luyện hai pha ở Mục~\ref{sec:exp-sft} cho phép thực hiệ
   \centering
   \caption[Hiệu ứng của việc bổ sung dữ liệu]{Hiệu ứng của việc bổ sung dữ liệu trên hai website được thu thập thêm. Shopping và GitLab không được thu thêm dữ liệu nên không có mặt trong bảng.}
   \label{tab:datascale}
-  \small
-  \begin{tabular}{@{}L{3.2cm} R{2.6cm} R{2.2cm} R{2.2cm} R{2.2cm} R{2.6cm}@{}}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}l r r r r r@{}}
     \toprule
     \textbf{Website} & \textbf{Mẫu thêm} & \textbf{SR trước (\%)} & \textbf{SR sau (\%)} & \textbf{$\Delta$ SR (đpt)} & \textbf{đpt / 1000 mẫu} \\
     \midrule
@@ -715,7 +715,8 @@ Lịch huấn luyện hai pha ở Mục~\ref{sec:exp-sft} cho phép thực hiệ
     \midrule
     \textbf{Cộng (288 task)} & \textbf{$+$4266} & \textbf{17{,}4} & \textbf{26{,}0} & \textbf{$+$8{,}7} & \textbf{$+$2{,}0} \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
 \end{table}
 
 Bảng~\ref{tab:datascale} cho thấy \textbf{bổ sung dữ liệu giúp nâng tỷ lệ hoàn thành trên cả hai website}: Reddit tăng từ 20{,}8\% lên 34{,}0\% ($+$13{,}2 đpt), Shopping Admin tăng từ 15{,}4\% lên 21{,}4\% ($+$6{,}0 đpt), tổng thể hai miền tăng từ 17{,}4\% lên 26{,}0\% trên 288 task. Vì phép đo cô lập hoàn toàn biến số website và mô hình nền, đây là bằng chứng trực tiếp nhất chứng minh quan hệ tỷ lệ thuận giữa lượng dữ liệu và năng lực của mô hình, mạnh hơn mọi suy luận từ so sánh chéo website. Đây là căn cứ định lượng cho Phát hiện~3, được phân tích chi tiết khi trả lời CH2 ở Mục~\ref{sec:disc-results}.

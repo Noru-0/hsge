@@ -53,7 +53,6 @@ sang _"đo được gì"_.
 | 17    | 23    | _M5_ CH3 — Hiệu quả chi phí tự sinh dữ liệu    | 13:15 | 0:40       |
 | 18    | 24    | _M6_ Kết luận & Hướng phát triển               | 13:55 | 1:00       |
 
-
 Kết thúc ở **14:55**. Bảng này khớp với các **"▶ Bản nói"** (đo ở tốc độ ~190 tiếng/phút),
 không khớp với bản đầy đủ — bản đầy đủ dài gấp khoảng ba lần và chỉ dùng để nắm ý.
 
@@ -79,7 +78,6 @@ nói. Trang 24 là trang cảm ơn / Hỏi & Đáp; dừng ở đó và mời H�
 ---
 
 ## Slide 2 - Động lực của khóa luận (0:30, trang 4)
-
 
 **▶ Bản nói — đúng ngân sách 0:50 (đây là bản học thuộc):**
 
@@ -481,6 +479,8 @@ quyết _một phần_ của bài toán, và ba mắt xích đó chưa được 
 
 ## Slide 13 - Thiết lập & Câu hỏi nghiên cứu (10:00, trang 18)
 
+Kính thưa Hội đồng, sau khi đã đi qua bức tranh tổng thể về kiến trúc đồ thị và thuật toán sinh dữ liệu của HSGE, câu hỏi đặt ra là: Liệu trên thực tế, quy trình này mang lại hiệu quả ra sao? Để làm rõ điều này, em xin phép bước sang phần trọng tâm tiếp theo: Thực nghiệm và kết quả.
+
 > _(Bấm Click 1 — hiện Cột trái: 3 Câu hỏi nghiên cứu)_
 > Đi vào phần thực nghiệm, nghiên cứu tập trung giải đáp **3 câu hỏi cốt lõi (RQ)**:
 >
@@ -500,9 +500,14 @@ quyết _một phần_ của bài toán, và ba mắt xích đó chưa được 
 
 **Câu chốt:** Phép đo sử dụng bộ đề xuất và **bộ chấm chính thức của WebArena** để đảm bảo tính khách quan hoàn toàn.
 
+"Vậy quá trình tự hành khám phá đã thu hoạch được khối lượng dữ liệu như thế nào? Xin mời Hội đồng cùng xem kết quả của Câu hỏi nghiên cứu thứ nhất."
+
 ---
 
 ## Slide 14 - CH1: Tự động tạo tác vụ & Quy mô dữ liệu (10:45, trang 19)
+
+Đây là bảng thống kê quá trình thu hoạch dữ liệu của HSGE trên 4 website.
+Chỉ qua **3.981 lượt tương tác** thử trên **4 website**, hệ thống đã tự động thu hoạch được **146 kỹ năng** và quy nạp thành **57 toán tử cốt lõi**. Từ các toán tử này, thuật toán ghép chuỗi đã sinh ra **142 semantic task đa bước**.
 
 > Trả lời **CH1**, phễu khám phá tự động của HSGE mang lại các kết quả quy mô ấn tượng:
 >
@@ -514,6 +519,8 @@ quyết _một phần_ của bài toán, và ba mắt xích đó chưa được 
 > - **Kết quả thu hoạch**: Thu được **1.760 trajectory sạch** (đạt tỷ lệ hợp lệ 53,2%), đóng gói thành **9.007 mẫu SFT** (8.554 train / 453 validation) hoàn toàn tự động mà **không cần 1 giờ gán nhãn thủ công nào**.
 
 **Câu chốt:** HSGE tự động sinh tác vụ có ý nghĩa và thu hoạch 9.007 mẫu SFT sạch hoàn toàn không cần nhãn người.
+
+"Với bộ dữ liệu thu được, chúng ta sẽ xem xét sự thay đổi về năng lực của các mô hình nhỏ (Small Language Models) trong Câu hỏi nghiên cứu thứ hai."
 
 ---
 
@@ -531,34 +538,24 @@ quyết _một phần_ của bài toán, và ba mắt xích đó chưa được 
 
 **Tránh:** Không nói "vượt Go-Browse" — con số 24,6% so với 22,6% nằm trong khoảng biến động thống kê, phát biểu chuẩn xác là _tương đương SOTA Go-Browse-7B_.
 
+Sự tăng trưởng này đến từ việc mô hình học được cú pháp lệnh, hay thực sự học được cách tư duy? Slide tiếp theo sẽ bóc tách bản chất của sự cải thiện này
+
 ---
 
 ## Slide 16 - CH2: So sánh mô hình nền (Base) và fine-tuning theo Website (12:25, trang 21)
 
-> Trả lời **CH2 (phần 2)**, slide này bóc tách bản chất cải thiện năng lực của mô hình sau fine-tune:
->
-> - **Độ tăng theo từng Website**: Cả 4/4 website đều ghi nhận mức tăng trưởng vượt trội có ý nghĩa thống kê theo **kiểm định McNemar** ($p \le 0{,}011$), đặc biệt Reddit tăng từ 6,6% lên **34,0%** ($p < 0{,}001$).
-> - **Ý nghĩa thống kê McNemar**: Có **100 task độc quyền** chỉ HSGE-9B mới giải được (so với 26 task Base giải được), đạt ý nghĩa thống kê cao trên toàn bộ 4 website ($p < 0{,}001$).
-> - **Bóc tách 2 nguồn cải thiện năng lực**:
->   1. **Kỷ luật cú pháp**: Lỗi định dạng đầu ra giảm triệt để từ **26,0% down còn 0,6%**.
->   2. **Năng lực ra quyết định**: Trên tập 485 task mà mô hình nền đã xuất đúng cú pháp, Task SR của HSGE-9B vẫn tăng từ **17,9% lên 23,5% ($p = 0{,}003$)**.
->
-> Điều này chứng minh fine-tuning không chỉ giúp mô hình học đúng cú pháp lệnh, mà thực sự nâng cao **năng lực ra quyết định hành động**.
-
-**Câu chốt:** Fine-tuning làm chủ cả kỷ luật cú pháp lẫn năng lực lựa chọn hành động ($p = 0{,}003$).
+"Chuyển sang phân tích bản chất của sự cải thiện này tại Slide 16. Dựa vào kết quả kiểm định McNemar trên Bảng 3, mức tăng trưởng hiệu năng trên cả 4 website đều có ý nghĩa thống kê rất cao (p < 0,011). Để bóc tách xem mô hình thực sự học được gì, chúng em nhận thấy sự cải thiện đến từ hai khía cạnh:
+Thứ nhất là kỷ luật cú pháp: Lỗi định dạng đầu ra của mô hình giảm triệt để từ mức 26,0% xuống chỉ còn 0,6%.
+Thứ hai, và là cốt lõi của bài toán, đó là sự gia tăng mạnh mẽ về năng lực ra quyết định. Để chứng minh mô hình thực sự 'thông minh hơn' chứ không chỉ 'gõ đúng lệnh hơn', chúng em đã thực hiện quá trình tinh chỉnh (fine-tuning) chia làm 2 pha. Ở Pha 2, chúng em chủ động tăng cường thêm dữ liệu chuyên biệt cho 2 tên miền khó nhất: cụ thể là bổ sung 1.856 mẫu cho website Reddit và 2.410 mẫu cho Shopping Admin. Kết quả thu được vô cùng rõ rệt: Tại diễn đàn Reddit, tỷ lệ thành công nhảy vọt từ 20,8% ở Pha 1 lên tới 34,0% ở Pha 2. Tương tự, hiệu năng trên Shopping Admin cũng tăng từ 15,4% lên 21,4%. Sự bổ sung dữ liệu này đã giúp mô hình ở giai đoạn fine-tune giải quyết thành công thêm 100 tác vụ độc quyền mà mô hình nền hoàn toàn bất lực. Hơn thế nữa, một phép thử minh chứng tính quyết định là: ngay cả trên tập 485 tác vụ mà mô hình gốc ban đầu vốn dĩ đã xuất đúng cú pháp lệnh, tỷ lệ thành công sau fine-tune vẫn tiếp tục tăng từ 17,9% lên 23,5%. Câu chốt: Phép thử chia 2 pha này là minh chứng rõ ràng cho việc mở rộng dữ liệu fine-tuning không chỉ dừng lại ở việc rèn kỷ luật cú pháp, mà thực sự liên tục nâng cao mức trần hiệu năng và năng lực tư duy, lựa chọn hành động của tác nhân."
 
 ---
 
 ## Slide 17 - CH3: Hiệu quả chi phí trong tự động tạo dữ liệu (13:15, trang 22)
 
-> Trả lời **CH3**, slide này phân tích hiệu quả kinh tế trong quá trình tự động sinh dữ liệu:
->
-> - **Chi phí API toàn chu trình**: Tổng chi phí API gọi LLM đóng (OpenAI + DeepSeek) cho cả 4 website chỉ tốn **54,21 USD** (chưa tới **14 USD / website**).
-> - **Đơn giá / Trajectory**: Trung bình mỗi trajectory thành công sạch chỉ tốn **0,0308 USD** (khoảng 3,1 cent).
-> - **Phân bổ lời gọi API**: Tổng cộng 20.808 lượt gọi LLM, trong đó Solver chiếm **85,5%**. Việc dồn Solver sang mô hình chi phí thấp (GPT-5.6-luna) giúp giảm đơn giá token đầu vào **~12 lần** so với GPT-4o.
-> - **So sánh kinh tế với Go-Browse**: Đơn giá **0,0308 USD/trajectory** của HSGE **rẻ hơn 3,3 lần** so với Go-Browse-7B ($0,1026 USD/trajectory).
+"Cuối cùng, một hệ thống mạnh chỉ thực sự thực tiễn nếu nó có chi phí hợp lý. Chúng ta cùng xem xét Câu hỏi nghiên cứu thứ 3 về bài toán kinh tế."
 
-**Câu chốt:** Tự động sinh dữ liệu với đơn giá 0,0308 USD/trajectory chứng minh tính khả thi kinh tế vượt trội cho các nhóm nghiên cứu và tổ chức nhỏ.
+Thay vì sử dụng các LLM đắt đỏ nhất cho toàn bộ pipeline, hệ thống định tuyến các tác vụ chuyên biệt dựa trên độ phức tạp và yêu cầu của từng bước. Cụ thể, việc phân tích thông tin đầu vào dạng hỗn hợp văn bản và hình ảnh trong quá trình duyệt web được giao cho mô hình GPT-5.6-luna (Vision) đảm nhiệm ở các vai trò Seeder, Explorer và Goal Solver đa bước. Trong khi đó, các tác vụ thực thi hành động (Solver) được phân bổ cho GPT-5.6-terra, và công tác đánh giá, kiểm định độc lập (Detector / Evaluator) được giao cho DeepSeek-chat. Chiến lược phân lớp này mang lại sự tối ưu đáng kinh ngạc về mặt kinh phí. Cụ thể, chi phí cho OpenAI API ở các cụm Solver và Explorer là 42,29 USD, và chi phí cho DeepSeek API ở khâu Judge và Skill chỉ tốn 11,92 USD. Tổng cộng, toàn bộ quá trình tự động sinh dữ liệu khép kín trên cả 4 website thực tế chỉ tiêu tốn 54,21 USD, tương đương chưa tới 14 USD cho mỗi website. Bằng cách dồn phần lớn tải lượng xử lý sang các mô hình tối ưu chi phí, đơn giá trung bình để thu hoạch được một trajectory thành công, sạch sẽ chỉ là 0,0308 USD. Phương pháp này giúp hệ thống giảm mức tiêu hao token tới khoảng 12 lần. Nếu đặt lên bàn cân so sánh với công trình SOTA hiện nay là Go-Browse-7B – vốn tiêu tốn 0,1026 USD/trajectory – thì hệ thống HSGE đạt mức chi phí rẻ hơn đến 3,3 lần.  
+Câu chốt: Với đơn giá đột phá chỉ 0,0308 USD/trajectory, kết quả này chứng minh một cách thuyết phục tính khả thi về mặt kỹ thuật và tài nguyên, cho phép các nhóm nghiên cứu và tổ chức nhỏ hoàn toàn có thể tự xây dựng dữ liệu và tinh chỉnh các tác nhân tự hành cục bộ chuyên biệt."
 
 ---
 

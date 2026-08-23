@@ -242,11 +242,13 @@ giao diện, nhóm theo thành phần mà mỗi hệ thống tập trung cải t
 thống thực sự huấn luyện mô hình. Mọi thông tin trong bảng lấy từ công bố
 gốc của chính hệ thống tương ứng.}
 \label{tab:agents}
-\footnotesize
-\begin{tabular}{@{}L{3.0cm} C{0.9cm} L{2.4cm} C{1.7cm} L{4.6cm}@{}}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{0.72}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}L{2.6cm} C{0.8cm} L{2.1cm} C{1.4cm} L{4.5cm}@{}}
 \toprule
-\textbf{Hệ thống} & \textbf{Năm} & \textbf{Quan sát} &
-\mbox{\textbf{Cập nhật}} \mbox{\textbf{trọng số}} & \textbf{Đóng góp phân biệt} \\
+\textbf{Hệ thống} & \textbf{Năm} & \textbf{Quan sát} & \textbf{Cập nhật trọng số} & \textbf{Đóng góp phân biệt} \\
 \midrule
 \multicolumn{5}{@{}l}{\textit{Nhóm 1: cấu trúc suy luận}} \\
 ReAct~\cite{yao2023react} & 2023 & văn bản & - & xen kẽ suy luận và hành động \\
@@ -283,7 +285,8 @@ API-based agents~\cite{song2025apiagents} & 2025 & API + axtree & - & lai giữa
 WALT~\cite{prabhu2025walt} & 2025 & axtree & - & chưng cất thao tác thành công cụ \\
 HxAgent~\cite{hxagent2026} & 2026 & DOM + ảnh & - & lập kế hoạch lặp cho kiểm thử đầu cuối \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Nhìn tổng thể bốn nhóm, có hai đặc điểm chung đáng chú ý đối với bài toán
