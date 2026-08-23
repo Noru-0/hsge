@@ -6,9 +6,6 @@
 
 \subsection{Phát biểu bài toán và phạm vi}
 \begin{frame}{Phát biểu bài toán và phạm vi}
-  % 2x2 grid laid out as two row-wise `columns` (not two stacked columns): this is
-  % what keeps the second row aligned on both sides when the two blocks of the first
-  % row wrap to a different number of lines.
   \begin{columns}[t]
     \begin{column}{0.485\textwidth}
       \uncover<1->{
@@ -19,42 +16,16 @@
           \end{itemize}
         \end{block}
       }
-
     \end{column}
 
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{block}{Tiêu chí đánh giá}
-          \begin{itemize}\ilist
-            \item \textbf{WebArena}: 655 tác vụ / 4 website thực.
-            \item \kw{Task SR} (hàm chấm benchmark); phụ: \kw{chi phí API / trajectory}.
-          \end{itemize}
-        \end{block}
-      }
-    \end{column}
-  \end{columns}
-
-  \gap
-  \begin{columns}[t]
-    \begin{column}{0.485\textwidth}
-      \uncover<3->{
-        \begin{block}{Ràng buộc}
-          \begin{itemize}\ilist
-            \item Ngân sách API mức nhóm nhỏ.
-            \item Chạy on-premise: dữ liệu không rời tổ chức.
-          \end{itemize}
-        \end{block}
-      }
-    \end{column}
-
-    \hfill
-    \begin{column}{0.485\textwidth}
-      \uncover<4->{
         \begin{block}{Phạm vi \& ứng dụng đích}
           \begin{itemize}\ilist
-            \item 1 website $\rightarrow$ 1 agent chuyên biệt, tại chỗ.
-            \item Tổng quát hóa ở mức pipeline, không phải mô hình.
+            \item 1 website $\rightarrow$ 1 agent chuyên biệt, tại chỗ (on-premise).
+            \item Ngân sách API ở mức \kw{nhóm nghiên cứu nhỏ}.
+            \item Tổng quát hóa ở mức \kw{pipeline}, không phải mô hình.
           \end{itemize}
         \end{block}
       }
@@ -67,10 +38,11 @@
   \begin{columns}[t]
     \begin{column}{0.485\textwidth}
       \uncover<1->{
-        \begin{block}{T1. Chi phí gán nhãn quá cao}
+        \begin{block}{1. Thu thập dữ liệu chất lượng cao}
           \begin{itemize}\ilist
-            \item Gán nhãn tay: AutoWebGLM 20 người $\times$ 1 tháng.
-            \item Sinh ngoại tuyến rẻ (${\sim}3\%$) nhưng lệch môi trường: 6\% vs 16\%.
+            \item Dữ liệu tự sinh dễ \kw{lặp lại, không hợp lệ}.
+            \item Agent dễ tập trung hành vi quen thuộc.
+            \item $\rightarrow$ Cần tự động sinh mẫu vừa \kw{hợp lệ, vừa đa dạng}.
           \end{itemize}
         \end{block}
       }
@@ -79,10 +51,10 @@
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{block}{T2. Tri thức thu được bị phân mảnh}
+        \begin{block}{2. Thiếu hiểu biết trước về môi trường}
           \begin{itemize}\ilist
-            \item Trajectory thô rời rạc, \kw{không có đơn vị kỹ năng}.
-            \item Thao tác lặp ở nhiều trang vẫn là dữ liệu mới.
+            \item Tri thức gián tiếp \kw{không bám web mục tiêu} ($6\%$ Synatra vs $16\%$ NNetNav).
+            \item $\rightarrow$ Cần \kw{tự động khám phá} và tích lũy tri thức trực tiếp trên môi trường thực.
           \end{itemize}
         \end{block}
       }
@@ -93,10 +65,10 @@
   \begin{columns}[t]
     \begin{column}{0.485\textwidth}
       \uncover<3->{
-        \begin{block}{T3. Dương tính giả khi agent tự chấm}
+        \begin{block}{3. Sàng lọc trajectory tự sinh}
           \begin{itemize}\ilist
-            \item Không nhãn người $\rightarrow$ agent \kw{tự khai hoàn thành}.
-            \item Dữ liệu bẩn \kw{dạy mô hình khai gian}.
+            \item Agent vừa sinh vừa chạy $\rightarrow$ dễ \kw{tự khai xong giả} (dương tính giả).
+            \item $\rightarrow$ Cần sàng lọc bằng \kw{tín hiệu khách quan} từ môi trường trước khi train.
           \end{itemize}
         \end{block}
       }
@@ -105,14 +77,15 @@
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<4->{
-        \begin{block}{T4. Khó ghép thành tác vụ dài}
+        \begin{block}{4. Tạo tác vụ có ngữ nghĩa}
           \begin{itemize}\ilist
-            \item Tác vụ tự sinh \kw{bó hẹp trong một trang}.
-            \item Thiếu cơ chế \textit{A xong mới làm được B}.
+            \item Task tự sinh cần mạch lạc, đúng luồng nghiệp vụ website (nhiều bước).
+            \item $\rightarrow$ Cần \kw{tự động phối hợp kỹ năng} đã khám phá thành tác vụ có ý nghĩa.
           \end{itemize}
         \end{block}
       }
     \end{column}
   \end{columns}
 \end{frame}
+
 
