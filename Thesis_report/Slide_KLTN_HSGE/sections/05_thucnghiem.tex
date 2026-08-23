@@ -7,30 +7,31 @@
 \subsection{Thiết lập \& Câu hỏi nghiên cứu}
 \begin{frame}{Câu hỏi nghiên cứu và thiết lập thực nghiệm}
   \begin{columns}[t]
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<1->{
         \begin{block}{3 Câu hỏi nghiên cứu (RQ)}
-          \begin{itemize}\scriptsize\setlength{\itemsep}{4pt}
-            \item \textbf{CH1.} Có thể tự động tạo ra các tác vụ có ý nghĩa hay không?
-            \item \textbf{CH2.} Năng lực của SLM sau khi fine-tune được cải thiện như thế nào?
-            \item \textbf{CH3.} Hệ thống đạt hiệu quả chi phí như thế nào trong quá trình tự động tạo dữ liệu?
+          \begin{itemize}\scriptsize\setlength{\itemsep}{5pt}
+            \item \textbf{CH1.} Khả năng tự động tạo tác vụ có ý nghĩa và quy mô tập dữ liệu thu được?
+            \item \textbf{CH2.} Năng lực của SLM sau fine-tuning so với mô hình nền và các SOTA?
+            \item \textbf{CH3.} Hiệu quả chi phí kinh tế của chu trình tự động sinh dữ liệu?
           \end{itemize}
         \end{block}
       }
     \end{column}
     \hfill
-    \begin{column}{0.49\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<2->{
         \begin{block}{Thiết lập thực nghiệm}
-          \begin{itemize}\scriptsize\setlength{\itemsep}{2.5pt}
+          \begin{itemize}\scriptsize\setlength{\itemsep}{3.5pt}
             \item \textbf{Mô hình}: Base Qwen3.5-9B $\rightarrow$ HSGE-9B.
             \item \textbf{Fine-tuning}: LoRA / QLoRA (3 epoch, 1119 bước).
-            \item \textbf{Đánh giá}: WebArena 655 task / 4 site, chấm bằng Task SR của benchmark.
+            \item \textbf{Đánh giá}: WebArena 655 task / 4 site, chấm bằng Task SR benchmark.
             \item \textbf{Đối chứng}: cùng prompt, cùng ngân sách bước với mô hình nền.
           \end{itemize}
         \end{block}
       }
     \end{column}
+
   \end{columns}
 \end{frame}
 
@@ -96,8 +97,9 @@
     \scriptsize
     \begin{tabular}{@{}L{4.8cm} R{1.7cm} R{1.2cm} R{1.2cm} R{1.2cm} R{1.2cm}@{}}
       \toprule
-      \textbf{Mô hình} & \multicolumn{5}{c}{\textbf{Tỷ lệ thành công -- SR (\%)}} \\
+      \textbf{Mô hình} & \multicolumn{5}{c}{\textbf{Tỷ lệ thành công Task SR (\%)}} \\
       \cmidrule(lr){2-6}
+
       & \textbf{Tổng (4 site)} & \textbf{Shopping} & \textbf{Admin} & \textbf{Reddit} & \textbf{GitLab} \\
       \midrule
       \multicolumn{6}{@{}l}{\textit{Mô hình đóng}} \\

@@ -12,18 +12,19 @@
         \begin{block}{(A) Tri thức từ Internet}
           \begin{itemize}\ilist
             \item \textbf{Synatra}, \textbf{AgentTrek}: tài liệu hướng dẫn $\rightarrow$ mẫu huấn luyện.
-            \item Replay trên trình duyệt thật.
+            \item Replay trên trình duyệt thật để lấy trajectory mẫu.
           \end{itemize}
         \end{block}
       }
     \end{column}
+
 
     \hfill
     \begin{column}{0.32\textwidth}
       \uncover<2->{
         \begin{block}{(B) Skill dùng lúc suy luận}
           \begin{itemize}\ilist
-            \item \textbf{AWM}: workflow lặp lại vào prompt --- \kw{23,5\% $\rightarrow$ 35,5\%}.
+            \item \textbf{AWM}: đưa workflow lặp vào prompt, tăng từ \kw{23,5\% lên 35,5\%}.
             \item \textbf{SkillWeaver}: đóng gói skill thành API.
           \end{itemize}
         \end{block}
@@ -46,7 +47,7 @@
   \gap
   \uncover<3->{
     \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
-      \scriptsize Hướng \textbf{(C)} --- học từ chính môi trường rồi \textbf{train SLM} --- gần bài toán của khóa luận nhất $\;\Longrightarrow\;$ \kw{mốc so sánh chính}.
+      \scriptsize Hướng \textbf{(C)} (học từ chính môi trường để \textbf{train SLM}) gần bài toán nhất $\;\Longrightarrow\;$ \kw{mốc so sánh chính}.
     \end{beamercolorbox}
   }
 \end{frame}
@@ -54,22 +55,19 @@
 \subsection{Hạn chế và khoảng trống nghiên cứu}
 \begin{frame}{Hạn chế của các hướng trên và khoảng trống nghiên cứu}
   \begin{columns}[t]
-
-    \begin{column}{0.50\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<1->{
-        \begin{block}{Hạn chế, đối chiếu với T1--T4}
+        \begin{block}{Hạn chế hướng (A) và (B)}
           \begin{itemize}\ilist
-            \item \textbf{(A)} Chặn bởi tài liệu sẵn có $\rightarrow$ còn \kw{T1}.
-            \item \textbf{(B)} Skill chỉ trong prompt, \kw{không train SLM} $\rightarrow$ còn \kw{T2, T4}.
-            \item \textbf{(C)} Đồ thị \kw{chỉ một tầng} $\rightarrow$ tác vụ bó trong một trang, còn \kw{T4}.
-            \item \textbf{(B), (C)} Thành công do \kw{tự khai báo} $\rightarrow$ còn \kw{T3}.
+            \item \textbf{(A)} Chặn bởi tài liệu sẵn có $\rightarrow$ chưa giải quyết \kw{T1}.
+            \item \textbf{(B)} Chỉ nạp prompt, không train SLM $\rightarrow$ còn \kw{T2, T4}.
           \end{itemize}
         \end{block}
       }
     \end{column}
 
     \hfill
-    \begin{column}{0.47\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<2->{
         \begin{alertblock}{Khoảng trống nghiên cứu}
           \centering \vspace{0.04cm}
@@ -78,8 +76,24 @@
           \vspace{0.04cm}
         \end{alertblock}
       }
+    \end{column}
+  \end{columns}
 
-      \gap
+  \gap
+  \begin{columns}[t]
+    \begin{column}{0.485\textwidth}
+      \uncover<1->{
+        \begin{block}{Hạn chế hướng (C)}
+          \begin{itemize}\ilist
+            \item \textbf{Đồ thị 1 tầng}: tác vụ bó trong một trang $\rightarrow$ còn \kw{T4}.
+            \item \textbf{Tự khai báo}: dương tính giả dạy sai mô hình $\rightarrow$ còn \kw{T3}.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+
+    \hfill
+    \begin{column}{0.485\textwidth}
       \uncover<3->{
         \begin{block}{Câu hỏi khóa luận đặt ra}
           \begin{itemize}\ilist
@@ -91,3 +105,4 @@
     \end{column}
   \end{columns}
 \end{frame}
+

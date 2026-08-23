@@ -65,26 +65,24 @@
 \subsection{Bốn thách thức cốt lõi}
 \begin{frame}{Bốn thách thức cốt lõi của bài toán}
   \begin{columns}[t]
-
     \begin{column}{0.485\textwidth}
       \uncover<1->{
-        \begin{block}{T1 --- Chi phí gán nhãn quá cao}
+        \begin{block}{T1. Chi phí gán nhãn quá cao}
           \begin{itemize}\ilist
             \item Gán nhãn tay: \textbf{AutoWebGLM} \kw{20 người $\times$ 1 tháng}.
             \item Sinh ngoại tuyến rẻ (\kw{${\sim}3\%$}) nhưng lệch môi trường: \kw{6\%} vs \kw{16\%}.
           \end{itemize}
         \end{block}
       }
-
     \end{column}
 
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{block}{T3 --- Dương tính giả khi agent tự chấm}
+        \begin{block}{T2. Tri thức thu được bị phân mảnh}
           \begin{itemize}\ilist
-            \item Không nhãn người $\rightarrow$ agent \kw{tự khai hoàn thành}.
-            \item Dữ liệu bẩn \kw{dạy mô hình khai gian}.
+            \item Trajectory thô rời rạc, \kw{không có đơn vị kỹ năng}.
+            \item Thao tác lặp ở nhiều trang vẫn là dữ liệu mới.
           \end{itemize}
         \end{block}
       }
@@ -95,10 +93,10 @@
   \begin{columns}[t]
     \begin{column}{0.485\textwidth}
       \uncover<3->{
-        \begin{block}{T2 --- Tri thức thu được bị phân mảnh}
+        \begin{block}{T3. Dương tính giả khi agent tự chấm}
           \begin{itemize}\ilist
-            \item Trajectory thô rời rạc, \kw{không có đơn vị kỹ năng}.
-            \item Thao tác lặp ở nhiều trang vẫn là dữ liệu mới.
+            \item Không nhãn người $\rightarrow$ agent \kw{tự khai hoàn thành}.
+            \item Dữ liệu bẩn \kw{dạy mô hình khai gian}.
           \end{itemize}
         \end{block}
       }
@@ -107,7 +105,7 @@
     \hfill
     \begin{column}{0.485\textwidth}
       \uncover<4->{
-        \begin{block}{T4 --- Khó ghép thành tác vụ dài}
+        \begin{block}{T4. Khó ghép thành tác vụ dài}
           \begin{itemize}\ilist
             \item Tác vụ tự sinh \kw{bó hẹp trong một trang}.
             \item Thiếu cơ chế \textit{A xong mới làm được B}.
@@ -116,11 +114,5 @@
       }
     \end{column}
   \end{columns}
-
-  \gap
-  \uncover<4->{
-    \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
-      \scriptsize Cộng đồng đã tấn công T1--T4 tới đâu? $\rightarrow$ \textbf{Nghiên cứu liên quan}.
-    \end{beamercolorbox}
-  }
 \end{frame}
+
