@@ -6,6 +6,12 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **15:52** — `Thesis_report/Slide_KLTN_HSGE/presentation_script.md` — **Rewrote the opening spoken script (slides 2–6) on the rhetorical arc of Go-Browse's abstract/intro** (`docs/go-browse.md`), paraphrased into Vietnamese rather than copied:
+  - The hook is now "an agent dropped into a website it has never seen gets lost", the WebArena number is framed as evidence that **the gap does not close by using a bigger model** — what is missing is knowledge of the deployment environment — and the 6% vs 16% offline/online contrast is promoted from a footnote to the **evidence** for that claim (with a Shopee-vs-internal-system analogy in place of Go-Browse's Amazon one).
+  - Related work is re-ordered by **source of knowledge** (Internet → own run history at inference → the environment itself) so groups A/B/C read as a progression instead of a list; Go-Browse's frontier/reuse idea is stated explicitly since it is the thesis's main baseline.
+  - **Found the script was ~4x over budget**: the full prose for slides 2–6 measured ~9 min against a 3:40 slot. Each of slides 2–6 now carries a **"▶ Bản nói"** block sized to its slot (~50–55 s at 190 syllables/min, measured), with the long-form text kept below it as background for deep questions.
+  - Duration table rebalanced to end at **14:55** (opening now 4:15, presenter switch moved 8:50 → 10:00) and every per-slide timestamp resynced to it.
+
 - **15:33** — `Thesis_report/Slide_KLTN_HSGE/{main.tex, sections/*, presentation_script.md, main.pdf}` — **Restructured the defense deck from 4 sections to the 6-section outline requested by the committee** (Giới thiệu/động lực → Phát biểu bài toán → Nghiên cứu liên quan → Phương pháp → Thực nghiệm → Kết luận & Hỏi đáp):
   - **New files**: `sections/02_baitoan.tex` (problem statement + scope; four core challenges T1–T4) and `sections/03_lienquan.tex` (three approaches A/B/C; limitations mapped 1-to-1 onto T1–T4 + research gap).
   - **Renamed** (`git mv`): `02_phuongphap` → `04_phuongphap`, `03_thucnghiem` → `05_thucnghiem`, `04_ketluan` → `06_ketluan_qa` (section retitled "Kết luận \& Hỏi đáp").

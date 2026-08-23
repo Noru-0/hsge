@@ -11,7 +11,7 @@ trang cảm ơn, chỉ bật khi được hỏi.
 chi tiết phương pháp nào trước mục 4.
 
 **Chia hai người:** Người 1 slide 1–12 (đặt vấn đề + phương pháp), Người 2 slide 13–18
-(thực nghiệm + kết luận). Điểm cắt sau slide 12, khi chuyển từ _"làm thế nào"_
+(thực nghiệm + kết luận). Điểm cắt ở **10:00**, sau slide 12, khi chuyển từ _"làm thế nào"_
 sang _"đo được gì"_.
 
 **Cách đọc kịch bản:**
@@ -20,6 +20,10 @@ sang _"đo được gì"_.
 - **Câu chốt** = câu duy nhất bắt buộc phải lọt tai Hội đồng ở slide đó.
 - **Tránh** = chỗ dễ nói quá; nói sai một chữ ở đây là mất điểm tin cậy.
 - `[lược nếu trễ]` = cắt được mà không gãy mạch.
+- **▶ Bản nói** (slide 2–6) = bản **đúng ngân sách thời gian**, là bản để học thuộc và
+  nói trên sân khấu. **Bản đầy đủ** ngay dưới nó là văn bản nền: đọc để nắm mạch lập
+  luận và để có sẵn câu chữ khi Hội đồng hỏi sâu vào một ý — **không đọc hết khi trình
+  bày**, nó dài gấp ba ngân sách.
 - Cột "Trang" là **số slide hiện ở footer** (`n / 24`), không phải số trang PDF: deck
   dùng overlay nên `main.pdf` hiện có 52 trang. Nhảy nhanh thì dùng số footer.
   Riêng phụ lục không có số footer — dùng **số trang PDF 45–52**.
@@ -31,27 +35,30 @@ sang _"đo được gì"_.
 | Slide | Trang | Nội dung                                       | Mốc   | Thời lượng |
 | ----- | ----- | ---------------------------------------------- | ----- | ---------- |
 | 1     | 1     | Bìa                                            | 0:00  | 0:30       |
-| 2     | 3     | _M1_ Động lực — khoảng cách hiệu năng trên web | 0:30  | 0:45       |
-| 3     | 5     | _M2_ Phát biểu bài toán và phạm vi             | 1:15  | 0:45       |
-| 4     | 6     | _M2_ Bốn thách thức cốt lõi                    | 2:00  | 0:45       |
-| 5     | 8     | _M3_ Ba hướng tiếp cận hiện nay                | 2:45  | 0:45       |
-| 6     | 9     | _M3_ Hạn chế và khoảng trống nghiên cứu        | 3:30  | 0:40       |
-| 7     | 11    | _M4_ Giải pháp HSGE & các đóng góp chính       | 4:10  | 0:50       |
-| 8     | 12    | _M4_ Tổng quan pipeline HSGE                   | 5:00  | 1:00       |
-| 9     | 13    | _M4_ Đồ thị hai tầng                           | 6:00  | 0:55       |
-| 10    | 14    | _M4_ Phát hiện skill → quy nạp operator        | 6:55  | 1:00       |
-| 11    | 15    | _M4_ Sinh semantic task                        | 7:55  | 0:55       |
-| 12    | 16    | _M4_ Tinh lọc dữ liệu _(chuyển người)_         | 8:50  | 0:55       |
-| 13    | 18    | _M5_ Thiết lập & Câu hỏi nghiên cứu            | 9:45  | 0:45       |
-| 14    | 19    | _M5_ CH1 — Tự động tạo tác vụ & Quy mô dữ liệu | 10:30 | 1:00       |
-| 15    | 20    | _M5_ CH2 — So sánh hiệu năng SOTA              | 11:30 | 1:00       |
-| 16    | 21    | _M5_ CH2 — So sánh Base và Fine-tuning         | 12:30 | 0:50       |
-| 17    | 22    | _M5_ CH3 — Hiệu quả chi phí tự sinh dữ liệu    | 13:20 | 0:40       |
-| 18    | 23    | _M6_ Kết luận & Hướng phát triển               | 14:00 | 1:00       |
+| 2     | 3     | _M1_ Động lực — khoảng cách hiệu năng trên web | 0:30  | 0:50       |
+| 3     | 5     | _M2_ Phát biểu bài toán và phạm vi             | 1:20  | 0:50       |
+| 4     | 6     | _M2_ Bốn thách thức cốt lõi                    | 2:10  | 0:50       |
+| 5     | 8     | _M3_ Ba hướng tiếp cận hiện nay                | 3:00  | 0:50       |
+| 6     | 9     | _M3_ Hạn chế và khoảng trống nghiên cứu        | 3:50  | 0:55       |
+| 7     | 11    | _M4_ Giải pháp HSGE & các đóng góp chính       | 4:45  | 0:50       |
+| 8     | 12    | _M4_ Tổng quan pipeline HSGE                   | 5:35  | 0:55       |
+| 9     | 13    | _M4_ Đồ thị hai tầng                           | 6:30  | 0:50       |
+| 10    | 14    | _M4_ Phát hiện skill → quy nạp operator        | 7:20  | 0:55       |
+| 11    | 15    | _M4_ Sinh semantic task                        | 8:15  | 0:50       |
+| 12    | 16    | _M4_ Tinh lọc dữ liệu _(chuyển người)_         | 9:05  | 0:55       |
+| 13    | 18    | _M5_ Thiết lập & Câu hỏi nghiên cứu            | 10:00 | 0:45       |
+| 14    | 19    | _M5_ CH1 — Tự động tạo tác vụ & Quy mô dữ liệu | 10:45 | 0:50       |
+| 15    | 20    | _M5_ CH2 — So sánh hiệu năng SOTA              | 11:35 | 0:50       |
+| 16    | 21    | _M5_ CH2 — So sánh Base và Fine-tuning         | 12:25 | 0:50       |
+| 17    | 22    | _M5_ CH3 — Hiệu quả chi phí tự sinh dữ liệu    | 13:15 | 0:40       |
+| 18    | 23    | _M6_ Kết luận & Hướng phát triển               | 13:55 | 1:00       |
+
+Kết thúc ở **14:55**. Bảng này khớp với các **"▶ Bản nói"** (đo ở tốc độ ~190 tiếng/phút),
+không khớp với bản đầy đủ — bản đầy đủ dài gấp khoảng ba lần và chỉ dùng để nắm ý.
 
 Phần đặt vấn đề trải trên **năm** slide (2–6), mỗi slide đúng một nhịp: động lực → bài
-toán → thách thức → công trình liên quan → khoảng trống. Tổng phần này ~3:40; nếu trễ thì
-lược nhóm (A) ở slide 5 và cột trái slide 6 xuống còn hai gạch đầu dòng.
+toán → thách thức → công trình liên quan → khoảng trống. Tổng phần này ~4:15; nếu trễ thì
+lược nhóm (A) ở slide 5 và gộp T1–T2 ở slide 4 thành một câu.
 
 Trang 2 là mục lục đầu bài; trang 4, 7, 10, 17 là mục lục đầu mục — bấm lướt, không dừng
 nói. Trang 24 là trang cảm ơn / Hỏi & Đáp; dừng ở đó và mời Hội đồng đặt câu hỏi.
@@ -72,58 +79,111 @@ nói. Trang 24 là trang cảm ơn / Hỏi & Đáp; dừng ở đó và mời H�
 
 ## Slide 2 - Động lực: khoảng cách hiệu năng trên tác vụ web (0:30, trang 3)
 
-> Kính thưa Hội đồng, sự phát triển của các **Mô hình Ngôn ngữ Lớn (LLM)** đã tạo tiền đề
-> chuyển từ chatbot trả lời thụ động sang **AI Agent tự hành**, trong đó **Web Agent** là
-> hướng nổi bật nhất: tác nhân nhận lệnh bằng ngôn ngữ tự nhiên rồi tự điều khiển trình
-> duyệt để hoàn thành công việc — ví dụ _"vào hệ thống nội bộ kiểm tra đơn hàng và xuất
-> báo cáo"_.
+**▶ Bản nói — đúng ngân sách 0:50 (đây là bản học thuộc):**
+
+> Kính thưa Hội đồng. LLM đã đưa chúng ta từ chatbot sang **tác nhân tự hành**, và Web
+> Agent là hướng nổi bật nhất. Nhưng đặt một agent vào website nó **chưa từng thấy** thì nó
+> lúng túng ngay: biết "mua hàng trên mạng" nói chung, không biết trong **hệ thống này** nút
+> đó ở đâu. Trên WebArena, **con người 78,24%**, agent dùng **GPT-4 chỉ 14,41%**. Điều đáng
+> nói là khoảng cách này **không đóng lại bằng mô hình to hơn** — thứ thiếu là **hiểu biết
+> về chính môi trường triển khai**.
 >
-> Nhưng thực tế còn cách kỳ vọng khá xa. Trên **WebArena** — bộ chuẩn mô phỏng các website
-> thật — agent dùng **GPT-4** chỉ hoàn thành **14,41%** số tác vụ, trong khi con người đạt
-> **78,24%**. Nghĩa là năng lực _tổng quát_ của một mô hình lớn vẫn chưa đủ; muốn dùng
-> được, phải **chuyên biệt hóa** theo đúng môi trường triển khai.
+> Mà cách phổ biến hiện nay, gọi API mô hình lớn, lại vướng ba rào cản: chi phí cộng dồn,
+> độ trễ, và **rủi ro riêng tư** vì dữ liệu nội bộ phải gửi ra ngoài. Nên hướng bền vững là
+> **mô hình nhỏ dưới 10B chạy cục bộ** — và mô hình nhỏ thì **bắt buộc phải fine-tune**.
+> Nút thắt vì thế dịch từ _mô hình_ sang **dữ liệu**: lấy dữ liệu ở đâu cho một website
+> cụ thể?
+
+**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
+
+> Kính thưa Hội đồng. Sự phát triển của các **Mô hình Ngôn ngữ Lớn** đã đưa chúng ta từ
+> chatbot trả lời thụ động sang **tác nhân tự hành**, và **Web Agent** là hướng nổi bật
+> nhất: người dùng ra lệnh bằng ngôn ngữ tự nhiên, tác nhân tự điều khiển trình duyệt để
+> làm xong việc — chẳng hạn _"vào hệ thống nội bộ kiểm tra đơn hàng tồn và xuất báo cáo"_.
 >
-> Thêm nữa, cách phổ biến hiện nay là gọi **API của LLM lớn thương mại**, và cách này có ba
-> rào cản: chi phí tích lũy theo từng bước thao tác, độ trễ mạng, và quan trọng nhất là
-> **rủi ro riêng tư** khi dữ liệu nội bộ phải gửi ra ngoài.
+> Nhưng có một điều rất dễ quan sát trong thực tế: đặt một agent vào một website nó **chưa
+> từng thấy**, nó sẽ lúng túng. Nó biết "mua hàng trên mạng" nói chung là làm gì, nhưng
+> không biết trong **hệ thống này** thì nút đó nằm ở đâu, phải đi qua những trang nào. Nó
+> giống một nhân viên mới ngày đầu đi làm: kiến thức chung thì có, hiểu biết về đúng phần
+> mềm của công ty thì chưa.
 >
-> Hướng bền vững là dùng **mô hình ngôn ngữ nhỏ, dưới 10 tỷ tham số**, chạy cục bộ ngay tại
-> tổ chức. Nhưng mô hình nhỏ vốn không biết cách vận hành trên một website lạ, nên **bắt
-> buộc phải fine-tune**. Và đó là lúc nút thắt dịch chuyển: từ chỗ _thiếu mô hình đủ mạnh_
-> sang chỗ **thiếu dữ liệu huấn luyện cho đúng website đó**.
+> Con số nói đúng điều đó. Trên **WebArena** — bộ chuẩn dựng lại các website thật — **con
+> người đạt 78,24%**, còn agent dùng **GPT-4 chỉ đạt 14,41%** tại thời điểm bộ chuẩn được
+> công bố. Và điểm đáng chú ý là: khoảng cách này **không đóng lại chỉ bằng cách dùng mô
+> hình to hơn**. Thứ đang thiếu không phải là tham số, mà là **hiểu biết về chính môi
+> trường sẽ triển khai** — thứ chỉ có được từ dữ liệu tương tác trên đúng website đó.
+>
+> _(Click 2)_ Cách làm phổ biến hiện nay là gọi thẳng **API của LLM lớn thương mại**. Cách
+> này vướng ba rào cản khi đưa vào vận hành thật: chi phí cộng dồn theo từng bước thao tác,
+> độ trễ mạng khi chạy hàng loạt, và quan trọng nhất là **rủi ro riêng tư** — mọi màn hình
+> nội bộ đều phải gửi ra ngoài tổ chức.
+>
+> _(Click 3)_ Vì vậy hướng bền vững là **mô hình ngôn ngữ nhỏ, dưới 10 tỷ tham số, chạy cục
+> bộ**. Nhưng mô hình nhỏ càng không biết gì về website lạ, nên **bắt buộc phải fine-tune**.
+> Và đến đây nút thắt dịch chuyển: từ chỗ _thiếu mô hình đủ mạnh_ sang chỗ **thiếu dữ liệu
+> tương tác của đúng website đó**.
 >
 > Nếu nút thắt là dữ liệu, thì bài toán cần giải chính là: **lấy dữ liệu huấn luyện ở đâu
 > cho một website cụ thể?**
 
-**Câu chốt:** Nút thắt của Web Agent không nằm ở kiến trúc mô hình, mà nằm ở **dữ liệu tương tác thực tế cho từng website cụ thể**.
+**Câu chốt:** Nút thắt của Web Agent không nằm ở kích thước mô hình, mà nằm ở **hiểu biết
+về chính môi trường triển khai** — tức ở **dữ liệu tương tác của từng website cụ thể**.
 
 **Tránh:** không nói "LLM không làm được web" — con số đúng là _14,41% so với 78,24% của
-con người trên WebArena_, tức là làm được nhưng còn xa mức dùng được.
+con người_, tức làm được nhưng còn xa mức dùng được. Cũng đừng nói "mô hình lớn hơn thì sẽ
+giải quyết được" — đó là điều slide này đang phản bác.
+
+`[lược nếu trễ]` Bỏ hình ảnh "nhân viên mới ngày đầu", vào thẳng con số 14,41% / 78,24%.
 
 ---
 
-## Slide 3 - Phát biểu bài toán và phạm vi (1:15, trang 5)
+## Slide 3 - Phát biểu bài toán và phạm vi (1:20, trang 5)
 
-> Em xin phát biểu bài toán một cách chính xác trước khi nói tới bất kỳ giải pháp nào.
+**▶ Bản nói — đúng ngân sách 0:50:**
+
+> Em xin phát biểu bài toán thật chính xác trước khi nói tới giải pháp.
+>
+> **Đầu vào**: một website đang vận hành — chỉ có URL gốc và quyền truy cập, **không một
+> nhãn người nào**, không có bộ tác vụ mẫu. **Đầu ra**: một bộ trajectory huấn luyện, và một
+> **mô hình dưới 10B** đã fine-tune thành agent chuyên biệt cho đúng website đó.
+>
+> Hai **ràng buộc** thực tế siết bài toán lại: ngân sách API ở mức nhóm nhỏ, và mô hình phải
+> chạy **tại chỗ**. Hai ràng buộc này loại thẳng phương án thuê người gán nhãn và phương án
+> gọi API mô hình lớn mỗi lần chạy.
+>
+> **Đo lường**: 655 tác vụ chính thức của WebArena trên 4 website, chấm bằng **bộ chấm của
+> benchmark**, chỉ số chính là **Task Success Rate**, chỉ số phụ là **chi phí API mỗi
+> trajectory**.
+>
+> Và xin nói rõ ngay **phạm vi**: một website cho ra một agent chuyên biệt. Thứ tổng quát
+> hóa ở đây là **pipeline, không phải model**.
+
+**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
+
+> Em xin phát biểu bài toán thật chính xác, trước khi nói tới bất kỳ giải pháp nào.
 >
 > _(Click 1 — Bài toán)_ **Đầu vào** là một **website mục tiêu đang vận hành**: nhóm chỉ có
-> URL gốc và quyền truy cập, **không có một nhãn người nào**, và cũng không có sẵn bộ tác
-> vụ mẫu để học theo. **Đầu ra** cần đạt là hai thứ: một bộ dữ liệu trajectory dùng để
-> huấn luyện, và một **mô hình nhỏ dưới 10 tỷ tham số** đã fine-tune thành agent chuyên
-> biệt cho đúng website đó.
+> URL gốc và quyền truy cập. **Không có một nhãn người nào**, và cũng không có sẵn bộ tác vụ
+> mẫu để học theo — đây là điều kiện của một tổ chức thật, chứ không phải của một bộ dữ liệu
+> đã được dọn sẵn. **Đầu ra** cần đạt gồm hai thứ: một bộ trajectory dùng để huấn luyện, và
+> một **mô hình dưới 10 tỷ tham số** đã fine-tune thành agent chuyên biệt cho đúng website
+> đó.
 >
-> _(Click 2 — Ràng buộc)_ Bài toán bị ràng buộc bởi hai điều kiện thực tế: ngân sách gọi
-> API ở mức một **nhóm nghiên cứu nhỏ**, và mô hình phải chạy được **tại chỗ (on-premise)**
-> để dữ liệu không rời khỏi tổ chức.
+> _(Click 2 — Ràng buộc)_ Bài toán bị siết bởi hai ràng buộc thực tế: ngân sách gọi API ở
+> mức một **nhóm nghiên cứu nhỏ**, và mô hình phải chạy được **tại chỗ**, để dữ liệu không
+> rời khỏi tổ chức. Hai ràng buộc này không phải chi tiết phụ — chúng loại thẳng phương án
+> "thuê người gán nhãn" và phương án "gọi API mô hình lớn mỗi lần chạy".
 >
-> _(Click 3 — Tiêu chí đánh giá)_ Về đo lường, nhóm dùng **WebArena** với **655 tác vụ
-> chính thức trên 4 website thực**, chấm bằng **bộ chấm của chính benchmark**, chỉ số chính
-> là **tỷ lệ hoàn thành tác vụ — Task Success Rate**. Chỉ số phụ là **chi phí API trên mỗi
-> trajectory**, vì ràng buộc kinh tế là một phần của bài toán chứ không phải chuyện phụ.
+> _(Click 3 — Tiêu chí đánh giá)_ Về đo lường, nhóm dùng **WebArena** với **655 tác vụ chính
+> thức trên 4 website thật**, chấm bằng **bộ chấm của chính benchmark** chứ không phải bằng
+> đánh giá của nhóm, chỉ số chính là **tỷ lệ hoàn thành tác vụ — Task Success Rate**. Chỉ số
+> phụ là **chi phí API trên mỗi trajectory**, vì với ràng buộc ở trên thì chi phí là một
+> phần của bài toán chứ không phải chuyện bên lề.
 >
 > _(Click 4 — Phạm vi)_ Và đây là chỗ em xin nói rõ ngay từ đầu để tránh hiểu nhầm: phạm vi
 > là **một website cho ra một agent chuyên biệt**, không phải một agent vạn năng. Thứ tổng
-> quát hóa ở đây là **quy trình (pipeline)**, không phải **mô hình**.
+> quát hóa ở đây là **quy trình**, không phải **mô hình**: cùng một pipeline đem sang website
+> khác thì sinh ra agent của website đó.
 
 **Câu chốt:** Bài toán là _sinh dữ liệu và huấn luyện agent cho **một** website cụ thể, với **0 nhãn người**_ — và thứ tổng quát hóa là **pipeline, không phải model**.
 
@@ -135,105 +195,180 @@ miền, khóa luận **không** giải và **không** đo.
 
 ---
 
-## Slide 4 - Bốn thách thức cốt lõi (2:00, trang 6)
+## Slide 4 - Bốn thách thức cốt lõi (2:10, trang 6)
 
-> Bài toán vừa nêu vướng bốn thách thức, và bốn thách thức này sẽ được nhắc lại xuyên suốt
+**▶ Bản nói — đúng ngân sách 0:50:**
+
+> Bài toán này vướng bốn thách thức, em xin đánh số **T1 đến T4** vì phần sau sẽ đối chiếu
+> lại đúng bốn mục này.
+>
+> **T1 — chi phí nhãn.** Người thật gán nhãn là nguồn tốt nhất và đắt nhất: AutoWebGLM cần
+> **20 người ròng rã một tháng**. Sinh từ tài liệu Internet rẻ hơn nhiều — chỉ **3%** chi phí
+> mỗi mẫu — nhưng không bám môi trường thật thì chỉ đạt **6%**, so với **16%** của cách học
+> trực tiếp từ website đích. Đọc hướng dẫn hủy đơn trên Shopee không giúp gì khi phải hủy đơn
+> trên hệ thống nội bộ của doanh nghiệp.
+>
+> **T2 — tri thức phân mảnh**: trajectory thô không có đơn vị kỹ năng nào để tái dùng.
+> **T3 — dương tính giả**: không có nhãn người thì agent tự khai xong, và dữ liệu bẩn **dạy
+> mô hình khai gian**. **T4 — khó ghép tác vụ dài**: thiếu cơ chế biết _làm xong A mới làm
+> được B_ thì task luôn bó trong một trang.
+
+**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
+
+> Bài toán vừa nêu vướng bốn thách thức. Bốn thách thức này sẽ được nhắc lại xuyên suốt
 > phần sau nên em xin đánh số **T1 đến T4**.
 >
-> _(Click 1 — T1)_ **T1 — chi phí gán nhãn.** Cách cổ điển là thuê người gán nhãn, và nó rất
-> đắt: AutoWebGLM cần **20 người làm việc suốt một tháng** cho khoảng mười nghìn trajectory.
-> Sinh mẫu ngoại tuyến thì rẻ hơn hẳn — Synatra chỉ tốn khoảng **3%** chi phí mỗi mẫu —
-> nhưng rẻ mà không bám môi trường thật thì cũng không dùng được: chỉ đạt **6%** trên
-> WebArena, so với **16%** của phương pháp học trực tiếp từ chính website đích.
+> _(Click 1 — T1)_ **T1 — chi phí gán nhãn.** Nguồn dữ liệu chất lượng nhất vẫn là người
+> thật ngồi thao tác, và cũng là nguồn đắt nhất: AutoWebGLM cần **20 người làm ròng rã một
+> tháng** cho khoảng mười nghìn trajectory. Hướng rẻ hơn là sinh dữ liệu từ tri thức có sẵn
+> trên Internet — Synatra chỉ tốn khoảng **3%** chi phí mỗi mẫu. Nhưng rẻ mà **không bám môi
+> trường thật thì không dùng được**: cách này chỉ đạt **6%** trên WebArena, trong khi cách
+> học trực tiếp từ chính website đích đạt **16%**.
 >
-> _(Click 2 — T2)_ **T2 — tri thức bị phân mảnh.** Trajectory thô chỉ là chuỗi thao tác rời
-> rạc, không có **đơn vị kỹ năng** nào để tái sử dụng. Cùng một thao tác lặp lại ở mười
-> trang khác nhau vẫn bị coi là mười mẩu dữ liệu mới, không được đúc kết thành gì cả.
+> Con số 6 so với 16 chính là bằng chứng cho nhận định ở slide đầu: đọc một bài hướng dẫn
+> cách hủy đơn hàng trên Shopee gần như **không chuyển giao** được sang việc hủy đơn trên hệ
+> thống nội bộ của một doanh nghiệp — nút khác, luồng khác, thuật ngữ khác. Muốn agent làm
+> được trên môi trường nào thì phải cho nó học từ **chính môi trường đó**.
 >
-> _(Click 3 — T3)_ **T3 — dương tính giả.** Vì không có nhãn người, agent phải **tự khai báo
-> đã hoàn thành**. Lời tự khai thường sai, và dữ liệu bẩn lọt vào tập huấn luyện thì hậu quả
-> nặng hơn thiếu dữ liệu: nó **dạy mô hình khai gian**.
+> _(Click 2 — T2)_ **T2 — tri thức bị phân mảnh.** Nhưng học trực tiếp từ môi trường lại
+> sinh ra vấn đề khác. Trajectory thô chỉ là chuỗi thao tác rời rạc, không có **đơn vị kỹ
+> năng** nào để tái sử dụng. Cùng một thao tác "tìm kiếm rồi mở chi tiết" lặp lại ở mười
+> trang khác nhau vẫn bị coi là mười mẩu dữ liệu mới, không đúc kết được thành gì cả — nên
+> càng khám phá lâu càng tốn, chứ không càng khôn.
+>
+> _(Click 3 — T3)_ **T3 — dương tính giả.** Vì không có nhãn người, agent phải **tự khai
+> báo đã hoàn thành**. Lời tự khai thường sai, và dữ liệu bẩn ở đây tệ hơn thiếu dữ liệu:
+> nó **dạy mô hình khai gian** — học đúng cái hành vi tuyên bố xong trong khi chưa làm gì.
 >
 > _(Click 4 — T4)_ **T4 — khó ghép thành tác vụ dài.** Tác vụ tự sinh thường bó hẹp trong
-> một trang — tra cứu, điều hướng. Thiếu cơ chế biết được _làm xong A thì mới làm được B_
-> thì không thể sinh ra tác vụ nhiều bước có ý nghĩa nghiệp vụ.
+> một trang: tra cứu, điều hướng. Trong khi công việc thật gần như luôn nhiều bước và bắc
+> cầu qua nhiều trang. Thiếu cơ chế biết được _làm xong A thì mới làm được B_ thì không sinh
+> ra được tác vụ nhiều bước có ý nghĩa nghiệp vụ.
 >
 > Bốn thách thức này đã được cộng đồng tấn công tới đâu — đó là nội dung phần tiếp theo.
 
-**Câu chốt:** bốn thách thức T1–T4 là **khung để chấm điểm mọi phương pháp**, kể cả HSGE — phần sau sẽ đối chiếu lại đúng bốn mục này.
+**Câu chốt:** T1–T4 là **khung để chấm điểm mọi phương pháp**, kể cả HSGE — phần sau sẽ đối chiếu lại đúng bốn mục này.
 
-`[lược nếu trễ]` Gộp T1 và T2 vào một câu, giữ nguyên T3 và T4 (đây là hai chỗ HSGE khác biệt nhất).
+**Tránh:** đừng nói dữ liệu ngoại tuyến là "vô dụng" — nó rẻ và có giá trị, vấn đề là **không chuyển giao** sang website đích.
+
+`[lược nếu trễ]` Bỏ ví dụ Shopee và gộp T1–T2 vào một câu; giữ nguyên T3 và T4 — đây là hai chỗ HSGE khác biệt nhất.
 
 ---
 
-## Slide 5 - Ba hướng tiếp cận hiện nay (2:45, trang 8)
+## Slide 5 - Ba hướng tiếp cận hiện nay (3:00, trang 8)
 
-> Cộng đồng đã giải quyết bài toán dữ liệu cho web agent theo ba hướng.
+**▶ Bản nói — đúng ngân sách 0:50:**
+
+> Cộng đồng đã tấn công bài toán này theo ba hướng, xếp theo **nguồn tri thức** mà mỗi hướng
+> khai thác.
 >
-> _(Click 1)_ **Nhóm (A) — tri thức gián tiếp:** Synatra và AgentTrek chuyển các bài hướng
-> dẫn, tài liệu trên Internet thành mẫu huấn luyện; AgentTrek còn replay lại trên trình
-> duyệt thật để lấy trajectory.
+> **Nhóm (A) lấy tri thức từ Internet**: Synatra, AgentTrek chuyển tài liệu hướng dẫn thành
+> mẫu huấn luyện, AgentTrek còn replay lại trên trình duyệt thật.
 >
-> _(Click 2)_ **Nhóm (B) — bộ nhớ và kỹ năng phục vụ lúc suy luận:** AWM trích các workflow
-> lặp lại từ lịch sử rồi nhét vào prompt, nâng tỷ lệ hoàn thành trên WebArena từ **23,5%
-> lên 35,5%**; SkillWeaver để agent tự khám phá và đóng gói kỹ năng thành các API tái sử
-> dụng được.
+> **Nhóm (B) lấy từ lịch sử chạy, dùng lại lúc suy luận**: AWM trích workflow lặp lại nhét
+> vào prompt, nâng WebArena từ **23,5% lên 35,5%**; SkillWeaver để agent tự đóng gói kỹ năng
+> thành API.
 >
-> _(Click 3)_ **Nhóm (C) — tự khám phá để sinh dữ liệu huấn luyện cho mô hình nhỏ**, gần
-> khóa luận nhất: NNetNav khám phá website rồi gán nhãn hồi tố, mô hình 8B đạt **16,3%**;
-> Go-Browse mô hình hóa việc khám phá thành **bài toán tìm kiếm trên đồ thị** website, mô
-> hình 7B đạt **21,7%** — mức tốt nhất của phân khúc dưới 10 tỷ tham số tại thời điểm công
-> bố.
+> **Nhóm (C) lấy từ chính môi trường, để huấn luyện mô hình nhỏ** — gần khóa luận nhất.
+> NNetNav khám phá rồi gán nhãn hồi tố, 8B đạt **16,3%**. Go-Browse coi khám phá là **tìm
+> kiếm trên đồ thị** website, tái sử dụng thông tin giữa các lượt thay vì mỗi lượt bắt đầu
+> lại, 7B đạt **21,7%** — tốt nhất phân khúc dưới 10B, và củng cố đúng tiền đề của nhóm em:
+> **khám phá có cấu trúc cho dữ liệu tốt hơn các lượt chạy rời rạc**.
+
+**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
+
+> Cộng đồng đã tấn công bài toán dữ liệu theo ba hướng, và cách dễ nhớ nhất là xếp chúng
+> theo **nguồn tri thức** mà mỗi hướng khai thác.
+>
+> _(Click 1)_ **Nhóm (A) lấy tri thức từ Internet.** Synatra và AgentTrek chuyển các bài
+> hướng dẫn, tài liệu sẵn có thành mẫu huấn luyện; AgentTrek còn replay lại trên trình duyệt
+> thật để lấy trajectory chứ không chỉ sinh văn bản.
+>
+> _(Click 2)_ **Nhóm (B) lấy tri thức từ chính lịch sử chạy, nhưng dùng lại lúc suy luận.**
+> AWM trích các workflow lặp đi lặp lại rồi nhét vào prompt, nâng tỷ lệ hoàn thành trên
+> WebArena từ **23,5% lên 35,5%** — một mức tăng rất đáng kể mà không đụng gì tới trọng số.
+> SkillWeaver đi xa hơn: để agent tự khám phá và đóng gói kỹ năng thành các API tái sử dụng
+> được.
+>
+> _(Click 3)_ **Nhóm (C) lấy tri thức từ chính môi trường, và dùng để huấn luyện mô hình
+> nhỏ** — đây là nhóm gần khóa luận nhất. NNetNav cho agent khám phá website rồi gán nhãn
+> hồi tố, mô hình 8B đạt **16,3%**. Go-Browse mô hình hóa việc khám phá thành **bài toán tìm
+> kiếm trên đồ thị** website: duy trì một biên khám phá gồm các trang đã phát hiện nhưng
+> chưa khai thác hết, và **tái sử dụng thông tin giữa các lượt** thay vì mỗi lượt lại bắt
+> đầu lại từ trang chủ. Mô hình 7B đạt **21,7%** — tốt nhất phân khúc dưới 10 tỷ tham số tại
+> thời điểm công bố.
 >
 > Kết quả của Go-Browse củng cố đúng tiền đề của khóa luận: **khám phá có cấu trúc cho dữ
-> liệu tốt hơn các chuỗi rollout rời rạc**. Đây cũng là mốc so sánh chính của nhóm.
+> liệu tốt hơn các lượt chạy rời rạc**. Đây cũng là mốc so sánh chính của nhóm em.
 
-**Câu chốt:** Ba hướng trước đã chứng minh **tự động sinh dữ liệu là khả thi**, và hướng
-khám phá có cấu trúc là hướng cho kết quả tốt nhất.
+**Câu chốt:** Ba hướng trước đã chứng minh **tự động sinh dữ liệu là khả thi**, và **khám phá có cấu trúc trên chính môi trường** là hướng cho kết quả tốt nhất.
+
+**Tránh:** đừng gọi Go-Browse là "đối thủ" — cách nói đúng là _công trình nền tảng gần nhất và là mốc so sánh_.
 
 `[lược nếu trễ]` Bỏ nhóm (A), vào thẳng (B) và (C).
 
 ---
 
-## Slide 6 - Hạn chế và khoảng trống nghiên cứu (3:30, trang 9)
+## Slide 6 - Hạn chế và khoảng trống nghiên cứu (3:50, trang 9)
 
-> Nhưng đối chiếu lại với bốn thách thức T1–T4 thì mỗi hướng đều còn một khoảng trống.
+**▶ Bản nói — đúng ngân sách 0:55:**
+
+> Ba hướng đó đều đã tiến rất xa, nhưng đối chiếu lại T1–T4 thì mỗi hướng còn đúng một mảng
+> bỏ trống.
+>
+> **(A)** bị chặn bởi lượng tài liệu sẵn có — quy trình nội bộ chưa ai viết ra thì nằm ngoài
+> tầm với: **T1 chưa giải triệt để**. **(B)** — kỹ năng chỉ sống trong prompt, **không cập
+> nhật tham số**, nên không giúp gì cho mô hình nhỏ chạy cục bộ; workflow lại tuyến tính,
+> không có tiền điều kiện và kết quả tường minh nên không ghép chuỗi được: còn **T2, T4**.
+> **(C)** — Go-Browse có đồ thị nhưng **chỉ một tầng**, node là URL, phía trên không có tầng
+> trừu tượng, nên task đề xuất bị bó trong trang hiện tại: **T4 vẫn còn**. Và cả (B) lẫn (C)
+> đều tin vào **lời tự khai của agent**: **T3 còn nguyên**.
+>
+> Gom lại: từng mắt xích đều có người làm, nhưng **chưa công trình nào nối trọn cả ba** —
+> **kiểm chứng kỹ năng → ghép tác vụ dài → huấn luyện mô hình nhỏ**. Từ đó câu hỏi của khóa
+> luận là: làm sao tự sinh dữ liệu ngay trên website mục tiêu, **0 nhãn người**, để mô hình
+> nhỏ chạy cục bộ đạt hiệu năng tiệm cận hoặc vượt LLM lớn trên chính các trang đó?
+
+**Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**
+
+> Ba hướng đó đều đã tiến rất xa. Nhưng khi đối chiếu lại với bốn thách thức T1–T4 thì mỗi
+> hướng vẫn còn đúng một mảng bỏ trống.
 >
 > **Nhóm (A)** bị chặn bởi đúng một thứ: lượng tài liệu hướng dẫn sẵn có. Quy trình nội bộ
-> chưa ai viết ra, hay website vừa triển khai, thì nằm ngoài tầm với — nên **T1 chưa được
-> giải**.
+> chưa ai viết thành bài, hay website vừa mới triển khai, thì nằm ngoài tầm với — nên **T1
+> chưa được giải triệt để**.
 >
-> **Nhóm (B)** — kỹ năng chỉ sống trong prompt của một mô hình lớn, **không hề cập nhật
-> tham số**, nên không giúp gì cho bài toán mô hình nhỏ chạy cục bộ. Thêm nữa, workflow của
-> AWM là chuỗi bước tuyến tính, **không có tiền điều kiện và kết quả tường minh**, nên không
-> thể ghép chuỗi bằng thuật toán lập kế hoạch — tức còn **T2 và T4**.
+> **Nhóm (B)** — kỹ năng chỉ sống trong prompt của một mô hình lớn, **không cập nhật tham
+> số**, nên không giúp gì cho bài toán mô hình nhỏ chạy cục bộ của nhóm em. Thêm nữa,
+> workflow của AWM là chuỗi bước tuyến tính, **không có tiền điều kiện và kết quả tường
+> minh**, nên không thể ghép chuỗi bằng thuật toán lập kế hoạch — tức còn **T2 và T4**.
 >
-> **Nhóm (C)** — NNetNav **không tích lũy** tri thức giữa các episode. Go-Browse có đồ thị,
-> nhưng **chỉ một tầng**: node là URL, cạnh là trajectory, phía trên không có tầng trừu
-> tượng nào. Hệ quả là bộ đề xuất task của Go-Browse được yêu cầu tường minh chỉ tìm những
-> việc **làm được ngay trên trang hiện tại** — task sinh ra bị bó trong một trang, tức vẫn
-> là **T4**.
+> **Nhóm (C)** — NNetNav **không tích lũy** tri thức giữa các episode. Go-Browse thì có đồ
+> thị, nhưng đồ thị đó **chỉ một tầng**: node là URL, cạnh là trajectory, phía trên không có
+> tầng trừu tượng nào. Hệ quả kéo theo rất cụ thể: bộ đề xuất task của Go-Browse được yêu
+> cầu tường minh là chỉ tìm những việc **làm được ngay trên trang hiện tại**, nên task sinh
+> ra bị bó trong một trang — **T4 vẫn còn**.
 >
-> Và cả **(B) lẫn (C)** đều ghi nhận thành công phần lớn dựa trên **lời tự khai của agent**,
+> Và cả **(B) lẫn (C)** đều ghi nhận thành công chủ yếu dựa trên **lời tự khai của agent**,
 > không chạy lại để kiểm chứng — tức **T3 còn nguyên**.
 >
-> _(Click 2)_ Khung đỏ bên phải là khoảng trống nghiên cứu: chưa công trình nào nối trọn ba
-> khâu **kiểm chứng kỹ năng → ghép thành tác vụ dài → dùng chính dữ liệu đó huấn luyện mô
-> hình nhỏ**.
+> _(Click 2)_ Gom lại, khung bên phải là khoảng trống nghiên cứu: từng mắt xích đều đã có
+> người làm, nhưng **chưa công trình nào nối trọn cả ba**: **kiểm chứng kỹ năng → ghép thành
+> tác vụ dài → dùng chính dữ liệu đó huấn luyện mô hình nhỏ**.
 >
 > _(Click 3)_ Từ đó, câu hỏi khóa luận đặt ra là: **Làm sao tận dụng LLM để tự động sinh dữ
-> liệu huấn luyện trên website mục tiêu, hoàn toàn không cần nhãn con người, nhằm giúp mô
+> liệu huấn luyện ngay trên website mục tiêu, hoàn toàn không cần nhãn con người, để một mô
 > hình nhỏ chạy cục bộ đạt hiệu năng tiệm cận hoặc vượt LLM lớn trên chính các trang đó?**
 
 **Câu chốt:** Khoảng trống không phải là "thu được nhiều dữ liệu hơn", mà là **thiếu một
-tầng kỹ năng đã kiểm chứng, ghép chuỗi được**.
+tầng kỹ năng đã kiểm chứng và ghép chuỗi được**.
 
-**Tránh:** không nói các công trình trước "sai" hay "kém" — cách nói đúng là mỗi hướng
-giải quyết _một phần_ của bài toán, và ba khâu đó chưa được nối liền.
+**Tránh:** không nói các công trình trước "sai" hay "kém" — cách nói đúng là mỗi hướng giải
+quyết _một phần_ của bài toán, và ba mắt xích đó chưa được nối liền.
 
 ---
 
-## Slide 7 - Giải pháp HSGE và các đóng góp chính (4:10, trang 11)
+## Slide 7 - Giải pháp HSGE và các đóng góp chính (4:45, trang 11)
 
 > Để lấp khoảng trống đó, khóa luận đề xuất **HSGE (Hierarchical Skill-Graph Exploration)**,
 > tự động hóa toàn chu trình từ website đến mô hình SLM cục bộ.
@@ -266,7 +401,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 8 - Tổng quan pipeline HSGE (5:00, trang 12)
+## Slide 8 - Tổng quan pipeline HSGE (5:35, trang 12)
 
 > Đây là toàn bộ phương pháp HSGE trên một hình, vận hành như một vòng lặp khép kín, tự động hoàn toàn.
 >
@@ -278,7 +413,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 9 - Đồ thị hai tầng (6:00, trang 13)
+## Slide 9 - Đồ thị hai tầng (6:30, trang 13)
 
 > Tri thức khám phá được lưu trữ trong một đồ thị hai tầng.
 >
@@ -293,7 +428,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 10 - Phát hiện skill và quy nạp operator (6:55, trang 14)
+## Slide 10 - Phát hiện skill và quy nạp operator (7:20, trang 14)
 
 > Khâu phát hiện kỹ năng chỉ chạy trên trajectory của các tác vụ **đã giải thành công**, qua bốn bước:
 >
@@ -310,7 +445,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 11 - Sinh tác vụ có ngữ nghĩa (7:55, trang 15)
+## Slide 11 - Sinh tác vụ có ngữ nghĩa (8:15, trang 15)
 
 > **Tác vụ có ngữ nghĩa (Semantic Task)** — tức tác vụ nhiều bước có ngữ nghĩa nghiệp vụ hoàn chỉnh — được sinh từ hai nguồn:
 >
@@ -325,7 +460,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 12 - Kiểm định trực tuyến & Đóng gói SFT (8:50, trang 16) — _điểm chuyển người trình bày_
+## Slide 12 - Kiểm định trực tuyến & Đóng gói SFT (9:05, trang 16) — _điểm chuyển người trình bày_
 
 > Nguyên tắc chất lượng cốt lõi: **không bao giờ tin vào lời tự khai hoàn thành của agent.**
 >
@@ -342,7 +477,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 13 - Thiết lập & Câu hỏi nghiên cứu (9:45, trang 18)
+## Slide 13 - Thiết lập & Câu hỏi nghiên cứu (10:00, trang 18)
 
 > _(Bấm Click 1 — hiện Cột trái: 3 Câu hỏi nghiên cứu)_
 > Đi vào phần thực nghiệm, nghiên cứu tập trung giải đáp **3 câu hỏi cốt lõi (RQ)**:
@@ -365,7 +500,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 14 - CH1: Tự động tạo tác vụ & Quy mô dữ liệu (10:30, trang 19)
+## Slide 14 - CH1: Tự động tạo tác vụ & Quy mô dữ liệu (10:45, trang 19)
 
 > Trả lời **CH1**, phễu khám phá tự động của HSGE mang lại các kết quả quy mô ấn tượng:
 >
@@ -380,7 +515,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 15 - CH2: So sánh hiệu năng với các hệ thống SOTA (11:30, trang 20)
+## Slide 15 - CH2: So sánh hiệu năng với các hệ thống SOTA (11:35, trang 20)
 
 > Trả lời **CH2 (phần 1)**, Bảng 2 so sánh hiệu năng của HSGE-9B và HSGE-7B với các mô hình đóng và mở:
 >
@@ -396,7 +531,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 16 - CH2: So sánh mô hình nền (Base) và fine-tuning theo Website (12:30, trang 21)
+## Slide 16 - CH2: So sánh mô hình nền (Base) và fine-tuning theo Website (12:25, trang 21)
 
 > Trả lời **CH2 (phần 2)**, slide này bóc tách bản chất cải thiện năng lực của mô hình sau fine-tune:
 >
@@ -412,7 +547,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 17 - CH3: Hiệu quả chi phí trong tự động tạo dữ liệu (13:20, trang 22)
+## Slide 17 - CH3: Hiệu quả chi phí trong tự động tạo dữ liệu (13:15, trang 22)
 
 > Trả lời **CH3**, slide này phân tích hiệu quả kinh tế trong quá trình tự động sinh dữ liệu:
 >
@@ -425,7 +560,7 @@ giải quyết _một phần_ của bài toán, và ba khâu đó chưa được
 
 ---
 
-## Slide 18 - Kết luận: Đóng góp chính & Hướng phát triển (14:00, trang 23)
+## Slide 18 - Kết luận: Đóng góp chính & Hướng phát triển (13:55, trang 23)
 
 > _(Bấm Click 1 — hiện Cột trái: Đóng góp chính)_
 > Tổng kết lại, khóa luận đóng góp 3 giá trị cốt lõi:
@@ -591,7 +726,7 @@ lại dữ liệu.
       **"tiềm năng"** khi nhắc kiểm thử E2E.
 - [ ] Nhớ hai chỗ **không được nói quá**: "ngang Go-Browse" (không phải _vượt_), và
       "ghép chuỗi mới khả thi" (không phải _đã đủ dày_).
-- [ ] Người 2 nắm chắc mốc 8:50 — nếu người 1 trễ quá 1 phút thì lược
+- [ ] Người 2 nắm chắc mốc 10:00 — nếu người 1 trễ quá 1 phút thì lược
       `[lược nếu trễ]` ở slide 4 và 5.
 
 ---
