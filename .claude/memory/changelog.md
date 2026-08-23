@@ -6,6 +6,8 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **16:44** — `Thesis_report/thesis_hsge_vi/main.tex` — **Moved "Tóm lược nội dung các chương" to after "Tóm tắt"**. The Faculty formatting guide (`CTDA_Huong-dan-chi-tiet-trinh-bay-KLTN...`) mandates the contiguous order Lời cảm ơn → Đề cương → Mục lục → danh sách hình/bảng/viết tắt → Tóm tắt → nội dung; Tóm lược is an extra front-matter piece and was sitting between Đề cương and Mục lục, splitting two mandated adjacent items. **Verified** on the rebuilt PDF: Lời cảm ơn = i, Đề cương unnumbered, Mục lục = ii, Tóm tắt = xviii, Tóm lược = xix–xx, Chương 1 = 1 (arabic); ToC order matches; 181 pages, 0 Overfull, 0 warnings.
+
 - **16:39** — `Thesis_report/thesis_hsge_vi/main.tex` — **Re-enabled the detailed proposal (Đề cương chi tiết) in the thesis build** (it had been commented out on 19-08). Uncommented the five-line block that saves the page counter, switches to `\pagestyle{empty}`, `\include`s `Appendix/decuongchitiet`, then restores `plain` and the saved counter — so the proposal carries **no page number** while the roman sequence continues unbroken across it. Not added to the ToC (nothing to point at). **Verified** on the rebuilt PDF: Lời cảm ơn = i, proposal = pages 4–15 with no folio, Tóm lược = ii, Mục lục = iv; 181 pages, build clean.
 
 - **16:14** — `Thesis_report/Slide_KLTN_HSGE/sections/{01_gioithieu,02_baitoan,03_lienquan,04_phuongphap}.tex` — **Cut the text density of sections 1–4** (committee feedback: too many words; the slides should carry headings and bullet labels, with the explanation after each colon shortened or dropped since the presenter says it):
