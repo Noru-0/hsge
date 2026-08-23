@@ -4,6 +4,10 @@ Every finished, verified change gets one entry. Newest first.
 Entry format: `- **HH:MM** — \`file(s)\` — what changed (and why, if not obvious).`
 Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
+## 2026-08-24
+
+- **01:31** — `Thesis_report/Slide_KLTN_HSGE/config/preamble.tex`, `sections/{01_gioithieu,02_baitoan,03_lienquan}.tex` — **Made the paired blocks in sections 1–3 end on the same horizontal line.** Word-level tuning (equal title lengths / equal bullet counts) could not hold the alignment: with Vietnamese text at `\footnotesize`, two bullets of the same word count still wrap to a different number of lines, so one block of a pair always ended lower than the other (Sec.1 6 vs 5 body lines, Sec.2 challenges 2 vs 3 lines in both rows, Sec.3 (A) 4 vs (B)/(C) 5 lines, Sec.3 limits row 2 4 vs 3 lines). Added two environments, `hblock{title}{height}` / `halertblock`, that wrap the body in a fixed-height `minipage[t][h][t]`, plus six named heights `\bhA`–`\bhF` (one per block row, all in the preamble so the tuning lives in one place) and converted the ten blocks of those three sections to them. Content is unchanged. **Verified** on rendered pages 4/6/7/9/10 of `main_print.pdf` (handout) and page 6 of `main.pdf` (overlay mode, `\uncover` still works inside the minipage): every pair now bottom-aligns with even padding; 25/53 pages, build clean.
+
 ## 2026-08-23
 
 - **16:44** — `Thesis_report/thesis_hsge_vi/main.tex` — **Moved "Tóm lược nội dung các chương" to after "Tóm tắt"**. The Faculty formatting guide (`CTDA_Huong-dan-chi-tiet-trinh-bay-KLTN...`) mandates the contiguous order Lời cảm ơn → Đề cương → Mục lục → danh sách hình/bảng/viết tắt → Tóm tắt → nội dung; Tóm lược is an extra front-matter piece and was sitting between Đề cương and Mục lục, splitting two mandated adjacent items. **Verified** on the rebuilt PDF: Lời cảm ơn = i, Đề cương unnumbered, Mục lục = ii, Tóm tắt = xviii, Tóm lược = xix–xx, Chương 1 = 1 (arabic); ToC order matches; 181 pages, 0 Overfull, 0 warnings.
