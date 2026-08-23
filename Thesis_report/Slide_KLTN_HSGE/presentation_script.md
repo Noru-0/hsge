@@ -1,11 +1,11 @@
 # Kịch bản trình bày — Bảo vệ KLTN HSGE
 
 **Thời lượng:** 15 phút trình bày + 15 phút hỏi đáp.
-**Cấu trúc deck:** 25 trang nội dung (18 slide thuyết trình chính + 1 slide cảm ơn/Q&A + mục lục) và 8 slide phụ lục (chỉ mở khi Hội đồng hỏi sâu).
+**Cấu trúc deck:** 26 trang nội dung (19 slide thuyết trình chính + 1 slide cảm ơn/Q&A + mục lục) và 8 slide phụ lục (chỉ mở khi Hội đồng hỏi sâu).
 **Phân chia:** 
-- **Người 1 (Slide 1–12):** Giới thiệu, Động lực, Phát biểu bài toán, Nghiên cứu liên quan, Phương pháp HSGE.
-- **Người 2 (Slide 13–18):** Thiết lập thực nghiệm, Kết quả 3 Câu hỏi nghiên cứu (CH1, CH2, CH3), Kết luận & Hướng phát triển.
-- **Điểm chuyển giao:** Sau Slide 12 (kết thúc phần Phương pháp, chuyển sang Thực nghiệm).
+- **Người 1 (Slide 1–13):** Giới thiệu, Động lực, Phát biểu bài toán, Nghiên cứu liên quan, Phương pháp HSGE.
+- **Người 2 (Slide 14–19):** Thiết lập thực nghiệm, Kết quả 3 Câu hỏi nghiên cứu (CH1, CH2, CH3), Kết luận & Hướng phát triển.
+- **Điểm chuyển giao:** Sau Slide 13 (kết thúc phần Phương pháp, chuyển sang Thực nghiệm).
 
 ---
 
@@ -46,20 +46,38 @@ Từ đó, nút thắt cốt lõi của bài toán dịch chuyển từ *kích t
 Từ động lực trên, nhóm xin phát biểu bài toán một cách chặt chẽ:
 
 - **Về bài toán đặt ra:**
-  - **Đầu vào:** Một website mục tiêu đang vận hành, với **0 nhãn con người** và không có sẵn kịch bản mẫu.
-  - **Mục tiêu:** Tự động khám phá website và tổng hợp dữ liệu huấn luyện chất lượng cao.
+  - **Đầu vào:** Một website mục tiêu đang vận hành và **một LLM mạnh gọi qua API**, với **0 nhãn con người** và không có sẵn kịch bản mẫu.
+  - **Mục tiêu:** Mượn năng lực của LLM để tự động khám phá website và tổng hợp dữ liệu huấn luyện chất lượng cao cho SLM.
   - **Đầu ra:** Một tập dữ liệu SFT sạch cùng một mô hình **SLM <10B chuyên biệt** cho chính website đó.
 
 - **Về phạm vi & ứng dụng đích:**
   - Mỗi website sẽ tạo ra một tác nhân chuyên biệt chạy **tại chỗ (on-premise)** nhằm bảo mật dữ liệu.
   - Ngân sách gọi API phục vụ khám phá được giới hạn ở mức **nhóm nghiên cứu nhỏ**.
   - Khóa luận hướng đến việc **tổng quát hóa ở mức pipeline (quy trình)** chứ không tạo ra một mô hình đơn lẻ dùng chung cho mọi website.
+  - Việc huấn luyện giới hạn ở **SFT/LoRA**, không dùng học tăng cường.
 
-- **Định hướng giải pháp:** Tự động khám phá chính website mục tiêu để sinh dữ liệu fine-tune SLM cục bộ.
+- **Định hướng giải pháp:** Dùng **LLM mạnh** tự động khám phá chính website mục tiêu, sinh trajectory để fine-tune **SLM cục bộ**.
 
 ---
 
-## Slide 4 — Bốn thách thức cốt lõi của bài toán
+## Slide 4 — Dữ liệu huấn luyện SLM: lấy từ đâu và có dạng gì?
+
+Trước khi nói về thách thức, em xin làm rõ hai điều mà toàn bộ khóa luận xoay quanh: **dữ liệu huấn luyện được lấy từ đâu**, và **nó có hình dạng cụ thể như thế nào**.
+
+- **Về nguồn dữ liệu:** Nhóm **mượn năng lực của LLM mạnh** để đóng vai người tạo dữ liệu. LLM được gọi qua API sẽ tự khám phá và tự thao tác trên **chính website mục tiêu**. Mỗi lần LLM giải xong một tác vụ, hệ thống thu được **một trajectory** — tức là chuỗi xen kẽ giữa *quan sát trạng thái trang* và *hành động* mà nó đã thực hiện. Toàn bộ các trajectory này được **chưng cất (distill)** thành tập dữ liệu SFT để dạy lại cho SLM. Điểm quan trọng về mặt kinh tế: chi phí API chỉ phải trả **một lần duy nhất trong giai đoạn tạo dữ liệu**; khi triển khai thực tế, hệ thống chỉ còn chạy SLM cục bộ, không gọi API nữa.
+
+- **Về dạng dữ liệu:** Mỗi **bước tương tác** trở thành **một mẫu SFT** theo đúng định dạng hội thoại:
+  - **System:** khai báo tập hành động cho phép và định dạng đầu ra JSON.
+  - **User:** mục tiêu của tác vụ, trang hiện tại (URL và cây khả truy cập **AXTree**), lỗi của hành động liền trước, và lịch sử các hành động đã làm.
+  - **Assistant:** đúng một hành động kế tiếp kèm suy luận, dạng `{"thought": ..., "action": "click('12')"}`.
+  
+  Như vậy một trajectory sẽ sinh ra nhiều mẫu nối tiếp nhau, và prompt lúc huấn luyện được giữ **khớp hoàn toàn** với prompt lúc suy luận.
+
+**Nói ngắn gọn:** LLM đóng vai *làm mẫu* cách thao tác trên website, còn SLM học **bài toán chọn hành động kế tiếp** từ trạng thái trang hiện tại.
+
+---
+
+## Slide 5 — Bốn thách thức cốt lõi của bài toán
 
 Để hiện thực hóa định hướng trên mà không cần con người can thiệp, hệ thống phải đối mặt với **bốn thách thức cốt lõi (T1 đến T4)**:
 
@@ -70,7 +88,7 @@ Từ động lực trên, nhóm xin phát biểu bài toán một cách chặt c
 
 ---
 
-## Slide 5 — Ba hướng tiếp cận hiện nay
+## Slide 6 — Ba hướng tiếp cận hiện nay
 
 Cộng đồng nghiên cứu hiện nay đã tiếp cận bài toán theo ba hướng chính:
 
@@ -82,7 +100,7 @@ Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục ti�
 
 ---
 
-## Slide 6 — Hạn chế và khoảng trống nghiên cứu
+## Slide 7 — Hạn chế và khoảng trống nghiên cứu
 
 Đối chiếu lại 3 hướng tiếp cận với 4 thách thức T1–T4:
 
@@ -97,7 +115,7 @@ Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục ti�
 
 ---
 
-## Slide 7 — Giải pháp HSGE và các đóng góp chính
+## Slide 8 — Giải pháp HSGE và các đóng góp chính
 
 Để lấp đầy khoảng trống nghiên cứu trên, khóa luận đề xuất phương pháp **HSGE (Hierarchical Skill-Graph Exploration)** với các đóng góp trọng tâm:
 
@@ -113,7 +131,7 @@ Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục ti�
 
 ---
 
-## Slide 8 — Tổng quan pipeline HSGE
+## Slide 9 — Tổng quan pipeline HSGE
 
 Toàn bộ phương pháp HSGE vận hành như một quy trình tự động hóa khép kín:
 
@@ -127,7 +145,7 @@ Các trang web mới phát hiện lại được quay vòng nạp vào Frontier,
 
 ---
 
-## Slide 9 — Đồ thị hai tầng
+## Slide 10 — Đồ thị hai tầng
 
 Cốt lõi biểu diễn tri thức của HSGE là **cấu trúc đồ thị hai tầng**:
 
@@ -141,7 +159,7 @@ Nhờ đó, tri thức thu được mang tính **tái sử dụng và tái tổ 
 
 ---
 
-## Slide 10 — Phát hiện skill và quy nạp operator
+## Slide 11 — Phát hiện skill và quy nạp operator
 
 Khâu quy nạp tri thức chỉ thực hiện trên các trajectory đã chạy thành công, qua 4 bước:
 
@@ -158,7 +176,7 @@ Kết quả: từ **146 skill** phát hiện được, hệ thống tinh lọc t
 
 ---
 
-## Slide 11 — Sinh Semantic Task từ chuỗi Operator
+## Slide 12 — Sinh Semantic Task từ chuỗi Operator
 
 Để tạo ra các tác vụ dài hạn có ý nghĩa nghiệp vụ, HSGE kết hợp 2 cơ chế:
 
@@ -169,7 +187,7 @@ Kết quả: từ **146 skill** phát hiện được, hệ thống tinh lọc t
 
 ---
 
-## Slide 12 — Kiểm định trực tuyến & Đóng gói SFT
+## Slide 13 — Kiểm định trực tuyến & Đóng gói SFT
 
 *(Điểm chuyển giao người trình bày)*
 
@@ -183,7 +201,7 @@ Nhờ dữ liệu đã sạch từ gốc, hệ thống tiến hành **Build tr�
 
 ---
 
-## Slide 13 — Thiết lập & Câu hỏi nghiên cứu
+## Slide 14 — Thiết lập & Câu hỏi nghiên cứu
 
 *(Người thứ 2 bắt đầu phần Thực nghiệm)*
 
@@ -199,7 +217,7 @@ Kính thưa Hội đồng, để đánh giá toàn diện hiệu quả của HSG
 
 ---
 
-## Slide 14 — CH1: Tự động tạo tác vụ & Quy mô dữ liệu
+## Slide 15 — CH1: Tự động tạo tác vụ & Quy mô dữ liệu
 
 Để trả lời **CH1**, Bảng 1 tổng hợp toàn bộ quy mô dữ liệu tự sinh của HSGE:
 
@@ -212,7 +230,7 @@ Kính thưa Hội đồng, để đánh giá toàn diện hiệu quả của HSG
 
 ---
 
-## Slide 15 — CH2: So sánh hiệu năng với các hệ thống SOTA
+## Slide 16 — CH2: So sánh hiệu năng với các hệ thống SOTA
 
 Để trả lời **CH2**, Bảng 2 so sánh hiệu năng của HSGE với các mô hình thương mại và mô hình mã nguồn mở:
 
@@ -223,7 +241,7 @@ Kính thưa Hội đồng, để đánh giá toàn diện hiệu quả của HSG
 
 ---
 
-## Slide 16 — CH2: So sánh Base và Fine-tuning theo Website
+## Slide 17 — CH2: So sánh Base và Fine-tuning theo Website
 
 Bóc tách sâu hơn về sự cải thiện trong CH2 qua Bảng 3:
 
@@ -236,7 +254,7 @@ Bóc tách sâu hơn về sự cải thiện trong CH2 qua Bảng 3:
 
 ---
 
-## Slide 17 — CH3: Hiệu quả chi phí trong tự động tạo dữ liệu
+## Slide 18 — CH3: Hiệu quả chi phí trong tự động tạo dữ liệu
 
 Trả lời **CH3** về tính khả thi kinh tế:
 
@@ -249,7 +267,7 @@ Trả lời **CH3** về tính khả thi kinh tế:
 
 ---
 
-## Slide 18 — Kết luận: Đóng góp chính & Hướng phát triển
+## Slide 19 — Kết luận: Đóng góp chính & Hướng phát triển
 
 Tổng kết lại, khóa luận mang lại 3 giá trị cốt lõi:
 
