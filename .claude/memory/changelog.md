@@ -6,6 +6,14 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **16:14** — `Thesis_report/Slide_KLTN_HSGE/sections/{01_gioithieu,02_baitoan,03_lienquan,04_phuongphap}.tex` — **Cut the text density of sections 1–4** (committee feedback: too many words; the slides should carry headings and bullet labels, with the explanation after each colon shortened or dropped since the presenter says it):
+  - Bullet/head text down **36% / 36% / 30% / 13%** per section. Explanations after the colon were compressed to a phrase or removed; numbers (the evidence) were all kept. Dropped two prose blocks in the method section that only restated their own frame title ("Câu hỏi cốt lõi", "Mục tiêu").
+  - **Three layout fixes so nothing sits lopsided after the cuts** — trimming text changes which blocks wrap, and that is what makes a two-column frame ragged:
+    1. The two 2×2 block frames in `02_baitoan.tex` are now built as **two row-wise `columns` environments** instead of two stacked columns, so the second row starts at the same height on both sides regardless of how the first row wraps (T2 was sitting a line below T4).
+    2. `03_lienquan.tex` block title "(C) Tự khám phá → train SLM" wrapped to two lines and pushed column (C)'s bullets below (A)/(B); all three titles now name the knowledge source and fit on one line, with "train SLM" moved into the bridge box.
+    3. `04_phuongphap.tex` contributions frame: the two `\head` titles wrapped, and the `\hfill(Tn)` challenge tags floated to the right edge of whatever line they landed on — heads shortened, tags changed to a trailing inline `\kw{[Tn]}`.
+  - **Verification**: `latexmk` clean — 0 errors, **0 Overfull/Underfull**, 52 pages / 24 frames unchanged; every trimmed frame (PDF pages 5, 10, 14, 18, 21, 24, 27, 29, 31, 33) rendered and inspected for column balance.
+
 - **15:52** — `Thesis_report/Slide_KLTN_HSGE/presentation_script.md` — **Rewrote the opening spoken script (slides 2–6) on the rhetorical arc of Go-Browse's abstract/intro** (`docs/go-browse.md`), paraphrased into Vietnamese rather than copied:
   - The hook is now "an agent dropped into a website it has never seen gets lost", the WebArena number is framed as evidence that **the gap does not close by using a bigger model** — what is missing is knowledge of the deployment environment — and the 6% vs 16% offline/online contrast is promoted from a footnote to the **evidence** for that claim (with a Shopee-vs-internal-system analogy in place of Go-Browse's Amazon one).
   - Related work is re-ordered by **source of knowledge** (Internet → own run history at inference → the environment itself) so groups A/B/C read as a progression instead of a list; Go-Browse's frontier/reuse idea is stated explicitly since it is the thesis's main baseline.

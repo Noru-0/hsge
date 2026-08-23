@@ -8,44 +8,38 @@
 \begin{frame}{Động lực: khoảng cách hiệu năng trên tác vụ web}
   \framesubtitle{Mô hình càng lớn càng tốt --- nhưng tốt tới đâu, và trả giá bằng gì?}
   \begin{columns}[t]
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<1->{
-        \head{Web agent: kỳ vọng và thực tế}
-        \begin{itemize}\ilist
-          \item \textbf{LLM phát triển} $\rightarrow$ thúc đẩy \textbf{web agent} tự động hóa thao tác trên trình duyệt.
-          \item Trên \textbf{WebArena} (benchmark website thực): agent dùng \textbf{GPT-4} chỉ đạt \kw{14,41\%}, trong khi con người đạt \kw{78,24\%}.
-          \item $\Rightarrow$ Năng lực tổng quát của LLM \kw{chưa đủ}; cần \kw{chuyên biệt hóa} theo môi trường triển khai.
-        \end{itemize}
+        \begin{block}{1. Thực tế: khoảng cách hiệu năng}
+          \begin{itemize}\ilist
+            \item \textbf{Kỳ vọng}: web agent tự hành theo lệnh ngôn ngữ tự nhiên.
+            \item \textbf{WebArena}: GPT-4 \kw{14,41\%} --- con người \kw{78,24\%}.
+            \item $\Rightarrow$ Mô hình tổng quát \kw{chưa đủ} $\rightarrow$ phải \kw{chuyên biệt hóa}.
+          \end{itemize}
+        \end{block}
       }
     \end{column}
 
     \hfill
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{block}{Vì sao không chỉ gọi LLM lớn qua API?}
-          \begin{itemize}\isub
-            \item \textbf{Chi phí} cao, \textbf{độ trễ} lớn khi chạy hàng loạt.
-            \item \textbf{Rủi ro riêng tư}: dữ liệu nội bộ rời khỏi tổ chức.
-          \end{itemize}
-        \end{block}
-      }
-
-      \gap
-      \uncover<3->{
-        \begin{block}{Hướng đi: SLM ${<}10$B chạy cục bộ}
-          \begin{itemize}\isub
-            \item Rẻ, chủ động, dữ liệu không ra ngoài; nhưng năng lực gốc yếu $\rightarrow$ \kw{bắt buộc fine-tune}.
-            \item $\Rightarrow$ Nút thắt chuyển từ \textbf{mô hình} sang \kw{dữ liệu huấn luyện}.
+        \begin{block}{2. Hướng đi: SLM cục bộ \& nút thắt}
+          \begin{itemize}\ilist
+            \item \textbf{Rào cản API lớn}: chi phí, độ trễ, riêng tư.
+            \item \textbf{SLM ${<}10$B cục bộ}: rẻ, tự chủ, bảo mật $\rightarrow$ \kw{bắt buộc fine-tune}.
+            \item $\Rightarrow$ Nút thắt dịch từ \textbf{mô hình} sang \kw{dữ liệu huấn luyện}.
           \end{itemize}
         \end{block}
       }
     \end{column}
   \end{columns}
 
-  \gap
+  \vspace{0.12cm}
   \uncover<3->{
-    \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
-      \scriptsize Nếu nút thắt là dữ liệu, thì \textbf{bài toán cần giải} là: lấy dữ liệu huấn luyện ở đâu cho một website cụ thể?
-    \end{beamercolorbox}
+    \begin{alertblock}{Nút thắt chuyển tiếp sang bài toán}
+      \centering \vspace{0.03cm}
+      {\scriptsize Nếu nút thắt là dữ liệu $\;\Longrightarrow\;$ \kw{\textbf{Lấy dữ liệu huấn luyện ở đâu cho từng website cụ thể?}}}
+      \vspace{0.03cm}
+    \end{alertblock}
   }
 \end{frame}
