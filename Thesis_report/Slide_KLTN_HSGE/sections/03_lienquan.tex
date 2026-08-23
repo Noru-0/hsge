@@ -7,36 +7,39 @@
 \subsection{Ba hướng tiếp cận hiện nay}
 \begin{frame}{Ba hướng tiếp cận hiện nay}
   \begin{columns}[t]
-    \begin{column}{0.31\textwidth}
+    \begin{column}{0.315\textwidth}
       \uncover<1->{
         \begin{block}{(A) Tri thức từ Internet}
           \begin{itemize}\ilist
-            \item \textbf{Synatra}, \textbf{AgentTrek}: tài liệu hướng dẫn $\rightarrow$ mẫu huấn luyện.
-            \item Replay trên trình duyệt thật để lấy trajectory mẫu.
+            \item \textbf{Synatra}, \textbf{AgentTrek}.
+            \item Dùng tài liệu/video ngoài để sinh trajectory mẫu.
+            \item Lệch môi trường mục tiêu.
           \end{itemize}
         \end{block}
       }
     \end{column}
 
     \hfill
-    \begin{column}{0.34\textwidth}
+    \begin{column}{0.325\textwidth}
       \uncover<2->{
         \begin{block}{(B) Skill dùng lúc suy luận}
           \begin{itemize}\ilist
-            \item \textbf{AWM}: đưa workflow lặp vào prompt, tăng từ \kw{23,5\% lên 35,5\%}.
-            \item \textbf{SkillWeaver}: đóng gói skill thành API.
+            \item \textbf{AWM}, \textbf{SkillWeaver}, \textbf{ASI}.
+            \item Trích workflow/API nhúng prompt cho LLM lớn.
+            \item Không cập nhật trọng số.
           \end{itemize}
         \end{block}
       }
     \end{column}
 
     \hfill
-    \begin{column}{0.34\textwidth}
+    \begin{column}{0.325\textwidth}
       \uncover<3->{
-        \begin{block}{(C) Tri thức từ môi trường}
+        \begin{block}{(C) Tự sinh từ môi trường}
           \begin{itemize}\ilist
-            \item \textbf{NNetNav}: gán nhãn hồi tố, 8B \kw{16,3\%}.
-            \item \textbf{Go-Browse}: khám phá $=$ tìm kiếm đồ thị, 7B 21,7\% (SOTA ${<}10$B).
+            \item \textbf{NNetNav}, \textbf{Go-Browse}.
+            \item Khám phá trực tiếp trên website để train SLM.
+            \item Go-Browse đạt \kw{21,7\%} (SOTA ${<}10$B).
           \end{itemize}
         \end{block}
       }
@@ -46,7 +49,7 @@
   \gap
   \uncover<3->{
     \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
-      \footnotesize Hướng (C) (học từ chính môi trường để train SLM) gần bài toán nhất $\;\Longrightarrow\;$ mốc so sánh chính.
+      \footnotesize Hướng (C) (tự khám phá trên môi trường thực để train SLM) gần bài toán nhất $\;\Longrightarrow\;$ mốc so sánh chính.
     \end{beamercolorbox}
   }
 \end{frame}
@@ -58,8 +61,8 @@
       \uncover<1->{
         \begin{block}{Hạn chế hướng (A) và (B)}
           \begin{itemize}\ilist
-            \item \textbf{(A)} Chặn bởi tài liệu sẵn có $\rightarrow$ chưa giải quyết \kw{T1}.
-            \item \textbf{(B)} Chỉ nạp prompt, không train SLM $\rightarrow$ còn \kw{T2, T4}.
+            \item \textbf{(A)} Lệch môi trường thật, không tự chủ $\rightarrow$ vướng \kw{T1, T2}.
+            \item \textbf{(B)} Chỉ nạp prompt cho LLM lớn, không train SLM $\rightarrow$ chi phí cao.
           \end{itemize}
         \end{block}
       }
@@ -70,8 +73,8 @@
       \uncover<2->{
         \begin{alertblock}{Khoảng trống nghiên cứu}
           \centering \vspace{0.04cm}
-          {\footnotesize Chưa công trình nào nối trọn ba mắt xích:}\\[0.12cm]
-          {\footnotesize \kw{Kiểm chứng} $\boldsymbol{\rightarrow}$ \kw{Ghép chuỗi} $\boldsymbol{\rightarrow}$ \kw{Train SLM}}
+          {\footnotesize Chưa công trình nào nối trọn chu trình:}\\[0.12cm]
+          {\footnotesize \kw{Khám phá} $\boldsymbol{\rightarrow}$ \kw{Kiểm chứng \& Ghép chuỗi} $\boldsymbol{\rightarrow}$ \kw{Train SLM}}
           \vspace{0.04cm}
         \end{alertblock}
       }
@@ -84,8 +87,8 @@
       \uncover<1->{
         \begin{block}{Hạn chế hướng (C)}
           \begin{itemize}\ilist
-            \item \textbf{Đồ thị 1 tầng}: tác vụ bó trong một trang $\rightarrow$ còn \kw{T4}.
-            \item \textbf{Tự khai báo}: dương tính giả dạy sai mô hình $\rightarrow$ còn \kw{T3}.
+            \item \textbf{Đồ thị 1 tầng}: sinh task bó trong một trang $\rightarrow$ vướng \kw{T4}.
+            \item \textbf{Tự khai báo}: dương tính giả dạy sai mô hình $\rightarrow$ vướng \kw{T3}.
           \end{itemize}
         \end{block}
       }
