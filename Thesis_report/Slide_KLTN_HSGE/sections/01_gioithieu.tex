@@ -4,8 +4,8 @@
 \section{Giới thiệu}
 %%% ============================================================
 
-\subsection{Bối cảnh: khoảng cách hiệu năng trên tác vụ web}
-\begin{frame}{Bối cảnh: khoảng cách hiệu năng trên tác vụ web}
+\subsection{Động lực: khoảng cách hiệu năng trên tác vụ web}
+\begin{frame}{Động lực: khoảng cách hiệu năng trên tác vụ web}
   \framesubtitle{Mô hình càng lớn càng tốt --- nhưng tốt tới đâu, và trả giá bằng gì?}
   \begin{columns}[t]
     \begin{column}{0.52\textwidth}
@@ -41,136 +41,11 @@
       }
     \end{column}
   \end{columns}
+
+  \gap
+  \uncover<3->{
+    \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
+      \scriptsize Nếu nút thắt là dữ liệu, thì \textbf{bài toán cần giải} là: lấy dữ liệu huấn luyện ở đâu cho một website cụ thể?
+    \end{beamercolorbox}
+  }
 \end{frame}
-
-\subsection{Thách thức dữ liệu \& các nghiên cứu liên quan}
-\begin{frame}{Thách thức thu thập dữ liệu và các nghiên cứu trước}
-  \framesubtitle{Lấy đâu ra trajectory để huấn luyện, khi không có người gán nhãn?}
-  \begin{columns}[t]
-    \begin{column}{0.40\textwidth}
-      \uncover<1->{
-        \head{Thách thức: chi phí dữ liệu}
-        \begin{itemize}\ilist
-          \item Gán nhãn tay: \textbf{AutoWebGLM} cần \kw{20 người $\times$ 1 tháng} cho ${\sim}10.000$ trajectory.
-          \item Mẫu tổng hợp rẻ hơn: \textbf{Synatra} chỉ tốn \kw{${\sim}3\%$} chi phí mỗi mẫu.
-          \item Nhưng dữ liệu \textbf{ngoại tuyến} không bám môi trường thật: \kw{6\%} (Synatra) so với \kw{16\%} (NNetNav) trên WebArena.
-        \end{itemize}
-      }
-    \end{column}
-
-    \hfill
-    \begin{column}{0.57\textwidth}
-      \uncover<2->{\head{Ba hướng nghiên cứu trước đây}}
-
-      \gap
-      \uncover<2->{
-        \begin{block}{(A) Tri thức gián tiếp $\rightarrow$ trajectory}
-          \scriptsize \textbf{Synatra}, \textbf{AgentTrek}: chuyển bài hướng dẫn / tài liệu trên Internet thành mẫu huấn luyện, replay trên trình duyệt thật.
-        \end{block}
-      }
-
-      \uncover<3->{
-        \begin{block}{(B) Bộ nhớ \& skill cho lúc suy luận}
-          \scriptsize \textbf{AWM}: trích workflow lặp lại, nhét vào prompt --- WebArena \kw{23,5\% $\rightarrow$ 35,5\%}. \textbf{SkillWeaver}: agent tự khám phá, đóng gói skill thành API tái sử dụng.
-        \end{block}
-      }
-
-      \uncover<4->{
-        \begin{block}{(C) Tự khám phá $\rightarrow$ dữ liệu huấn luyện SLM}
-          \scriptsize \textbf{NNetNav}: khám phá rồi gán nhãn hồi tố, 8B đạt \kw{16,3\%}. \textbf{Go-Browse}: khám phá như \textbf{tìm kiếm trên đồ thị} website, 7B đạt \kw{21,7\%} --- SOTA phân khúc ${<}10$B.
-        \end{block}
-      }
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\subsection{Hạn chế của các phương pháp trước \& bài toán đặt ra}
-\begin{frame}{Hạn chế của các phương pháp trước và bài toán đặt ra}
-  \framesubtitle{Khám phá được, nhưng tri thức thu về có tái sử dụng và ghép nối được không?}
-  \begin{columns}[t]
-    \begin{column}{0.49\textwidth}
-      \uncover<1->{
-        \begin{block}{Hạn chế của nghiên cứu trước}
-          \begin{itemize}\scriptsize\setlength{\itemsep}{3pt}
-            \item \textbf{(A) Tri thức gián tiếp}: Bị chặn bởi tài liệu sẵn có $\rightarrow$ không tự mở rộng.
-            \item \textbf{(B) Skill cho suy luận}: Chỉ trong prompt LLM lớn, \kw{không train SLM}; không ghép chuỗi.
-            \item \textbf{(C) Tự khám phá}: Đồ thị \kw{chỉ 1 tầng} $\rightarrow$ task bị bó hẹp trong 1 trang.
-          \end{itemize}
-        \end{block}
-      }
-
-      \vspace{0.06cm}
-      \uncover<2->{
-        \begin{block}{4 Thách thức cốt lõi}
-          \begin{itemize}\scriptsize\setlength{\itemsep}{2pt}
-            \item \textbf{Dữ liệu}: Gán nhãn tay đắt $\bullet$ Tri thức phân mảnh
-            \item \textbf{Kỹ thuật}: Dương tính giả $\bullet$ Khó ghép tác vụ dài
-          \end{itemize}
-        \end{block}
-      }
-    \end{column}
-
-    \hfill
-    \begin{column}{0.48\textwidth}
-      \uncover<3->{
-        \begin{block}{Câu hỏi bài toán}
-          \begin{itemize}\scriptsize\setlength{\itemsep}{3.5pt}
-            \item Làm sao \textbf{tự sinh dữ liệu} trên \kw{web mục tiêu} ($0$ nhãn người)?
-            \item Giúp \textbf{SLM cục bộ} đạt hiệu năng \kw{tiệm cận hoặc hơn LLM lớn}?
-          \end{itemize}
-        \end{block}
-      }
-
-      \vspace{0.06cm}
-      \uncover<4->{
-        \begin{alertblock}{Khoảng trống nghiên cứu}
-          \centering \vspace{0.04cm}
-          {\scriptsize Chưa có công trình nào kết nối trọn vẹn:}\\[0.12cm]
-          {\scriptsize \textbf{\kw{Kiểm chứng} $\boldsymbol{\rightarrow}$ \kw{Ghép chuỗi} $\boldsymbol{\rightarrow}$ \kw{Train SLM}}}
-          \vspace{0.04cm}
-        \end{alertblock}
-      }
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\subsection{Giải pháp HSGE: đóng góp \& định vị}
-\begin{frame}{Giải pháp HSGE và các đóng góp chính}
-  \framesubtitle{Tự động hóa toàn chu trình từ website đến mô hình SLM cục bộ}
-  \begin{columns}[t]
-    \begin{column}{0.49\textwidth}
-      \uncover<1->{
-        \head{Đóng góp Khoa học (Kiến trúc \& Thuật toán)}
-        \begin{itemize}\ilist
-          \item \textbf{Đồ thị hai tầng}: Kết hợp State Graph (POMDP) $\leftrightarrow$ Operator Graph (Options/STRIPS).
-          \item \textbf{Quy nạp \& Ghép chuỗi}: Tự động phát hiện skill, quy nạp operator và ghép chuỗi sinh task đa bước.
-        \end{itemize}
-      }
-    \end{column}
-    \hfill
-    \begin{column}{0.47\textwidth}
-      \uncover<2->{
-        \head{Đóng góp Thực tiễn (Sản phẩm \& Dữ liệu)}
-        \begin{itemize}\isub
-          \item \textbf{Dataset SFT}: 9.007 mẫu sạch trên 4 website ($0$ nhãn người).
-          \item \textbf{Mô hình HSGE-9B}: Đạt \kw{24,6\%} (vượt GPT-4o-mini).
-          \item \textbf{Kinh tế}: Chi phí chỉ \kw{\$0,0308}/trajectory (\kw{rẻ hơn 3,3$\times$} so với Go-Browse).
-        \end{itemize}
-      }
-
-      \gap
-      \uncover<3->{
-        \begin{block}{Phạm vi \& ứng dụng đích}
-          \begin{itemize}\isub
-            \item 1 website $\rightarrow$ 1 agent chuyên biệt, on-premise.
-            \item Tổng quát hóa: \kw{pipeline}, không phải \kw{model}.
-          \end{itemize}
-        \end{block}
-      }
-    \end{column}
-  \end{columns}
-\end{frame}
-
-
-
-

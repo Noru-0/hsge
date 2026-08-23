@@ -1,0 +1,94 @@
+% !TEX root = ../main.tex
+
+%%% ============================================================
+\section{Nghiên cứu liên quan}
+%%% ============================================================
+
+\subsection{Ba hướng tiếp cận hiện nay}
+\begin{frame}{Ba hướng tiếp cận hiện nay}
+  \framesubtitle{Cộng đồng đã giải quyết bài toán dữ liệu cho web agent như thế nào?}
+  \begin{columns}[t]
+    \begin{column}{0.32\textwidth}
+      \uncover<1->{
+        \begin{block}{(A) Tri thức gián tiếp $\rightarrow$ trajectory}
+          \begin{itemize}\isub
+            \item \textbf{Synatra}, \textbf{AgentTrek}: chuyển bài hướng dẫn / tài liệu trên Internet thành mẫu huấn luyện.
+            \item Replay lại trên trình duyệt thật để lấy trajectory.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+
+    \hfill
+    \begin{column}{0.32\textwidth}
+      \uncover<2->{
+        \begin{block}{(B) Bộ nhớ \& skill cho lúc suy luận}
+          \begin{itemize}\isub
+            \item \textbf{AWM}: trích workflow lặp lại rồi nhét vào prompt --- WebArena \kw{23,5\% $\rightarrow$ 35,5\%}.
+            \item \textbf{SkillWeaver}: agent tự khám phá, đóng gói skill thành API tái sử dụng.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+
+    \hfill
+    \begin{column}{0.32\textwidth}
+      \uncover<3->{
+        \begin{block}{(C) Tự khám phá $\rightarrow$ train SLM}
+          \begin{itemize}\isub
+            \item \textbf{NNetNav}: khám phá rồi gán nhãn hồi tố, 8B đạt \kw{16,3\%}.
+            \item \textbf{Go-Browse}: khám phá như \textbf{tìm kiếm trên đồ thị} website, 7B đạt \kw{21,7\%} --- SOTA phân khúc ${<}10$B.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+  \end{columns}
+
+  \gap
+  \uncover<3->{
+    \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
+      \scriptsize Hướng (C) bám môi trường thật và huấn luyện được SLM $\rightarrow$ gần bài toán của khóa luận nhất, và cũng là mốc so sánh chính.
+    \end{beamercolorbox}
+  }
+\end{frame}
+
+\subsection{Hạn chế và khoảng trống nghiên cứu}
+\begin{frame}{Hạn chế của các hướng trên và khoảng trống nghiên cứu}
+  \framesubtitle{Khám phá được, nhưng tri thức thu về có tái sử dụng và ghép nối được không?}
+  \begin{columns}[t]
+    \begin{column}{0.55\textwidth}
+      \uncover<1->{
+        \begin{block}{Hạn chế, đối chiếu với T1--T4}
+          \begin{itemize}\isub
+            \item \textbf{(A)} Bị chặn bởi tài liệu sẵn có, không tự mở rộng theo website $\rightarrow$ chưa giải được \kw{T1}.
+            \item \textbf{(B)} Skill chỉ nằm trong prompt của LLM lớn, \kw{không dùng để train SLM}; không ghép chuỗi $\rightarrow$ còn \kw{T2, T4}.
+            \item \textbf{(C)} Đồ thị khám phá \kw{chỉ một tầng} (trang $\leftrightarrow$ hành động) $\rightarrow$ tác vụ bó hẹp trong một trang, còn \kw{T4}.
+            \item \textbf{(B), (C)} Thành công phần lớn do agent \kw{tự khai báo}, không kiểm chứng lại $\rightarrow$ còn \kw{T3}.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+
+    \hfill
+    \begin{column}{0.42\textwidth}
+      \uncover<2->{
+        \begin{alertblock}{Khoảng trống nghiên cứu}
+          \centering \vspace{0.04cm}
+          {\scriptsize Chưa có công trình nào kết nối trọn vẹn ba mắt xích:}\\[0.12cm]
+          {\scriptsize \textbf{\kw{Kiểm chứng} $\boldsymbol{\rightarrow}$ \kw{Ghép chuỗi} $\boldsymbol{\rightarrow}$ \kw{Train SLM}}}
+          \vspace{0.04cm}
+        \end{alertblock}
+      }
+
+      \gap
+      \uncover<3->{
+        \begin{block}{Câu hỏi khóa luận đặt ra}
+          \begin{itemize}\isub
+            \item Làm sao \textbf{tự sinh dữ liệu} trên \kw{web mục tiêu} với $0$ nhãn người?
+            \item Giúp \textbf{SLM cục bộ} đạt hiệu năng \kw{tiệm cận hoặc vượt LLM lớn}?
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+  \end{columns}
+\end{frame}

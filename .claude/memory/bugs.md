@@ -672,6 +672,22 @@ Entry format:
 
 ## Fixed
 
+### Slide deck: "XIN CẢM ƠN HỘI ĐỒNG" title invisible (white on white)
+- **Status**: fixed (2026-08-23 15:33)
+- **Found**: 2026-08-23, while restructuring the deck -- rendering the closing
+  page of the *committed* `main.pdf` showed only the subtitle and the author
+  table; the two title lines were missing.
+- **Where**: `Thesis_report/Slide_KLTN_HSGE/sections/06_ketluan_qa.tex` (the
+  final `\begin{frame}[plain]`).
+- **Symptom**: the closing slide of the defense rendered with no visible
+  "XIN CẢM ƠN HỘI ĐỒNG" heading.
+- **Cause**: the line used `\usebeamercolor[fg]{title}`. In the `whale`
+  colortheme the `title` foreground is **white** (it normally sits on the dark
+  blue title bar), so on a `[plain]` frame -- which has a white background and
+  no bar -- it painted white text on white.
+- **Fix**: use `\color{structure.fg}` (the theme's dark blue) for both title
+  lines instead. Verified by rendering the page.
+
 ### `datasets/README.md` claimed the wrong file trained checkpoint-536
 - **Status**: fixed (2026-08-13 21:55)
 - **Found**: 2026-08-13, updating the root `README.md` to match the current

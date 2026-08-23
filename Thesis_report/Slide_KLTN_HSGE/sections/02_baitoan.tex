@@ -1,0 +1,110 @@
+% !TEX root = ../main.tex
+
+%%% ============================================================
+\section{Phát biểu bài toán}
+%%% ============================================================
+
+\subsection{Phát biểu bài toán và phạm vi}
+\begin{frame}{Phát biểu bài toán và phạm vi}
+  \framesubtitle{Một website mục tiêu, không một nhãn người --- cần ra được một agent chuyên biệt}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \uncover<1->{
+        \begin{block}{Bài toán}
+          \begin{itemize}\isub
+            \item \textbf{Đầu vào}: một \kw{website mục tiêu} (URL gốc + quyền truy cập), \kw{không có nhãn người}, không có sẵn bộ tác vụ.
+            \item \textbf{Đầu ra}: bộ dữ liệu huấn luyện (trajectory) và một \kw{SLM ${<}10$B} đã fine-tune thành agent chuyên biệt cho chính website đó.
+          \end{itemize}
+        \end{block}
+      }
+
+      \gap
+      \uncover<2->{
+        \begin{block}{Ràng buộc}
+          \begin{itemize}\isub
+            \item Ngân sách API ở mức \textbf{nhóm nghiên cứu nhỏ}.
+            \item Mô hình chạy \textbf{on-premise}: dữ liệu không rời tổ chức.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+
+    \hfill
+    \begin{column}{0.48\textwidth}
+      \uncover<3->{
+        \begin{block}{Tiêu chí đánh giá}
+          \begin{itemize}\isub
+            \item \textbf{WebArena}: 655 tác vụ trên 4 website thực (Shopping, Shopping Admin, GitLab, Reddit).
+            \item Chỉ số chính: \kw{Task Success Rate (Task SR)} --- kiểm tra bằng hàm chấm của benchmark.
+            \item Chỉ số phụ: \kw{chi phí API / trajectory}.
+          \end{itemize}
+        \end{block}
+      }
+
+      \gap
+      \uncover<4->{
+        \begin{block}{Phạm vi \& ứng dụng đích}
+          \begin{itemize}\isub
+            \item 1 website $\rightarrow$ 1 agent chuyên biệt, triển khai tại chỗ.
+            \item Tổng quát hóa ở mức \kw{quy trình (pipeline)}, không phải \kw{mô hình}.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\subsection{Bốn thách thức cốt lõi}
+\begin{frame}{Bốn thách thức cốt lõi của bài toán}
+  \begin{columns}[t]
+    \begin{column}{0.49\textwidth}
+      \uncover<1->{
+        \begin{block}{T1 --- Chi phí gán nhãn quá cao}
+          \begin{itemize}\isub
+            \item Gán nhãn tay: \textbf{AutoWebGLM} cần \kw{20 người $\times$ 1 tháng} cho ${\sim}10.000$ trajectory.
+            \item Sinh mẫu ngoại tuyến rẻ hơn (\textbf{Synatra} chỉ \kw{${\sim}3\%$} chi phí/mẫu) nhưng \kw{không bám môi trường thật}: \kw{6\%} so với \kw{16\%}.
+          \end{itemize}
+        \end{block}
+      }
+
+      \gap
+      \uncover<2->{
+        \begin{block}{T2 --- Tri thức thu được bị phân mảnh}
+          \begin{itemize}\isub
+            \item Trajectory thô là chuỗi thao tác rời rạc, \kw{không có đơn vị kỹ năng} để tái sử dụng.
+            \item Thao tác lặp lại ở nhiều trang vẫn bị coi là dữ liệu mới.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+
+    \hfill
+    \begin{column}{0.48\textwidth}
+      \uncover<3->{
+        \begin{block}{T3 --- Dương tính giả khi agent tự chấm}
+          \begin{itemize}\isub
+            \item Không có nhãn người $\rightarrow$ agent \kw{tự khai báo hoàn thành}.
+            \item Lời tự khai thường sai; dữ liệu bẩn sẽ \kw{dạy mô hình khai gian}.
+          \end{itemize}
+        \end{block}
+      }
+
+      \gap
+      \uncover<4->{
+        \begin{block}{T4 --- Khó ghép thành tác vụ dài}
+          \begin{itemize}\isub
+            \item Tác vụ tự sinh thường \kw{bó hẹp trong một trang} (tra cứu, điều hướng).
+            \item Thiếu cơ chế biết \textit{A xong thì làm được B} $\rightarrow$ không sinh được tác vụ nhiều bước.
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+  \end{columns}
+
+  \gap
+  \uncover<4->{
+    \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
+      \scriptsize Bốn thách thức này đã được cộng đồng tấn công tới đâu? $\rightarrow$ \textbf{Nghiên cứu liên quan}.
+    \end{beamercolorbox}
+  }
+\end{frame}

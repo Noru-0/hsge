@@ -6,6 +6,14 @@ Get the timestamp with `date "+%Y-%m-%d %H:%M"` — never guess it.
 
 ## 2026-08-23
 
+- **15:33** — `Thesis_report/Slide_KLTN_HSGE/{main.tex, sections/*, presentation_script.md, main.pdf}` — **Restructured the defense deck from 4 sections to the 6-section outline requested by the committee** (Giới thiệu/động lực → Phát biểu bài toán → Nghiên cứu liên quan → Phương pháp → Thực nghiệm → Kết luận & Hỏi đáp):
+  - **New files**: `sections/02_baitoan.tex` (problem statement + scope; four core challenges T1–T4) and `sections/03_lienquan.tex` (three approaches A/B/C; limitations mapped 1-to-1 onto T1–T4 + research gap).
+  - **Renamed** (`git mv`): `02_phuongphap` → `04_phuongphap`, `03_thucnghiem` → `05_thucnghiem`, `04_ketluan` → `06_ketluan_qa` (section retitled "Kết luận \& Hỏi đáp").
+  - **Moved** the "Giải pháp HSGE và các đóng góp chính" frame out of the introduction (committee feedback: the opening sections leaked method detail and results) to the head of the method section; its scope block moved into the new problem-statement frame. Sections 1–3 now contain no HSGE-specific term or number.
+  - **`main.tex`**: TOC two-column split `1-2`/`3-4` → `1-3`/`4-6`; `\AtBeginSection` hook now installed after section 1 and cleared before section 6, so the per-section outline frame count stays at 4 despite going from 4 to 6 sections.
+  - **`presentation_script.md`**: rewrote the header, duration table and slides 1–7 for the new order; renumbered slides 8–18; appendix table now uses PDF pages 45–52; removed a duplicated "Slide 11 - Thiết lập thực nghiệm" stub; stale CH1–CH4 → CH1–CH3.
+  - **Verification**: `latexmk -pdf` clean — 0 errors, **0 Overfull/Underfull** (an initial 7.2 pt overflow on the T1–T4 frame was fixed by trimming bullets and dropping its framesubtitle), 52 pages / 24 content frames; `main.toc` lists exactly the 6 sections in order with Phụ lục excluded; rendered pages 2/5/10/14/18/21/24/36/43/45 inspected visually.
+
 - **04:28** — `Thesis_report/thesis_hsge_vi/{Chapter4/chapter4.tex, main.pdf}` — **Added direct in-table citations for external baselines:**
   - Added `\cite{gandhi2026gobrowse}` directly into the header of `tab:backbone7b` (`Chapter4/chapter4.tex:891`).
   - Verified all comparative tables (`tab:related` L593, `tab:baseline` L530, `tab:novelty` L79, `tab:positioning` L429) have explicit `\cite{...}` tags directly on baseline rows and column headers.

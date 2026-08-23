@@ -14,14 +14,16 @@
   \footnotesize
   \begin{columns}[t]
     \begin{column}{0.48\textwidth}
-      \tableofcontents[sections={1-2}]
+      \tableofcontents[sections={1-3}]
     \end{column}
     \hfill
     \begin{column}{0.48\textwidth}
-      \tableofcontents[sections={3-4}]
+      \tableofcontents[sections={4-6}]
     \end{column}
   \end{columns}
 \end{frame}
+
+\input{sections/01_gioithieu}
 
 % Show outline before each section
 \AtBeginSection[]
@@ -30,22 +32,26 @@
     \footnotesize
     \begin{columns}[t]
       \begin{column}{0.48\textwidth}
-        \tableofcontents[sections={1-2},currentsection,hideothersubsections]
+        \tableofcontents[sections={1-3},currentsection,hideothersubsections]
       \end{column}
       \hfill
       \begin{column}{0.48\textwidth}
-        \tableofcontents[sections={3-4},currentsection,hideothersubsections]
+        \tableofcontents[sections={4-6},currentsection,hideothersubsections]
       \end{column}
     \end{columns}
   \end{frame}
 }
 
-\input{sections/01_gioithieu}
-\input{sections/02_phuongphap}
-\input{sections/03_thucnghiem}
-\input{sections/04_ketluan}
+\input{sections/02_baitoan}
+\input{sections/03_lienquan}
+\input{sections/04_phuongphap}
+\input{sections/05_thucnghiem}
 
-% --- Phụ lục: không hiện trong mục lục (mục lục chỉ liệt kê section 1-4),
+% Kết luận & Hỏi đáp: mục ngắn (2 frame) -- không chèn frame outline riêng.
+\AtBeginSection[]{}
+\input{sections/06_ketluan_qa}
+
+% --- Phụ lục: không hiện trong mục lục (mục lục chỉ liệt kê section 1-6),
 % không sinh frame outline, và không tính vào tổng số trang phần chính.
 \AtBeginSection[]{}
 \appendix
