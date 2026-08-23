@@ -42,8 +42,12 @@
 \setbeamertemplate{caption}[numbered]
 
 % Chuẩn hóa màu sắc và font chữ của Block
-\setbeamercolor{block title}{bg=structure.fg!15,fg=structure.fg!80!black}
+\setbeamercolor{block title}{bg=structure.fg!15,fg=black}
 \setbeamercolor{block body}{bg=structure.fg!5}
+\setbeamercolor{block title alerted}{bg=structure.fg!15,fg=black}
+\setbeamercolor{block body alerted}{bg=structure.fg!5}
+\setbeamercolor{block title example}{bg=structure.fg!15,fg=black}
+\setbeamercolor{block body example}{bg=structure.fg!5}
 \setbeamerfont{block title}{size=\small,series=\bfseries}
 \setbeamerfont{block body}{size=\scriptsize}
 
@@ -82,8 +86,8 @@
 % Caption line under a figure on a slide.
 \newcommand{\figcap}[1]{\vspace{0.08cm}{\scriptsize\itshape #1}}
 
-% Highlight for the key number of a slide.
-\newcommand{\kw}[1]{\textbf{\color{structure.fg}#1}}
+% Highlight for key numbers/terms: standard text formatting without automatic bolding or color
+\newcommand{\kw}[1]{#1}
 
 
 % ---------------------------------------------------------------
