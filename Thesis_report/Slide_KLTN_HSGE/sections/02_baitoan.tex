@@ -25,9 +25,9 @@
         \begin{hblock}{Phạm vi \& ứng dụng đích}{\bhB}
           \begin{itemize}\ilist
             \item $1$ website $\rightarrow$ $1$ agent chuyên biệt, tại chỗ.
-            \item Ngân sách API ở mức \kw{nhóm nghiên cứu nhỏ}.
+            \item Ngân sách API mức \kw{nhóm nhỏ}.
             \item Tổng quát hóa \kw{pipeline}, không phải mô hình.
-            \item Chỉ \kw{SFT/LoRA}, không dùng học tăng cường.
+            \item Chỉ \kw{SFT/LoRA}, không dùng RL.
           \end{itemize}
         \end{hblock}
       }
@@ -51,10 +51,10 @@
       \uncover<1->{
         \begin{hblock}{Nguồn: LLM mạnh sinh dữ liệu}{\bhG}
           \begin{itemize}\ilist
-            \item LLM mạnh (API) tự thao tác trên \kw{chính website mục tiêu}.
+            \item LLM mạnh (API) tự thao tác trên \kw{website mục tiêu}.
             \item Mỗi task giải xong $\rightarrow$ $1$ \kw{trajectory}: quan sát $\rightarrow$ hành động.
             \item \kw{Chưng cất}: trajectory của LLM $\rightarrow$ tập SFT dạy SLM.
-            \item Trả phí API \kw{một lần} lúc tạo dữ liệu; khi chạy chỉ còn SLM.
+            \item Trả phí API \kw{một lần}; khi chạy chỉ còn SLM.
           \end{itemize}
         \end{hblock}
       }

@@ -127,13 +127,17 @@
 % Block có chiều cao thân cố định: hai (hoặc ba) block đặt cạnh nhau
 % kết thúc cùng một đường ngang dù danh sách bên trong xuống dòng
 % khác số dòng. Dùng: \begin{hblock}{Tiêu đề}{2.0cm} ... \end{hblock}
+% `\linewidth` inside a beamer block is the FULL column width (the block
+% background is drawn wider than the text by colsep), so a line that happens to
+% fill it ends flush against the block border. Reserve a right inset.
+\newcommand{\bhinset}{0.9em}
 \newenvironment{hblock}[2]{%
-  \begin{block}{#1}\begin{minipage}[t][#2][t]{\linewidth}%
+  \begin{block}{#1}\begin{minipage}[t][#2][t]{\dimexpr\linewidth-\bhinset\relax}%
 }{%
   \end{minipage}\end{block}%
 }
 \newenvironment{halertblock}[2]{%
-  \begin{alertblock}{#1}\begin{minipage}[t][#2][t]{\linewidth}%
+  \begin{alertblock}{#1}\begin{minipage}[t][#2][t]{\dimexpr\linewidth-\bhinset\relax}%
 }{%
   \end{minipage}\end{alertblock}%
 }
@@ -141,9 +145,9 @@
 % Chiều cao thân block dùng chung cho từng hàng block ở phần 1-3
 % (đặt tập trung ở đây để tinh chỉnh một chỗ).
 \newcommand{\bhA}{2.45cm} % Sec.1 - Động lực (2 block)
-\newcommand{\bhB}{2.00cm} % Sec.2 - Phát biểu bài toán (2 block)
-\newcommand{\bhC}{1.35cm} % Sec.2 - Bốn thách thức (4 block)
-\newcommand{\bhG}{3.20cm} % Sec.2 - Nguon & dang du lieu (2 block)
-\newcommand{\bhD}{2.10cm} % Sec.3 - Ba hướng tiếp cận (3 block)
-\newcommand{\bhE}{1.35cm} % Sec.3 - Hạn chế, hàng trên
+\newcommand{\bhB}{2.25cm} % Sec.2 - Phát biểu bài toán (2 block)
+\newcommand{\bhC}{1.50cm} % Sec.2 - Bốn thách thức (4 block)
+\newcommand{\bhG}{3.35cm} % Sec.2 - Nguon & dang du lieu (2 block)
+\newcommand{\bhD}{2.25cm} % Sec.3 - Ba hướng tiếp cận (3 block)
+\newcommand{\bhE}{1.55cm} % Sec.3 - Hạn chế, hàng trên
 \newcommand{\bhF}{1.70cm} % Sec.3 - Hạn chế, hàng dưới
