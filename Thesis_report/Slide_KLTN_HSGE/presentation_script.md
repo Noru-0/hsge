@@ -187,7 +187,7 @@ giải quyết được" — đó là điều slide này đang phản bác.
 > quát hóa ở đây là **quy trình**, không phải **mô hình**: cùng một pipeline đem sang website
 > khác thì sinh ra agent của website đó.
 
-**Câu chốt:** Bài toán là _sinh dữ liệu và huấn luyện agent cho **một** website cụ thể, với **0 nhãn người**_ — và thứ tổng quát hóa là **pipeline, không phải model**.
+**Câu chốt:** Bài toán là _sinh dữ liệu và huấn luyện agent cho **một** website cụ thể, với **0 nhãn con người**_ — và thứ tổng quát hóa là **pipeline, không phải model**.
 
 **Câu chốt phụ (bắt buộc nói, đừng đợi bị hỏi):** người dùng đích là nhóm vận hành một tập
 website cố định, cần agent chạy tại chỗ — không phải người cần một model dùng cho mọi trang.
@@ -328,7 +328,7 @@ miền, khóa luận **không** giải và **không** đo.
 >
 > Gom lại: từng mắt xích đều có người làm, nhưng **chưa công trình nào nối trọn cả ba** —
 > **kiểm chứng kỹ năng → ghép tác vụ dài → huấn luyện mô hình nhỏ**. Từ đó câu hỏi của khóa
-> luận là: làm sao tự sinh dữ liệu ngay trên website mục tiêu, **0 nhãn người**, để mô hình
+> luận là: làm sao tự sinh dữ liệu ngay trên website mục tiêu, **0 nhãn con người**, để mô hình
 > nhỏ chạy cục bộ đạt hiệu năng tiệm cận hoặc vượt LLM lớn trên chính các trang đó?
 
 **Bản đầy đủ (nền tảng — nắm ý, và dùng khi Hội đồng hỏi sâu):**

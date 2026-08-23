@@ -23,7 +23,7 @@
       \uncover<2->{
         \head{Đóng góp Thực tiễn}
         \begin{itemize}\ilist
-          \item \textbf{Dataset SFT}: \kw{9.007 mẫu} / 4 website, \kw{0 nhãn người}. \kw{[T1]}
+          \item \textbf{Dataset SFT}: \kw{9.007 mẫu} / 4 website, \kw{0 nhãn con người}. \kw{[T1]}
           \item \textbf{HSGE-9B}: đạt \kw{24,6\%} (vượt GPT-4o-mini).
           \item \textbf{Kinh tế}: \kw{\$0,0308}/trajectory (\kw{rẻ hơn 3,3$\times$}).
         \end{itemize}
@@ -34,7 +34,7 @@
   \gap
   \uncover<2->{
     \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
-      \scriptsize Phần còn lại của mục này: bốn thách thức \textbf{T1--T4} được giải quyết trong một quy trình khép kín.
+      \footnotesize Phần còn lại của mục này: bốn thách thức \textbf{T1--T4} được giải quyết trong một quy trình khép kín.
     \end{beamercolorbox}
   }
 \end{frame}
@@ -42,50 +42,54 @@
 \subsection{Tổng quan kiến trúc pipeline}
 \begin{frame}{Tổng quan pipeline HSGE}
   \begin{center}
-    \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{fig_pipeline.pdf}
+    \includegraphics[width=\linewidth,height=0.86\textheight,keepaspectratio]{fig_pipeline.pdf}
   \end{center}
   \vspace{-0.1cm}
   \begin{center}
-    \scriptsize
+    \footnotesize
     \kw{Frontier} $\xrightarrow{\text{duyệt}}$ \textbf{Explorer/Solver} $\xrightarrow{\text{quy nạp}}$ \kw{Skill/Operator} $\xrightarrow{\text{ghép chuỗi}}$ \textbf{Semantic Task} $\xrightarrow{\text{lọc online}}$ \kw{Dataset SFT}
   \end{center}
 \end{frame}
 
 \subsection{Biểu diễn tri thức: Đồ thị hai tầng}
 \begin{frame}{Biểu diễn: đồ thị hai tầng}
-  \begin{columns}[c]
-    \begin{column}{0.54\textwidth}
-      \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{fig_twolevel.pdf}
-    \end{column}
-    \hfill
-    \begin{column}{0.43\textwidth}
-      \uncover<1->{
-        \head{Hai tầng biểu diễn tri thức}
-      }
-      \vspace{0.08cm}
-      \uncover<2->{
+  \begin{center}
+    \includegraphics[width=0.95\linewidth,height=0.48\textheight,keepaspectratio]{fig_twolevel.pdf}
+  \end{center}
+  \vspace{-0.15cm}
+  \uncover<1->{
+    \head{Hai tầng biểu diễn tri thức}
+  }
+  \vspace{-0.1cm}
+  \uncover<2->{
+    \begin{columns}[t]
+      \begin{column}{0.48\textwidth}
         \begin{itemize}\ilist
           \item \textbf{Tầng thấp}: State Graph (lưu vết duyệt web).
           \item \textbf{Tầng cao}: Operator Graph (kỹ năng có \kw{Precondition} \& \kw{Effect}).
+        \end{itemize}
+      \end{column}
+      \hfill
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}\ilist
           \item \textbf{Ghép nối}: $\text{Effect}_A \models \text{Pre}_B \Rightarrow$ tác vụ dài.
           \item \textbf{Ưu thế}: \kw{tái sử dụng \& tái tổ hợp}.
         \end{itemize}
-      }
-
-    \end{column}
-  \end{columns}
+      \end{column}
+    \end{columns}
+  }
 \end{frame}
 
 \subsection{Phát hiện Skill \& Quy nạp Operator}
 \begin{frame}{Phát hiện skill và quy nạp operator}
   \begin{columns}[c]
-    \begin{column}{0.38\textwidth}
-      \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{fig_discovery.pdf}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{fig_discovery.pdf}
     \end{column}
     \hfill
-    \begin{column}{0.58\textwidth}
+    \begin{column}{0.50\textwidth}
       \uncover<1->{
-        \head{4 bước phát hiện skill (từ trajectory thành công)}
+        \head{4 bước phát hiện skill}
         \begin{enumerate}\ilist
           \item \textbf{Phân cắt}: đổi URL \& tụt tương đồng AXTree.
           \item \textbf{Gom cụm}: phi tham số (ngưỡng cosine).
@@ -110,12 +114,12 @@
 
 \subsection{Sinh Semantic Task từ chuỗi Operator}
 \begin{frame}{Sinh semantic task: ghép chuỗi operator}
-  \begin{columns}[c]
-    \begin{column}{0.52\textwidth}
-      \includegraphics[width=\linewidth,height=0.66\textheight,keepaspectratio]{fig_semantic.pdf}
-    \end{column}
-    \hfill
-    \begin{column}{0.45\textwidth}
+  \begin{center}
+    \includegraphics[width=0.95\linewidth,height=0.46\textheight,keepaspectratio]{fig_semantic.pdf}
+  \end{center}
+  \vspace{-0.15cm}
+  \begin{columns}[t]
+    \begin{column}{0.48\textwidth}
       \uncover<1->{
         \head{Hai cơ chế sinh tác vụ nhiều bước}
         \begin{itemize}\ilist
@@ -123,11 +127,12 @@
           \item \textbf{Top-down}: seed từ chức năng tổng quan website.
         \end{itemize}
       }
-
-      \vspace{0.08cm}
+    \end{column}
+    \hfill
+    \begin{column}{0.48\textwidth}
       \uncover<2->{
         \begin{alertblock}{Kết quả thực thi}
-          \scriptsize Sinh \kw{142 task} (130 seed + 12 chuỗi) $\rightarrow$ \kw{71 task thành công}.
+          \footnotesize Sinh \kw{142 task} (130 seed + 12 chuỗi) $\rightarrow$ \kw{71 task thành công}.
         \end{alertblock}
       }
     \end{column}
@@ -137,19 +142,18 @@
 \subsection{Kiểm định trực tuyến \& Đóng gói SFT}
 \begin{frame}{Kiểm định trực tuyến và đóng gói SFT}
   \begin{columns}[c]
-    \begin{column}{0.34\textwidth}
-      \includegraphics[width=\linewidth,height=0.74\textheight,keepaspectratio]{fig_curation.pdf}
+    \begin{column}{0.46\textwidth}
+      \includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{fig_curation.pdf}
     \end{column}
     \hfill
-    \begin{column}{0.62\textwidth}
+    \begin{column}{0.52\textwidth}
       \uncover<1->{
-        \head{Kiểm soát chất lượng trực tuyến (Online Gates)}
+        \head{Kiểm soát chất lượng (Online Gates)}
         \begin{itemize}\ilist
           \item \textbf{Online LLM Judge}: chấm lại trang đích $\rightarrow$ loại \kw{801 episode (27,4\%)}.
           \item \textbf{Effective Action}: loại task không đổi trạng thái $\rightarrow$ \kw{1760 trajectory sạch}.
         \end{itemize}
       }
-
 
       \vspace{0.08cm}
       \uncover<2->{
