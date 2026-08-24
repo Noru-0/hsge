@@ -27,9 +27,9 @@ Bài trình bày của nhóm gồm sáu nội dung chính:
 
 ## Slide 2 — Động lực của khóa luận
 
-Động lực của khoá luận xuất phát từ định hướng nghiên cứu mà thầy Vũ đặt ra: 
+Kính thưa Hội đồng. Khóa luận của nhóm bắt nguồn từ định hướng nghiên cứu mà thầy hướng dẫn đặt ra: xây dựng một **tác nhân có thể tự thực hiện các tác vụ trên web**, hướng tới những ứng dụng thiết thực như **tự động hóa quy trình nghiệp vụ** và **kiểm thử phần mềm**.
 
-Kính thưa Hội đồng. Những năm gần đây, sự bùng nổ của các **Mô hình Ngôn ngữ Lớn (LLM)** đã tạo ra bước ngoặt lớn về năng lực hiểu ngôn ngữ và suy luận logic.
+Đây cũng là hướng đi đang được cộng đồng đặc biệt quan tâm. Những năm gần đây, sự bùng nổ của các **Mô hình Ngôn ngữ Lớn (LLM)** đã tạo ra bước ngoặt lớn về năng lực hiểu ngôn ngữ và suy luận logic.
 
 Dựa trên nền tảng đó, cộng đồng nghiên cứu đã phát triển các **tác nhân tự hành (LLM-based Agent)**, nổi bật nhất là **Web Agent** — có khả năng nhận chỉ thị bằng ngôn ngữ tự nhiên từ người dùng, tự động lập kế hoạch và tương tác với trình duyệt để hoàn thành các tác vụ thực tế.
 
