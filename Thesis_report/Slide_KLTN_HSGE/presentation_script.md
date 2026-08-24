@@ -102,16 +102,16 @@ Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục ti�
 
 ## Slide 7 — Hạn chế và khoảng trống nghiên cứu
 
-Đối chiếu lại 3 hướng tiếp cận với 4 thách thức T1–T4:
+Đối chiếu ba hướng vừa nêu với bốn thách thức T1–T4:
 
-- **Hạn chế của hướng (A) & (B):** Hướng (A) vướng **T1, T2** do phụ thuộc tài liệu ngoài. Hướng (B) chỉ nạp prompt cho LLM lớn, không giải quyết bài toán train SLM cục bộ.
-- **Hạn chế của hướng (C):** Go-Browse có đồ thị nhưng **chỉ dừng ở 1 tầng (State Graph)**, các task đề xuất bị bó hẹp trong từng trang riêng lẻ $\rightarrow$ vướng **T4**. Đồng thời, cả (B) và (C) vẫn tin vào lời tự khai của agent $\rightarrow$ vấn đề dương tính giả **T3** vẫn còn nguyên.
+- **Hướng (A)** dựa vào tài liệu ngoài nên lệch môi trường thật và không tự chủ $\rightarrow$ vướng **T1, T2**.
+- **Hướng (B)** chỉ nạp workflow vào prompt của LLM lớn, không cập nhật trọng số nên không dùng được cho SLM cục bộ, và vẫn tin vào lời tự khai của agent $\rightarrow$ vướng **T3**.
+- **Hướng (C)** gần bài toán nhất vì tự khám phá web thật, nhưng đồ thị chỉ **một tầng** nên tác vụ bó trong từng trang $\rightarrow$ vướng **T4**; đồng thời cũng chấm điểm bằng lời tự khai $\rightarrow$ vướng **T3**.
 
-- **Khoảng trống nghiên cứu:** Chưa có công trình nào kết nối trọn vẹn chu trình 3 mắt xích:
-  $$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longrightarrow \text{Huấn luyện SLM}$$
+**Khoảng trống nghiên cứu:** Chưa có công trình nào nối trọn ba mắt xích:
+$$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longrightarrow \text{Huấn luyện SLM}$$
 
-- **Câu hỏi nghiên cứu của khóa luận:**
-  *Làm thế nào để tự động sinh dữ liệu huấn luyện ngay trên website mục tiêu với **0 nhãn con người**, giúp một **SLM cục bộ đạt hiệu năng tiệm cận hoặc vượt LLM lớn** trên chính các trang đó?*
+Đó chính là chỗ HSGE đứng vào, và bốn thách thức này sẽ được giải quyết lần lượt trong phần phương pháp sau đây.
 
 ---
 
