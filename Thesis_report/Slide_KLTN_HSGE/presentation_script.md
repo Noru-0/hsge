@@ -2,7 +2,7 @@
 
 **Thời lượng:** 15 phút trình bày + 15 phút hỏi đáp.
 **Cấu trúc deck:** 26 trang nội dung (19 slide thuyết trình chính + 1 slide cảm ơn/Q&A + mục lục) và 8 slide phụ lục (chỉ mở khi Hội đồng hỏi sâu).
-**Phân chia:** 
+**Phân chia:**
 - **Người 1 (Slide 1–13):** Giới thiệu, Động lực, Phát biểu bài toán, Nghiên cứu liên quan, Phương pháp HSGE.
 - **Người 2 (Slide 14–19):** Thiết lập thực nghiệm, Kết quả 3 Câu hỏi nghiên cứu (CH1, CH2, CH3), Kết luận & Hướng phát triển.
 - **Điểm chuyển giao:** Sau Slide 13 (kết thúc phần Phương pháp, chuyển sang Thực nghiệm).
@@ -26,6 +26,8 @@ Bài trình bày của nhóm gồm sáu nội dung chính:
 ---
 
 ## Slide 2 — Động lực của khóa luận
+
+Động lực của khoá luận xuất phát từ định hướng nghiên cứu mà thầy Vũ đặt ra: 
 
 Kính thưa Hội đồng. Những năm gần đây, sự bùng nổ của các **Mô hình Ngôn ngữ Lớn (LLM)** đã tạo ra bước ngoặt lớn về năng lực hiểu ngôn ngữ và suy luận logic.
 
@@ -133,33 +135,38 @@ $$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longr
 
 ## Slide 9 — Tổng quan pipeline HSGE
 
-Toàn bộ phương pháp vận hành như **một vòng lặp khép kín, lặp trên từng trang web**. Em xin mô tả **một vòng** diễn ra cụ thể như thế nào.
+Toàn bộ phương pháp là **một vòng lặp khép kín gồm bốn khâu**, chạy trên chính website mục tiêu và không có con người trong vòng lặp.
 
-**Bước 1 — Chọn trang để khám phá.** Hệ thống duy trì một **Frontier** — hàng đợi ưu tiên các URL đã biết, khởi đầu chỉ có trang chủ của website. Mỗi vòng, agent lấy ra một URL và mở nó bằng **trình duyệt thật** (Playwright/Chromium); trạng thái trang được đọc dưới dạng **cây khả truy cập AXTree**, tức danh sách các phần tử kèm mã định danh mà agent có thể thao tác.
+1. **Khám phá tự hành.** Agent đi từng trang một: Explorer sinh tác vụ *ngay tại trang đang mở*, Solver thao tác trên trình duyệt thật để giải, và mọi thành công tự khai đều bị Judge soi lại trước khi được ghi nhận. Đầu ra của khâu này là các **trajectory** — chuỗi xen kẽ quan sát và hành động.
+2. **Phát hiện skill & quy nạp operator.** Các trajectory được cắt đoạn và gom cụm; đoạn thao tác nào lặp lại đủ số lần sẽ được trừu tượng hóa thành **skill**, rồi quy nạp thành **operator** có tiền điều kiện và hiệu ứng tường minh.
+3. **Ghép semantic task.** Khi hiệu ứng của operator này khớp tiền điều kiện của operator kia, hệ thống nối chúng lại thành **tác vụ đa bước** — thứ mà việc sinh tác vụ tại chỗ ở khâu 1 không bao giờ tạo ra được.
+4. **Đóng gói SFT.** Các trajectory đã qua kiểm định được đóng gói thành tập dữ liệu huấn luyện, dùng đúng định dạng prompt mà agent sẽ gặp lúc suy luận.
 
-**Bước 2 — Sinh tác vụ ngay tại trang đó.** **Explorer** nhìn vào đúng trang đang mở và đề xuất tối đa **9 tác vụ cụ thể**, mỗi tác vụ được phân loại **INFO** (tra cứu thông tin), **NAV** (điều hướng) hoặc **MOD** (làm thay đổi trạng thái). Vì tác vụ sinh ra *từ chính giao diện đang thấy*, nó luôn khả thi trên website này — đây là điểm khác căn bản so với việc lấy kịch bản từ tài liệu ngoài.
+Điểm mấu chốt là **đường phản hồi nét đứt** trong hình: đồ thị operator tích lũy được ở khâu 2 và 3 quay lại **định hướng cho vòng khám phá tiếp theo**, nên hệ thống tự nâng dần độ khó của dữ liệu thay vì mãi sinh ra các thao tác một bước.
 
-**Bước 3 — Giải từng tác vụ và ghi lại vết.** **Solver** hoạt động theo cơ chế **ReAct**: mỗi bước nó nhận mục tiêu, AXTree hiện tại, lỗi của hành động trước và lịch sử, rồi sinh ra một cặp *suy luận + hành động* như `click`, `fill`, `goto`; hành động được thực thi thật trên trình duyệt và trang mới lại quay về làm đầu vào cho bước kế tiếp. Ngân sách **15 bước** cho tác vụ thường và **25 bước** cho tác vụ đa bước; hệ thống tự cắt sớm nếu agent lặp lại một thao tác vô ích. Chuỗi các bước này chính là **một trajectory**.
-
-**Bước 4 — Kiểm chứng ngay lúc chạy, rồi mở rộng Frontier.** Mỗi tác vụ agent tự nhận là xong đều bị **LLM Judge soi lại trang đích** — không đạt thì bị hạ thành thất bại và **không** được đưa vào dữ liệu. Tác vụ đạt sẽ được **giải lại lần hai từ trang chủ**, để trajectory chứa cả phần điều hướng tới trang chứ không chỉ thao tác cuối. Sau đó, Frontier được nạp thêm: **những URL agent thực sự đã đi qua** khi giải tác vụ, cộng với **các liên kết khai thác trực tiếp trên trang**; mỗi *dạng URL* chỉ nhận tối đa 3 trang để hàng chục nghìn trang chi tiết cùng khuôn không làm ngập hàng đợi. Vòng lặp quay lại Bước 1 với trang tiếp theo.
-
-**Bước 5 — Tích lũy tri thức và nâng cấp độ khó.** Song song, các trajectory thành công được **cắt đoạn, gom cụm**; một đoạn thao tác lặp lại đủ số lần sẽ được **trừu tượng hóa thành SkillCard**, rồi **quy nạp thành Operator** có tiền điều kiện và hiệu ứng tường minh. Khi hiệu ứng của operator này khớp tiền điều kiện của operator kia, hệ thống **ghép chuỗi** chúng thành **tác vụ đa bước có ngữ nghĩa** — thứ mà bước sinh tác vụ tại chỗ ở Bước 2 không bao giờ tạo ra được. Đây chính là đường phản hồi nét đứt trong hình: **đồ thị operator định hướng cho vòng khám phá tiếp theo**.
-
-**Kết quả của vòng lặp này** trên 4 website: **455 trang** được khám phá, **3.981 lượt thử**, đọng lại **146 skill** và **57 operator**, **142 tác vụ đa bước**, và cuối cùng là **1.760 trajectory sạch** được đóng gói thành **9.007 mẫu SFT** — hoàn toàn không có nhãn con người ở bất kỳ khâu nào.
+**Sau đây em xin phóng to từng khâu, bắt đầu từ khâu khám phá tự hành.**
 
 ---
 
-## Slide 10 — Đồ thị hai tầng
+## Slide 10 — Khám phá tự hành: một vòng lặp trên một trang
 
-Cốt lõi biểu diễn tri thức của HSGE là **cấu trúc đồ thị hai tầng**:
+Slide này phóng to **hộp số 1 của pipeline**. Một vòng lặp tại một trang gồm năm bước:
 
-- **Tầng thấp — State Graph:** Lưu vết duyệt web thực tế, với node là trạng thái trang DOM/URL và cạnh là các hành động điều hướng.
-- **Tầng cao — Operator Graph:** Mỗi node là một Operator đại diện cho một kỹ năng chuẩn hóa gồm **Điều kiện đầu vào (Precondition)** và **Kết quả đạt được (Effect)**.
+1. **Lấy trang:** lấy một URL ra khỏi Frontier, mở bằng trình duyệt thật và đọc trạng thái dưới dạng AXTree.
+2. **Sinh task:** Explorer đề xuất tối đa 9 tác vụ **từ chính trang đang mở**, phân loại INFO / NAV / MOD — nên tác vụ luôn khả thi trên website này.
+3. **Giải task:** Solver chạy theo cơ chế ReAct với ngân sách 15 bước, hoặc 25 bước cho tác vụ đa bước.
+4. **Kiểm định:** LLM Judge soi lại trang đích của mọi tác vụ agent tự nhận là xong; tác vụ đạt còn được **giải lại một lần nữa từ trang gốc** để trajectory có cả phần điều hướng.
+5. **Mở rộng Frontier:** nạp thêm các URL agent thực sự đã đi qua và các liên kết khai thác được trên trang, rồi quay lại bước 1.
 
-**Nguyên lý ghép nối:** Khi Effect của Operator A thỏa mãn Precondition của Operator B ($\text{Effect}_A \models \text{Pre}_B$), hệ thống tự động tạo một cạnh chuyển tiếp.
-*Ví dụ:* Kỹ năng "Tìm kiếm sản phẩm" sinh ra kết quả "Đang ở trang chi tiết". Kết quả này thỏa mãn điều kiện cần của kỹ năng "Thêm vào giỏ hàng" $\rightarrow$ Hệ thống tự động ghép thành tác vụ mua hàng hoàn chỉnh.
+Vấn đề của một vòng lặp tự hành là **thoái hóa** — đi mãi trong một vùng, làm mãi một thao tác. Hệ thống có bốn chốt chặn:
+- **Node trùng:** băm nội dung AXTree, loại **71 trên 455** node có nội dung y hệt dù khác URL.
+- **Lặp thao tác:** dừng cứng khi agent tác động vào cùng một đối tượng mà trang không hề đổi.
+- **Bão hòa:** mỗi *khuôn dạng* URL chỉ nhận tối đa 3 trang, để hàng chục nghìn trang chi tiết cùng khuôn không làm ngập hàng đợi.
+- **Task trùng:** Explorer nhớ các tác vụ đã đề xuất và loại các bản gần trùng.
 
-Nhờ đó, tri thức thu được mang tính **tái sử dụng và tái tổ hợp** vượt bậc.
+**Kết quả trên 4 website:** 455 trang được khám phá, 3.981 lượt thử, đọng lại 2.117 trajectory hợp lệ — tỷ lệ 53,2%.
+
+*(Nếu Hội đồng hỏi về biểu diễn tri thức hai tầng State Graph / Operator Graph — mở **PL12**.)*
 
 ---
 
@@ -304,3 +311,4 @@ Em xin chân thành cảm ơn Quý Thầy Cô trong Hội đồng đã chú ý l
 | **Skill là gì, operator là gì, trông ra sao?** | **PL9** |
 | **Explorer / Solver / Judge nhận gì, trả ra gì?** | **PL10** |
 | **Một mẫu dữ liệu SFT trông ra sao?** | **PL11** |
+| **Đồ thị hai tầng biểu diễn tri thức thế nào?** | **PL12** |

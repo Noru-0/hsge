@@ -23,6 +23,7 @@
     \textbf{PL9} & Skill và Operator: là gì, dạng ra sao, dùng để làm gì \\
     \textbf{PL10} & Các agent trong pipeline: đầu vào và đầu ra \\
     \textbf{PL11} & Dạng một mẫu dữ liệu SFT (prompt parity) \\
+    \textbf{PL12} & Biểu diễn tri thức: đồ thị hai tầng \\
   \end{tabular}
   \vfill
 \end{frame}
@@ -437,6 +438,29 @@
 
       \vspace{0.06cm}
       {\scriptsize Nhờ prompt parity, mô hình sau fine-tune \kw{cắm thẳng} lại vào đúng vòng lặp Solver, không cần lớp chuyển đổi nào.\par}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%%% ---------------------------------------------------------------
+\begin{frame}{PL12 - Biểu diễn tri thức: đồ thị hai tầng}
+  \begin{center}
+    \includegraphics[width=0.95\linewidth,height=0.46\textheight,keepaspectratio]{fig_twolevel.pdf}
+  \end{center}
+  \vspace{-0.15cm}
+  \begin{columns}[t]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}\ilist
+        \item \textbf{Tầng thấp}: State Graph (lưu vết duyệt web).
+        \item \textbf{Tầng cao}: Operator Graph (kỹ năng có \kw{Precondition} \& \kw{Effect}).
+      \end{itemize}
+    \end{column}
+    \hfill
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}\ilist
+        \item \textbf{Ghép nối}: $\text{Effect}_A \models \text{Pre}_B \Rightarrow$ tác vụ dài.
+        \item \textbf{Ưu thế}: \kw{tái sử dụng \& tái tổ hợp}.
+      \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}

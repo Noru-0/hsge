@@ -51,32 +51,43 @@
   \end{center}
 \end{frame}
 
-\subsection{Biểu diễn tri thức: Đồ thị hai tầng}
-\begin{frame}{Biểu diễn: đồ thị hai tầng}
-  \begin{center}
-    \includegraphics[width=0.95\linewidth,height=0.48\textheight,keepaspectratio]{fig_twolevel.pdf}
-  \end{center}
-  \vspace{-0.15cm}
-  \uncover<1->{
-    \head{Hai tầng biểu diễn tri thức}
-  }
-  \vspace{-0.1cm}
-  \uncover<2->{
-    \begin{columns}[t]
-      \begin{column}{0.48\textwidth}
-        \begin{itemize}\ilist
-          \item \textbf{Tầng thấp}: State Graph (lưu vết duyệt web).
-          \item \textbf{Tầng cao}: Operator Graph (kỹ năng có \kw{Precondition} \& \kw{Effect}).
-        \end{itemize}
-      \end{column}
-      \hfill
-      \begin{column}{0.48\textwidth}
-        \begin{itemize}\ilist
-          \item \textbf{Ghép nối}: $\text{Effect}_A \models \text{Pre}_B \Rightarrow$ tác vụ dài.
-          \item \textbf{Ưu thế}: \kw{tái sử dụng \& tái tổ hợp}.
-        \end{itemize}
-      \end{column}
-    \end{columns}
+\subsection{Khám phá tự hành}
+\begin{frame}{Khám phá tự hành: một vòng lặp trên một trang}
+  \begin{columns}[onlytextwidth,t]
+    \begin{column}{0.585\textwidth}
+      \uncover<1->{
+        \begin{hblock}{Năm bước của một vòng lặp}{\bhH}
+          \begin{enumerate}\ilist
+            \item \textbf{Lấy trang}: pop URL khỏi \kw{Frontier}, mở browser, đọc \kw{AXTree}.
+            \item \textbf{Sinh task}: Explorer đề xuất $\le 9$ task \kw{từ chính trang đó} (INFO / NAV / MOD).
+            \item \textbf{Giải task}: Solver chạy \kw{ReAct}, $15$ bước ($25$ nếu đa bước).
+            \item \textbf{Kiểm định}: Judge soi trang đích; task đạt \kw{giải lại từ trang gốc}.
+            \item \textbf{Mở rộng Frontier}: URL đã ghé $+$ liên kết trên trang.
+          \end{enumerate}
+        \end{hblock}
+      }
+    \end{column}
+
+    \hfill
+    \begin{column}{0.385\textwidth}
+      \uncover<2->{
+        \begin{hblock}{Bốn chốt chặn thoái hóa}{\bhH}
+          \begin{itemize}\ilist
+            \item \textbf{Node trùng}: băm nội dung AXTree $\rightarrow$ loại \kw{71/455} node.
+            \item \textbf{Lặp thao tác}: dừng cứng khi cùng đích mà trang không đổi.
+            \item \textbf{Bão hòa}: $\le 3$ node mỗi \kw{khuôn dạng} URL.
+            \item \textbf{Task trùng}: nhớ task đã đề xuất, bỏ các bản gần trùng.
+          \end{itemize}
+        \end{hblock}
+      }
+    \end{column}
+  \end{columns}
+
+  \gap
+  \uncover<3->{
+    \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
+      \footnotesize \kw{Kết quả trên 4 website}: \kw{455} trang được khám phá, \kw{3.981} lượt thử, \kw{2.117} trajectory hợp lệ (\kw{53,2\%}).
+    \end{beamercolorbox}
   }
 \end{frame}
 
