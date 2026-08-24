@@ -1,11 +1,11 @@
 # Kịch bản trình bày — Bảo vệ KLTN HSGE
 
 **Thời lượng:** 15 phút trình bày + 15 phút hỏi đáp.
-**Cấu trúc deck:** 26 trang nội dung (19 slide thuyết trình chính + 1 slide cảm ơn/Q&A + mục lục) và 8 slide phụ lục (chỉ mở khi Hội đồng hỏi sâu).
+**Cấu trúc deck:** 25 trang nội dung (18 slide thuyết trình chính + 1 slide cảm ơn/Q&A + mục lục) và 8 slide phụ lục (chỉ mở khi Hội đồng hỏi sâu).
 **Phân chia:**
-- **Người 1 (Slide 1–13):** Giới thiệu, Động lực, Phát biểu bài toán, Nghiên cứu liên quan, Phương pháp HSGE.
-- **Người 2 (Slide 14–19):** Thiết lập thực nghiệm, Kết quả 3 Câu hỏi nghiên cứu (CH1, CH2, CH3), Kết luận & Hướng phát triển.
-- **Điểm chuyển giao:** Sau Slide 13 (kết thúc phần Phương pháp, chuyển sang Thực nghiệm).
+- **Người 1 (Slide 1–12):** Giới thiệu, Động lực, Phát biểu bài toán, Nghiên cứu liên quan, Phương pháp HSGE.
+- **Người 2 (Slide 13–18):** Thiết lập thực nghiệm, Kết quả 3 Câu hỏi nghiên cứu (CH1, CH2, CH3), Kết luận & Hướng phát triển.
+- **Điểm chuyển giao:** Sau Slide 12 (kết thúc phần Phương pháp, chuyển sang Thực nghiệm).
 
 ---
 
@@ -79,18 +79,7 @@ Cách làm này hợp lý ở ba điểm:
 
 ---
 
-## Slide 5 — Bốn thách thức cốt lõi của bài toán
-
-Để hiện thực hóa định hướng trên mà không cần con người can thiệp, hệ thống phải đối mặt với **bốn thách thức cốt lõi (T1 đến T4)**:
-
-1. **T1 — Thu thập dữ liệu chất lượng cao:** Dữ liệu do agent tự do khám phá rất dễ bị **lặp lại, vô nghĩa hoặc không hợp lệ**. Thách thức là làm sao tự sinh được các mẫu vừa hợp lệ về mặt kỹ thuật, vừa phong phú, đa dạng cho quá trình SFT.
-2. **T2 — Thiếu tri thức về môi trường:** Việc lấy tri thức từ tài liệu ngoài Internet dễ bị **lệch môi trường** (chỉ đạt 6% so với 16% khi học trực tiếp). Do đó, agent bắt buộc phải **tự động khám phá và tích lũy tri thức trực tiếp trên website thật**.
-3. **T3 — Sàng lọc trajectory tự sinh:** Khi không có con người giám sát, agent vừa thực hiện vừa tự chấm điểm nên rất dễ bị **dương tính giả (tự nhận hoàn thành khi chưa xong)**. Dữ liệu sai này sẽ dạy cho mô hình hành vi gian dối, vì vậy cần cơ chế sàng lọc bằng **tín hiệu khách quan**.
-4. **T4 — Tạo tác vụ có ngữ nghĩa:** Các tác vụ tự sinh đơn lẻ thường chỉ dừng lại ở thao tác 1 trang. Trong khi đó, nghiệp vụ thực tế đòi hỏi chuỗi hành động dài qua nhiều trang, đòi hỏi hệ thống phải có khả năng **tự động ghép chuỗi thành tác vụ đa bước có ngữ nghĩa**.
-
----
-
-## Slide 6 — Ba hướng tiếp cận hiện nay
+## Slide 5 — Ba hướng tiếp cận hiện nay
 
 Cộng đồng nghiên cứu hiện nay đã tiếp cận bài toán theo ba hướng chính:
 
@@ -102,38 +91,38 @@ Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục ti�
 
 ---
 
-## Slide 7 — Hạn chế và khoảng trống nghiên cứu
+## Slide 6 — Hạn chế và khoảng trống nghiên cứu
 
-Đối chiếu ba hướng vừa nêu với bốn thách thức T1–T4:
+Đối chiếu ba hướng vừa nêu, mỗi hướng đều còn một khoảng hở so với bài toán của khóa luận:
 
-- **Hướng (A)** dựa vào tài liệu ngoài nên lệch môi trường thật và không tự chủ $\rightarrow$ vướng **T1, T2**.
-- **Hướng (B)** chỉ nạp workflow vào prompt của LLM lớn, không cập nhật trọng số nên không dùng được cho SLM cục bộ, và vẫn tin vào lời tự khai của agent $\rightarrow$ vướng **T3**.
-- **Hướng (C)** gần bài toán nhất vì tự khám phá web thật, nhưng đồ thị chỉ **một tầng** nên tác vụ bó trong từng trang $\rightarrow$ vướng **T4**; đồng thời cũng chấm điểm bằng lời tự khai $\rightarrow$ vướng **T3**.
+- **Hướng (A)** dựa vào tài liệu ngoài nên **lệch môi trường thật** và không tự chủ trong việc thu thập dữ liệu.
+- **Hướng (B)** chỉ nạp workflow vào prompt của LLM lớn, **không cập nhật trọng số** nên không dùng được cho SLM cục bộ, và vẫn tin vào lời tự khai của agent.
+- **Hướng (C)** gần bài toán nhất vì tự khám phá web thật, nhưng đồ thị chỉ **một tầng** nên tác vụ **bó trong từng trang**, và cũng chấm điểm bằng **lời tự khai** của chính agent.
 
 **Khoảng trống nghiên cứu:** Chưa có công trình nào nối trọn ba mắt xích:
 $$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longrightarrow \text{Huấn luyện SLM}$$
 
-Đó chính là chỗ HSGE đứng vào, và bốn thách thức này sẽ được giải quyết lần lượt trong phần phương pháp sau đây.
+Đó chính là chỗ HSGE đứng vào, và các khoảng hở này sẽ được lấp lần lượt trong phần phương pháp sau đây.
 
 ---
 
-## Slide 8 — Giải pháp HSGE và các đóng góp chính
+## Slide 7 — Giải pháp HSGE và các đóng góp chính
 
 Để lấp đầy khoảng trống nghiên cứu trên, khóa luận đề xuất phương pháp **HSGE (Hierarchical Skill-Graph Exploration)** với các đóng góp trọng tâm:
 
 - **Về mặt Khoa học:**
-  - Đề xuất mô hình **Đồ thị hai tầng**: kết hợp State Graph (tầng thấp) và Operator Graph (tầng cao) để giải quyết **T2**.
-  - Cơ chế **Quy nạp operator & Ghép chuỗi đa bước**: tự động chuyển đổi skill thành tác vụ nghiệp vụ dài hạn nhằm giải quyết **T4**.
-  - Cơ chế **Kiểm định trực tuyến (Online Gates)**: loại bỏ triệt để dương tính giả ngay trong vòng lặp khám phá để giải quyết **T3**.
+  - Đề xuất mô hình **Đồ thị hai tầng**: kết hợp State Graph (tầng thấp) và Operator Graph (tầng cao) để tích lũy tri thức ngay trên website thật.
+  - Cơ chế **Quy nạp operator & Ghép chuỗi đa bước**: tự động chuyển đổi skill thành tác vụ nghiệp vụ dài hạn, thay vì chỉ thao tác trong một trang.
+  - Cơ chế **Kiểm định trực tuyến (Online Gates)**: loại bỏ dương tính giả ngay trong vòng lặp khám phá, không tin vào lời tự khai của agent.
 
 - **Về mặt Thực tiễn:**
-  - Xây dựng bộ dataset SFT sạch gồm **9.007 mẫu trên 4 website** hoàn toàn không cần nhãn người (**T1**).
+  - Xây dựng bộ dataset SFT sạch gồm **9.007 mẫu trên 4 website**, hoàn toàn không cần nhãn người.
   - Huấn luyện mô hình **HSGE-9B đạt 24,6% Task Success Rate**, vượt GPT-4o-mini và đạt SOTA phân khúc <10B.
   - Tối ưu chi phí API xuống mức **0,0308 USD/trajectory** (rẻ hơn 3,3 lần so với Go-Browse).
 
 ---
 
-## Slide 9 — Tổng quan pipeline HSGE
+## Slide 8 — Tổng quan pipeline HSGE
 
 Toàn bộ phương pháp vận hành như **một vòng lặp khép kín, lặp trên từng trang web**. Em xin mô tả **một vòng** diễn ra cụ thể như thế nào.
 
@@ -151,7 +140,7 @@ Toàn bộ phương pháp vận hành như **một vòng lặp khép kín, lặp
 
 ---
 
-## Slide 10 — Đồ thị hai tầng
+## Slide 9 — Đồ thị hai tầng
 
 Cốt lõi biểu diễn tri thức của HSGE là **cấu trúc đồ thị hai tầng**:
 
@@ -165,7 +154,7 @@ Nhờ đó, tri thức thu được mang tính **tái sử dụng và tái tổ 
 
 ---
 
-## Slide 11 — Phát hiện skill và quy nạp operator
+## Slide 10 — Phát hiện skill và quy nạp operator
 
 Khâu quy nạp tri thức chỉ thực hiện trên các trajectory đã chạy thành công, qua 4 bước:
 
@@ -182,7 +171,7 @@ Kết quả: từ **146 skill** phát hiện được, hệ thống tinh lọc t
 
 ---
 
-## Slide 12 — Sinh Semantic Task từ chuỗi Operator
+## Slide 11 — Sinh Semantic Task từ chuỗi Operator
 
 Để tạo ra các tác vụ dài hạn có ý nghĩa nghiệp vụ, HSGE kết hợp 2 cơ chế:
 
@@ -193,7 +182,7 @@ Kết quả: từ **146 skill** phát hiện được, hệ thống tinh lọc t
 
 ---
 
-## Slide 13 — Kiểm định trực tuyến & Đóng gói SFT
+## Slide 12 — Kiểm định trực tuyến & Đóng gói SFT
 
 *(Điểm chuyển giao người trình bày)*
 
@@ -207,7 +196,7 @@ Nhờ dữ liệu đã sạch từ gốc, hệ thống tiến hành **Build tr�
 
 ---
 
-## Slide 14 — Thiết lập & Câu hỏi nghiên cứu
+## Slide 13 — Thiết lập & Câu hỏi nghiên cứu
 
 *(Người thứ 2 bắt đầu phần Thực nghiệm)*
 
@@ -223,7 +212,7 @@ Kính thưa Hội đồng, để đánh giá toàn diện hiệu quả của HSG
 
 ---
 
-## Slide 15 — CH1: Tự động tạo tác vụ & Quy mô dữ liệu
+## Slide 14 — CH1: Tự động tạo tác vụ & Quy mô dữ liệu
 
 Để trả lời **CH1**, Bảng 1 tổng hợp toàn bộ quy mô dữ liệu tự sinh của HSGE:
 
@@ -236,7 +225,7 @@ Kính thưa Hội đồng, để đánh giá toàn diện hiệu quả của HSG
 
 ---
 
-## Slide 16 — CH2: So sánh hiệu năng với các hệ thống SOTA
+## Slide 15 — CH2: So sánh hiệu năng với các hệ thống SOTA
 
 "Để trả lời cho Câu hỏi nghiên cứu thứ hai, Bảng 2 trình bày bức tranh toàn cảnh so sánh hiệu năng của HSGE với các hệ thống State-of-the-art (SOTA) hiện hành trên benchmark WebArena.
 
@@ -251,7 +240,7 @@ _(Bấm Click 2 — hiện nhóm mô hình HSGE của khóa luận)_
 
 ---
 
-## Slide 17 — CH2: So sánh Base và Fine-tuning theo Website
+## Slide 16 — CH2: So sánh Base và Fine-tuning theo Website
 
 Tuy nhiên, trong nghiên cứu khoa học, những con số tổng quan sẽ thiếu đi sức nặng nếu không được chứng minh tính vững chắc về mặt thống kê và giải thích được nguyên nhân sâu xa.
 
@@ -277,7 +266,7 @@ Câu chốt: Những kiểm định thống kê khắt khe và phép thử chia 
 
 ---
 
-## Slide 18 — CH3: Hiệu quả chi phí trong tự động tạo dữ liệu
+## Slide 17 — CH3: Hiệu quả chi phí trong tự động tạo dữ liệu
 
 Trả lời **CH3** về tính khả thi kinh tế:
 
@@ -313,7 +302,7 @@ Câu chốt: Với đơn giá đột phá chỉ 0,0308 USD/trajectory đi kèm h
 
 ---
 
-## Slide 19 — Kết luận: Đóng góp chính & Hướng phát triển
+## Slide 18 — Kết luận: Đóng góp chính & Hướng phát triển
 
 "Từ những kết quả thực nghiệm trên, em xin phép đi đến phần tổng kết toàn bộ nội dung khóa luận."
 

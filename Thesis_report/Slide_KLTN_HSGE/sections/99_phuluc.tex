@@ -24,6 +24,7 @@
     \textbf{PL10} & Các agent trong pipeline: đầu vào và đầu ra \\
     \textbf{PL11} & Dạng một mẫu dữ liệu SFT (prompt parity) \\
     \textbf{PL12} & Biểu diễn tri thức: đồ thị hai tầng \\
+    \textbf{PL13} & Bốn thách thức cốt lõi T1--T4 \\
   \end{tabular}
   \vfill
 \end{frame}
@@ -461,6 +462,52 @@
         \item \textbf{Ghép nối}: $\text{Effect}_A \models \text{Pre}_B \Rightarrow$ tác vụ dài.
         \item \textbf{Ưu thế}: \kw{tái sử dụng \& tái tổ hợp}.
       \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%%% ---------------------------------------------------------------
+\begin{frame}{PL13 - Bốn thách thức cốt lõi của bài toán}
+  \begin{columns}[onlytextwidth,t]
+    \begin{column}{0.485\textwidth}
+        \begin{hblock}{T1. Thu thập dữ liệu chất lượng cao}{\bhCp}
+          \begin{itemize}\ilist
+            \item Dữ liệu tự sinh dễ \kw{lặp lại, không hợp lệ}.
+            \item $\rightarrow$ Cần tự sinh mẫu \kw{vừa hợp lệ, vừa đa dạng}.
+          \end{itemize}
+        \end{hblock}
+    \end{column}
+
+    \hfill
+    \begin{column}{0.485\textwidth}
+        \begin{hblock}{T2. Thiếu tri thức về môi trường}{\bhCp}
+          \begin{itemize}\ilist
+            \item Tri thức ngoài dễ \kw{lệch môi trường} ($6\%$ vs $16\%$).
+            \item $\rightarrow$ Cần \kw{tự động khám phá} trên web thật.
+          \end{itemize}
+        \end{hblock}
+    \end{column}
+  \end{columns}
+
+  \gap
+  \begin{columns}[onlytextwidth,t]
+    \begin{column}{0.485\textwidth}
+        \begin{hblock}{T3. Sàng lọc trajectory tự sinh}{\bhCp}
+          \begin{itemize}\ilist
+            \item Agent tự sinh tự chạy $\rightarrow$ dễ \kw{tự khai xong giả}.
+            \item $\rightarrow$ Cần sàng lọc bằng \kw{tín hiệu khách quan}.
+          \end{itemize}
+        \end{hblock}
+    \end{column}
+
+    \hfill
+    \begin{column}{0.485\textwidth}
+        \begin{hblock}{T4. Tạo tác vụ có ngữ nghĩa}{\bhCp}
+          \begin{itemize}\ilist
+            \item Task tự sinh cần mạch lạc, đúng luồng nghiệp vụ.
+            \item $\rightarrow$ Cần \kw{ghép chuỗi} thành task đa bước.
+          \end{itemize}
+        \end{hblock}
     \end{column}
   \end{columns}
 \end{frame}
