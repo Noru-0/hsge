@@ -60,20 +60,20 @@ Từ động lực trên, nhóm xin phát biểu bài toán một cách chặt c
 
 ---
 
-## Slide 4 — Dữ liệu huấn luyện SLM: lấy từ đâu và có dạng gì?
+## Slide 4 — Dữ liệu huấn luyện SLM lấy từ đâu?
 
-Trước khi nói về thách thức, em xin làm rõ hai điều mà toàn bộ khóa luận xoay quanh: **dữ liệu huấn luyện được lấy từ đâu**, và **nó có hình dạng cụ thể như thế nào**.
+Trước khi nói về thách thức, em xin làm rõ **dữ liệu huấn luyện đến từ đâu**.
 
-- **Về nguồn dữ liệu:** Nhóm **mượn năng lực của LLM mạnh** để đóng vai người tạo dữ liệu. LLM được gọi qua API sẽ tự khám phá và tự thao tác trên **chính website mục tiêu**. Mỗi lần LLM giải xong một tác vụ, hệ thống thu được **một trajectory** — tức là chuỗi xen kẽ giữa *quan sát trạng thái trang* và *hành động* mà nó đã thực hiện. Toàn bộ các trajectory này được **chưng cất (distill)** thành tập dữ liệu SFT để dạy lại cho SLM. Điểm quan trọng về mặt kinh tế: chi phí API chỉ phải trả **một lần duy nhất trong giai đoạn tạo dữ liệu**; khi triển khai thực tế, hệ thống chỉ còn chạy SLM cục bộ, không gọi API nữa.
+Nhóm sử dụng kỹ thuật **chưng cất tri thức (knowledge distillation)**, trong đó **LLM mạnh đóng vai người thầy**: nó được gọi qua API để tự khám phá và tự thao tác trên **chính website mục tiêu**. Mỗi lần thầy giải xong một tác vụ, hệ thống thu được **một trajectory** — chính là *lời giải mẫu* cho tác vụ đó. Toàn bộ các lời giải mẫu này được đóng gói thành tập dữ liệu SFT, và **SLM học bắt chước** chúng qua fine-tune.
 
-- **Về dạng dữ liệu:** Mỗi **bước tương tác** trở thành **một mẫu SFT** theo đúng định dạng hội thoại:
-  - **System:** khai báo tập hành động cho phép và định dạng đầu ra JSON.
-  - **User:** mục tiêu của tác vụ, trang hiện tại (URL và cây khả truy cập **AXTree**), lỗi của hành động liền trước, và lịch sử các hành động đã làm.
-  - **Assistant:** đúng một hành động kế tiếp kèm suy luận, dạng `{"thought": ..., "action": "click('12')"}`.
-  
-  Như vậy một trajectory sẽ sinh ra nhiều mẫu nối tiếp nhau, và prompt lúc huấn luyện được giữ **khớp hoàn toàn** với prompt lúc suy luận.
+Cách làm này hợp lý ở ba điểm:
+- **Về chi phí:** phí API chỉ trả **một lần duy nhất** trong giai đoạn tạo dữ liệu; khi triển khai thực tế, hệ thống chỉ còn chạy SLM cục bộ, không gọi API nữa.
+- **Về nhãn:** người thầy tự ra **cả đề lẫn lời giải**, nên toàn bộ quy trình **không cần một nhãn con người nào**.
+- **Về độ phù hợp:** tri thức chưng cất được gắn với **đúng giao diện và luồng nghiệp vụ** của website mục tiêu, chứ không phải kiến thức chung chung từ Internet.
 
-**Nói ngắn gọn:** LLM đóng vai *làm mẫu* cách thao tác trên website, còn SLM học **bài toán chọn hành động kế tiếp** từ trạng thái trang hiện tại.
+**Nói ngắn gọn:** LLM *làm mẫu* cách thao tác, còn SLM học **bài toán chọn hành động kế tiếp** từ trạng thái trang hiện tại.
+
+*(Nếu Hội đồng hỏi một mẫu SFT trông cụ thể ra sao — System/User/Assistant, prompt parity — mở **PL11**.)*
 
 ---
 
@@ -303,3 +303,4 @@ Em xin chân thành cảm ơn Quý Thầy Cô trong Hội đồng đã chú ý l
 | Thêm dữ liệu / đổi mô hình nền thì sao? | **PL8** |
 | **Skill là gì, operator là gì, trông ra sao?** | **PL9** |
 | **Explorer / Solver / Judge nhận gì, trả ra gì?** | **PL10** |
+| **Một mẫu dữ liệu SFT trông ra sao?** | **PL11** |

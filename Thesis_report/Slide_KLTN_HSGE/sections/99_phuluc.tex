@@ -22,6 +22,7 @@
     \textbf{PL8} & Hai phép đo bổ trợ: thêm dữ liệu và đổi mô hình nền \\
     \textbf{PL9} & Skill và Operator: là gì, dạng ra sao, dùng để làm gì \\
     \textbf{PL10} & Các agent trong pipeline: đầu vào và đầu ra \\
+    \textbf{PL11} & Dạng một mẫu dữ liệu SFT (prompt parity) \\
   \end{tabular}
   \vfill
 \end{frame}
@@ -344,7 +345,7 @@
       \end{tabular}
       \vspace{0.06cm}
 
-      {\scriptsize \textbf{Dùng để}: tái sử dụng và làm nguyên liệu quy nạp operator.}
+      {\scriptsize \textbf{Dùng để}: tái sử dụng và làm nguyên liệu quy nạp operator.\par}
     \end{column}
 
     \hfill
@@ -397,4 +398,45 @@
   \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
     \scriptsize Mọi agent đều trả về \kw{JSON có cấu trúc} (không phải văn bản tự do) nên có thể kiểm tra bằng mã. Mô hình dùng cho từng vai trò: xem \textbf{PL5}.
   \end{beamercolorbox}
+\end{frame}
+
+%%% ---------------------------------------------------------------
+\begin{frame}{PL11 - Dạng một mẫu dữ liệu SFT}
+  \begin{columns}[onlytextwidth,t]
+    \begin{column}{0.53\textwidth}
+      \textbf{$1$ bước tương tác $=$ $1$ mẫu hội thoại}
+      \vspace{0.08cm}
+      \tsepc
+      \scriptsize
+      \begin{tabular}{@{}L{1.7cm} L{5.6cm}@{}}
+        \toprule
+        \textbf{System} & Tập hành động cho phép $+$ định dạng đầu ra JSON \\
+        \midrule
+        \textbf{User} & \texttt{\# Goal} — mục tiêu tác vụ \newline
+                        \texttt{\# Current Page} — URL $+$ \kw{AXTree} \newline
+                        \texttt{\# Error} — lỗi của hành động trước \newline
+                        \texttt{\# History} — các hành động đã làm \\
+        \midrule
+        \textbf{Assistant} & \texttt{\{"thought": "...",} \newline
+                             \texttt{ "action": "click('12')"\}} \\
+        \bottomrule
+      \end{tabular}
+      \vspace{0.1cm}
+
+      {\scriptsize $1$ trajectory $\rightarrow$ nhiều mẫu nối tiếp; \kw{8.554} mẫu train $/$ \kw{453} val.\par}
+    \end{column}
+
+    \hfill
+    \begin{column}{0.43\textwidth}
+      \textbf{Ba quy tắc khi đóng gói}
+      \begin{itemize}\setlength{\itemsep}{3pt}\scriptsize
+        \item \textbf{Prompt parity}: prompt huấn luyện \kw{khớp từng byte} với prompt của Solver lúc suy luận — cùng system prompt, cùng ngưỡng cắt AXTree \kw{6.000} ký tự, cùng cách ghi lịch sử.
+        \item \textbf{Bước lỗi không làm nhãn}: hành động thất bại bị loại khỏi target nhưng \kw{vẫn giữ trong lịch sử} của các bước sau (đó là ngữ cảnh khiến bước sau chọn cách khác).
+        \item \textbf{Curriculum}: mỗi mẫu mang \kw{độ khó} $=$ độ dài chuỗi operator (LOCAL $=1$, UNPREFIXED $=2$) để xếp dữ liệu dễ $\rightarrow$ khó.
+      \end{itemize}
+
+      \vspace{0.06cm}
+      {\scriptsize Nhờ prompt parity, mô hình sau fine-tune \kw{cắm thẳng} lại vào đúng vòng lặp Solver, không cần lớp chuyển đổi nào.\par}
+    \end{column}
+  \end{columns}
 \end{frame}

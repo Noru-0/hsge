@@ -44,31 +44,29 @@
   }
 \end{frame}
 
-\subsection{Nguồn và dạng dữ liệu huấn luyện}
-\begin{frame}{Dữ liệu huấn luyện SLM: lấy từ đâu và có dạng gì?}
+\subsection{Nguồn dữ liệu huấn luyện}
+\begin{frame}{Dữ liệu huấn luyện SLM lấy từ đâu?}
   \begin{columns}[onlytextwidth,t]
-    \begin{column}{0.455\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<1->{
-        \begin{hblock}{Nguồn: LLM mạnh sinh dữ liệu}{\bhG}
+        \begin{hblock}{Chưng cất tri thức: LLM làm thầy}{\bhG}
           \begin{itemize}\ilist
             \item LLM mạnh (API) tự thao tác trên \kw{website mục tiêu}.
-            \item Mỗi task giải xong $\rightarrow$ $1$ \kw{trajectory}: quan sát $\rightarrow$ hành động.
-            \item \kw{Chưng cất}: trajectory của LLM $\rightarrow$ tập SFT dạy SLM.
-            \item Trả phí API \kw{một lần}; khi chạy chỉ còn SLM.
+            \item Mỗi task giải xong $\rightarrow$ $1$ \kw{trajectory}: lời giải mẫu của thầy.
+            \item SLM \kw{học bắt chước} trajectory đó qua fine-tune.
           \end{itemize}
         \end{hblock}
       }
     \end{column}
 
     \hfill
-    \begin{column}{0.515\textwidth}
+    \begin{column}{0.485\textwidth}
       \uncover<2->{
-        \begin{hblock}{Dạng dữ liệu: $1$ bước $=$ $1$ mẫu SFT}{\bhG}
+        \begin{hblock}{Vì sao chưng cất là hợp lý}{\bhG}
           \begin{itemize}\ilist
-            \item \textbf{System}: hành động cho phép $+$ định dạng JSON.
-            \item \textbf{User}: mục tiêu $+$ trang hiện tại (URL, \kw{AXTree}) $+$ lỗi bước trước $+$ lịch sử.
-            \item \textbf{Assistant}: \texttt{\{"thought": ..., "action": "click('12')"\}}
-            \item $1$ trajectory $\rightarrow$ nhiều mẫu nối tiếp nhau.
+            \item Trả phí API \kw{một lần}; khi chạy chỉ còn SLM cục bộ.
+            \item Thầy tự ra \kw{cả đề lẫn lời giải} $\rightarrow$ không cần nhãn người.
+            \item Tri thức gắn với \kw{đúng giao diện} của website mục tiêu.
           \end{itemize}
         \end{hblock}
       }
