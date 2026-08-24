@@ -20,6 +20,8 @@
     \textbf{PL6} & Khám phá có định hướng: frontier hai tầng \\
     \textbf{PL7} & Nguyên nhân thất bại và so sánh đặc tính hai mô hình \\
     \textbf{PL8} & Hai phép đo bổ trợ: thêm dữ liệu và đổi mô hình nền \\
+    \textbf{PL9} & Skill và Operator: là gì, dạng ra sao, dùng để làm gì \\
+    \textbf{PL10} & Các agent trong pipeline: đầu vào và đầu ra \\
   \end{tabular}
   \vfill
 \end{frame}
@@ -315,3 +317,84 @@
 
 
 
+
+%%% ---------------------------------------------------------------
+\begin{frame}{PL9 - Skill và Operator: là gì, dạng ra sao, dùng để làm gì}
+  \begin{columns}[onlytextwidth,t]
+    \begin{column}{0.49\textwidth}
+      \textbf{Skill: thao tác lặp lại đã tham số hóa}
+      \begin{itemize}\setlength{\itemsep}{2pt}\scriptsize
+        \item Sinh từ \kw{một cụm} các đoạn trajectory giống nhau (lặp $\ge 2$ lần).
+        \item Lưu dưới dạng \textbf{SkillCard} $\langle I, \pi, \beta\rangle$.
+      \end{itemize}
+      \vspace{0.06cm}
+      {\scriptsize\textit{SkillCard thật, site Shopping:}}
+      \vspace{0.04cm}
+      \tsepc
+      \scriptsize
+      \begin{tabular}{@{}L{1.5cm} L{4.9cm}@{}}
+        \toprule
+        name & \texttt{add\_variant\_to\_cart} \\
+        mô tả & Chọn biến thể rồi bấm Add to Cart \\
+        slots & \texttt{variant\_option} (selector), \texttt{add\_to\_cart} (selector) \\
+        template ($\pi$) & \texttt{click('\{variant\_option\}')} \newline \texttt{click('\{add\_to\_cart\}')} \\
+        precond ($I$) & biến thể hiển thị và bấm được \\
+        success ($\beta$) & sản phẩm đã nằm trong giỏ \\
+        \bottomrule
+      \end{tabular}
+      \vspace{0.06cm}
+
+      {\scriptsize \textbf{Dùng để}: tái sử dụng và làm nguyên liệu quy nạp operator.}
+    \end{column}
+
+    \hfill
+    \begin{column}{0.47\textwidth}
+      \textbf{Operator: skill dạng lập kế hoạch}
+      \begin{itemize}\setlength{\itemsep}{2pt}\scriptsize
+        \item Chỉ giữ \kw{tiền điều kiện} và \kw{hiệu ứng} (mô tả NL, chuẩn hóa thành id \texttt{p0, p1, ...}).
+        \item \texttt{add\_variant\_to\_cart}: \newline
+              pre \texttt{p1} ``on the product detail page'' \newline
+              eff \texttt{p3} ``on the shopping cart page''
+        \item \textbf{Dùng để}: nối chuỗi khi \kw{eff(A) khớp pre(B)} $\rightarrow$ sinh task đa bước.
+      \end{itemize}
+
+      \vspace{0.08cm}
+      \begin{block}{Chuỗi operator thật (Shopping)}
+        \scriptsize
+        \texttt{navigate\_to\_product\_category} \newline
+        \hspace*{0.3cm}$\rightarrow$ \textit{on a product listing page} \newline
+        \texttt{navigate\_to\_product\_page} \newline
+        \hspace*{0.3cm}$\rightarrow$ \textit{on the product detail page} \newline
+        \texttt{add\_variant\_to\_cart} $\rightarrow$ \textit{cart} \\[0.08cm]
+        $\Rightarrow$ Task 3 bước: mở danh mục $\rightarrow$ mở sản phẩm $\rightarrow$ thêm vào giỏ.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%%% ---------------------------------------------------------------
+\begin{frame}{PL10 - Các agent trong pipeline: đầu vào và đầu ra}
+  \centering
+  \tsep
+  \scriptsize
+  \begin{tabular}{@{}L{2.5cm} L{5.5cm} L{5.3cm}@{}}
+    \toprule
+    \textbf{Agent} & \textbf{Đầu vào} & \textbf{Đầu ra} \\
+    \midrule
+    \textbf{Explorer} \newline (sinh task) & URL $+$ AXTree của trang đang mở $+$ các task đã đề xuất trước đó & JSON: tối đa \kw{9} task \texttt{\{text, type\}}, type $\in$ INFO / NAV / MOD \\
+    \midrule
+    \textbf{Solver} \newline (ReAct) & Mục tiêu $+$ AXTree hiện tại $+$ lỗi của hành động trước $+$ lịch sử hành động & JSON \texttt{\{thought, action\}}: đúng \kw{một} hành động (\texttt{click}, \texttt{fill}, \texttt{goto}, ...) \\
+    \midrule
+    \textbf{Judge} \newline (kiểm định episode) & Mục tiêu $+$ chuỗi hành động đã chạy $+$ trang đích cuối cùng & \kw{PASS / FAIL} $+$ lý do; FAIL hạ episode thành thất bại \\
+    \midrule
+    \textbf{Skill Abstractor} & Cụm đoạn trajectory ($\ge 2$ thành viên) & \textbf{SkillCard}: slots, template, $I$, $\beta$ (xem PL9) \\
+    \midrule
+    \textbf{Operator Inducer} & SkillCard $+$ AXTree biên của vài thành viên & Tiền điều kiện / hiệu ứng dạng NL $\rightarrow$ id \texttt{p0, p1, ...} \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.15cm}
+  \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt,leftskip=6pt,rightskip=6pt,rounded=true]{block body}
+    \scriptsize Mọi agent đều trả về \kw{JSON có cấu trúc} (không phải văn bản tự do) nên có thể kiểm tra bằng mã. Mô hình dùng cho từng vai trò: xem \textbf{PL5}.
+  \end{beamercolorbox}
+\end{frame}

@@ -286,3 +286,20 @@ Tổng kết lại, khóa luận mang lại 3 giá trị cốt lõi:
 - **Tổng quát hóa ngoài miền:** Mở rộng pipeline sang các website phức tạp hơn ngoài WebArena.
 
 Em xin chân thành cảm ơn Quý Thầy Cô trong Hội đồng đã chú ý lắng nghe. Nhóm chúng em rất mong nhận được những câu hỏi và ý kiến đóng góp quý báu từ Hội đồng!
+
+---
+
+## Phụ lục — mở slide nào khi Hội đồng hỏi gì
+
+| Hội đồng hỏi | Mở |
+|---|---|
+| Train và test trên cùng website thì có hợp lệ không? | **PL1** |
+| Pipeline này dùng cho ai, tổng quát hóa cái gì? | **PL2** |
+| Task tự sinh có khả thi không, thế nào là hoàn thành? | **PL3** |
+| Ba câu hỏi nghiên cứu đã trả lời tới đâu? | **PL4** |
+| Chi phí cụ thể từng khâu? | **PL5** |
+| Agent chọn trang tiếp theo để khám phá bằng cách nào? | **PL6** |
+| Vì sao thất bại, hai mô hình nền khác nhau ra sao? | **PL7** |
+| Thêm dữ liệu / đổi mô hình nền thì sao? | **PL8** |
+| **Skill là gì, operator là gì, trông ra sao?** | **PL9** |
+| **Explorer / Solver / Judge nhận gì, trả ra gì?** | **PL10** |
