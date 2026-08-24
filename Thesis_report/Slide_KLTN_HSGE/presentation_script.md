@@ -133,15 +133,19 @@ $$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longr
 
 ## Slide 9 — Tổng quan pipeline HSGE
 
-Toàn bộ phương pháp HSGE vận hành như một quy trình tự động hóa khép kín:
+Toàn bộ phương pháp vận hành như **một vòng lặp khép kín, lặp trên từng trang web**. Em xin mô tả **một vòng** diễn ra cụ thể như thế nào.
 
-1. **Frontier:** Duy trì hàng đợi các trang web đã phát hiện để điều phối agent đi khám phá.
-2. **Explorer & Solver:** Thực hiện tương tác trực tiếp trên trình duyệt thật (Playwright/Chromium) để thu thập các trajectory thô.
-3. **Skill Discovery & Operator Induction:** Cắt nhỏ trajectory, gom cụm, trừu tượng hóa và quy nạp thành các **Operator** có Precondition và Effect tường minh.
-4. **Semantic Task Generation:** Ghép chuỗi các operator để sinh ra các tác vụ đa bước có ngữ nghĩa nghiệp vụ.
-5. **Online Curation & SFT Packaging:** Dữ liệu được lọc trực tuyến qua 2 cổng chất lượng trước khi đóng gói chuẩn xác thành tập huấn luyện SFT.
+**Bước 1 — Chọn trang để khám phá.** Hệ thống duy trì một **Frontier** — hàng đợi ưu tiên các URL đã biết, khởi đầu chỉ có trang chủ của website. Mỗi vòng, agent lấy ra một URL và mở nó bằng **trình duyệt thật** (Playwright/Chromium); trạng thái trang được đọc dưới dạng **cây khả truy cập AXTree**, tức danh sách các phần tử kèm mã định danh mà agent có thể thao tác.
 
-Các trang web mới phát hiện lại được quay vòng nạp vào Frontier, tạo thành một vòng lặp liên tục mở rộng tri thức.
+**Bước 2 — Sinh tác vụ ngay tại trang đó.** **Explorer** nhìn vào đúng trang đang mở và đề xuất tối đa **9 tác vụ cụ thể**, mỗi tác vụ được phân loại **INFO** (tra cứu thông tin), **NAV** (điều hướng) hoặc **MOD** (làm thay đổi trạng thái). Vì tác vụ sinh ra *từ chính giao diện đang thấy*, nó luôn khả thi trên website này — đây là điểm khác căn bản so với việc lấy kịch bản từ tài liệu ngoài.
+
+**Bước 3 — Giải từng tác vụ và ghi lại vết.** **Solver** hoạt động theo cơ chế **ReAct**: mỗi bước nó nhận mục tiêu, AXTree hiện tại, lỗi của hành động trước và lịch sử, rồi sinh ra một cặp *suy luận + hành động* như `click`, `fill`, `goto`; hành động được thực thi thật trên trình duyệt và trang mới lại quay về làm đầu vào cho bước kế tiếp. Ngân sách **15 bước** cho tác vụ thường và **25 bước** cho tác vụ đa bước; hệ thống tự cắt sớm nếu agent lặp lại một thao tác vô ích. Chuỗi các bước này chính là **một trajectory**.
+
+**Bước 4 — Kiểm chứng ngay lúc chạy, rồi mở rộng Frontier.** Mỗi tác vụ agent tự nhận là xong đều bị **LLM Judge soi lại trang đích** — không đạt thì bị hạ thành thất bại và **không** được đưa vào dữ liệu. Tác vụ đạt sẽ được **giải lại lần hai từ trang chủ**, để trajectory chứa cả phần điều hướng tới trang chứ không chỉ thao tác cuối. Sau đó, Frontier được nạp thêm: **những URL agent thực sự đã đi qua** khi giải tác vụ, cộng với **các liên kết khai thác trực tiếp trên trang**; mỗi *dạng URL* chỉ nhận tối đa 3 trang để hàng chục nghìn trang chi tiết cùng khuôn không làm ngập hàng đợi. Vòng lặp quay lại Bước 1 với trang tiếp theo.
+
+**Bước 5 — Tích lũy tri thức và nâng cấp độ khó.** Song song, các trajectory thành công được **cắt đoạn, gom cụm**; một đoạn thao tác lặp lại đủ số lần sẽ được **trừu tượng hóa thành SkillCard**, rồi **quy nạp thành Operator** có tiền điều kiện và hiệu ứng tường minh. Khi hiệu ứng của operator này khớp tiền điều kiện của operator kia, hệ thống **ghép chuỗi** chúng thành **tác vụ đa bước có ngữ nghĩa** — thứ mà bước sinh tác vụ tại chỗ ở Bước 2 không bao giờ tạo ra được. Đây chính là đường phản hồi nét đứt trong hình: **đồ thị operator định hướng cho vòng khám phá tiếp theo**.
+
+**Kết quả của vòng lặp này** trên 4 website: **455 trang** được khám phá, **3.981 lượt thử**, đọng lại **146 skill** và **57 operator**, **142 tác vụ đa bước**, và cuối cùng là **1.760 trajectory sạch** được đóng gói thành **9.007 mẫu SFT** — hoàn toàn không có nhãn con người ở bất kỳ khâu nào.
 
 ---
 
