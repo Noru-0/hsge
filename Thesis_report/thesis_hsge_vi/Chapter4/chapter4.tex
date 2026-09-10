@@ -1,280 +1,113 @@
 % !TEX root = ../main.tex
+
 \chapter{Thực nghiệm}
 \label{ch:experiments}
 
-Chương 4 bao gồm các nội dung: (1) môi trường thực nghiệm và quy trình đánh giá; (2) kết quả thu thập dữ liệu; (3) kết quả fine-tuning; (4) đánh giá chính trên bốn website WebArena; (5) ảnh hưởng của lượng dữ liệu; (6) phân tích nguyên nhân lỗi; và (7) kết quả bổ sung trên mô hình nền Qwen-2.5-7B. Toàn bộ chương cung cấp số liệu cho ba câu hỏi nghiên cứu CH1-CH3 (Mục~\ref{sec:intro-rq}, Bảng~\ref{tab:rqmap}). Việc thảo luận và trả lời chi tiết từng câu hỏi thuộc về Chương~\ref{ch:discussion}.
+Chương 4 bao gồm các nội dung: (1) thiết kế thực nghiệm; (2) kết quả thực nghiệm (bao gồm kết quả thu thập dữ liệu, kết quả fine-tuning và đánh giá chính trên bốn website WebArena); (3) ảnh hưởng của quy mô dữ liệu; (4) phân tích nguyên nhân lỗi; và (5) tổng kết chương. Toàn bộ chương cung cấp số liệu cho ba câu hỏi nghiên cứu CH1-CH3 (Mục~\ref{sec:intro-rq}, Bảng~\ref{tab:rqmap}). Việc thảo luận và trả lời chi tiết từng câu hỏi thuộc về Chương~\ref{ch:discussion}.
 
-Các bảng số liệu tuân theo quy ước: đơn vị đặt ở tiêu đề cột khi đồng nhất, hoặc đặt trực tiếp trong ô khi cột kết hợp số đếm và tỷ lệ (Bảng~\ref{tab:runs}, \ref{tab:failures}, \ref{tab:profile}). Mọi số liệu ngoại suy hoặc từ công trình khác đều được dẫn nguồn ngay trên dòng tương ứng.
-
-\section{Môi trường thực nghiệm}
+\section{Thiết kế thực nghiệm}
 \label{sec:exp-setup}
 
-\subsection{Website và hạ tầng}
-
+\subsection{Môi trường và hạ tầng}
 Bốn website thuộc nền tảng WebArena~\cite{zhou2024webarena} bao gồm: Shopping (Magento), Shopping Admin (Magento CMS), GitLab và Reddit (Postmill) được self-host thông qua các container chính thức của WebArena trên một máy chủ nội bộ. Để hỗ trợ khả năng truy cập từ xa, hệ thống được mở cổng kết nối thông qua dịch vụ Cloudflare quick tunnel. Đặc tính thiết yếu của các môi trường này là chúng mang \emph{trạng thái dùng chung và có thể bị thay đổi}. Do đó, mọi tiến trình khám phá và đánh giá đều phải được thực thi theo cơ chế đơn luồng trên từng website; đồng thời, cơ sở dữ liệu luôn được khôi phục về trạng thái nguyên bản trước khi bắt đầu mỗi đợt đánh giá mới.
 
-Về hạ tầng phần cứng, nghiên cứu sử dụng dịch vụ GPU cho thuê theo giờ trên nền tảng vast.ai (Bảng~\ref{tab:infra}). Riêng quá trình khám phá không yêu cầu tài nguyên GPU cục bộ, do các agent khám phá hoàn toàn giao tiếp với API của các mô hình ngôn ngữ đóng. Vì vậy, quy trình này được vận hành trực tiếp trên máy tính cá nhân, thực hiện nhiệm vụ điều khiển trình duyệt Chromium thông qua bộ thư viện Playwright và BrowserGym~\cite{dechezelles2025browsergym}.
+Về hạ tầng phần cứng, nghiên cứu sử dụng dịch vụ GPU cho thuê trên nền tảng vast.ai (1 $\times$ H100-80GB cho fine-tuning ban đầu và 4 $\times$ A100-40GB cho đợt đánh giá song song 4 website). Riêng quá trình khám phá không yêu cầu tài nguyên GPU cục bộ, do các agent khám phá hoàn toàn giao tiếp với API của các mô hình ngôn ngữ đóng. Vì vậy, quy trình này được vận hành trực tiếp trên máy tính cá nhân, thực hiện nhiệm vụ điều khiển trình duyệt Chromium thông qua bộ thư viện Playwright và BrowserGym~\cite{dechezelles2025browsergym}.
 
 \begin{table}[htbp]
   \centering
-  \caption[Hạ tầng tính toán và chi phí]{Hạ tầng tính toán, thời gian và chi
-    phí GPU của từng giai đoạn. Đơn giá thuê tại thời điểm thực nghiệm là
-    2{,}146\,USD mỗi giờ đối với H100-80GB và 0{,}803\,USD mỗi giờ đối với
-    A100-40GB. Chi phí gọi API của các mô hình đóng trong giai đoạn khám phá
-    không được tính trong bảng này, do được thanh toán theo số token thay vì
-    theo giờ thuê máy; chi phí đó được báo cáo riêng ở Bảng~\ref{tab:apicost}.
-    Đơn giá thuê là đơn giá niêm yết của vast.ai tại thời điểm thực nghiệm, ghi
-  theo hóa đơn thanh toán chứ không lấy từ một nguồn công bố.}
+  \caption[Hạ tầng tính toán và cấu hình phần cứng]{Hạ tầng tính toán và cấu hình phần cứng được thiết lập cho từng giai đoạn thực nghiệm. Đơn giá thuê tại thời điểm thực nghiệm là 2{,}146\,USD mỗi giờ đối với H100-80GB và 0{,}803\,USD mỗi giờ đối với A100-40GB theo niêm yết trên vast.ai.}
   \label{tab:infra}
   \small
-  \begin{tabular}{@{}L{2.4cm} L{3.7cm} L{4.5cm} R{2.4cm}@{}}
+  \begin{tabular}{@{}L{2.5cm} L{5.2cm} R{4.5cm}@{}}
     \toprule
-    \textbf{Giai đoạn} & \textbf{Phần cứng} & \textbf{Thời lượng} &
-    \textbf{Chi phí GPU (USD)} \\
+    \textbf{Giai đoạn} & \textbf{Phần cứng \& Môi trường} & \textbf{Cấu hình thực thi} \\
     \midrule
-    Khám phá & Máy cá nhân điều khiển Chromium; LLM truy cập qua API &
-    $\approx$ 21 giờ mỗi website, bốn website chạy song song &
-    (mục~\ref{sec:exp-cost-explore}) \\
-    \addlinespace
-    Fine-tuning & 1 $\times$ H100-80GB rồi 1 $\times$ A100-40GB &
-    5 giờ 09 phút &
-    8{,}3 \\
-    \addlinespace
-    Đánh giá & 4 $\times$ A100-40GB, mỗi máy phụ trách một website &
-    $\approx$ 5 giờ mỗi máy, tương đương 20 giờ GPU thuê; riêng thời gian giải
-    task đo được là 16{,}0 giờ &
-    16{,}1 \\
-    \midrule
-    \textbf{Tổng} & & & \textbf{24{,}4} \\
+    Khám phá & Máy cá nhân điều khiển Chromium; LLM qua API & 4 website chạy song song \\
+    Fine-tuning & 1 $\times$ H100-80GB / 1 $\times$ A100-40GB & LoRA (rank 16, $\alpha=32$), batch size 16 \\
+    Đánh giá & 4 $\times$ A100-40GB & vLLM serving, mode \texttt{nothink} \\
     \bottomrule
   \end{tabular}
 \end{table}
-
-Như vậy, tính từ thời điểm bắt đầu fine-tune cho tới khi hoàn tất đánh giá
-trên 655 task, tổng chi phí GPU của toàn bộ chu trình là 24{,}4\,USD.
-Con số này định vị lại rào cản tính toán của việc chuyên hóa một mô hình ngôn ngữ nhỏ cho một nhóm website. Rào cản không nằm ở khâu huấn luyện hay đánh giá, mà ở khâu thu thập dữ liệu, vốn tiêu tốn thời gian điều khiển trình duyệt
-và số lượng lời gọi API chứ không tiêu tốn tài nguyên GPU.
 
 \subsection{Cấu hình mô hình theo vai trò}
+Kiến trúc cho phép định tuyến mỗi vai trò LLM tới một mô hình khác nhau (Mục~\ref{sec:method-impl}). Cả bốn đợt khám phá dùng chung một cách phân bổ: các vai trò làm việc trực tiếp với trang - \texttt{site\_seeder}, \texttt{page\_explorer} và \texttt{solver} - dùng GPT-5.6-luna, riêng tác vụ GOAL nhiều bước dùng GPT-5.6-terra; toàn bộ pipeline phát hiện kỹ năng cùng bộ chấm lại phiên thực thi dùng DeepSeek-v4-pro. Bảng phân bổ đầy đủ kèm tham số sinh của từng vai trò nằm ở Phụ lục~\ref{app:design-config}.
 
-Kiến trúc cho phép định tuyến mỗi vai trò LLM tới một mô hình khác nhau
-(mục~\ref{sec:method-impl}). Cả bốn đợt khám phá dùng chung một cách phân bổ:
-các vai trò làm việc trực tiếp với trang - \texttt{site\_seeder},
-\texttt{page\_explorer} và \texttt{solver} - dùng GPT-5.6-luna có bật thị giác
-kèm Set-of-Marks~\cite{yang2023som}, riêng task GOAL nhiều bước dùng
-GPT-5.6-terra; toàn bộ pipeline phát hiện skill cùng bộ chấm lại episode dùng
-DeepSeek-chat. Bảng phân bổ đầy đủ kèm tần suất gọi và tham số sinh của từng
-vai trò nằm ở Phụ lục~\ref{app:design-config}. Vì solver nằm trên luồng có tần
-suất gọi cao nhất - một lời gọi cho mỗi bước hành động, khoảng 1200 lời gọi
-mỗi đợt chạy - thành phần này quyết định phần lớn tổng chi phí vận hành.
+\subsection{Bộ dữ liệu đánh giá và tiêu chí lựa chọn}
+\label{sec:exp-dataset-select}
 
-\subsection{Chi phí của giai đoạn khám phá}
-\label{sec:exp-cost-explore}
+Đánh giá thực nghiệm được tiến hành trên tập tác vụ chuẩn của benchmark WebArena~\cite{zhou2024webarena}. Để đảm bảo tính toàn diện và đại diện, bộ dữ liệu đánh giá gồm 655 tác vụ trải dài trên cả 4 website thử nghiệm: Shopping (237 tác vụ), Shopping Admin (189 tác vụ), GitLab (175 tác vụ) và Reddit (54 tác vụ). Các tác vụ được lựa chọn bao gồm đầy đủ các mức độ phức tạp từ các thao tác tra cứu đơn giản (LOCAL) đến các quy trình điều hướng đa bước phức tạp (GOAL).
 
-\noindent\emph{Mục này góp số liệu cho CH3.}
+\subsection{Độ đo đánh giá}
+\label{sec:exp-metrics}
 
-Khác với hai giai đoạn còn lại, giai đoạn khám phá không thuê GPU mà trả
-tiền theo số token gửi tới API của các mô hình đóng, nên chi phí của nó tỷ
-lệ với \emph{số lời gọi LLM} chứ không với thời gian chạy. Bảng~\ref{tab:calls}
-thống kê ngân sách lời gọi thực tế của cả bốn đợt khám phá, đếm trực tiếp
-từ các sản phẩm mà hệ thống ghi lại.
+Để đánh giá định lượng hiệu năng của các mô hình web agent, nghiên cứu sử dụng các độ đo tiêu chuẩn sau:
 
-\begin{table}[htbp]
-  \centering
-  \caption[Ngân sách lời gọi và token của giai đoạn khám phá]{Ngân sách lời gọi
-    LLM và lượng token của cả bốn đợt khám phá. Số lời gọi solver lấy bằng số bước
-    hành động đã ghi, nên là cận dưới: nhật ký sự kiện ghi 32\,003 bước, cao hơn
-    con số quy được về từng mô hình ở đây. Token ước lượng bằng cách đo trực tiếp
-    prompt đã dựng - mỗi lời gọi solver mang trung bình 1\,974 token vào (trong
-      đó cây truy cập trung bình 4\,228 ký tự sau khi cắt ở ngưỡng 6000, cộng 85
-    token ảnh ở chế độ \texttt{detail=low}) và 66 token ra, quy đổi 4 ký tự mỗi
-    token. Cột chi phí dùng đơn giá niêm yết lúc thực nghiệm (GPT-5.6-luna
-      0{,}20/1{,}20, GPT-5.6-terra 2/12, GPT-4o 2{,}50/10 USD mỗi triệu token
-  vào/ra); phần DeepSeek không tách được vì đơn giá không được ghi lại.}
-  \label{tab:calls}
-  \footnotesize
-  \begin{tabular}{@{}L{3.9cm} L{2.4cm} R{1.5cm} R{1.5cm} R{1.5cm} R{1.5cm}@{}}
-    \toprule
-    \textbf{Vai trò} & \textbf{Mô hình} &
-    \textbf{Lời gọi\newline (lượt)} &
-    \textbf{Token vào\newline (triệu)} &
-    \textbf{Token ra\newline (triệu)} &
-    \textbf{Chi phí\newline (\%)} \\
-    \midrule
-    \multicolumn{6}{@{}l}{\textit{OpenAI}} \\
-    \quad \texttt{solver} & GPT-5.6-luna & 22\,857 & 45{,}1 & 1{,}5 & 26{,}5 \\
-    \quad \texttt{solver} & GPT-4o & 3\,864 & 7{,}6 & 0{,}3 & 52{,}9 \\
-    \quad \texttt{solver\_goal} & GPT-5.6-terra & 1\,663 & 3{,}3 & 0{,}1 & 19{,}3 \\
-    \quad \texttt{page\_explorer} & GPT-5.6-luna & 470 & 1{,}0 & 0{,}2 & 1{,}1 \\
-    \quad \texttt{goal\_planner} & GPT-5.6-luna & 142 & 0{,}2 & $<0{,}1$ & 0{,}2 \\
-    \quad \texttt{site\_seeder} & GPT-5.6-luna & 8 & $<0{,}1$ & $<0{,}1$ & $<0{,}1$ \\
-    \quad \textit{Cộng} & & \textit{29\,004} & \textit{57{,}3} & \textit{2{,}1} &
-    \textit{100{,}0} \\
-    \addlinespace
-    \multicolumn{6}{@{}l}{\textit{DeepSeek}} \\
-    \quad \texttt{episode\_judge} & DeepSeek-v4-pro & 2\,918 & 3{,}4 & 0{,}2 & --- \\
-    \quad \texttt{trajectory\_}\linebreak[0]\texttt{segmenter} & DeepSeek-v4-pro &
-    2\,117 & 1{,}1 & 0{,}4 & --- \\
-    \quad \texttt{operator\_inducer} & DeepSeek-v4-pro & 217 & 0{,}7 & $<0{,}1$ & --- \\
-    \quad \textit{Cộng} & & \textit{5\,252} & \textit{5{,}1} & \textit{0{,}7} & --- \\
-    \midrule
-    \textbf{Tổng} & & \textbf{34\,256} & \textbf{62{,}4} & \textbf{2{,}7} & \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\begin{enumerate}
+  \item \textbf{Tỷ lệ thành công (Task Success Rate - SR):} Tỷ lệ phần trăm số tác vụ hoàn thành chính xác theo bộ chấm tự động của WebArena trên tổng số tác vụ đánh giá: $\text{SR} = \frac{N_{\text{thành công}}}{N_{\text{tổng}}} \times 100\%$.
+  \item \textbf{Khoảng tin cậy 95\% (Binomial Confidence Interval):} Báo cáo độ biến thiên lấy mẫu tác vụ với nửa độ rộng khoảng tin cậy nhị thức theo xấp xỉ chuẩn~\cite{brown2001binomial}: $\pm 1{,}96 \sqrt{\frac{\text{SR}(1-\text{SR})}{N}}$.
+  \item \textbf{Kiểm định ý nghĩa thống kê McNemar:} Áp dụng kiểm định McNemar theo cặp~\cite{mcnemar1947} ($p$-value) khi so sánh đối đầu giữa hai mô hình trên cùng một tập tác vụ, chỉ xét các tác vụ có kết quả bất đồng giữa hai mô hình.
+\end{enumerate}
 
-Phân bố này cho thấy \textbf{82{,}9\% số lời gọi và 88{,}9\% lượng token thuộc
-về solver}, do đây là vai trò duy nhất nằm trong vòng lặp hành động từng bước
-và cũng là vai trò phải mang toàn bộ accessibility tree vào mỗi prompt. Hai tỷ
-lệ này giải thích vì sao chi phí khám phá thực chất là một quyết định về
-solver: \textbf{GPT-4o chỉ chiếm 13{,}6\% số bước nhưng chiếm 52{,}9\% chi
-phí}, vì đơn giá token vào của nó cao gấp 12{,}5 lần GPT-5.6-luna - đây
-chính là lý do vai trò này được chuyển sang GPT-5.6-luna giữa chừng các đợt
-chạy.
+\subsection{Các mô hình đối chứng (Baselines)}
+\label{sec:exp-baselines}
 
-Hệ thống không ghi số token của mỗi lời gọi, nên lượng token trong
-Bảng~\ref{tab:calls} là ước lượng dựng lại từ prompt đã lưu, còn chi phí thực
-tế lấy từ hóa đơn của nhà cung cấp (Bảng~\ref{tab:apicost}). Hai nguồn này
-kiểm chứng lẫn nhau: nhân lượng token ước lượng với đơn giá niêm yết cho
-40{,}84\,USD, so với 42{,}29\,USD trên hóa đơn OpenAI, tức sai lệch 3{,}4\%.
-Mức khớp đó vừa xác nhận cách ước lượng, vừa cho thấy phần token suy luận
-(\emph{reasoning}) bị tính tiền là không đáng kể ở mức
-\texttt{reasoning\_effort} trung bình - nếu không, hóa đơn đã phải cao hơn
-hẳn. Ghi token ngay tại lớp gọi API vẫn là việc nên làm, vì khi đó chi phí quy
-được về từng website và từng task thay vì chỉ so tổng.
+Hiệu năng của hệ thống đề xuất (HSGE-9B và HSGE-7B) được đối chứng với các nhóm mô hình đại diện:
 
-\begin{table}[htbp]
-  \centering
-  \caption[Chi phí API và lượng token của giai đoạn khám phá]{Chi phí API thực
-    tế của toàn bộ giai đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp và
-    cộng đủ cả phần thu thập bổ sung cho Reddit và Shopping Admin. Cột token là
-    tổng token vào và ra ước lượng theo Bảng~\ref{tab:calls}. Cột cuối là đơn giá
-    pha trộn suy ra từ hai cột trước; với DeepSeek đây là cách duy nhất định giá
-    được, vì đơn giá niêm yết của \texttt{deepseek-v4-pro} không được ghi lại tại
-  thời điểm thực nghiệm.}
-  \label{tab:apicost}
-  \small
-  \begin{tabular}{@{}L{2.5cm} L{4.4cm} R{1.8cm} R{1.9cm} R{2.0cm}@{}}
-    \toprule
-    \textbf{Nhà cung cấp} & \textbf{Vai trò sử dụng} &
-    \textbf{Token (triệu)} & \textbf{Chi phí (USD)} &
-    \textbf{USD/1M token} \\
-    \midrule
-    OpenAI & \texttt{solver}, \texttt{page\_explorer}, \texttt{goal\_planner},
-    \texttt{site\_seeder} & 59{,}3 & 42{,}29 & 0{,}71 \\
-    DeepSeek & \texttt{episode\_judge}, pipeline phát hiện skill &
-    5{,}8 & 11{,}92 & 2{,}07 \\
-    \midrule
-    \textbf{Tổng} & & \textbf{65{,}1} & \textbf{54{,}21} & \textbf{0{,}83} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-Tính trên 1760 trajectory thành công (Bảng~\ref{tab:dataset}), chi phí API trung bình là $54{,}21 / 1760 \approx \mathbf{0{,}0308}$\,USD mỗi trajectory, tương ứng khoảng \textbf{37 nghìn token} mỗi trajectory. Con số này tương đương mức 0{,}031\,USD mỗi mẫu tổng hợp ngoại tuyến của Synatra~\cite{ou2024synatra}, dù HSGE vận hành trực tiếp trên môi trường web sống.
-
-So với Go-Browse~\cite{gandhi2026gobrowse} (thu thập qua tương tác web với tổng chi phí 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD/trajectory), chi phí trung bình trên mỗi trajectory thành công của HSGE thấp hơn khoảng \textbf{3{,}3 lần}. Sự khác biệt này chủ yếu đến từ việc HSGE định tuyến các lời gọi tần suất cao của solver sang mô hình có chi phí thấp hơn, thay vì dùng các mô hình đắt tiền (Claude-3.7-Sonnet, GPT-4o) cho toàn bộ quá trình rollout.
-
-\subsection{Tham số chạy}
-
-Cả bốn đợt khám phá đều chạy trên cùng một cấu hình vòng lặp: ngân sách 15
-bước hành động cho task cục bộ và 25 bước cho task GOAL nhiều bước, 9 task đề
-xuất mỗi node, ngưỡng \texttt{maturity} $=2$ lần lặp lại để một cụm trở thành
-operator, cùng bốn cơ chế được bật gồm lấy mẫu không tiền tố, chấm lại episode
-bằng LLM, sinh task GOAL từ seed năng lực website và khai thác liên kết
-\texttt{<a href>} vào frontier với giới hạn 3 node cho mỗi khuôn dạng URL.
-Danh sách tham số đầy đủ kèm giá trị đã dùng được trình bày ở
-Phụ lục~\ref{app:design-params}.
+\begin{itemize}
+  \item \textbf{Mô hình nền chưa fine-tune (Base Model):} Qwen3.5-9B-Instruct~\cite{qwen2026qwen35} (đo trong cùng điều kiện thực nghiệm để cô lập giá trị của tập dữ liệu HSGE).
+  \item \textbf{Mô hình nền chuyển giao (Transfer Backbone):} Qwen-2.5-7B-Instruct~\cite{qwen2024qwen25} (mô hình nền phổ biến cho các web agent mở).
+  \item \textbf{Các mô hình mở cỡ nhỏ SOTA ($<10$\,B):} Go-Browse-7B~\cite{gandhi2026gobrowse} và NNetNav-7B~\cite{murty2024nnetnav} (tính lại theo trung bình trên 4 website).
+  \item \textbf{Các mô hình thương mại đóng SOTA:} GPT-4o và GPT-4o-mini~\cite{gandhi2026gobrowse}.
+\end{itemize}
 
 \subsection{Quy trình đánh giá}
 \label{sec:exp-protocol}
 
-Việc đánh giá dùng đúng tập task và bộ chấm chuẩn của
-WebArena~\cite{zhou2024webarena}, tách biệt
-hoàn toàn với cơ chế xác minh nội bộ của hệ thống đề xuất: mỗi task được
-khởi tạo trong môi trường BrowserGym~\cite{dechezelles2025browsergym} ở chế độ có tính điểm, solver chạy tối
-đa 15 bước hành động với \texttt{temperature} $= 0$. Reward function của
-WebArena phân xử thành công hay thất bại bằng ba cơ chế kiểm tra tùy loại
-task: so khớp URL, so khớp lập trình trên DOM và so khớp mờ bằng LLM. Mô
-hình sau fine-tune được merge trọng số LoRA~\cite{hu2022lora} rồi serving bằng vLLM~\cite{kwon2023vllm}
-ngay trên máy chủ đánh giá, ở chế độ nothink để giữ đúng prompt parity với
-lúc huấn luyện.
+Việc đánh giá dùng đúng tập tác vụ và bộ chấm chuẩn của WebArena~\cite{zhou2024webarena}, tách biệt hoàn toàn với cơ chế xác minh nội bộ của hệ thống đề xuất: mỗi tác vụ được khởi tạo trong môi trường BrowserGym~\cite{dechezelles2025browsergym} ở chế độ có tính điểm, bộ giải tác vụ chạy tối đa 15 bước hành động với \texttt{temperature} $= 0$. Reward function của WebArena phân xử thành công hay thất bại bằng ba cơ chế kiểm tra tùy loại tác vụ: so khớp URL, so khớp lập trình trên DOM và so khớp mờ bằng LLM. Mô hình sau fine-tune được merge trọng số LoRA~\cite{hu2022lora} rồi phục vụ bằng vLLM~\cite{kwon2023vllm} ngay trên máy chủ đánh giá, ở chế độ \texttt{nothink} để giữ đúng prompt parity với lúc huấn luyện.
 
-Trước mỗi đợt đánh giá, hệ thống chạy một quy trình kiểm tra tự động gồm
-chín điều kiện tiên quyết, và chỉ khởi động khi tất cả được thỏa mãn; ba
-điều kiện cốt lõi là: (1) endpoint phục vụ mô hình phản hồi văn bản hợp lệ;
-(2) website mục tiêu truy cập được \emph{trực tiếp từ máy chủ đánh giá}; và
-(3) một đợt chạy thử trên ba task ngẫu nhiên ghi nhận ít nhất một thành
-công mà không phát sinh lỗi hệ thống. Kết quả mỗi task được lưu thành một
-bản ghi riêng, kèm trace chi tiết đầy đủ của episode đó: các bước của solver, dữ
-liệu thô từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác -
-nguồn dữ liệu chính cho phần phân tích lỗi ở Mục~\ref{sec:exp-analysis}.
+Trước mỗi đợt đánh giá, hệ thống chạy một quy trình kiểm tra tự động gồm chín điều kiện tiên quyết, và chỉ khởi động khi tất cả được thỏa mãn; ba điều kiện cốt lõi là: (1) điểm kết nối API phục vụ mô hình phản hồi văn bản hợp lệ; (2) website mục tiêu truy cập được \emph{trực tiếp từ máy chủ đánh giá}; và (3) một đợt chạy thử trên ba tác vụ ngẫu nhiên ghi nhận ít nhất một thành công mà không phát sinh lỗi hệ thống. Kết quả mỗi tác vụ được lưu thành một bản ghi riêng, kèm vết thực thi chi tiết đầy đủ của phiên thực thi đó: các bước của bộ giải tác vụ, dữ liệu thô từng lời gọi LLM, và phản hồi trình duyệt sau mỗi thao tác - nguồn dữ liệu chính cho phần phân tích lỗi ở Mục~\ref{sec:exp-analysis}.
 
-\textbf{Hai sai lệch cần được công bố kèm theo mọi số liệu ở
-mục~\ref{sec:exp-main}:}
+\textbf{Hai sai lệch cần được công bố kèm theo mọi số liệu ở mục~\ref{sec:exp-main}:}
 
 \begin{enumerate}
-  \item \textbf{Thay thế mô hình chấm.} Bộ chấm chính thức của WebArena gọi
-    cố định mô hình \texttt{gpt-4-1106-preview} cho các task so khớp mờ, nhưng
-    mô hình này đã ngừng được cung cấp. Khóa luận thay thế bằng
-    \texttt{gpt-4-turbo}, áp dụng đồng nhất trên cả bốn máy đánh giá và được ghi
-    lại cùng kết quả. Sai lệch này có thể ảnh hưởng tới 40 trong 655 task (Shopping 15,
-    Shopping Admin 20, GitLab 5); toàn bộ các task còn lại được chấm hoàn toàn
-    tất định nên không chịu ảnh hưởng.
-  \item \textbf{Shopping và Shopping Admin được đánh giá đồng thời.} Trong
-    cấu hình WebArena chuẩn, hai website này được phục vụ từ cùng một container
-    Magento. Khóa luận đã chạy hai đợt đánh giá song song mà chưa xác nhận trước
-    liệu chúng có dùng chung cơ sở dữ liệu hay không. Nếu có, các task làm thay
-    đổi dữ liệu ở một website có thể gây nhiễu sang website còn lại; khi đó hai
-    kết quả này cần được đo lại theo trình tự tuần tự.
+  \item \textbf{Thay thế mô hình chấm.} Bộ chấm chính thức của WebArena gọi cố định mô hình \texttt{gpt-4-1106-preview} cho các tác vụ so khớp mờ, nhưng mô hình này đã ngừng được cung cấp. Khóa luận thay thế bằng \texttt{gpt-4-turbo}, áp dụng đồng nhất trên cả bốn máy đánh giá và được ghi lại cùng kết quả. Sai lệch này có thể ảnh hưởng tới 40 trong 655 tác vụ (Shopping 15, Shopping Admin 20, GitLab 5); toàn bộ các tác vụ còn lại được chấm hoàn toàn tất định nên không chịu ảnh hưởng.
+  \item \textbf{Shopping và Shopping Admin được đánh giá đồng thời.} Trong cấu hình WebArena chuẩn, hai website này được phục vụ từ cùng một container Magento. Khóa luận đã chạy hai đợt đánh giá song song mà chưa xác nhận trước liệu chúng có dùng chung cơ sở dữ liệu hay không. Nếu có, các tác vụ làm thay đổi dữ liệu ở một website có thể gây nhiễu sang website còn lại; khi đó hai kết quả này cần được đo lại theo trình tự tuần tự.
 \end{enumerate}
 
-\section{Kết quả thu thập dữ liệu}
+\section{Kết quả thực nghiệm}
+\label{sec:exp-results}
+
+\subsection{Kết quả thu thập dữ liệu}
 \label{sec:exp-data}
 
 \noindent\emph{Mục này trả lời CH1.}
 
 Các tác vụ được HSGE tự động tạo ra đáp ứng bốn tiêu chí về tính hợp lệ, tính đa dạng, tính ngữ nghĩa và khả năng thực thi:
+
 \begin{itemize}
-  \item \textbf{Tính hợp lệ:} Cổng kiểm chứng đã hạ cấp 801 episode tự tuyên bố thành công sai (chiếm $\approx 27\%$), và cổng hành động hữu hiệu loại bỏ thêm 104 trajectory không tạo ra thay đổi trạng thái; bộ dữ liệu huấn luyện thu được gồm 1760 trajectory hợp lệ (Bảng~\ref{tab:runs}, Bảng~\ref{tab:dataset}).
-  \item \textbf{Tính đa dạng:} Quá trình khám phá bao phủ 455 node giao diện, 146 skill được phát hiện và 130 năng lực seed trên bốn website, trải rộng trên cả ba nhóm tác vụ (LOCAL, UNPREFIXED và GOAL).
-  \item \textbf{Tính ngữ nghĩa:} 142 tác vụ GOAL nhiều bước được sinh tự động từ chuỗi operator (12 tác vụ) và từ bộ seed năng lực của website (130 tác vụ), thể hiện đúng ý định người dùng trong môi trường thực tế.
-  \item \textbf{Khả năng thực thi:} Nhóm tác vụ GOAL đạt tỷ lệ hoàn thành 50{,}0\% (71/142 episode), xấp xỉ tỷ lệ của nhóm tác vụ LOCAL (47{,}6\%), khẳng định các tác vụ phức tạp được sinh ra hoàn toàn có thể giải được bởi agent.
+  \item \textbf{Tính hợp lệ:} Cổng kiểm chứng đã hạ cấp 801 phiên thực thi tự tuyên bố thành công sai (chiếm $\approx 27\%$), và cổng hành động hữu hiệu loại bỏ thêm 104 chuỗi hành động không tạo ra thay đổi trạng thái; bộ dữ liệu huấn luyện thu được gồm 1760 chuỗi hành động hợp lệ (Bảng~\ref{tab:runs}, Bảng~\ref{tab:dataset}).
+  \item \textbf{Tính đa dạng:} Quá trình khám phá bao phủ 455 nút giao diện, 146 kỹ năng được phát hiện và 130 năng lực seed trên bốn website, trải rộng trên cả ba nhóm tác vụ (LOCAL, UNPREFIXED và GOAL).
+  \item \textbf{Tính ngữ nghĩa:} 142 tác vụ GOAL nhiều bước được sinh tự động từ chuỗi toán tử (12 tác vụ) và từ bộ seed năng lực của website (130 tác vụ), thể hiện đúng ý định người dùng trong môi trường thực tế.
+  \item \textbf{Khả năng thực thi:} Nhóm tác vụ GOAL đạt tỷ lệ hoàn thành 50{,}0\% (71/142 phiên thực thi), xấp xỉ tỷ lệ của nhóm tác vụ LOCAL (47{,}6\%), khẳng định các tác vụ phức tạp được sinh ra hoàn toàn có thể giải được bởi agent.
 \end{itemize}
 
-\subsection{Kết quả khám phá}
+\subsubsection{Kết quả khám phá}
+Bảng~\ref{tab:runs} tổng hợp kết quả khám phá trên bốn website. Mỗi website được khám phá qua một hoặc nhiều lượt chạy, và mọi lượt đều được dừng chủ động khi lượng dữ liệu thu được đã đủ cho vòng huấn luyện, chứ không dừng vì thuật toán hội tụ. Do đó, số nút giao diện đã duyệt là một \emph{cận dưới} của khả năng khám phá. Reddit và Shopping Admin được cấp ngân sách khám phá lớn hơn hai website còn lại, vì đây là hai website có mật độ thao tác thay đổi trạng thái cao nhất: một mục tiêu điển hình trên diễn đàn hay trên trang quản trị Magento đòi hỏi điền biểu mẫu và lưu, chứ không chỉ tra cứu, nên cần nhiều chuỗi hành động hơn để phủ được không gian hành vi.
 
-Bảng~\ref{tab:runs} tổng hợp kết quả khám phá trên bốn website. Mỗi website
-được khám phá qua một hoặc nhiều lượt chạy, và mọi lượt đều được dừng chủ
-động khi lượng dữ liệu thu được đã đủ cho vòng huấn luyện, chứ không dừng vì
-thuật toán hội tụ. Do đó, số node đã duyệt là một \emph{cận dưới} của khả
-năng khám phá. Reddit và Shopping Admin được cấp ngân sách khám phá lớn hơn
-hai website còn lại, vì đây là hai website có mật độ thao tác thay đổi trạng
-thái cao nhất: một mục tiêu điển hình trên diễn đàn hay trên trang quản trị
-Magento đòi hỏi điền biểu mẫu và lưu, chứ không chỉ tra cứu, nên cần nhiều
-trajectory hơn để phủ được không gian hành vi.
+Trong quá trình chạy, các lượt khám phá bị ngắt vài lần vì tài khoản API hết hạn mức; mỗi lần đều được chạy tiếp từ điểm kiểm tra của nút giao diện cuối cùng thay vì phải làm lại (Mục~\ref{sec:method-impl}). Đây là lần duy nhất cơ chế khôi phục được dùng tới ngoài các phép thử, và số liệu trong bảng là kết quả sau khi nối lại.
 
-Trong quá trình chạy, các lượt khám phá bị ngắt vài lần vì tài khoản API hết
-hạn mức; mỗi lần đều được chạy tiếp từ checkpoint của node cuối cùng thay vì
-phải làm lại (Mục~\ref{sec:method-impl}). Đây là lần duy nhất cơ chế khôi
-phục được dùng tới ngoài các phép thử, và số liệu trong bảng là kết quả sau
-khi nối lại.
-Trong bảng, \emph{episode hợp lệ} là những episode được tính là thành công
-sau khi cổng kiểm chứng đã chấm lại, tức tổng ba dòng ``Thành công'' của ba
-nhóm task; tỷ lệ hợp lệ được tính trên số episode ghi nhận. Tỷ lệ thành công
-của mỗi nhóm task được tính trên tổng số task của nhóm đó tại website tương
-ứng, tức đã bao gồm cả các task bị báo là bất khả thi. Tỷ lệ bị hạ cấp được
-tính trên tổng số lần agent tự tuyên bố hoàn thành.
+Trong bảng, \emph{phiên thực thi hợp lệ} là những phiên thực thi được tính là thành công sau khi cổng kiểm chứng đã chấm lại, tức tổng ba dòng ``Thành công'' của ba nhóm tác vụ; tỷ lệ hợp lệ được tính trên số phiên thực thi ghi nhận. Tỷ lệ thành công của mỗi nhóm tác vụ được tính trên tổng số tác vụ của nhóm đó tại website tương ứng, tức đã bao gồm cả các tác vụ bị báo là bất khả thi. Tỷ lệ bị hạ cấp được tính trên tổng số lần agent tự tuyên bố hoàn thành.
 
 \begin{table}[htbp]
   \centering
   \caption[Thống kê khám phá theo website]{Thống kê khám phá trên bốn website,
-    nhóm theo quy mô khám phá, kết quả của ba nhóm task và tri thức thu được;
-    dòng cuối cùng là số episode bị cổng kiểm chứng hạ cấp từ thành công xuống
+    nhóm theo quy mô khám phá, kết quả của ba nhóm tác vụ và tri thức thu được;
+    dòng cuối cùng là số phiên thực thi bị cổng kiểm chứng hạ cấp từ thành công xuống
     thất bại, tính trên tổng số lần agent tự tuyên bố hoàn thành.
     Các dòng in nghiêng là tỷ lệ dẫn xuất từ các dòng đếm phía trên; vì cột trộn
-    số đếm với tỷ lệ nên đơn vị được giữ trong ô thay vì ở tiêu đề cột. LOCAL là task giải ngay trên node;
-    UNPREFIXED là chính task đó giải lại từ trang chủ; GOAL là semantic task
-  nhiều bước sinh từ chuỗi operator hoặc từ seed năng lực của website.}
+    số đếm với tỷ lệ nên đơn vị được giữ trong ô thay vì ở tiêu đề cột. LOCAL là tác vụ giải ngay trên nút giao diện;
+    UNPREFIXED là chính tác vụ đó giải lại từ trang chủ; GOAL là tác vụ ngữ nghĩa
+  nhiều bước sinh từ chuỗi toán tử hoặc từ seed năng lực của website.}
   \label{tab:runs}
   \footnotesize
   \begin{tabular}{@{}L{4.9cm} R{1.7cm} R{1.5cm} R{1.5cm} R{1.9cm} R{1.6cm}@{}}
@@ -283,28 +116,28 @@ tính trên tổng số lần agent tự tuyên bố hoàn thành.
     \textbf{Sh.\ Admin} & \textbf{Tổng} \\
     \midrule
     \multicolumn{6}{@{}l}{\textit{Quy mô khám phá (Số lượng / Count)}} \\
-    \quad Node đã duyệt & 79 & 179 & 63 & 134 & \textbf{455} \\
-    \quad Node trùng nội dung & 3 & 35 & 6 & 27 & \textbf{71} \\
-    \quad Episode ghi nhận & 565 & 1623 & 563 & 1230 & \textbf{3981} \\
-    \quad Episode hợp lệ & 311 & 954 & 229 & 623 & \textbf{2117} \\
+    \quad Nút giao diện đã duyệt & 79 & 179 & 63 & 134 & \textbf{455} \\
+    \quad Nút giao diện trùng nội dung & 3 & 35 & 6 & 27 & \textbf{71} \\
+    \quad Phiên thực thi ghi nhận & 565 & 1623 & 563 & 1230 & \textbf{3981} \\
+    \quad Phiên thực thi hợp lệ & 311 & 954 & 229 & 623 & \textbf{2117} \\
     \quad \textit{Tỷ lệ hợp lệ (\%)} & \textit{55,0\%} & \textit{58,8\%} &
     \textit{40,7\%} & \textit{50,7\%} & \textbf{53,2\%} \\
     \addlinespace
-    \multicolumn{6}{@{}l}{\textit{Task LOCAL}} \\
+    \multicolumn{6}{@{}l}{\textit{Tác vụ LOCAL}} \\
     \quad Thành công & 192 & 623 & 160 & 392 & \textbf{1367} \\
     \quad Thất bại & 268 & 363 & 147 & 253 & \textbf{1031} \\
     \quad Bất khả thi & 73 & 111 & 101 & 190 & \textbf{475} \\
     \quad \textit{Tỷ lệ thành công (SR, \%)} & \textit{36,0\%} & \textit{56,8\%} &
     \textit{39,2\%} & \textit{46,9\%} & \textbf{47,6\%} \\
     \addlinespace
-    \multicolumn{6}{@{}l}{\textit{Task UNPREFIXED}} \\
+    \multicolumn{6}{@{}l}{\textit{Tác vụ UNPREFIXED}} \\
     \quad Thành công & 109 & 293 & 66 & 211 & \textbf{679} \\
     \quad Thất bại & 57 & 147 & 58 & 122 & \textbf{384} \\
     \quad Bất khả thi & 13 & 45 & 33 & 38 & \textbf{129} \\
     \quad \textit{Tỷ lệ thành công (SR, \%)} & \textit{60,9\%} & \textit{60,4\%} &
     \textit{42,0\%} & \textit{56,9\%} & \textbf{57,0\%} \\
     \addlinespace
-    \multicolumn{6}{@{}l}{\textit{Task GOAL}} \\
+    \multicolumn{6}{@{}l}{\textit{Tác vụ GOAL}} \\
     \quad Thành công & 10 & 38 & 3 & 20 & \textbf{71} \\
     \quad Thất bại & 6 & 16 & 6 & 10 & \textbf{38} \\
     \quad Bất khả thi & 3 & 7 & 5 & 18 & \textbf{33} \\
@@ -312,12 +145,12 @@ tính trên tổng số lần agent tự tuyên bố hoàn thành.
     \textit{21,4\%} & \textit{41,7\%} & \textbf{50,0\%} \\
     \addlinespace
     \multicolumn{6}{@{}l}{\textit{Tri thức thu được (Số lượng / Count)}} \\
-    \quad Skill được thu nhận & 14 & 56 & 16 & 60 & \textbf{146} \\
-    \quad Operator được quy nạp & 8 & 21 & 8 & 20 & \textbf{57} \\
-    \quad Chuỗi operator đã thử & 5 & 5 & 1 & 1 & \textbf{12} \\
+    \quad Kỹ năng được thu nhận & 14 & 56 & 16 & 60 & \textbf{146} \\
+    \quad Toán tử được quy nạp & 8 & 21 & 8 & 20 & \textbf{57} \\
+    \quad Chuỗi toán tử đã thử & 5 & 5 & 1 & 1 & \textbf{12} \\
     \quad Năng lực seed đã thử & 14 & 56 & 13 & 47 & \textbf{130} \\
     \midrule
-    Episode bị hạ cấp & 127 & 328 & 119 & 227 & \textbf{801} \\
+    Phiên thực thi bị hạ cấp & 127 & 328 & 119 & 227 & \textbf{801} \\
     \textit{Tỷ lệ bị hạ cấp (\%)} & \textit{29,0\%} & \textit{25,6\%} &
     \textit{34,2\%} & \textit{26,7\%} & \textbf{27,4\%} \\
     \bottomrule
@@ -326,56 +159,28 @@ tính trên tổng số lần agent tự tuyên bố hoàn thành.
 
 Từ bảng này có thể rút ra ba nhận xét.
 
-\textbf{Thứ nhất, hai nguồn sinh semantic task đóng góp rất không đồng
-đều.} Tổng cộng 142 task GOAL đã được thực thi trên bốn website, chia trọn vẹn
-thành 130 lượt bắt nguồn từ seed năng lực của website
-(mục~\ref{sec:method-seed}) và 12 lượt bắt nguồn từ việc ghép chuỗi operator.
-Nói cách khác, cơ chế sinh mục tiêu từ trên xuống là nguồn semantic task chủ
-yếu trong thực tế, còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết
-kế nhưng chỉ kích hoạt được ở mức thưa thớt: 12 chuỗi trên tổng số 57
-operator đã quy nạp, phân bố rất lệch giữa các website (Shopping 5, Reddit 5,
-GitLab 1, Shopping Admin 1). Nguyên nhân kỹ thuật của hiện tượng này được
-phân tích ở Phụ lục~\ref{sec:disc-operators}.
+\textbf{Thứ nhất, hai nguồn sinh tác vụ ngữ nghĩa đóng góp ở mức độ rất không đồng đều.} Tổng cộng 142 tác vụ GOAL đã được thực thi trên bốn website, chia trọn vẹn thành 130 lượt bắt nguồn từ seed năng lực của website (mục~\ref{sec:method-seed}) và 12 lượt bắt nguồn từ việc ghép chuỗi toán tử.
 
-\textbf{Thứ hai, tỷ lệ thành công của nhóm GOAL chênh lệch rất lớn giữa các
-website.} Tỷ lệ chung là 71/142 $=$ 50{,}0\%, xấp xỉ nhóm LOCAL (47{,}6\%) và
-thấp hơn nhóm UNPREFIXED (57{,}0\%). Nhưng con số chung này che mất khoảng
-cách bên dưới: Reddit đạt 62{,}3\% còn GitLab chỉ 21{,}4\%. Số task GOAL bị
-agent báo là bất khả thi cũng tập trung ở GitLab và Shopping Admin, hai
-website mà một mục tiêu ngữ nghĩa thường đòi hỏi chuỗi thao tác thay đổi
-trạng thái tương đối dài. Đáng chú ý, hai website được cấp ngân sách khám phá
-lớn hơn cũng là hai website có tỷ lệ GOAL cao hơn, gợi ý rằng nhóm task khó
-nhất này là nhóm hưởng lợi nhiều nhất từ việc khám phá sâu hơn.
+Nói cách khác, cơ chế sinh mục tiêu từ trên xuống là nguồn tác vụ ngữ nghĩa chủ yếu trong thực tế, còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết kế nhưng chỉ kích hoạt được ở mức thưa thớt: 12 chuỗi trên tổng số 57 toán tử đã quy nạp, phân bố rất lệch giữa các website (Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nguyên nhân kỹ thuật của hiện tượng này được phân tích ở Phụ lục~\ref{sec:disc-toán tử}.
 
-\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 801 trường hợp agent tự đánh
-giá sai kết quả của chính mình.} Khi tham số \texttt{verify\_episodes} được
-bật, mọi episode mà agent tự tuyên bố hoàn thành đều được một LLM độc lập
-chấm lại dựa trên chính trạng thái trang cuối cùng của episode đó; 801
-trường hợp bị đánh dấu thất bại, tương đương khoảng 27\% tổng số lần tự
-tuyên bố hoàn thành. Nếu không có cổng kiểm chứng này, xấp xỉ một phần tư
-tập dữ liệu huấn luyện sẽ là những trajectory dạy mô hình cách tuyên bố đã hoàn
-thành trong khi thực tế chưa hoàn thành.
+\textbf{Thứ hai, tỷ lệ thành công của nhóm tác vụ GOAL thể hiện sự chênh lệch lớn giữa các website.} Tỷ lệ chung là 71/142 $=$ 50{,}0\%, xấp xỉ nhóm LOCAL (47{,}6\%) và thấp hơn nhóm UNPREFIXED (57{,}0\%). Nhưng con số chung này che mất khoảng cách bên dưới: Reddit đạt 62{,}3\% còn GitLab chỉ 21{,}4\%. Số tác vụ GOAL bị agent báo là bất khả thi cũng tập trung ở GitLab và Shopping Admin, hai website mà một mục tiêu ngữ nghĩa thường đòi hỏi chuỗi thao tác thay đổi trạng thái tương đối dài. Đáng chú ý, hai website được cấp ngân sách khám phá lớn hơn cũng là hai website có tỷ lệ GOAL cao hơn, gợi ý rằng nhóm tác vụ khó nhất này là nhóm hưởng lợi nhiều nhất từ việc khám phá sâu hơn.
 
-\subsection{Tập dữ liệu huấn luyện}
+\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 801 trường hợp agent tự đánh giá sai kết quả của chính mình.} Khi tham số \texttt{verify\_episodes} được bật, mọi phiên thực thi mà agent tự tuyên bố hoàn thành đều được một LLM độc lập chấm lại dựa trên chính trạng thái trang cuối cùng của phiên thực thi đó; 801 trường hợp bị đánh dấu thất bại, tương đương khoảng 27\% tổng số lần tự tuyên bố hoàn thành. Nếu không có cổng kiểm chứng này, xấp xỉ một phần tư tập dữ liệu huấn luyện sẽ là những chuỗi hành động dạy mô hình cách tuyên bố đã hoàn thành trong khi thực tế chưa hoàn thành.
 
-Bảng~\ref{tab:dataset} trình bày tập dữ liệu thu được sau khi các trajectory
-được xuất thành mẫu huấn luyện. Mỗi mẫu tương ứng với một
-bước hành động, trong đó đầu vào là prompt \emph{trùng khớp hoàn toàn} với
-prompt mà solver sử dụng lúc chạy thật, bao gồm cả cách cắt ngắn
-accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp
-\texttt{\{thought, action\}}.
+\subsubsection{Tập dữ liệu huấn luyện}
+Bảng~\ref{tab:dataset} trình bày tập dữ liệu thu được sau khi các chuỗi hành động được xuất thành mẫu huấn luyện. Mỗi mẫu tương ứng với một bước hành động, trong đó đầu vào là prompt \emph{trùng khớp hoàn toàn} với prompt mà bộ giải tác vụ sử dụng lúc chạy thật, bao gồm cả cách cắt ngắn accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp \texttt{\{thought, action\}}.
 
 \begin{table}[htbp]
   \centering
   \caption[Tập dữ liệu huấn luyện theo website]{Tập dữ liệu huấn luyện theo
     website, sau khi qua cổng chấm và cổng ``hành động hữu hiệu''. Hai cột cuối
-    là kết quả chia tập theo đơn vị task; chúng cộng lại nhỏ hơn cột ``Mẫu'' vì
+    là kết quả chia tập theo đơn vị tác vụ; chúng cộng lại nhỏ hơn cột ``Mẫu'' vì
   bước hợp nhất còn khử các mẫu trùng lặp.}
   \label{tab:dataset}
   \small
   \begin{tabular}{@{}L{3.4cm} R{2.4cm} R{2.4cm} R{2.4cm} R{2.4cm}@{}}
     \toprule
-    \textbf{Website} & \textbf{Số trajectory} & \textbf{Số mẫu (bước)} &
+    \textbf{Website} & \textbf{Số chuỗi hành động} & \textbf{Số mẫu (bước)} &
     \textbf{Tập train (mẫu)} & \textbf{Tập val (mẫu)} \\
     \midrule
     Shopping Admin & 563 & 3759 & 3585 & 174 \\
@@ -392,52 +197,96 @@ accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp
 Con số cuối cùng được quyết định bởi hai cổng lọc chất lượng:
 
 \begin{itemize}
-  \item \textbf{Cổng chấm lại episode}: chỉ giữ những episode đã được bộ chấm
-    độc lập xác nhận. Một episode chưa từng được chấm sẽ bị loại chứ không được
+  \item \textbf{Cổng chấm lại phiên thực thi}: chỉ giữ những phiên thực thi đã được bộ chấm
+    độc lập xác nhận. Một phiên thực thi chưa từng được chấm sẽ bị loại chứ không được
     mặc nhiên coi là hợp lệ. Cổng này không phát sinh thêm lời gọi LLM nào ở khâu
-    dựng dữ liệu: nó chỉ \emph{đọc lại} phán quyết mà bộ chấm đã ghi kèm episode
+    dựng dữ liệu: nó chỉ \emph{đọc lại} phán quyết mà bộ chấm đã ghi kèm phiên thực thi
     ngay trong vòng lặp khám phá (Mục~\ref{sec:method-success}), nên vai trò thực
-    chất của nó là một chốt an toàn, bảo đảm không một episode chưa qua chấm nào
+    chất của nó là một chốt an toàn, bảo đảm không một phiên thực thi chưa qua chấm nào
     lọt vào tập dữ liệu.
-  \item \textbf{Cổng hành động hữu hiệu}: một episode được gắn nhãn
+  \item \textbf{Cổng hành động hữu hiệu}: một phiên thực thi được gắn nhãn
     \texttt{[MOD]}\slash\texttt{[NAV]}\slash\texttt{[COMPOSITE]} nhưng các bước
     được xuất ra lại không chứa bất kỳ hành động nào thực sự tác động lên trang
     (\texttt{click}\slash\texttt{fill}\slash\texttt{select\_option}\slash
     \texttt{press}\slash\texttt{goto}\slash\texttt{go\_back}\slash\texttt{tab\_*})
-    sẽ bị loại bỏ, bởi một task ``sửa đổi'' mà không sửa đổi gì là một thành
-    công giả. Cổng này loại 104 trajectory, tương ứng 279 mẫu. Điểm đáng lưu ý là bộ chấm LLM \emph{không} phát hiện được nhóm trường hợp này, vì nó chỉ xét trạng thái trang cuối, mà trạng thái
+    sẽ bị loại bỏ, bởi một tác vụ ``sửa đổi'' mà không sửa đổi gì là một thành
+    công giả. Cổng này loại 104 chuỗi hành động, tương ứng 279 mẫu. Điểm đáng lưu ý là bộ chấm LLM \emph{không} phát hiện được nhóm trường hợp này, vì nó chỉ xét trạng thái trang cuối, mà trạng thái
     đó thì không hề thay đổi.
 \end{itemize}
 
-Một đặc điểm của bảng này cần được nêu rõ vì nó ảnh hưởng tới cách đọc kết
-quả đánh giá: \textbf{tập dữ liệu mất cân đối mạnh giữa các website}. Shopping
-Admin và Reddit chiếm 41{,}9\% và 36{,}6\% số mẫu huấn luyện, cộng lại là
-78{,}5\%, trong khi Shopping còn 11{,}4\% và GitLab còn 10{,}0\%. Đây là hệ
-quả trực tiếp của việc cấp ngân sách khám phá lớn hơn cho hai website nhiều
-thao tác thay đổi trạng thái, và là một biến số cần nhớ khi đọc
-Mục~\ref{sec:exp-analysis}.
+Một đặc điểm của bảng này cần được nêu rõ vì nó ảnh hưởng tới cách đọc kết quả đánh giá: tập dữ liệu mất cân đối mạnh giữa các website. Shopping Admin và Reddit chiếm 41{,}9\% và 36{,}6\% số mẫu huấn luyện, cộng lại là 78{,}5\%, trong khi Shopping còn 11{,}4\% và GitLab còn 10{,}0\%. Đây là hệ quả trực tiếp của việc cấp ngân sách khám phá lớn hơn cho hai website nhiều thao tác thay đổi trạng thái, và là một biến số cần nhớ khi đọc Mục~\ref{sec:exp-analysis}.
 
-Quá trình phân chia tập train và tập validation được thực hiện nghiêm ngặt ở cấp độ \emph{task}, thay vì cấp độ trajectory. Cụ thể, mọi trajectory phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng trajectory đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Hệ quả là rò rỉ dữ liệu: chỉ số tổn thất kiểm định (\texttt{eval\_loss}) khi đó phản ánh khả năng ghi nhớ chứ không phản ánh năng lực khái quát hóa.
+Quá trình phân chia tập train và tập validation được thực hiện nghiêm ngặt ở cấp độ \emph{tác vụ}, thay vì cấp độ chuỗi hành động. Cụ thể, mọi chuỗi hành động phục vụ cho cùng một mục tiêu (bao gồm cả hai phiên bản \texttt{LOCAL} và \texttt{UNPREFIXED}) bắt buộc phải được phân bổ vào cùng một tập dữ liệu. Nếu hệ thống phân chia theo từng chuỗi hành động đơn lẻ, các biến thể của cùng một mục tiêu có nguy cơ bị rải rác ở cả hai tập. Hệ quả là rò rỉ dữ liệu: chỉ số tổn thất kiểm định (\texttt{eval\_loss}) khi đó phản ánh khả năng ghi nhớ chứ không phản ánh năng lực khái quát hóa.
 
-Nhờ chiến lược chia tách này, tập kiểm định đạt được mức độ cách ly tuyệt đối với \textbf{0} mục tiêu trùng lặp so với tập huấn luyện. Thêm vào đó, dữ liệu kiểm định được lấy mẫu phân tầng (stratified) \emph{theo từng website cụ thể}. Cơ chế này duy trì tỷ lệ phân bổ cân đối, ngăn chặn triệt để tình trạng một website có lượng dữ liệu lớn làm sai lệch và chi phối toàn bộ các chỉ số đánh giá tổng thể.
+Nhờ chiến lược chia tách này, tập kiểm định đạt được mức độ cách ly tuyệt đối với 0 mục tiêu trùng lặp so với tập huấn luyện. Thêm vào đó, dữ liệu kiểm định được lấy mẫu phân tầng (stratified) \emph{theo từng website cụ thể}. Cơ chế này duy trì tỷ lệ phân bổ cân đối, ngăn chặn triệt để tình trạng một website có lượng dữ liệu lớn làm sai lệch và chi phối toàn bộ các chỉ số đánh giá tổng thể.
 
-\section{Kết quả fine-tuning}
+\subsubsection{Chi phí và tài nguyên thu thập dữ liệu}
+\label{sec:exp-cost-explore}
+
+\noindent\emph{Mục này góp số liệu cho CH3.}
+
+Khác với các giai đoạn sử dụng GPU cho thuê, giai đoạn khám phá tự hành trả tiền theo số token gửi tới API của các mô hình đóng, nên chi phí của nó tỷ lệ trực tiếp với \emph{số lời gọi LLM}. Bảng~\ref{tab:calls} thống kê ngân sách lời gọi thực tế của cả bốn đợt khám phá, đếm trực tiếp từ các sản phẩm mà hệ thống ghi lại.
+
+\begin{table}[htbp]
+  \centering
+  \caption[Ngân sách lời gọi và token của giai đoạn khám phá]{Ngân sách lời gọi LLM và lượng token của cả bốn đợt khám phá. Số lời gọi bộ giải tác vụ lấy bằng số bước hành động đã ghi, nên là cận dưới: nhật ký sự kiện ghi 32\,003 bước. Token ước lượng bằng cách đo trực tiếp prompt đã dựng — mỗi lời gọi bộ giải tác vụ mang trung bình 1\,974 token vào và 66 token ra.}
+  \label{tab:calls}
+  \footnotesize
+  \begin{tabular}{@{}L{3.2cm} L{2.6cm} R{1.8cm} R{1.8cm} R{1.8cm} R{1.6cm}@{}}
+    \toprule
+    \textbf{Vai trò} & \textbf{Mô hình} & \textbf{Lời gọi (lượt)} & \textbf{Token vào (triệu)} & \textbf{Token ra (triệu)} & \textbf{Chi phí (\%)} \\
+    \midrule
+    \multicolumn{6}{@{}l}{\textit{OpenAI}} \\
+    \quad \texttt{solver} & GPT-5.6-luna & 22\,857 & 45{,}1 & 1{,}5 & 26{,}5 \\
+    \quad \texttt{solver} & GPT-4o & 3\,864 & 7{,}6 & 0{,}3 & 52{,}9 \\
+    \quad \texttt{solver\_goal} & GPT-5.6-terra & 1\,663 & 3{,}3 & 0{,}1 & 19{,}3 \\
+    \quad \texttt{page\_explorer} & GPT-5.6-luna & 470 & 1{,}0 & 0{,}2 & 1{,}1 \\
+    \quad \texttt{goal\_planner} & GPT-5.6-luna & 142 & 0{,}2 & $<0{,}1$ & 0{,}2 \\
+    \quad \texttt{site\_seeder} & GPT-5.6-luna & 8 & $<0{,}1$ & $<0{,}1$ & $<0{,}1$ \\
+    \quad \textit{Cộng} & & \textit{29\,004} & \textit{57{,}3} & \textit{2{,}1} & \textit{100{,}0} \\
+    \addlinespace
+    \multicolumn{6}{@{}l}{\textit{DeepSeek}} \\
+    \quad \texttt{episode\_judge} & DeepSeek-v4-pro & 2\,918 & 3{,}4 & 0{,}2 & --- \\
+    \quad \texttt{trajectory\_segmenter} & DeepSeek-v4-pro & 2\,117 & 1{,}1 & 0{,}4 & --- \\
+    \quad \texttt{operator\_inducer} & DeepSeek-v4-pro & 217 & 0{,}7 & $<0{,}1$ & --- \\
+    \quad \textit{Cộng} & & \textit{5\,252} & \textit{5{,}1} & \textit{0{,}7} & --- \\
+    \midrule
+    \textbf{Tổng} & & \textbf{34\,256} & \textbf{62{,}4} & \textbf{2{,}7} & \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Phân bố này cho thấy 82{,}9\% số lời gọi và 88{,}9\% lượng token thuộc về bộ giải tác vụ, do đây là vai trò duy nhất nằm trong vòng lặp hành động từng bước. Chi phí khám phá thực chất là một quyết định về bộ giải tác vụ: GPT-4o chỉ chiếm 13{,}6\% số bước nhưng chiếm 52{,}9\% chi phí, do đơn giá token vào của nó cao gấp 12{,}5 lần GPT-5.6-luna — đây chính là lý do vai trò này được chuyển sang GPT-5.6-luna giữa chừng các đợt chạy.
+
+Chi phí API thực tế của toàn bộ giai đoạn khám phá được tổng hợp từ hóa đơn của nhà cung cấp ở Bảng~\ref{tab:apicost}.
+
+\begin{table}[htbp]
+  \centering
+  \caption[Chi phí API thực tế của giai đoạn khám phá]{Chi phí API thực tế của toàn bộ giai đoạn khám phá, tổng hợp từ hóa đơn của nhà cung cấp. Cột token là tổng token vào và ra ước lượng theo Bảng~\ref{tab:calls}.}
+  \label{tab:apicost}
+  \small
+  \begin{tabular}{@{}L{2.5cm} L{4.4cm} R{1.8cm} R{1.9cm} R{2.0cm}@{}}
+    \toprule
+    \textbf{Nhà cung cấp} & \textbf{Vai trò sử dụng} & \textbf{Token (triệu)} & \textbf{Chi phí (USD)} & \textbf{USD/1M token} \\
+    \midrule
+    OpenAI & \texttt{solver}, \texttt{page\_explorer}, \texttt{goal\_planner}, \texttt{site\_seeder} & 59{,}3 & 42{,}29 & 0{,}71 \\
+    DeepSeek & \texttt{episode\_judge}, pipeline phát hiện kỹ năng & 5{,}8 & 11{,}92 & 2{,}07 \\
+    \midrule
+    \textbf{Tổng} & & \textbf{65{,}1} & \textbf{54{,}21} & \textbf{0{,}83} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Tính trên 1760 chuỗi hành động thành công (Bảng~\ref{tab:dataset}), chi phí API trung bình là $54{,}21 / 1760 \approx 0{,}0308$\,USD mỗi chuỗi hành động. So với Go-Browse~\cite{gandhi2026gobrowse} (0{,}1026\,USD/chuỗi hành động), chi phí trung bình trên mỗi chuỗi hành động thành công của HSGE thấp hơn khoảng 3{,}3 lần. Sự khác biệt này chủ yếu đến từ việc HSGE định tuyến các lời gọi tần suất cao của bộ giải tác vụ sang mô hình có chi phí thấp hơn.
+
+\subsection{Kết quả fine-tuning}
 \label{sec:exp-sft}
 
-Mô hình nền là Qwen3.5-9B~\cite{qwen2026qwen35}, được fine-tune bằng
-LoRA~\cite{hu2022lora} với thư viện LLaMA-Factory~\cite{zheng2024llamafactory}. Cấu hình LoRA gồm rank 16, $\alpha$ 32, dropout 0{,}05, áp
-lên toàn bộ các lớp tuyến tính.
+Mô hình nền là Qwen3.5-9B~\cite{qwen2026qwen35}, được fine-tune bằng LoRA~\cite{hu2022lora} với thư viện LLaMA-Factory~\cite{zheng2024llamafactory}. Cấu hình LoRA gồm rank 16, $\alpha$ 32, dropout 0{,}05, áp lên toàn bộ các lớp tuyến tính.
 
-Kích thước batch hiệu dụng là 16. Độ dài ngữ cảnh được đặt ở 4096 token; giá
-trị này được xác định bằng cách đo trực tiếp trên tokenizer của mô hình (độ
-dài lớn nhất 4040 token, phân vị 99 là 3672 token, không mẫu nào bị cắt).
+Kích thước batch hiệu dụng là 16. Độ dài ngữ cảnh được đặt ở 4096 token; giá trị này được xác định bằng cách đo trực tiếp trên tokenizer của mô hình (độ dài lớn nhất 4040 token, phân vị 99 là 3672 token, không mẫu nào bị cắt).
 
-Lịch learning rate gồm hai pha. Pha đầu chạy ở $1{,}0 \times 10^{-4}$ theo
-lịch cosine với warmup 10\%, lưu checkpoint sau mỗi epoch và giữ lại
-checkpoint tốt nhất theo \texttt{eval\_loss}. Pha sau hạ learning rate xuống
-$3{,}0 \times 10^{-5}$, mức phù hợp khi tiếp tục tinh chỉnh từ những trọng số
-đã hội tụ: giữ nguyên learning rate ban đầu ở giai đoạn này khiến mô hình ghi
-đè lên phần đã học thay vì mở rộng nó.
+Lịch learning rate gồm hai pha. Pha đầu chạy ở $1{,}0 \times 10^{-4}$ theo lịch cosine với warmup 10\%, lưu điểm kiểm tra sau mỗi epoch và giữ lại điểm kiểm tra tốt nhất theo \texttt{eval\_loss}. Pha sau hạ learning rate xuống $3{,}0 \times 10^{-5}$, mức phù hợp khi tiếp tục tinh chỉnh từ những trọng số đã hội tụ: giữ nguyên learning rate ban đầu ở giai đoạn này khiến mô hình ghi đè lên phần đã học thay vì mở rộng nó.
 
 Bảng~\ref{tab:sft} tổng hợp cấu hình và kết quả.
 
@@ -457,60 +306,78 @@ Bảng~\ref{tab:sft} tổng hợp cấu hình và kết quả.
     Tổng số bước (step) & 1119 bước \\
     Thời gian huấn luyện & 5 giờ 09 phút \\
     \texttt{train\_loss} cuối & 0{,}4536 \\
-    \texttt{eval\_loss} (checkpoint tốt nhất) & 0{,}4219 \\
-    Checkpoint được chọn & \texttt{checkpoint-315} \\
+    \texttt{eval\_loss} (điểm kiểm tra tốt nhất) & 0{,}4219 \\
+    Điểm kiểm tra được chọn & \texttt{checkpoint-315} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 Có hai điểm cần được làm rõ khi diễn giải bảng này.
 
-\textbf{Mô hình bắt đầu overfit từ epoch thứ ba.} Trong pha đầu, giá trị
-\texttt{eval\_loss} giảm ở epoch 2 (0{,}4343) rồi tăng trở lại ở epoch 3
-(0{,}4535), do đó checkpoint của epoch 2 được giữ lại thay vì trạng thái cuối
-của pha đó. Đây cũng là lý do khóa luận sử dụng chiến lược lưu checkpoint theo
-từng epoch thay vì chỉ giữ lại trạng thái cuối cùng.
+\textbf{Mô hình bắt đầu có dấu hiệu quá khớp (overfit) từ epoch thứ ba.} Trong pha đầu, giá trị
 
-\textbf{Giá trị \texttt{eval\_loss} tuyệt đối cần được đọc cùng với cách
-xây dựng tập kiểm định.} Tập kiểm định ở đây được tách theo đơn vị task và
-không chia sẻ mục tiêu nào với tập huấn luyện
-(mục~\ref{sec:exp-data}); đồng thời, những trajectory dễ dự đoán nhất, tức các
-trajectory chỉ gồm một bước tuyên bố hoàn thành mà không tác động lên trang,
-đã bị loại khỏi dữ liệu. Cả hai yếu tố này đều làm bài toán dự đoán khó hơn
-và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ
-mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở
-Phụ lục~\ref{sec:disc-slm}.
+\texttt{eval\_loss} giảm ở epoch 2 (0{,}4343) rồi tăng trở lại ở epoch 3 (0{,}4535), do đó điểm kiểm tra của epoch 2 được giữ lại thay vì trạng thái cuối của pha đó. Đây cũng là lý do khóa luận sử dụng chiến lược lưu điểm kiểm tra theo từng epoch thay vì chỉ giữ lại trạng thái cuối cùng.
 
-Một chi tiết môi trường đáng ghi nhận, tuy không ảnh hưởng tới kết quả: đường
-đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa âm thầm khi thiếu
-thư viện \texttt{causal-conv1d}, làm tốc độ huấn luyện chậm đi 2{,}3 lần mà
-không phát sinh cảnh báo nào (Phụ lục~\ref{sec:disc-slm}).
+\textbf{Giá trị \texttt{eval\_loss} tuyệt đối cần được đánh giá cùng với quy trình xây dựng tập kiểm định.} Tập kiểm định ở đây được tách theo đơn vị tác vụ và không chia sẻ mục tiêu nào với tập huấn luyện (mục~\ref{sec:exp-data}); đồng thời, những chuỗi hành động dễ dự đoán nhất, tức các chuỗi hành động chỉ gồm một bước tuyên bố hoàn thành mà không tác động lên trang, đã bị loại khỏi dữ liệu. Cả hai yếu tố này đều làm bài toán dự đoán khó hơn và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở Phụ lục~\ref{sec:disc-slm}.
 
-\section{Đánh giá chính trên WebArena}
+Một chi tiết môi trường đáng ghi nhận, tuy không ảnh hưởng tới kết quả: đường đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa âm thầm khi thiếu thư viện \texttt{causal-conv1d}, làm tốc độ huấn luyện chậm đi 2{,}3 lần mà không phát sinh cảnh báo nào (Phụ lục~\ref{sec:disc-slm}).
+
+\subsubsection{Chuyển tập dữ liệu sang mô hình nền Qwen-2.5-7B}
+
+\label{sec:exp-backbone}
+
+Để tách phần đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ tập dữ liệu 8554 mẫu được dùng để fine-tune mô hình nền thứ hai: Qwen-2.5-7B-Instruct~\cite{qwen2024qwen25} — đây chính là mô hình nền mà Go-Browse~\cite{gandhi2026gobrowse} và NNetNav~\cite{murty2024nnetnav} sử dụng. Quá trình fine-tuning áp dụng cấu hình LoRA tương tự và được đánh giá trên đúng 655 tác vụ với cùng bộ chấm, ngân sách 15 bước và cấu hình giải mã.
+
+\begin{table}[htbp]
+  \centering
+  \caption[Hiệu năng fine-tuning trên mô hình nền Qwen-2.5-7B]{Hiệu năng của Qwen-2.5-7B trước và sau khi fine-tune trên tập dữ liệu HSGE (8554 mẫu), đánh giá trên 655 tác vụ WebArena. Cột mô hình nền dẫn theo số liệu công bố của Go-Browse~\cite{gandhi2026gobrowse}.}
+  \label{tab:backbone7b}
+  \small
+  \begin{tabular}{@{}L{3.6cm} R{3.0cm} R{3.0cm} R{2.8cm}@{}}
+    \toprule
+    \textbf{Miền / Website} & \textbf{Mô hình nền 7B~\cite{gandhi2026gobrowse} (SR, \%)} & \textbf{Sau fine-tune (SR, \%)} & \textbf{$\Delta$ SR (đpt)} \\
+    \midrule
+    Shopping & 9{,}4 & \textbf{21{,}4} & $+$12{,}0 \\
+    Shopping Admin & 7{,}1 & \textbf{11{,}5} & $+$4{,}4 \\
+    GitLab & 8{,}7 & \textbf{12{,}2} & $+$3{,}5 \\
+    Reddit & 7{,}9 & \textbf{23{,}6} & $+$15{,}7 \\
+    \midrule
+    \textbf{Tổng (655 tác vụ)} & \textbf{8{,}3} & \textbf{16{,}5} & \textbf{$+$8{,}2} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Bảng~\ref{tab:backbone7b} cho thấy tập dữ liệu HSGE cải thiện tỷ lệ thành công trên cả bốn website, nâng tổng thể từ 8{,}3\% lên 16{,}5\% ($+$8{,}2 đpt, gần gấp đôi). Mức tăng mạnh nhất xuất hiện ở Reddit ($+$15{,}7 đpt) và Shopping ($+$12{,}0 đpt).
+
+Tuy nhiên, phân tích vết thực thi cho thấy 58-60\% tác vụ của bản 7B chứa ít nhất một phản hồi không phân giải được, và không tác vụ nào trong nhóm đó thành công. Khi loại trừ nhóm lỗi định dạng và chỉ xét các tác vụ có đầu ra sạch, tỷ lệ thành công của 7B đạt 21{,}9\% ở Shopping Admin, 23{,}7\% ở GitLab và 34{,}1\% ở Reddit — xấp xỉ mức của bản 9B trên cùng miền. Cần lưu ý rằng nhóm đầu ra sạch không phải mẫu phân bố ngẫu nhiên (các tác vụ ngắn có ít rủi ro hỏng định dạng hơn), nên đây là ước lượng \emph{thiên lệch lên}: nó chứng minh phần lớn khoảng cách xuất phát từ lỗi tuân thủ định dạng chứ không chứng minh 7B mạnh ngang 9B.
+
+Đáng chú ý, 92-98\% phản hồi hỏng của bản 7B là các lệnh \texttt{report\_infeasible} viết trần kết thúc bình thường kèm lý do mạch lạc (chỉ thiếu lớp vỏ JSON). Hệ quả là 7B chỉ ghi nhận 10/182 lần báo bất khả thi ở Shopping Admin so với 41/182 của bản 9B. Vì WebArena cho điểm khi agent báo bất khả thi chính xác, con số 16{,}5\% thực chất là một cận dưới bị hạ thấp bởi bộ phân giải đầu ra nghiêm ngặt. Kết quả của bản 7B sau fine-tune cũng được đối chứng ở Bảng~\ref{tab:related} để tham chiếu cùng mô hình nền Qwen-2.5-7B với Go-Browse-7B và NNetNav-7B.
+
+Kết quả này khẳng định hai điểm quan trọng: (1) tập dữ liệu HSGE nâng cao năng lực cho cả hai mô hình nền so với chính chúng, chứng minh tri thức thu thập không bị phụ thuộc vào một kiến trúc duy nhất; và (2) đối với các mô hình nền nhỏ hơn, độ nghiêm của bộ phân giải đầu ra trở thành một thành phần chi phối kết quả đo lường.
+
+\subsection{Kết quả đánh giá trên WebArena}
 \label{sec:exp-main}
 
 \noindent\emph{Mục này trả lời CH2.}
 
-\subsection{Kết quả tổng hợp}
-
-Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 task chính thức của
-bốn website. Toàn bộ 655 task đều được chấm điểm: không task nào phát sinh lỗi môi trường, không task nào bị bỏ qua. Mẫu số của mọi tỷ lệ trong bảng vì thế là số task đầy đủ của website tương ứng.
+\subsubsection{Kết quả tổng hợp}
+Bảng~\ref{tab:main} trình bày kết quả trên toàn bộ 655 tác vụ chính thức của bốn website. Toàn bộ 655 tác vụ đều được chấm điểm: không tác vụ nào phát sinh lỗi môi trường, không tác vụ nào bị bỏ qua. Mẫu số của mọi tỷ lệ trong bảng vì thế là số tác vụ đầy đủ của website tương ứng.
 
 \begin{table}[htbp]
   \centering
-  \caption[Kết quả đánh giá chính trên WebArena]{Kết quả trên bộ task chính
-    thức của WebArena. Hai dòng đánh dấu $\dagger$ được đo trên một checkpoint
-    trung gian và chưa được đo lại trên checkpoint cuối, nên dòng ``Tổng'' chưa
+  \caption[Kết quả đánh giá chính trên WebArena]{Kết quả trên bộ tác vụ chính
+    thức của WebArena. Hai dòng đánh dấu $\dagger$ được đo trên một điểm kiểm tra
+    trung gian và chưa được đo lại trên điểm kiểm tra cuối, nên dòng ``Tổng'' chưa
     phải kết quả của một mô hình duy nhất.
     Cột cuối ghi tỷ lệ hoàn thành kèm nửa độ rộng khoảng tin cậy 95\%, tính bằng
     điểm phần trăm. Đây là khoảng nhị thức theo xấp xỉ chuẩn trên \emph{tập
-    task}~\cite{brown2001binomial}, phản ánh sai số lấy mẫu task chứ không phải
-  độ biến thiên giữa các lần chạy (xem mục~\ref{sec:exp-stats}).}
+    tác vụ}~\cite{brown2001binomial}, phản ánh sai số lấy mẫu tác vụ chứ không phải
+  độ biến thiên giữa các lần chạy .}
   \label{tab:main}
   \small
   \begin{tabular}{@{}L{3.6cm} R{2.0cm} R{2.2cm} R{4.0cm}@{}}
     \toprule
-    \textbf{Website} & \textbf{Tổng số task} & \textbf{Số task đạt} & \textbf{Tỷ lệ thành công -- SR (\%)} \\
+    \textbf{Website} & \textbf{Tổng số tác vụ} & \textbf{Số tác vụ đạt} & \textbf{Tỷ lệ thành công -- SR (\%)} \\
     \midrule
     Shopping$^\dagger$ & 187 & 53 & 28{,}3 $\pm$ 6{,}5 \\
     Reddit & 106 & 36 & 34{,}0 $\pm$ 9{,}0 \\
@@ -522,24 +389,24 @@ bốn website. Toàn bộ 655 task đều được chấm điểm: không task n
   \end{tabular}
 \end{table}
 
-\subsection{So với mô hình nền chưa fine-tune}
+\subsubsection{So với mô hình nền chưa fine-tune}
 \label{sec:exp-baseline}
 
-Để tách đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ 655 task được đo lại một lần nữa trên mô hình Qwen3.5-9B \emph{chưa} fine-tune. Mọi thứ khác giữ nguyên: prompt, ngân sách bước, cấu hình giải mã và bộ chấm đã mô tả ở mục~\ref{sec:exp-protocol}. Khác biệt duy nhất giữa hai đợt đo là trọng số nạp vào máy chủ suy luận. Đợt đo mô hình nền chỉ bắt đầu sau khi cơ sở dữ liệu của cả bốn website đã được khôi phục về trạng thái nguyên bản. Lý do đến từ một đợt đo trước đó: khi hai lượt quét chạy nối tiếp trên cùng một instance mà không khôi phục dữ liệu ở giữa, những thay đổi lượt trước để lại sẽ được bộ chấm ghi nhận cho lượt sau. Cả bốn website đều hoàn tất đủ mẫu số, không có task nào phát sinh lỗi môi trường.
+Để tách đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ 655 tác vụ được đo lại một lần nữa trên mô hình Qwen3.5-9B \emph{chưa} fine-tune. Mọi thứ khác giữ nguyên: prompt, ngân sách bước, cấu hình giải mã và bộ chấm đã mô tả ở mục~\ref{sec:exp-protocol}. Khác biệt duy nhất giữa hai đợt đo là trọng số nạp vào máy chủ suy luận. Đợt đo mô hình nền chỉ bắt đầu sau khi cơ sở dữ liệu của cả bốn website đã được khôi phục về trạng thái nguyên bản. Lý do đến từ một đợt đo trước đó: khi hai lượt quét chạy nối tiếp trên cùng một instance mà không khôi phục dữ liệu ở giữa, những thay đổi lượt trước để lại sẽ được bộ chấm ghi nhận cho lượt sau. Cả bốn website đều hoàn tất đủ mẫu số, không có tác vụ nào phát sinh lỗi môi trường.
 
 \begin{table}[htbp]
   \centering
   \caption[Đối chứng mô hình nền và mô hình sau fine-tune]{Đối chứng giữa mô
-    hình nền Qwen3.5-9B và mô hình sau fine-tune, đo trên cùng bộ task chính
+    hình nền Qwen3.5-9B và mô hình sau fine-tune, đo trên cùng bộ tác vụ chính
     thức với cùng cấu hình đánh giá. Vì hai mô hình được đo trên \emph{cùng một}
-    tập task, cột cuối báo cáo kiểm định McNemar theo
-    cặp~\cite{mcnemar1947}, tức chỉ xét những task mà hai mô hình cho kết quả
+    tập tác vụ, cột cuối báo cáo kiểm định McNemar theo
+    cặp~\cite{mcnemar1947}, tức chỉ xét những tác vụ mà hai mô hình cho kết quả
     khác nhau, thay vì kiểm định hai tỷ lệ độc lập. Cột ``Chênh lệch'' tính bằng
     điểm phần trăm (đpt). Điểm số trong bảng là kết quả sau khi phán quyết của
     bộ chấm được rà soát thủ công theo cả hai chiều: hạ 16 phiên chấm đỗ nhầm của
     mô hình nền và khôi phục 19 phiên chấm trượt nhầm của mô hình sau fine-tune,
     đều là lỗi của tiêu chí chấm chứ không phải đánh giá lại theo cảm tính; danh
-    sách task được điều chỉnh kèm lý do từng trường hợp công bố cùng mã nguồn
+    sách tác vụ được điều chỉnh kèm lý do từng trường hợp công bố cùng mã nguồn
     (Mục~\ref{sec:conc-availability}). Hai dòng $\dagger$ xem chú thích
   Bảng~\ref{tab:main}.}
   \label{tab:baseline}
@@ -560,41 +427,28 @@ bốn website. Toàn bộ 655 task đều được chấm điểm: không task n
   \end{tabular}
 \end{table}
 
-Trên toàn bộ bốn website, fine-tuning nâng tỷ lệ hoàn thành từ 13{,}3\% lên 24{,}6\%, tức 11{,}3 điểm phần trăm tuyệt đối và khoảng 85\% về giá trị tương đối. Do hai mô hình được đo trên cùng một tập task, phép kiểm định phù hợp là kiểm định McNemar theo cặp~\cite{mcnemar1947}: có 100 task chỉ mô hình sau fine-tune giải được và 26 task chỉ mô hình nền giải được, cho $\chi^2 = 42{,}3$ và $p < 0{,}001$. Nói cách khác, mức cải thiện không phải là hệ quả của việc mô hình sau fine-tune giải được một tập task khác nhưng cùng độ khó; nó giải thêm được nhiều gần bốn lần so với số task mà nó đánh mất.
+Trên toàn bộ bốn website, fine-tuning nâng tỷ lệ hoàn thành từ 13{,}3\% lên 24{,}6\%, tức 11{,}3 điểm phần trăm tuyệt đối và khoảng 85\% về giá trị tương đối. Do hai mô hình được đo trên cùng một tập tác vụ, phép kiểm định phù hợp là kiểm định McNemar theo cặp~\cite{mcnemar1947}: có 100 tác vụ chỉ mô hình sau fine-tune giải được và 26 tác vụ chỉ mô hình nền giải được, cho $\chi^2 = 42{,}3$ và $p < 0{,}001$. Nói cách khác, mức cải thiện không phải là hệ quả của việc mô hình sau fine-tune giải được một tập tác vụ khác nhưng cùng độ khó; nó giải thêm được nhiều gần bốn lần so với số tác vụ mà nó đánh mất.
 
-Mức cải thiện phân bố không đều giữa các website nhưng đạt ý nghĩa thống kê
-trên cả bốn. Reddit là nơi chênh lệch lớn nhất, từ 6{,}6\% lên 34{,}0\%, tức
-hơn năm lần. Shopping Admin tăng 8{,}8 điểm ($p = 0{,}005$): 16 task được cả
-hai mô hình giải được, 23 task chỉ mô hình sau fine-tune giải được và 7 task
-chỉ mô hình nền giải được. Shopping tăng 8{,}6 điểm và GitLab tăng 7{,}2
-điểm. Đáng chú ý, hai website được cấp ngân sách khám phá lớn nhất cũng là hai
-website cải thiện nhiều nhất - nhưng thứ tự bên trong cặp đó thì ngược lại:
-Shopping Admin chiếm phần dữ liệu huấn luyện lớn hơn Reddit (41{,}9\% so với
-36{,}6\%) mà chỉ cải thiện 8{,}8 điểm so với 27{,}4 điểm của Reddit. Lượng dữ
-liệu vì vậy giải thích được việc một website có nằm trong nhóm cải thiện mạnh
-hay không, nhưng không giải thích được mức cải thiện bên trong nhóm;
-Mục~\ref{sec:exp-ablation} quay lại điểm này với một phép đo trực tiếp.
+Mức cải thiện phân bố không đều giữa các website nhưng đạt ý nghĩa thống kê trên cả bốn. Reddit là nơi chênh lệch lớn nhất, từ 6{,}6\% lên 34{,}0\%, tức hơn năm lần. Shopping Admin tăng 8{,}8 điểm ($p = 0{,}005$): 16 tác vụ được cả hai mô hình giải được, 23 tác vụ chỉ mô hình sau fine-tune giải được và 7 tác vụ chỉ mô hình nền giải được. Shopping tăng 8{,}6 điểm và GitLab tăng 7{,}2 điểm. Đáng chú ý, hai website được cấp ngân sách khám phá lớn nhất cũng là hai website cải thiện nhiều nhất - nhưng thứ tự bên trong cặp đó thì ngược lại:
 
-Một phần lớn khoảng cách đến từ \textbf{khả năng tuân thủ định dạng đầu ra}. Ở mô hình nền, 170/655 episode (26{,}0\%) kết thúc do phản hồi không phân giải được thành hành động hợp lệ (gồm 91 phiên sinh tràn dài trung vị $\approx 5300$ token chạm trần ngữ cảnh và 79 phiên kết thúc bình thường nhưng sai định dạng), trong khi mô hình sau fine-tune chỉ còn 4/655 episode (0{,}6\%). Khi tách 655 task theo tiêu chí này để định lượng: trên 170 task mô hình nền hỏng định dạng, mô hình nền đạt 0 task còn mô hình sau fine-tune giải được 47 task; trên 485 task còn lại mà mô hình nền chạy trọn vẹn, tỷ lệ hoàn thành vẫn tăng từ 17{,}9\% (87 task) lên 23{,}5\% (114 task, kiểm định McNemar theo cặp $p = 0{,}003$). Phép tách này là căn cứ của Phát hiện~2 (thảo luận ở Mục~\ref{sec:disc-results}).
+Shopping Admin chiếm phần dữ liệu huấn luyện lớn hơn Reddit (41{,}9\% so với 36{,}6\%) mà chỉ cải thiện 8{,}8 điểm so với 27{,}4 điểm của Reddit. Lượng dữ liệu vì vậy giải thích được việc một website có nằm trong nhóm cải thiện mạnh hay không, nhưng không giải thích được mức cải thiện bên trong nhóm; Mục~\ref{sec:exp-ablation} quay lại điểm này với một phép đo trực tiếp.
+
+Một phần lớn khoảng cách đến từ khả năng tuân thủ định dạng đầu ra. Ở mô hình nền, 170/655 phiên thực thi (26{,}0\%) kết thúc do phản hồi không phân giải được thành hành động hợp lệ (gồm 91 phiên sinh tràn dài trung vị $\approx 5300$ token chạm trần ngữ cảnh và 79 phiên kết thúc bình thường nhưng sai định dạng), trong khi mô hình sau fine-tune chỉ còn 4/655 phiên thực thi (0{,}6\%). Khi tách 655 tác vụ theo tiêu chí này để định lượng: trên 170 tác vụ mô hình nền hỏng định dạng, mô hình nền đạt 0 tác vụ còn mô hình sau fine-tune giải được 47 tác vụ; trên 485 tác vụ còn lại mà mô hình nền chạy trọn vẹn, tỷ lệ hoàn thành vẫn tăng từ 17{,}9\% (87 tác vụ) lên 23{,}5\% (114 tác vụ, kiểm định McNemar theo cặp $p = 0{,}003$). Phép tách này là căn cứ của Phát hiện~2 (thảo luận ở Mục~\ref{sec:disc-results}).
 
 Tuân thủ định dạng là điều kiện cần nhưng chưa đủ. Reddit vừa có tỷ lệ hỏng định dạng cao nhất ở mô hình nền (38{,}7\%) vừa có mức cải thiện lớn nhất, đúng như kỳ vọng; tuy nhiên GitLab có tỷ lệ hỏng định dạng tương đương Shopping (22{,}8\% so với 23{,}0\%) nhưng mức cải thiện thấp hơn. Khi rào cản định dạng được gỡ bỏ, hiệu năng phụ thuộc vào độ khó nội tại của website và lượng dữ liệu thu thập được.
 
-Cuối cùng, cần nhấn mạnh phạm vi của kết luận: mỗi ô trong Bảng~\ref{tab:baseline} là kết quả của một lần chạy trên mỗi task với \texttt{temperature} $= 0$. Phép đo tất định về phía mô hình nhưng chịu ảnh hưởng bởi tính ngẫu nhiên của môi trường.
+Cuối cùng, cần nhấn mạnh phạm vi của kết luận: mỗi ô trong Bảng~\ref{tab:baseline} là kết quả của một lần chạy trên mỗi tác vụ với \texttt{temperature} $= 0$. Phép đo tất định về phía mô hình nhưng chịu ảnh hưởng bởi tính ngẫu nhiên của môi trường.
 
-\subsection{So với các công trình liên quan}
+\subsubsection{So với các công trình liên quan}
+Không thể so trực tiếp con số tổng của các công trình liên quan: các công trình đó báo cáo trên toàn bộ 812 tác vụ của WebArena (bao gồm cả website Map và các tác vụ đa-website), trong khi khóa luận đánh giá trên 655 tác vụ thuộc bốn website. Vì vậy, Bảng~\ref{tab:related}
 
-Không thể so trực tiếp con số tổng của các công trình liên quan: các công trình đó báo cáo trên toàn bộ 812 task của WebArena
-(bao gồm cả website Map và các task đa-website), trong khi khóa luận đánh
-giá trên 655 task thuộc bốn website. Vì vậy, Bảng~\ref{tab:related}
-\emph{tính lại} kết quả của các công trình đó theo trung bình có trọng số
-trên đúng bốn website này, dựa trên bảng kết quả chi tiết theo từng website
-mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
+\emph{tính lại} kết quả của các công trình đó theo trung bình có trọng số trên đúng bốn website này, dựa trên bảng kết quả chi tiết theo từng website mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
 
 \begin{table}[htbp]
   \centering
   \caption[So sánh với các công trình liên quan]{So sánh trên đúng bốn website
     được đánh giá. Cột ``Tổng (4 site)'' được tính lại theo trung bình có trọng
-    số của các tỷ lệ theo từng website, với trọng số là số task chính thức
+    số của các tỷ lệ theo từng website, với trọng số là số tác vụ chính thức
     (Shopping 187, Sh.\ Admin 182, GitLab 180, Reddit 106). Mọi ô trong bảng là tỷ lệ hoàn thành (SR),
     đơn vị phần trăm (\%). Số liệu của tất cả các dòng tham chiếu lấy từ Bảng 3 của
     Go-Browse~\cite{gandhi2026gobrowse} và được dẫn nguồn ngay trên từng dòng;
@@ -604,7 +458,7 @@ mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
   website này (Bảng~\ref{tab:baseline}).}
   \label{tab:related}
   \small
-  \begin{tabular}{@{}L{4.4cm} R{2.5cm} R{1.3cm} R{1.8cm} R{1.5cm} R{1.5cm}@{}}
+  \begin{tabular}{@{}L{5.4cm} R{2.2cm} R{1.4cm} R{1.4cm} R{1.4cm} R{1.4cm}@{}}
     \toprule
     \textbf{Mô hình} & \multicolumn{5}{c}{\textbf{Tỷ lệ thành công -- SR (\%)}} \\
     \cmidrule(lr){2-6}
@@ -615,20 +469,19 @@ mà Go-Browse công bố~\cite{gandhi2026gobrowse}.
     GPT-4o-mini~\cite{gandhi2026gobrowse} & 20{,}0 & 19{,}3 & 19{,}2 & 21{,}1 & 20{,}9 \\
     GPT-4o~\cite{gandhi2026gobrowse} & 37{,}5 & 32{,}3 & 35{,}7 & 50{,}9 & 36{,}7 \\
     \midrule
-    \multicolumn{6}{@{}l}{\textit{Mô hình mở, cỡ nhỏ}} \\
+    \multicolumn{6}{@{}l}{\textit{Mô hình mở, cỡ nhỏ ($<10$B)}} \\
     Qwen-2.5-7B-Instruct~\cite{gandhi2026gobrowse} & 8{,}3 & 9{,}4 & 7{,}1 & 7{,}9 & 8{,}7 \\
     NNetNav-7B~\cite{murty2024nnetnav,gandhi2026gobrowse} & 19{,}1 & 20{,}3 & 14{,}3 & 23{,}7 & \textbf{19{,}9} \\
     Go-Browse-7B~\cite{gandhi2026gobrowse} & 22{,}6 & 22{,}4 & \textbf{25{,}3} & 30{,}7 & 15{,}3 \\
     \midrule
-    \textbf{HSGE-9B (khóa luận)} & \textbf{24{,}6} & \textbf{28{,}3} & 21{,}4 & \textbf{34{,}0} & 18{,}3 \\
-
     Qwen3.5-9B (mô hình nền) & 13{,}3 & 19{,}8 & 12{,}6 & 6{,}6 & 11{,}1 \\
+    HSGE-7B (Qwen-2.5-7B FT) & 16{,}5 & 21{,}4 & 11{,}5 & 23{,}6 & 12{,}2 \\
+    \textbf{HSGE-9B (khóa luận)} & \textbf{24{,}6} & \textbf{28{,}3} & 21{,}4 & \textbf{34{,}0} & 18{,}3 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Bảng này cần được diễn giải một cách thận trọng, vì \emph{ba} khác biệt về
-điều kiện đo khiến nó không phải là một phép so sánh có kiểm soát:
+Bảng này cần được diễn giải một cách thận trọng, vì \emph{ba} khác biệt về điều kiện đo khiến nó không phải là một phép so sánh có kiểm soát:
 
 \begin{enumerate}
   \item \textbf{Mô hình gốc khác nhau.} Khóa luận sử dụng Qwen3.5-9B, mới hơn
@@ -646,7 +499,7 @@ Bảng này cần được diễn giải một cách thận trọng, vì \emph{b
     tập dữ liệu của khóa luận có 8554 mẫu huấn luyện, vẫn nhỏ hơn khoảng năm
     lần.
   \item \textbf{Ngân sách bước và mô hình chấm khác nhau.} Khóa luận giới hạn
-    15 bước cho mỗi task khi đánh giá và sử dụng mô hình chấm mờ thay thế như đã
+    15 bước cho mỗi tác vụ khi đánh giá và sử dụng mô hình chấm mờ thay thế như đã
     nêu ở mục~\ref{sec:exp-protocol}.
 \end{enumerate}
 
@@ -655,43 +508,14 @@ Từ những giới hạn đã phân tích, kết luận xác đáng nhất có 
 Vì vậy phát biểu đúng là: khóa luận \emph{ngang} Go-Browse-7B chứ không vượt. Hai hệ thống còn khác nhau về mô hình nền, quy mô dữ liệu và quy trình chấm, nên một phép so sánh có kết luận được đòi hỏi thiết lập đồng nhất cả ba yếu tố đó - điều nằm ngoài phạm vi khóa luận.
 
 Phân bố kết quả theo từng website mang nhiều thông tin hơn con số tổng.
-Khóa luận cao hơn Go-Browse trên
-Shopping (28{,}3\% so với 22{,}4\%), GitLab (18{,}3\% so với 15{,}3\%) và nay
-cả Reddit (34{,}0\% so với 30{,}7\%); chỉ còn thấp hơn trên Shopping Admin
-(21{,}4\% so với 25{,}3\%), và khoảng cách ở đó đã thu từ gần 10 điểm xuống
-dưới 4 điểm.
 
-Đáng chú ý là hai website khóa luận vượt Go-Browse nhiều nhất - Reddit và
-Shopping - cũng nằm ở hai đầu đối lập về lượng dữ liệu thu được, nên khoảng
-cách này không quy về riêng quy mô dữ liệu được.
-Mục~\ref{sec:exp-analysis} cho thấy nó gắn với kiểu lỗi chiếm ưu thế trên
-từng website.
+Khóa luận cao hơn Go-Browse trên Shopping (28{,}3\% so với 22{,}4\%), GitLab (18{,}3\% so với 15{,}3\%) và nay cả Reddit (34{,}0\% so với 30{,}7\%); chỉ còn thấp hơn trên Shopping Admin (21{,}4\% so với 25{,}3\%), và khoảng cách ở đó đã thu từ gần 10 điểm xuống dưới 4 điểm.
 
-\section{Lặp lại thống kê}
-\label{sec:exp-stats}
+Đáng chú ý là hai website khóa luận vượt Go-Browse nhiều nhất - Reddit và Shopping - cũng nằm ở hai đầu đối lập về lượng dữ liệu thu được, nên khoảng cách này không quy về riêng quy mô dữ liệu được.
 
-\textbf{Hạng mục này chưa được hoàn tất và được ghi lại đúng theo hiện
-trạng.} Toàn bộ số liệu ở mục~\ref{sec:exp-main} đến từ \emph{một} lần chạy
-cho mỗi website, trong đó mỗi task được giải đúng một lần. Việc đặt
-\texttt{temperature} $=0$ loại bỏ tính ngẫu nhiên trong quá trình sinh văn
-bản, nhưng không loại bỏ được tính ngẫu nhiên của môi trường như thời gian
-tải trang, mức độ sẵn sàng của phần tử giao diện hay tình trạng đường truyền
-mạng. Các khoảng tin cậy trong Bảng~\ref{tab:main} là khoảng tin cậy nhị
-thức theo xấp xỉ chuẩn~\cite{brown2001binomial} tính trên tập task, tức chúng trả lời câu hỏi ``nếu lấy một bộ 655 task
-tương tự khác thì tỷ lệ dao động bao nhiêu'', chứ không trả lời câu hỏi
-``nếu chạy lại đúng bộ task này thì tỷ lệ dao động bao nhiêu''.
+Mục~\ref{sec:exp-analysis} cho thấy nó gắn với kiểu lỗi chiếm ưu thế trên từng website.
 
-Để có được kết luận thống kê vững chắc, cần bổ sung hai hạng mục, xếp theo
-thứ tự ưu tiên.
-
-\emph{(i) Lặp lại phép đo} tối thiểu ba lần cho cả hai mô hình, báo cáo
-trung bình kèm độ lệch chuẩn bên cạnh kiểm định theo cặp task đã có ở
-Bảng~\ref{tab:baseline}.
-
-\emph{(ii) Đo lại Shopping cùng Shopping Admin theo trình tự tuần tự} nhằm
-loại trừ khả năng nhiễu chéo đã nêu ở mục~\ref{sec:exp-protocol}.
-
-\section{Ảnh hưởng của lượng dữ liệu}
+\section{Ảnh hưởng của quy mô dữ liệu}
 \label{sec:exp-ablation}
 
 \noindent\emph{Mục này trả lời CH2.}
@@ -699,7 +523,7 @@ loại trừ khả năng nhiễu chéo đã nêu ở mục~\ref{sec:exp-protocol
 \subsection{Ảnh hưởng của lượng dữ liệu bổ sung}
 \label{sec:exp-datascale}
 
-Lịch huấn luyện hai pha ở Mục~\ref{sec:exp-sft} cho phép thực hiện một phép đo mà bảng kết quả chính không thể hiện được. Cuối pha đầu, mô hình mới chỉ tiếp cận phần dữ liệu thu được tại thời điểm đó; pha sau bổ sung thêm dữ liệu thu tiếp cho Reddit và Shopping Admin. Vì mô hình được đánh giá trên bộ task chính thức ở cả hai mốc, hiệu ứng của riêng lượng dữ liệu được tách bạch trên \textbf{cùng một website và cùng một mô hình nền} — điều mà so sánh chéo bốn website không thể thực hiện được.
+Lịch huấn luyện hai pha ở Mục~\ref{sec:exp-sft} cho phép thực hiện một phép đo mà bảng kết quả chính không thể hiện được. Cuối pha đầu, mô hình mới chỉ tiếp cận phần dữ liệu thu được tại thời điểm đó; pha sau bổ sung thêm dữ liệu thu tiếp cho Reddit và Shopping Admin. Vì mô hình được đánh giá trên bộ tác vụ chính thức ở cả hai mốc, hiệu ứng của riêng lượng dữ liệu được tách bạch trên cùng một website và cùng một mô hình nền — điều mà so sánh chéo bốn website không thể thực hiện được.
 
 \begin{table}[htbp]
   \centering
@@ -713,26 +537,25 @@ Lịch huấn luyện hai pha ở Mục~\ref{sec:exp-sft} cho phép thực hiệ
     Reddit & $+$1856 ($\times$2{,}45) & 20{,}8 & \textbf{34{,}0} & $+$13{,}2 & $+$7{,}1 \\
     Shopping Admin & $+$2410 ($\times$3{,}05) & 15{,}4 & \textbf{21{,}4} & $+$6{,}0 & $+$2{,}5 \\
     \midrule
-    \textbf{Cộng (288 task)} & \textbf{$+$4266} & \textbf{17{,}4} & \textbf{26{,}0} & \textbf{$+$8{,}7} & \textbf{$+$2{,}0} \\
+    \textbf{Cộng (288 tác vụ)} & \textbf{$+$4266} & \textbf{17{,}4} & \textbf{26{,}0} & \textbf{$+$8{,}7} & \textbf{$+$2{,}0} \\
     \bottomrule
   \end{tabular}%
   }
 \end{table}
 
-Bảng~\ref{tab:datascale} cho thấy \textbf{bổ sung dữ liệu giúp nâng tỷ lệ hoàn thành trên cả hai website}: Reddit tăng từ 20{,}8\% lên 34{,}0\% ($+$13{,}2 đpt), Shopping Admin tăng từ 15{,}4\% lên 21{,}4\% ($+$6{,}0 đpt), tổng thể hai miền tăng từ 17{,}4\% lên 26{,}0\% trên 288 task. Vì phép đo cô lập hoàn toàn biến số website và mô hình nền, đây là bằng chứng trực tiếp nhất chứng minh quan hệ tỷ lệ thuận giữa lượng dữ liệu và năng lực của mô hình, mạnh hơn mọi suy luận từ so sánh chéo website. Đây là căn cứ định lượng cho Phát hiện~3, được phân tích chi tiết khi trả lời CH2 ở Mục~\ref{sec:disc-results}.
+Bảng~\ref{tab:datascale} cho thấy bổ sung dữ liệu giúp nâng tỷ lệ hoàn thành trên cả hai website: Reddit tăng từ 20{,}8\% lên 34{,}0\% ($+$13{,}2 đpt), Shopping Admin tăng từ 15{,}4\% lên 21{,}4\% ($+$6{,}0 đpt), tổng thể hai miền tăng từ 17{,}4\% lên 26{,}0\% trên 288 tác vụ. Vì phép đo cô lập hoàn toàn biến số website và mô hình nền, đây là bằng chứng trực tiếp nhất chứng minh quan hệ tỷ lệ thuận giữa lượng dữ liệu và năng lực của mô hình, mạnh hơn mọi suy luận từ so sánh chéo website. Đây là căn cứ định lượng cho Phát hiện~3, được phân tích chi tiết khi trả lời CH2 ở Mục~\ref{sec:disc-results}.
 
-Tuy nhiên, hiệu suất trên mỗi mẫu không đồng đều: Reddit đạt $+$7{,}1 đpt trên 1000 mẫu bổ sung so với $+$2{,}5 của Shopping Admin, nghĩa là website nhận \emph{nhiều} mẫu hơn lại thu được \emph{ít} điểm hơn trên mỗi mẫu. Nguyên nhân kỹ thuật đến từ việc Reddit xuất phát từ mức nền thấp (6{,}6\%) với không gian hành động nhỏ và lặp lại, trong khi Shopping Admin chịu điểm nghẽn ở chân trời thực thi dài hơi (60\% task cạn ngân sách bước hoặc bị kẹt), như phân tích chi tiết ở Mục~\ref{sec:exp-analysis}.
+Tuy nhiên, hiệu suất trên mỗi mẫu không đồng đều: Reddit đạt $+$7{,}1 đpt trên 1000 mẫu bổ sung so với $+$2{,}5 của Shopping Admin, nghĩa là website nhận \emph{nhiều} mẫu hơn lại thu được \emph{ít} điểm hơn trên mỗi mẫu. Nguyên nhân kỹ thuật đến từ việc Reddit xuất phát từ mức nền thấp (6{,}6\%) với không gian hành động nhỏ và lặp lại, trong khi Shopping Admin chịu điểm nghẽn ở chân trời thực thi dài hơi (60\% tác vụ cạn ngân sách bước hoặc bị kẹt), như phân tích chi tiết ở Mục~\ref{sec:exp-analysis}.
 
 \subsection{Các ablation chưa thực hiện}
-
-Ba thực nghiệm ablation có kiểm soát đã được thiết kế nhằm cô lập đóng góp của từng thành phần trong pipeline nhưng chưa thể thực hiện do giới hạn tài nguyên: (a) so sánh khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách episode và lời gọi LLM — đây là ablation quan trọng nhất để chứng minh giá trị của cấu trúc đồ thị; (b) so sánh có và không có cổng chấm lại episode; và (c) so sánh có và không có cổng hành động hữu hiệu.
+Ba thực nghiệm ablation có kiểm soát đã được thiết kế nhằm cô lập đóng góp của từng thành phần trong pipeline nhưng chưa thể thực hiện do giới hạn tài nguyên: (a) so sánh khám phá theo đồ thị với khám phá phẳng ở cùng ngân sách phiên thực thi và lời gọi LLM — đây là ablation quan trọng nhất để chứng minh giá trị của cấu trúc đồ thị; (b) so sánh có và không có cổng chấm lại phiên thực thi; và (c) so sánh có và không có cổng hành động hữu hiệu.
 
 \section{Phân tích}
 \label{sec:exp-analysis}
 
 \noindent\emph{Mục này bổ sung cho CH2.}
 
-\subsection{Quan sát liên-website}
+\subsection{Phân tích tương quan giữa quy mô dữ liệu và hiệu năng các website}
 \label{sec:exp-crosssite}
 
 Bảng~\ref{tab:crosssite} đối chiếu tỷ lệ dữ liệu huấn luyện của mỗi website với kết quả đánh giá trên chính website đó.
@@ -765,26 +588,19 @@ Thứ hạng hai cột đầu không trùng nhau. Shopping Admin chiếm nhiều
 \subsection{Phân loại nguyên nhân thất bại}
 \label{sec:exp-failures}
 
-Mỗi episode đánh giá đều để lại một trace gồm ba loại bản ghi được lưu tách
-biệt: các bước của solver, nội dung thô của từng lời gọi LLM, và kết quả
-trình duyệt trả về sau mỗi hành động. Ba loại bản ghi này không tương ứng
-một-một với nhau nên được giữ riêng thay vì gộp chung. Dựa trên đó, mỗi
-episode thất bại được gán \emph{đúng một} nguyên nhân chính theo thứ tự ưu
-tiên từ cụ thể đến tổng quát, nhờ vậy tổng các dòng trong
-Bảng~\ref{tab:failures} bằng đúng số episode thất bại.
+Mỗi phiên thực thi đánh giá đều để lại một vết thực thi gồm ba loại bản ghi được lưu tách biệt: các bước của bộ giải tác vụ, nội dung thô của từng lời gọi LLM, và kết quả trình duyệt trả về sau mỗi hành động. Ba loại bản ghi này không tương ứng một-một với nhau nên được giữ riêng thay vì gộp chung. Dựa trên đó, mỗi phiên thực thi thất bại được gán \emph{đúng một} nguyên nhân chính theo thứ tự ưu tiên từ cụ thể đến tổng quát, nhờ vậy tổng các dòng trong Bảng~\ref{tab:failures} bằng đúng số phiên thực thi thất bại.
 
 \begin{table}[htbp]
   \centering
-  \caption[Phân loại nguyên nhân thất bại]{Nguyên nhân chính của các episode
-    thất bại (mỗi episode một nhãn). Mỗi ô ghi số episode kèm tỷ lệ phần trăm (\%)
-    tính trên số episode thất bại của website đó; đơn vị nằm trong ô vì cột trộn
+  \caption[Phân loại nguyên nhân thất bại]{Nguyên nhân chính của các phiên thực thi
+    thất bại (mỗi phiên thực thi một nhãn). Mỗi ô ghi số phiên thực thi kèm tỷ lệ phần trăm (\%)
+    tính trên số phiên thực thi thất bại của website đó; đơn vị nằm trong ô vì cột trộn
   số đếm với tỷ lệ.}
   \label{tab:failures}
   \small
-  \begin{tabular}{@{}L{4.6cm} R{2.1cm} R{2.1cm} R{2.1cm} R{2.1cm}@{}}
+  \begin{tabular}{@{}L{4.4cm} R{2.1cm} R{2.1cm} R{2.1cm} R{2.3cm}@{}}
     \toprule
-    \textbf{Nguyên nhân chính} & \textbf{Shopping (số / \%)} & \textbf{Reddit (số / \%)} &
-    \textbf{GitLab (số / \%)} & \textbf{Sh.\ Admin (số / \%)} \\
+    \textbf{Nguyên nhân chính} & \textbf{Shopping (số/\%)} & \textbf{Reddit (số/\%)} & \textbf{GitLab (số/\%)} & \textbf{Sh.\ Admin (số/\%)} \\
     \midrule
     Lỗi hành động & 60 (45\%) & 24 (34\%) & 66 (45\%) & 56 (39\%) \\
     Kẹt vòng lặp & 45 (34\%) & 26 (37\%) & 45 (31\%) & 50 (35\%) \\
@@ -793,127 +609,64 @@ Bảng~\ref{tab:failures} bằng đúng số episode thất bại.
     Tuyên bố xong mà không làm gì & 0 (0\%) & 0 (0\%) & 2 (1\%) & 0 (0\%) \\
     Đầu ra không phân tích được & 0 (0\%) & 3 (4\%) & 1 (1\%) & 0 (0\%) \\
     \midrule
-    \textbf{Tổng episode thất bại} & \textbf{134 (100\%)} & \textbf{70 (100\%)} & \textbf{147 (100\%)} & \textbf{143 (100\%)} \\
+    \textbf{Tổng phiên thực thi thất bại} & \textbf{134 (100\%)} & \textbf{70 (100\%)} & \textbf{147 (100\%)} & \textbf{143 (100\%)} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Các nguyên nhân trên có thể chồng lấn lên nhau; chẳng hạn hiện tượng kẹt
-vòng lặp thường đi kèm một chuỗi lỗi hành động. Vì vậy,
-Phụ lục~\ref{app:signals} báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu
-hiệu} tại bất kỳ vị trí nào trong một episode thất bại.
+Các nguyên nhân trên có thể chồng lấn lên nhau; chẳng hạn hiện tượng kẹt vòng lặp thường đi kèm một chuỗi lỗi hành động. Vì vậy, Phụ lục~\ref{app:signals} báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu hiệu} tại bất kỳ vị trí nào trong một phiên thực thi thất bại.
 
 \subsection{Nhận xét từ kết quả phân loại lỗi}
+\textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất của hệ thống, chứ không phải lỗi suy luận.} Từ 85\% đến 96\% số phiên thực thi thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi thực thi trên 655 phiên thực thi. Phần lớn là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác.
 
-\textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất, không phải lỗi
-suy luận.} Từ 85\% đến 96\% số episode thất bại có ít nhất một hành động bị
-trình duyệt từ chối, tổng cộng 2315 lỗi thực thi trên 655 episode. Phần lớn
-là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử
-mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã
-chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác.
-Hệ quả của quan sát này đối với hướng cải thiện được bàn ở
-Mục~\ref{sec:disc-results}.
+Hệ quả của quan sát này đối với hướng cải thiện được bàn ở Mục~\ref{sec:disc-results}.
 
-\textbf{Chân dung lỗi khá đồng đều giữa bốn website.} Trên cả bốn, lỗi thực
-thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp xỉ nhau
-(31-45\% và 31-37\%). Reddit là website có tỷ lệ kẹt vòng lặp cao nhất tính
-theo dấu hiệu (37\%) nhưng chênh lệch so với ba website còn lại không lớn.
-Điều này khác với các lượt chạy phát triển trước đó, nơi Reddit từng có tỷ lệ
-kẹt vòng lặp vượt trội; cơ chế dừng cứng khi phát hiện lặp
-(Phụ lục~\ref{sec:disc-guardrails}) là thay đổi trực tiếp nhắm vào hiện tượng
-đó.
+\textbf{Phân bố các nguyên nhân thất bại thể hiện sự đồng đều rõ rệt trên cả bốn website.} Trên cả bốn, lỗi thực thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp xỉ nhau (31-45\% và 31-37\%). Reddit là website có tỷ lệ kẹt vòng lặp cao nhất tính theo dấu hiệu (37\%) nhưng chênh lệch so với ba website còn lại không lớn.
 
-\textbf{Cạn ngân sách 15 bước là nguyên nhân thất bại nặng nhất trên
-GitLab} (45\%), đúng với đặc điểm các task ở đó vốn cần chuỗi điều hướng
-dài. Đáng chú ý, không episode nào rơi vào tình trạng ``chạm mục tiêu rồi
-rời đi'' - tức một bước giữa chừng đã đạt điểm nhưng episode kết thúc với
-điểm 0. Đây là bằng chứng cho tính hợp lệ của phép đo: giới hạn 15 bước
-đang đóng vai trò \emph{thước đo} năng lực mô hình, không phải \emph{trừng
-phạt} nó, vì không task nào bị cắt ngang ngay sau khi đã hoàn thành đúng
-mục tiêu.
+Điều này khác với các lượt chạy phát triển trước đó, nơi Reddit từng có tỷ lệ kẹt vòng lặp vượt trội; cơ chế dừng cứng khi phát hiện lặp (Phụ lục~\ref{sec:disc-guardrails}) là thay đổi trực tiếp nhắm vào hiện tượng đó.
 
-\textbf{Báo cáo hoàn thành ảo - tuyên bố xong mà không thao tác gì - gần
-như biến mất.} Chỉ 2 trên 494 episode thất bại (0{,}4\%) gọi
-\texttt{send\_msg\_to\_user} ngay ở bước đầu tiên mà không hề tương tác với
-trang. Đây đúng là nhóm hành vi mà cổng hành động hữu hiệu ở
-Mục~\ref{sec:exp-data} đã lọc ra, loại 104 trajectory khỏi tập huấn luyện; tỷ
-lệ còn lại 0{,}6\% cho thấy cổng lọc đó làm đúng việc của nó.
+\textbf{Hiện tượng cạn ngân sách 15 bước là nguyên nhân thất bại chủ yếu trên website GitLab.} (45\%), đúng với đặc điểm các tác vụ ở đó vốn cần chuỗi điều hướng dài. Đáng chú ý, không phiên thực thi nào rơi vào tình trạng ``chạm mục tiêu rồi rời đi'' - tức một bước giữa chừng đã đạt điểm nhưng phiên thực thi kết thúc với điểm 0. Đây là bằng chứng cho tính hợp lệ của phép đo: giới hạn 15 bước đang đóng vai trò \emph{thước đo} năng lực mô hình, không phải \emph{trừng phạt} nó, vì không tác vụ nào bị cắt ngang ngay sau khi đã hoàn thành đúng mục tiêu.
 
-\textbf{Đầu ra không phân tích được không còn là nguồn gây lỗi đáng kể.}
-Chỉ 4 trên 655 episode (0{,}6\%) kết thúc vì phản hồi của mô hình không phân
-giải được thành JSON hợp lệ. Nhờ lưu dữ liệu thô của từng lời gọi LLM trong
-trace, nhóm lỗi này tách bạch được khỏi trường hợp mô hình chủ động dừng;
-không có nó, hai loại thất bại rất khác nhau sẽ bị gộp làm một. Giá trị của
-phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170
-trên 655 episode, tức 26{,}0\% (Bảng~\ref{tab:profile}).
+\textbf{Tình trạng báo cáo hoàn thành ảo khi agent không tương tác trên trang đã gần như bị loại bỏ hoàn toàn.} Chỉ 2 trên 494 phiên thực thi thất bại (0{,}4\%) gọi
 
-\subsection{Đối chiếu chân dung lỗi giữa hai mô hình}
+\texttt{send\_msg\_to\_user} ngay ở bước đầu tiên mà không hề tương tác với trang. Đây đúng là nhóm hành vi mà cổng hành động hữu hiệu ở Mục~\ref{sec:exp-data} đã lọc ra, loại 104 chuỗi hành động khỏi tập huấn luyện; tỷ lệ còn lại 0{,}6\% cho thấy cổng lọc đó làm đúng việc của nó.
 
-Vì mô hình nền và mô hình sau fine-tune được đo trên cùng một tập task với cùng cấu hình, các chỉ số phụ ghi lại trong trace cho phép mô tả \emph{fine-tuning đã thay đổi hành vi của agent theo hướng nào}, chứ không chỉ nó thay đổi bao nhiêu điểm. Bảng~\ref{tab:profile} tổng hợp năm chỉ số như vậy.
+\textbf{Các lỗi do đầu ra không phân tích được không còn là nguồn phát sinh sai sót đáng kể.}
+
+Chỉ 4 trên 655 phiên thực thi (0{,}6\%) kết thúc vì phản hồi của mô hình không phân giải được thành JSON hợp lệ. Nhờ lưu dữ liệu thô của từng lời gọi LLM trong vết thực thi, nhóm lỗi này tách bạch được khỏi trường hợp mô hình chủ động dừng; không có nó, hai loại thất bại rất khác nhau sẽ bị gộp làm một. Giá trị của phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170 trên 655 phiên thực thi, tức 26{,}0\% (Bảng~\ref{tab:profile}).
+
+\subsection{Đối chiếu đặc điểm lỗi giữa hai mô hình}
+Vì mô hình nền và mô hình sau fine-tune được đo trên cùng một tập tác vụ với cùng cấu hình, các chỉ số phụ ghi lại trong vết thực thi cho phép mô tả \emph{fine-tuning đã thay đổi hành vi của agent theo hướng nào}, chứ không chỉ nó thay đổi bao nhiêu điểm. Bảng~\ref{tab:profile} tổng hợp năm chỉ số như vậy.
 
 \begin{table}[htbp]
   \centering
-  \caption[Chân dung hành vi của hai mô hình]{Các chỉ số hành vi cộng dồn trên
-    toàn bộ 655 task, đo từ trace của hai lượt đánh giá. ``Phiên hỏng định dạng''
-    là episode phải kết thúc vì phản hồi của mô hình không phân giải được thành
+  \caption[Đặc điểm hành vi của hai mô hình]{Các chỉ số hành vi cộng dồn trên
+    toàn bộ 655 tác vụ, đo từ vết thực thi của hai lượt đánh giá. ``Phiên hỏng định dạng''
+    là phiên thực thi phải kết thúc vì phản hồi của mô hình không phân giải được thành
   hành động.}
   \label{tab:profile}
   \small
   \begin{tabular}{@{}L{6.2cm} R{3.0cm} R{3.0cm}@{}}
     \toprule
-    \textbf{Chỉ số hành vi (655 task)} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} \\
+    \textbf{Chỉ số hành vi (655 tác vụ)} & \textbf{Mô hình nền} & \textbf{Sau fine-tune} \\
     \midrule
     Phiên hỏng định dạng & 170 (26{,}0\%) & 4 (0{,}6\%) \\
     Tổng số bước đã thực thi (bước) & 5424 & 6727 \\
     Tổng số lỗi hành động (lỗi) & 1940 & 2315 \\
-    Trung vị số bước, episode thành công (bước) & 4 & 6 \\
-    Trung vị số bước, episode thất bại (bước) & 8 & 13 \\
+    Trung vị số bước, phiên thực thi thành công (bước) & 4 & 6 \\
+    Trung vị số bước, phiên thực thi thất bại (bước) & 8 & 13 \\
     Tỷ lệ lỗi hành động trên mỗi bước (lỗi/bước) & 0{,}358 & 0{,}344 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Chân dung hành vi cho thấy fine-tuning không làm giảm tỷ lệ lỗi thao tác trên mỗi bước (0{,}344 so với 0{,}358 lỗi/bước), mà giúp mô hình \emph{bền bỉ} hơn nhờ loại bỏ các lỗi hỏng định dạng vốn khiến episode bị dừng sớm. Mô hình sau fine-tune duy trì hành động hợp lệ để khai thác tối đa ngân sách bước. Do đó, điểm nghẽn cốt lõi chuyển từ việc tuân thủ định dạng sang chất lượng của từng thao tác DOM và khả năng tự phục hồi sau lỗi thực thi.
-
-\section{Kết quả bổ sung: chuyển tập dữ liệu sang mô hình nền Qwen-2.5-7B}
-\label{sec:exp-backbone}
-
-\noindent\emph{Mục này bổ sung cho CH2.}
-
-Để tách phần đóng góp của tập dữ liệu khỏi năng lực sẵn có của mô hình nền, toàn bộ tập dữ liệu 8554 mẫu được dùng để fine-tune mô hình nền thứ hai: Qwen-2.5-7B-Instruct~\cite{qwen2024qwen25} — đây chính là mô hình nền mà Go-Browse~\cite{gandhi2026gobrowse} và NNetNav~\cite{murty2024nnetnav} sử dụng. Quá trình fine-tuning áp dụng cấu hình LoRA tương tự và được đánh giá trên đúng 655 task với cùng bộ chấm, ngân sách 15 bước và cấu hình giải mã.
-
-\begin{table}[htbp]
-  \centering
-  \caption[Hiệu năng fine-tuning trên mô hình nền Qwen-2.5-7B]{Hiệu năng của Qwen-2.5-7B trước và sau khi fine-tune trên tập dữ liệu HSGE (8554 mẫu), đánh giá trên 655 task WebArena. Cột mô hình nền dẫn theo số liệu công bố của Go-Browse~\cite{gandhi2026gobrowse}.}
-  \label{tab:backbone7b}
-  \small
-  \begin{tabular}{@{}L{3.6cm} R{3.0cm} R{3.0cm} R{2.8cm}@{}}
-    \toprule
-    \textbf{Miền / Website} & \textbf{Mô hình nền 7B~\cite{gandhi2026gobrowse} (SR, \%)} & \textbf{Sau fine-tune (SR, \%)} & \textbf{$\Delta$ SR (đpt)} \\
-    \midrule
-    Shopping & 9{,}4 & \textbf{21{,}4} & $+$12{,}0 \\
-    Shopping Admin & 7{,}1 & \textbf{11{,}5} & $+$4{,}4 \\
-    GitLab & 8{,}7 & \textbf{12{,}2} & $+$3{,}5 \\
-    Reddit & 7{,}9 & \textbf{23{,}6} & $+$15{,}7 \\
-    \midrule
-    \textbf{Tổng (655 task)} & \textbf{8{,}3} & \textbf{16{,}5} & \textbf{$+$8{,}2} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-Bảng~\ref{tab:backbone7b} cho thấy tập dữ liệu HSGE cải thiện tỷ lệ thành công trên \textbf{cả bốn website}, nâng tổng thể từ 8{,}3\% lên \textbf{16{,}5\%} ($+$8{,}2 đpt, gần gấp đôi). Mức tăng mạnh nhất xuất hiện ở Reddit ($+$15{,}7 đpt) và Shopping ($+$12{,}0 đpt).
-
-Tuy nhiên, phân tích trace cho thấy 58-60\% task của bản 7B chứa ít nhất một phản hồi không phân giải được, và \textbf{không task nào trong nhóm đó thành công}. Khi loại trừ nhóm lỗi định dạng và chỉ xét các task có đầu ra sạch, tỷ lệ thành công của 7B đạt 21{,}9\% ở Shopping Admin, 23{,}7\% ở GitLab và 34{,}1\% ở Reddit — xấp xỉ mức của bản 9B trên cùng miền. Cần lưu ý rằng nhóm đầu ra sạch không phải mẫu phân bố ngẫu nhiên (các task ngắn có ít rủi ro hỏng định dạng hơn), nên đây là ước lượng \emph{thiên lệch lên}: nó chứng minh phần lớn khoảng cách xuất phát từ lỗi tuân thủ định dạng chứ không chứng minh 7B mạnh ngang 9B.
-
-Đáng chú ý, 92-98\% phản hồi hỏng của bản 7B là các lệnh \texttt{report\_infeasible} viết trần kết thúc bình thường kèm lý do mạch lạc (chỉ thiếu lớp vỏ JSON). Hệ quả là 7B chỉ ghi nhận 10/182 lần báo bất khả thi ở Shopping Admin so với 41/182 của bản 9B. Vì WebArena cho điểm khi agent báo bất khả thi chính xác, con số 16{,}5\% thực chất là một \textbf{cận dưới bị hạ thấp bởi bộ phân giải đầu ra nghiêm ngặt}. Do sai lệch này, kết quả của bản 7B không được đưa vào Bảng~\ref{tab:related} để so sánh đối đầu cùng-mô-hình-nền với Go-Browse-7B.
-
-Kết quả này khẳng định hai điểm quan trọng: (1) tập dữ liệu HSGE nâng cao năng lực cho \textbf{cả hai} mô hình nền so với chính chúng, chứng minh tri thức thu thập không bị phụ thuộc vào một kiến trúc duy nhất; và (2) đối với các mô hình nền nhỏ hơn, độ nghiêm của bộ phân giải đầu ra trở thành một thành phần chi phối kết quả đo lường (Mục~\ref{sec:conc-future}).
+Đặc điểm hành vi cho thấy fine-tuning không làm giảm tỷ lệ lỗi thao tác trên mỗi bước (0{,}344 so với 0{,}358 lỗi/bước), mà giúp mô hình \emph{bền bỉ} hơn nhờ loại bỏ các lỗi hỏng định dạng vốn khiến phiên thực thi bị dừng sớm. Mô hình sau fine-tune duy trì hành động hợp lệ để khai thác tối đa ngân sách bước. Do đó, điểm nghẽn cốt lõi chuyển từ việc tuân thủ định dạng sang chất lượng của từng thao tác DOM và khả năng tự phục hồi sau lỗi thực thi.
 
 \section{Tổng kết chương}
 \label{sec:exp-summary}
 
-Pipeline đã chạy trọn vẹn trên bốn website thật: 3981 episode được ghi nhận và tinh lọc còn 1760 trajectory đạt chuẩn, tương ứng 8554 mẫu huấn luyện. Việc fine-tune một mô hình 9B tham số tốn 8{,}3\,USD chi phí GPU, và cả chu trình fine-tune lẫn đánh giá cộng lại là 24{,}4\,USD (Bảng~\ref{tab:infra}). Trên bộ 655 task chính thức, mô hình đạt tỷ lệ thành công 24{,}6\%, so với 13{,}3\% của chính mô hình đó khi chưa fine-tune - chênh lệch 11{,}3 điểm phần trăm, đạt ý nghĩa thống kê trên \emph{cả bốn} website (Mục~\ref{sec:exp-baseline}). Quan trọng hơn con số tổng, phần cải thiện tách được khỏi yếu tố tuân thủ định dạng: riêng trên nhóm 485 task mà mô hình nền vốn chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$. So với các công trình liên quan cùng đo trên bốn website này, kết quả ngang hàng với các mô hình mở tốt nhất dưới 10B tham số (Bảng~\ref{tab:related}), dù phép so sánh đó không kiểm soát được mô hình gốc, quy mô dữ liệu và quy trình chấm.
+Pipeline đã chạy trọn vẹn trên bốn website thật: 3981 phiên thực thi được ghi nhận và tinh lọc còn 1760 chuỗi hành động đạt chuẩn, tương ứng 8554 mẫu huấn luyện. Việc fine-tune một mô hình 9B tham số tốn 8{,}3\,USD chi phí GPU, và cả chu trình fine-tune lẫn đánh giá cộng lại là 24{,}4\,USD (Bảng~\ref{tab:infra}). Trên bộ 655 tác vụ chính thức, mô hình đạt tỷ lệ thành công 24{,}6\%, so với 13{,}3\% của chính mô hình đó khi chưa fine-tune - chênh lệch 11{,}3 điểm phần trăm, đạt ý nghĩa thống kê trên \emph{cả bốn} website (Mục~\ref{sec:exp-baseline}). Quan trọng hơn con số tổng, phần cải thiện tách được khỏi yếu tố tuân thủ định dạng: riêng trên nhóm 485 tác vụ mà mô hình nền vốn chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% với $p = 0{,}003$. So với các công trình liên quan cùng đo trên bốn website này, kết quả ngang hàng với các mô hình mở tốt nhất dưới 10B tham số (Bảng~\ref{tab:related}), dù phép so sánh đó không kiểm soát được mô hình gốc, quy mô dữ liệu và quy trình chấm.
 
 Bên cạnh kết quả chính, các phép đo bổ sung chỉ ra rằng: việc bổ sung 4266 mẫu cho Reddit và Shopping Admin nâng SR của chính hai website đó từ 17{,}4\% lên 26{,}0\% (Mục~\ref{sec:exp-datascale}); đồng thời, cùng tập dữ liệu đó nâng Qwen-2.5-7B từ 8{,}3\% lên 16{,}5\% trên cả bốn website, tuy con số này bị bộ phân giải đầu ra hạ thấp (Mục~\ref{sec:exp-backbone}).
 
-Hai giới hạn cần nêu rõ: mọi kết quả đều đến từ một lượt chạy cho mỗi website (Mục~\ref{sec:exp-stats}), và các ablation cô lập từng thành phần pipeline vẫn chưa được thực hiện (Mục~\ref{sec:exp-ablation}). Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những bài học kỹ thuật rút ra.
+Hai giới hạn cần nêu rõ: mọi kết quả đều đến từ một lượt chạy cho mỗi website , và các ablation cô lập từng thành phần pipeline vẫn chưa được thực hiện (Mục~\ref{sec:exp-ablation}). Chương~\ref{ch:discussion} sẽ diễn giải các kết quả này và trình bày những bài học kỹ thuật rút ra.
