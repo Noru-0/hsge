@@ -2,11 +2,7 @@
 \chapter{Thảo luận}
 \label{ch:discussion}
 
-Chương này diễn giải các kết quả thực nghiệm của Chương~\ref{ch:experiments}
-bằng cách trả lời lần lượt ba câu hỏi nghiên cứu đặt ra ở
-Mục~\ref{sec:intro-rq}, tóm tắt các bài học kỹ thuật rút ra trong quá trình xây
-dựng và vận hành hệ thống, và đối chiếu kết quả đo được với những gì các công bố
-gốc gần nhất đã tuyên bố.
+Chương này trình bày phần thảo luận và diễn giải chi tiết các kết quả thực nghiệm đạt được ở Chương~\ref{ch:experiments}. Chúng tôi tập trung trả lời lần lượt ba câu hỏi nghiên cứu (CH1--CH3) đặt ra ở Mục~\ref{sec:intro-rq}, tóm tắt các bài học kỹ thuật đúc kết trong quá trình xây dựng và vận hành hệ thống, đồng thời đối chiếu kết quả đo được với các nghiên cứu tiên tiến nhất hiện nay.
 
 \section{Trả lời các câu hỏi nghiên cứu}
 \label{sec:disc-results}
@@ -15,247 +11,101 @@ gốc gần nhất đã tuyên bố.
 
 Các tác vụ được HSGE tự động tạo ra đáp ứng bốn tiêu chí mà CH1 đặt ra: (1) \emph{tính hợp lệ} thể hiện qua việc 801 episode tự tuyên bố hoàn thành sai ($\approx 27\%$) bị gạt bỏ cùng 104 trajectory không chứa hành động hữu hiệu; (2) \emph{tính đa dạng} thể hiện qua 455 node, 146 skill, 130 năng lực seed trên cả ba nhóm tác vụ; (3) \emph{tính ngữ nghĩa} thể hiện qua 142 tác vụ GOAL nhiều bước; và (4) \emph{khả năng thực thi} thể hiện qua tỷ lệ hoàn thành 50{,}0\% (71/142), xấp xỉ nhóm tác vụ LOCAL (47{,}6\%).
 
-Trên bốn website, pipeline duyệt 455 node và ghi nhận 3981 episode
-(Bảng~\ref{tab:runs}). Từ đó rút ra 146 kỹ năng đã kiểm chứng, nâng được 57
-trong số đó thành operator - 89 kỹ năng còn lại bị hai cổng chặn loại - và sinh
-142 semantic task với 71 lượt thành công. Sau khi các cổng chất lượng đã hạ cấp
-801 lần tự tuyên bố hoàn thành sai và loại các trajectory không có hành động
-hữu hiệu nào, phần sống sót là 1760 trajectory tương ứng 8554 mẫu huấn luyện
-(Bảng~\ref{tab:dataset}). Nói cách khác, câu trả lời cho CH1 là pipeline
-\emph{có} chạy được đầu cuối trên website thật và \emph{có} sinh ra dữ liệu đủ
-dùng, nhưng phần bị các cổng lọc gạt đi cũng lớn - và chính tỷ lệ bị gạt đó là
-dữ kiện đáng chú ý nhất của khâu thu thập.
+Trên bốn website thực tế, pipeline của chúng tôi đã duyệt 455 node và ghi nhận 3981 episode (Bảng~\ref{tab:runs}). Từ đó, chúng tôi rút ra 146 kỹ năng đã kiểm chứng, nâng được 57 trong số đó thành toán tử (89 kỹ năng còn lại bị hai cổng chặn loại bỏ), và tự động sinh 142 semantic task với 71 lượt thực thi thành công. Sau khi các cổng kiểm soát chất lượng loại bỏ 801 lượt tự tuyên bố hoàn thành sai và loại các trajectory không có hành động hữu hiệu, tập dữ liệu thu được gồm 1760 trajectory tương ứng 8554 mẫu huấn luyện (Bảng~\ref{tab:dataset}). Qua đó, kết quả nghiên cứu khẳng định rằng pipeline \emph{hoàn toàn} chạy được đầu cuối trên các website thực tế và sinh ra bộ dữ liệu đáp ứng yêu cầu huấn luyện.
 
-Quy trình thực nghiệm đầu cuối hoàn chỉnh (từ khâu khám phá tự động, phát hiện kỹ năng, quy nạp operator, tinh lọc dữ liệu đến huấn luyện, serving và đánh giá mô hình) đã vận hành thành công trên cả bốn website thực tế. Can thiệp thủ công duy nhất trong suốt quá trình này là 5 lần khởi chạy lại khi tài khoản API chạm hạn mức; cả 5 lần hệ thống đều tự động khôi phục và tiếp tục thực thi chính xác từ checkpoint gần nhất mà không cần chạy lại từ đầu. Bên cạnh đó, các cổng kiểm soát chất lượng đã phát huy hiệu quả thiết kế khi ngăn chặn triệt để các luồng dữ liệu lỗi trước khi chúng đi vào tập dữ liệu huấn luyện (Phụ lục~\ref{sec:disc-slm}).
+Quy trình thực nghiệm đầu cuối hoàn chỉnh (từ khâu khám phá tự động, phát hiện kỹ năng, quy nạp toán tử, tinh lọc dữ liệu đến huấn luyện, serving và đánh giá mô hình) đã vận hành thành công trên cả bốn website thực tế. Can thiệp thủ công duy nhất trong suốt quá trình này là 5 lần khởi chạy lại khi tài khoản API chạm hạn mức; cả 5 lần hệ thống đều tự động khôi phục và tiếp tục thực thi chính xác từ checkpoint gần nhất mà không cần chạy lại từ đầu. Bên cạnh đó, các cổng kiểm soát chất lượng đã phát huy hiệu quả thiết kế khi ngăn chặn triệt để các luồng dữ liệu lỗi trước khi chúng đi vào tập dữ liệu huấn luyện (Phụ lục~\ref{sec:disc-slm}).
 
-Có một điểm cần được phát biểu thật chính xác: \emph{khâu ghép chuỗi operator vẫn là khâu hạn chế nhất}. Cơ chế sinh semantic task đã thực sự vận hành được trên website thật: 142 task GOAL với 71 lượt thành công, tỷ lệ 50{,}0\%. Tuy nhiên, nguồn sinh ra phần lớn số task đó vẫn là seed năng lực website (130 lượt thử), chứ không phải đồ thị operator (12 lượt thử trên tổng số 57 operator, phân bố rất lệch: Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nói cách khác, giả thuyết ``ghép chuỗi các skill đã kiểm chứng để sinh mục tiêu dài hạn'' mới được chứng minh là \emph{khả thi}, chưa được chứng minh là \emph{đủ dày} để làm nguồn dữ liệu chính; nguyên nhân kỹ thuật của độ thưa đó được phân tích ở Phụ lục~\ref{sec:disc-operators}.
+Tuy nhiên, qua phân tích thực nghiệm, chúng tôi nhận thấy rằng \emph{khâu ghép chuỗi toán tử vẫn là thành phần hạn chế nhất}. Cơ chế sinh semantic task đã thực sự vận hành được trên website thật: 142 task GOAL với 71 lượt thành công, đạt tỷ lệ 50{,}0\%. Mặc dù vậy, nguồn sinh ra phần lớn số task đó vẫn là seed năng lực website (130 lượt thử), chứ không phải đồ thị toán tử (12 lượt thử trên tổng số 57 toán tử, phân bố rất lệch: Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nói cách khác, giả thuyết ``ghép chuỗi các skill đã kiểm chứng để sinh mục tiêu dài hạn'' mới được chúng tôi chứng minh là \emph{khả thi}, nhưng chưa được chứng minh là \emph{đủ dầy} để làm nguồn dữ liệu chính; nguyên nhân kỹ thuật của độ thưa đó được phân tích ở Phụ lục~\ref{sec:disc-operators}.
 
 \subsection{CH2 - Mức cải thiện năng lực và vị thế so với SOTA}
 
-\emph{Về mức cải thiện tổng thể:} Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc về năng lực sẵn có của mô hình nền, đã được đo trực tiếp trên cả bốn website: cùng mô hình Qwen3.5-9B, cùng prompt và cùng bộ chấm, tỷ lệ hoàn thành đi từ 13{,}3\% lên 24{,}6\% sau khi fine-tune (Bảng~\ref{tab:baseline}). Vì hai đợt đo dùng chung một tập task, chênh lệch này được kiểm định McNemar theo cặp~\cite{mcnemar1947}: 100 task chỉ mô hình sau fine-tune giải được so với 26 task chỉ mô hình nền giải được, tức $p < 0{,}001$. Đây là bằng chứng trực tiếp nhất mà khóa luận có được cho luận điểm trung tâm, rằng dữ liệu do pipeline tự thu thập từ website không nhãn là đủ để nâng năng lực của một mô hình nhỏ trên chính những website đó - Phát hiện~1 ở Mục~\ref{sec:intro-results}.
+\emph{Về mức cải thiện tổng thể:} Phần đóng góp thuộc về tập dữ liệu, tách khỏi phần thuộc về năng lực sẵn có của mô hình nền, đã được chúng tôi đo trực tiếp trên cả bốn website: cùng mô hình Qwen3.5-9B, cùng prompt và cùng bộ chấm, tỷ lệ hoàn thành tăng từ 13{,}3\% lên 24{,}6\% sau khi fine-tune (Bảng~\ref{tab:baseline}). Vì hai đợt đo dùng chung một tập task, chúng tôi áp dụng kiểm định McNemar theo cặp~\cite{mcnemar1947} để đánh giá mức độ ý nghĩa: 100 task chỉ mô hình sau fine-tune giải được so với 26 task chỉ mô hình nền giải được ($p < 0{,}001$). Đây là bằng chứng trực tiếp nhất mà chúng tôi thu được cho luận điểm trung tâm: dữ liệu do pipeline tự thu thập từ các website không nhãn hoàn toàn đủ khả năng nâng cao năng lực của mô hình ngôn ngữ nhỏ trên chính các miền ứng dụng đó (Phát hiện~1 ở Mục~\ref{sec:intro-results}).
 
-Bằng chứng ấy phân bố không đều giữa các website nhưng đạt ý nghĩa trên cả bốn: Reddit $+27{,}4$ điểm, Shopping Admin $+8{,}8$, Shopping $+8{,}6$, GitLab $+7{,}2$. Hai website đứng đầu về mức cải thiện cũng là hai website thu được nhiều dữ liệu nhất, song thứ tự bên trong cặp thì ngược lại: Shopping Admin nhiều dữ liệu hơn Reddit mà cải thiện kém hơn ba lần. Quan hệ giữa lượng dữ liệu và mức cải thiện vì vậy chỉ đứng vững ở mức nhóm chứ không ở mức thứ hạng.
+Mức độ cải thiện phân bố không đồng đều giữa các website nhưng đều đạt ý nghĩa thống kê trên cả bốn miền: Reddit tăng $+27{,}4$ điểm phần trăm (đpt), Shopping Admin tăng $+8{,}8$ đpt, Shopping tăng $+8{,}6$ đpt, và GitLab tăng $+7{,}2$ đpt. Hai website dẫn đầu về mức cải thiện cũng là hai miền thu thập được nhiều dữ liệu nhất, song thứ tự bên trong cặp thì ngược lại: Shopping Admin sở hữu lượng dữ liệu lớn hơn Reddit nhưng mức tăng điểm lại thấp hơn 3 lần. Do đó, chúng tôi nhận thấy quan hệ giữa dung lượng dữ liệu và mức cải thiện chỉ phản ánh ở cấp độ nhóm chứ không quyết định thứ hạng tuyệt đối.
 
-\emph{Về nguồn gốc của mức cải thiện:} Điều mà phép đối chứng này làm rõ nhất lại nằm ở chân dung lỗi chứ không ở con số tổng. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, so với 0{,}6\% ở mô hình sau fine-tune (Bảng~\ref{tab:profile}). Khi tách 655 task theo đúng ranh giới đó: 47 trong 100 task mà chỉ mô hình sau fine-tune giải được rơi vào nhóm mà mô hình nền không bao giờ phát ra nổi một hành động hợp lệ; còn trên 485 task mà mô hình nền chạy trọn vẹn, khoảng cách là 17{,}9\% so với 23{,}5\% và \emph{đạt} ý nghĩa thống kê ($p = 0{,}003$).
+\emph{Về nguồn gốc của mức cải thiện:} Phép đối chứng này giúp chúng tôi làm rõ điểm cốt lõi nằm ở đặc điểm lỗi thay vì chỉ xét con số tổng hợp. Ở mô hình nền, 26{,}0\% số phiên kết thúc vì phản hồi không phân giải được thành một hành động hợp lệ, trong khi mô hình sau fine-tune giảm xuống chỉ còn 0{,}6\% (Bảng~\ref{tab:profile}). Khi chúng tôi phân tách 655 task theo ranh giới này: 47 trong số 100 task mà chỉ mô hình sau fine-tune giải được thuộc về nhóm mà mô hình nền không thể sinh ra phản hồi hợp lệ; còn trên 485 task mà mô hình nền thực thi trọn vẹn, tỷ lệ hoàn thành vẫn tăng từ 17{,}9\% lên 23{,}5\% ($p = 0{,}003$).
 
-Phép tách này chính là Phát hiện~2, và nó quan trọng vì phân biệt được hai thứ rất khác nhau mà con số tổng gộp làm một. Thứ nhất là \emph{tính kỷ luật của giao diện hành động}: phát ra đúng thứ môi trường chấp nhận, đủ đều đặn để đi hết một phiên. Thứ hai là năng lực \emph{chọn} hành động đúng - phần mà một pipeline khám phá có cấu trúc hứa hẹn mang lại. Số liệu cho thấy tập dữ liệu dạy được cả hai.
+Phép phân tách này mang lại Phát hiện~2, giúp chúng tôi phân biệt rõ hai khía cạnh cốt lõi mà con số tổng hợp chưa phản ánh hết: (1) \emph{tính kỷ luật của giao diện hành động} (phát ra phản hồi đúng định dạng môi trường yêu cầu, duy trì đều đặn suốt phiên thực thi); và (2) năng lực \emph{lựa chọn hành động chính xác} (phần mà pipeline khám phá có cấu trúc đóng góp). Kết quả đo lường khẳng định tập dữ liệu của chúng tôi giúp mô hình cải thiện hiệu quả cả hai khía cạnh này.
 
 \emph{Về ảnh hưởng của lượng dữ liệu:} Bên cạnh so sánh đối chứng với mô hình nền, phép đo bổ sung dữ liệu trên cùng website và cùng mô hình nền (Mục~\ref{sec:exp-datascale}) cung cấp bằng chứng trực tiếp cho quan hệ giữa lượng dữ liệu và năng lực. Khi bổ sung 4266 mẫu huấn luyện, tỷ lệ thành công của Reddit tăng từ 20{,}8\% lên 34{,}0\% ($+$13{,}2 đpt) và Shopping Admin tăng từ 15{,}4\% lên 21{,}4\% ($+$6{,}0 đpt), nâng tổng thể hai website từ 17{,}4\% lên 26{,}0\% trên 288 task (Bảng~\ref{tab:datascale}). Vì phép đo cô lập hoàn toàn biến số website và kiến trúc mô hình, đây là minh chứng vững chắc cho thấy dữ liệu tự sinh giúp cải thiện trực tiếp tỷ lệ hoàn thành tác vụ. Tuy nhiên, hiệu suất trên mỗi 1000 mẫu bổ sung rất không đồng đều ($+$7{,}1 đpt ở Reddit so với $+$2{,}5 đpt ở Shopping Admin), phản ánh các rào cản nội tại riêng biệt sẽ được làm rõ ngay dưới đây.
 
 \emph{Về điểm nghẽn còn lại:} Phép đo ở Mục~\ref{sec:exp-datascale} đã chứng minh việc bổ sung dữ liệu \emph{có} giúp nâng cao tỷ lệ hoàn thành tác vụ trong phạm vi từng website. Tuy nhiên, vấn đề cốt lõi là: \emph{điều gì đang cản trở phần dữ liệu đã thu thập phát huy tối đa hiệu quả, và đâu là điểm nghẽn thực sự của hệ thống?}
 
-Bảng~\ref{tab:crosssite} chỉ ra rằng website có lượng dữ liệu huấn luyện lớn nhất (Shopping Admin, chiếm 41{,}9\% tập huấn luyện) chỉ xếp thứ ba về tỷ lệ thành công (21{,}4\%), trong khi website đứng thứ nhì về kết quả (Shopping, 28{,}3\%) lại chỉ chiếm 11{,}4\% dữ liệu. Với $n=4$ website thì đây chưa phải một kết luận thống kê, nhưng đủ để bác bỏ cách nghĩ rằng \emph{mức} điểm của một website được quyết định bởi riêng khối lượng dữ liệu thu được cho nó.
+Bảng~\ref{tab:crosssite} chỉ ra rằng website có lượng dữ liệu huấn luyện lớn nhất (Shopping Admin, chiếm 41{,}9\% tập huấn luyện) chỉ xếp thứ ba về tỷ lệ thành công (21{,}4\%), trong khi website đứng thứ nhì về kết quả (Shopping, 28{,}3\%) lại chỉ chiếm 11{,}4\% dữ liệu. Với $n=4$ website thì đây chưa phải một kết luận thống kê, nhưng kết quả này đủ để chúng tôi bác bỏ giả định rằng \emph{mức} điểm của một website được quyết định bởi riêng khối lượng dữ liệu thu được cho nó.
 
-Cách diễn giải nhất quán là: độ khó nội tại của website đặt ra một mức trần khác nhau, còn lượng dữ liệu quyết định mô hình tiến gần mức trần đó tới đâu (Mục~\ref{sec:exp-analysis}). Trên những website có chuỗi thao tác dài và phức tạp như Shopping Admin, hiệu suất biên trên mỗi mẫu giảm nhanh do mô hình gặp phải rào cản thực thi: 60\% task ở miền này kết thúc do cạn ngân sách 15 bước hoặc bị kẹt lặp lại, khiến dữ liệu hành động chuẩn không thể chuyển hóa trọn vẹn thành điểm số.
+Chúng tôi diễn giải kết quả này một cách nhất quán: độ khó nội tại của website đặt ra mức trần năng lực khác nhau, trong khi lượng dữ liệu quyết định khả năng mô hình tiệm cận mức trần đó tới đâu (Mục~\ref{sec:exp-analysis}). Trên những website có chuỗi thao tác dài và phức tạp như Shopping Admin, hiệu suất biên trên mỗi mẫu giảm nhanh do mô hình gặp phải rào cản thực thi: 60\% task ở miền này kết thúc do cạn ngân sách 15 bước hoặc bị kẹt lặp lại, khiến dữ liệu hành động chuẩn không thể chuyển hóa trọn vẹn thành điểm số.
 
 Bảng phân loại nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) chỉ ra điểm nghẽn thực sự: từ 85\% đến 96\% số episode thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi trên 655 episode. Phần lớn là lỗi quá hạn chờ thao tác Playwright trên các phần tử DOM mà accessibility tree \emph{có} hiển thị. Nghĩa là mô hình đã chọn đúng đối tượng tương tác, nhưng tương tác bị gián đoạn ở tầng thực thi (\emph{execution layer}). Đi kèm với đó là hiện tượng kẹt vòng lặp: episode thất bại kéo dài trung vị 13 bước so với 6 bước ở episode thành công.
 
-Hai quan sát trên hợp thành \textbf{Phát hiện~3}: điểm nghẽn chi phối hiệu năng hiện tại nằm ở \emph{độ tin cậy của tầng thực thi và khả năng tự phục hồi sau lỗi thao tác}, chứ không phải ở việc thiếu hụt quy mô dữ liệu huấn luyện. Do đó, hướng đầu tư mang lại hiệu quả cao tiếp theo là cải thiện cơ chế đồng bộ DOM, làm giàu dữ liệu phục hồi lỗi (\emph{error recovery}) và bổ sung cơ chế chống lang thang, thay vì chỉ gia tăng đơn thuần số lượng trajectory mẫu.
+Hai quan sát trên giúp chúng tôi rút ra \textbf{Phát hiện~3}: điểm nghẽn chi phối hiệu năng hiện tại nằm ở \emph{độ tin cậy của tầng thực thi và khả năng tự phục hồi sau lỗi thao tác}, chứ không phải ở việc thiếu hụt quy mô dữ liệu huấn luyện. Do đó, chúng tôi nhận thấy hướng cải thiện mang lại hiệu quả cao tiếp theo là tối ưu cơ chế đồng bộ DOM, bổ sung dữ liệu phục hồi lỗi (\emph{error recovery}) và xây dựng cơ chế chống lặp hành động, thay vì chỉ gia tăng đơn thuần số lượng mẫu huấn luyện.
 
-\emph{Về vị thế so với SOTA:} Kết quả 24{,}6\% của HSGE-9B vượt qua NNetNav-7B~\cite{murty2024nnetnav} (19{,}1\%) và GPT-4o-mini (20{,}0\%), đồng thời đạt mức tương đương Go-Browse-7B~\cite{gandhi2026gobrowse} (22{,}6\%) trên cùng bốn website (Bảng~\ref{tab:related}). Khoảng cách 2{,}0 điểm phần trăm nhỏ hơn nửa độ rộng khoảng tin cậy của phép đo ($\pm 3{,}3$ điểm) nên không mang ý nghĩa thống kê. Mặc dù vậy, các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hay kém hiệu quả hơn so với Go-Browse: hai hệ thống có sự khác biệt rõ rệt về mô hình nền (Qwen3.5-9B so với Qwen-2.5-7B), quy mô dữ liệu (8554 mẫu so với $\approx 40$ nghìn bước), cũng như cấu hình ngân sách bước và bộ chấm mờ.
+\emph{Về vị thế so với SOTA:} Kết quả 24{,}6\% của HSGE-9B vượt qua NNetNav-7B~\cite{murty2024nnetnav} (19{,}1\%) và GPT-4o-mini (20{,}0\%), đồng thời đạt mức tương đương Go-Browse-7B~\cite{gandhi2026gobrowse} (22{,}6\%) trên cùng bốn website (Bảng~\ref{tab:related}). Khoảng cách 2{,}0 điểm phần trăm nhỏ hơn nửa độ rộng khoảng tin cậy của phép đo ($\pm 3{,}3$ điểm) nên không mang ý nghĩa thống kê. Mặc dù vậy, chúng tôi nhận thấy các số liệu này \emph{chưa đủ cơ sở} để kết luận phương pháp HSGE ưu việt hơn hay kém hiệu quả hơn so với Go-Browse: hai hệ thống có sự khác biệt rõ rệt về mô hình nền (Qwen3.5-9B so với Qwen-2.5-7B), quy mô dữ liệu (8554 mẫu so với $\approx 40$ nghìn bước), cũng như cấu hình ngân sách bước và bộ chấm mờ.
 
-\emph{Về tính độc lập với kiến trúc mô hình nền:} Tập dữ liệu HSGE không bị ràng buộc riêng với Qwen3.5-9B. Khi chuyển toàn bộ 8554 mẫu sang fine-tune mô hình nền thứ hai là Qwen-2.5-7B-Instruct (chính mô hình nền của Go-Browse và NNetNav), tỷ lệ hoàn thành tăng từ 8{,}3\% lên \textbf{16{,}5\%} ($+$8{,}2 đpt), cải thiện trên \textbf{cả bốn website} (Bảng~\ref{tab:backbone7b}). Con số này chưa dùng để so sánh đối đầu cùng-mô-hình-nền với Go-Browse-7B được vì 58--60\% task của bản 7B gặp lỗi định dạng (chủ yếu do phát lệnh \texttt{report\_infeasible} viết trần thiếu vỏ JSON), khiến điểm số là một cận dưới bị hạ thấp bởi bộ phân giải đầu ra nghiêm ngặt; tuy nhiên, kết quả đủ để khẳng định giá trị khái quát hóa của tập dữ liệu trên các kiến trúc khác nhau.
+\emph{Về tính độc lập với kiến trúc mô hình nền:} Tập dữ liệu HSGE không bị ràng buộc riêng với Qwen3.5-9B. Khi chuyển toàn bộ 8554 mẫu sang fine-tune mô hình nền thứ hai là Qwen-2.5-7B-Instruct (chính mô hình nền của Go-Browse và NNetNav), tỷ lệ hoàn thành tăng từ 8{,}3\% lên \textbf{16{,}5\%} ($+$8{,}2 đpt), cải thiện trên \textbf{cả bốn website} (Bảng~\ref{tab:backbone7b}). Chúng tôi chưa sử dụng con số này để so sánh đối đầu trực tiếp cùng mô hình nền với Go-Browse-7B vì 58--60\% task của bản 7B gặp lỗi định dạng (chủ yếu do phát lệnh \texttt{report\_infeasible} viết trần thiếu vỏ JSON), khiến điểm số là một cận dưới bị hạ thấp bởi bộ phân giải đầu ra nghiêm ngặt; tuy nhiên, kết quả thu được đủ để chúng tôi khẳng định giá trị khái quát hóa của tập dữ liệu trên các kiến trúc mô hình nền khác nhau.
 
-\emph{Ba giới hạn còn lại:} Bên cạnh đó, hệ thống vẫn đối mặt với ba giới hạn chính. Thứ nhất là quy mô dữ liệu: tập dữ liệu 8554 mẫu huấn luyện của nghiên cứu vẫn nhỏ hơn khoảng 5 lần so với quy mô 40.000--45.000 mẫu của các hệ thống đối chuẩn như Go-Browse~\cite{gandhi2026gobrowse} hay NNetNav~\cite{murty2024nnetnav}. Mặc dù dữ liệu bổ sung đem lại mức tăng rõ rệt ($+$8{,}7 đpt ở Bảng~\ref{tab:datascale}), sự chênh lệch lớn về hiệu suất biên giữa các website ($+$7{,}1 so với $+$2{,}5 đpt/1000 mẫu) cho thấy việc mở rộng quy mô cần đi liền với chiến lược chọn lọc tác vụ theo đặc thù miền thay vì thu thập dàn trải. Thứ hai là độ phủ không gian trang: dữ liệu khám phá bao quát từ 63 đến 179 node mỗi website, trong khi bộ task WebArena phân bố trên không gian rộng lớn hơn nhiều. Thứ ba là giới hạn nội tại của mô hình nền 9B khi tinh chỉnh thuần SFT: khó tiếp thu đầy đủ năng lực lập kế hoạch dài hạn hay tự sửa lỗi phức tạp nếu các hành vi này không xuất hiện dày đặc trong dữ liệu (Bảng~\ref{tab:failures}).
+\emph{Ba giới hạn còn lại:} Bên cạnh các kết quả đạt được, chúng tôi ghi nhận ba giới hạn chính của hệ thống. Thứ nhất là quy mô dữ liệu: tập dữ liệu 8554 mẫu huấn luyện của nghiên cứu vẫn nhỏ hơn khoảng 5 lần so với quy mô 40.000--45.000 mẫu của các hệ thống đối chuẩn như Go-Browse~\cite{gandhi2026gobrowse} hay NNetNav~\cite{murty2024nnetnav}. Mặc dù dữ liệu bổ sung đem lại mức tăng rõ rệt ($+$8{,}7 đpt ở Bảng~\ref{tab:datascale}), sự chênh lệch lớn về hiệu suất biên giữa các website ($+$7{,}1 so với $+$2{,}5 đpt/1000 mẫu) cho thấy việc mở rộng quy mô cần đi liền với chiến lược chọn lọc tác vụ theo đặc thù miền thay vì thu thập dàn trải. Thứ hai là độ phủ không gian trang: dữ liệu khám phá bao quát từ 63 đến 179 node mỗi website, trong khi bộ task WebArena phân bố trên không gian rộng lớn hơn nhiều. Thứ ba là giới hạn nội tại của mô hình nền 9B khi tinh chỉnh thuần SFT: khó tiếp thu đầy đủ năng lực lập kế hoạch dài hạn hay tự sửa lỗi phức tạp nếu các hành vi này không xuất hiện dày đặc trong dữ liệu (Bảng~\ref{tab:failures}).
 
 \subsection{CH3 - Hiệu quả chi phí của quá trình tự động tạo dữ liệu}
 
-Về chi phí, toàn bộ giai đoạn khám phá tiêu tốn 54{,}21\,USD cho khoảng 65 triệu token (Bảng~\ref{tab:calls}, \ref{tab:apicost}), tương đương 0{,}0308\,USD mỗi trajectory thành công và hoàn toàn không tiêu tốn tài nguyên GPU; chu trình fine-tune và đánh giá trên 655 task tốn thêm 24{,}4\,USD thuê GPU (Bảng~\ref{tab:infra}). Chi phí khám phá thực chất dồn vào một vai trò duy nhất: solver chiếm 82{,}9\% số lời gọi và 88{,}9\% lượng token. Đòn bẩy chi phí lớn nhất nằm ở việc định tuyến mô hình cho solver: việc chuyển từ GPT-4o sang GPT-5.6-luna giữa chừng đã kiểm soát ngân sách hiệu quả, bởi GPT-4o dù chỉ chiếm 13{,}6\% số bước nhưng chiếm tới 52{,}9\% tổng chi phí gọi OpenAI. Do đó, kiểm soát chi phí khám phá là bài toán lựa chọn mô hình và tối ưu ngữ cảnh cho solver, không phải bài toán cắt giảm quy mô khám phá.
+Về chi phí vận hành, chúng tôi ghi nhận toàn bộ giai đoạn khám phá tiêu tốn 54{,}21\,USD cho khoảng 65 triệu token (Bảng~\ref{tab:calls}, \ref{tab:apicost}), tương đương 0{,}0308\,USD mỗi trajectory thành công và hoàn toàn không tiêu tốn tài nguyên GPU; chu trình fine-tune và đánh giá trên 655 task tốn thêm 24{,}4\,USD thuê GPU (Bảng~\ref{tab:infra}). Chi phí khám phá thực chất dồn vào một vai trò duy nhất: solver chiếm 82{,}9\% số lời gọi và 88{,}9\% lượng token. Đòn bẩy chi phí lớn nhất nằm ở việc định tuyến mô hình cho solver: việc chuyển từ GPT-4o sang GPT-5.6-luna giữa chừng đã giúp chúng tôi kiểm soát ngân sách hiệu quả, bởi GPT-4o dù chỉ chiếm 13{,}6\% số bước nhưng chiếm tới 52{,}9\% tổng chi phí gọi OpenAI. Do đó, chúng tôi kết luận rằng việc kiểm soát chi phí khám phá thực chất là bài toán lựa chọn mô hình và tối ưu ngữ cảnh cho solver, chứ không phải bài toán cắt giảm quy mô khám phá.
 
-So với Go-Browse (công bố 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD mỗi trajectory), chi phí của HSGE là 0{,}0308\,USD mỗi trajectory thành công — thấp hơn khoảng \textbf{3{,}3 lần} (Mục~\ref{sec:exp-cost-explore}). Sự khác biệt này chủ yếu đến từ chiến lược phân bổ mô hình theo vai trò (định tuyến solver sang mô hình có chi phí thấp hơn) thay vì dùng các mô hình đắt tiền cho toàn bộ quá trình rollout. Đây là quan sát thực tế về đơn giá vận hành trong điều kiện tài nguyên hạn chế, không phải một phép so sánh hiệu quả phương pháp có kiểm soát.
+So với Go-Browse (công bố 975{,}57\,USD cho 9504 trajectory thành công, tức 0{,}1026\,USD mỗi trajectory), chi phí của HSGE đạt 0{,}0308\,USD cho mỗi trajectory thành công — thấp hơn khoảng \textbf{3{,}3 lần} (Mục~\ref{sec:exp-cost-explore}). Chúng tôi xác định sự khác biệt này đến từ chiến lược phân bổ mô hình theo vai trò (định tuyến solver sang mô hình có chi phí thấp hơn) thay vì dùng các mô hình đắt tiền cho toàn bộ quá trình rollout. Đây là quan sát thực tế của chúng tôi về đơn giá vận hành trong điều kiện tài nguyên hạn chế.
 
 \section{Bài học kỹ thuật rút ra từ quá trình triển khai}
 \label{sec:disc-lessons}
 
-Ngoài các kết quả định lượng ở trên, quá trình xây dựng và vận hành hệ thống
-trên website thật để lại một tập bài học kỹ thuật - đóng góp O5 của khóa luận.
-Vì chúng thuộc về kinh nghiệm triển khai chứ không phải bàn luận về kết quả đo,
-toàn bộ phần này được trình bày đầy đủ ở Phụ lục~\ref{app:lessons}, kèm bảng
-mười bốn best practice đã chưng cất. Mục này chỉ tóm tắt bốn nhóm.
+Bên cạnh các kết quả định lượng ở trên, quá trình xây dựng và vận hành hệ thống trên các website thực tế giúp chúng tôi đúc kết một bộ bài học kỹ thuật quan trọng (đóng góp O5 của khóa luận). Toàn bộ phần này được trình bày đầy đủ ở Phụ lục~\ref{app:lessons}, kèm bảng 14 best practice đã chưng cất. Mục này tóm tắt bốn nhóm kinh nghiệm chính:
 
-Bốn nhóm đó là: \emph{khám phá website thật}
-(Phụ lục~\ref{sec:disc-exploration}) - khả năng tiếp cận trang không được phụ
-thuộc vào hành vi giải task, vì một lượt chạy đã dừng sớm ở 57 trên 500 node
-khi frontier chỉ lớn lên nhờ những URL solver tình cờ đi tới, và độ đa dạng của
-tập task là thuộc tính cấp lượt chạy chứ không cấp trang (46\% đề xuất gần
-trùng nhau khi explorer không nhớ gì giữa các trang); \emph{chốt chặn cấu trúc
-thay vì nhắc nhở qua prompt} (Phụ lục~\ref{sec:disc-guardrails}) - quy ước định
-dạng chìm trong văn bản tự do không sống nổi (89\% đề xuất không mang thẻ phân
-loại mà cổng an toàn đang dựa vào), và chỉ ngân sách kèm lệnh dừng cứng mới
-chặn được vòng lặp hành động vô hiệu; \emph{quy nạp operator}
-(Phụ lục~\ref{sec:disc-operators}) - tính hợp lệ của từng operator được canh
-chặt ở mức cục bộ nhưng khả năng nối giữa chúng thì không, nên đồ thị sạch mà
-rời, và cổng grounding cho thấy hai lớp trước để lọt 44 mệnh đề effect có độ
-chính xác đúng bằng 0{,}0; \emph{huấn luyện và phục vụ mô hình nhỏ}
-(Phụ lục~\ref{sec:disc-slm}) - một agent tự chấm bài mình là nguồn dữ liệu hỏng
-có hệ thống (cổng judge hạ cấp 801 episode, khoảng 27\% số lần tự tuyên bố hoàn
-thành), những lỗi mang tính cơ học phải bắt bằng mã chứ không giao cho bộ chấm
-ngữ nghĩa, và với bộ chấm chỉ nhìn trạng thái cuối thì khôi phục môi trường
-giữa hai lượt đo là một thành phần bắt buộc của phép đo.
+Bốn nhóm đó là: \emph{khám phá website thật} (Phụ lục~\ref{sec:disc-exploration}) - khả năng tiếp cận trang không được phụ thuộc vào hành vi giải task, vì một lượt chạy đã dừng sớm ở 57 trên 500 node khi frontier chỉ lớn lên nhờ những URL solver tình cờ đi tới, và độ đa dạng của tập task là thuộc tính cấp lượt chạy chứ không cấp trang (46\% đề xuất gần trùng nhau khi explorer không nhớ gì giữa các trang); \emph{chốt chặn cấu trúc thay vì nhắc nhở qua prompt} (Phụ lục~\ref{sec:disc-guardrails}) - quy ước định dạng chìm trong văn bản tự do không sống nổi (89\% đề xuất không mang thẻ phân loại mà cổng an toàn đang dựa vào), và chỉ ngân sách kèm lệnh dừng cứng mới chặn được vòng lặp hành động vô hiệu; \emph{quy nạp toán tử} (Phụ lục~\ref{sec:disc-operators}) - tính hợp lệ của từng toán tử được canh chặt ở mức cục bộ nhưng khả năng nối giữa chúng thì không, nên đồ thị sạch mà rời, và cổng grounding cho thấy hai lớp trước để lọt 44 mệnh đề effect có độ chính xác đúng bằng 0{,}0; \emph{huấn luyện và phục vụ mô hình nhỏ} (Phụ lục~\ref{sec:disc-slm}) - một agent tự chấm bài mình là nguồn dữ liệu hỏng có hệ thống (cổng judge hạ cấp 801 episode, khoảng 27\% số lần tự tuyên bố hoàn thành), những lỗi mang tính cơ học phải bắt bằng mã chứ không giao cho bộ chấm ngữ nghĩa, và với bộ chấm chỉ nhìn trạng thái cuối thì khôi phục môi trường giữa hai lượt đo là một thành phần bắt buộc của phép đo.
 
 \section{Đối chiếu với các công bố gốc}
 \label{sec:disc-related}
 
-Bảng~\ref{tab:related} ở Chương~\ref{ch:experiments} đặt kết quả của khóa
-luận cạnh các hệ thống cùng phân khúc, nhưng một bảng số chỉ nói được
-\emph{khác bao nhiêu}, không nói được \emph{vì sao khác}. Mục này đối chiếu
-lần lượt với ba công bố gần nhất theo cùng một khuôn: công bố gốc tuyên bố
-điều gì, khóa luận đo được gì trên đúng bốn website, và khác biệt đó quy về
-nguyên nhân nào. Mục~\ref{sec:disc-related-qual} khép lại bằng phần định vị
-với những hướng tiếp cận chưa được đưa vào thực nghiệm.
+Bảng~\ref{tab:related} ở Chương~\ref{ch:experiments} đối chiếu kết quả của chúng tôi với các hệ thống cùng phân khúc. Mục này trình bày phân tích chi tiết của chúng tôi đối với ba công bố gần nhất theo cùng một khuôn: công bố gốc tuyên bố điều gì, chúng tôi đo được gì trên đúng bốn website, và khác biệt đó quy về nguyên nhân nào. Mục~\ref{sec:disc-related-qual} khép lại bằng phần định vị với những hướng tiếp cận chưa được đưa vào thực nghiệm.
 
 \subsection{Đối chiếu với Go-Browse (Gandhi và cộng sự, 2026)}
 
-Go-Browse~\cite{gandhi2026gobrowse} công bố tỷ lệ hoàn thành 21{,}7\% trên
-toàn bộ 812 task của WebArena với một mô hình 7B, xác lập mức tiên tiến nhất
-cho phân khúc dưới 10 tỷ tham số tại thời điểm công bố; tính lại trên đúng
-bốn website mà khóa luận đánh giá, con số đó là 22{,}6\%. Khóa luận đo được
-24{,}6\%, cao hơn 2{,}0 điểm.
+Go-Browse~\cite{gandhi2026gobrowse} công bố tỷ lệ hoàn thành 21{,}7\% trên toàn bộ 812 task của WebArena với một mô hình 7B, xác lập mức tiên tiến nhất cho phân khúc dưới 10 tỷ tham số tại thời điểm công bố; tính lại trên đúng bốn website mà chúng tôi đánh giá, con số đó là 22{,}6\%. Trong nghiên cứu này, chúng tôi đạt 24{,}6\%, cao hơn 2{,}0 điểm.
 
-\textbf{Điều tái lập được.} Tiền đề trung tâm mà Go-Browse đặt ra - khám phá
-\emph{có cấu trúc} cho dữ liệu tốt hơn các chuỗi rollout rời rạc - được xác
-nhận độc lập ở đây, trên một mô hình nền khác và một quy mô dữ liệu khác. Cả
-hai hệ thống đều lấy một mô hình mở dưới 10B, huấn luyện thuần giám sát trên
-dữ liệu tự thu từ website không nhãn, và đều vượt xa chính mô hình nền của
-mình.
+\textbf{Điều tái lập được:} Tiền đề trung tâm mà Go-Browse đặt ra - khám phá \emph{có cấu trúc} cho dữ liệu tốt hơn các chuỗi rollout rời rạc - được xác nhận độc lập ở đây, trên một mô hình nền khác và một quy mô dữ liệu khác. Cả hai hệ thống đều lấy một mô hình mở dưới 10B, huấn luyện thuần giám sát trên dữ liệu tự thu từ website không nhãn, và đều vượt xa chính mô hình nền của mình.
 
-\textbf{Điều không tái lập được, và đây mới là điểm đáng nói.} Khoảng cách
-2{,}0 điểm \emph{không} chứng minh được HSGE tốt hơn, vì hai lý do độc lập
-đều đủ để giải thích nó. Thứ nhất, mô hình nền khác nhau: Qwen-2.5-7B mà
-Go-Browse dùng đạt 8{,}3\% khi chưa huấn luyện thêm, trong khi Qwen3.5-9B của
-khóa luận đã đạt 13{,}3\% ở cùng bốn website - chênh lệch xuất phát điểm
-khoảng 5 điểm, tức lớn gấp đôi khoảng cách cuối cùng. Thứ hai, khoảng cách
-2{,}0 điểm nhỏ hơn nửa độ rộng khoảng tin cậy 95\% của phép đo ($\pm 3{,}3$
-điểm). Phát biểu đúng vì vậy là \emph{ngang}, không phải \emph{vượt}
-(Mục~\ref{sec:disc-results}).
+\textbf{Điều không tái lập được:} Chúng tôi đánh giá khoảng cách 2{,}0 điểm này \emph{chưa thể} chứng minh HSGE vượt trội hơn hẳn, do hai nguyên nhân độc lập: Thứ nhất, mô hình nền khác nhau: Qwen-2.5-7B mà Go-Browse dùng đạt 8{,}3\% khi chưa huấn luyện thêm, trong khi Qwen3.5-9B của chúng tôi đạt 13{,}3\% ở cùng bốn website - chênh lệch xuất phát điểm khoảng 5 điểm, lớn gấp đôi khoảng cách cuối cùng. Thứ hai, khoảng cách 2{,}0 điểm nhỏ hơn nửa độ rộng khoảng tin cậy 95\% của phép đo ($\pm 3{,}3$ điểm). Do đó, chúng tôi xác định kết quả hai bên ở mức \emph{ngang nhau}, chứ không phải \emph{vượt trội} (Mục~\ref{sec:disc-results}).
 
-\textbf{Nguyên nhân đáng chú ý hơn cả.} Điểm phân biệt HSGE với Go-Browse
-nằm ở tầng đồ thị thứ hai: Go-Browse chỉ có node URL và cạnh trajectory, bộ
-đề xuất task của họ được yêu cầu tường minh chỉ tìm những việc làm được ngay
-trên trang hiện tại; HSGE bổ sung tầng skill đã kiểm chứng, nâng thành
-operator có precondition/effect rồi ghép chuỗi để sinh semantic task
-(Mục~\ref{sec:method-semantic}). Nhưng số liệu của chính khóa luận cho thấy
-cơ chế phân biệt đó \emph{chưa} đủ dày để giải thích khoảng cách: chỉ 12 trong
-142 semantic task đến từ việc ghép chuỗi trên đồ thị operator, phần còn lại
-đến từ seed năng lực website (Mục~\ref{sec:disc-results}). Nói cách khác,
-việc khóa luận ngang được Go-Browse với tập dữ liệu nhỏ hơn khoảng năm lần
-(8554 mẫu so với khoảng 40 nghìn bước tương tác) là một quan sát thú vị,
-nhưng nó \emph{không} phải bằng chứng cho tầng đồ thị thứ hai. Bằng chứng đó
-đòi hỏi ablation ở Mục~\ref{sec:exp-ablation}, phép đo hiện chưa chạy.
+\textbf{Nguyên nhân đáng chú ý hơn cả:} Điểm phân biệt HSGE với Go-Browse nằm ở tầng đồ thị thứ hai: Go-Browse chỉ có node URL và cạnh trajectory, bộ đề xuất task của họ được yêu cầu tường minh chỉ tìm những việc làm được ngay trên trang hiện tại; HSGE bổ sung tầng skill đã kiểm chứng, nâng thành toán tử có precondition/effect rồi ghép chuỗi để sinh semantic task (Mục~\ref{sec:method-semantic}). Tuy nhiên, kết quả phân tích của chúng tôi chỉ ra rằng cơ chế phân biệt đó \emph{chưa} đủ dầy để giải thích khoảng cách: chỉ 12 trong 142 semantic task đến từ việc ghép chuỗi trên đồ thị toán tử, phần còn lại đến từ seed năng lực website (Mục~\ref{sec:disc-results}). Nói cách khác, việc chúng tôi đạt kết quả tương đương Go-Browse với tập dữ liệu nhỏ hơn khoảng 5 lần (8554 mẫu so với khoảng 40 nghìn bước tương tác) là một quan sát đáng chú ý, nhưng chưa đủ để làm bằng chứng cho tầng đồ thị thứ hai.
 
-\textbf{Phân bố theo website.} Khóa luận cao hơn Go-Browse trên Shopping
-(28{,}3\% so với 22{,}4\%), Reddit (34{,}0\% so với 30{,}7\%) và GitLab
-(18{,}3\% so với 15{,}3\%), nhưng thấp hơn trên Shopping Admin (21{,}4\% so
-với 25{,}3\%). Chiều lệch này không quy về lượng dữ liệu được: Shopping Admin
-chính là website chiếm phần lớn nhất trong tập huấn luyện (41{,}9\%) mà lại
-là website duy nhất khóa luận thua, còn Shopping chỉ chiếm 11{,}4\% mà lại
-dẫn trước gần 6 điểm (Bảng~\ref{tab:crosssite}). Quan sát này khớp với câu
-trả lời cho CH2: yếu tố chi phối không phải khối lượng dữ liệu mà là kiểu lỗi
-chiếm ưu thế trên từng website.
+\textbf{Phân bố theo website:} Chúng tôi ghi nhận kết quả cao hơn Go-Browse trên Shopping (28{,}3\% so với 22{,}4\%), Reddit (34{,}0\% so với 30{,}7\%) và GitLab (18{,}3\% so với 15{,}3\%), nhưng thấp hơn trên Shopping Admin (21{,}4\% so với 25{,}3\%). Chiều lệch này không quy về lượng dữ liệu được: Shopping Admin chính là website chiếm phần lớn nhất trong tập huấn luyện (41{,}9\%) mà lại là website duy nhất chúng tôi thấp hơn, còn Shopping chỉ chiếm 11{,}4\% dữ liệu lại dẫn trước gần 6 điểm (Bảng~\ref{tab:crosssite}). Quan sát này khớp với phân tích của chúng tôi ở CH2: yếu tố chi phối không phải khối lượng dữ liệu mà là kiểu lỗi chiếm ưu thế trên từng website.
 
 \subsection{Đối chiếu với NNetNav (Murty và cộng sự, 2025)}
 
-Nhóm NNetNav~\cite{murty2024nnetnav} công bố 16{,}3\% trên toàn bộ 812 task
-với Llama-3.1-8B. Go-Browse tái lập phương pháp này ở quy mô 7B và báo cáo
-18{,}8\%; tính lại trên bốn website của khóa luận, con số là 19{,}1\%. Khóa
-luận đo được 24{,}6\%.
+Nhóm NNetNav~\cite{murty2024nnetnav} công bố 16{,}3\% trên toàn bộ 812 task với Llama-3.1-8B. Go-Browse tái lập phương pháp này ở quy mô 7B và báo cáo 18{,}8\%; tính lại trên bốn website trong nghiên cứu của chúng tôi, con số là 19{,}1\%. Trong khi đó, hệ thống của chúng tôi đạt 24{,}6\%.
 
-\textbf{Điều tái lập được.} Hạn chế mà chính nhóm NNetNav nêu ra - tri thức
-về cấu trúc website không được tích lũy giữa các episode, mỗi episode phải
-khởi tạo lại từ đầu - đúng là chỗ mà một biểu diễn đồ thị bền vững can thiệp
-được, và cả Go-Browse lẫn khóa luận đều đo được kết quả cao hơn NNetNav sau
-khi bổ sung biểu diễn đó. Đây là một dấu hiệu nhất quán qua hai hệ thống độc
-lập, không phải một phép kiểm chứng có kiểm soát.
+\textbf{Điều tái lập được:} Hạn chế mà nhóm NNetNav nêu ra - tri thức về cấu trúc website không được tích lũy giữa các episode, mỗi episode phải khởi tạo lại từ đầu - đúng là điểm mà biểu diễn đồ thị bền vững có thể can thiệp. Cả Go-Browse và hệ thống của chúng tôi đều đạt kết quả cao hơn NNetNav sau khi bổ sung biểu diễn đồ thị. Đây là một minh chứng nhất quán qua hai hệ thống độc lập.
 
-\textbf{Một cảnh báo về độ phân giải của mọi so sánh trong bảng.} Con số do
-chính nhóm NNetNav công bố (16{,}3\%) và con số Go-Browse đo lại cho cùng
-phương pháp (18{,}8\%) lệch nhau 2{,}5 điểm, chỉ vì khác cài đặt lại và khác
-quy mô mô hình nền. Khoảng lệch đó \emph{lớn hơn} khoảng cách 2{,}0 điểm giữa
-khóa luận và Go-Browse. Nói cách khác, chênh lệch vài điểm phần trăm giữa hai
-dòng trong Bảng~\ref{tab:related} nằm trong đúng biên độ mà riêng việc cài
-đặt lại một phương pháp đã tạo ra được. Đây là lý do khóa luận không rút bất
-kỳ kết luận thứ hạng nào từ những khoảng cách nhỏ hơn khoảng tin cậy.
+\textbf{Một cảnh báo về độ phân giải của mọi so sánh trong bảng:} Con số do nhóm NNetNav công bố (16{,}3\%) và con số Go-Browse đo lại cho cùng phương pháp (18{,}8\%) lệch nhau 2{,}5 điểm, do khác biệt về cài đặt và quy mô mô hình nền. Khoảng lệch đó \emph{lớn hơn} khoảng cách 2{,}0 điểm giữa hệ thống của chúng tôi và Go-Browse. Chính vì vậy, chúng tôi không đưa ra bất kỳ kết luận thứ hạng nào đối với các chênh lệch nhỏ hơn khoảng tin cậy thống kê.
 
 \subsection{Đối chiếu với Agent Workflow Memory (Wang và cộng sự, 2024)}
 
-AWM~\cite{wang2024awm} nâng tỷ lệ hoàn thành trên WebArena từ 23{,}5\% lên
-35{,}5\% bằng cách trích các workflow lặp lại từ lịch sử rồi nạp chúng vào
-prompt ở các lượt sau. Nhìn con số tuyệt đối thì đây là mức cao hơn hẳn kết
-quả 24{,}6\% của khóa luận.
+AWM~\cite{wang2024awm} nâng tỷ lệ hoàn thành trên WebArena từ 23{,}5\% lên 35{,}5\% bằng cách trích các workflow lặp lại từ lịch sử rồi nạp chúng vào prompt ở các lượt sau. Nhìn con số tuyệt đối thì đây là mức cao hơn kết quả 24{,}6\% của chúng tôi.
 
-\textbf{Vì sao hai con số này không so trực tiếp được.} AWM là một phương
-pháp can thiệp ở thời điểm suy luận: nó cải thiện \emph{prompt} của một mô
-hình mạnh sẵn có, và bản thân năng lực của mô hình nền không thay đổi - tháo
-bộ nhớ workflow ra thì hệ thống trở lại mức 23{,}5\%. Khóa luận đi hướng
-ngược lại: sản phẩm bàn giao là một tập dữ liệu và một checkpoint 9B đã đổi
-trọng số, chạy được mà không cần tri thức bổ trợ nào trong ngữ cảnh. Hai
-hướng này bổ sung cho nhau chứ không thay thế nhau, và mức tăng của chúng
-không cộng dồn hay so đọ được trên cùng một trục.
+\textbf{Vì sao hai con số này không so trực tiếp được:} AWM là một phương pháp can thiệp ở thời điểm suy luận (inference-time): nó cải thiện \emph{prompt} của một mô hình mạnh sẵn có, và bản thân năng lực của mô hình nền không thay đổi - tháo bộ nhớ workflow ra thì hệ thống trở lại mức 23{,}5\%. Chúng tôi tiếp cận theo hướng ngược lại: sản phẩm bàn giao là một tập dữ liệu và checkpoint 9B đã được fine-tune trọng số, vận hành tự chủ mà không cần tri thức bổ trợ trong ngữ cảnh. Hai hướng này bổ sung cho nhau chứ không thay thế nhau, và mức tăng của chúng không cộng dồn hay so đọ được trên cùng một trục.
 
-\textbf{Điều khóa luận xác nhận độc lập.} Bộ chấm nhị phân của AWM chỉ xét
-episode có thành công hay không rồi mới trích workflow, chứ không thực thi
-lại workflow để xác nhận nó dùng lại được (Mục~\ref{sec:rel-skills}). Khoảng
-trống kiểm chứng đó là thứ mà cổng kiểm chứng skill và cổng grounding của
-HSGE nhắm tới, và số liệu của khóa luận cho thấy nó \emph{có} thật, đo được:
-44 mệnh đề effect bị loại với độ chính xác grounding bằng đúng 0{,}0, tức
-những mệnh đề không đúng trên bất kỳ thành viên nào của cụm vẫn đi lọt hai
-lớp trước đó (Phụ lục~\ref{sec:disc-operators}). Song phải nói nốt phần
-ngược lại: cổng kiểm chứng bằng thực thi lại của chính khóa luận đã phải tắt
-trên website sống để tránh tác dụng phụ, nên nhãn ``đã kiểm chứng'' ở đây
-cũng chưa mạnh bằng định nghĩa lý tưởng (Phụ lục~\ref{sec:disc-verify}). Khóa
-luận thu hẹp khoảng trống mà AWM để lại, chứ chưa khép được nó.
+\textbf{Điều chúng tôi xác nhận độc lập:} Bộ chấm nhị phân của AWM chỉ xét episode có thành công hay không rồi mới trích workflow, chứ không thực thi lại workflow để xác nhận tính tái sử dụng (Mục~\ref{sec:rel-skills}). Khoảng trống kiểm chứng đó là mục tiêu mà cổng kiểm chứng skill và cổng grounding của HSGE nhắm tới, và thực nghiệm của chúng tôi xác nhận khoảng trống này \emph{hoàn toàn} tồn tại trên thực tế: 44 mệnh đề effect bị loại với độ chính xác grounding bằng 0{,}0 (Phụ lục~\ref{sec:disc-operators}). Mặc dù cổng kiểm chứng bằng thực thi lại của chúng tôi đã phải tạm tắt trên các website thực tế để tránh tác dụng phụ (Phụ lục~\ref{sec:disc-verify}), phương pháp của chúng tôi đã góp phần thu hẹp khoảng trống mà AWM để lại.
 
 \subsection{Định vị với các hướng chưa đưa vào thực nghiệm}
 \label{sec:disc-related-qual}
 
-Ba nhóm công trình còn lại trong Chương~\ref{ch:related} không xuất hiện
-trong Bảng~\ref{tab:related} vì chúng không cùng điều kiện đo; phần này nêu
-rõ lý do loại trừ để người đọc định vị được đóng góp của khóa luận, thay vì
-hiểu nhầm sự vắng mặt là một phép so sánh đã thắng. Bảng~\ref{tab:agents} ở
-Chương~\ref{ch:related} tóm tắt vị trí của từng hệ thống trên các trục thiết
-kế.
+Ba nhóm công trình còn lại trong Chương~\ref{ch:related} không xuất hiện trong Bảng~\ref{tab:related} vì chúng không cùng điều kiện đo; phần này nêu rõ lý do loại trừ nhằm định vị rõ đóng góp của nghiên cứu, tránh việc hiểu nhầm sự vắng mặt này là một kết quả vượt trội. Bảng~\ref{tab:agents} ở Chương~\ref{ch:related} tóm tắt vị trí của từng hệ thống trên các trục thiết kế.
 
-\textbf{Nhóm học tăng cường.} WebRL~\cite{qi2025webrl},
-WebAgent-R1~\cite{wei2025webagentr1} và PAE~\cite{zhou2024pae} đạt mức cải
-thiện mạnh hơn SFT trên mô hình mở, nên nếu chỉ nhìn hiệu năng thì đây là
-hướng đáng gờm nhất. Chúng không được đưa vào thực nghiệm vì hai lý do gắn
-liền với chính bài toán khóa luận đặt ra. Thứ nhất, cả WebRL lẫn
-WebAgent-R1 đều cần một phân phối task mồi để khởi động vòng tự tiến hóa -
-mà việc \emph{không có sẵn task nào} chính là điều kiện đầu vào mà khóa luận
-lấy làm giả định. Thứ hai, vòng lặp học tăng cường trực tuyến đòi hỏi duy trì
-hạ tầng rollout song song trên website sống, trong khi ràng buộc an toàn của
-khóa luận là chạy đơn luồng trên hạ tầng dùng chung có trạng thái
-(Mục~\ref{sec:exp-setup}). Đáng chú ý là hai hướng này bổ trợ chứ không loại
-trừ nhau: dữ liệu do HSGE sinh ra hoàn toàn có thể đóng vai trò phân phối
-task mồi mà WebRL cần.
+\textbf{Nhóm học tăng cường:} WebRL~\cite{qi2025webrl}, WebAgent-R1~\cite{wei2025webagentr1} và PAE~\cite{zhou2024pae} đạt mức cải thiện mạnh hơn SFT trên mô hình mở. Chúng tôi không đưa nhóm này vào thực nghiệm đối chứng vì hai lý do: Thứ nhất, cả WebRL lẫn WebAgent-R1 đều cần một phân phối task mồi để khởi động vòng tự tiến hóa - mà việc \emph{không có sẵn task nào} chính là điều kiện đầu vào của nghiên cứu này. Thứ hai, vòng lặp học tăng cường trực tuyến đòi hỏi duy trì hạ tầng rollout song song, trong khi ràng buộc an toàn của chúng tôi là chạy đơn luồng trên hạ tầng dùng chung có trạng thái (Mục~\ref{sec:exp-setup}). Đáng chú ý là hai hướng này bổ trợ chứ không loại trừ nhau: dữ liệu do HSGE sinh ra hoàn toàn có thể đóng vai trò phân phối task mồi cho WebRL.
 
-\textbf{Nhóm mở rộng quy mô.} InSTA~\cite{trabucco2025insta} sinh và đánh giá
-task trên 150 nghìn website thật, tức lớn hơn phạm vi khóa luận nhiều bậc.
-Đánh đổi của hướng đó lại đúng vào chỗ khóa luận nhắm tới: một lượt rà soát
-bề rộng không dựng được tri thức bền vững về cấu trúc một website, nên không
-sinh được task nhiều bước. Hai hướng nằm ở hai đầu của trục rộng - sâu, và
-kết quả của khóa luận không nói được gì về vế rộng.
+\textbf{Nhóm mở rộng quy mô:} InSTA~\cite{trabucco2025insta} sinh và đánh giá task trên 150 nghìn website thật. Đánh đổi của hướng đó nằm ở chiều sâu: một lượt rà soát bề rộng không dựng được tri thức bền vững về cấu trúc một website, nên không sinh được task nhiều bước. Hai hướng nằm ở hai đầu của trục rộng -- sâu, và kết quả của chúng tôi không đối chiếu trực tiếp với vế rộng.
 
-\textbf{Nhóm quy nạp kỹ năng dạng chương trình.} ASI~\cite{wang2025asi} nâng
-các chuỗi hành động lặp lại thành hàm thực thi được, tự kiểm chứng lúc vận
-hành - tức giải đúng khoảng trống kiểm chứng nêu ở mục trước, và giải bằng
-một cơ chế mạnh hơn cổng grounding của khóa luận, vì một hàm chạy được là một
-bằng chứng cứng hơn một mệnh đề hợp lệ về ngữ nghĩa. Cái giá là kỹ năng phải
-biểu diễn được thành mã, điều kiện mà nhiều thao tác web phụ thuộc trạng thái
-trang không thỏa. Đây là hướng đối chiếu đáng giá nhất cho công việc tiếp
-theo của khóa luận, và được nêu lại ở Mục~\ref{sec:conc-future}.
+\textbf{Nhóm quy nạp kỹ năng dạng chương trình:} ASI~\cite{wang2025asi} nâng các chuỗi hành động lặp lại thành hàm thực thi được, tự kiểm chứng lúc vận hành. Cái giá phải trả là kỹ năng phải biểu diễn được thành mã, điều kiện mà nhiều thao tác web phụ thuộc trạng thái trang không thỏa mãn. Đây là hướng đối chiếu quan trọng mà chúng tôi sẽ tiếp tục mở rộng trong các nghiên cứu tiếp theo (Mục~\ref{sec:conc-future}).
 
 \vspace{0.5em}
 \noindent
-\textbf{Vị trí của khóa luận.} Tổng hợp bốn phép đối chiếu trên, đóng góp của
-khóa luận nằm ở chỗ bổ trợ chứ không phải thay thế: so với Go-Browse, khóa
-luận thêm một tầng trừu tượng trên đồ thị khám phá và cho thấy tầng đó
-\emph{chạy được} trên website thật, dù chưa đủ dày để chứng minh giá trị; so
-với NNetNav, khóa luận củng cố thêm bằng chứng cho việc tích lũy tri thức
-giữa các episode; và so với AWM, khóa luận chuyển tri thức trích được từ chỗ
-nằm trong prompt vào thẳng trọng số của một mô hình nhỏ, đồng thời đo được
-rằng khoảng trống kiểm chứng mà AWM để lại là có thật.
+\textbf{Vị trí đóng góp của nghiên cứu:} Tổng hợp các đối chiếu trên, chúng tôi định vị đóng góp của nghiên cứu nằm ở tính bổ trợ hơn là thay thế: so với Go-Browse, chúng tôi đề xuất thêm một tầng trừu tượng trên đồ thị khám phá và chứng minh tầng này \emph{vận hành được} trên các website thực tế; so với NNetNav, chúng tôi củng cố thêm bằng chứng cho việc tích lũy tri thức giữa các episode; và so với AWM, chúng tôi chuyển tri thức trích xuất được từ prompt trực tiếp vào trọng số của mô hình nhỏ, đồng thời kiểm chứng thực nghiệm khoảng trống dữ liệu mà AWM để lại.
 
 \vspace{1em}
 \noindent
-Toàn bộ các phân tích thực nghiệm và đối chiếu trên đây đã khép lại phần thảo luận của khóa luận. Chương tiếp theo sẽ tổng kết các kết quả đạt được, đóng góp chính và đề xuất các hướng nghiên cứu tiếp theo.
+Toàn bộ các phân tích thực nghiệm và đối chiếu trên đây đã khép lại phần thảo luận của luận văn. Chương tiếp theo sẽ tổng kết các kết quả đạt được, đóng góp chính và đề xuất các hướng nghiên cứu tiếp theo.
