@@ -201,7 +201,7 @@ tin xác thực sống.
 Các mục tiêu của khóa luận đã đạt được ở mức đã đối chiếu trong Bảng~\ref{tab:objectives}. Phần dưới đây nêu những hướng
 còn có thể đi tiếp, cả về quy mô dữ liệu lẫn hiệu quả của mô hình.
 
-\textbf{Mở rộng quy mô thu thập dữ liệu.}
+\textbf{Cần mở rộng quy mô thu thập dữ liệu trên các miền ứng dụng mới.}
 Tập dữ liệu hiện tại (8554 mẫu huấn luyện) tuy đã gần gấp đôi sau đợt bổ
 sung, vẫn nhỏ hơn khoảng năm lần so với các nghiên cứu cùng hướng vốn sử dụng
 khoảng 40.000 đến 45.000 bước tương
@@ -221,7 +221,7 @@ quyết định. Do đó, định hướng mở rộng dữ liệu tiếp theo n
 \emph{độ phủ} và \emph{độ khó} của task, thay vì chỉ gia tăng đơn thuần về số
 lượng mẫu.
 
-\textbf{Giảm tỷ lệ hành động thất bại ở lớp thực thi.}
+\textbf{Cần giảm thiểu tỷ lệ hành động thất bại ở tầng thực thi của trình duyệt.}
 Phân tích nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) cho thấy từ
 85\% đến 96\% episode thất bại có ít nhất một hành động bị trình duyệt từ
 chối. Một episode thất bại điển hình cũng dài gấp hơn hai lần episode thành
@@ -230,26 +230,26 @@ quy mô dữ liệu: bổ sung các trajectory \emph{phục hồi sau lỗi} và
 luyện để mô hình học cách đổi chiến lược thay vì thử lại, và làm cho lớp
 thực thi ít sinh ra lỗi khả thao tác giả hơn.
 
-\textbf{Khai thác tín hiệu kiểm chứng để huấn luyện.}
+\textbf{Cần khai thác trực tiếp tín hiệu kiểm chứng cho quá trình huấn luyện mô hình.}
 Ngoài tập dữ liệu dùng cho fine-tuning có giám sát, pipeline còn để lại nhiều
 tín hiệu khác: trajectory đã được judge xác nhận, trajectory thất bại, và episode
 kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở thích hoặc học tăng cường, như cách WebRL~\cite{qi2025webrl} và WebAgent-R1~\cite{wei2025webagentr1} đã làm, có thể khai thác triệt để các nguồn tín hiệu này, giúp mô hình học tập được từ cả những trường hợp chưa thành công thay vì chỉ giới hạn trên các mẫu đạt chuẩn.
 
-\textbf{Mở rộng sang các mô hình nhỏ hơn.}
+\textbf{Cần đánh giá khả năng áp dụng pipeline trên các mô hình nhỏ hơn.}
 Qwen3.5-9B đã nhỏ hơn hẳn các mô hình lớn thường dùng cho web agent,
 nhưng chi phí triển khai vẫn còn cao với một số môi trường thực tế. Hướng tiếp
 theo là chưng cất hành vi của agent đã fine-tune xuống mô hình cỡ 1B-3B,
 để xem phương pháp còn giữ được hiệu quả tới đâu khi dung lượng mô hình giảm
 tiếp.
 
-\textbf{Khai thác đồ thị kỹ năng trong giai đoạn suy luận.}
+\textbf{Cần khai thác đồ thị kỹ năng tích lũy trong giai đoạn suy luận của tác tử.}
 Trong phạm vi khóa luận, đồ thị kỹ năng chỉ được sử dụng để sinh dữ liệu huấn
 luyện. Tuy nhiên, cùng một biểu diễn này cũng có thể được khai thác ở thời
 điểm suy luận nhằm truy xuất các skill hoặc subgoal liên quan để bổ sung ngữ
 cảnh cho mô hình, theo cách mà Synapse~\cite{zheng2024synapse}, AWM~\cite{wang2024awm} và SkillWeaver~\cite{zheng2025skillweaver} đã chứng minh là hiệu quả với các mô hình lớn. Điều này mở ra khả năng kết hợp giữa dữ liệu đã học và tri
 thức có cấu trúc trong cùng một hệ thống web agent.
 
-\textbf{Hoàn thiện phần thực nghiệm còn thiếu.}
+\textbf{Cần hoàn thiện các phép đo thực nghiệm còn thiếu trên các benchmark bổ sung.}
 Bốn hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất là lặp
 phép đo: mỗi cấu hình chạy ít nhất ba lần cho cả hai mô hình, báo cáo trung
 bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất. Đi kèm là một việc dọn
