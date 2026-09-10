@@ -30,8 +30,9 @@ defernumbers=true]{biblatex}
 \makeatother
 \AtBeginBibliography{\sloppy}
 
-% Figures
+% Figures and PDF inclusion
 \usepackage{graphicx}
+\usepackage{pdfpages}
 \usepackage{float}
 \usepackage{amssymb}
 \usepackage[nointegrals]{wasysym}
@@ -153,8 +154,11 @@ defernumbers=true]{biblatex}
 \newgeometry{top=30mm, bottom=35mm, left=35mm, right=20mm, includefoot}
 \input{Title/title.tex}
 \restoregeometry
-% After the title pages, the advisor's and reviewer's evaluation sheets are
-% inserted here when binding the final copy (provided after the defense).
+
+% Chèn bản thuyết minh và 2 file nhận xét theo thứ tự: Thuyết minh -> Nhận xét GVHD -> Nhận xét GVPB
+\includepdf[pages=-]{nhanxet/thuyet_minh.pdf}
+\includepdf[pages=-]{nhanxet/nhanxet_gvhd.pdf}
+\includepdf[pages=-]{nhanxet/Nhanxet_GVPB.pdf}
 
 \pagenumbering{roman}
 
