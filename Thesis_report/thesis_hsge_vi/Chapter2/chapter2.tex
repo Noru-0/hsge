@@ -22,79 +22,41 @@ của chúng tôi được trình bày tại Mục~\ref{sec:method-graph}.
 Chính sách của các agent này thường được thiết kế dựa trên
 kiến trúc ReAct~\cite{yao2023react}. Kiến trúc này xen kẽ suy luận bằng ngôn ngữ với thực thi hành động, nên mỗi quyết định đều có một dòng suy nghĩ tường minh đứng sau, dựa trên trạng thái hiện tại của môi trường.
 
-\subsection{Benchmark và môi trường}
+\subsection{Benchmark và môi trường thực nghiệm}
 \label{sec:rel-benchmarks}
 
-Các benchmark dành cho web agent ngày càng được thiết kế gần với các tình
-huống sử dụng trong thực tế. Có thể chia chúng thành bốn thế hệ theo mức độ
-chân thực của môi trường thực thi; Bảng~\ref{tab:benchmarks} tổng hợp lại
-theo bốn nhóm này.
+Năng lực của web agent được đánh giá thông qua các bộ kiểm chuẩn (benchmark) với độ phức tạp và mức độ chân thực của môi trường thực thi khác nhau. Bảng~\ref{tab:benchmarks} tổng hợp các benchmark tiêu biểu được phân loại theo đặc điểm môi trường:
 
-\textbf{Thế hệ thứ nhất: môi trường mô phỏng.}
-MiniWoB++~\cite{liu2018miniwob} gồm hàng trăm màn hình giao diện thu nhỏ,
-mỗi màn hình một thao tác nguyên tử như tích vào ô chọn hoặc điều chỉnh thanh trượt.
-Ưu điểm là môi trường có trạng thái và kết quả thực thi có thể được xác định nhất quán, đồng thời việc chấm điểm có thể thực hiện tự động bằng mã, nhưng khoảng cách với một website
-thật là rất lớn. WebShop~\cite{yao2022webshop} tiến gần hơn một bước với
-website thương mại điện tử mô phỏng chứa hơn một triệu sản phẩm thật cùng
-các yêu cầu mua sắm thu thập từ cộng đồng; dẫu vậy nó vẫn chỉ là một website
-đơn giản hóa và chỉ hỗ trợ những tác vụ liên quan đến mua sắm.
+\begin{itemize}
+  \item \textbf{Môi trường mô phỏng}:
+    \begin{itemize}
+      \item \textbf{MiniWoB++}~\cite{liu2018miniwob}: Cung cấp các giao diện web tối giản cho các thao tác nguyên tử (nhấn nút, nhập chuỗi, chọn tùy chọn) với cơ chế chấm điểm tự động tất định.
+      \item \textbf{WebShop}~\cite{yao2022webshop}: Môi trường thương mại điện tử mô phỏng gồm hơn 1 triệu sản phẩm, đánh giá khả năng tìm kiếm và lựa chọn sản phẩm theo yêu cầu.
+      \item \textbf{WebGames}~\cite{thomas2025webgames}: Tập hợp các thử thách tương tác trong môi trường web khép kín nhằm đo lường khả năng suy luận và thích ứng của tác tử.
+    \end{itemize}
+  \item \textbf{Bản chụp tĩnh của website thực tế}:
+    \begin{itemize}
+      \item \textbf{Mind2Web}~\cite{deng2023mind2web}: Bao gồm hơn 2.000 tác vụ trên 137 website thực tế được lưu trữ dưới dạng bản chụp DOM tĩnh, đánh giá theo mức độ khớp với chuỗi hành động mẫu của con người.
+      \item \textbf{WebLINX}~\cite{lu2024weblinx}: Tập hợp hơn 100.000 tương tác hội thoại đa lượt trên hơn 150 website, đo lường khả năng tương tác liên tục theo ngữ cảnh.
+    \end{itemize}
+  \item \textbf{Website tự triển khai (Self-hosted)}:
+    \begin{itemize}
+      \item \textbf{WebArena}~\cite{zhou2024webarena}: Cung cấp môi trường gồm 6 website thực tế đầy đủ chức năng (thương mại điện tử, GitLab, diễn đàn, v.v.) với 812 tác vụ dài hạn và cơ chế chấm điểm tự động dựa trên trạng thái cuối của hệ thống.
+      \item \textbf{VisualWebArena}~\cite{koh2024visualwebarena}: Mở rộng WebArena cho các tác vụ đa phương thức, yêu cầu tác tử xử lý kết hợp giữa hình ảnh chụp màn hình và cây trợ năng.
+      \item \textbf{WorkArena}~\cite{drouin2024workarena}: Đánh giá tác tử trong môi trường ứng dụng quản trị doanh nghiệp ServiceNow.
+    \end{itemize}
+  \item \textbf{Web mở trực tuyến}:
+    \begin{itemize}
+      \item \textbf{WebVoyager}~\cite{he2024webvoyager}, \textbf{Online-Mind2Web}~\cite{xue2025illusion}, \textbf{AssistantBench}~\cite{yoran2024assistantbench}, \textbf{GAIA}~\cite{mialon2024gaia}: Đánh giá tác tử trực tiếp trên các website đang vận hành trên Internet. Nhóm này có độ chân thực cao nhưng gặp hạn chế về tính bất định của dữ liệu, khó tái lập kết quả và bị giới hạn các hành động ghi làm biến đổi trạng thái hệ thống.
+    \end{itemize}
+\end{itemize}
 
-\textbf{Thế hệ thứ hai: bản chụp tĩnh của website thật.}
-Mind2Web~\cite{deng2023mind2web} mở rộng quy mô lên hơn 2{.}000 task trên
-137 website thật, còn WebLINX~\cite{lu2024weblinx} bổ sung chiều hội thoại
-nhiều lượt với khoảng 100 nghìn tương tác trên hơn 150 website. Cả hai đều
-đánh giá trên bản chụp đã lưu, nên agent được chấm theo mức khớp với chuỗi
-hành động tham chiếu chứ không theo việc nó có thực sự hoàn thành mục tiêu
-trong một môi trường đang sống hay không. Hệ quả là một chuỗi hành động khác
-với tham chiếu nhưng vẫn đạt mục tiêu sẽ bị tính là sai.
-
-\textbf{Thế hệ thứ ba: website sống, tự triển khai.}
-WebArena~\cite{zhou2024webarena} khắc phục hạn chế trên bằng cách cung cấp
-các bản sao đầy đủ chức năng của nhiều website có thể tự triển khai, gồm
-một cửa hàng trực tuyến, trang quản trị của cửa hàng, một instance GitLab
-và một diễn đàn kiểu Reddit. Benchmark này bao gồm 812 task dài hạn, được
-đánh giá bằng bộ chấm tự động trên trạng thái cuối của môi trường. Kết quả
-của WebArena cũng cho thấy mức độ khó của bài toán: tại thời điểm công bố
-benchmark, agent tốt nhất sử dụng GPT-4 chỉ đạt tỷ lệ hoàn thành 14{,}41\%,
-trong khi con người đạt 78{,}24\%.
-VisualWebArena~\cite{koh2024visualwebarena} kế thừa hạ tầng đó và bổ sung
-các task mà mục tiêu chỉ diễn đạt được bằng hình ảnh, buộc agent phải đọc
-được cả ảnh chụp màn hình chứ không riêng accessibility tree.
-WorkArena~\cite{drouin2024workarena} đưa cùng ý tưởng sang lĩnh vực công
-việc văn phòng trên nền tảng ServiceNow. WebArena-Lite, tập con rút gọn và
-hiệu chỉnh lại của WebArena, được giới thiệu cùng WebRL~\cite{qi2025webrl}
-để giảm chi phí cho các vòng lặp huấn luyện tăng cường.
-
-\textbf{Thế hệ thứ tư: web mở, trực tuyến.}
-Nhóm này đánh giá agent trên chính Internet đang vận hành:
-WebVoyager~\cite{he2024webvoyager} chấm agent trên các task lấy từ 15 website
-phổ biến bằng một mô hình thị giác-ngôn ngữ, còn
-Online-Mind2Web~\cite{xue2025illusion} đánh giá 300 task trải trên 136 website
-thật và, đáng chú ý, kết luận rằng nhiều báo cáo hiệu năng trước đó bị thổi
-phồng khi đo lại trong điều kiện trực tuyến. Một nhánh khác nhấn vào năng lực
-tìm kiếm thông tin khó hơn là thao tác giao diện, gồm
-AssistantBench~\cite{yoran2024assistantbench} (214 task tra cứu dài),
-GAIA~\cite{mialon2024gaia} (466 câu hỏi), BrowseComp~\cite{wei2025browsecomp}
-(1266 câu hỏi), BEARCUBS~\cite{song2025bearcubs} (111 câu hỏi kèm trajectory
-đã được con người xác nhận) và
-EconWebArena~\cite{liu2025econwebarena} (360 task trên 82 website kinh tế
-chính thống). Ưu điểm của nhóm này là tính chân thực tuyệt đối; nhược điểm là
-môi trường thay đổi liên tục nên kết quả khó tái lập, và mọi thao tác thay đổi
-trạng thái đều bị hạn chế vì lý do đạo đức và pháp lý.
-
-\textbf{Mở rộng ra ngoài trình duyệt.} WebGames~\cite{thomas2025webgames} tập
-hợp hơn 50 thử thách tương tác tách bạch từng năng lực trong một môi trường kín
-tái lập được, OSUniverse~\cite{davydova2025osuniverse} chuyển bài toán sang
-giao diện desktop, còn AgentBench~\cite{liu2024agentbench} đặt web thành một
-trong nhiều môi trường dùng để đo năng lực agent nói chung. Cuối cùng,
-BrowserGym~\cite{drouin2024workarena, dechezelles2025browsergym} không phải
-benchmark mà là một lớp chuẩn hóa giao diện quan sát và hành động giữa nhiều
-benchmark kể trên; runtime của khóa luận được xây dựng trên nền tảng này.
+Về hạ tầng tương tác, \textbf{BrowserGym}~\cite{drouin2024workarena, dechezelles2025browsergym} đóng vai trò là một lớp chuẩn hóa giao diện quan sát và hành động giữa nhiều benchmark kể trên; runtime trong nghiên cứu của chúng tôi được xây dựng trên nền tảng này.
 
 \begin{table}[htbp]
 \centering
 \caption[Đối chiếu các benchmark cho web agent]{Đối chiếu các benchmark cho
-web agent theo mức độ chân thực của môi trường. Mọi số liệu quy mô trong
+web agent theo đặc điểm môi trường. Mọi số liệu quy mô trong
 bảng lấy từ công bố gốc của chính benchmark tương ứng (cột đầu); ô để trống
 là trường hợp công bố gốc không nêu con số tổng ở dạng so sánh được.}
 \label{tab:benchmarks}
@@ -131,18 +93,10 @@ Online-Mind2Web~\cite{xue2025illusion} & 2025 & 136 website thật & 300 task & 
 \end{tabular}
 \end{table}
 
-Từ bảng này có thể thấy vì sao khóa luận chọn WebArena làm môi trường duy
-nhất. Bài toán của khóa luận đòi hỏi đồng thời ba tính chất mà không nhóm
-nào khác đáp ứng đủ. Thứ nhất, môi trường phải \emph{đang sống}: pipeline
-cần thực sự thay đổi trạng thái website để phát hiện và kiểm chứng skill,
-điều mà nhóm bản chụp tĩnh không cho phép. Thứ hai, môi trường phải
-\emph{tự triển khai được}: quá trình khám phá thực hiện hàng nghìn thao tác
-ghi lên dữ liệu, nên chạy trên web mở vừa không được phép vừa không tái lập
-được. Thứ ba, việc chấm điểm phải \emph{tự động và theo trạng thái cuối},
-để đánh giá cuối cùng không phụ thuộc vào phán quyết của chính mô hình
-đang được nghiên cứu. WebArena là benchmark duy nhất tại thời điểm thực hiện
-khóa luận hội đủ cả ba, nên nó vừa đóng vai trò môi trường khám phá vừa là
-benchmark đánh giá chính thức.
+Từ bảng so sánh trên, chúng tôi lựa chọn WebArena làm môi trường khám phá và đánh giá chính thức cho khóa luận nhờ 3 ưu điểm cốt lõi:
+(1) \emph{Môi trường hoạt động thực tế}: Cho phép tác tử tương tác và thay đổi trạng thái website theo thời gian thực để trích xuất và kiểm chứng kỹ năng;
+(2) \emph{Khả năng tự triển khai độc lập}: Đảm bảo an toàn khi thực hiện số lượng lớn thao tác ghi và có khả năng tái lập hoàn toàn kết quả;
+(3) \emph{Cơ chế đánh giá tự động theo trạng thái cuối}: Cung cấp thước đo khách quan độc lập với mô hình được đánh giá.
 
 \subsection{Fine-tuning hiệu quả tham số (Parameter-Efficient Fine-Tuning)}
 
@@ -304,63 +258,17 @@ giải quyết được những hạn chế cốt lõi này. Đó là lý do kh�
 \section{Khám phá skill và workflow}
 \label{sec:rel-skills}
 
-Quan điểm cho rằng các agent AI cần được trang bị khả năng tích lũy các chuỗi
-hành vi để tái sử dụng đã có một nền tảng lịch sử vững chắc. Từ rất sớm,
-STRIPS~\cite{fikes1971strips} đã cho thấy các năng lực của agent có thể được
-đặc tả qua precondition và effect,
-nhờ đó phục vụ được các thuật toán symbolic planning.
-Nhiều thập niên sau, khung lý thuyết options~\cite{sutton1999options} mô hình hóa
-một skill thành một bộ ba toán học gồm tập trạng thái khởi đầu, chính sách hành
-động và điều kiện kết thúc. Hai khung này được nối lại bởi các công trình sau đó. Konidaris và Barto~\cite{konidaris2009skillchaining} ghép chuỗi skill bằng cách khớp điều kiện kết thúc của skill trước với tập trạng thái khởi đầu của skill sau. Konidaris và cộng sự~\cite{konidaris2018skills2symbols} thì chứng minh options có thể được nâng thành operator ký hiệu dạng precondition/effect để lập kế hoạch trừu tượng. HSGE kế thừa trực tiếp nguyên lý từ cả bốn công trình này
-(chi tiết tại Mục~\ref{sec:method-graph}).
+Việc tích lũy và tái sử dụng chuỗi hành vi của tác tử AI được xây dựng trên hai nền tảng lý thuyết: mô hình toán tử STRIPS $\langle \mathit{pre}, \mathit{eff} \rangle$~\cite{fikes1971strips} phục vụ lập kế hoạch ký hiệu, và khung lý thuyết Options $\langle I, \pi, \beta \rangle$~\cite{sutton1999options} mô hình hóa kỹ năng phân cấp. Các nghiên cứu tiếp theo đã chứng minh khả năng ghép chuỗi kỹ năng bằng cách khớp điều kiện kết thúc với điều kiện khởi đầu~\cite{konidaris2009skillchaining}, cũng như chuyển đổi options thành các toán tử ký hiệu để lập kế hoạch trừu tượng~\cite{konidaris2018skills2symbols}. Phương pháp HSGE kế thừa trực tiếp các nguyên lý này để xây dựng cấu trúc đồ thị hai tầng (Mục~\ref{sec:method-graph}).
 
-Trong kỷ nguyên của các mô hình ngôn ngữ lớn (LLM), Voyager~\cite{wang2024voyager}
-là minh chứng tiêu biểu cho khả năng học tập skill liên tục
-của agent trong môi trường Minecraft. Hệ thống này xây dựng một thư viện các skill
-dưới dạng mã thực thi có khả năng tự mở rộng, trong đó mỗi skill bắt buộc phải
- được kiểm chứng thông qua thực thi trước khi được tích hợp. Tuy nhiên, giới hạn của
- phương pháp này nằm ở chỗ môi trường giả lập cung cấp sẵn các trạng thái chân lý nền
- có thể truy xuất chính xác bằng mã nguồn, một đặc quyền không tồn tại
- trong môi trường website thực tế. Thêm vào đó, skill thu thập được chỉ đóng vai trò
- hỗ trợ runtime của agent, hoàn toàn không được tái sử dụng để
- xây dựng dữ liệu huấn luyện.
+Trong kỷ nguyên LLM, các phương pháp khám phá và quản lý kỹ năng phát triển theo hai hướng chính:
+\begin{itemize}
+  \item \textbf{Đóng gói kỹ năng dạng mã và API}: Voyager~\cite{wang2024voyager} tiên phong xây dựng thư viện kỹ năng dạng mã thực thi tự mở rộng trong Minecraft. Tiếp nối hướng đi này trên giao diện web, ASI~\cite{wang2025asi} và SkillWeaver~\cite{zheng2025skillweaver} tự động trừu tượng hóa các chuỗi hành động lặp lại thành các hàm thực thi bậc cao hoặc các API độc lập có thể chia sẻ giữa nhiều tác tử.
+  \item \textbf{Bộ nhớ quy trình và quỹ đạo mẫu}: Synapse~\cite{zheng2024synapse} lưu trữ các quỹ đạo mẫu của con người để truy xuất theo độ tương đồng ngữ nghĩa. AWM (\textit{Agent Workflow Memory})~\cite{wang2024awm} trích xuất các quy trình công việc tuần hoàn từ các episode thành công để nạp vào prompt ở các lượt tương tác sau. Tuy nhiên, các workflow trong AWM chỉ là chuỗi thao tác tuyến tính, thiếu vị từ precondition/effect tường minh để ghép nối tự động, đồng thời bộ chấm nhị phân của AWM chỉ đánh giá kết quả episode mà không thực thi lại để xác nhận tính tái sử dụng.
+\end{itemize}
 
-Ở một hướng tiếp cận khác, Synapse~\cite{zheng2024synapse} lược bớt các chi tiết không
-liên quan tới task trong trajectory, lưu phần còn lại làm bản mẫu
-rồi truy xuất theo độ tương đồng để nhúng vào prompt. Mặc dù vậy, bộ nhớ này
-mang tính tuyến tính, tức phẳng: các bản mẫu bị cô lập và không thể ghép nối với nhau. Hạn
-chế lớn hơn là các bản mẫu đó vốn được xây từ thao tác mẫu do con người thực hiện, nên
-bộ nhớ không thể tự mở rộng khi agent gặp tình huống mới.
+Điểm chung của các kiến trúc trên là kỹ năng sinh ra chỉ phục vụ giai đoạn suy luận (\textit{inference-time context}) của các LLM lớn mà không trực tiếp cập nhật tham số mô hình. Ngược lại, các công trình sinh dữ liệu huấn luyện từ khám phá (như NNetNav~\cite{murty2024nnetnav}, PAE~\cite{zhou2024pae}) lại chỉ dựa trên các chuỗi tương tác đơn lẻ hoặc ngữ cảnh tĩnh mà thiếu cơ chế ghép chuỗi năng lực. 
 
-Tương tự, Agent Workflow Memory~\cite{wang2024awm} tiến hành trích xuất các workflow
-mang tính chu kỳ từ dữ liệu lịch sử và tích hợp chúng vào prompt
-ở các lượt tương tác sau, nâng tỷ lệ hoàn thành task trên WebArena từ 23{,}5\% lên
-35{,}5\%. Phiên bản trực tuyến của AWM có dùng một mô hình ngôn ngữ chấm nhị phân xem episode thành công hay không trước khi trích workflow. Nhưng bộ chấm đó chỉ xét kết quả episode, không thực thi lại workflow để xác nhận nó dùng lại được.
-Bên cạnh đó, mỗi workflow là một chuỗi bước tuyến tính, không có precondition/effect
-tường minh, nên không thể ghép chuỗi bằng thuật toán lập kế hoạch. Quan trọng hơn,
-chúng chỉ được tiêu thụ dưới dạng tri thức bổ trợ ngữ cảnh
-khi mô hình đưa ra suy luận; do đó, năng lực cốt lõi của bản
-thân mô hình nền tảng không được cải thiện.
-
-Gần đây, phương pháp quy nạp skill dưới dạng lập trình~\cite{wang2025asi} nâng
-các chuỗi hành động lặp lại thành những hàm có khả năng thực thi, tự động kiểm
-chứng lúc vận hành và gom các thao tác nguyên thủy thành các lệnh gọi hàm bậc cao.
-
-Tiến thêm một bước, SkillWeaver~\cite{zheng2025skillweaver} cho phép agent tự
-khám phá, tinh chỉnh và đóng gói skill thành những API độc lập qua nhiều vòng
-lặp, đồng thời chia sẻ chúng giữa các agent khác nhau.
-
-Điểm chung của tất cả các kiến trúc trên là skill sinh ra chỉ phục vụ giai đoạn
-inference của những LLM cỡ lớn, không hề cập nhật tham số của mô hình.
-Ở chiều ngược lại, một số công trình có biến quá trình khám phá thành dữ liệu huấn luyện, chẳng hạn NNetNav~\cite{murty2024nnetnav} hay PAE~\cite{zhou2024pae} (Mục~\ref{sec:rel-datagen}). Nhưng chúng xuất phát từ những chuỗi thực thi đơn lẻ, hoặc từ task đề xuất theo ngữ cảnh tĩnh, chứ không từ các skill đã kiểm chứng và ghép chuỗi được. Theo khảo sát của chúng tôi, việc kiểm chứng skill, nâng
-chúng thành operator có precondition/effect rồi \emph{ghép chuỗi} các operator đó để
-sinh \emph{dữ liệu huấn luyện} là hướng đi chưa được khai thác.
-
-Đây chính là khoảng trống mà HSGE nhắm tới. Skill vẫn trải qua các bước phát
-hiện và kiểm chứng tương tự, nhưng thay vì dừng lại ở đó, chúng được nâng thành
-các planning operator. Từ các operator này, hệ thống ghép
-chuỗi để tổng hợp những semantic task dài hạn, và chính chúng mới là nguồn dữ
-liệu dùng để huấn luyện một mô hình ngôn ngữ nhỏ.
+HSGE khắc phục khoảng trống này bằng cách: phát hiện và kiểm chứng kỹ năng từ quỹ đạo thực tế, quy nạp kỹ năng thành các toán tử chuẩn hóa, và ghép chuỗi toán tử trên đồ thị để tự động tạo ra tập tác vụ ngữ nghĩa đa bước phục vụ huấn luyện mô hình ngôn ngữ nhỏ (Mục~\ref{sec:method-semantic}).
 
 \section{Sinh dữ liệu huấn luyện tự động cho web agent}
 \label{sec:rel-datagen}
