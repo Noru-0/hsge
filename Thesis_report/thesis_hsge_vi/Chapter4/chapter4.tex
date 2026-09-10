@@ -159,13 +159,13 @@ Trong bảng, \emph{phiên thực thi hợp lệ} là những phiên thực thi 
 
 Từ bảng này có thể rút ra ba nhận xét.
 
-\textbf{Thứ nhất, hai nguồn sinh tác vụ ngữ nghĩa đóng góp ở mức độ rất không đồng đều.} Tổng cộng 142 tác vụ GOAL đã được thực thi trên bốn website, chia trọn vẹn thành 130 lượt bắt nguồn từ seed năng lực của website (mục~\ref{sec:method-seed}) và 12 lượt bắt nguồn từ việc ghép chuỗi toán tử.
+\textbf{Thứ nhất, hai nguồn sinh tác vụ ngữ nghĩa đóng góp ở mức độ rất không đồng đều:} Tổng cộng 142 tác vụ GOAL đã được thực thi trên bốn website, chia trọn vẹn thành 130 lượt bắt nguồn từ seed năng lực của website (mục~\ref{sec:method-seed}) và 12 lượt bắt nguồn từ việc ghép chuỗi toán tử.
 
 Nói cách khác, cơ chế sinh mục tiêu từ trên xuống là nguồn tác vụ ngữ nghĩa chủ yếu trong thực tế, còn cơ chế ghép chuỗi từ dưới lên tuy hoạt động đúng thiết kế nhưng chỉ kích hoạt được ở mức thưa thớt: 12 chuỗi trên tổng số 57 toán tử đã quy nạp, phân bố rất lệch giữa các website (Shopping 5, Reddit 5, GitLab 1, Shopping Admin 1). Nguyên nhân kỹ thuật của hiện tượng này được phân tích ở Phụ lục~\ref{sec:disc-toán tử}.
 
-\textbf{Thứ hai, tỷ lệ thành công của nhóm tác vụ GOAL thể hiện sự chênh lệch lớn giữa các website.} Tỷ lệ chung là 71/142 $=$ 50{,}0\%, xấp xỉ nhóm LOCAL (47{,}6\%) và thấp hơn nhóm UNPREFIXED (57{,}0\%). Nhưng con số chung này che mất khoảng cách bên dưới: Reddit đạt 62{,}3\% còn GitLab chỉ 21{,}4\%. Số tác vụ GOAL bị agent báo là bất khả thi cũng tập trung ở GitLab và Shopping Admin, hai website mà một mục tiêu ngữ nghĩa thường đòi hỏi chuỗi thao tác thay đổi trạng thái tương đối dài. Đáng chú ý, hai website được cấp ngân sách khám phá lớn hơn cũng là hai website có tỷ lệ GOAL cao hơn, gợi ý rằng nhóm tác vụ khó nhất này là nhóm hưởng lợi nhiều nhất từ việc khám phá sâu hơn.
+\textbf{Thứ hai, tỷ lệ thành công của nhóm tác vụ GOAL thể hiện sự chênh lệch lớn giữa các website:} Tỷ lệ chung là 71/142 $=$ 50{,}0\%, xấp xỉ nhóm LOCAL (47{,}6\%) và thấp hơn nhóm UNPREFIXED (57{,}0\%). Nhưng con số chung này che mất khoảng cách bên dưới: Reddit đạt 62{,}3\% còn GitLab chỉ 21{,}4\%. Số tác vụ GOAL bị agent báo là bất khả thi cũng tập trung ở GitLab và Shopping Admin, hai website mà một mục tiêu ngữ nghĩa thường đòi hỏi chuỗi thao tác thay đổi trạng thái tương đối dài. Đáng chú ý, hai website được cấp ngân sách khám phá lớn hơn cũng là hai website có tỷ lệ GOAL cao hơn, gợi ý rằng nhóm tác vụ khó nhất này là nhóm hưởng lợi nhiều nhất từ việc khám phá sâu hơn.
 
-\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 801 trường hợp agent tự đánh giá sai kết quả của chính mình.} Khi tham số \texttt{verify\_episodes} được bật, mọi phiên thực thi mà agent tự tuyên bố hoàn thành đều được một LLM độc lập chấm lại dựa trên chính trạng thái trang cuối cùng của phiên thực thi đó; 801 trường hợp bị đánh dấu thất bại, tương đương khoảng 27\% tổng số lần tự tuyên bố hoàn thành. Nếu không có cổng kiểm chứng này, xấp xỉ một phần tư tập dữ liệu huấn luyện sẽ là những chuỗi hành động dạy mô hình cách tuyên bố đã hoàn thành trong khi thực tế chưa hoàn thành.
+\textbf{Thứ ba, cơ chế chấm lại đã loại bỏ 801 trường hợp agent tự đánh giá sai kết quả của chính mình:} Khi tham số \texttt{verify\_episodes} được bật, mọi phiên thực thi mà agent tự tuyên bố hoàn thành đều được một LLM độc lập chấm lại dựa trên chính trạng thái trang cuối cùng của phiên thực thi đó; 801 trường hợp bị đánh dấu thất bại, tương đương khoảng 27\% tổng số lần tự tuyên bố hoàn thành. Nếu không có cổng kiểm chứng này, xấp xỉ một phần tư tập dữ liệu huấn luyện sẽ là những chuỗi hành động dạy mô hình cách tuyên bố đã hoàn thành trong khi thực tế chưa hoàn thành.
 
 \subsubsection{Tập dữ liệu huấn luyện}
 Bảng~\ref{tab:dataset} trình bày tập dữ liệu thu được sau khi các chuỗi hành động được xuất thành mẫu huấn luyện. Mỗi mẫu tương ứng với một bước hành động, trong đó đầu vào là prompt \emph{trùng khớp hoàn toàn} với prompt mà bộ giải tác vụ sử dụng lúc chạy thật, bao gồm cả cách cắt ngắn accessibility tree ở ngưỡng 6000 ký tự; đầu ra là cặp \texttt{\{thought, action\}}.
@@ -314,11 +314,11 @@ Bảng~\ref{tab:sft} tổng hợp cấu hình và kết quả.
 
 Có hai điểm cần được làm rõ khi diễn giải bảng này.
 
-\textbf{Mô hình bắt đầu có dấu hiệu quá khớp (overfit) từ epoch thứ ba.} Trong pha đầu, giá trị
+\textbf{Mô hình bắt đầu có dấu hiệu quá khớp (overfit) từ epoch thứ ba:} Trong pha đầu, giá trị
 
 \texttt{eval\_loss} giảm ở epoch 2 (0{,}4343) rồi tăng trở lại ở epoch 3 (0{,}4535), do đó điểm kiểm tra của epoch 2 được giữ lại thay vì trạng thái cuối của pha đó. Đây cũng là lý do khóa luận sử dụng chiến lược lưu điểm kiểm tra theo từng epoch thay vì chỉ giữ lại trạng thái cuối cùng.
 
-\textbf{Giá trị \texttt{eval\_loss} tuyệt đối cần được đánh giá cùng với quy trình xây dựng tập kiểm định.} Tập kiểm định ở đây được tách theo đơn vị tác vụ và không chia sẻ mục tiêu nào với tập huấn luyện (mục~\ref{sec:exp-data}); đồng thời, những chuỗi hành động dễ dự đoán nhất, tức các chuỗi hành động chỉ gồm một bước tuyên bố hoàn thành mà không tác động lên trang, đã bị loại khỏi dữ liệu. Cả hai yếu tố này đều làm bài toán dự đoán khó hơn và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở Phụ lục~\ref{sec:disc-slm}.
+\textbf{Giá trị \texttt{eval\_loss} tuyệt đối cần được đánh giá cùng với quy trình xây dựng tập kiểm định:} Tập kiểm định ở đây được tách theo đơn vị tác vụ và không chia sẻ mục tiêu nào với tập huấn luyện (mục~\ref{sec:exp-data}); đồng thời, những chuỗi hành động dễ dự đoán nhất, tức các chuỗi hành động chỉ gồm một bước tuyên bố hoàn thành mà không tác động lên trang, đã bị loại khỏi dữ liệu. Cả hai yếu tố này đều làm bài toán dự đoán khó hơn và do đó đẩy giá trị loss lên cao. Nói cách khác, một giá trị loss thấp chỉ mang ý nghĩa khi tập kiểm định đủ sạch; luận điểm này được bàn kỹ hơn ở Phụ lục~\ref{sec:disc-slm}.
 
 Một chi tiết môi trường đáng ghi nhận, tuy không ảnh hưởng tới kết quả: đường đi nhanh (\emph{fast path}) GDN của Qwen3.5 bị vô hiệu hóa âm thầm khi thiếu thư viện \texttt{causal-conv1d}, làm tốc độ huấn luyện chậm đi 2{,}3 lần mà không phát sinh cảnh báo nào (Phụ lục~\ref{sec:disc-slm}).
 
@@ -617,21 +617,21 @@ Mỗi phiên thực thi đánh giá đều để lại một vết thực thi g�
 Các nguyên nhân trên có thể chồng lấn lên nhau; chẳng hạn hiện tượng kẹt vòng lặp thường đi kèm một chuỗi lỗi hành động. Vì vậy, Phụ lục~\ref{app:signals} báo cáo thêm tần suất xuất hiện của mỗi \emph{dấu hiệu} tại bất kỳ vị trí nào trong một phiên thực thi thất bại.
 
 \subsection{Nhận xét từ kết quả phân loại lỗi}
-\textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất của hệ thống, chứ không phải lỗi suy luận.} Từ 85\% đến 96\% số phiên thực thi thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi thực thi trên 655 phiên thực thi. Phần lớn là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác.
+\textbf{Lỗi thực thi hành động là điểm nghẽn phổ biến nhất của hệ thống, chứ không phải lỗi suy luận:} Từ 85\% đến 96\% số phiên thực thi thất bại có ít nhất một hành động bị trình duyệt từ chối, tổng cộng 2315 lỗi thực thi trên 655 phiên thực thi. Phần lớn là lỗi quá hạn chờ thao tác của Playwright, xảy ra ngay trên những phần tử mà accessibility tree \emph{thực sự} có hiển thị - nghĩa là mô hình đã chọn đúng đối tượng, chỉ là phần tử đó chưa sẵn sàng nhận tương tác.
 
 Hệ quả của quan sát này đối với hướng cải thiện được bàn ở Mục~\ref{sec:disc-results}.
 
-\textbf{Phân bố các nguyên nhân thất bại thể hiện sự đồng đều rõ rệt trên cả bốn website.} Trên cả bốn, lỗi thực thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp xỉ nhau (31-45\% và 31-37\%). Reddit là website có tỷ lệ kẹt vòng lặp cao nhất tính theo dấu hiệu (37\%) nhưng chênh lệch so với ba website còn lại không lớn.
+\textbf{Phân bố các nguyên nhân thất bại thể hiện sự đồng đều rõ rệt trên cả bốn website:} Trên cả bốn, lỗi thực thi và kẹt vòng lặp là hai nguyên nhân chính và có tỷ lệ xấp xỉ nhau (31-45\% và 31-37\%). Reddit là website có tỷ lệ kẹt vòng lặp cao nhất tính theo dấu hiệu (37\%) nhưng chênh lệch so với ba website còn lại không lớn.
 
 Điều này khác với các lượt chạy phát triển trước đó, nơi Reddit từng có tỷ lệ kẹt vòng lặp vượt trội; cơ chế dừng cứng khi phát hiện lặp (Phụ lục~\ref{sec:disc-guardrails}) là thay đổi trực tiếp nhắm vào hiện tượng đó.
 
-\textbf{Hiện tượng cạn ngân sách 15 bước là nguyên nhân thất bại chủ yếu trên website GitLab.} (45\%), đúng với đặc điểm các tác vụ ở đó vốn cần chuỗi điều hướng dài. Đáng chú ý, không phiên thực thi nào rơi vào tình trạng ``chạm mục tiêu rồi rời đi'' - tức một bước giữa chừng đã đạt điểm nhưng phiên thực thi kết thúc với điểm 0. Đây là bằng chứng cho tính hợp lệ của phép đo: giới hạn 15 bước đang đóng vai trò \emph{thước đo} năng lực mô hình, không phải \emph{trừng phạt} nó, vì không tác vụ nào bị cắt ngang ngay sau khi đã hoàn thành đúng mục tiêu.
+\textbf{Hiện tượng cạn ngân sách 15 bước là nguyên nhân thất bại chủ yếu trên website GitLab:} (45\%), đúng với đặc điểm các tác vụ ở đó vốn cần chuỗi điều hướng dài. Đáng chú ý, không phiên thực thi nào rơi vào tình trạng ``chạm mục tiêu rồi rời đi'' - tức một bước giữa chừng đã đạt điểm nhưng phiên thực thi kết thúc với điểm 0. Đây là bằng chứng cho tính hợp lệ của phép đo: giới hạn 15 bước đang đóng vai trò \emph{thước đo} năng lực mô hình, không phải \emph{trừng phạt} nó, vì không tác vụ nào bị cắt ngang ngay sau khi đã hoàn thành đúng mục tiêu.
 
-\textbf{Tình trạng báo cáo hoàn thành ảo khi agent không tương tác trên trang đã gần như bị loại bỏ hoàn toàn.} Chỉ 2 trên 494 phiên thực thi thất bại (0{,}4\%) gọi
+\textbf{Tình trạng báo cáo hoàn thành ảo khi agent không tương tác trên trang đã gần như bị loại bỏ hoàn toàn:} Chỉ 2 trên 494 phiên thực thi thất bại (0{,}4\%) gọi
 
 \texttt{send\_msg\_to\_user} ngay ở bước đầu tiên mà không hề tương tác với trang. Đây đúng là nhóm hành vi mà cổng hành động hữu hiệu ở Mục~\ref{sec:exp-data} đã lọc ra, loại 104 chuỗi hành động khỏi tập huấn luyện; tỷ lệ còn lại 0{,}6\% cho thấy cổng lọc đó làm đúng việc của nó.
 
-\textbf{Các lỗi do đầu ra không phân tích được không còn là nguồn phát sinh sai sót đáng kể.}
+\textbf{Các lỗi do đầu ra không phân tích được không còn là nguồn phát sinh sai sót đáng kể:}
 
 Chỉ 4 trên 655 phiên thực thi (0{,}6\%) kết thúc vì phản hồi của mô hình không phân giải được thành JSON hợp lệ. Nhờ lưu dữ liệu thô của từng lời gọi LLM trong vết thực thi, nhóm lỗi này tách bạch được khỏi trường hợp mô hình chủ động dừng; không có nó, hai loại thất bại rất khác nhau sẽ bị gộp làm một. Giá trị của phép đo này chỉ hiện rõ khi đặt cạnh mô hình nền, nơi cùng chỉ số đó là 170 trên 655 phiên thực thi, tức 26{,}0\% (Bảng~\ref{tab:profile}).
 
