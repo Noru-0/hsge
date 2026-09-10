@@ -60,11 +60,40 @@ Từ động lực trên, nhóm xin phát biểu bài toán một cách chặt c
 
 - **Định hướng giải pháp:** Dùng **LLM mạnh** tự động khám phá chính website mục tiêu, sinh trajectory để fine-tune **SLM cục bộ**.
 
+Sau khi đã xác định rõ bài toán và phạm vi, cộng đồng nghiên cứu hiện nay đã tiếp cận vấn đề này như thế nào? Em xin chuyển sang phần 3: Nghiên cứu liên quan.
+
 ---
 
-## Slide 4 — Dữ liệu huấn luyện SLM lấy từ đâu?
+## Slide 4 — Ba hướng tiếp cận hiện nay
 
-Trước khi nói về thách thức, em xin làm rõ **dữ liệu huấn luyện đến từ đâu**.
+Cộng đồng nghiên cứu hiện nay đã tiếp cận bài toán theo ba hướng chính:
+
+1. **Hướng (A) — Tri thức từ Internet (như Synatra, AgentTrek):** Sử dụng video, tài liệu hướng dẫn trên mạng để tổng hợp trajectory. Hạn chế là dữ liệu dễ bị lệch so với website thực tế và không áp dụng được cho hệ thống nội bộ.
+2. **Hướng (B) — Skill dùng lúc suy luận (như AWM, SkillWeaver, ASI):** Trích xuất các workflow lặp lại rồi nhồi vào context prompt cho LLM lớn. Hướng này giúp tăng hiệu năng nhưng **không cập nhật trọng số cho mô hình nhỏ (SLM)**.
+3. **Hướng (C) — Tự sinh từ môi trường (như NNetNav, Go-Browse):** Cho agent tự tương tác trên website thật để lấy dữ liệu train SLM. Tiêu biểu là **Go-Browse** đạt 21,7% (SOTA phân khúc <10B) nhờ mô hình hóa khám phá bằng tìm kiếm trên đồ thị.
+
+Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục tiêu khóa luận nhất** và được nhóm chọn làm mốc so sánh chính.
+
+---
+
+## Slide 5 — Hạn chế và khoảng trống nghiên cứu
+
+Đối chiếu ba hướng vừa nêu, mỗi hướng đều còn một khoảng hở so với bài toán của khóa luận:
+
+- **Hướng (A)** dựa vào tài liệu ngoài nên **lệch môi trường thật** và không tự chủ trong việc thu thập dữ liệu.
+- **Hướng (B)** chỉ nạp workflow vào prompt của LLM lớn, **không cập nhật trọng số** nên không dùng được cho SLM cục bộ, và vẫn tin vào lời tự khai của agent.
+- **Hướng (C)** gần bài toán nhất vì tự khám phá web thật, nhưng đồ thị chỉ **một tầng** nên tác vụ **bó trong từng trang**, và cũng chấm điểm bằng **lời tự khai** của chính agent.
+
+**Khoảng trống nghiên cứu:** Chưa có công trình nào nối trọn ba mắt xích:
+$$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longrightarrow \text{Huấn luyện SLM}$$
+
+Đó chính là chỗ HSGE đứng vào. Sau đây, em xin đi vào **Phần 4: Phương pháp HSGE**.
+
+---
+
+## Slide 6 — Dữ liệu huấn luyện SLM lấy từ đâu?
+
+Mở đầu phần Phương pháp, em xin làm rõ nguyên lý nền tảng: **dữ liệu huấn luyện của chúng em đến từ đâu và được chưng cất như thế nào**.
 
 Nhóm sử dụng kỹ thuật **chưng cất tri thức (knowledge distillation)**, trong đó **LLM mạnh đóng vai người thầy**: nó được gọi qua API để tự khám phá và tự thao tác trên **chính website mục tiêu**. Mỗi lần thầy giải xong một tác vụ, hệ thống thu được **một trajectory** — chính là *lời giải mẫu* cho tác vụ đó. Toàn bộ các lời giải mẫu này được đóng gói thành tập dữ liệu SFT, và **SLM học bắt chước** chúng qua fine-tune.
 
@@ -79,36 +108,9 @@ Cách làm này hợp lý ở ba điểm:
 
 ---
 
-## Slide 5 — Ba hướng tiếp cận hiện nay
-
-Cộng đồng nghiên cứu hiện nay đã tiếp cận bài toán theo ba hướng chính:
-
-1. **Hướng (A) — Tri thức từ Internet (như Synatra, AgentTrek):** Sử dụng video, tài liệu hướng dẫn trên mạng để tổng hợp trajectory. Hạn chế là dữ liệu dễ bị lệch so với website thực tế và không áp dụng được cho hệ thống nội bộ.
-2. **Hướng (B) — Skill dùng lúc suy luận (như AWM, SkillWeaver, ASI):** Trích xuất các workflow lặp lại rồi nhồi vào context prompt cho LLM lớn. Hướng này giúp tăng hiệu năng nhưng **không cập nhật trọng số cho mô hình nhỏ (SLM)**.
-3. **Hướng (C) — Tự sinh từ môi trường (như NNetNav, Go-Browse):** Cho agent tự tương tác trên website thật để lấy dữ liệu train SLM. Tiêu biểu là **Go-Browse** đạt 21,7% (SOTA phân khúc <10B) nhờ mô hình hóa khám phá bằng tìm kiếm trên đồ thị.
-
-Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục tiêu khóa luận nhất** và được nhóm chọn làm mốc so sánh chính.
-
----
-
-## Slide 6 — Hạn chế và khoảng trống nghiên cứu
-
-Đối chiếu ba hướng vừa nêu, mỗi hướng đều còn một khoảng hở so với bài toán của khóa luận:
-
-- **Hướng (A)** dựa vào tài liệu ngoài nên **lệch môi trường thật** và không tự chủ trong việc thu thập dữ liệu.
-- **Hướng (B)** chỉ nạp workflow vào prompt của LLM lớn, **không cập nhật trọng số** nên không dùng được cho SLM cục bộ, và vẫn tin vào lời tự khai của agent.
-- **Hướng (C)** gần bài toán nhất vì tự khám phá web thật, nhưng đồ thị chỉ **một tầng** nên tác vụ **bó trong từng trang**, và cũng chấm điểm bằng **lời tự khai** của chính agent.
-
-**Khoảng trống nghiên cứu:** Chưa có công trình nào nối trọn ba mắt xích:
-$$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longrightarrow \text{Huấn luyện SLM}$$
-
-Đó chính là chỗ HSGE đứng vào, và các khoảng hở này sẽ được lấp lần lượt trong phần phương pháp sau đây.
-
----
-
 ## Slide 7 — Giải pháp HSGE và các đóng góp chính
 
-Để lấp đầy khoảng trống nghiên cứu trên, khóa luận đề xuất phương pháp **HSGE (Hierarchical Skill-Graph Exploration)** với các đóng góp trọng tâm:
+Để hiện thực hóa trọn vẹn quy trình chưng cất tự động trên, khóa luận đề xuất phương pháp **HSGE (Hierarchical Skill-Graph Exploration)** với các đóng góp trọng tâm:
 
 - **Về mặt Khoa học:**
   - Đề xuất mô hình **Đồ thị hai tầng**: kết hợp State Graph (tầng thấp) và Operator Graph (tầng cao) để tích lũy tri thức ngay trên website thật.
@@ -120,37 +122,41 @@ $$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longr
   - Huấn luyện mô hình **HSGE-9B đạt 24,6% Task Success Rate**, vượt GPT-4o-mini và đạt SOTA phân khúc <10B.
   - Tối ưu chi phí API xuống mức **0,0308 USD/trajectory** (rẻ hơn 3,3 lần so với Go-Browse).
 
+Phần còn lại của mục này sẽ trình bày cách các đóng góp trên được hiện thực hóa trong **một quy trình khép kín**.
+
 ---
 
 ## Slide 8 — Tổng quan pipeline HSGE
 
-Toàn bộ phương pháp vận hành như **một vòng lặp khép kín, lặp trên từng trang web**. Em xin mô tả **một vòng** diễn ra cụ thể như thế nào.
+Nhìn trên bức tranh kiến trúc tổng thể, toàn bộ phương pháp vận hành như một quy trình khép kín gồm các khối chức năng gắn kết chặt chẽ:
 
-**Bước 1 — Chọn trang để khám phá.** Hệ thống duy trì một **Frontier** — hàng đợi ưu tiên các URL đã biết, khởi đầu chỉ có trang chủ của website. Mỗi vòng, agent lấy ra một URL và mở nó bằng **trình duyệt thật** (Playwright/Chromium); trạng thái trang được đọc dưới dạng **cây khả truy cập AXTree**, tức danh sách các phần tử kèm mã định danh mà agent có thể thao tác.
+- **Frontier:** Duy trì hàng đợi ưu tiên các URL mục tiêu trên website, khởi tạo từ trang chủ.
+- **Explorer & Solver:** Duyệt từng URL, quan sát giao diện qua cây khả truy cập AXTree, tự sinh và giải quyết các tác vụ tương tác thực tế bằng trình duyệt Playwright.
+- **Skill Discovery & Operator Induction:** Tự động cắt đoạn các chuỗi thao tác thành công, gom cụm và quy nạp thành các toán tử chuẩn hóa (Operator) có tiền điều kiện (Precondition) và kết quả (Effect).
+- **Semantic Task Chaining:** Tự động ghép nối các Operator trên đồ thị để tạo ra các tác vụ dài hạn, đa bước có ý nghĩa nghiệp vụ thực tế.
+- **Online Gates & SFT Packaging:** Lọc bỏ nghiêm ngặt các lượt dương tính giả qua LLM Judge và Effective Action Gate, sau đó đóng gói trực tiếp thành tập dữ liệu SFT chuẩn Prompt Parity để huấn luyện SLM.
 
-**Bước 2 — Sinh tác vụ ngay tại trang đó.** **Explorer** nhìn vào đúng trang đang mở và đề xuất tối đa **9 tác vụ cụ thể**, mỗi tác vụ được phân loại **INFO** (tra cứu thông tin), **NAV** (điều hướng) hoặc **MOD** (làm thay đổi trạng thái). Vì tác vụ sinh ra *từ chính giao diện đang thấy*, nó luôn khả thi trên website này — đây là điểm khác căn bản so với việc lấy kịch bản từ tài liệu ngoài.
-
-**Bước 3 — Giải từng tác vụ và ghi lại vết.** **Solver** hoạt động theo cơ chế **ReAct**: mỗi bước nó nhận mục tiêu, AXTree hiện tại, lỗi của hành động trước và lịch sử, rồi sinh ra một cặp *suy luận + hành động* như `click`, `fill`, `goto`; hành động được thực thi thật trên trình duyệt và trang mới lại quay về làm đầu vào cho bước kế tiếp. Ngân sách **15 bước** cho tác vụ thường và **25 bước** cho tác vụ đa bước; hệ thống tự cắt sớm nếu agent lặp lại một thao tác vô ích. Chuỗi các bước này chính là **một trajectory**.
-
-**Bước 4 — Kiểm chứng ngay lúc chạy, rồi mở rộng Frontier.** Mỗi tác vụ agent tự nhận là xong đều bị **LLM Judge soi lại trang đích** — không đạt thì bị hạ thành thất bại và **không** được đưa vào dữ liệu. Tác vụ đạt sẽ được **giải lại lần hai từ trang chủ**, để trajectory chứa cả phần điều hướng tới trang chứ không chỉ thao tác cuối. Sau đó, Frontier được nạp thêm: **những URL agent thực sự đã đi qua** khi giải tác vụ, cộng với **các liên kết khai thác trực tiếp trên trang**; mỗi *dạng URL* chỉ nhận tối đa 3 trang để hàng chục nghìn trang chi tiết cùng khuôn không làm ngập hàng đợi. Vòng lặp quay lại Bước 1 với trang tiếp theo.
-
-**Bước 5 — Tích lũy tri thức và nâng cấp độ khó.** Song song, các trajectory thành công được **cắt đoạn, gom cụm**; một đoạn thao tác lặp lại đủ số lần sẽ được **trừu tượng hóa thành SkillCard**, rồi **quy nạp thành Operator** có tiền điều kiện và hiệu ứng tường minh. Khi hiệu ứng của operator này khớp tiền điều kiện của operator kia, hệ thống **ghép chuỗi** chúng thành **tác vụ đa bước có ngữ nghĩa** — thứ mà bước sinh tác vụ tại chỗ ở Bước 2 không bao giờ tạo ra được. Đây chính là đường phản hồi nét đứt trong hình: **đồ thị operator định hướng cho vòng khám phá tiếp theo**.
-
-**Kết quả của vòng lặp này** trên 4 website: **455 trang** được khám phá, **3.981 lượt thử**, đọng lại **146 skill** và **57 operator**, **142 tác vụ đa bước**, và cuối cùng là **1.760 trajectory sạch** được đóng gói thành **9.007 mẫu SFT** — hoàn toàn không có nhãn con người ở bất kỳ khâu nào.
+Sau đây, em xin đi sâu vào chi tiết cách **một vòng lặp khám phá trên một trang web** được thực thi.
 
 ---
 
-## Slide 9 — Đồ thị hai tầng
+## Slide 9 — Khám phá tự hành: một vòng lặp trên một trang
 
-Cốt lõi biểu diễn tri thức của HSGE là **cấu trúc đồ thị hai tầng**:
+Tại mỗi trang web, hệ thống thực hiện một vòng lặp tự hành gồm **5 bước chặt chẽ**:
 
-- **Tầng thấp — State Graph:** Lưu vết duyệt web thực tế, với node là trạng thái trang DOM/URL và cạnh là các hành động điều hướng.
-- **Tầng cao — Operator Graph:** Mỗi node là một Operator đại diện cho một kỹ năng chuẩn hóa gồm **Điều kiện đầu vào (Precondition)** và **Kết quả đạt được (Effect)**.
+1. **Lấy trang:** Lấy URL từ Frontier, mở trình duyệt thật (Playwright/Chromium) và đọc cây trợ năng AXTree.
+2. **Sinh tác vụ:** Explorer nhìn vào giao diện trang và đề xuất tối đa **9 tác vụ cụ thể** (INFO - tra cứu, NAV - điều hướng, MOD - đổi trạng thái). Vì sinh từ giao diện đang thấy, tác vụ luôn đảm bảo tính khả thi.
+3. **Giải tác vụ:** Solver thực thi theo cơ chế **ReAct** (Suy luận + Hành động: `click`, `fill`, `goto`...) với ngân sách 15 bước cho tác vụ thường và 25 bước cho tác vụ đa bước để thu về một trajectory.
+4. **Kiểm định:** LLM Judge độc lập thẩm định lại trang đích; tác vụ đạt được **giải lại lần 2 từ trang chủ** để trajectory thu trọn vẹn cả luồng điều hướng.
+5. **Mở rộng Frontier:** Nạp thêm các URL agent đã đi qua và các liên kết mới khai thác được trên trang.
 
-**Nguyên lý ghép nối:** Khi Effect của Operator A thỏa mãn Precondition của Operator B ($\text{Effect}_A \models \text{Pre}_B$), hệ thống tự động tạo một cạnh chuyển tiếp.
-*Ví dụ:* Kỹ năng "Tìm kiếm sản phẩm" sinh ra kết quả "Đang ở trang chi tiết". Kết quả này thỏa mãn điều kiện cần của kỹ năng "Thêm vào giỏ hàng" $\rightarrow$ Hệ thống tự động ghép thành tác vụ mua hàng hoàn chỉnh.
+Để tránh bẫy vô tận và cạn kiệt tài nguyên, hệ thống thiết lập **4 chốt chặn thoái hóa**:
+- **Node trùng:** Băm nội dung AXTree để phát hiện và loại bỏ trang trùng lặp (loại 71/455 node).
+- **Lặp thao tác:** Dừng cứng ngay khi agent lặp lại cùng một hành động mà trạng thái trang không đổi.
+- **Bão hòa:** Giới hạn tối đa $\le 3$ node cho mỗi khuôn dạng URL để tránh ngập hàng đợi.
+- **Task trùng:** Ghi nhớ và loại bỏ các tác vụ có ngữ nghĩa gần trùng nhau.
 
-Nhờ đó, tri thức thu được mang tính **tái sử dụng và tái tổ hợp** vượt bậc.
+**Kết quả trên 4 website:** Duyệt **455 trang**, thực hiện **3.981 lượt thử**, thu về **2.117 trajectory hợp lệ** (tỷ lệ 53,2%).
 
 ---
 
@@ -333,18 +339,19 @@ Phụ lục không có số footer — cột "Trang" dưới đây là **số tr
 
 | Slide | Trang | Nội dung                                            | Bật khi được hỏi về                                                    |
 | ----- | ----- | --------------------------------------------------- | ---------------------------------------------------------------------- |
-| PL1   | 58    | Tính hợp lệ của phép đánh giá                       | "Explore rồi test trên cùng app thì có hợp lệ không?"                  |
-| PL2   | 59    | Hướng đến ai; pipeline mới là thứ tổng quát         | "Có phải muốn model generalize cho mọi trang không?"                   |
-| PL3   | 60    | Task khả thi, ngân sách bước, tiêu chuẩn hoàn thành | "Task LLM đề xuất có thật không?", "Sao 25 bước?", "Sao biết đã xong?" |
-| PL4   | 61    | Ba CH: số liệu và mức độ trả lời                    | "Thực nghiệm trả lời được mục tiêu chưa?"                              |
-| PL5   | 62    | Chi phí chi tiết                                    | "Chi phí đã tính đủ chưa?"                                             |
-| PL6   | 63    | Frontier hai tầng                                   | "Khám phá không bị lạc bằng cách nào?"                                 |
-| PL7   | 64    | Nguyên nhân thất bại; đặc tính hai mô hình          | "Điểm nghẽn còn lại ở đâu?"                                            |
-| PL8   | 65    | Thêm dữ liệu; đổi mô hình nền                       | "Thêm dữ liệu nữa có tốt hơn không?", "Sao không dùng mô hình khác?"   |
-| PL9   | 66    | SkillCard & Operator, ví dụ 3-operator chain        | "Skill là gì, operator là gì, trông ra sao?"                           |
-| PL10  | 67    | Bảng I/O của Explorer, Solver, Judge, Seeder        | "Explorer / Solver / Judge nhận gì, trả ra gì?"                         |
-| PL11  | 68    | Dạng một mẫu dữ liệu SFT (System/User/Assistant)    | "Một mẫu dữ liệu SFT trông ra sao?", "Prompt parity"                   |
-| PL12  | 69    | Biểu diễn tri thức: đồ thị hai tầng                 | "Đồ thị hai tầng State Graph & Operator Graph"                         |
+| PL1   | 54    | Tính hợp lệ của phép đánh giá                       | "Explore rồi test trên cùng app thì có hợp lệ không?"                  |
+| PL2   | 55    | Hướng đến ai; pipeline mới là thứ tổng quát         | "Có phải muốn model generalize cho mọi trang không?"                   |
+| PL3   | 56    | Task khả thi, ngân sách bước, tiêu chuẩn hoàn thành | "Task LLM đề xuất có thật không?", "Sao 25 bước?", "Sao biết đã xong?" |
+| PL4   | 57    | Ba CH: số liệu và mức độ trả lời                    | "Thực nghiệm trả lời được mục tiêu chưa?"                              |
+| PL5   | 58    | Chi phí chi tiết                                    | "Chi phí đã tính đủ chưa?"                                             |
+| PL6   | 59    | Frontier hai tầng                                   | "Khám phá không bị lạc bằng cách nào?"                                 |
+| PL7   | 60    | Nguyên nhân thất bại; đặc tính hai mô hình          | "Điểm nghẽn còn lại ở đâu?"                                            |
+| PL8   | 61    | Thêm dữ liệu; đổi mô hình nền                       | "Thêm dữ liệu nữa có tốt hơn không?", "Sao không dùng mô hình khác?"   |
+| PL9   | 62    | SkillCard & Operator, ví dụ 3-operator chain        | "Skill là gì, operator là gì, trông ra sao?"                           |
+| PL10  | 63    | Bảng I/O của Explorer, Solver, Judge, Seeder        | "Explorer / Solver / Judge nhận gì, trả ra gì?"                         |
+| PL11  | 64    | Dạng một mẫu dữ liệu SFT (System/User/Assistant)    | "Một mẫu dữ liệu SFT trông ra sao?", "Prompt parity"                   |
+| PL12  | 65    | Biểu diễn tri thức: đồ thị hai tầng                 | "Đồ thị hai tầng State Graph & Operator Graph"                         |
+| PL13  | 66    | Bốn thách thức cốt lõi T1–T4                        | "Thách thức cốt lõi khi Web Agent khám phá tự hành?"                   |
 
 ---
 
@@ -555,7 +562,7 @@ lại dữ liệu.
 
 ## Checklist trước khi lên
 
-- [ ] Mở sẵn `main.pdf` ở chế độ toàn màn hình, kiểm tra nhảy được tới **trang PDF 58–69** (phụ lục PL1–PL8).
+- [ ] Mở sẵn `main.pdf` ở chế độ toàn màn hình, kiểm tra nhảy được tới **trang PDF 54–66** (phụ lục PL1–PL13).
 - [ ] Video demo mở sẵn ở tab riêng, **âm lượng 0**, đã thử phát một lần.
 - [ ] Nhớ ba con số không được nói sai: **24,6% / 13,3% / +11,3 điểm**.
 - [ ] Slide 3 phải nói ra chữ **"một tập website cố định"**; slide 7 phải có chữ

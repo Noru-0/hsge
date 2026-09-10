@@ -1,6 +1,6 @@
 % Template KLTN cho SV trường ĐHKHTN
-% Liên hệ: bhthong@fit.hcmus.edu.vn
-% Last update: 
+% Liên hệ: nqminh@fit.hcmus.edu.vn
+% Last update: 08/06/2016
 
 % Chú ý: đọc các phần chú ý đóng khung của file này và chỉnh lại cho phù hợp.
 % Trước khi build, xóa hết các file được tạo ra trong quá trình build trước đó, và build theo thứ tự: BIB > PDF > PDF.
@@ -14,18 +14,12 @@
 \DeclareTextSymbolDefault{\DH}{T1}
 
 % Tài liệu tham khảo
-%\usepackage[
-%	sorting=nty,
-%	backend=biber,
-%    style=ieee
-%	defernumbers=true]{biblatex}
-\usepackage[style=ieee]{biblatex}
+\usepackage[
+	sorting=nty,
+	backend=bibtex,
+	defernumbers=true]{biblatex}
 \usepackage[unicode]{hyperref} % Bookmark tiếng Việt
 \addbibresource{References/references.bib}
-%\bibliographystyle{IEEEtran}
-%\bibliography{IEEEabrv,references}
-
-
 
 \makeatletter
 \def\blx@maxline{77}
@@ -77,6 +71,9 @@
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
+
+
+ 
 % Đổi tên mặc định
 \renewcommand{\chaptername}{Chương}
 \renewcommand{\figurename}{Hình}
@@ -86,14 +83,19 @@
 \renewcommand{\listtablename}{Danh sách bảng}
 \renewcommand{\appendixname}{Phụ lục}
 
-
-% Kích thước Chapter
+% Định dạng chapter
 \usepackage{titlesec}
-\titleformat{\chapter}[display]
-  {\LARGE\bfseries}
-  {\chaptertitlename\ \thechapter}{18pt}{\huge}
+\titleformat{\chapter}
+    [display] 
+    {\normalfont\bfseries\Large}{\chaptername \ \thechapter}{10pt}{\huge}
+\titlespacing*{\chapter}{0pt}{-10pt}{40pt} %khoảng cách giữa chapter và đầu trang
 
-
+\titleformat{\section}
+    {\normalfont\bfseries\large}{\thesection}{1em}{}
+ 
+\titleformat{\subsection}
+    {\normalfont\bfseries\normalsize}{\thesubsection}{1em}{}
+  
 % Dãn dòng 1.5
 \usepackage{setspace}
 \onehalfspacing
@@ -103,10 +105,11 @@
 
 % Canh lề
 \usepackage[
-  top=30mm,
-  bottom=25mm,
+  top=20mm,
+  bottom=10mm,
   left=30mm,
   right=20mm,
+  footskip = 15mm,
   includefoot]{geometry}
   
 % Trang bìa
@@ -128,51 +131,25 @@
 \input{Title/title.tex}
 % Sasu trang Title, các bạn chèn nhận xét gủa GVHD và GVPB. Nhận xét sẽ được giáo vụ phát sau buổi bảo vệ để các bạn đóng quyển.
 
-\cleardoublepage
-
 \pagenumbering{roman} % Đánh số i, ii, iii, ...
 
-
-\phantomsection
 %\addcontentsline{toc}{chapter}{Lời cam đoan}
 %\include{Appendix/reassurances}
-\include{Appendix/commitment}
-
-\addcontentsline{toc}{chapter}{Thuyết minh chỉnh sửa đề tài}
-\include{Appendix/edit}
-
-\addcontentsline{toc}{chapter}{Nhận xét của GV hướng dẫn}
-\include{Appendix/advisor}
-
-\addcontentsline{toc}{chapter}{Nhận xét của GV phản biện}
-\include{Appendix/reviewer}
 
 \addcontentsline{toc}{chapter}{Lời cảm ơn}
 \include{Appendix/thanks}
 
-\addcontentsline{toc}{chapter}{Đề cương}
-\include{Appendix/proposal}
+\addcontentsline{toc}{chapter}{Đề cương chi tiết}
+\include{Appendix/decuong}
 
 % Mục lục, danh sách hình, danh sách bảng
 \addcontentsline{toc}{chapter}{Mục lục}
-
 \tableofcontents
-
-%\listoffigures
-\cleardoublepage
-% \phantomsection
-\addcontentsline{toc}{chapter}{\listfigurename}
 \listoffigures
-
-\cleardoublepage
-% \phantomsection
-\addcontentsline{toc}{chapter}{\listtablename}
 \listoftables
-%\listoftables
 
 \addcontentsline{toc}{chapter}{Tóm tắt}
-\include{Appendix/summary}
-
+\include{Appendix/tomtat}
 
 \clearpage
 
@@ -192,10 +169,6 @@
 % In tài liệu tham khảo
 \addcontentsline{toc}{chapter}{Tài liệu tham khảo}
 \printbibheading[title={Tài liệu tham khảo}]
-
-
-
-%\printbibliography
 
 \printbibliography[heading=subbibliography, title={Tiếng Việt}, keyword=Viet, resetnumbers=true]
 
