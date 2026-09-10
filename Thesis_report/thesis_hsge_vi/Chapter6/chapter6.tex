@@ -12,41 +12,41 @@ cứu có thể đi tiếp.
 
 Khóa luận nhắm tới một mục tiêu: nâng năng lực của mô hình ngôn ngữ nhỏ
 trong vai trò web agent, bằng cách tự động thu thập dữ liệu huấn luyện từ
-những website không có nhãn. Giải pháp đề xuất là HSGE, một pipeline khám phá
+những website không có nhãn. Giải pháp đề xuất là HSGE, một quy trình khám phá
 có cấu trúc: quá trình tương tác với website được tổ chức quanh một biểu diễn
-đồ thị, thay vì chỉ khai thác từng task rời rạc.
+đồ thị, thay vì chỉ khai thác từng tác vụ rời rạc.
 
-Trong quá trình khám phá, hệ thống phát hiện các skill lặp lại từ trajectory,
+Trong quá trình khám phá, hệ thống phát hiện các skill lặp lại từ chuỗi vết tương tác,
 kiểm chứng chúng trước khi đưa vào thư viện skill, rồi trừu tượng hóa thành
 các operator có precondition và effect tường minh. Trên cơ sở các operator
-đã thu nhận, pipeline tiếp tục xây dựng đồ thị toán tử và ghép chuỗi các
-operator tương thích để sinh ra các semantic task nhiều bước. Nhờ vậy, mục tiêu huấn luyện mới được dựng trên các năng lực đã kiểm chứng,
-chứ không chỉ trên những task gắn với một trang riêng lẻ. Các cổng chấm và
-tinh lọc tự động nằm ngay trong vòng lặp thu thập, nên trajectory đã sạch từ
-lúc được ghi và đi thẳng vào khâu dựng dữ liệu rồi fine-tuning mà không cần
-một pha hậu kiểm tách rời; toàn bộ đường đi đó giữ nguyên tắc \emph{prompt
+đã thu nhận, quy trình tiếp tục xây dựng đồ thị toán tử và ghép chuỗi các
+operator tương thích để sinh ra các tác vụ ngữ nghĩa nhiều bước. Nhờ vậy, mục tiêu huấn luyện mới được dựng trên các năng lực đã kiểm chứng,
+chứ không chỉ trên những tác vụ gắn với một trang riêng lẻ. Các cổng chấm và
+tinh lọc tự động nằm ngay trong vòng lặp thu thập, nên chuỗi vết tương tác đã sạch từ
+lúc được ghi và đi thẳng vào khâu dựng dữ liệu rồi tinh chỉnh mà không cần
+một pha hậu kiểm tách rời; toàn bộ đường đi đó giữ nguyên tắc \emph{lời nhắc
 parity} giữa huấn luyện và suy luận.
 
 Khóa luận tạo ra năm sản phẩm chính như sau.
 
 \begin{enumerate}
 
-  \item \textbf{Pipeline HSGE.}
+  \item \textbf{quy trình HSGE.}
     Hệ thống hiện thực trọn quy trình khám phá có cấu trúc - khám phá theo đồ thị,
     phát hiện và kiểm chứng skill, quy nạp operator kèm chuẩn hóa mệnh đề, sinh
-    semantic task từ đồ thị toán tử - và chạy được trên cả backend mô phỏng dùng
+    tác vụ ngữ nghĩa từ đồ thị toán tử - và chạy được trên cả backend mô phỏng dùng
     để kiểm thử lẫn website thật qua trình duyệt.
 
-  \item \textbf{Pipeline tinh lọc và tập dữ liệu huấn luyện.}
-    Các cổng chất lượng chấm lại từng episode ngay trong vòng lặp thu thập, và
-    trình dựng dataset giữ nguyên tắc prompt parity. Kết quả là một tập dữ liệu
-    fine-tuning xây dựng hoàn toàn tự động trên bốn website WebArena tự triển
-    khai: 1760 trajectory và 8554 mẫu huấn luyện, sau khi đã loại 801 lần tự tuyên
-    bố thành công sai cùng các trajectory không có hành động hữu hiệu nào
+  \item \textbf{quy trình tinh lọc và tập dữ liệu huấn luyện.}
+    Các cổng chất lượng chấm lại từng phiên tương tác ngay trong vòng lặp thu thập, và
+    trình dựng dataset giữ nguyên tắc tính nhất quán lời nhắc (lời nhắc parity). Kết quả là một tập dữ liệu
+    tinh chỉnh xây dựng hoàn toàn tự động trên bốn website WebArena tự triển
+    khai: 1760 chuỗi vết tương tác và 8554 mẫu huấn luyện, sau khi đã loại 801 lần tự tuyên
+    bố thành công sai cùng các chuỗi vết tương tác không có hành động hữu hiệu nào
     (Mục~\ref{sec:exp-data}).
 
-  \item \textbf{Mô hình web agent đã fine-tune.}
-    Qwen3.5-9B được fine-tune bằng LoRA trên tập dữ liệu do pipeline thu thập rồi
+  \item \textbf{Mô hình web agent đã tinh chỉnh.}
+    Qwen3.5-9B được tinh chỉnh bằng LoRA trên tập dữ liệu do quy trình thu thập rồi
     triển khai bằng vLLM, với cấu hình phục vụ tắt chế độ thinking đúng như lúc
     huấn luyện để hai giai đoạn dùng chung một dạng đầu vào và đầu ra. Ngoài ra,
     cùng tập dữ liệu này được kiểm chứng tính độc lập kiến trúc trên mô hình nền
@@ -54,36 +54,36 @@ Khóa luận tạo ra năm sản phẩm chính như sau.
     với điểm số là một cận dưới do bộ phân giải đầu ra loại bỏ các lệnh kết thúc
     thiếu vỏ JSON (Mục~\ref{sec:exp-backbone}).
 
-  \item \textbf{Đánh giá trên benchmark WebArena.}
-    Khóa luận xây dựng pipeline đánh giá sử dụng cùng prompt với agent triển khai
-    thực tế, chấm bằng bộ task và bộ chấm chính thức của WebArena. Mô hình sau
-    fine-tune đạt \textbf{161 trên 655 task} của bốn website, tức 24{,}6\%
+  \item \textbf{Đánh giá trên bộ thử nghiệm chuẩn WebArena.}
+    Khóa luận xây dựng quy trình đánh giá sử dụng cùng lời nhắc với agent triển khai
+    thực tế, chấm bằng bộ tác vụ và bộ chấm chính thức của WebArena. Mô hình sau
+    tinh chỉnh đạt \textbf{161 trên 655 tác vụ} của bốn website, tức 24{,}6\%
     (Shopping 28{,}3\%, Reddit 34{,}0\%, GitLab 18{,}3\%, Shopping Admin
-    21{,}4\%), với toàn bộ mẫu số đầy đủ và không task nào bị lỗi. Khi tính lại
+    21{,}4\%), với toàn bộ mẫu số đầy đủ và không tác vụ nào bị lỗi. Khi tính lại
     kết quả của các công trình liên quan trên đúng bốn website này, con số đó
     cao hơn NNetNav-7B (19{,}1\%) và GPT-4o-mini (20{,}0\%), và ngang
-    Go-Browse-7B (22{,}6\%) trong phạm vi sai số của phép đo. Cùng bộ task đó, mô
-    hình nền khi chưa fine-tune đạt 87 trên 655 task, tức 13{,}3\%; chênh lệch
+    Go-Browse-7B (22{,}6\%) trong phạm vi sai số của phép đo. Cùng bộ tác vụ đó, mô
+    hình nền khi chưa tinh chỉnh đạt 87 trên 655 tác vụ, tức 13{,}3\%; chênh lệch
     11{,}3 điểm phần trăm đạt ý nghĩa thống kê theo kiểm định cặp trên cả bốn
-    website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ, vì mỗi task
+    website. Đây là một tín hiệu mạnh, chưa phải một kết luận đầy đủ, vì mỗi tác vụ
     mới chỉ được đánh giá một lần
     (Mục~\ref{sec:disc-results}).
 
   \item \textbf{Báo cáo kinh nghiệm triển khai.}
     Quá trình xây dựng hệ thống để lại một tập các bài học kinh nghiệm trải
     trên năm mảng - khám phá website, điều khiển agent, quy nạp operator, xây dựng
-    dữ liệu và fine-tuning - tóm tắt ở Mục~\ref{sec:disc-lessons}, trình bày đầy
+    dữ liệu và tinh chỉnh - tóm tắt ở Mục~\ref{sec:disc-lessons}, trình bày đầy
     đủ ở Phụ lục~\ref{app:lessons} kèm hướng dẫn tái lập ở
     Phụ lục~\ref{app:repro}.
 
 \end{enumerate}
 
 Bên cạnh các sản phẩm cụ thể, đóng góp về mặt phương pháp là cách tổ chức quá
-trình thu thập dữ liệu quanh một biểu diễn đồ thị: thay vì sinh thẳng task
+trình thu thập dữ liệu quanh một biểu diễn đồ thị: thay vì sinh thẳng tác vụ
 huấn luyện từ từng trang, hệ thống dựng trước một biểu diễn có cấu trúc về các
-skill đã kiểm chứng rồi mới khai thác biểu diễn đó để tạo semantic task nhiều
+skill đã kiểm chứng rồi mới khai thác biểu diễn đó để tạo tác vụ ngữ nghĩa nhiều
 bước, qua đó tách quá trình khám phá website khỏi quá trình sinh dữ liệu và mở
-rộng không gian task tạo được từ cùng một tập trải nghiệm.
+rộng không gian tác vụ tạo được từ cùng một tập trải nghiệm.
 
 \section{Đối chiếu mục tiêu và kết quả}
 \label{sec:conc-objectives}
@@ -108,11 +108,10 @@ Mục~\ref{sec:intro-contrib} với những kết quả đạt được của kh
   \endfoot
 
   O1 &
-  Thu thập trajectory tự động, bền vững và an toàn từ website không nhãn &
+  Thu thập chuỗi vết tương tác tự động, bền vững và an toàn từ website không nhãn &
   Hoàn thành. Hệ thống hiện thực cơ chế frontier hai tầng kết hợp giới hạn
   template, chiến lược duyệt web fail-soft và chế độ an toàn fail-closed;
-  quá trình khám phá trên website thật duyệt 455 node và ghi nhận 3981
-  episode; can thiệp tay duy nhất là năm lần nối lại sau khi tài khoản API hết
+  quá trình khám phá trên website thật duyệt 455 nút và ghi nhận 3981 phiên tương tác; can thiệp tay duy nhất là năm lần nối lại sau khi tài khoản API hết
   hạn mức, mỗi lần đều chạy tiếp từ điểm kiểm tra của node cuối
   (Mục~\ref{sec:method-exploration}, \ref{sec:exp-data}). \\
 
@@ -122,9 +121,9 @@ Mục~\ref{sec:intro-contrib} với những kết quả đạt được của kh
   Sinh tác vụ có ngữ nghĩa nhiều bước từ đồ thị các skill đã kiểm chứng &
   Hoàn thành một phần. Quy trình phát hiện, kiểm chứng skill và quy nạp
   operator có precondition/effect đã chạy thật (146 skill, 57 operator), và
-  lần đầu tiên sinh được semantic task trên website sống: 142 task, 71 thành
-  công, so với 0 task ở toàn bộ các đợt trước. Tuy nhiên, phần lớn task này
-  đến từ seed năng lực website (130 lượt) chứ không từ việc ghép chuỗi
+  lần đầu tiên sinh được tác vụ ngữ nghĩa trên website sống: 142 tác vụ, 71 thành
+  công, so với 0 tác vụ ở toàn bộ các đợt trước. Tuy nhiên, phần lớn tác vụ này
+  đến từ hạt giống năng lực website (130 lượt) chứ không từ việc ghép chuỗi
   operator (12 lượt), nên cơ chế ghép chuỗi mới được chứng minh là khả thi
   chứ chưa đủ dày để làm nguồn dữ liệu chính
   (Mục~\ref{sec:method-semantic}, \ref{sec:disc-operators}). \\
@@ -132,23 +131,23 @@ Mục~\ref{sec:intro-contrib} với những kết quả đạt được của kh
   \addlinespace
 
   O3 &
-  Xây dựng pipeline tinh lọc dữ liệu theo nguyên tắc prompt parity &
-  Hoàn thành. Pipeline bao gồm bước judge đánh giá độc lập ngay trong vòng lặp
-  thu thập và dựng dataset với cùng cấu trúc prompt sử dụng trong quá trình
+  Xây dựng quy trình tinh lọc dữ liệu theo nguyên tắc tính nhất quán lời nhắc (lời nhắc parity) &
+  Hoàn thành. quy trình bao gồm bước judge đánh giá độc lập ngay trong vòng lặp
+  thu thập và dựng dataset với cùng cấu trúc lời nhắc sử dụng trong quá trình
   suy luận. Các bước thực thi lỗi được loại bỏ và dữ liệu được sắp xếp theo
-  curriculum trước khi fine-tune
+  curriculum trước khi tinh chỉnh
   (Mục~\ref{sec:method-data}). \\
 
   \addlinespace
 
   O4 &
-  Fine-tune và đánh giá một mô hình ngôn ngữ nhỏ trên benchmark chính thức &
-  Hoàn thành một phần. Mô hình đã được fine-tune và đánh giá trên toàn bộ
-  655 task chính thức của cả bốn website, đạt 24{,}6\% so với 13{,}3\% của mô
+  tinh chỉnh và đánh giá một mô hình ngôn ngữ nhỏ trên bộ thử nghiệm chuẩn chính thức &
+  Hoàn thành một phần. Mô hình đã được tinh chỉnh và đánh giá trên toàn bộ
+  655 tác vụ chính thức của cả bốn website, đạt 24{,}6\% so với 13{,}3\% của mô
   hình nền đo trong cùng điều kiện; hai phép đo bổ trợ đã chạy là hiệu ứng của
   việc bổ sung dữ liệu trên hai website và việc thay mô hình nền trong khi giữ
   nguyên tập dữ liệu. Phần còn thiếu là các phép lặp thống kê và các ablation
-  tách bạch đóng góp của từng thành phần trong pipeline
+  tách bạch đóng góp của từng thành phần trong quy trình
   (Mục~\ref{sec:exp-main}--\ref{sec:exp-ablation}, \ref{sec:exp-backbone}). \\
 
   \addlinespace
@@ -170,29 +169,29 @@ Mục~\ref{sec:intro-contrib} với những kết quả đạt được của kh
 gồm bốn nhóm nội dung.
 
 \begin{itemize}
-  \item \textbf{Mã nguồn pipeline}: toàn bộ vòng lặp khám phá, cơ chế phát
+  \item \textbf{Mã nguồn quy trình}: toàn bộ vòng lặp khám phá, cơ chế phát
     hiện skill, quy nạp operator, các cổng lọc chất lượng và trình dựng tập
     dữ liệu, kèm tệp cấu hình của bốn đợt khám phá đã báo cáo ở
     Chương~\ref{ch:experiments}.
   \item \textbf{Tập dữ liệu huấn luyện}: thư mục \texttt{training\_data/}
     chứa 8554 mẫu train và 453 mẫu validation, cùng bản tách theo từng
-    website, ở đúng định dạng đã dùng để fine-tune
+    website, ở đúng định dạng đã dùng để tinh chỉnh
     (Bảng~\ref{tab:dataset}).
   \item \textbf{Kết quả đánh giá thô}: thư mục \texttt{outputs/eval/} chứa
-    kết quả từng task của cả ba lượt đo --- mô hình nền 9B, mô hình sau
-    fine-tune 9B, và mô hình 7B (\texttt{outputs/eval/eval-7B/}) --- trên đủ
-    655 task, đủ để người đọc tự tính lại mọi con số ở Bảng~\ref{tab:main},
+    kết quả từng tác vụ của cả ba lượt đo --- mô hình nền 9B, mô hình sau
+    tinh chỉnh 9B, và mô hình 7B (\texttt{outputs/eval/eval-7B/}) --- trên đủ
+    655 tác vụ, đủ để người đọc tự tính lại mọi con số ở Bảng~\ref{tab:main},
     Bảng~\ref{tab:baseline} và Bảng~\ref{tab:backbone7b}, bao gồm cả phép
     điều chỉnh thủ công đã công bố ở Mục~\ref{sec:exp-baseline}.
   \item \textbf{Tài liệu vận hành}: hướng dẫn dựng lại môi trường WebArena,
-    chạy pipeline, huấn luyện và đánh giá.
+    chạy quy trình, huấn luyện và đánh giá.
 \end{itemize}
 
 Hai hạng mục \emph{không} nằm trong kho vì lý do dung lượng và bảo mật. Thứ
 nhất là các trace thô của những đợt khám phá và đánh giá (khoảng 11\,GB, chủ
 yếu là ảnh chụp màn hình); các số liệu tổng hợp rút ra từ chúng đã được báo
 cáo đầy đủ trong Chương~\ref{ch:experiments} và Phụ lục~\ref{app:runs}. Thứ
-hai là khóa API và phiên đăng nhập của các website benchmark, vốn là thông
+hai là khóa API và phiên đăng nhập của các website bộ thử nghiệm chuẩn, vốn là thông
 tin xác thực sống.
 
 \section{Hướng phát triển}
@@ -205,7 +204,7 @@ còn có thể đi tiếp, cả về quy mô dữ liệu lẫn hiệu quả củ
 Tập dữ liệu hiện tại (8554 mẫu huấn luyện) tuy đã gần gấp đôi sau đợt bổ
 sung, vẫn nhỏ hơn khoảng năm lần so với các nghiên cứu cùng hướng vốn sử dụng
 khoảng 40.000 đến 45.000 bước tương
-tác~\cite{murty2024nnetnav,gandhi2026gobrowse}. Do pipeline HSGE không phụ thuộc vào một website cố định và đã hỗ trợ
+tác~\cite{murty2024nnetnav,gandhi2026gobrowse}. Do quy trình HSGE không phụ thuộc vào một website cố định và đã hỗ trợ
 cơ chế chuyển giao skill giữa các giao diện tương đồng, việc mở rộng sang
 nhiều nền tảng mới kết hợp tái sử dụng các skill đã tích lũy sẽ giúp gia tăng
 độ đa dạng của dữ liệu mà không cần thực thi lại toàn bộ quá trình khám phá.
@@ -218,27 +217,27 @@ không đồng đều của nó}: $+$7{,}1 đpt trên mỗi 1000 mẫu ở Reddi
 ở Shopping Admin. So sánh chéo giữa bốn website (Mục~\ref{sec:exp-crosssite})
 cũng cho thấy \emph{mức} điểm của một website không do riêng lượng dữ liệu
 quyết định. Do đó, định hướng mở rộng dữ liệu tiếp theo nên ưu tiên nâng cao
-\emph{độ phủ} và \emph{độ khó} của task, thay vì chỉ gia tăng đơn thuần về số
+\emph{độ phủ} và \emph{độ khó} của tác vụ, thay vì chỉ gia tăng đơn thuần về số
 lượng mẫu.
 
 \textbf{Cần giảm thiểu tỷ lệ hành động thất bại ở tầng thực thi của trình duyệt.}
 Phân tích nguyên nhân thất bại (Mục~\ref{sec:exp-analysis}) cho thấy từ
-85\% đến 96\% episode thất bại có ít nhất một hành động bị trình duyệt từ
-chối. Một episode thất bại điển hình cũng dài gấp hơn hai lần episode thành
+85\% đến 96\% phiên tương tác thất bại có ít nhất một hành động bị trình duyệt từ
+chối. Một phiên tương tác thất bại điển hình cũng dài gấp hơn hai lần phiên tương tác thành
 công, vì bị kẹt lặp lại. Đây là hai hướng cải thiện có tỷ suất cao và độc lập với
-quy mô dữ liệu: bổ sung các trajectory \emph{phục hồi sau lỗi} vào tập huấn
+quy mô dữ liệu: bổ sung các chuỗi vết tương tác \emph{phục hồi sau lỗi} vào tập huấn
 luyện để mô hình học cách đổi chiến lược thay vì thử lại, và làm cho lớp
 thực thi ít sinh ra lỗi khả thao tác giả hơn.
 
 \textbf{Cần khai thác trực tiếp tín hiệu kiểm chứng cho quá trình huấn luyện mô hình.}
-Ngoài tập dữ liệu dùng cho fine-tuning có giám sát, pipeline còn để lại nhiều
-tín hiệu khác: trajectory đã được judge xác nhận, trajectory thất bại, và episode
+Ngoài tập dữ liệu dùng cho tinh chỉnh có giám sát, quy trình còn để lại nhiều
+tín hiệu khác: chuỗi vết tương tác đã được judge xác nhận, chuỗi vết tương tác thất bại, và phiên tương tác
 kết thúc bằng \texttt{report\_infeasible}. Các phương pháp tối ưu theo sở thích hoặc học tăng cường, như cách WebRL~\cite{qi2025webrl} và WebAgent-R1~\cite{wei2025webagentr1} đã làm, có thể khai thác triệt để các nguồn tín hiệu này, giúp mô hình học tập được từ cả những trường hợp chưa thành công thay vì chỉ giới hạn trên các mẫu đạt chuẩn.
 
-\textbf{Cần đánh giá khả năng áp dụng pipeline trên các mô hình nhỏ hơn.}
+\textbf{Cần đánh giá khả năng áp dụng quy trình trên các mô hình nhỏ hơn.}
 Qwen3.5-9B đã nhỏ hơn hẳn các mô hình lớn thường dùng cho web agent,
 nhưng chi phí triển khai vẫn còn cao với một số môi trường thực tế. Hướng tiếp
-theo là chưng cất hành vi của agent đã fine-tune xuống mô hình cỡ 1B-3B,
+theo là chưng cất hành vi của agent đã tinh chỉnh xuống mô hình cỡ 1B-3B,
 để xem phương pháp còn giữ được hiệu quả tới đâu khi dung lượng mô hình giảm
 tiếp.
 
@@ -249,7 +248,7 @@ luyện. Tuy nhiên, cùng một biểu diễn này cũng có thể được kha
 cảnh cho mô hình, theo cách mà Synapse~\cite{zheng2024synapse}, AWM~\cite{wang2024awm} và SkillWeaver~\cite{zheng2025skillweaver} đã chứng minh là hiệu quả với các mô hình lớn. Điều này mở ra khả năng kết hợp giữa dữ liệu đã học và tri
 thức có cấu trúc trong cùng một hệ thống web agent.
 
-\textbf{Cần hoàn thiện các phép đo thực nghiệm còn thiếu trên các benchmark bổ sung.}
+\textbf{Cần hoàn thiện các phép đo thực nghiệm còn thiếu trên các bộ thử nghiệm chuẩn bổ sung.}
 Bốn hạng mục đã được xác định rõ và xếp theo thứ tự ưu tiên. Thứ nhất là lặp
 phép đo: mỗi cấu hình chạy ít nhất ba lần cho cả hai mô hình, báo cáo trung
 bình kèm độ lệch chuẩn thay vì một lần chạy duy nhất. Đi kèm là một việc dọn
@@ -258,25 +257,25 @@ Thứ hai là ablation so sánh khám phá theo đồ thị với khám phá ph�
 ngân sách; đây là thực nghiệm duy nhất chứng minh trực tiếp giá trị của cấu
 trúc đồ thị, và cũng là phần còn thiếu để phát biểu mạnh hơn về phương pháp.
 Thứ ba là hoàn tất phép so sánh cùng mô hình nền đã khởi động ở
-Mục~\ref{sec:exp-backbone}: fine-tune trên đúng tập dữ liệu này cho kết quả
+Mục~\ref{sec:exp-backbone}: tinh chỉnh trên đúng tập dữ liệu này cho kết quả
 chưa dùng để đối chiếu với Go-Browse được, vì bộ phân giải đầu ra loại bỏ phần
 lớn các lệnh kết thúc mà mô hình 7B phát ra không đúng định dạng. Việc cần làm
 là chạy lại với bộ phân giải chấp nhận lệnh viết trần; đây là hạng mục rẻ nhất
 trong bốn hạng mục vì không phải thu thêm dữ liệu hay huấn luyện lại, chỉ đo
-lại. Thứ tư là mở rộng sang các benchmark khác - VisualWebArena~\cite{koh2024visualwebarena} cho các mục tiêu diễn đạt bằng hình ảnh, WorkArena~\cite{drouin2024workarena} cho miền công việc văn phòng, và Online-Mind2Web~\cite{xue2025illusion} cho điều kiện web mở - kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân, chẳng hạn như chỉ số tiến bộ từng phần.
+lại. Thứ tư là mở rộng sang các bộ thử nghiệm chuẩn khác - VisualWebArena~\cite{koh2024visualwebarena} cho các mục tiêu diễn đạt bằng hình ảnh, WorkArena~\cite{drouin2024workarena} cho miền công việc văn phòng, và Online-Mind2Web~\cite{xue2025illusion} cho điều kiện web mở - kết hợp áp dụng các thước đo chuyên sâu hơn thay vì chỉ dựa vào tỷ lệ thành công nhị phân, chẳng hạn như chỉ số tiến bộ từng phần.
 
 \vspace{1em}
 \noindent
-Khóa luận đã đề xuất HSGE, một pipeline tự động thu thập dữ liệu huấn luyện
+Khóa luận đã đề xuất HSGE, một quy trình tự động thu thập dữ liệu huấn luyện
 cho web agent từ các website không có nhãn thông qua quá trình khám phá có
-cấu trúc. Thực nghiệm cho thấy dữ liệu do pipeline tạo ra đủ để đưa một mô hình 9B lên
-24{,}6\% trên 655 task chính thức của bốn website WebArena~\cite{zhou2024webarena}. Mức đó ngang
+cấu trúc. Thực nghiệm cho thấy dữ liệu do quy trình tạo ra đủ để đưa một mô hình 9B lên
+24{,}6\% trên 655 tác vụ chính thức của bốn website WebArena~\cite{zhou2024webarena}. Mức đó ngang
 các hệ thống mở tốt nhất cùng phân khúc dưới 10B, và cao hơn 11{,}3
-điểm phần trăm so với chính mô hình nền khi chưa fine-tune. Đáng nói hơn, kết quả đạt
+điểm phần trăm so với chính mô hình nền khi chưa tinh chỉnh. Đáng nói hơn, kết quả đạt
 được chỉ với 8554 mẫu huấn luyện, ít hơn khoảng năm lần so với các
 công trình cùng hướng, và trong một ngân sách vừa tầm một nhóm nghiên cứu nhỏ:
 54{,}21\,USD tiền gọi API (cho khoảng 65 triệu token) cho toàn bộ giai đoạn thu
-thập, cộng 24{,}4\,USD tiền thuê GPU cho cả chu trình fine-tune và đánh giá. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
+thập, cộng 24{,}4\,USD tiền thuê GPU cho cả chu trình tinh chỉnh và đánh giá. Vẫn còn nhiều hướng phải nghiên cứu tiếp và phải đánh
 giá ở quy mô lớn hơn. Nhưng chừng đó đã đủ để nói rằng đầu tư vào chất lượng
 và cấu trúc của dữ liệu huấn luyện là một hướng khả thi để nâng năng lực của
 web agent chạy trên mô hình ngôn ngữ nhỏ.
