@@ -92,20 +92,26 @@ defernumbers=true]{biblatex}
 % Soften overfull lines caused by unhyphenatable \texttt words
 \emergencystretch=1.5em
 
+% Kích thước Chapter
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\LARGE\bfseries}
+  {\chaptertitlename\ \thechapter}{10pt}{\huge}
+\titlespacing*{\chapter}{0pt}{-30pt}{15pt}
+
 % Indent first paragraph of each section
 \usepackage{indentfirst}
 
 % Number down to subsubsection (Faculty requirement)
 \setcounter{secnumdepth}{3}
 
-% Margins per the Faculty formatting guideline:
-% top 3cm, bottom 3.5cm, left 3.5cm, right 2cm, page number centered at bottom
+% Canh lề (Thu nhỏ lề trên/dưới)
 \usepackage[
-  top=30mm,
-  bottom=35mm,
-  left=35mm,
-  right=20mm,
-includefoot]{geometry}
+  a4paper,
+  top=25mm,
+  bottom=20mm,
+  left=30mm,
+  right=20mm]{geometry}
 
 % Vietnamese names for chapters/figures/tables
 \renewcommand{\chaptername}{Chương}
@@ -144,7 +150,9 @@ includefoot]{geometry}
 
 \begin{document}
 
+\newgeometry{top=30mm, bottom=35mm, left=35mm, right=20mm, includefoot}
 \input{Title/title.tex}
+\restoregeometry
 % After the title pages, the advisor's and reviewer's evaluation sheets are
 % inserted here when binding the final copy (provided after the defense).
 

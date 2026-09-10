@@ -85,10 +85,10 @@
 
 % Định dạng chapter
 \usepackage{titlesec}
-\titleformat{\chapter}
-    [display] 
-    {\normalfont\bfseries\Large}{\chaptername \ \thechapter}{10pt}{\huge}
-\titlespacing*{\chapter}{0pt}{-10pt}{40pt} %khoảng cách giữa chapter và đầu trang
+\titleformat{\chapter}[display]
+  {\LARGE\bfseries}
+  {\chaptertitlename\ \thechapter}{10pt}{\huge}
+\titlespacing*{\chapter}{0pt}{-30pt}{15pt} % Thu nhỏ thêm khoảng trống phía trên tiêu đề chương
 
 \titleformat{\section}
     {\normalfont\bfseries\large}{\thesection}{1em}{}
@@ -103,14 +103,13 @@
 % Thụt vào đầu dòng
 \usepackage{indentfirst}
 
-% Canh lề
+% Canh lề (Thu nhỏ lề trên/dưới)
 \usepackage[
-  top=20mm,
-  bottom=10mm,
+  a4paper,
+  top=25mm,
+  bottom=20mm,
   left=30mm,
-  right=20mm,
-  footskip = 15mm,
-  includefoot]{geometry}
+  right=20mm]{geometry}
   
 % Trang bìa
 \usepackage{tikz}

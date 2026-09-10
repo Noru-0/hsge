@@ -60,11 +60,35 @@ Từ động lực trên, nhóm xin phát biểu bài toán một cách chặt c
 
 - **Định hướng giải pháp:** Dùng **LLM mạnh** tự động khám phá chính website mục tiêu, sinh trajectory để fine-tune **SLM cục bộ**.
 
+<<<<<<< HEAD
 Sau khi đã xác định rõ bài toán và phạm vi, cộng đồng nghiên cứu hiện nay đã tiếp cận vấn đề này như thế nào? Em xin chuyển sang phần 3: Nghiên cứu liên quan.
 
 ---
 
 ## Slide 4 — Ba hướng tiếp cận hiện nay
+=======
+---
+
+## Slide 4 — Dữ liệu huấn luyện SLM lấy từ đâu?
+
+Trước khi nói về thách thức, em xin làm rõ **dữ liệu huấn luyện đến từ đâu**.
+
+Nhóm sử dụng kỹ thuật **chưng cất tri thức (knowledge distillation)**, trong đó **LLM mạnh đóng vai người thầy**: nó được gọi qua API để tự khám phá và tự thao tác trên **chính website mục tiêu**. Mỗi lần thầy giải xong một tác vụ, hệ thống thu được **một trajectory** — chính là _lời giải mẫu_ cho tác vụ đó. Toàn bộ các lời giải mẫu này được đóng gói thành tập dữ liệu SFT, và **SLM học bắt chước** chúng qua fine-tune.
+
+Cách làm này hợp lý ở ba điểm:
+
+- **Về chi phí:** phí API chỉ trả **một lần duy nhất** trong giai đoạn tạo dữ liệu; khi triển khai thực tế, hệ thống chỉ còn chạy SLM cục bộ, không gọi API nữa.
+- **Về nhãn:** người thầy tự ra **cả đề lẫn lời giải**, nên toàn bộ quy trình **không cần một nhãn con người nào**.
+- **Về độ phù hợp:** tri thức chưng cất được gắn với **đúng giao diện và luồng nghiệp vụ** của website mục tiêu, chứ không phải kiến thức chung chung từ Internet.
+
+**Nói ngắn gọn:** LLM _làm mẫu_ cách thao tác, còn SLM học **bài toán chọn hành động kế tiếp** từ trạng thái trang hiện tại.
+
+_(Nếu Hội đồng hỏi một mẫu SFT trông cụ thể ra sao — System/User/Assistant, prompt parity — mở **PL11**.)_
+
+---
+
+## Slide 5 — Ba hướng tiếp cận hiện nay
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
 Cộng đồng nghiên cứu hiện nay đã tiếp cận bài toán theo ba hướng chính:
 
@@ -76,7 +100,11 @@ Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục ti�
 
 ---
 
+<<<<<<< HEAD
 ## Slide 5 — Hạn chế và khoảng trống nghiên cứu
+=======
+## Slide 6 — Hạn chế và khoảng trống nghiên cứu
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
 Đối chiếu ba hướng vừa nêu, mỗi hướng đều còn một khoảng hở so với bài toán của khóa luận:
 
@@ -87,11 +115,19 @@ Trong 3 hướng, **hướng (C) là hướng tiếp cận gần với mục ti�
 **Khoảng trống nghiên cứu:** Chưa có công trình nào nối trọn ba mắt xích:
 $$\text{Khám phá} \longrightarrow \text{Kiểm chứng / Ghép chuỗi} \longrightarrow \text{Huấn luyện SLM}$$
 
+<<<<<<< HEAD
 Đó chính là chỗ HSGE đứng vào. Sau đây, em xin đi vào **Phần 4: Phương pháp HSGE**.
 
 ---
 
 ## Slide 6 — Dữ liệu huấn luyện SLM lấy từ đâu?
+=======
+Đó chính là chỗ HSGE đứng vào, và các khoảng hở này sẽ được lấp lần lượt trong phần phương pháp sau đây.
+
+---
+
+## Slide 7 — Giải pháp HSGE và các đóng góp chính
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
 Mở đầu phần Phương pháp, em xin làm rõ nguyên lý nền tảng: **dữ liệu huấn luyện của chúng em đến từ đâu và được chưng cất như thế nào**.
 
@@ -122,11 +158,35 @@ Cách làm này hợp lý ở ba điểm:
   - Huấn luyện mô hình **HSGE-9B đạt 24,6% Task Success Rate**, vượt GPT-4o-mini và đạt SOTA phân khúc <10B.
   - Tối ưu chi phí API xuống mức **0,0308 USD/trajectory** (rẻ hơn 3,3 lần so với Go-Browse).
 
+<<<<<<< HEAD
 Phần còn lại của mục này sẽ trình bày cách các đóng góp trên được hiện thực hóa trong **một quy trình khép kín**.
 
 ---
 
 ## Slide 8 — Tổng quan pipeline HSGE
+=======
+---
+
+## Slide 8 — Tổng quan pipeline HSGE
+
+Toàn bộ phương pháp vận hành như **một vòng lặp khép kín, lặp trên từng trang web**. Em xin mô tả **một vòng** diễn ra cụ thể như thế nào.
+
+**Bước 1 — Chọn trang để khám phá.** Hệ thống duy trì một **Frontier** — hàng đợi ưu tiên các URL đã biết, khởi đầu chỉ có trang chủ của website. Mỗi vòng, agent lấy ra một URL và mở nó bằng **trình duyệt thật** (Playwright/Chromium); trạng thái trang được đọc dưới dạng **cây khả truy cập AXTree**, tức danh sách các phần tử kèm mã định danh mà agent có thể thao tác.
+
+**Bước 2 — Sinh tác vụ ngay tại trang đó.** **Explorer** nhìn vào đúng trang đang mở và đề xuất tối đa **9 tác vụ cụ thể**, mỗi tác vụ được phân loại **INFO** (tra cứu thông tin), **NAV** (điều hướng) hoặc **MOD** (làm thay đổi trạng thái). Vì tác vụ sinh ra _từ chính giao diện đang thấy_, nó luôn khả thi trên website này — đây là điểm khác căn bản so với việc lấy kịch bản từ tài liệu ngoài.
+
+**Bước 3 — Giải từng tác vụ và ghi lại vết.** **Solver** hoạt động theo cơ chế **ReAct**: mỗi bước nó nhận mục tiêu, AXTree hiện tại, lỗi của hành động trước và lịch sử, rồi sinh ra một cặp _suy luận + hành động_ như `click`, `fill`, `goto`; hành động được thực thi thật trên trình duyệt và trang mới lại quay về làm đầu vào cho bước kế tiếp. Ngân sách **15 bước** cho tác vụ thường và **25 bước** cho tác vụ đa bước; hệ thống tự cắt sớm nếu agent lặp lại một thao tác vô ích. Chuỗi các bước này chính là **một trajectory**.
+
+**Bước 4 — Kiểm chứng ngay lúc chạy, rồi mở rộng Frontier.** Mỗi tác vụ agent tự nhận là xong đều bị **LLM Judge soi lại trang đích** — không đạt thì bị hạ thành thất bại và **không** được đưa vào dữ liệu. Tác vụ đạt sẽ được **giải lại lần hai từ trang chủ**, để trajectory chứa cả phần điều hướng tới trang chứ không chỉ thao tác cuối. Sau đó, Frontier được nạp thêm: **những URL agent thực sự đã đi qua** khi giải tác vụ, cộng với **các liên kết khai thác trực tiếp trên trang**; mỗi _dạng URL_ chỉ nhận tối đa 3 trang để hàng chục nghìn trang chi tiết cùng khuôn không làm ngập hàng đợi. Vòng lặp quay lại Bước 1 với trang tiếp theo.
+
+**Bước 5 — Tích lũy tri thức và nâng cấp độ khó.** Song song, các trajectory thành công được **cắt đoạn, gom cụm**; một đoạn thao tác lặp lại đủ số lần sẽ được **trừu tượng hóa thành SkillCard**, rồi **quy nạp thành Operator** có tiền điều kiện và hiệu ứng tường minh. Khi hiệu ứng của operator này khớp tiền điều kiện của operator kia, hệ thống **ghép chuỗi** chúng thành **tác vụ đa bước có ngữ nghĩa** — thứ mà bước sinh tác vụ tại chỗ ở Bước 2 không bao giờ tạo ra được. Đây chính là đường phản hồi nét đứt trong hình: **đồ thị operator định hướng cho vòng khám phá tiếp theo**.
+
+**Kết quả của vòng lặp này** trên 4 website: **455 trang** được khám phá, **3.981 lượt thử**, đọng lại **146 skill** và **57 operator**, **142 tác vụ đa bước**, và cuối cùng là **1.760 trajectory sạch** được đóng gói thành **9.007 mẫu SFT** — hoàn toàn không có nhãn con người ở bất kỳ khâu nào.
+
+---
+
+## Slide 9 — Đồ thị hai tầng
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
 Nhìn trên bức tranh kiến trúc tổng thể, toàn bộ phương pháp vận hành như một quy trình khép kín gồm các khối chức năng gắn kết chặt chẽ:
 
@@ -159,7 +219,6 @@ Tại mỗi trang web, hệ thống thực hiện một vòng lặp tự hành g
 **Kết quả trên 4 website:** Duyệt **455 trang**, thực hiện **3.981 lượt thử**, thu về **2.117 trajectory hợp lệ** (tỷ lệ 53,2%).
 
 ---
-
 ## Slide 10 — Phát hiện skill và quy nạp operator
 
 Khâu quy nạp tri thức chỉ thực hiện trên các trajectory đã chạy thành công, qua 4 bước:
@@ -202,6 +261,7 @@ Nhờ dữ liệu đã sạch từ gốc, hệ thống tiến hành **Build tr�
 
 ---
 
+<<<<<<< HEAD
 ## Slide 13 — Thiết lập & Câu hỏi nghiên cứu
 
 *(Người thứ 2 bắt đầu phần Thực nghiệm)*
@@ -232,6 +292,47 @@ Kính thưa Hội đồng, để đánh giá toàn diện hiệu quả của HSG
 ---
 
 ## Slide 15 — CH2: So sánh hiệu năng với các hệ thống SOTA
+=======
+## Slide 19 - Thiết lập & Câu hỏi nghiên cứu (10:00, trang 18)
+
+Kính thưa Hội đồng, sau khi đã đi qua bức tranh tổng thể về kiến trúc đồ thị và thuật toán sinh dữ liệu của HSGE, câu hỏi đặt ra là: Liệu trên thực tế, quy trình này mang lại hiệu quả ra sao? Để làm rõ điều này, em xin phép bước sang phần trọng tâm tiếp theo: Thực nghiệm và kết quả.
+
+(Bấm Click 1 — hiện Cột trái: 3 Câu hỏi nghiên cứu)
+"Để đánh giá toàn diện hệ thống, nghiên cứu của chúng em được thiết kế xoay quanh 3 câu hỏi cốt lõi (Research Questions): '
+
+- Thứ nhất (CH1): Về mặt dữ liệu, hệ thống có thực sự tự động sinh ra được các tác vụ có ý nghĩa và đạt quy mô dữ liệu chất lượng hay không?
+- Thứ hai (CH2): Về mặt hiệu năng, năng lực của các mô hình ngôn ngữ nhỏ (SLM) sau khi fine-tune được cải thiện như thế nào so với chính mô hình nền và các công trình SOTA hiện tại?
+- Thứ ba (CH3): Về tính khả thi, toàn bộ chu trình tự động sinh dữ liệu này đạt hiệu quả chi phí kinh tế ra sao khi đưa vào thực tiễn?
+
+(Bấm Click 2 — hiện Cột phải: Thiết lập thực nghiệm)
+Để trả lời một cách khách quan 3 câu hỏi trên, đặc biệt là bám sát mục tiêu thiết kế các tác nhân chi phí thấp sử dụng mô hình nhỏ và có khả năng xử lý đầu vào lai (hybrid) kết hợp cả văn bản và hình ảnh, chúng em đã chuẩn hóa thiết lập thực nghiệm như sau:
+
+- Về Môi trường khám phá và Đánh giá: Trước tiên, quá trình tự hành khám phá và thu thập dữ liệu được hệ thống thực thi thông qua công cụ mã nguồn mở Playwright và BrowserGym trên nền trình duyệt Chromium. Không gian khám phá tập trung vào 4 website đại diện cho các miền ứng dụng phức tạp do nhóm tự triển khai (self-hosted), bao gồm: nền tảng thương mại điện tử (Shopping, Shopping Admin), hệ thống quản lý mã nguồn (GitLab) và diễn đàn (Reddit). Sau khi khai thác tri thức từ các website này để sinh dữ liệu và huấn luyện, năng lực của mô hình mới được đưa vào đánh giá trực tiếp trên 655 tác vụ chuẩn của benchmark WebArena.
+- Về Mô hình và Cấu hình Huấn luyện: Mô hình được chọn làm nền tảng là Qwen3.5-9B-Instruct. Chúng em tiến hành tinh chỉnh (fine-tune) để tạo ra phiên bản HSGE-9B thông qua kỹ thuật LoRA/QLoRA trong 3 epoch, tương đương 1.119 bước huấn luyện.
+- Về Tiêu chí đánh giá được sử dụng là Task Success Rate - SR, tức là tỷ lệ hoàn thành tác vụ.
+
+Câu chốt: Việc chủ động sử dụng bộ đề xuất tác vụ và bộ chấm điểm chính thức của benchmark WebArena giúp đảm bảo mọi kết quả đánh giá năng lực của hệ thống đều mang tính khách quan và minh bạch."
+
+---
+
+(Câu chuyển đoạn): "Vậy quá trình tự hành khám phá trên các website mục tiêu đã mang lại quy mô chất lượng dữ liệu ra sao? Chúng ta cùng xem xét kết quả khám phá cũng như giải đáp Câu hỏi nghiên cứu thứ nhất tại Slide 14."
+
+## Slide 20 - CH1: Tự động tạo tác vụ & Quy mô dữ liệu (10:45, trang 19)
+
+Đây là bảng thống kê quá trình thu thập dữ liệu của HSGE trên 4 website.
+
+- Về Quy mô khám phá và Tích lũy tri thức: Bắt đầu từ con số không tròn trĩnh về nhãn dữ liệu, hệ thống Explorer của chúng em đã tự động duyệt qua 4 website với tổng cộng 455 URL. Qua 3.981 lượt tương tác thử nghiệm trực tiếp với môi trường, hệ thống đã tự động thu hoạch và phân cụm được 146 kỹ năng (skills). Từ đó, hệ thống tiếp tục quy nạp và cô đọng lại thành 57 toán tử (operators) mang tính cốt lõi.
+- Về Năng lực Sinh tác vụ: Dựa trên đồ thị của 57 toán tử này, thuật toán ghép chuỗi đã tự động tạo ra và kiểm chứng thành công 142 tác vụ ngữ nghĩa (semantic tasks) đa bước.
+- Để đảm bảo độ tinh sạch cho lượng dữ liệu này, các Cổng kiểm soát chất lượng (Quality Gates) được thiết lập trong hệ thống đã phát huy hiệu quả sàng lọc cực kỳ xuất sắc:
+  - Cổng LLM-as-Judge hoạt động trực tuyến đã hoàn thành tốt nhiệm vụ khi soi xét và loại bỏ chính xác 801 lượt chạy (chiếm 27,4%) rơi vào trường hợp đỗ ảo (dương tính giả).
+  - Song song đó, cổng Effective Action Gate cũng đã phát hiện và chặn đứng thành công 104 trajectory không hợp lệ do không tạo ra bất kỳ sự biến đổi thực tế nào trên cấu trúc trang DOM.
+- Kết quả thu hoạch cuối cùng: Trải qua các màng lọc khắt khe đó, chúng em đã thu về 1.760 trajectory hoàn toàn sạch sẽ, đạt tỷ lệ hợp lệ là 53,2%. Khối lượng này được hệ thống đóng gói trực tiếp thành một bộ dữ liệu Supervised Fine-Tuning (SFT) đồ sộ với 9.007 mẫu, trong đó có 8.554 mẫu dùng để huấn luyện và 453 mẫu để xác thực.
+- Câu chốt: Điểm mấu chốt và cũng là giá trị lớn nhất ở đây là: HSGE đã tự động sinh ra các tác vụ có ý nghĩa và thu hoạch thành công 9.007 mẫu dữ liệu SFT sạch hoàn toàn tự động, mà không có bất kỳ sự can thiệp thủ công từ con người."
+
+"Với bộ dữ liệu thu được, chúng ta sẽ xem xét liệu chúng có thực sự truyền tải được tri thức để nâng tầm các mô hình ngôn ngữ nhỏ hay không."
+
+## Slide 21 — CH2: So sánh hiệu năng với các hệ thống SOTA
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
 "Để trả lời cho Câu hỏi nghiên cứu thứ hai, Bảng 2 trình bày bức tranh toàn cảnh so sánh hiệu năng của HSGE với các hệ thống State-of-the-art (SOTA) hiện hành trên benchmark WebArena.
 
@@ -246,7 +347,11 @@ _(Bấm Click 2 — hiện nhóm mô hình HSGE của khóa luận)_
 
 ---
 
+<<<<<<< HEAD
 ## Slide 16 — CH2: So sánh Base và Fine-tuning theo Website
+=======
+## Slide 22 — CH2: So sánh Base và Fine-tuning theo Website
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
 Tuy nhiên, trong nghiên cứu khoa học, những con số tổng quan sẽ thiếu đi sức nặng nếu không được chứng minh tính vững chắc về mặt thống kê và giải thích được nguyên nhân sâu xa.
 
@@ -272,9 +377,13 @@ Câu chốt: Những kiểm định thống kê khắt khe và phép thử chia 
 
 ---
 
+<<<<<<< HEAD
 ## Slide 17 — CH3: Hiệu quả chi phí trong tự động tạo dữ liệu
+=======
+## Slide 23 — CH3: Hiệu quả chi phí trong tự động tạo dữ liệu
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
-Trả lời **CH3** về tính khả thi kinh tế:
+"Cuối cùng, một hệ thống mạnh chỉ thực sự thực tiễn nếu nó có chi phí hợp lý. Chúng ta cùng xem xét Câu hỏi nghiên cứu thứ 3 về bài toán kinh tế."
 
 _(Bấm Click 1 — hiện Phân bổ mô hình theo vai trò Agent)_
 
@@ -302,6 +411,7 @@ Câu chốt: Với đơn giá đột phá chỉ 0,0308 USD/trajectory đi kèm h
 
 ---
 
+<<<<<<< HEAD
 ## Slide Mục lục phần Kết luận
 
 "Tiếp theo, em xin đi vào phần 6: Kết luận và Hướng phát triển."
@@ -309,6 +419,9 @@ Câu chốt: Với đơn giá đột phá chỉ 0,0308 USD/trajectory đi kèm h
 ---
 
 ## Slide 18 — Kết luận: Đóng góp chính & Hướng phát triển
+=======
+## Slide 24 — Kết luận: Đóng góp chính & Hướng phát triển
+>>>>>>> 34ef6db (Update page margins, titlesec spacing, cover page layout and presentation script)
 
 "Từ những kết quả thực nghiệm trên, em xin phép đi đến phần tổng kết toàn bộ nội dung khóa luận."
 
@@ -330,6 +443,12 @@ _(Bấm Click 2 — hiện Cột phải: Hướng phát triển tương lai)_
 - **Cuối cùng - Tổng quát hóa**: Mở rộng năng lực của pipeline khám phá để tác nhân có thể hoạt động trơn tru trên các nền tảng ứng dụng đa dạng ngoài miền (cross-domain) chứ không chỉ giới hạn ở các website đã thử nghiệm."
 
 **Câu chốt toàn bài:** "Dạ, phần trình bày của nhóm đến đây là kết thúc. Em xin chân thành cảm ơn Thầy Cô trong Hội đồng đã dành thời gian theo dõi, và em xin phép được lắng nghe các câu hỏi cũng như ý kiến đóng góp quý báu từ Thầy Cô ạ!"
+
+---
+
+## Slide Mục lục phần Kết luận
+
+"Tiếp theo, em xin đi vào phần 6: Kết luận và Hướng phát triển."
 
 ---
 
